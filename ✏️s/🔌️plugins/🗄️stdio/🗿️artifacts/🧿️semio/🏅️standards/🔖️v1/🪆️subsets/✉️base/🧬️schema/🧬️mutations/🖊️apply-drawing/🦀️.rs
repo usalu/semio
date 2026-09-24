@@ -23,7 +23,7 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyDrawing {
         agg_inverse(&SemioMutation::ApplyDrawing(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("drawing", "Zeichnung")
+        protocol::SemanticMutation::label(&self.mutation)
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

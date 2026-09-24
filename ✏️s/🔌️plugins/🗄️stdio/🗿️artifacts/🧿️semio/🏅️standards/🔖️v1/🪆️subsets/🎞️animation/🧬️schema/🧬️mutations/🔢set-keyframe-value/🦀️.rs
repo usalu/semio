@@ -26,7 +26,7 @@ impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for 
         agg_inverse(&SemioAnimationMutation::SetKeyframeValue(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-keyframe-value", "Schlüsselbildwert setzen")
+        protocol::LocalizedLabel::native("Set keyframe value", "Schlüsselbildwert setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

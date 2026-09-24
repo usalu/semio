@@ -57,7 +57,6 @@ describe("document opening scope", () => {
         expect(actual, row.id).toEqual(reference);
         expect(actual, row.id).toEqual(row.expected);
       }
-      console.log("[DEBUG] document-opening-scope", row.id, row.error ?? "exact-bindings");
     }
   });
 });

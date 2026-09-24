@@ -9,7 +9,7 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent } from "react";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
 import { ContextMenuController, CATALOGUE_DRAG_MIME, getActiveCataloguePointerDragData, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
-import { type ComponentSceneHostProps } from "@semio-tech/framework";
+import { applyPinchToCamera, type ComponentSceneHostProps, type PinchStep } from "@semio-tech/framework";
 import { currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
@@ -31,6 +31,16 @@ export type CanvasCamera = {
   y: number;
   zoom: number;
 };
+
+/** 🔍️ The canvas camera's zoom limits as `👆️gesture` bounds — the pinch and the wheel clamp to ONE range. */
+export const CANVAS_CAMERA_ZOOM_BOUNDS = { min: CANVAS_CAMERA_ZOOM_MIN, max: CANVAS_CAMERA_ZOOM_MAX } as const;
+
+/** 🤏️ One shared-recognizer pinch step on a canvas camera (`Canvas2dHost`, `Paint2dHost`): the finger-anchored
+ * `applyPinchToCamera` law in this camera's own centred transform and zoom limits. */
+export function canvasPinchCamera(camera: CanvasCamera, step: PinchStep, viewportWidth: number, viewportHeight: number): CanvasCamera {
+  const next = applyPinchToCamera(camera, step, { w: viewportWidth, h: viewportHeight }, CANVAS_CAMERA_ZOOM_BOUNDS);
+  return { x: next.x, y: next.y, zoom: next.zoom };
+}
 
 export function clampCanvasZoom(zoom: number): number {
   return Math.min(CANVAS_CAMERA_ZOOM_MAX, Math.max(CANVAS_CAMERA_ZOOM_MIN, zoom));
@@ -726,6 +736,13 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
 
   doubleClick(x: number, y: number): void {
     this.onPointer?.("canvasDoubleClick", { x, y, width: this.logicalWidth, height: this.logicalHeight });
+  }
+
+  pinch(step: PinchStep): void {
+    const next = canvasPinchCamera(this.camera, step, this.logicalWidth, this.logicalHeight);
+    this.camera = next;
+    this.onCameraChange(next);
+    this.renderFrame();
   }
 
   wheel(x: number, y: number, deltaY: number): void {

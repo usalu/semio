@@ -21,7 +21,7 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveSlide {
         agg_inverse(&PptxMutation::RemoveSlide(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-slide", "Folie entfernen")
+        protocol::LocalizedLabel::native("Remove slide", "Folie entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

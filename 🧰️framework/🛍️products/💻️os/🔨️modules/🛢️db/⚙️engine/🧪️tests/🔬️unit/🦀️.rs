@@ -710,14 +710,15 @@ async fn database_catalog_bootstrap_lost_handle_take_resume_close_and_terminal_w
     assert_eq!(resumed.generation(), generation);
     drop(resumed);
     let terminal = take_database_catalog_bootstrap_terminal(generation).unwrap();
-    let initial = terminal.witness().retained_owners;
     let initial_grants = state.driver_grants.load(std::sync::atomic::Ordering::Acquire);
+    let grant_in_flight = u64::from(state.driver_authority.load(std::sync::atomic::Ordering::Acquire) == DatabaseCatalogBootstrapDriverAuthority::Driving as u8);
+    let initial = terminal.witness().retained_owners;
     while !terminal.terminal_is_empty() {
         let step = terminal.close_step();
         assert!(matches!(step, DatabaseCatalogBootstrapCloseStep::Progress | DatabaseCatalogBootstrapCloseStep::Blocked | DatabaseCatalogBootstrapCloseStep::Complete));
         let current = terminal.witness().retained_owners;
         let granted = state.driver_grants.load(std::sync::atomic::Ordering::Acquire);
-        assert!(initial.saturating_sub(current) as u64 <= granted - initial_grants, "one mounted close grant retires at most one owner");
+        assert!(initial.saturating_sub(current) as u64 <= granted - initial_grants + grant_in_flight, "one mounted close grant retires at most one owner");
         std::thread::yield_now();
     }
     assert_eq!(state.retained_owner_count(), 0);
@@ -3820,6 +3821,49 @@ async fn a_document_survives_a_full_database_shutdown_and_reopen_at_the_same_roo
     assert_eq!(value, serde_json::json!(1), "the document's committed state must have survived the reopen via WAL replay");
     assert_eq!(handle.frontier().await.unwrap().head_seq, 1);
     assert_eq!(handle.checkpoint_publication_snapshot().await.unwrap().head_edit_id, Some(protocol::MutationId("op-1".to_string())));
+}
+
+/// 📈️ A long-lived document keeps accepting edits however large it grows: hundreds of edits with a
+/// large payload each, then a full shutdown and reopen at the same root, then more edits — every one
+/// admitted, the whole history replayed. A per-operation I/O bound that the document's size outgrew
+/// made every hub document read-only after about twenty map edits, even across a restart.
+#[semio_framework_async_macros::async_test]
+async fn a_document_keeps_accepting_edits_as_it_grows_across_restart() {
+    const EDITS_BEFORE_RESTART: usize = 400;
+    const EDITS_AFTER_RESTART: usize = 60;
+    const PAYLOAD_BYTES: usize = 24 * 1024;
+    let root = tempdir("growing-document").await;
+    let document = protocol::ArtifactId("growing-doc".to_string());
+    let payload = |index: usize| serde_json::json!(format!("{index:08}{}", "g".repeat(PAYLOAD_BYTES)));
+    let submit = |handle: ArtifactHandle, index: usize| {
+        let document = document.clone();
+        async move {
+            let batch = db_artifact::CommandBatch::new(vec![envelope(&format!("grow-{index}"), &[], "alice", &document, &[(&format!("feature-{}", index % 32), payload(index))]).await]).await.unwrap();
+            handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }).await.unwrap_or_else(|error| panic!("edit {index} was not delivered: {error:?}")).unwrap_or_else(|error| panic!("edit {index} was refused: {error:?}"))
+        }
+    };
+    {
+        let mut database = Database::open_at(test_worker_pool(), &root, Profile::Prod).await.unwrap();
+        let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+        for index in 0..EDITS_BEFORE_RESTART {
+            submit(handle.clone(), index).await;
+        }
+        assert_eq!(handle.frontier().await.unwrap().head_seq, EDITS_BEFORE_RESTART as u64);
+        drop(handle);
+        database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await.unwrap();
+    }
+    let mut reopened = Database::open_at(test_worker_pool(), &root, Profile::Prod).await.unwrap();
+    let handle = reopened.document(&document).await.unwrap();
+    assert_eq!(handle.frontier().await.unwrap().head_seq, EDITS_BEFORE_RESTART as u64, "the whole grown history replays");
+    for index in EDITS_BEFORE_RESTART..EDITS_BEFORE_RESTART + EDITS_AFTER_RESTART {
+        submit(handle.clone(), index).await;
+    }
+    assert_eq!(handle.frontier().await.unwrap().head_seq, (EDITS_BEFORE_RESTART + EDITS_AFTER_RESTART) as u64);
+    let last = EDITS_BEFORE_RESTART + EDITS_AFTER_RESTART - 1;
+    let queried = handle.query(Query::Get { path: format!("feature-{}", last % 32) }, Consistency::Canonical).await.unwrap();
+    assert_eq!(decode_query_json(queried).await, payload(last));
+    drop(handle);
+    reopened.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await.unwrap();
 }
 
 #[semio_framework_async_macros::async_test]

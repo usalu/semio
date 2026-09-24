@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Re
         agg_inverse(&SemioDocumentMutation::RemoveImage(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-image", "Bild entfernen")
+        protocol::LocalizedLabel::native("Remove image", "Bild entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

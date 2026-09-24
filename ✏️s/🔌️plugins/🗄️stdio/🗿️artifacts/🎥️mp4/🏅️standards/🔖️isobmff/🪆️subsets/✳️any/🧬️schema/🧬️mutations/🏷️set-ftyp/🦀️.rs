@@ -22,7 +22,7 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetFtyp {
         agg_inverse(&Mp4Mutation::SetFtyp(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-ftyp", "ftyp setzen")
+        protocol::LocalizedLabel::native("Set ftyp", "ftyp-Box setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

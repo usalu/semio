@@ -31,7 +31,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerBlendM
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set layer \"{}\" blend mode to {}", self.layer_id, self.blend_mode), &format!("Ebene \"{}\" Mischungsmodus auf {} setzen", self.layer_id, self.blend_mode))
+        protocol::LocalizedLabel::native(&format!("Set layer \"{}\" blend mode to {}", self.layer_id, self.blend_mode), &format!("Füllmethode von Ebene \"{}\" auf {} setzen", self.layer_id, self.blend_mode))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

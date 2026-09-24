@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeSiloNRdKn 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change silo axial resistance N_Rd [kN] to {}", self.new_silo_n_rd_kn), &format!("Siloaxialwiderstandn_Rd [kN] auf {} ändern", self.new_silo_n_rd_kn))
+        protocol::LocalizedLabel::native(&format!("Change silo axial resistance N_Rd [kN] to {}", self.new_silo_n_rd_kn), &format!("Normalkrafttragfähigkeit des Silos N_Rd [kN] auf {} ändern", self.new_silo_n_rd_kn))
     }
 }
 //#endregion 🔖️ChangeSiloNRdKn

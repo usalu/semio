@@ -13,24 +13,6 @@ use protocol::Mutation;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::SemioMutation;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::snapshot::SemioSnapshot;
 
-/// 🎯️ Maps production's outcome severities onto the protocol's outcome classes: `Info`/`Warning`
-/// ride on an applied outcome, `Error`/`Fatal` are the refusal.
-fn protocol_outcomes(classes: &[protocol::MutationOutcomeClass]) -> Vec<&'static str> {
-    let mut seen: Vec<&'static str> = Vec::new();
-    for outcome in classes {
-        let mapped = match outcome {
-            protocol::MutationOutcomeClass::Applied | protocol::MutationOutcomeClass::Info | protocol::MutationOutcomeClass::Warning => "applied",
-            protocol::MutationOutcomeClass::Error | protocol::MutationOutcomeClass::Fatal => "rejected",
-        };
-        if !seen.contains(&mapped) {
-            seen.push(mapped);
-        }
-    }
-    if seen.is_empty() {
-        seen.push("applied");
-    }
-    seen
-}
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -48,7 +30,7 @@ fn main() {
             pack::json_object([
                 ("id".to_string(), pack::JsonValue::from(descriptor.semantic_kind)),
                 ("variant".to_string(), pack::JsonValue::from(descriptor.aggregate_variant)),
-                ("outcomes".to_string(), pack::json_array(protocol_outcomes(descriptor.outcome_classes).into_iter().map(pack::JsonValue::from))),
+                ("outcomes".to_string(), pack::json_array(descriptor.outcome_classes.iter().map(|class| pack::JsonValue::from(class.as_str())))),
             ])
         })
         .collect();

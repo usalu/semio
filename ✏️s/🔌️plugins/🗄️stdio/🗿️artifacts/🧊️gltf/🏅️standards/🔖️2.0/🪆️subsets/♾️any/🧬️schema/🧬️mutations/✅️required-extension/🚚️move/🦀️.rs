@@ -66,7 +66,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveRequiredE
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Move Required Extension", "erforderliche Erweiterung verschieben")
+        protocol::LocalizedLabel::native("Move Required Extension", "Erforderliche Erweiterung verschieben")
     }
 
     fn target(&self) -> Vec<String> {

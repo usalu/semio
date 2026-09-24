@@ -30,7 +30,7 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for DeleteSlot {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Delete Slot", "Platz löschen")
+        protocol::LocalizedLabel::native("Delete Slot", "Slot löschen")
     }
 }
 //#endregion 🔖️DeleteSlot

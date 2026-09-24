@@ -25,7 +25,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetBounds {
         agg_inverse(&LasMutation::SetBounds(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-bounds", "Grenzen setzen")
+        protocol::LocalizedLabel::native("Set bounds", "Grenzen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

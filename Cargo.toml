@@ -598,6 +598,13 @@ opt-level = 3
 [profile.dev.package.wit-parser]
 opt-level = 3
 
+# 🧮️ The owned wasm interpreter (`semio-framework-plugin-host::interpreter`) runs every trusted-catalog
+# verification `codec.pack-schema-hash` on the hub's startup path. At `opt-level = 0` a debug hub spent
+# >11 min of one core interpreting writer/draw/puzzle during catalog load and the candidate readiness
+# wait gave up (ticket 26/09/23 W1 §4.6, sampled: 100 % in `CoreInstance::execute_machine`).
+[profile.dev.package.semio-framework-plugin-host]
+opt-level = 3
+
 # 🛡️ WASI component links alone select this mitigation for rust-lld's ElemSection crash.
 # Native dev retains Cargo's parallel codegen policy; publication stays wasm-release.
 [profile.wasm-dev]

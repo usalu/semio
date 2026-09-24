@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeFEdKn {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change f ed kn to {:?}", self.new_f_ed_kn), &format!("Fedkn auf {:?} ändern", self.new_f_ed_kn))
+        protocol::LocalizedLabel::native(&format!("Change design force F_Ed [kN] to {:?}", self.new_f_ed_kn), &format!("Bemessungskraft F_Ed [kN] auf {:?} ändern", self.new_f_ed_kn))
     }
 }
 //#endregion 🔖️ChangeFEdKn

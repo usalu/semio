@@ -349,8 +349,9 @@
           "capability": "procedural-3d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-generation-value",
@@ -369,8 +370,9 @@
           "capability": "procedural-3d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-schema",
@@ -489,8 +491,9 @@
           "capability": "procedural-3d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-widget-position",
@@ -549,8 +552,9 @@
           "capability": "procedural-3d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-generation",
@@ -569,8 +573,9 @@
           "capability": "procedural-3d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "update-camera",
@@ -589,8 +594,9 @@
           "capability": "procedural-3d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "update-synapse",
@@ -609,8 +615,9 @@
           "capability": "procedural-3d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "update-widget",
@@ -625,6 +632,13 @@
           ]
         }
       ]
+    }
+  ],
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
     }
   ]
 }

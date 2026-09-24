@@ -1,0 +1,129 @@
+{
+  "surface": "conformance.component.table",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "spaces",
+      "component": {
+        "type": "table",
+        "label": "Spaces",
+        "columns": [
+          "Name",
+          "Kind"
+        ],
+        "actionsLabel": "Actions",
+        "window": {
+          "total": 40,
+          "offset": 12,
+          "rowExtent": "standard"
+        }
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Spaces"
+      },
+      "children": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": 1,
+      "key": "space:sp-1",
+      "component": {
+        "type": "tableRow",
+        "cells": [
+          "Atelier Ada",
+          "atelier"
+        ]
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    },
+    {
+      "id": 2,
+      "key": "space:sp-2",
+      "component": {
+        "type": "tableRow",
+        "cells": [
+          "Werkstatt Ada",
+          "atelier"
+        ],
+        "rowActions": [
+          {
+            "icon": "folder-open",
+            "label": "Open",
+            "action": {
+              "trigger": "activate",
+              "action": {
+                "scope": "s.space.home@1/*#editor",
+                "name": "openSpace",
+                "version": 1
+              },
+              "args": {
+                "spaceId": "sp-2"
+              }
+            }
+          }
+        ]
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "s.space.home@1/*#editor",
+            "name": "openSpace",
+            "version": 1
+          },
+          "args": {
+            "spaceId": "sp-2"
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

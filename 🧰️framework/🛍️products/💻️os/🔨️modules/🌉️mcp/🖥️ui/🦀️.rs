@@ -64,29 +64,26 @@ fn next_shell_command_seq() -> u64 {
     SHELL_COMMAND_SEQ.fetch_add(1, Ordering::Relaxed)
 }
 
-/// 🕳️ No `BridgeHandle` at all — this gateway is serving no `/bridge`. In `stdio` mode (every client
-/// config in this repo) that happens for exactly one reason the caller can act on: no os session had
-/// published a live record in `🛰️rendezvous`'s sessions directory when this process started, so there
-/// was nobody to offer a bridge to. The details name that directory and the live-session count as of
-/// NOW, so an agent can tell "start `dev s`" apart from "the session started after I did".
+/// 🕳️ No `BridgeHandle` at all — this gateway serves no `/bridge`, so no shell can ever attach to
+/// it: it was started with `--no-bridge`, or its loopback listener could not be bound or offered
+/// (the gateway's stderr names which). The details name the rendezvous a shell would have dialled.
 fn bridge_not_running_error() -> GatewayError {
-    let sessions = crate::rendezvous::live_os_sessions();
     GatewayError::new(
         GatewayErrorCode::PluginUnavailable,
-        "no `/bridge` is running on this gateway — a stdio gateway offers one only when a live os session was already published at launch; start `bun ./📜️script.ts dev s` and reconnect this MCP server",
+        "this gateway serves no `/bridge`, so no shell can attach to it — it was started with `--no-bridge` or its loopback listener could not be offered; restart this MCP server without `--no-bridge`",
     )
     .with_details(serde_json::json!({
-        "liveOsSessionsNow": sessions.len(),
+        "liveOsSessionsNow": crate::rendezvous::live_os_sessions().len(),
         "sessionsDirectory": crate::rendezvous::sessions_dir().to_string_lossy(),
-        "bindWith": ["stdio (a live os session must exist at launch)", "http"],
+        "bindWith": ["stdio (without --no-bridge)", "http"],
     }))
     .retryable()
 }
 
 /// 🕳️ A `BridgeHandle` exists but no shell connection is live — the normal headless state, not a
-/// bug: an agent should retry once a shell has dialed `/bridge`.
+/// bug. The gateway's offer is already published, so a shell started now dials it on its own.
 fn no_shell_attached_error() -> GatewayError {
-    GatewayError::new(GatewayErrorCode::PluginUnavailable, "no shell is attached to `/bridge` yet — this is expected until a shell connects; retry once one does").retryable()
+    GatewayError::new(GatewayErrorCode::PluginUnavailable, "no shell is attached to `/bridge` yet — start `bun ./📜️script.ts dev s` (it dials this gateway on its own) and retry").retryable()
 }
 
 /// 🧭️ The connection this facet routes `ShellCommand`/`semio://window…` reads through — the
@@ -141,6 +138,8 @@ pub enum JobStatus {
     Pending,
     #[value(rename = "RUNNING")]
     Running,
+    #[value(rename = "AWAITING_APPROVAL")]
+    AwaitingApproval,
     #[value(rename = "SUCCEEDED")]
     Succeeded,
     #[value(rename = "FAILED")]
@@ -164,6 +163,46 @@ struct JobRecord {
     error: Option<GatewayError>,
     cancel_requested: bool,
     on_cancel: Option<Box<dyn FnOnce() + Send>>,
+    events: Vec<JobEvent>,
+    next_ordinal: u64,
+}
+
+impl JobRecord {
+    fn append(&mut self, kind: &str, progress: Option<f64>, message: Option<String>) {
+        if self.events.len() == JOB_EVENT_JOURNAL_CAPACITY {
+            self.events.remove(0);
+        }
+        self.next_ordinal += 1;
+        self.events.push(JobEvent { ordinal: self.next_ordinal, kind: kind.to_string(), at_ms: now_ms(), progress, message });
+    }
+}
+
+/// 🧾️ How many journal rows one job retains — the oldest row leaves first, and a reader behind the
+/// window sees the gap in the returned rows' own `ordinal`s rather than a silently renumbered stream.
+pub const JOB_EVENT_JOURNAL_CAPACITY: usize = 256;
+
+/// 🗓️ One append-only lifecycle fact of one job, ordered by `ordinal`: `accepted`, `progress`,
+/// `cancel-requested`, `awaiting-approval`, `approved`, and exactly one terminal `succeeded`/`failed`/
+/// `cancelled` — plus whatever domain facts the job's own producer records. The journal is the job's
+/// event stream; `JobSnapshot` is only its current fold.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JobEvent {
+    pub ordinal: u64,
+    pub kind: String,
+    pub at_ms: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub progress: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+}
+
+/// 📃️ One cursor-paged read of a job's journal: every row after `after`, and the cursor to read on from.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JobEventPage {
+    pub events: Vec<JobEvent>,
+    pub next_cursor: u64,
 }
 
 /// 📸️ `job_get`/`semio://job/{id}`'s answer shape — real fields only, never fabricated: `progress`/
@@ -231,7 +270,8 @@ impl JobRegistry {
     /// `HandleKind::Job`/`mint_id`, then call this with that exact id.
     pub fn begin_with_id(&self, job_id: impl Into<String>, kind: &str) -> String {
         let job_id = job_id.into();
-        let record = JobRecord { kind: kind.to_string(), status: JobStatus::Pending, progress: None, message: None, result: None, error: None, cancel_requested: false, on_cancel: None };
+        let mut record = JobRecord { kind: kind.to_string(), status: JobStatus::Pending, progress: None, message: None, result: None, error: None, cancel_requested: false, on_cancel: None, events: Vec::new(), next_ordinal: 0 };
+        record.append("accepted", None, None);
         self.jobs.lock().expect("job registry lock poisoned").insert(job_id.clone(), record);
         // 📈️ Every producer in this crate mints through here, so binding the job to the `tools/call`
         // progress token currently active on this thread covers all of them by construction — no
@@ -244,12 +284,13 @@ impl JobRegistry {
     pub fn report_progress(&self, job_id: &str, progress: f64, message: Option<String>) -> bool {
         let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
         let accepted = match jobs.get_mut(job_id) {
-            Some(record) if !record.status.is_terminal() => {
+            Some(record) if !record.status.is_terminal() && record.status != JobStatus::AwaitingApproval => {
                 record.status = JobStatus::Running;
                 record.progress = Some(progress.clamp(0.0, 1.0));
                 if message.is_some() {
                     record.message = message.clone();
                 }
+                record.append("progress", record.progress, message.clone());
                 true
             }
             _ => false,
@@ -267,11 +308,20 @@ impl JobRegistry {
             Some(record) if !record.status.is_terminal() => {
                 record.status = status;
                 record.on_cancel = None;
-                record.result = result;
+                if result.is_some() {
+                    record.result = result;
+                }
                 record.error = error;
                 if status == JobStatus::Succeeded {
                     record.progress = Some(1.0);
                 }
+                let kind = match status {
+                    JobStatus::Succeeded => "succeeded",
+                    JobStatus::Failed => "failed",
+                    _ => "cancelled",
+                };
+                let message = record.error.as_ref().map(|error| error.message.clone());
+                record.append(kind, record.progress, message);
                 true
             }
             _ => false,
@@ -336,8 +386,10 @@ impl JobRegistry {
             return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, format!("job {job_id} already finished as {:?} — nothing to cancel", record.status)));
         }
         record.cancel_requested = true;
-        if record.status == JobStatus::Pending {
+        record.append("cancel-requested", None, None);
+        if matches!(record.status, JobStatus::Pending | JobStatus::AwaitingApproval) {
             record.status = JobStatus::Cancelled;
+            record.append("cancelled", None, None);
         }
         let hook = record.on_cancel.take();
         let snapshot = record_snapshot(job_id, record);
@@ -351,6 +403,47 @@ impl JobRegistry {
     pub fn snapshot(&self, job_id: &str) -> Option<JobSnapshot> {
         let jobs = self.jobs.lock().expect("job registry lock poisoned");
         jobs.get(job_id).map(|record| record_snapshot(job_id, record))
+    }
+
+    /// ⏸️ The producer's work is done and its effect waits on an explicit approval: the job parks,
+    /// non-terminal, with the proposal as its result. A cancel now withdraws the proposal and ends
+    /// the job; [`Self::resume_approved`] hands it back to its producer to commit.
+    pub fn await_approval(&self, job_id: &str, proposal: serde_json::Value) -> bool {
+        let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
+        let Some(record) = jobs.get_mut(job_id).filter(|record| !record.status.is_terminal()) else { return false };
+        record.status = JobStatus::AwaitingApproval;
+        record.progress = Some(1.0);
+        record.result = Some(proposal);
+        record.append("awaiting-approval", record.progress, None);
+        true
+    }
+
+    /// ▶️ Consumes a parked approval exactly once: `true` only for a job still `AwaitingApproval`,
+    /// which is `Running` again when this returns, so two approvals of one proposal can never both
+    /// commit.
+    pub fn resume_approved(&self, job_id: &str) -> bool {
+        let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
+        let Some(record) = jobs.get_mut(job_id).filter(|record| record.status == JobStatus::AwaitingApproval) else { return false };
+        record.status = JobStatus::Running;
+        record.append("approved", record.progress, None);
+        true
+    }
+
+    /// 🗓️ Records one producer-owned domain fact in the job's journal; refused once the job is terminal.
+    pub fn record_event(&self, job_id: &str, kind: &str, message: Option<String>) -> bool {
+        let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
+        let Some(record) = jobs.get_mut(job_id).filter(|record| !record.status.is_terminal()) else { return false };
+        record.append(kind, None, message);
+        true
+    }
+
+    /// 📃️ Every journal row after `after`, oldest first, at most `limit` of them.
+    pub fn events(&self, job_id: &str, after: u64, limit: usize) -> Option<JobEventPage> {
+        let jobs = self.jobs.lock().expect("job registry lock poisoned");
+        let record = jobs.get(job_id)?;
+        let events: Vec<JobEvent> = record.events.iter().filter(|event| event.ordinal > after).take(limit).cloned().collect();
+        let next_cursor = events.last().map_or(after, |last| last.ordinal);
+        Some(JobEventPage { events, next_cursor })
     }
 }
 

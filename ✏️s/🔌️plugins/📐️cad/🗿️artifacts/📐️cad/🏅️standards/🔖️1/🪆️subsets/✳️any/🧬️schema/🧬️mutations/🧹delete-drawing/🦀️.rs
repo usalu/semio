@@ -24,7 +24,7 @@ impl MutationKind<CadSnapshot, CadMutation> for DeleteDrawing {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete drawing child {}", self.child_id), &format!("Zeichnungskind {} löschen", self.child_id))
+        protocol::LocalizedLabel::native(&format!("Delete drawing child {}", self.child_id), &format!("Zeichnungs-Kind {} löschen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.child_id.clone()]

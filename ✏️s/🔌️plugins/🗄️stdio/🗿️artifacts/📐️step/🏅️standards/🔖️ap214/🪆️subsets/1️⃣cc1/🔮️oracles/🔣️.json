@@ -73,7 +73,7 @@
     {
       "id": "semantic-step-conformance-class-v1",
       "description": "STEP AP214 exchange structures compared by what a CONFORMANCE CLASS is about, and by nothing else: the declared FILE_SCHEMA, the full *_SHAPE_REPRESENTATION ladder census (id, type name, ISO 10303-214 §4.3 rung), whether the document sits inside the class's ceiling, the count of instances above it, the PRODUCT/formation/definition identity chain, and the instance count. Deliberately NOT the 🧱️base subset's whole id-keyed entity graph — 1,396 entities of unrelated real geometry would drown every class-level difference this profile exists to see. Header timestamp, preprocessor and originating-system strings and line wrapping are writer freedom. Declared once, here, for all six ✳️ccN subsets: the registry merges every discovered manifest repo-wide, so declaring it six times would be the copy this arrangement exists to avoid.",
-      "tolerance": 0.000001,
+      "tolerance": 1e-06,
       "ignoreKeys": [
         "timestamp",
         "preprocessorVersion",
@@ -98,7 +98,8 @@
           "capability": "step-ap214-cc1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-shape-representation",
@@ -117,7 +118,8 @@
           "capability": "step-ap214-cc1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-file-schema",
@@ -136,7 +138,8 @@
           "capability": "step-ap214-cc1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-product-identity",

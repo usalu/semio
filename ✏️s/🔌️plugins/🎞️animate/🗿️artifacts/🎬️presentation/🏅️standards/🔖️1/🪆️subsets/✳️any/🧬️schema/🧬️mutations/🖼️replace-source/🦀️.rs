@@ -32,7 +32,7 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ReplaceSource 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace source with \"{}\"", self.new_source.src), &format!("Quelle mit \"{}\" ersetzen", self.new_source.src))
+        protocol::LocalizedLabel::native(&format!("Replace source with \"{}\"", self.new_source.src), &format!("Quelle durch \"{}\" ersetzen", self.new_source.src))
     }
 
     fn target(&self) -> Vec<String> {

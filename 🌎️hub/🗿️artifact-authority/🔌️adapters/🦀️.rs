@@ -1,7 +1,7 @@
 //! 🔌️ Production adapters from the hub-owned artifact-authority ports to the live plugin host
 //! and registered artifact codecs.
 
-use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactIdentity};
+use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactIdentity, TrustedArtifactReplayCodec};
 use directory::os_directory::hex_lower;
 use directory::os_store::{document_codec, ArtifactCodec};
 use semio_framework_plugin_host::{PackageRef, PluginGraph};
@@ -67,6 +67,18 @@ impl TrustedArtifactCodec for PluginHostArtifactCodec {
         context.checkpoint()?;
         let encoded = directory::os_spr::encode_ops_vec(std::slice::from_ref(&operation.encoded));
         let (pack, spr, ops) = (self.codec.apply_ops_binary)(&pair.pack, &pair.spr, &encoded).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
+        if ops.len() > AUTHORITY_MAX_CODEC_TEXT_BYTES {
+            return Err(AuthorityError::ResourceLimit("codec text byte"));
+        }
+        context.checkpoint()?;
+        Ok(ArtifactPair { pack, spr })
+    }
+}
+
+impl TrustedArtifactReplayCodec for PluginHostArtifactCodec {
+    async fn replay_envelopes(&self, pair: ArtifactPair, envelopes: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        context.checkpoint()?;
+        let (pack, spr, ops) = (self.codec.replay_envelopes)(&pair.pack, &pair.spr, envelopes).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
         if ops.len() > AUTHORITY_MAX_CODEC_TEXT_BYTES {
             return Err(AuthorityError::ResourceLimit("codec text byte"));
         }

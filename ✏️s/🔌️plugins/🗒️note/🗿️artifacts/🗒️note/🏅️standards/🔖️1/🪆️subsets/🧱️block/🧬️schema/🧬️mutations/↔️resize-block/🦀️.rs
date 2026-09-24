@@ -34,7 +34,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ResizeBlock {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Resize block \"{}\"", self.id), &format!("Block \"{}\" skalieren", self.id))
+        protocol::LocalizedLabel::native(&format!("Resize block \"{}\"", self.id), &format!("Größe von Block \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -35,7 +35,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ReplaceNodeH
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace handle \"{}\" on node \"{}\"", self.handle_id, self.node_id), &format!("Griff \"{}\" auf Knoten \"{}\" ersetzen", self.handle_id, self.node_id))
+        protocol::LocalizedLabel::native(&format!("Replace handle \"{}\" on node \"{}\"", self.handle_id, self.node_id), &format!("Griff \"{}\" an Knoten \"{}\" ersetzen", self.handle_id, self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.clone(), self.handle_id.clone()]

@@ -3,8 +3,7 @@ use super::*;
 
 #[test]
 fn every_real_document_feature_row_is_observable_and_invertible() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf");
-    let base = std::fs::read(path).unwrap();
+    let base = include_bytes!("../../../../🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf").to_vec();
     let feature = include_str!("../../../🧪️tests/🖨️mutate-pdf-1-4-x/🥒️.feature");
     let rows = crate::law::feature_rows(feature);
     assert_eq!(rows.len(), KINDS.len());
@@ -23,7 +22,7 @@ fn every_real_document_feature_row_is_observable_and_invertible() {
 
 #[test]
 fn language_neutral_direct_vectors_match_independent_lopdf() {
-    use crate::standards::v1_4::subsets::base::{OraclePage, build_document, independent_pages};
+    use crate::artifacts::pdf::standards::v1_4::subsets::base::{OraclePage, build_document, independent_pages};
     use semio_repo_test_host::parse_json;
     let vectors =
         [include_str!("../../../🧫️fixtures/🧬️mutations/📐️set-page-size/🔄️round-trips-the-concrete-inverse/🔣️.json"), include_str!("../../../🧫️fixtures/🧬️mutations/📉️collapse-page-size/🔄️round-trips-the-concrete-inverse/🔣️.json")];

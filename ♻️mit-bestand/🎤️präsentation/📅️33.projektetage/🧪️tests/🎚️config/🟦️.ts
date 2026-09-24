@@ -30,8 +30,8 @@ export default defineConfig({
     mode: "test",
     environment: "node",
     include: [],
-    coverage: { include: ["🟦️.ts"] },
-    includeSource: ["🟦️.ts"],
+    coverage: { include: ["📦️index.ts", "🔖️spec.ts"] },
+    includeSource: ["📦️index.ts"],
     passWithNoTests: false,
   },
 });

@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeFCkMpa {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change concrete strength f_ck to {}", self.new_f_ck_mpa), &format!("Betonfestigkeitsf_ck auf {} ändern", self.new_f_ck_mpa))
+        protocol::LocalizedLabel::native(&format!("Change concrete strength f_ck to {}", self.new_f_ck_mpa), &format!("Betondruckfestigkeit f_ck auf {} ändern", self.new_f_ck_mpa))
     }
 }
 //#endregion 🔖️Payload

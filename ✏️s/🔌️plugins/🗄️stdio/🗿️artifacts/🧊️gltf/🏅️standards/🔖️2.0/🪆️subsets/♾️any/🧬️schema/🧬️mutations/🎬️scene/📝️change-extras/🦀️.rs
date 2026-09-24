@@ -69,7 +69,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneEx
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Scene Extra Data", "zusätzliche Szenendaten ändern")
+        protocol::LocalizedLabel::native("Change Scene Extra Data", "Zusatzdaten der Szene ändern")
     }
 
     fn target(&self) -> Vec<String> {

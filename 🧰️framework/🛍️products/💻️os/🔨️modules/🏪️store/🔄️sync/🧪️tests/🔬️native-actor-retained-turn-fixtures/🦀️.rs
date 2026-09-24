@@ -441,4 +441,26 @@ pub(super) mod retained_turn_fixtures {
         while handle.close_step() {}
         assert!(handle.terminal_is_empty());
     }
+
+    /// 🔌️ A native document actor is polled on a plain `WorkerPool` thread with no ambient Tokio
+    /// runtime, so its hub dial must find the socket reactor by itself: a timed TCP dial polled from a
+    /// thread that never entered a runtime completes under [`document_socket_io_reactor`]. Before, the
+    /// actor took whatever runtime its spawner was inside; the native wgpu shell spawns from a plain
+    /// thread, so the dial panicked `there is no reactor running` (two-user gate run 1, WG8).
+    #[test]
+    fn a_hub_dial_polled_off_any_runtime_is_driven_by_the_document_socket_reactor() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("loopback listener");
+        let address = listener.local_addr().expect("listener address");
+        let dialed = std::thread::spawn(move || {
+            let ambient = tokio::runtime::Handle::try_current().is_ok();
+            let reactor = document_socket_io_reactor().expect("the document socket reactor starts");
+            let _entered = reactor.enter();
+            let dialed = semio_framework_async::block_on(async move { tokio::time::timeout(Duration::from_secs(5), tokio::net::TcpStream::connect(address)).await.map(|stream| stream.is_ok()) });
+            (ambient, dialed)
+        })
+        .join()
+        .expect("the dialing thread returns");
+        assert_eq!(dialed, (false, Ok(true)), "no ambient runtime, and the dial completes on the document socket reactor");
+        assert!(listener.accept().is_ok(), "the listener saw the dial");
+    }
 }

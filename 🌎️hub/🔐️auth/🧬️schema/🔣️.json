@@ -429,7 +429,10 @@
           "type": "boolean"
         },
         "lastUsedAtMs": {
-          "type": ["integer", "null"],
+          "type": [
+            "integer",
+            "null"
+          ],
           "minimum": 0
         }
       },
@@ -894,6 +897,141 @@
           }
         }
       ]
+    },
+    "HubAccessRoleV1": {
+      "description": "A role a principal holds for one request: admin (an operator subject), owner (the space's owner), author/spectator (its membership), share (an exact document share token), authenticated (any signed-in user).",
+      "enum": [
+        "admin",
+        "owner",
+        "author",
+        "spectator",
+        "share",
+        "authenticated"
+      ]
+    },
+    "HubAccessActionV1": {
+      "description": "Every access decision the hub takes: directory commands, agent delegation, document read/write/check-in, artifact creation, and space blob read/write.",
+      "enum": [
+        "space.create",
+        "space.rename",
+        "space.visibility",
+        "space.archive",
+        "space.delete",
+        "member.upsert",
+        "member.remove",
+        "invite.create",
+        "invite.revoke",
+        "document.announce",
+        "document.read",
+        "document.write",
+        "document.check-in",
+        "artifact.create",
+        "blob.read",
+        "blob.write",
+        "agent.delegate"
+      ]
+    },
+    "HubAccessGrantV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "roles",
+        "actions"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/HubAccessRoleV1"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/HubAccessActionV1"
+          }
+        },
+        "spaceKinds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "atelier",
+              "studio",
+              "archive"
+            ]
+          }
+        }
+      }
+    },
+    "HubAccessPolicyV1": {
+      "description": "The hub's one declared access policy: closed by default, deny overrides allow, a grant limited to spaceKinds applies only in spaces of those kinds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "grants"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.access-policy/v1"
+        },
+        "grants": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/HubAccessGrantV1"
+          }
+        }
+      }
+    },
+    "HubAccessDecisionVectorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "roles",
+        "action",
+        "permitted"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "roles": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/HubAccessRoleV1"
+          }
+        },
+        "action": {
+          "$ref": "#/$defs/HubAccessActionV1"
+        },
+        "spaceKind": {
+          "enum": [
+            "atelier",
+            "studio",
+            "archive"
+          ]
+        },
+        "permitted": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

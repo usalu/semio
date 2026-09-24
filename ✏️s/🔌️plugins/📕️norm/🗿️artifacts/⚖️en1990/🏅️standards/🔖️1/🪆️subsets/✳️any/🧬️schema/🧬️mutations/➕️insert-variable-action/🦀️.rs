@@ -24,7 +24,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for InsertVariableAc
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Insert variable action \"{}\" ({}) at #{}", self.category, self.value, self.index), &format!("Variablenaktion \"{}\" ({}) an #{} einfügen", self.category, self.value, self.index))
+        protocol::LocalizedLabel::native(&format!("Insert variable action \"{}\" ({}) at #{}", self.category, self.value, self.index), &format!("Veränderliche Einwirkung \"{}\" ({}) an #{} einfügen", self.category, self.value, self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

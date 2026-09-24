@@ -16,13 +16,14 @@ workspace = true
 
 [[test]]
 name = "fixture_sweep"
-path = "../../🧪️tests/🧹️fixture-sweep/🦀️.rs"
+path = "../../🧪️tests/🔬️fleet-example-sweep/🦀️.rs"
 
 [dependencies]
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-artifact-space-space = { workspace = true }
 semio-framework-artifact-space-collection = { workspace = true }
+semio-framework-artifact-workflow-workflow = { workspace = true }
 semio-s-artifact-animate-presentation = { workspace = true }
 semio-s-artifact-block-2d = { workspace = true }
 semio-s-artifact-block-3d = { workspace = true }

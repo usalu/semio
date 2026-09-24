@@ -84,7 +84,7 @@
     {
       "id": "semantic-svg-1-1-v1",
       "description": "SVG 1.1 mutation round trips compared structurally: element/text/CDATA/comment/PI tree shape and content exact, attributes compared as a name-sorted set (SVG attribute order is real writer freedom -- see this subset's own `write_svg_xml`, which never claims to preserve source attribute order beyond update-in-place), and the `viewBox`/`transform` attribute values specifically decomposed into typed numeric geometry (never compared as raw strings) with a small absolute tolerance for cross-implementation float-formatting noise between quick-xml's writer and this subset's own. Self-closing vs explicit empty open/close tags are equivalent by construction (both parse to zero children) and never distinguished by either side.",
-      "tolerance": 1e-9,
+      "tolerance": 1e-09,
       "ignoreKeys": []
     },
     {
@@ -273,12 +273,13 @@
           "capability": "svg-1-1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-element",
             "bridgeVersion": 1,
-            "variant": "InsertElementPayload"
+            "variant": "InsertElement"
           },
           "oracleRequirements": [
             {
@@ -293,12 +294,13 @@
           "capability": "svg-1-1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-element",
             "bridgeVersion": 1,
-            "variant": "RemoveElementPayload"
+            "variant": "RemoveElement"
           },
           "oracleRequirements": [
             {
@@ -313,12 +315,13 @@
           "capability": "svg-1-1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-attribute",
             "bridgeVersion": 1,
-            "variant": "SetAttributePayload"
+            "variant": "SetAttribute"
           },
           "oracleRequirements": [
             {
@@ -338,7 +341,7 @@
           "productionDispatch": {
             "operation": "set-declaration",
             "bridgeVersion": 1,
-            "variant": "SetDeclarationPayload"
+            "variant": "SetDeclaration"
           },
           "oracleRequirements": [
             {
@@ -358,7 +361,7 @@
           "productionDispatch": {
             "operation": "set-doctype",
             "bridgeVersion": 1,
-            "variant": "SetDoctypePayload"
+            "variant": "SetDoctype"
           },
           "oracleRequirements": [
             {
@@ -373,12 +376,13 @@
           "capability": "svg-1-1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-element-name",
             "bridgeVersion": 1,
-            "variant": "SetElementNamePayload"
+            "variant": "SetElementName"
           },
           "oracleRequirements": [
             {
@@ -393,12 +397,13 @@
           "capability": "svg-1-1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-text",
             "bridgeVersion": 1,
-            "variant": "SetTextPayload"
+            "variant": "SetText"
           },
           "oracleRequirements": [
             {
@@ -413,12 +418,13 @@
           "capability": "svg-1-1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-transform",
             "bridgeVersion": 1,
-            "variant": "SetTransformPayload"
+            "variant": "SetTransform"
           },
           "oracleRequirements": [
             {
@@ -433,12 +439,13 @@
           "capability": "svg-1-1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-view-box",
             "bridgeVersion": 1,
-            "variant": "SetViewBoxPayload"
+            "variant": "SetViewBox"
           },
           "oracleRequirements": [
             {

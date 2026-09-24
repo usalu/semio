@@ -11,17 +11,6 @@
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::base::{oracle_apply_mutation, oracle_round_trip, project_shared_string_pool, project_xlsx_workbook, shared_string_inverse_spec};
 
-//#region 🔖️Kinds
-/// 🧾️ Test-case-local mirror of the `xlsx-ecma-376-base` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that
-/// module lives in the SUBJECT crate, and the oracle role must not link the subject crate at all
-/// (fleet brief §5.3), while this loop registers handlers for both roles from one list. That other
-/// `KINDS` carries its own test proving it matches the enum AND the catalog manifest; a mismatch
-/// HERE against either one is caught structurally instead — the contract phase fails with
-/// `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits or invents a kind, and the
-/// runner fails every unregistered scenario id outright (`adapter has no {role} registration`).
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-sheet", "remove-sheet", "rename-sheet", "set-cell", "remove-cell", "insert-shared-string", "remove-shared-string", "set-shared-string"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://📕️reuse-marketplaces.xlsx";
@@ -288,7 +277,7 @@ mod subject {
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation;
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
-    use crate::{XlsxMutation, XlsxSnapshot};
+    use semio_s_artifact_stdio_xlsx::{XlsxMutation, XlsxSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::base::{project_shared_string_pool, project_xlsx_workbook};
 
     /// 📑️ The SAME projector choice the oracle half makes for the same scenario id, and it has to
@@ -422,12 +411,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

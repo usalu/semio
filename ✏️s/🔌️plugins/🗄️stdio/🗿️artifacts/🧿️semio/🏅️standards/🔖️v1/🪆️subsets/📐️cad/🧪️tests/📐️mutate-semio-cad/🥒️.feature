@@ -74,7 +74,6 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
     Then the independent implementation and the subject agree on the resulting snapshot
     Examples:
       | id                        | mutation                                                                                                                                                                                       |
-      | no-mutation               | {"mutation":"noMutation"}                                                                                                                                                                      |
       | set-snapshot              | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.cad","layers":[{"name":"0","colorIndex":7,"lineType":"CONTINUOUS","visible":true}],"blocks":[],"entities":[]}}                     |
       | add-layer                 | {"mutation":"addLayer","layer":{"name":"hidden","colorIndex":8,"lineType":"HIDDEN","visible":false}}                                                                                           |
       | remove-layer              | {"mutation":"removeLayer","name":"dim"}                                                                                                                                                        |
@@ -91,6 +90,17 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
       | set-block-entity-layer    | {"mutation":"setBlockEntityLayer","block_name":"door","handle":"be1","layer":"dim"}                                                                                                            |
       | set-block-entity-geometry | {"mutation":"setBlockEntityGeometry","block_name":"door","handle":"be1","entity":{"kind":"arc","center":{"x":0.0,"y":0.0},"radius":1.0,"start_angle":0.0,"end_angle":90.0}}                    |
 
+  @id-no-mutation-baseline-mutate
+  @level-exhaustive
+  @mode-differential
+  Scenario: Apply no-mutation to the real committed drawing
+    Given the real committed drawing asset://📐️drawing/🗣️.dsl.semio
+    When the no-mutation mutation is applied to the drawing parsed from it
+      """
+      {"mutation":"noMutation"}
+      """
+    Then the independent implementation and the subject agree on the resulting snapshot
+
   @id-inverse
   @level-exhaustive
   @mode-differential
@@ -103,7 +113,6 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
     Then both sides restore the drawing and agree on the mutated and the restored snapshot
     Examples:
       | id                        | mutation                                                                                                                                                                                       |
-      | no-mutation               | {"mutation":"noMutation"}                                                                                                                                                                      |
       | set-snapshot              | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.cad","layers":[{"name":"0","colorIndex":7,"lineType":"CONTINUOUS","visible":true}],"blocks":[],"entities":[]}}                     |
       | add-layer                 | {"mutation":"addLayer","layer":{"name":"hidden","colorIndex":8,"lineType":"HIDDEN","visible":false}}                                                                                           |
       | remove-layer              | {"mutation":"removeLayer","name":"dim"}                                                                                                                                                        |
@@ -119,6 +128,17 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
       | remove-block-entity       | {"mutation":"removeBlockEntity","block_name":"door","handle":"be1"}                                                                                                                            |
       | set-block-entity-layer    | {"mutation":"setBlockEntityLayer","block_name":"door","handle":"be1","layer":"dim"}                                                                                                            |
       | set-block-entity-geometry | {"mutation":"setBlockEntityGeometry","block_name":"door","handle":"be1","entity":{"kind":"arc","center":{"x":0.0,"y":0.0},"radius":1.0,"start_angle":0.0,"end_angle":90.0}}                    |
+
+  @id-no-mutation-baseline-inverse
+  @level-exhaustive
+  @mode-differential
+  Scenario: Undoing no-mutation restores the real committed drawing
+    Given the real committed drawing asset://📐️drawing/🗣️.dsl.semio
+    When the no-mutation mutation is applied to the drawing parsed from it and each side undoes it with its own computed inverse
+      """
+      {"mutation":"noMutation"}
+      """
+    Then both sides restore the drawing and agree on the mutated and the restored snapshot
 
   @id-spec-vector
   @level-exhaustive

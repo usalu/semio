@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteAuditEvent {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete audit event \"{}\"", self.id.0), &format!("Prüfungsereignis \"{}\" löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete audit event \"{}\"", self.id.0), &format!("Audit-Ereignis \"{}\" löschen", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

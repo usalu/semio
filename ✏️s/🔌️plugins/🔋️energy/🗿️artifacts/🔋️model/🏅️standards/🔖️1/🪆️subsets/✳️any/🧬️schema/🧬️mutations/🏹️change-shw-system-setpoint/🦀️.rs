@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Shw System Setpoint of service hot water system {}", self.id.0), &format!("Shwsystemsollwert von Dienstheißwassersystem {} ändern", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Change Shw System Setpoint of service hot water system {}", self.id.0), &format!("Sollwert von Trinkwarmwasseranlage {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

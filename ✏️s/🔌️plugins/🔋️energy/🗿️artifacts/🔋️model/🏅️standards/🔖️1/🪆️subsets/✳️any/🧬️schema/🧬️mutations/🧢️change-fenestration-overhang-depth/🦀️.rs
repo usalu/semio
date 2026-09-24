@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fenestration {} overhang depth to {} m", self.id.0, self.new_overhang_depth_m), &format!("Fenster {} Auskragungstiefe auf {} m ändern", self.id.0, self.new_overhang_depth_m))
+        protocol::LocalizedLabel::native(&format!("Change fenestration {} overhang depth to {} m", self.id.0, self.new_overhang_depth_m), &format!("Überstandstiefe von Fenster {} auf {} m ändern", self.id.0, self.new_overhang_depth_m))
     }
 
     fn target(&self) -> Vec<String> {

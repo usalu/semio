@@ -1009,6 +1009,14 @@ class CatalogRootScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("bench", BenchScript).register("describe", DescribeScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript).register("home-io-surface", HomeIoSurfaceScript);
+/** 🧬️ Regenerates this plugin's committed native-codec projection `packSchemaHash` column from the live Rust
+ * receipts (`os_pack::schema_hash`); the same test, run without the write mode, is the projection-equals-receipts law. */
+class NativeCodecProjectionScript extends BundleScript {
+  run(): void {
+    runCmd("cargo", ["test", "-p", "semio-s-plugin-stdio", "--features", "full-artifact-catalog", "--test", "native_openable_provider", "--", "native_codec_projection_pack_schema_hashes_equal_live_receipts", "--exact"], { cwd: this.repoRoot, env: devToolingEnv({ SEMIO_NATIVE_CODEC_PROJECTION: "write", CARGO_INCREMENTAL: "0" }), budgetMs: buildBudgetMs() });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("native-codec-projection", NativeCodecProjectionScript).register("test", TestScript).register("bench", BenchScript).register("describe", DescribeScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript).register("home-io-surface", HomeIoSurfaceScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

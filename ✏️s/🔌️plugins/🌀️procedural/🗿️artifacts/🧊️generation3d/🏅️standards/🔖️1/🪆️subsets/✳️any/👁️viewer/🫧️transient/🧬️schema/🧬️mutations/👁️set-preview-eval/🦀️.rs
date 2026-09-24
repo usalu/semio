@@ -25,7 +25,7 @@ impl protocol::MutationKind<Generation3dViewTransient, Generation3dViewTransient
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Preview Eval", "Vorschaueval setzen")
+        protocol::LocalizedLabel::native("Set Preview Eval", "Vorschauauswertung setzen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -25,7 +25,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateStory {
         inverse_create_story(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create story \"{}\"", self.story.id), &format!("Geschoss \"{}\" erstellen", self.story.id))
+        protocol::LocalizedLabel::native(&format!("Create story \"{}\"", self.story.id), &format!("Textfluss \"{}\" erstellen", self.story.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.story.id.clone()]

@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeIdaCla
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change indoor air quality class to \"{}\"", self.new_ida_class), &format!("Innenluftqualitätsklasse auf \"{}\" ändern", self.new_ida_class))
+        protocol::LocalizedLabel::native(&format!("Change indoor air quality class to \"{}\"", self.new_ida_class), &format!("Raumluftqualitätsklasse auf \"{}\" ändern", self.new_ida_class))
     }
 }
 //#endregion 🔖️ChangeIdaClass

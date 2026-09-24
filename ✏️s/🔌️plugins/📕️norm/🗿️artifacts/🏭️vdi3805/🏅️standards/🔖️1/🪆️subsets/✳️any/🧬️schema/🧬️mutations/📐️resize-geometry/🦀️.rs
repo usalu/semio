@@ -21,7 +21,7 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ResizeGeometry
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Resize geometry \"{}\"", self.id), &format!("Geometrie \"{}\" skalieren", self.id))
+        protocol::LocalizedLabel::native(&format!("Resize geometry \"{}\"", self.id), &format!("Größe von Geometrie \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

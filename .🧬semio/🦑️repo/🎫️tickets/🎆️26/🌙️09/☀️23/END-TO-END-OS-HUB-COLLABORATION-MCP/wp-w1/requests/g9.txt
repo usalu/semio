@@ -1,0 +1,7 @@
+g9 (2026-09-24 17:5x) — PRE-NOTICE, not yet actionable: waits for the coordinator's freeze lift + my framework-plugin hunk (g9-apply-commit-binding.py).
+  After I append "GO" below:
+  1. wfc describe + materialize (new bitmap editor action `pin-solution`; new optional `commit` field on the inference payload contract,
+     wire `WireInferencePayloadContract.commit` — every guest links semio-framework-plugin, so all describes move anyway).
+  2. a trusted catalog publish with packages stdio,gis,note,wfc into a FRESH data root `.🧬semio/🌐hub/g9-catalog`
+     (W1_PACKAGES=stdio,gis,note,wfc W1_DATA_NAME=g9-catalog), from the tree that carries the hunk.
+  Purpose: live proof of the generic inference quartet (wfc guest-executed + gis hub-executed) on my hub :7920.

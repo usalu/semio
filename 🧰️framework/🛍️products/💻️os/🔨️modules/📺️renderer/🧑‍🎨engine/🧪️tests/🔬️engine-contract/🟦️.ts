@@ -4833,7 +4833,7 @@ describe("framework renderer hosts", () => {
         const onAction = vi.fn();
         const view = render(createElement(FlowGraphCanvasHost, {
           scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostSnapshotJson: '{"schema":"flow.host_snapshot","widgets":[]}' },
-          controllerId: item.controllerId, surfaceId: item.surfaceId, editable: true, onAction,
+          controllerId: item.controllerId, surfaceId: item.surfaceId, editable: true, keyboardPort: { current: null }, onAction,
         }));
         await waitFor(() => expect(view.getByRole("slider", { name: item.label })).toBeTruthy());
         const slider = view.getByRole("slider", { name: item.label });
@@ -4903,6 +4903,7 @@ describe("framework renderer hosts", () => {
       controllerId: `flow.${id}`,
       surfaceId: `flow.${id}`,
       editable: true,
+      keyboardPort: { current: null },
       onAction: vi.fn(),
     });
     const pair = (revision: number) => createElement("div", {}, host("A", revision), host("B", revision));
@@ -4950,6 +4951,7 @@ describe("framework renderer hosts", () => {
       controllerId: `flow.late.${id}`,
       surfaceId: `flow.late.${id}`,
       editable: true,
+      keyboardPort: { current: null },
       onAction: vi.fn(),
     });
     const first = render(host("A", 0));
@@ -11387,7 +11389,7 @@ describe("node-graph surface sizing", () => {
     vi.stubGlobal("devicePixelRatio", 2);
     const view = render(createElement(FlowGraphCanvasHost, {
       scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostSnapshotJson: '{"schema":"flow.host_snapshot","widgets":[]}' },
-      controllerId: "procedural", surfaceId: "procedural.main", editable: true, onAction: noopAction,
+      controllerId: "procedural", surfaceId: "procedural.main", editable: true, keyboardPort: { current: null }, onAction: noopAction,
     }));
     try {
       const canvases = [...view.container.querySelectorAll("canvas")];
@@ -11463,7 +11465,7 @@ describe("node-graph surface attachment in a hidden tab", () => {
     vi.stubGlobal("devicePixelRatio", 1);
     const view = render(createElement(FlowGraphCanvasHost, {
       scene: hexagonalMushroomColumnScene(),
-      controllerId: "procedural", surfaceId: "procedural.main", editable: true, onAction: noopAction,
+      controllerId: "procedural", surfaceId: "procedural.main", editable: true, keyboardPort: { current: null }, onAction: noopAction,
     }));
     try {
       expect(globalThis.navigator.gpu).toBeUndefined();
@@ -11525,7 +11527,7 @@ describe("node-graph surface attachment in a hidden tab", () => {
     vi.stubGlobal("devicePixelRatio", 1);
     const view = render(createElement(FlowGraphCanvasHost, {
       scene: hexagonalMushroomColumnScene(),
-      controllerId: "procedural", surfaceId: "procedural.main", editable: true, onAction: noopAction,
+      controllerId: "procedural", surfaceId: "procedural.main", editable: true, keyboardPort: { current: null }, onAction: noopAction,
     }));
     try {
       const first = view.container.querySelectorAll("canvas")[0]!;
@@ -11581,7 +11583,7 @@ describe("node-graph surface attachment in a hidden tab", () => {
     const sceneFor = (statusJson: string) => ({ ...hexagonalMushroomColumnScene(), statusJson });
     const view = render(createElement(FlowGraphCanvasHost, {
       scene: sceneFor(retention.refreshes[0]!.statusJson),
-      controllerId: "29", surfaceId: retention.surface, editable: true, onAction: noopAction,
+      controllerId: "29", surfaceId: retention.surface, editable: true, keyboardPort: { current: null }, onAction: noopAction,
     }));
     try {
       await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.attachSurface));
@@ -11591,7 +11593,7 @@ describe("node-graph surface attachment in a hidden tab", () => {
         // measured refresh). A host that re-attached on it would fail here and nowhere else.
         view.rerender(createElement(FlowGraphCanvasHost, {
           scene: sceneFor(refresh.statusJson),
-          controllerId: String(29 + index * 2), surfaceId: retention.surface, editable: true, onAction: noopAction,
+          controllerId: String(29 + index * 2), surfaceId: retention.surface, editable: true, keyboardPort: { current: null }, onAction: noopAction,
         }));
         await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.synchronizeSnapshotJson));
       }

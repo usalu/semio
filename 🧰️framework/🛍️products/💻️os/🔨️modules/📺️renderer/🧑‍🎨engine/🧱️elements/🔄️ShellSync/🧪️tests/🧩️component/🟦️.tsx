@@ -14,7 +14,8 @@
 import { cleanup, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it } from "vitest";
 import { type ArtifactSyncStatus } from "@semio-tech/framework-os";
-import { HubConnectionIndicator, hubConnectionSummaryV1, syncStatusLabelV1, type SyncStatusTextsV1 } from "../../🟦️.tsx";
+import { HubConnectionIndicator, hubConnectionSummaryV1, syncStatusLabelV1, type HubLinkV1, type HubSessionPresenceV1, type SyncStatusTextsV1 } from "../../🟦️.tsx";
+import hubSummary from "../../🧫️fixtures/📶️hub-connection-summary.json";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Fixtures
@@ -60,24 +61,14 @@ describe("syncStatusLabelV1", () => {
 //#endregion 🔖️SyncStatusLabel
 
 //#region 🔖️HubConnectionSummary
+/** 🧪️ Replayed from the language-agnostic fixture `🧫️fixtures/📶️hub-connection-summary.json` (slice U5 added the
+ * session link: a verified session that stops answering reads `reconnecting` without a single document). */
 describe("hubConnectionSummaryV1", () => {
-  it("is offline with nothing attached — not a false 'live'", () => {
-    expect(hubConnectionSummaryV1([], "none")).toEqual({ state: "offline", peerCount: 0, documentCount: 0 });
-  });
-
-  it("reports signedOut ahead of any transport state, because no transport state means anything without a session", () => {
-    expect(hubConnectionSummaryV1([status({ kind: "live", peerCount: 4 })], "signedOut")).toEqual({ state: "signedOut", peerCount: 0, documentCount: 1 });
-  });
-
-  it("lets one live document carry the aggregate, and reports the busiest document's peers (never a double-counting sum)", () => {
-    const summary = hubConnectionSummaryV1([status({ kind: "detached" }), status({ kind: "live", peerCount: 2 }), status({ kind: "live", peerCount: 5 })], "signedIn");
-    expect(summary).toEqual({ state: "live", peerCount: 5, documentCount: 3 });
-  });
-
-  it("prefers a document still dialling over one already in backoff", () => {
-    expect(hubConnectionSummaryV1([status({ kind: "backoff", retryInMs: 800 }), status({ kind: "connecting" })], "none").state).toBe("connecting");
-    expect(hubConnectionSummaryV1([status({ kind: "backoff", retryInMs: 800 }), status({ kind: "detached" })], "none").state).toBe("reconnecting");
-  });
+  for (const row of hubSummary.cases) {
+    it(row.name, () => {
+      expect(hubConnectionSummaryV1(row.remotes.map((remote) => status(remote as ArtifactSyncStatus["remote"])), row.session as HubSessionPresenceV1, row.link as HubLinkV1)).toEqual(row.expected);
+    });
+  }
 });
 //#endregion 🔖️HubConnectionSummary
 
@@ -86,7 +77,7 @@ describe("HubConnectionIndicator", () => {
   afterEach(cleanup);
 
   it("announces itself as a status region with a text label, never colour alone", () => {
-    render(<HubConnectionIndicator statuses={[status({ kind: "backoff", retryInMs: 500 })]} session="none" />);
+    render(<HubConnectionIndicator statuses={[status({ kind: "backoff", retryInMs: 500 })]} session="signedIn" link="reachable" />);
     const badge = screen.getByRole("status");
     expect(badge.getAttribute("data-semio-hub-connection")).toBe("reconnecting");
     expect(badge.getAttribute("aria-live")).toBe("polite");
@@ -95,21 +86,29 @@ describe("HubConnectionIndicator", () => {
   });
 
   it("carries the attached-document count and the live peer count", () => {
-    render(<HubConnectionIndicator statuses={[status({ kind: "live", peerCount: 1 })]} session="signedIn" />);
+    render(<HubConnectionIndicator statuses={[status({ kind: "live", peerCount: 1 })]} session="signedIn" link="reachable" />);
     const badge = screen.getByRole("status");
     expect(badge.getAttribute("data-hub-connection-documents")).toBe("1");
     expect(badge.textContent).toContain("1 peer");
   });
 
+  it("reads a short shortage of the session link as reconnecting and recovers to online", () => {
+    const { rerender } = render(<HubConnectionIndicator statuses={[]} session="signedIn" link="unreachable" />);
+    expect(screen.getByRole("status").getAttribute("data-semio-hub-connection")).toBe("reconnecting");
+    rerender(<HubConnectionIndicator statuses={[]} session="signedIn" link="reachable" />);
+    expect(screen.getByRole("status").getAttribute("data-semio-hub-connection")).toBe("online");
+  });
+
   it("offers the sign-in entry point only when signed out AND an opener exists", () => {
-    render(<HubConnectionIndicator statuses={[]} session="signedOut" onSignIn={() => {}} />);
+    render(<HubConnectionIndicator statuses={[]} session="signedOut" link="verifying" onSignIn={() => {}} />);
     expect(document.querySelector("[data-semio-hub-sign-in]")).not.toBeNull();
     cleanup();
-    render(<HubConnectionIndicator statuses={[]} session="signedOut" />);
+    render(<HubConnectionIndicator statuses={[]} session="signedOut" link="verifying" />);
     expect(document.querySelector("[data-semio-hub-sign-in]")).toBeNull();
     cleanup();
-    render(<HubConnectionIndicator statuses={[]} session="none" onSignIn={() => {}} />);
+    render(<HubConnectionIndicator statuses={[]} session="none" link="verifying" onSignIn={() => {}} />);
     expect(document.querySelector("[data-semio-hub-sign-in]")).toBeNull();
+    expect(screen.getByRole("status").getAttribute("data-semio-hub-connection")).toBe("local");
   });
 });
 //#endregion 🔖️HubConnectionIndicator

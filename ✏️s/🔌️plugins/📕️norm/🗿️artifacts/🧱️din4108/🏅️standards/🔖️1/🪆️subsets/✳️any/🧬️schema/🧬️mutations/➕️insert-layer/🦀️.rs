@@ -22,7 +22,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for InsertLayer {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Insert layer at #{}", self.index), &format!("Ebene an #{} einfügen", self.index))
+        protocol::LocalizedLabel::native(&format!("Insert layer at #{}", self.index), &format!("Schicht an #{} einfügen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

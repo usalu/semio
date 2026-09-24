@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change sizing object {} sizing type to {:?}", self.id.0, self.new_sizing_type), &format!("Auslegungsobjekt {} Auslegungstyp auf {:?} ändern", self.id.0, self.new_sizing_type))
+        protocol::LocalizedLabel::native(&format!("Change sizing object {} sizing type to {:?}", self.id.0, self.new_sizing_type), &format!("Auslegungsart von Auslegungsobjekt {} auf {:?} ändern", self.id.0, self.new_sizing_type))
     }
 
     fn target(&self) -> Vec<String> {

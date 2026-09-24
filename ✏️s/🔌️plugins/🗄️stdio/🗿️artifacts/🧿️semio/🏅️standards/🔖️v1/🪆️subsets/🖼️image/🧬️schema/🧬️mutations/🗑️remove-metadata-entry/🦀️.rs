@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for RemoveMe
         agg_inverse(&SemioImageMutation::RemoveMetadataEntry(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-metadata-entry", "Metadateneintrag entfernen")
+        protocol::LocalizedLabel::native("Remove metadata entry", "Metadateneintrag entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

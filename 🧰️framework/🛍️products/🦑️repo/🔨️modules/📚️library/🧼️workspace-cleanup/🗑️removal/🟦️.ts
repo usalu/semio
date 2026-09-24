@@ -10,7 +10,6 @@ import {
   cleanDiscoverTicketFolders,
   cleanDiscoverTicketRoots,
   cleanGitignoredMapForTicketRoots,
-  cleanOpenTicketOversizedFileRemovals,
   cleanOversizedIgnoredRemovals,
   cleanPathBytes,
   cleanTicketGeneratedOutputRemovals,
@@ -26,12 +25,11 @@ import {
   cleanRemovalProtection,
   cleanTicketFolderForPath,
   cleanTicketGeneratedOutputTicketRoot,
-  cleanTicketManifestIsClosed,
 } from "../🛡️protection/🟦️.ts";
 
-export function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[], allowTicketGeneratedOutput = false, allowWindowsIllegal = false): boolean {
+export function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[], allowTicketCleanup = false, allowWindowsIllegal = false): boolean {
   const allowedOpenTicket =
-    (allowTicketGeneratedOutput ? cleanTicketGeneratedOutputTicketRoot(root, abs) ?? cleanTicketFolderForPath(root, abs) : undefined) ??
+    (allowTicketCleanup ? cleanTicketGeneratedOutputTicketRoot(root, abs) ?? cleanTicketFolderForPath(root, abs) : undefined) ??
     (allowWindowsIllegal ? cleanTicketFolderForPath(root, abs) : undefined);
   const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
   if (cleanIntersectsProtected(abs, applicablePrefixes) || (!allowedOpenTicket && cleanRemovalProtection(root, abs, CLEAN_PROTECTION_VIEW, allowedOpenTicket).length !== 0)) return false;
@@ -51,7 +49,6 @@ export function runWorkspaceClean(root: string, dry: boolean): { removals: Clean
   const protectedPrefixes = cleanProtectedPrefixes(root);
   const ticketRoots = cleanDiscoverTicketRoots(root);
   const ticketFolders = ticketRoots.flatMap(cleanDiscoverTicketFolders);
-  for (const folder of ticketFolders) if (!cleanTicketManifestIsClosed(folder, CLEAN_PROTECTION_VIEW)) protectedPrefixes.push(resolve(folder));
   const skippedProtected = protectedPrefixes.filter((p) => existsSync(p)).map((p) => relative(root, p) || p);
   const pending: CleanRemoval[] = [];
   pending.push(...cleanCollectMisplaced(root, protectedPrefixes));
@@ -61,10 +58,7 @@ export function runWorkspaceClean(root: string, dry: boolean): { removals: Clean
   const gitignoredMap = cleanGitignoredMapForTicketRoots(root, ticketRoots);
   for (const ticketFolder of ticketFolders) {
     pending.push(...cleanTicketGeneratedOutputRemovals(root, ticketFolder, protectedPrefixes));
-    if (cleanIsProtected(ticketFolder, protectedPrefixes) || !cleanTicketManifestIsClosed(ticketFolder, CLEAN_PROTECTION_VIEW)) {
-      pending.push(...cleanOpenTicketOversizedFileRemovals(root, ticketFolder, protectedPrefixes));
-      continue;
-    }
+    if (cleanIsProtected(ticketFolder, protectedPrefixes)) continue;
     const gitignored = gitignoredMap.get(resolve(ticketFolder)) ?? [];
     for (const abs of gitignored) {
       if (!existsSync(abs) || cleanIntersectsProtected(abs, protectedPrefixes)) continue;
@@ -76,7 +70,8 @@ export function runWorkspaceClean(root: string, dry: boolean): { removals: Clean
   const candidates = cleanProjectRemovals(root, pending, protectedPrefixes, CLEAN_PROTECTION_VIEW, (path) => skippedProtected.push(relative(root, path) || path));
   const removals: CleanRemoval[] = [];
   for (const row of candidates) {
-    if (cleanRemovePath(root, resolve(root, row.path), dry, protectedPrefixes, row.kind === "ticket-generated", row.kind === "windows-illegal")) removals.push(row);
+    const ticketCleanup = row.kind === "ticket-generated" || row.kind === "ticket-file" || row.kind === "ticket-dir" || row.kind === "gitignore";
+    if (cleanRemovePath(root, resolve(root, row.path), dry, protectedPrefixes, ticketCleanup, row.kind === "windows-illegal")) removals.push(row);
     else skippedProtected.push(row.path);
   }
   return { removals, skippedProtected };

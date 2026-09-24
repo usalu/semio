@@ -100,7 +100,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-layout",
@@ -119,7 +121,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-master",
@@ -138,7 +142,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-shape",
@@ -157,7 +163,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-slide",
@@ -176,7 +184,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-layout",
@@ -195,7 +205,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-master",
@@ -214,7 +226,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-shape",
@@ -233,7 +247,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-slide",
@@ -252,7 +268,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-layout-master",
@@ -271,7 +289,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-shape-frame",
@@ -290,7 +310,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-slide-layout",
@@ -309,7 +331,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-slide-notes",
@@ -328,7 +352,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -347,7 +373,9 @@
           "capability": "semio-v1-presentation-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-text-box-blocks",

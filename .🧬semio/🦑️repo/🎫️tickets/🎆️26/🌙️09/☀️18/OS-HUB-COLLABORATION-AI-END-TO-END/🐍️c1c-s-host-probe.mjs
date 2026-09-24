@@ -10,7 +10,13 @@
  * the landing window publishes a live, EMPTY surface signed out, with the shell's sign-in call to
  * action beside it and no space rows; the rows arriving after the sign-in are check 2's business.
  *
+ * 🧭️ Checks 4–5 were added by S3 (session 10, 2026-09-24, G11 §C): the `/hub` deep link is the one
+ * hub surface that exists ONLY in host mode (`applyShellUri`'s `hostMode` guard), so it is driven here,
+ * inside `s`, by navigation; and a space the hub already lists is opened from the workspace, read-only
+ * (nothing is created on the hub).
+ *
  * Usage: bun 🐍️c1c-s-host-probe.mjs <uiOrigin> <hubOrigin> [users]
+ *   C1C_EMAIL / C1C_PASSWORD  replace the first account (a hub provisioned with other credentials)
  */
 import { chromium } from "playwright";
 import { fileURLToPath } from "node:url";
@@ -20,7 +26,7 @@ const hubOrigin = process.argv[3] ?? "http://127.0.0.1:7501";
 const users = Number(process.argv[4] ?? 1);
 const IDENTITY_FAULT = "s.home.session-identity-required";
 const ACCOUNTS = [
-  { email: "user1@semio.dev", password: "collab e2e first human phrase" },
+  { email: process.env.C1C_EMAIL ?? "user1@semio.dev", password: process.env.C1C_PASSWORD ?? "collab e2e first human phrase" },
   { email: "user2@semio.dev", password: "collab e2e second human phrase" },
 ];
 
@@ -42,6 +48,44 @@ const census = (page) =>
     signInOffered: document.querySelectorAll('[data-semio-hub-sign-in=""]').length,
     ids: [...document.querySelectorAll("[id]")].map((element) => element.id).filter((id) => id.startsWith("s-")),
   }), IDENTITY_FAULT);
+
+/** 🧭️ Checks 4–5: the host-mode `/hub` route, and opening a space the hub already lists. */
+async function hubRouteAndSpace(page, label) {
+  await page.goto(`${uiOrigin}/hub`, { waitUntil: "domcontentloaded", timeout: 300_000 });
+  const workspace = page.locator("[data-semio-hub-workspace]");
+  await workspace.waitFor({ state: "visible", timeout: 180_000 }).catch(() => undefined);
+  await page.waitForFunction(() => document.querySelector('[id="s-home-main"]') !== null, undefined, { timeout: 180_000 }).catch(() => undefined);
+  await page.waitForTimeout(6_000);
+  const onHub = await page.evaluate(() => ({
+    route: location.pathname,
+    overlay: document.querySelectorAll("[data-semio-hub-workspace]").length,
+    homeSurface: document.querySelector('[id="s-home-main"]') !== null,
+    signInOffered: document.querySelectorAll('[data-semio-hub-sign-in=""]').length,
+    openSpaces: [...document.querySelectorAll('[data-semio-hub-workspace] button[aria-label^="Open "]')].map((button) => button.getAttribute("aria-label")),
+    workspaceText: (document.querySelector("[data-semio-hub-workspace]")?.innerText ?? "").replace(/\s+/gu, " ").slice(0, 400),
+  }));
+  console.log(`[${label}] /hub: ${JSON.stringify(onHub)}`);
+  await page.screenshot({ path: fileURLToPath(new URL(`./🗑️generated/c1c-s-host-${label}-hub-route.png`, import.meta.url)) });
+  check("4 /hub opens the hub workspace over the host app", [onHub.route, onHub.overlay > 0, onHub.homeSurface], ["/hub", true, true]);
+  check("4 the session survives the /hub reload", onHub.signInOffered, 0);
+  if (onHub.openSpaces.length === 0) {
+    console.log(`[${label}] no space listed on this hub — opening one is not observable read-only (nothing created)`);
+    return;
+  }
+  const windowsBefore = await page.evaluate(() => [...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id")));
+  await workspace.locator('button[aria-label^="Open "]').first().click({ timeout: 30_000 }).catch((error) => console.log(`[${label}] open click: ${String(error).slice(0, 160)}`));
+  await page.waitForTimeout(20_000);
+  const opened = await page.evaluate(() => ({
+    route: location.pathname,
+    overlay: document.querySelectorAll("[data-semio-hub-workspace]").length,
+    windows: [...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id")),
+    notices: [...document.querySelectorAll("[data-semio-transient-notice]")].map((element) => `${element.getAttribute("data-notice-code")}|${(element.textContent ?? "").trim().slice(0, 160)}`),
+    bodyText: (document.querySelector('[data-slot="window-body"]')?.innerText ?? "").replace(/\s+/gu, " ").slice(0, 300),
+  }));
+  console.log(`[${label}] opened ${JSON.stringify(onHub.openSpaces[0])}: ${JSON.stringify({ windowsBefore, ...opened })}`);
+  await page.screenshot({ path: fileURLToPath(new URL(`./🗑️generated/c1c-s-host-${label}-space-opened.png`, import.meta.url)) });
+  check("5 opening a listed space leaves the workspace for the space", [opened.overlay, JSON.stringify(opened.windows) !== JSON.stringify(windowsBefore)], [0, true]);
+}
 
 const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal"] });
 const shells = [];
@@ -100,7 +144,8 @@ try {
     };
     console.log(`[${label}] introduction steps skipped before the badge: ${await clickThroughIntroduction(page.locator('[data-semio-hub-sign-in=""]').first(), 120_000)}`);
     const form = page.locator("[data-semio-hub-workspace]");
-    await form.waitFor({ state: "visible", timeout: 60_000 });
+    await form.waitFor({ state: "visible", timeout: 60_000 }).catch(() => undefined);
+    if (index === 0) check("1 the footer pill opens the hub workspace inside s", await form.isVisible(), true);
     await form.locator('input[type="email"]').fill(account.email);
     await form.locator('input[type="password"]').fill(account.password);
     await clickThroughIntroduction(form.locator('button[type="submit"][aria-label="Sign in"]'), 60_000);
@@ -127,6 +172,7 @@ try {
       check("2 the command palette tab is present", after.commandTab, true);
     }
     shells.push({ label, page, after });
+    if (index === 0) await hubRouteAndSpace(page, label);
   }
 
   if (users > 1) {

@@ -5,7 +5,7 @@ import "s_stdio_binary/snapshot.proto";
 
 enum BinaryMutationKind {
   SET_SNAPSHOT = 0;
-  SPLICE = 2;
+  REPLACE_BYTE_RANGE = 2;
   APPEND_BYTES = 3;
   TRUNCATE_AT = 4;
 }

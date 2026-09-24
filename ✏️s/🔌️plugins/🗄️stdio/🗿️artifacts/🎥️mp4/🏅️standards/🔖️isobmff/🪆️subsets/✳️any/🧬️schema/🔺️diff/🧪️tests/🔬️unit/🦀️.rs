@@ -147,8 +147,7 @@ fn absorb_associativity_over_three_diffs() {
 
 #[test]
 fn exact_fixture_empty_inverse_absorb_and_source_removal_laws() {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../temp/bauen-mit-bestand.mp4");
-    let bytes = std::fs::read(path).expect("read exact MP4 fixture");
+    let bytes = include_bytes!("../../../../🧫️fixtures/🎬️.mp4").to_vec();
     let base = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
     let empty = Mp4Diff::default();

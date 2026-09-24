@@ -143,6 +143,30 @@
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test quick",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test long",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test exhaustive",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
     }
   },
   "implicitDependencies": [

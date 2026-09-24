@@ -1,4 +1,4 @@
-"""🐍️ `s.layout.layout`'s second, independent implementation of its own 25-kind mutation vocabulary.
+"""🐍️ `s.layout.layout`'s second, independent implementation of its own 26-kind mutation vocabulary.
 
 `s.layout.layout` is a semio-NATIVE page-layout document — its two wire forms, `.dsl.semio` and
 `.pack.semio`, are grammars this repository defines and nobody else reads (confirmed, again, by the
@@ -88,6 +88,7 @@ VECTORS = {
     "delete-frame": (f"{_ROOT}/➖delete-frame/🧪️tests/🚫️removes-the-text-frame-and-its-layer-membership", "DeleteFrame"),
     "move-frame": (f"{_ROOT}/🕹️move-frame/📍️moves-the-rect-frame", "MoveFrame"),
     "resize-frame": (f"{_ROOT}/📏resize-frame/📐️resizes-the-rect-frame", "ResizeFrame"),
+    "rotate-frame": (f"{_ROOT}/🔄️rotate-frame/🌀️rotates-the-rect-frame", "RotateFrame"),
     "change-frame-fill": (f"{_ROOT}/🎨change-frame-fill/🧪️tests/🎨️repaints-the-rect-frame-fill", "ChangeFrameFill"),
     "change-frame-stroke": (f"{_ROOT}/🖊️change-frame-stroke/🧪️tests/🖊️adds-a-stroke-to-the-rect-frame", "ChangeFrameStroke"),
     "change-frame-wrap-mode": (f"{_ROOT}/🔤change-frame-wrap-mode/🧪️tests/🔤️switches-the-text-frame-to-column-wrap", "ChangeFrameWrapMode"),
@@ -291,6 +292,14 @@ def apply_move_frame(doc, p):
     return after
 
 
+def apply_rotate_frame(doc, p):
+    after = copy.deepcopy(doc)
+    _, page = _page(after, p["page_id"])
+    _, frame = _frame(page, p["frame_id"])
+    frame["bounds"]["rotation"] = p["new_rotation"]
+    return after
+
+
 def apply_resize_frame(doc, p):
     after = copy.deepcopy(doc)
     _, page = _page(after, p["page_id"])
@@ -353,6 +362,7 @@ APPLIERS = {
     "create-frame": apply_create_frame,
     "delete-frame": apply_delete_frame,
     "move-frame": apply_move_frame,
+    "rotate-frame": apply_rotate_frame,
     "resize-frame": apply_resize_frame,
     "change-frame-fill": apply_change_frame_fill,
     "change-frame-stroke": apply_change_frame_stroke,
@@ -423,6 +433,10 @@ def inverse_mutation(kind, before, payload):
         _, page = _page(before, payload["page_id"])
         _, frame = _frame(page, payload["frame_id"])
         return "MoveFrame", {"page_id": payload["page_id"], "frame_id": payload["frame_id"], "new_x": frame["bounds"]["x"], "new_y": frame["bounds"]["y"]}
+    if kind == "rotate-frame":
+        _, page = _page(before, payload["page_id"])
+        _, frame = _frame(page, payload["frame_id"])
+        return "RotateFrame", {"page_id": payload["page_id"], "frame_id": payload["frame_id"], "new_rotation": frame["bounds"]["rotation"]}
     if kind == "resize-frame":
         _, page = _page(before, payload["page_id"])
         _, frame = _frame(page, payload["frame_id"])

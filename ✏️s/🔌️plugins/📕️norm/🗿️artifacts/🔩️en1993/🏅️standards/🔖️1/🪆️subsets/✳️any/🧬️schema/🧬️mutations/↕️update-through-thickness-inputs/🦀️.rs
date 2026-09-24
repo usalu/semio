@@ -22,7 +22,7 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateThroughThi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-1-10 through-thickness inputs", "EN 1993-1-10 durch -Dickeneingaben aktualisieren")
+        protocol::LocalizedLabel::native("Update EN 1993-1-10 through-thickness inputs", "EN 1993-1-10 Eingaben zu Eigenschaften in Dickenrichtung aktualisieren")
     }
 }
 //#endregion 🔖️Payload

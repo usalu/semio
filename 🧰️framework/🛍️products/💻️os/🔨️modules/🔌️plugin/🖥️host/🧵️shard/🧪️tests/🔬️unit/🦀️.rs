@@ -126,7 +126,7 @@ async fn pump_drives_one_turn_per_actor_and_reports_it_as_a_shard_outcome() {
     assert_eq!(outbound.len(), 1, "one ShardOutcome sent back");
     let outcome = decode_outcome(&outbound[0]).await;
     match outcome {
-        ShardOutcome::Turn { actor: reported, result } => {
+        ShardOutcome::Turn { actor: reported, result, .. } => {
             assert_eq!(reported, 7);
             assert_eq!(result.usage.fuel, 42, "the scripted turn's own fuel_used must round-trip through ShardOutcome");
         }
@@ -267,6 +267,67 @@ async fn spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completi
         }
         other => panic!("expected Event::JobCompleted{{job: 777, result: Ok(..)}} to have reached the originating actor's execute_turn, got {other:?}"),
     }
+}
+
+/// 🧰️ A framework reserved tool job (`semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND`: undo, redo,
+/// the selection and clipboard verbs) is live-only: the spawning turn's outcome hands the host the job's
+/// exact shard-minted `JobTurn`, the seed starts the job without ever checkpointing the guest (a whole
+/// block2d checkpoint outgrew the fixed checkpoint pages and closed the seed, so native undo never
+/// applied — ticket 26/09/23 slice WG8 §1.4), a replay request for it is refused, and the host's steps
+/// with that turn run it to `Done` and deliver `Event::JobCompleted` to the spawning actor.
+#[semio_framework_async_macros::async_test]
+async fn a_framework_reserved_spawn_starts_live_hands_its_turn_to_the_host_and_refuses_replay() {
+    let _replay_authority = replay_test_authority();
+    let mock = Arc::new(MockGuestRuntime::new().await);
+    let actor = ActorId(23);
+    let package = PackageRef { package: PackageId("block".to_string()), hash: PackageHash([7u8; 32]) };
+    let compiled = mock.compile(&package, &[]).await.expect("mock compile");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let job_id = 71u64;
+    let mut spawning_turn = MockGuestRuntime::idle_turn().await;
+    spawning_turn.effects.push(Effect::SpawnJob { job: job_id, kind: semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND.to_string(), input: b"undo".to_vec(), placement: JobPlacement::Isolated });
+    mock.script_turn(actor, spawning_turn).await;
+    mock.script_job_step(actor, JobStep::Running { progress: None }).await;
+    mock.script_job_step(actor, JobStep::Done { output: b"undone".to_vec() }).await;
+    mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
+
+    let (transport, probe) = LoopbackTransport::paired().await;
+    probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+    shard.register(actor, instance);
+    assert_eq!(pump(&mut shard).await.expect("spawning turn"), 1);
+    let reported = decode_outcomes(&probe.take_outbound().await).await.into_iter().find_map(|outcome| match outcome {
+        ShardOutcome::Turn { actor: turn_actor, jobs, .. } if turn_actor == actor.0 => Some(jobs),
+        _ => None,
+    });
+    let reported = reported.expect("the spawning turn's outcome");
+    assert_eq!(reported.len(), 1, "the host learns the live job's turn with the spawning turn");
+    assert_eq!(reported[0].job, job_id);
+
+    let authority = retain_replay_seed(&mut shard, actor, job_id).await;
+    assert_eq!(authority, reported[0], "the reported turn is the seed's exact step authority");
+    let GuestInstanceState::Mock(state) = &shard.instances.get(&actor.0).expect("registered instance").state else { panic!("mock instance") };
+    assert_eq!(state.checkpoint, None, "a reserved tool job never checkpoints the guest before it starts");
+    let request = shard.replay_seeds.iter().flatten().find(|seed| seed.job == job_id).and_then(|seed| seed.seed.as_ref()).map(|seed| seed.request).expect("retained seed request");
+    let refusal = shard.validate_replay_request(actor.0, authority, request).expect_err("a live-only reserved job has nothing to replay from");
+    assert!(refusal.to_string().contains("live-only"), "{refusal}");
+
+    probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: authority }).await).await;
+    assert_eq!(pump(&mut shard).await.expect("first step"), 1);
+    probe.push_inbound(encode_payload_envelope(actor, 3, Payload::JobStep { turn: JobTurn { step_sequence: 1, ..authority } }).await).await;
+    assert_eq!(pump(&mut shard).await.expect("terminal step"), 1);
+    assert_eq!(pump(&mut shard).await.expect("deferred completion turn"), 1);
+    let steps: Vec<JobStepOutcome> = decode_outcomes(&probe.take_outbound().await)
+        .await
+        .into_iter()
+        .filter_map(|outcome| match outcome {
+            ShardOutcome::Job { publication, .. } if publication.turn.job == job_id => Some(publication.outcome),
+            _ => None,
+        })
+        .collect();
+    assert!(matches!(steps.as_slice(), [JobStepOutcome::Yield, JobStepOutcome::Complete { candidate }] if candidate.output == b"undone"), "{steps:?}");
+    let completed = mock.observed_events(actor).await.into_iter().find(|event| matches!(event, Event::JobCompleted { job, .. } if *job == job_id));
+    assert!(matches!(&completed, Some(Event::JobCompleted { result: RequestOutcome::Ok(bytes), .. }) if bytes == b"undone"), "{completed:?}");
 }
 
 /// 🛑️ A successful `Effect::CancelJob` removes the job in the same turn, before step.
@@ -680,6 +741,7 @@ async fn shard_outcome_owned_pack_round_trips_every_variant() {
                 status: semio_framework_actor::TurnStatus::MoreWork,
                 usage: semio_framework_actor::Usage { fuel: 4, wall_us: 5, memory_bytes: 6 },
             },
+            jobs: vec![turn],
         },
         ShardOutcome::Job {
             actor: 11,
@@ -692,6 +754,7 @@ async fn shard_outcome_owned_pack_round_trips_every_variant() {
         ShardOutcome::Checkpoint { actor: 11, operation, checkpoint: JobCheckpoint { state: vec![8], applied_progress: 9 } },
         ShardOutcome::Resumed { actor: 11, operation },
         ShardOutcome::Cancelled { actor: 11 },
+        ShardOutcome::Preempted { actor: 11 },
     ];
     for value in values {
         let mut bytes = Vec::new();
@@ -1042,7 +1105,7 @@ async fn an_interactive_grant_is_executed_before_background_grants_queued_the_sa
     assert_eq!(outbound.len(), BACKGROUND_ACTORS as usize + 1);
     let outcomes = decode_outcomes(&outbound).await;
     match &outcomes[0] {
-        ShardOutcome::Turn { actor, result } => {
+        ShardOutcome::Turn { actor, result, .. } => {
             assert_eq!(*actor, interactive_actor.0, "the Interactive-lane grant must be the FIRST ShardOutcome sent, despite every Background-lane grant having been queued on the wire BEFORE it");
             assert_eq!(result.usage.fuel, 4242, "must be the interactive actor's own scripted turn, not a background one that happens to share a position");
         }
@@ -1077,7 +1140,7 @@ async fn a_turn_that_hits_its_epoch_deadline_yields_more_work_not_a_fault_and_st
     assert_eq!(outbound.len(), 1);
     let outcome = decode_outcome(&outbound[0]).await;
     match outcome {
-        ShardOutcome::Turn { actor: reported, result } => {
+        ShardOutcome::Turn { actor: reported, result, .. } => {
             assert_eq!(reported, 91);
             assert_eq!(result.status, semio_framework_actor::TurnStatus::MoreWork, "a deadline-exceeded turn must yield MoreWork, not surface as a Fault the kernel would escalate/quarantine the actor for");
         }
@@ -1463,3 +1526,17 @@ async fn mounted_cancel_marks_the_exact_replay_seed_for_incremental_close_before
     assert_eq!(JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire), abi_bytes_before);
 }
 //#endregion 🔖️LanePriorityAndEpochYield
+
+/// ⏯️ A `Wake` granted to a mid-flight owned turn is its resume (no events); a settled instance gets
+/// the `Wake` itself, and every other event reaches the runtime unchanged so a mid-flight turn
+/// refuses it loudly. Measured cause: the wgpu native kernel's first block2d poll overran its 100 ms
+/// grant, the shard answered `MoreWork`, and the host's next ordinary event trapped the guest for good
+/// (ticket 26/09/18 slice G7w).
+#[test]
+fn a_wake_to_a_mid_flight_turn_resumes_it_with_no_events() {
+    assert!(turn_events(&Event::Wake, true).is_empty());
+    assert!(matches!(turn_events(&Event::Wake, false), [Event::Wake]));
+    let job = Event::JobCompleted { job: 7, result: RequestOutcome::Ok(Vec::new()) };
+    assert!(matches!(turn_events(&job, true), [Event::JobCompleted { job: 7, .. }]));
+    assert!(matches!(turn_events(&job, false), [Event::JobCompleted { job: 7, .. }]));
+}

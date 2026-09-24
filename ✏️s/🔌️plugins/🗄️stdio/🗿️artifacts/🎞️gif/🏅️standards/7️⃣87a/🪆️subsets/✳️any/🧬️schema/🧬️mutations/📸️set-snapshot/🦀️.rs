@@ -23,7 +23,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetSnapshot {
         agg_inverse(&GifMutation::SetSnapshot(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
+        protocol::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

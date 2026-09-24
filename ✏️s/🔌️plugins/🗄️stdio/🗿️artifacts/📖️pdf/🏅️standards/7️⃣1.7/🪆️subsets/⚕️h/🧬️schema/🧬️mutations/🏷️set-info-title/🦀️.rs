@@ -27,7 +27,7 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for SetInfoTitle {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set PDF/H title \"{}\"", self.title), &format!("PDF/Htitel \"{}\" setzen", self.title))
+        protocol::LocalizedLabel::native(&format!("Set PDF/H title \"{}\"", self.title), &format!("PDF/H-Titel \"{}\" setzen", self.title))
     }
 
     fn target(&self) -> Vec<String> {

@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Material Conductivity of material {}", self.id.0), &format!("Materialleitfähigkeit von Material {} ändern", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Change Material Conductivity of material {}", self.id.0), &format!("Wärmeleitfähigkeit von Material {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

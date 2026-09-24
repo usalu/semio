@@ -78,7 +78,7 @@ impl ArtifactViewer for VcsViewer {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            history::BODY_KEY => history::render(doc.history).map(semio_framework_plugin::built_to_component_tree),
+            history::BODY_KEY => history::render(doc.snapshot, doc.history).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

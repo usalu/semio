@@ -5,7 +5,7 @@
 //!
 //! ⚠️ A shape-CHANGING `➡️after` is unhand-authorable for this artifact — `diff_board_fixture`
 //! mints the composed `s.stdio.semio.graph` child handle from a `DefaultHasher` digest of the
-//! child content. `change-node-shape`'s already-that-shape guard is a real APPLIED exit that never
+//! child content. `change-node-shape`'s already-that-shape guard is a real NO-OP exit that never
 //! reaches that hash: it returns `MutationOutcome::empty().warn("mutation.no-op", …)`.
 //!
 //! 🔷 This leaf owns exactly one key, `shape`. It deliberately does NOT strip or rewrite the
@@ -81,12 +81,12 @@ async fn committed_json_is_canonical() {
     assert_eq!(original.get("mutation").and_then(serde_json::Value::as_str), Some("changeNodeShape"), "the internally-tagged variant name must be the camelCased ChangeNodeShape, not its ChangeNodeKind sibling");
 }
 
-/// 🎯️ The declared outcome — `applied` with one `warn`/`mutation.no-op` — is exactly what the
+/// 🎯️ The declared outcome — `no-op` with one `warn`/`mutation.no-op` — is exactly what the
 /// already-that-shape guard emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-node-shape/reports-a-no-op-when-the-shape-already-reads-circle declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "change-node-shape/reports-a-no-op-when-the-shape-already-reads-circle declares a no-op outcome");
     let produced = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its diagnostics");

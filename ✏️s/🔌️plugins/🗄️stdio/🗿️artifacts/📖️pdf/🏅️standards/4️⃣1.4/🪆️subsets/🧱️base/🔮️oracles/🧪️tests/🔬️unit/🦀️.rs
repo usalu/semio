@@ -7,11 +7,11 @@ fn direct_language_neutral_vectors_match_lopdf_and_concrete_inverse() {
     macro_rules! vector {
         ($mutation:literal) => {
             (
-                include_str!(concat!("../🧬️schema/🧬️mutations/", $mutation, "/🧪️tests/round-trips-the-concrete-inverse/🎯️outcome/🔣️.json")),
-                include_str!(concat!("../🧬️schema/🧬️mutations/", $mutation, "/🧪️tests/round-trips-the-concrete-inverse/📸️snapshot/⬅️before/🔣️.json")),
-                include_str!(concat!("../🧬️schema/🧬️mutations/", $mutation, "/🧪️tests/round-trips-the-concrete-inverse/📸️snapshot/➡️after/🔣️.json")),
-                include_str!(concat!("../🧬️schema/🧬️mutations/", $mutation, "/🧪️tests/round-trips-the-concrete-inverse/🔺️diff/🔣️.json")),
-                include_str!(concat!("../🧬️schema/🧬️mutations/", $mutation, "/🧪️tests/round-trips-the-concrete-inverse/🦠️mutation/🔣️.json")),
+                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round-trips-the-concrete-inverse/🎯️outcome/🔣️.json")),
+                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round-trips-the-concrete-inverse/📸️snapshot/⬅️before/🔣️.json")),
+                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round-trips-the-concrete-inverse/📸️snapshot/➡️after/🔣️.json")),
+                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round-trips-the-concrete-inverse/🔺️diff/🔣️.json")),
+                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round-trips-the-concrete-inverse/🦠️mutation/🔣️.json")),
             )
         };
     }
@@ -41,8 +41,7 @@ fn direct_language_neutral_vectors_match_lopdf_and_concrete_inverse() {
 
 #[test]
 fn every_real_document_feature_row_is_observable_and_invertible() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf");
-    let base = std::fs::read(path).unwrap();
+    let base = include_bytes!("../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf").to_vec();
     assert_eq!(independent_pages(&base).unwrap().len(), 65);
     let feature = include_str!("../../../🧪️tests/📑️mutate-pdf-1-4/🥒️.feature");
     let rows = crate::law::feature_rows(feature);

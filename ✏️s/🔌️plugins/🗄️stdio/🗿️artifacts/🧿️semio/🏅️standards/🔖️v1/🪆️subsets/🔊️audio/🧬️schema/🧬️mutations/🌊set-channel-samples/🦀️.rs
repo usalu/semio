@@ -24,7 +24,7 @@ impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetChann
         agg_inverse(&SemioAudioMutation::SetChannelSamples(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-channel-samples", "Kanalproben setzen")
+        protocol::LocalizedLabel::native("Set channel samples", "Stützwerte des Kanals setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

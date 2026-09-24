@@ -52,8 +52,9 @@
           "capability": "sequence-1-dependency-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "connect-steps",

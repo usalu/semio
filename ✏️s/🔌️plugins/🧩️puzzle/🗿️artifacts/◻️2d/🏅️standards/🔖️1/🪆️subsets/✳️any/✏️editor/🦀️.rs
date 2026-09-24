@@ -5544,6 +5544,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportFixture", InteractiveJobClassification::Migrated)
+            .action_destructive("exportFixture")
             .action_interactive_job("importFixture", InteractiveJobClassification::Migrated)
             .action_interactive_job("openImportFixture", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectionFlag", InteractiveJobClassification::Migrated)

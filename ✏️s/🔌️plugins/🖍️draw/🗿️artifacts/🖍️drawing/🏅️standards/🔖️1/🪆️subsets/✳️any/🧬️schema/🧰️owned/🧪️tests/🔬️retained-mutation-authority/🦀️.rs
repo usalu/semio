@@ -164,11 +164,23 @@ fn close_candidate(authority: &mut DrawingMutationCandidateAuthority, mut source
     panic!("Drawing candidate close did not terminate")
 }
 
+/// 🧮️ Borrows a candidate from the shared process pool the way the production initializer does: a
+/// transiently contended pool (another law holds it for one bounded borrow) is borrowed again.
+fn borrowed_candidate(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<DrawingMutationCandidateAuthority, &'static str> {
+    for _ in 0..1_000_000 {
+        match DrawingMutationCandidateAuthority::try_new(operation, generation) {
+            Err(DrawingMutationArenaBorrowError::Contended) => std::thread::yield_now(),
+            other => return other.map_err(DrawingMutationArenaBorrowError::as_str),
+        }
+    }
+    Err("drawing-store.mutation-arena-pool-contended")
+}
+
 fn apply(mut source: DrawingSnapshot, mutation: &DrawingMutation) -> Result<DrawingSnapshot, (DrawingSnapshot, &'static str)> {
     initialize_drawing_mutation_arena_pool_for_test();
     let operation = semio_framework_job::OperationId(8_001);
     let generation = semio_framework_job::Generation(81);
-    let mut authority = DrawingMutationCandidateAuthority::try_new(operation, generation).expect("Drawing candidate fixed owner arenas admit");
+    let mut authority = borrowed_candidate(operation, generation).expect("Drawing candidate fixed owner arenas admit");
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     for _ in 0..200_000 {
@@ -200,7 +212,7 @@ fn live_workset(source: &mut DrawingSnapshot, mutation: &DrawingMutation) -> Res
     let generation = semio_framework_job::Generation(84);
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
-    let mut authority = DrawingMutationCandidateAuthority::try_new(operation, generation)?;
+    let mut authority = borrowed_candidate(operation, generation)?;
     for _ in 0..100_000 {
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
         authority.step(source, mutation, &mut context)?;
@@ -221,7 +233,7 @@ fn planned_clone_workset(source: &mut DrawingSnapshot, mutation: &DrawingMutatio
     let generation = semio_framework_job::Generation(86);
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
-    let mut authority = DrawingMutationCandidateAuthority::try_new(operation, generation)?;
+    let mut authority = borrowed_candidate(operation, generation)?;
     for _ in 0..100_000 {
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
         authority.step(source, mutation, &mut context)?;
@@ -1366,7 +1378,7 @@ fn retained_drawing_cancel_stale_each_precommit_replay_candidate_container_stage
             };
             let operation = semio_framework_job::OperationId(8_003);
             let generation = semio_framework_job::Generation(83);
-            let mut authority = DrawingMutationCandidateAuthority::try_new(operation, generation).expect("Drawing candidate fixed owner arenas admit");
+            let mut authority = borrowed_candidate(operation, generation).expect("Drawing candidate fixed owner arenas admit");
             let cancel = semio_framework_job::root_cancel_token();
             let mut preview_sequence = 0;
             for _ in 0..100_000 {
@@ -1407,7 +1419,7 @@ fn retained_drawing_committed_candidate_finishes_exact_owner_return_after_late_c
         let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target });
         let operation = semio_framework_job::OperationId(8_004);
         let generation = semio_framework_job::Generation(84);
-        let mut authority = DrawingMutationCandidateAuthority::try_new(operation, generation).expect("Drawing candidate fixed owner arenas admit");
+        let mut authority = borrowed_candidate(operation, generation).expect("Drawing candidate fixed owner arenas admit");
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
         for _ in 0..100_000 {

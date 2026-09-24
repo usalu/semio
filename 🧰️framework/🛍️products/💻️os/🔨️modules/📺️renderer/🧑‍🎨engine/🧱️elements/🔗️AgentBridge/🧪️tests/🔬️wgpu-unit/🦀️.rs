@@ -53,7 +53,7 @@ fn every_gateway_to_shell_fixture_round_trips_through_this_codec() {
         assert_eq!(encode_hex(&frame.encode()), hex, "{variant} re-encoded to different bytes");
         seen.push(variant);
     }
-    assert_eq!(distinct_variants(&seen), 11, "the gateway→shell corpus must cover all eleven tags — the ten this shell has always modelled plus `AgentReply` (tag 10), saw {seen:?}");
+    assert_eq!(distinct_variants(&seen), 12, "the gateway→shell corpus must cover all twelve tags — including `AgentReply` (10) and `ApprovalWithdrawn` (11), saw {seen:?}");
 }
 
 #[test]
@@ -94,6 +94,48 @@ fn a_simulated_approval_requested_frame_parks_a_pending_approval() {
     assert_eq!(state.pending_approvals.len(), 1);
     assert_eq!(state.pending_approvals[0].approval_id, "appr_1");
     assert_eq!(state.pending_approvals[0].requested_at_ms, 1_000.0);
+}
+
+/// 🪦️ Replays `🌉️mcp/🛡️policy/🧫️fixtures/🪦️approval-withdrawal.json`'s `retiredAffordances` through this
+/// shell's own decoder and state: a withdrawn request leaves nothing waiting and its row says why.
+#[test]
+fn a_withdrawn_approval_retires_its_affordance_and_keeps_the_reason() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🌉️mcp/🛡️policy/🧫️fixtures/🪦️approval-withdrawal.json")).expect("approval withdrawal law");
+    for row in law["retiredAffordances"].as_array().expect("retiredAffordances") {
+        let name = row["name"].as_str().expect("name");
+        let mut state = AgentBridgeState::default();
+        for frame in row["frames"].as_array().expect("frames") {
+            let decoded = match frame["variant"].as_str().expect("variant") {
+                "approvalRequested" => GatewayToShell::ApprovalRequested { approval_id: "appr_law".into(), summary: "{}".into() },
+                "approvalResolved" => GatewayToShell::ApprovalResolved { approval_id: "appr_law".into(), decision: ApprovalDecision::Deny },
+                "approvalWithdrawn" => GatewayToShell::ApprovalWithdrawn {
+                    approval_id: "appr_law".into(),
+                    reason: match frame["reason"].as_str().expect("reason") {
+                        "cancelled" => ApprovalWithdrawal::Cancelled,
+                        "timed_out" => ApprovalWithdrawal::TimedOut,
+                        "superseded" => ApprovalWithdrawal::Superseded,
+                        other => panic!("{name}: unknown reason {other}"),
+                    },
+                },
+                other => panic!("{name}: unexpected frame {other}"),
+            };
+            state.apply_encoded_frame(&decoded.encode(), 0.0).expect("frame decodes");
+        }
+        assert_eq!(state.pending_approvals.len() as u64, row["pending"].as_u64().expect("pending"), "{name}");
+        let Some(AgentConversationEntry::Approval { state: approval, .. }) = state.conversation.iter().find(|entry| entry.id() == "appr_law") else { panic!("{name}: no approval row") };
+        let (expected_state, expected_reason) = (row["state"].as_str().expect("state"), row["withdrawal"].as_str());
+        let observed = match approval {
+            AgentApprovalState::Pending => ("pending", None),
+            AgentApprovalState::Resolved => ("resolved", None),
+            AgentApprovalState::Withdrawn(ApprovalWithdrawal::Cancelled) => ("withdrawn", Some("cancelled")),
+            AgentApprovalState::Withdrawn(ApprovalWithdrawal::TimedOut) => ("withdrawn", Some("timed_out")),
+            AgentApprovalState::Withdrawn(ApprovalWithdrawal::Superseded) => ("withdrawn", Some("superseded")),
+        };
+        assert_eq!(observed, (expected_state, expected_reason), "{name}");
+    }
+    let de = crate::agent_approvals::approvals_withdrawal_label(ApprovalWithdrawal::TimedOut, Locale::De);
+    let en = crate::agent_approvals::approvals_withdrawal_label(ApprovalWithdrawal::TimedOut, Locale::En);
+    assert!(de.contains("niemand hat rechtzeitig entschieden") && en.contains("nobody decided in time"), "{en} / {de}");
 }
 
 #[test]

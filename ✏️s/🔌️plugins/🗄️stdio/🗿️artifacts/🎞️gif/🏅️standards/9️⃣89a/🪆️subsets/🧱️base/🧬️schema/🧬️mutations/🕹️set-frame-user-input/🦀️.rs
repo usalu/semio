@@ -23,7 +23,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameUserInput {
         agg_inverse(&GifMutation::SetFrameUserInput(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-frame-user-input", "Rahmenbenutzereingabe setzen")
+        protocol::LocalizedLabel::native("Set frame user input", "Benutzereingabe-Kennung des Einzelbilds setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

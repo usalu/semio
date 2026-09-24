@@ -31,7 +31,7 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RenamePuzzle
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Rename puzzle5d", "Puzzle5d umbenennen")
+        protocol::LocalizedLabel::native("Rename puzzle5d", "Puzzle 5D umbenennen")
     }
 }
 //#endregion 🔖️Mutation

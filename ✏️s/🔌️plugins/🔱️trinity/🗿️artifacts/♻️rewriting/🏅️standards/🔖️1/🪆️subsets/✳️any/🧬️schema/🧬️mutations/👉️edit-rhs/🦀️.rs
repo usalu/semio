@@ -29,7 +29,7 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for EditRhs 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Edit rhs", "rhs bearbeiten")
+        protocol::LocalizedLabel::native("Edit rhs", "Rechte Regelseite bearbeiten")
     }
 }
 //#endregion 🔖️Mutation

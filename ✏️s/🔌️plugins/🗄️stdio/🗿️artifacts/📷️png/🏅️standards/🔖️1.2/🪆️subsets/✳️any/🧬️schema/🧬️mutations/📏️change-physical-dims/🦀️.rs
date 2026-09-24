@@ -34,7 +34,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangePhysicalDimsMuta
         vec![PngMutation::ChangePhysicalDims(ChangePhysicalDimsMutation { phys: base.phys })]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change physical dims", "Physischabmessungen ändern")
+        protocol::LocalizedLabel::native("Change physical dimensions", "Physische Abmessungen ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-physical-dims".into()]

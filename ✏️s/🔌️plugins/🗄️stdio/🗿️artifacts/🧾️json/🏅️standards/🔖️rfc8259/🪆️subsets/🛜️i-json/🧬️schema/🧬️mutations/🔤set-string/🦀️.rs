@@ -22,7 +22,7 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetString {
         agg_inverse(&JsonIJsonMutation::SetString(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-string", "Zeichenkette setzen")
+        protocol::LocalizedLabel::native("Set string", "Zeichenkette setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

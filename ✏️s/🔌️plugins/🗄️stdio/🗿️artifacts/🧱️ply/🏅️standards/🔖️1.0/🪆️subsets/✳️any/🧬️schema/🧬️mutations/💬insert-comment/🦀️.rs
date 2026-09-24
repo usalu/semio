@@ -22,7 +22,7 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for InsertComment {
         agg_inverse(&PlyMutation::InsertComment(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-comment", "Kommentar einfügen")
+        protocol::LocalizedLabel::native("Insert comment", "Kommentar einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

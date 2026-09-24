@@ -100,7 +100,8 @@
           "capability": "gisterrain-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-exaggeration",
@@ -119,7 +120,8 @@
           "capability": "gisterrain-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-imported-features",

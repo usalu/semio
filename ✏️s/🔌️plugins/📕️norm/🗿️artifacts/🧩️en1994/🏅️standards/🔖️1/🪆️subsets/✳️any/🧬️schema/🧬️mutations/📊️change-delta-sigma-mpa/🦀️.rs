@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeDeltaSigma
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fatigue stress range Δσ to {}", self.new_delta_sigma_mpa), &format!("Ermüdungsspannungsbereich Δσ auf {} ändern", self.new_delta_sigma_mpa))
+        protocol::LocalizedLabel::native(&format!("Change fatigue stress range Δσ to {}", self.new_delta_sigma_mpa), &format!("Spannungsschwingbreite Δσ auf {} ändern", self.new_delta_sigma_mpa))
     }
 }
 //#endregion 🔖️Payload

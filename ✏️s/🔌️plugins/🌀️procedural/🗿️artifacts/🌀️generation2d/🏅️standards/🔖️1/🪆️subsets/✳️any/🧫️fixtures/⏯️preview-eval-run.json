@@ -70,6 +70,10 @@
       "entity": "5542927423540195655"
     },
     {
+      "nodeId": "outline",
+      "entity": "17606304008214596573"
+    },
+    {
       "nodeId": "preview",
       "entity": "14472534944091126455"
     },
@@ -1017,7 +1021,7 @@
     ]
   },
   "demoRun": {
-    "note": "The run job driven over the bundled demo (`📚️examples/🎬️demo`) with its edit preview attached and NO flow extension contributed, every hop performed by the evaluation tick itself: `math.add` is unserved, so `rect` fails, the preview downstream of it is observed as the evaluator reports it, and the run settles with a warning step instead of spinning. Pins the verdict set the trace carries, the settle step and that no single drive_step overruns the interactive ceiling.",
+    "note": "The run job driven over the bundled demo (`📚️examples/🎬️demo`) with its edit preview attached and NO flow extension contributed, every hop performed by the evaluation tick itself: `draw.shape.rect` and `draw.style.stroke` are unserved, so `rect` and `outline` fail, the preview downstream of it is observed as the evaluator reports it, and the run settles with a warning step instead of spinning. Pins the verdict set the trace carries, the settle step and that no single drive_step overruns the interactive ceiling.",
     "window": {
       "id": "preview-1",
       "kind": "generation2d-preview"
@@ -1027,6 +1031,7 @@
       "finalNodes": {
         "slider": "evaluated",
         "rect": "failed",
+        "outline": "failed",
         "preview": "evaluated"
       },
       "settleReason": "settledWithFailures",

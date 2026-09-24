@@ -927,6 +927,13 @@ export function encodeCausalEnvelopeBatch(envelopes: readonly MutationEnvelope[]
   return out;
 }
 
+/** 🔀️ `diff.schema` of every history-transition envelope — undo, redo, checkpoint commit, branch, checkout, pin — the TS
+ * twin of Rust's `HISTORY_TRANSITION_SCHEMA`, pinned by the neutral schema's `diffSchema` const. Operation envelopes carry
+ * their artifact's own schema, so this tag alone tells a framework history record from an app mutation.
+ * @see ./🔗️causal/🧬️schema/🔀️history-transition-v1/🔣️.json
+ * @see ./🔗️causal/🔀️transition/🦀️.rs */
+export const HISTORY_TRANSITION_DIFF_SCHEMA = "semio.history.transition";
+
 const MUTATION_DAG_CAPACITY = 8_192;
 const MUTATION_DAG_IDENTIFIER_BYTES = 256;
 
@@ -1775,7 +1782,7 @@ if (import.meta.vitest) {
   const { registerTests2 } = await import("./🧪️tests/🧪️document-backbone-envelope-batch/🟦️.ts");
   await registerTests2(import.meta.vitest, { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact }, { directory: import.meta.dir, url: import.meta.url });
   const { registerTests3 } = await import("./🧪️tests/🧪️history-transition/🟦️.ts");
-  await registerTests3(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests3(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url }, HISTORY_TRANSITION_DIFF_SCHEMA);
   const { registerTests: registerDurableCollaborativeRedoTests } = await import("./🧪️tests/🗄️durable-collaborative-redo/🟦️.ts");
   await registerDurableCollaborativeRedoTests(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url });
 

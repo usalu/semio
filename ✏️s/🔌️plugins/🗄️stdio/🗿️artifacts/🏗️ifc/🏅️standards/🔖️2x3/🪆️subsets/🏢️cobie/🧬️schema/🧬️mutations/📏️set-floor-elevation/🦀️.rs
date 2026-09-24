@@ -22,7 +22,7 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetFloorEle
         agg_inverse(&Ifc2x3CobieMutation::SetFloorElevation(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-floor-elevation", "Geschossansicht setzen")
+        protocol::LocalizedLabel::native("Set floor elevation", "Geschosshöhenkote setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -30,11 +30,13 @@ impl MutationKind<TestSnapshot, TestMutation> for SetSlotChildren {
         protocol::LocalizedLabel::native(
             &match self.children.len() {
                 0 => "Clear the declared slot children".to_string(),
-                count => format!("Set {count} slot child reference(s)"),
+                1 => "Set 1 slot child reference".to_string(),
+                count => format!("Set {count} slot child references"),
             },
             &match self.children.len() {
                 0 => "Deklarierte Slot-Kinder leeren".to_string(),
-                count => format!("{count} Slot-Kindverweis(e) deklarieren"),
+                1 => "1 Slot-Kindverweis deklarieren".to_string(),
+                count => format!("{count} Slot-Kindverweise deklarieren"),
             },
         )
     }

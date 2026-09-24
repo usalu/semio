@@ -26,7 +26,7 @@ impl MutationKind<Fem2dSnapshot, Fem2dMutation> for ChangeLoadCaseSelfWeight {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set case \"{}\" self-weight to {}", self.case_id, self.new_self_weight), &format!("Fall \"{}\" Eigengewicht auf {} setzen", self.case_id, self.new_self_weight))
+        protocol::LocalizedLabel::native(&format!("Set case \"{}\" self-weight to {}", self.case_id, self.new_self_weight), &format!("Eigengewicht von Lastfall \"{}\" auf {} setzen", self.case_id, self.new_self_weight))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]

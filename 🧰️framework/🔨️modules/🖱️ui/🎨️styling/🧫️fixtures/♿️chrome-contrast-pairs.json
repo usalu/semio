@@ -1,0 +1,166 @@
+{
+  "why": "The chrome palette's WCAG 2.2 1.4.3 text-on-surface pair law (`THEME_CHROME_CONTRAST_PAIRS` / `themePaintContrastPairs`, 🌓️theme/🟦️.ts), replayed by any twin (G8 WG-10's wgpu settings dock). Each case is a palette and, per paint, the WORST pair it takes part in; a paint in no pair (borders) answers null.",
+  "liveDefect": "Ticket 26/09/18 U4, measured on the live `s` Settings → Theme tree 2026-09-24: the first cut measured EVERY paint against `foreground`, so `activeForeground`, `accentForeground` and `borderEmphasized` (all = foreground on the default light theme) printed `1.00:1 · Below AA` on an untouched palette — text compared with text, a border compared with text.",
+  "palette": {
+    "base": [
+      250,
+      250,
+      245,
+      255
+    ],
+    "panel": [
+      201,
+      200,
+      189,
+      255
+    ],
+    "muted": [
+      240,
+      236,
+      221,
+      255
+    ],
+    "foreground": [
+      0,
+      17,
+      23,
+      255
+    ],
+    "mutedForeground": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "accent": [
+      252,
+      207,
+      5,
+      255
+    ],
+    "accentForeground": [
+      0,
+      17,
+      23,
+      255
+    ],
+    "activeBase": [
+      252,
+      207,
+      5,
+      255
+    ],
+    "activeForeground": [
+      0,
+      17,
+      23,
+      255
+    ],
+    "activeHover": [
+      227,
+      186,
+      5,
+      255
+    ],
+    "hoverInteractiveFill": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "borderNormal": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "borderEmphasized": [
+      0,
+      17,
+      23,
+      255
+    ]
+  },
+  "cases": {
+    "base": {
+      "text": "mutedForeground",
+      "surface": "base",
+      "counterpart": "mutedForeground",
+      "ratio": 3.76,
+      "grade": "aaLarge"
+    },
+    "panel": {
+      "text": "mutedForeground",
+      "surface": "panel",
+      "counterpart": "mutedForeground",
+      "ratio": 2.34,
+      "grade": "fail"
+    },
+    "muted": {
+      "text": "foreground",
+      "surface": "muted",
+      "counterpart": "foreground",
+      "ratio": 16.24,
+      "grade": "aaa"
+    },
+    "foreground": {
+      "text": "foreground",
+      "surface": "hoverInteractiveFill",
+      "counterpart": "hoverInteractiveFill",
+      "ratio": 4.88,
+      "grade": "aa"
+    },
+    "mutedForeground": {
+      "text": "mutedForeground",
+      "surface": "panel",
+      "counterpart": "panel",
+      "ratio": 2.34,
+      "grade": "fail"
+    },
+    "accent": {
+      "text": "accentForeground",
+      "surface": "accent",
+      "counterpart": "accentForeground",
+      "ratio": 12.87,
+      "grade": "aaa"
+    },
+    "accentForeground": {
+      "text": "accentForeground",
+      "surface": "accent",
+      "counterpart": "accent",
+      "ratio": 12.87,
+      "grade": "aaa"
+    },
+    "activeBase": {
+      "text": "activeForeground",
+      "surface": "activeBase",
+      "counterpart": "activeForeground",
+      "ratio": 12.87,
+      "grade": "aaa"
+    },
+    "activeForeground": {
+      "text": "activeForeground",
+      "surface": "activeHover",
+      "counterpart": "activeHover",
+      "ratio": 10.34,
+      "grade": "aaa"
+    },
+    "activeHover": {
+      "text": "activeForeground",
+      "surface": "activeHover",
+      "counterpart": "activeForeground",
+      "ratio": 10.34,
+      "grade": "aaa"
+    },
+    "hoverInteractiveFill": {
+      "text": "foreground",
+      "surface": "hoverInteractiveFill",
+      "counterpart": "foreground",
+      "ratio": 4.88,
+      "grade": "aa"
+    },
+    "borderNormal": null,
+    "borderEmphasized": null
+  },
+  "oracle": "Expected ratios computed by an independent Python WCAG 2.2 implementation (sRGB 0.04045 linearization, 0.2126/0.7152/0.0722 luminance) at fixture-authoring time, rounded to 0.01 as the UI prints."
+}

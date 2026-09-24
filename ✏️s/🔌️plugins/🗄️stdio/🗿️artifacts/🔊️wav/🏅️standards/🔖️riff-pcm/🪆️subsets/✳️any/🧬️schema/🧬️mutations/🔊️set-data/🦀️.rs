@@ -21,7 +21,7 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetData {
         agg_inverse(&WavMutation::SetData(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-data", "Daten setzen")
+        protocol::LocalizedLabel::native("Set data", "Daten setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

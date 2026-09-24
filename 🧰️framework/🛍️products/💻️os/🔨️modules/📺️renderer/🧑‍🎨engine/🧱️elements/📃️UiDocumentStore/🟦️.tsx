@@ -86,6 +86,10 @@ function componentTextBytes(component: Component): number {
       return utf8ByteLength(component.valueText);
     case "extension":
       return utf8ByteLength(component.extension);
+    case "table":
+      return utf8ByteLength(component.label) + component.columns.reduce((sum, column) => sum + utf8ByteLength(column), 0) + labelBytes(component.actionsLabel);
+    case "tableRow":
+      return component.cells.reduce((sum, cell) => sum + utf8ByteLength(cell), 0);
     case "separator":
     case "slider":
     case "numberStepper":
@@ -450,6 +454,15 @@ export class UiDocumentStore {
     this.state = result.state;
     this.notifyDiff(previous, this.state);
     return { ok: true };
+  }
+
+  /** 🧹️ Returns the store to the empty document at revision 0 — the receiver state a `patch-rejected` leaves
+   * behind, which the producer's full resend (a fresh reconciler, base revision 0) assumes. Subscribers see the
+   * removal like any other change. */
+  reset(): void {
+    const previous = this.state;
+    this.state = emptyUiDocumentState(previous.surface);
+    this.notifyDiff(previous, this.state);
   }
 
   private notifyDiff(previous: UiDocumentState, next: UiDocumentState): void {

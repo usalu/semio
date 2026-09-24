@@ -358,12 +358,15 @@ export class Builder {
         return this.fixed({ type: "surface", kind: choice(v.kind, ["canvas-2d", "world-3d", "node-graph", "text-editor", "table", "paint-2d", "virtual-file-system", "tiled-map", "board-2d", "icon-render", "ink-canvas", "graph-timeline", "block-list", "diff-view", "event-feed"]), docSchema: text(v.docSchema), doc, bindings });
       }
       case "extension": { const v = yield* this.record(value, ["type", "extension", "props"]); const props = yield* this.value(v.props); yield 128; return this.fixed({ type: "extension", extension: text(v.extension), props }); }
+      case "table": { const v = yield* this.record(value, ["type", "label", "columns", "actionsLabel", "window"]); const columns = yield* this.list(v.columns, (item) => this.textItem(item)); const window = yield* this.treeWindow(v.window); yield 128; return this.fixed({ type: "table", label: text(v.label), columns, actionsLabel: optional(v.actionsLabel, text), window }); }
+      case "tableRow": { const v = yield* this.record(value, ["type", "cells", "rowActions"]); const cells = yield* this.list(v.cells, (item) => this.textItem(item)); const rowActions = yield* this.list(v.rowActions === undefined ? [] : v.rowActions, (item) => this.rowAction(item)); yield 128; return this.fixed({ type: "tableRow", cells, rowActions }); }
       default: throw new Error("Unknown UI component type");
     }
   }
 
   /** 🪟️ A tree container's materialised slice (`TreeSectionProps.window`/`TreeItemProps.window`) — `null` for an unwindowed container. */
   *treeWindow(value: unknown): Program<Contract.TreeWindow | null> { yield 32; if (value == null) return null; const v = yield* this.record(value, ["total", "offset", "rowExtent"]); return this.fixed({ total: number(v.total), offset: number(v.offset), rowExtent: choice(v.rowExtent, ["standard", "compactText", "compactSmallControl", "compactControl"]) }); }
+  *textItem(value: unknown): Program<string> { yield 16; return text(value); }
   *selectItem(value: unknown): Program<Contract.SelectItem> { const v = yield* this.record(value, ["value", "label"]); return this.fixed({ value: text(v.value), label: text(v.label) }); }
   *entry(value: unknown): Program<Contract.KeyValueEntry> { const v = yield* this.record(value, ["label", "value"]); return this.fixed({ label: text(v.label), value: text(v.value) }); }
   *rowAction(value: unknown): Program<Contract.RowAction> { const v = yield* this.record(value, ["icon", "label", "action", "placement"]); const action = yield* this.binding(v.action); yield 128; return this.fixed({ icon: text(v.icon), label: optional(v.label, text), action, placement: defaulted(v.placement, "row", v => choice(v, ["row", "menu"])) }); }

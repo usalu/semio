@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ConnectTrace {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Connect trace \"{}\" -> \"{}\"", self.trace.from_id.0, self.trace.to_id.0), &format!("Spur \"{}\" -> \"{}\" verbinden", self.trace.from_id.0, self.trace.to_id.0))
+        protocol::LocalizedLabel::native(&format!("Connect trace \"{}\" -> \"{}\"", self.trace.from_id.0, self.trace.to_id.0), &format!("Nachverfolgung \"{}\" -> \"{}\" verknüpfen", self.trace.from_id.0, self.trace.to_id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.trace.id.0.clone()]

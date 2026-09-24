@@ -3683,7 +3683,9 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             if length > 4256 || length as usize != bytes.len().saturating_sub(pos) {
                 return Err(malformed("local interaction reply", pos as u64, "invalid exact bounded envelope"));
             }
-            AppFrame::LocalInteractionQuery { reply: protocol::decode_local_interaction_query_reply(&bytes[pos..]).map_err(|reason| malformed("local interaction reply", pos as u64, reason))? }
+            let reply = protocol::decode_local_interaction_query_reply(&bytes[pos..]).map_err(|reason| malformed("local interaction reply", pos as u64, reason))?;
+            pos = bytes.len();
+            AppFrame::LocalInteractionQuery { reply }
         }
         24 => AppFrame::WindowConfigs {
             in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
@@ -3708,6 +3710,9 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
         }
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
+    if pos != bytes.len() {
+        return Err(malformed("channel app-frame", pos as u64, "trailing bytes after the frame"));
+    }
     Ok(frame)
 }
 //#endregion 🔖️Codec

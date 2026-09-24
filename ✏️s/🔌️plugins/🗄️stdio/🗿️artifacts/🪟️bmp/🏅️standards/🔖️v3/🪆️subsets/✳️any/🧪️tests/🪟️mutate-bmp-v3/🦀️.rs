@@ -13,19 +13,10 @@
 //! independently against the registered `image` reference crate. The subject side fully parses the
 //! real document into the typed `BmpSnapshot` and re-serializes from it — never splices bytes.
 
-use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v3::subsets::any::oracle_identity_round_trip;
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::{oracle_apply_mutation, oracle_undo_mutation, project_bmp_mutation};
+use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::{oracle_apply_mutation, oracle_identity_round_trip, oracle_undo_mutation, project_bmp_mutation};
 use semio_s_plugin_stdio_test_oracle::law;
 
-//#region 🔖️Kinds
-/// 📇️ Mirrors `../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s own
-/// `KINDS` and `../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🔣️oracle.json`'s
-/// `mutationCatalogs[0].kinds` — kept in the SAME declaration order in all three; a mismatch is
-/// caught loudly (either by the contract phase, or by the runner's own "no registration for
-/// scenario" error) rather than silently.
-const KINDS: &[&str] = &["change-header-fields", "insert-palette-entry", "remove-palette-entry", "replace-palette-entry", "replace-pixel-data"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏛️rathaus-ahlen-grundriss/🖼️.bmp";
@@ -106,7 +97,7 @@ mod subject {
     use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::io::{decode_bmp, encode_bmp};
     use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, inverse_bmp_mutation, BmpMutation};
     use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
-    use crate::BmpSnapshot;
+    use semio_s_artifact_stdio_bmp::BmpSnapshot;
     use semio_framework_os_kernel::ArtifactDsl;
 
     //#region 🔖️Json
@@ -233,18 +224,16 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. One `mutate-<kind>`/`inverse-<kind>`
-/// pair per declared kind, plus the standalone `identity-round-trip` scenario.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for &kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle);
-        built = built.oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate);
-            built = built.subject(&format!("inverse-{kind}"), subject::undo);
-        }
+    built = built.oracle("mutate", mutate_oracle);
+    built = built.oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate);
+        built = built.subject("inverse", subject::undo);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

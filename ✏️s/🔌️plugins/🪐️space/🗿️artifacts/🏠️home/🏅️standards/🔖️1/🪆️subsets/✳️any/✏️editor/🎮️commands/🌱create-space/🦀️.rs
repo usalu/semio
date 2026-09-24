@@ -1,7 +1,7 @@
 //! 🌱️ S Home launcher app command — `create-space`. Contract §C6: the plugin never touches the
 //! network — a validated create request is relayed to the shell as `Effect::ReplayShellCommand`;
-//! the resulting `space.created` event returns over `/directory/ws` and is folded back in by
-//! `fold-directory-events`. No optimistic mutation of the read model. An empty (raw toolbar click, not
+//! the resulting `space.created` event wakes the shell's acknowledged directory stream, whose next sealed
+//! page reaches `apply-directory-event-page`. No optimistic mutation of the read model. An empty (raw toolbar click, not
 //! yet a dialog submit) `name` opens the declared `createSpace` dialog instead of relaying — the local-
 //! only "create ephemeral studio" path (`create-studio`) is untouched and still works with no hub.
 

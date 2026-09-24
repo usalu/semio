@@ -30,7 +30,7 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
         agg_inverse(&SemioPresentationMutation::SetTextBoxBlocks(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-text-box-blocks", "Textkastenblöcke setzen")
+        protocol::LocalizedLabel::native("Set text box blocks", "Blöcke des Textfelds setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -21,7 +21,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertStyle {
         agg_inverse(&DocxMutation::InsertStyle(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-style", "Stil einfügen")
+        protocol::LocalizedLabel::native("Insert style", "Formatvorlage einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

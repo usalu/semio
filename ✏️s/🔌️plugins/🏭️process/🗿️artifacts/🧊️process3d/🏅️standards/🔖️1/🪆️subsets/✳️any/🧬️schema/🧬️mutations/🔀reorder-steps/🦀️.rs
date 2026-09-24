@@ -29,7 +29,7 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReorderSte
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder step \"{}\"", self.id), &format!("Schritt \"{}\" umordnen", self.id))
+        protocol::LocalizedLabel::native(&format!("Reorder step \"{}\"", self.id), &format!("Reihenfolge von Schritt \"{}\" ändern", self.id))
     }
 
     fn target(&self) -> Vec<String> {

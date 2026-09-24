@@ -13,13 +13,6 @@
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v4::subsets::any::{oracle_apply_mutation, project_ifc_4_any};
 
-//#region 🔖️Kinds
-/// 🏷️ Mirrors this subset's own `IfcMutation::KINDS` (`../../🏅️standards/4️⃣4/🪆️subsets/✳️any/
-/// 🧬️schema/🧬️mutations/🦀️.rs`). Kept as a plain literal here rather than imported since
-/// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
-/// coverage against the `ifc-4-any` catalog) is what keeps the two lists honest against each other.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc";
@@ -380,12 +373,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), mutate_oracle).oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), subject::mutate).subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

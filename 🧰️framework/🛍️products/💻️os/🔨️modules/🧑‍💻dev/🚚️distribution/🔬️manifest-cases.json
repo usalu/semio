@@ -1,0 +1,15 @@
+{
+  "text": "hello",
+  "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+  "manifest": {
+    "version": 1, "contractId": "dev-distribution-bundle",
+    "layoutSha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    "inputs": [{ "path": "source/main.html", "bytes": 5, "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824" }],
+    "outputs": [
+      { "ownerId": "🌐️.html", "path": "🌐️.html", "bytes": 5, "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824" },
+      { "ownerId": "🚀️bootstrap-[hash].js", "path": "🧶️bundles/🚀️bootstrap-AbCd1234.js", "bytes": 5, "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824" }
+    ]
+  },
+  "rejectedPaths": ["index.html", "404.html", "../🌐️.html", "🧶️bundles/🚀️bootstrap-.js", "🧶️bundles/🚀️bootstrap-[hash].js", "🧶️bundles/🚀️bootstrap-AbCd1234.js/extra", "🧶️bundles/🖥️runtime-AbCd1234.js"],
+  "rejectedInputs": ["../outside", "/absolute", "source//main.html", "source/./main.html", "source\\main.html"]
+}

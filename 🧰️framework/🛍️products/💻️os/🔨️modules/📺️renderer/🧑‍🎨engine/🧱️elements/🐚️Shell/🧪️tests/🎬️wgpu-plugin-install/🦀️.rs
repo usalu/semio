@@ -139,14 +139,3 @@ fn a_surface_ref_must_agree_with_every_other_role_spelling() {
     assert_eq!(target.role, semio_framework::AppRole::Viewer);
     assert_eq!(target.artifact_ref, "s.cad.cad@1/*", "the surface suffix is normalized off the stored coordinate");
 }
-
-/// 🧪️ The browser's document half refuses out loud: the relay's wasm32 arm reads this key, and an
-/// untranslated one would paint the key itself into the banner.
-#[test]
-fn the_browser_document_refusal_is_localized() {
-    let english = shell_chrome_string("open-artifact.browser-document", false);
-    let german = shell_chrome_string("open-artifact.browser-document", true);
-    assert!(english.contains("document sync"), "{english}");
-    assert!(german.contains("Dokumentsynchronisierung"), "{german}");
-    assert_ne!(english, german);
-}

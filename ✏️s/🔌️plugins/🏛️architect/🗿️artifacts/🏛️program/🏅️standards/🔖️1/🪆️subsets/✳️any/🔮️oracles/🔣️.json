@@ -39,7 +39,13 @@
       ],
       "license": "MIT",
       "testOnly": true,
-      "productionDebt": {"reachableFrom": ["🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"], "owner": "🧰️framework/🛍️products/💻️os/🖥️host", "plan": "The same reach the `zip` oracle records in ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json: the OS host declares an optional `zip` dependency for container handling. This oracle's subject does not link it; the stdio and architect crates keep `zip` as a dev-dependency. The debt retires when the host routes containers through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."},
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
+        "plan": "The same reach the `zip` oracle records in ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json: the OS host declares an optional `zip` dependency for container handling. This oracle's subject does not link it; the stdio and architect crates keep `zip` as a dev-dependency. The debt retires when the host routes containers through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."
+      },
       "homepage": "https://github.com/zip-rs/zip2",
       "rationale": "The production architect program exporter maps all 66 registers plus the program, meta, project and governance singleton blocks to seventy JSON members in a real ZIP archive. Each mutation subject first proves its typed result against the committed vector and proves that every non-guard mutation changes this carrier projection; the oracle then receives those exact subject bytes and independently decompresses every member with zip 6 before parsing and comparing its JSON. The reader never links architect, applies a mutation, predicts a row or trusts the repository ZIP decoder, so a silent empty archive, a missing register, corrupt compression or dropped content diverges externally.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
@@ -92,8 +98,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "connect-adjacency",
@@ -113,7 +120,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "connect-trace",
@@ -133,7 +141,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-access-rule",
@@ -153,7 +162,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-accessibility-requirement",
@@ -173,7 +183,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-activity",
@@ -193,7 +204,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-analysis-record",
@@ -213,7 +225,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-approval-record",
@@ -233,7 +246,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-assumption",
@@ -253,7 +267,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-audit-event",
@@ -273,7 +288,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-benchmark-record",
@@ -293,7 +309,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-change-record",
@@ -313,7 +330,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-collaboration-record",
@@ -333,7 +351,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-communication-requirement",
@@ -353,7 +372,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-compliance-record",
@@ -373,7 +393,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-conflict",
@@ -393,7 +414,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-constraint-record",
@@ -413,7 +435,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-cost-requirement",
@@ -433,7 +456,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-decision",
@@ -453,7 +477,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-delivery-constraint",
@@ -473,7 +498,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-document",
@@ -493,7 +519,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-environmental-requirement",
@@ -513,7 +540,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-equipment",
@@ -533,7 +561,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-flexibility-requirement",
@@ -553,7 +582,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-flow-requirement",
@@ -573,7 +603,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-function",
@@ -593,7 +624,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-growth-plan",
@@ -613,7 +645,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-human-factor-requirement",
@@ -633,7 +666,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-information-requirement",
@@ -653,7 +687,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-infrastructure-requirement",
@@ -673,7 +708,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-issue",
@@ -693,7 +729,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-knowledge-record",
@@ -713,7 +750,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-meeting-record",
@@ -733,7 +771,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-operational-requirement",
@@ -753,7 +792,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-option-evaluation",
@@ -773,7 +813,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-organizational-requirement",
@@ -793,7 +834,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-performance-criterion",
@@ -813,7 +855,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-priority-record",
@@ -833,7 +876,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-privacy-requirement",
@@ -853,7 +897,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-process",
@@ -873,7 +918,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-program-element",
@@ -893,7 +939,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-quality-record",
@@ -913,7 +960,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-quantity-requirement",
@@ -933,7 +981,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-regulatory-requirement",
@@ -953,7 +1002,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-relationship",
@@ -973,7 +1023,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-report-record",
@@ -993,7 +1044,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-requirement",
@@ -1013,7 +1065,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-resilience-requirement",
@@ -1033,7 +1086,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-resource",
@@ -1053,7 +1107,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-risk",
@@ -1073,7 +1128,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-safety-requirement",
@@ -1093,7 +1149,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-scenario",
@@ -1113,7 +1170,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-schedule-requirement",
@@ -1133,7 +1191,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-search-filter",
@@ -1153,7 +1212,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-security-requirement",
@@ -1173,7 +1233,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-service-requirement",
@@ -1193,7 +1254,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-site-context",
@@ -1213,7 +1275,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-stakeholder",
@@ -1233,7 +1296,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-status-record",
@@ -1253,7 +1317,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-storage-requirement",
@@ -1273,7 +1338,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-survey",
@@ -1293,7 +1359,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-sustainability-requirement",
@@ -1313,7 +1380,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-template-record",
@@ -1333,7 +1401,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-user-profile",
@@ -1353,7 +1422,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-validation-record",
@@ -1373,7 +1443,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-wayfinding-requirement",
@@ -1393,7 +1464,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-workshop",
@@ -2799,8 +2871,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-access-rule",
@@ -2820,8 +2893,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-accessibility-requirement",
@@ -2841,8 +2915,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-activity",
@@ -2862,8 +2937,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-analysis-record",
@@ -2883,8 +2959,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-approval-record",
@@ -2904,8 +2981,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-assumption",
@@ -2925,8 +3003,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-audit-event",
@@ -2946,8 +3025,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-benchmark-record",
@@ -2967,8 +3047,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-change-record",
@@ -2988,8 +3069,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-collaboration-record",
@@ -3009,8 +3091,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-communication-requirement",
@@ -3030,8 +3113,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-compliance-record",
@@ -3051,8 +3135,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-conflict",
@@ -3072,8 +3157,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-constraint-record",
@@ -3093,8 +3179,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-cost-requirement",
@@ -3114,8 +3201,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-decision",
@@ -3135,8 +3223,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-delivery-constraint",
@@ -3156,8 +3245,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-document",
@@ -3177,8 +3267,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-environmental-requirement",
@@ -3198,8 +3289,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-equipment",
@@ -3219,8 +3311,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-flexibility-requirement",
@@ -3240,8 +3333,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-flow-requirement",
@@ -3261,8 +3355,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-function",
@@ -3282,7 +3377,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "rename-governance",
@@ -3302,8 +3398,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-growth-plan",
@@ -3323,8 +3420,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-human-factor-requirement",
@@ -3344,8 +3442,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-information-requirement",
@@ -3365,8 +3464,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-infrastructure-requirement",
@@ -3386,8 +3486,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-issue",
@@ -3407,8 +3508,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-knowledge-record",
@@ -3428,8 +3530,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-meeting-record",
@@ -3449,7 +3552,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "rename-meta",
@@ -3469,8 +3573,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-operational-requirement",
@@ -3490,8 +3595,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-option-evaluation",
@@ -3511,8 +3617,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-organizational-requirement",
@@ -3532,8 +3639,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-performance-criterion",
@@ -3553,8 +3661,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-priority-record",
@@ -3574,8 +3683,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-privacy-requirement",
@@ -3595,8 +3705,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-process",
@@ -3616,8 +3727,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-program-element",
@@ -3637,7 +3749,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "rename-project",
@@ -3657,8 +3770,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-quality-record",
@@ -3678,8 +3792,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-quantity-requirement",
@@ -3699,8 +3814,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-regulatory-requirement",
@@ -3720,8 +3836,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-relationship",
@@ -3741,8 +3858,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-report-record",
@@ -3762,8 +3880,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-requirement",
@@ -3783,8 +3902,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-resilience-requirement",
@@ -3804,8 +3924,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-resource",
@@ -3825,8 +3946,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-risk",
@@ -3846,8 +3968,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-safety-requirement",
@@ -3867,8 +3990,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-scenario",
@@ -3888,8 +4012,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-schedule-requirement",
@@ -3909,8 +4034,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-search-filter",
@@ -3930,8 +4056,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-security-requirement",
@@ -3951,8 +4078,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-service-requirement",
@@ -3972,8 +4100,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-site-context",
@@ -3993,8 +4122,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-stakeholder",
@@ -4014,8 +4144,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-status-record",
@@ -4035,8 +4166,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-storage-requirement",
@@ -4056,8 +4188,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-survey",
@@ -4077,8 +4210,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-sustainability-requirement",
@@ -4098,8 +4232,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-template-record",
@@ -4119,8 +4254,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-user-profile",
@@ -4140,8 +4276,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-validation-record",
@@ -4161,8 +4298,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-wayfinding-requirement",
@@ -4182,8 +4320,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-workshop",
@@ -4203,8 +4342,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-access-rule",
@@ -4224,8 +4364,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-accessibility-requirement",
@@ -4245,8 +4386,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-activity",
@@ -4266,8 +4408,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-analysis-record",
@@ -4287,8 +4430,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-approval-record",
@@ -4308,8 +4452,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-assumption",
@@ -4329,8 +4474,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-audit-event",
@@ -4350,8 +4496,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-benchmark-record",
@@ -4371,8 +4518,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-change-record",
@@ -4392,8 +4540,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-collaboration-record",
@@ -4413,8 +4562,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-communication-requirement",
@@ -4434,8 +4584,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-compliance-record",
@@ -4455,8 +4606,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-conflict",
@@ -4476,8 +4628,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-constraint-record",
@@ -4497,8 +4650,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-cost-requirement",
@@ -4518,8 +4672,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-decision",
@@ -4539,8 +4694,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-delivery-constraint",
@@ -4560,8 +4716,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-document",
@@ -4581,8 +4738,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-environmental-requirement",
@@ -4602,8 +4760,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-equipment",
@@ -4623,8 +4782,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-flexibility-requirement",
@@ -4644,8 +4804,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-flow-requirement",
@@ -4665,8 +4826,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-function",
@@ -4686,7 +4848,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "replace-governance",
@@ -4706,8 +4869,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-growth-plan",
@@ -4727,8 +4891,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-human-factor-requirement",
@@ -4748,8 +4913,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-information-requirement",
@@ -4769,8 +4935,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-infrastructure-requirement",
@@ -4790,8 +4957,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-issue",
@@ -4811,8 +4979,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-knowledge-record",
@@ -4832,8 +5001,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-meeting-record",
@@ -4853,7 +5023,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "replace-meta",
@@ -4873,8 +5044,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-operational-requirement",
@@ -4894,8 +5066,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-option-evaluation",
@@ -4915,8 +5088,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-organizational-requirement",
@@ -4936,8 +5110,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-performance-criterion",
@@ -4957,8 +5132,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-priority-record",
@@ -4978,8 +5154,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-privacy-requirement",
@@ -4999,8 +5176,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-process",
@@ -5020,8 +5198,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-program-element",
@@ -5041,7 +5220,8 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "replace-project",
@@ -5061,8 +5241,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-quality-record",
@@ -5082,8 +5263,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-quantity-requirement",
@@ -5103,8 +5285,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-regulatory-requirement",
@@ -5124,8 +5307,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-relationship",
@@ -5145,8 +5329,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-report-record",
@@ -5166,8 +5351,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-requirement",
@@ -5187,8 +5373,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-resilience-requirement",
@@ -5208,8 +5395,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-resource",
@@ -5229,8 +5417,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-risk",
@@ -5250,8 +5439,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-safety-requirement",
@@ -5271,8 +5461,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-scenario",
@@ -5292,8 +5483,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-schedule-requirement",
@@ -5313,8 +5505,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-search-filter",
@@ -5334,8 +5527,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-security-requirement",
@@ -5355,8 +5549,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-service-requirement",
@@ -5376,8 +5571,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-site-context",
@@ -5397,8 +5593,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-stakeholder",
@@ -5418,8 +5615,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-status-record",
@@ -5439,8 +5637,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-storage-requirement",
@@ -5460,8 +5659,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-survey",
@@ -5481,8 +5681,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-sustainability-requirement",
@@ -5502,8 +5703,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-template-record",
@@ -5523,8 +5725,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-user-profile",
@@ -5544,8 +5747,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-validation-record",
@@ -5565,8 +5769,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-wayfinding-requirement",
@@ -5586,8 +5791,9 @@
           "capability": "program-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-workshop",

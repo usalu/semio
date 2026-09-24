@@ -1,0 +1,150 @@
+{
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The transient state lane of `s.fem.3d`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient): its mutation vocabulary `Fem3dResultsWindowTransientMutation` over `Fem3dResultsWindowTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-fem-3d-1-any-editor-edit-results-transient` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "fem-3d-1-any-editor-edit-results-transient-state-lane-semantics",
+      "capabilities": [
+        "fem-3d-1-any-editor-edit-results-transient-mutate"
+      ],
+      "rationale": "`Fem3dResultsWindowTransientMutation` is the transient state lane of `s.fem.3d`'s ✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient surface: it holds the results window's playback clock (phase and direction), or none while playback is stopped. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-playback-clock`) changes exactly its own part of `Fem3dResultsWindowTransient`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "zustand",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "An in-memory state container with arbitrary setter functions; it has no typed transient record, no per-kind mutation vocabulary and no computed inverse."
+          },
+          {
+            "package": "im",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Persistent immutable collections; they version values structurally but define no mutation kinds, no-op guards or inverses over this surface's record."
+          }
+        ],
+        "whyNoneQualifies": "`Fem3dResultsWindowTransient` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "fem-3d-1-any-editor-edit-results-transient",
+      "capability": "fem-3d-1-any-editor-edit-results-transient-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "🌐️any",
+      "kinds": [
+        "set-playback-clock"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.fem.3d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient",
+      "mutations": [
+        {
+          "id": "set-playback-clock",
+          "capability": "fem-3d-1-any-editor-edit-results-transient-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-playback-clock",
+            "bridgeVersion": 1,
+            "variant": "SetPlaybackClock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem-3d-1-any-editor-edit-results-transient-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-playback-clock-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.fem.3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient"
+      },
+      "mutation": "set-playback-clock",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/⏱️set-playback-clock/✅️set-playback-clock-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7647d0da8526f66d748fff4769d1c955457f5aca045df07b748d7c4f98ec9422",
+          "bytes": 20
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/⏱️set-playback-clock/✅️set-playback-clock-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5867adf95691547ca5d152ec3b974fe97cb3e3707c4ecc163c5e9b8e0810b6e7",
+          "bytes": 97
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/⏱️set-playback-clock/✅️set-playback-clock-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:404e99d77b976647df2a182649122a219b030e835b527d8e913ca9335c13dbf1",
+          "bytes": 61
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/⏱️set-playback-clock/✅️set-playback-clock-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:404e99d77b976647df2a182649122a219b030e835b527d8e913ca9335c13dbf1",
+          "bytes": 61
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/⏱️set-playback-clock/✅️set-playback-clock-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "Starting playback from a stopped results window sets the clock to a quarter phase, running forward."
+    }
+  ]
+}

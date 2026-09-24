@@ -61,7 +61,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeDocumen
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Document Extra Data", "zusätzliche Dokumentdaten ändern")
+        protocol::LocalizedLabel::native("Change Document Extra Data", "Zusatzdaten des Dokuments ändern")
     }
 
     fn target(&self) -> Vec<String> {

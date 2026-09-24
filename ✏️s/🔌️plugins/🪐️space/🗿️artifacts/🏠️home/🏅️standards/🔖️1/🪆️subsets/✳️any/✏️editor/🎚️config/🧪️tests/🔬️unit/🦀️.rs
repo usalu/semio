@@ -9,7 +9,6 @@ async fn home_config_dsl_text_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn home_config_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::Snapshot { config: HomeConfig::default() });
-    store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::FoldDirectoryEvent { event_json: "{}".into() });
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::ReplaceDirectoryProjection {
         directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()),
         session_binding_sha256: "a".repeat(64),
@@ -23,33 +22,6 @@ async fn home_config_default_directory_is_empty() {
     let model = HomeConfig::default().directory().expect("default directory projection");
     assert!(model.spaces.is_empty());
     assert_eq!(model.cursor, 0);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn fold_directory_event_updates_the_read_model() {
-    let config = HomeConfig::default();
-    let event_json = pack::json!({
-        "seq": 1,
-        "id": "evt-1",
-        "hlc": { "physicalMs": 0, "logical": 0 },
-        "actor": { "kind": "user", "id": "user:u1#s1" },
-        "spaceId": "sp-1",
-        "body": { "kind": "space.created", "spaceId": "sp-1", "name": "Atelier", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1" },
-        "recordedAtMs": 1000
-    })
-    .to_string();
-    let next = HomeConfigMutation::FoldDirectoryEvent { event_json }.diff(&config).diff().clone();
-    let model = next.directory().expect("folded directory projection");
-    assert_eq!(model.cursor, 1);
-    let space = model.spaces.get("sp-1").expect("space folded");
-    assert_eq!(space.view.name, "Atelier");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn fold_directory_event_ignores_malformed_json() {
-    let config = HomeConfig::default();
-    let next = HomeConfigMutation::FoldDirectoryEvent { event_json: "not json".into() }.diff(&config).diff().clone();
-    assert_eq!(next.directory_json, config.directory_json, "malformed events never panic and never change the model");
 }
 
 #[semio_framework_async_macros::async_test]

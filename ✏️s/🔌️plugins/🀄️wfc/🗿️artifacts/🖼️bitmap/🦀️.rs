@@ -512,6 +512,8 @@ pub mod editor {
         pub mod commands {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs"]
             pub mod set_active_example;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📌️pin-solution/🦀️.rs"]
+            pub mod pin_solution;
         }
 
         #[path = "."]

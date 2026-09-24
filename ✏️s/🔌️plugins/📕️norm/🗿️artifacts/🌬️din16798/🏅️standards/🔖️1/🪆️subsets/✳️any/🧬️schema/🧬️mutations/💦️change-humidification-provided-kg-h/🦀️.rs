@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHumidi
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change provided humidification rate to {}", self.new_humidification_provided_kg_h), &format!("vorhandene Befeuchtungsrate auf {} ändern", self.new_humidification_provided_kg_h))
+        protocol::LocalizedLabel::native(&format!("Change provided humidification rate to {}", self.new_humidification_provided_kg_h), &format!("Vorhandene Befeuchtungsleistung auf {} ändern", self.new_humidification_provided_kg_h))
     }
 }
 //#endregion 🔖️ChangeHumidificationProvidedKgH

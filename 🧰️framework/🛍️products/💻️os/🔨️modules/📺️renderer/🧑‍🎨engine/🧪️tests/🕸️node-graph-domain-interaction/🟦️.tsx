@@ -12,7 +12,7 @@ import {
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
-const fixture = JSON.parse(readFileSync(resolve(engineRoot, "🧪️fixtures/🕸️node-graph-domain-interaction/🔣️.json"), "utf8")) as any;
+const fixture = JSON.parse(readFileSync(resolve(engineRoot, "🧫️fixtures/🕸️node-graph-domain-interaction/🔣️.json"), "utf8")) as any;
 const schema = JSON.parse(readFileSync(resolve(engineRoot, "🧬️schema/🕸️node-graph-domain-interaction/🔣️.json"), "utf8"));
 const testCase = (id: string) => fixture.cases.find((entry: any) => entry.id === id);
 

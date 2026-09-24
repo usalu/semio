@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change daylight zone {} zone to {}", self.id.0, self.new_zone_id.0), &format!("Tageslichtzone {} Zone auf {} ändern", self.id.0, self.new_zone_id.0))
+        protocol::LocalizedLabel::native(&format!("Change daylight zone {} zone to {}", self.id.0, self.new_zone_id.0), &format!("Zone von Tageslichtzone {} auf {} ändern", self.id.0, self.new_zone_id.0))
     }
 
     fn target(&self) -> Vec<String> {

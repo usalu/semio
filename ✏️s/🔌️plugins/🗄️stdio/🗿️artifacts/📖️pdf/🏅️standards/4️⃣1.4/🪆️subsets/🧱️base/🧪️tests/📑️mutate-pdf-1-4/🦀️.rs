@@ -26,7 +26,7 @@
 //! the real input's own page tree from bytes that differ from the input. Nothing is exempt.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::base::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_pdf_1_4, KINDS};
+use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::base::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_pdf_1_4};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Input
@@ -172,21 +172,15 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
-/// id, so both roles are registered in one loop over the subset's own `KINDS` — the same list the
-/// oracle module's `kinds_matches_the_catalog_and_every_feature_row` pins against the catalog and
-/// the feature's `Examples` rows.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-    }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        for kind in KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

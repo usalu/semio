@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for RenameCo
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename column {} to {}", self.name, self.new_name), &format!("Stütze {} in {} umbenennen", self.name, self.new_name))
+        protocol::LocalizedLabel::native(&format!("Rename column {} to {}", self.name, self.new_name), &format!("Spalte {} in {} umbenennen", self.name, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.name.clone()]

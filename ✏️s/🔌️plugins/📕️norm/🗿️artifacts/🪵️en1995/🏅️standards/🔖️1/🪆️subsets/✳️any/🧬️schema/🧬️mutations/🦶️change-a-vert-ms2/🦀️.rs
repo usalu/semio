@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeAVertMS2 {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change a vert m s2 to {:?}", self.new_a_vert_m_s2), &format!("Vertms2 auf {:?} ändern", self.new_a_vert_m_s2))
+        protocol::LocalizedLabel::native(&format!("Change vertical acceleration a_vert [m/s2] to {:?}", self.new_a_vert_m_s2), &format!("Vertikalbeschleunigung a_vert [m/s2] auf {:?} ändern", self.new_a_vert_m_s2))
     }
 }
 //#endregion 🔖️ChangeAVertMS2

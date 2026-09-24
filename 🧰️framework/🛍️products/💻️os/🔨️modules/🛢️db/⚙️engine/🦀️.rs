@@ -4976,6 +4976,7 @@ pub mod vcs_integration {
 
     struct VcsStoreCellState {
         store: Option<HashStore>,
+        rolled_checkpoint: Option<String>,
         busy_generation: Option<u64>,
         waiters: [Option<VcsStoreWaiter>; VCS_OPERATION_ITEMS],
     }
@@ -4989,7 +4990,7 @@ pub mod vcs_integration {
     impl VcsStoreCell {
         fn new() -> Self {
             Self {
-                state: Mutex::new(VcsStoreCellState { store: None, busy_generation: None, waiters: std::array::from_fn(|_| None) }),
+                state: Mutex::new(VcsStoreCellState { store: None, rolled_checkpoint: None, busy_generation: None, waiters: std::array::from_fn(|_| None) }),
                 #[cfg(test)]
                 shutdown_failures: std::sync::atomic::AtomicUsize::new(0),
             }
@@ -5159,6 +5160,43 @@ pub mod vcs_integration {
         fn store_mut(&mut self) -> &mut HashStore {
             self.store.as_mut().expect("vcs store lease owner already returned")
         }
+
+        /// @emoji 🪟️ Keeps a document's version graph a bounded window: when its store's applied-edit
+        /// ledger is full, every applied change is folded into one checkpoint, the store is retired and
+        /// a fresh store starts from the folded hash. The graph then answers `merge_base`/`head` within
+        /// the current window (`head` falls back to the last folded checkpoint); history older than the
+        /// window is the durable WAL's, never this in-memory graph's. A full ledger used to refuse every
+        /// later change — after the change was already durable in the WAL.
+        async fn roll_window_when_full(&mut self, document: &ArtifactId) -> Result<(), DbError> {
+            if self.store_mut().envelope().vcs.edits.has_capacity() {
+                return Ok(());
+            }
+            self.store_mut().dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("version graph window".to_string()), authors: Vec::new() }).await.map_err(map_vcs_error)?;
+            let folded = self.store_mut().current_checkpoint_id().map(str::to_string);
+            let latest_hash = self.store_mut().envelope().vcs.initial_snapshot.latest_hash;
+            let latest_hash = self.store_mut().snapshot().map_or(latest_hash, |snapshot| snapshot.latest_hash);
+            let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection { latest_hash }, None);
+            let mut fresh = store::ArtifactStore::new(envelope).await.map_err(map_vcs_error)?;
+            fresh.install_document_store_owners_exact(<HashProjection as store::MemberStoreOwner<HashMutation>>::member_store_owners());
+            let mut retired = self.store.replace(fresh).expect("vcs store lease owner already returned");
+            loop {
+                match store::SpaceMember::close_owned_step(&mut retired, 1, VCS_OPERATION_BYTES as usize).map_err(|error| DbError::Internal(format!("vcs window retirement: {error}")))? {
+                    store::SnapshotRetirementStep::Complete => break,
+                    store::SnapshotRetirementStep::Pending { .. } => semio_framework_async::yield_once().await,
+                    store::SnapshotRetirementStep::Blocked => return Err(DbError::Internal("vcs window retirement blocked".to_string())),
+                }
+            }
+            if !store::SpaceMember::close_owned_terminal_is_empty(&retired) {
+                return Err(DbError::Internal("vcs window retirement completed without a terminal store witness".to_string()));
+            }
+            drop(retired);
+            self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).rolled_checkpoint = folded;
+            Ok(())
+        }
+
+        fn rolled_checkpoint(&self) -> Option<String> {
+            self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).rolled_checkpoint.clone()
+        }
     }
 
     impl Drop for VcsStoreLease {
@@ -5223,6 +5261,7 @@ pub mod vcs_integration {
             Box::pin(async move {
                 let admission = record_credit(document, &change).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
                 let mut lease = self.store(document, &admission).await?;
+                lease.roll_window_when_full(document).await?;
                 let ChangeRecord { content_hash, author, message, timestamp_ms, .. } = change;
                 let operation = HashMutation { hash: content_hash.0, author: Some(protocol::ActorId(author.0)), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, timestamp_ms)) };
                 let mutations = Vec::from([operation]);
@@ -5270,7 +5309,7 @@ pub mod vcs_integration {
                 if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
                     return Ok(found.checkpoint_ids.last().cloned());
                 }
-                Ok(lease.store_mut().current_checkpoint_id().map(str::to_string))
+                Ok(lease.store_mut().current_checkpoint_id().map(str::to_string).or_else(|| lease.rolled_checkpoint()))
             })
         }
 

@@ -1,3 +1,4 @@
+use crate::editor::remodeling::engine::step_ceiling;
 use super::*;
 
 /// 🧪️ Per-point `(camera-0 pixel, camera-1 pixel)` accumulator shared by a few two-view tests below.
@@ -332,7 +333,7 @@ fn maximum_seed_pair_and_degenerate_solve_steps_stay_below_hard_ceiling() {
     loop {
         let started = std::time::Instant::now();
         let complete = sfm.advance_seed_pair(&mut preparation, 1).expect("maximum admitted seed pair");
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum 64-correspondence/32-hypothesis seed worker step {steps} exceeded 8 ms");
+        step_ceiling::admit_step(started.elapsed(), format_args!("maximum 64-correspondence/32-hypothesis seed worker step {steps} exceeded 8 ms"));
         steps += 1;
         if complete {
             break;
@@ -344,14 +345,14 @@ fn maximum_seed_pair_and_degenerate_solve_steps_stay_below_hard_ceiling() {
     while malformed_preparation.phase == SeedPairPhase::Collect {
         let started = std::time::Instant::now();
         let result = malformed.advance_seed_pair(&mut malformed_preparation, 1);
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "degenerate seed collection/solve worker step exceeded 8 ms");
+        step_ceiling::admit_step(started.elapsed(), format_args!("degenerate seed collection/solve worker step exceeded 8 ms"));
         if result.is_err() {
             return;
         }
     }
     let started = std::time::Instant::now();
     assert!(malformed.advance_seed_pair(&mut malformed_preparation, 1).is_err(), "coincident correspondences must be rejected");
-    assert!(started.elapsed() < std::time::Duration::from_millis(8), "degenerate maximum seed solve exceeded 8 ms");
+    step_ceiling::admit_step(started.elapsed(), format_args!("degenerate maximum seed solve exceeded 8 ms"));
 }
 
 #[test]
@@ -362,7 +363,7 @@ fn maximum_registration_and_malformed_pnp_steps_stay_below_hard_ceiling_in_each_
         loop {
             let started = std::time::Instant::now();
             let result = sfm.advance_registration(&mut preparation, 1);
-            assert!(started.elapsed() < std::time::Duration::from_millis(8), "64-correspondence one-hypothesis registration worker step {steps} exceeded 8 ms");
+            step_ceiling::admit_step(started.elapsed(), format_args!("64-correspondence one-hypothesis registration worker step {steps} exceeded 8 ms"));
             steps += 1;
             match result {
                 Ok(true) if !degenerate => break,
@@ -383,7 +384,7 @@ fn maximum_track_triangulation_and_degenerate_geometry_steps_stay_below_hard_cei
         let mut preparation = BundlePreparation { point_track_ids: Vec::new(), cursor: 0, phase: BundlePhase::Retriangulate, tolerance: 3.0 };
         let started = std::time::Instant::now();
         assert!(!sfm.advance_bundle(&mut preparation, 1));
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "8-observation triangulation worker step exceeded 8 ms");
+        step_ceiling::admit_step(started.elapsed(), format_args!("8-observation triangulation worker step exceeded 8 ms"));
         assert_eq!(sfm.points.contains_key(&0), !degenerate);
     }
 }

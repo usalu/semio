@@ -20,7 +20,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangePsiTimes
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change psi times l sum to {}", self.new_psi_times_l_sum), &format!("Psimallsumme auf {} ändern", self.new_psi_times_l_sum))
+        protocol::LocalizedLabel::native(&format!("Change sum of Ψ·l to {}", self.new_psi_times_l_sum), &format!("Summe Ψ·l auf {} ändern", self.new_psi_times_l_sum))
     }
 }
 //#endregion 🔖️Payload

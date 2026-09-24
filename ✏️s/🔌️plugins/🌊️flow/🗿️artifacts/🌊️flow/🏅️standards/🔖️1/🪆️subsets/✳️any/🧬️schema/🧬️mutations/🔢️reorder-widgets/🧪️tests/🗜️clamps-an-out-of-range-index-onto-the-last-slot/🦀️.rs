@@ -4,7 +4,7 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`.
 //!
-//! ✅️ This is an APPLIED case with an EMPTY diff. `reorder-widgets`' own `🔺️diff` leaf clamps the
+//! ✅️ This is an NO-OP case with an EMPTY diff. `reorder-widgets`' own `🔺️diff` leaf clamps the
 //! requested position with `to_index.min(widgets.len() - 1)` and then, when that lands on the
 //! widget's current index, returns `MutationOutcome::empty().warn("mutation.no-op", …)` without ever
 //! reaching `diff_replace_content`. Because no new content handle is minted, `➡️after` equals
@@ -88,15 +88,15 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "reorder-widgets/clamps-an-out-of-range-index-onto-the-last-slot: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared outcome is `applied` WITH a `warn`-level `mutation.no-op` — an out-of-range index
+/// 🎯️ The declared outcome is `no-op` WITH a `warn`-level `mutation.no-op` — an out-of-range index
 /// is clamped, never rejected as an invariant breach. (`🎯️outcome` spells the level `warn`;
 /// `Severity` itself names that level `Warning`.)
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "reorder-widgets/clamps-an-out-of-range-index-onto-the-last-slot declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "reorder-widgets/clamps-an-out-of-range-index-onto-the-last-slot declares a no-op outcome");
     let mut snapshot = before();
-    apply_flow_mutation(&mut snapshot, &mutation()).expect("reorder-widgets/clamps-an-out-of-range-index-onto-the-last-slot: declared applied but the mutation was rejected");
+    apply_flow_mutation(&mut snapshot, &mutation()).expect("reorder-widgets/clamps-an-out-of-range-index-onto-the-last-slot: declared no-op but the mutation was rejected");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its messages");
     let produced = <FlowMutation as protocol::Mutation<FlowSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

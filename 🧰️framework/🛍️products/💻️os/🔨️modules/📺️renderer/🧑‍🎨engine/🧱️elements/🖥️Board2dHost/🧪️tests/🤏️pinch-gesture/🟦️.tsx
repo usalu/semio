@@ -193,6 +193,29 @@ describe("🤏️ board 2d two-finger gesture", () => {
     expect(session.calls.slice(callsBeforeRelease)).not.toContain("pointerUpScreen");
   });
 
+  it("the finger left down after a pinch stays latched: no drag, no click, until the LAST contact lifts", async () => {
+    const session = createStubSession();
+    const { canvas } = await mountBoard(session);
+    pointerBatch(() => {
+      canvas.dispatchEvent(pointer("pointerdown", 1, 300, 300));
+      canvas.dispatchEvent(pointer("pointerdown", 2, 500, 300));
+      window.dispatchEvent(pointer("pointermove", 2, 600, 300));
+    });
+    const callsAfterPinch = session.calls.length;
+    pointerBatch(() => {
+      window.dispatchEvent(pointer("pointerup", 2, 600, 300));
+      window.dispatchEvent(pointer("pointermove", 1, 250, 260));
+      window.dispatchEvent(pointer("pointermove", 1, 200, 220));
+      window.dispatchEvent(pointer("pointerup", 1, 200, 220));
+    });
+    const afterRelease = session.calls.slice(callsAfterPinch);
+    expect(afterRelease).not.toContain("pointerMoveScreen");
+    expect(afterRelease).not.toContain("pointerUpScreen");
+    const callsAfterLatch = session.calls.length;
+    pointerBatch(() => canvas.dispatchEvent(pointer("pointerdown", 3, 100, 100)));
+    expect(session.calls.slice(callsAfterLatch)).toContain("pointerDownScreen");
+  });
+
   it("keeps routing a SINGLE contact through the pointer lane — a pinch path must not disable touch drag", async () => {
     const session = createStubSession();
     const { canvas } = await mountBoard(session);

@@ -22,7 +22,7 @@ fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&sem
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_node_for_the_default_document() {
-    let _ = project(render(&SSpaceSnapshot::default()).expect("default Space viewer rows"));
+    let _ = project(render(&SSpaceSnapshot::default(), &semio_framework_plugin::ViewModel::default()).expect("default Space viewer rows"));
 }
 
 /// 🆔️ Contract §C0: the read-only viewer's rows must still carry `data-row-id="artifact:<id>"` —
@@ -32,8 +32,9 @@ async fn a_row_stamps_the_artifact_row_id_with_no_actions_cell() {
     use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
     let mut document = SSpaceSnapshot::default();
     document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });
-    observe(render(&document).expect("Space viewer rows"), |root| {
+    observe(render(&document, &semio_framework_plugin::ViewModel::default()).expect("Space viewer rows"), |root| {
         let row = root.children.iter().find(|node| node.key.as_str() == "artifact:artifact-1").expect("Space viewer row id");
-        assert!(!row.children.iter().any(|child| matches!(&child.component, semio_framework_ui_contract::Component::Button(_))), "the viewer never carries a row action button");
+        let semio_framework_ui_contract::Component::TableRow(props) = &row.component else { panic!("a viewer row is one TableRow record") };
+        assert!(props.row_actions.is_empty() && row.bindings.is_empty(), "the viewer never carries a row action");
     });
 }

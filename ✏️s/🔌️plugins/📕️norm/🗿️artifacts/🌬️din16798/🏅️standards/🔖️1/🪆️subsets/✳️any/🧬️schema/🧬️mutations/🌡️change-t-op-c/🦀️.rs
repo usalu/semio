@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeTOpC {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change operative temperature to {}", self.new_t_op_c), &format!("operative Temperatur auf {} ändern", self.new_t_op_c))
+        protocol::LocalizedLabel::native(&format!("Change operative temperature to {}", self.new_t_op_c), &format!("Operative Temperatur auf {} ändern", self.new_t_op_c))
     }
 }
 //#endregion 🔖️ChangeTOpC

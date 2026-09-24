@@ -24,7 +24,7 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetEntityArg {
         agg_inverse(&IfcMutation::SetEntityArg(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-entity-arg", "Entitätsargument setzen")
+        protocol::LocalizedLabel::native("Set entity arg", "Entitätsargument setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

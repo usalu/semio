@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for RemoveDesign
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove design {}", self.id), &format!("Bemessung {} entfernen", self.id))
+        protocol::LocalizedLabel::native(&format!("Remove design {}", self.id), &format!("Entwurf {} entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

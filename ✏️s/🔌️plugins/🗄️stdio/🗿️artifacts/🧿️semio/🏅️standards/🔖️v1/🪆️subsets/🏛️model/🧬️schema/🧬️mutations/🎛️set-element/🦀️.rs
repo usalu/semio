@@ -32,7 +32,7 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for SetEleme
         agg_inverse(&SemioModelMutation::SetElement(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-element", "Element setzen")
+        protocol::LocalizedLabel::native("Set element", "Element setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

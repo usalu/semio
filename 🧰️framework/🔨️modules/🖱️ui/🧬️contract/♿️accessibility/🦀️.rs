@@ -93,6 +93,8 @@ pub fn accessibility_role(component: &crate::Component, activatable: bool) -> &'
         crate::Component::Image(_) => "img",
         crate::Component::Surface(_) => "application",
         crate::Component::Extension(_) => "region",
+        crate::Component::Table(_) => "grid",
+        crate::Component::TableRow(_) => "row",
     }
 }
 
@@ -127,7 +129,8 @@ pub fn accessibility_is_focusable(component: &crate::Component, activatable: boo
         | crate::Component::Ring(_)
         | crate::Component::IconSelect(_)
         | crate::Component::Surface(_)
-        | crate::Component::TreeItem(_) => true,
+        | crate::Component::TreeItem(_)
+        | crate::Component::TableRow(_) => true,
         crate::Component::Container(_) => activatable,
         _ => false,
     }
@@ -239,6 +242,7 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
     let value = accessibility_value(&record.component);
     let label = record.accessibility.label.as_ref().or_else(|| match &record.component {
         crate::Component::TreeItem(props) => Some(&props.label),
+        crate::Component::Table(props) => Some(&props.label),
         _ => None,
     });
     AccessibilityProjectionNode {

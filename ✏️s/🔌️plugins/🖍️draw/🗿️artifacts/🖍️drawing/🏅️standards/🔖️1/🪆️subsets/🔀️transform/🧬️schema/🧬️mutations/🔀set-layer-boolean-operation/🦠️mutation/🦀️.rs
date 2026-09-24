@@ -31,7 +31,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerBoolea
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set layer \"{}\" boolean operation to {}", self.layer_id, self.boolean_operation), &format!("Ebene \"{}\" boolesche Operation auf {} setzen", self.layer_id, self.boolean_operation))
+        protocol::LocalizedLabel::native(&format!("Set layer \"{}\" boolean operation to {}", self.layer_id, self.boolean_operation), &format!("Boolesche Operation von Ebene \"{}\" auf {} setzen", self.layer_id, self.boolean_operation))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

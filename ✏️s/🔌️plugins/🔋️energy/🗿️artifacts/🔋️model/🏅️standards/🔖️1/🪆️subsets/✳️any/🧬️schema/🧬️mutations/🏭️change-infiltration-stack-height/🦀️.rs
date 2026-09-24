@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Infiltration Stack Height of infiltration {}", self.id.0), &format!("Infiltrationsstapelhöhe von Infiltration {} ändern", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Change Infiltration Stack Height of infiltration {}", self.id.0), &format!("Kaminhöhe von Infiltration {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -28,6 +28,7 @@ exports.daemonBudgetMs = daemonBudgetMs;
 exports.defaultBudgetMs = defaultBudgetMs;
 exports.budgetTimeoutHint = budgetTimeoutHint;
 exports.terminateOwnedProcessTree = terminateOwnedProcessTree;
+exports.terminateOwnedChildTree = terminateOwnedChildTree;
 exports.orchestratorBudgetOpts = orchestratorBudgetOpts;
 exports.daemonBudgetOpts = daemonBudgetOpts;
 exports.runCmd = runCmd;
@@ -156,6 +157,12 @@ function terminateOwnedProcessTree(rootPid) {
         }
         catch (_k) { }
     }
+}
+/** 🪓️ Terminates one still-running spawned child with its whole descendant tree — POSIX groups and `taskkill /T`
+ * on Windows through [[terminateOwnedProcessTree]] — and never signals a pid its exited child no longer owns. */
+function terminateOwnedChildTree(child) {
+    if (child.exitCode === null && child.signalCode === null && child.pid)
+        terminateOwnedProcessTree(child.pid);
 }
 /** ⏱️[[RunCmdOpts]] preset for nx/script orchestrators — [[orchestratorBudgetMs]] and full CPU [[devToolingEnv]]. */
 function orchestratorBudgetOpts(extra) {

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeVEdKn {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change v ed kn to {:?}", self.new_v_ed_kn), &format!("Vedkn auf {:?} ändern", self.new_v_ed_kn))
+        protocol::LocalizedLabel::native(&format!("Change design shear force V_Ed [kN] to {:?}", self.new_v_ed_kn), &format!("Bemessungsquerkraft V_Ed [kN] auf {:?} ändern", self.new_v_ed_kn))
     }
 }
 //#endregion 🔖️ChangeVEdKn

@@ -34,7 +34,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for ReplacePixelsMutatio
         vec![TiffMutation::ReplacePixels(ReplacePixelsMutation { pixels: base.pixels.clone() })]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("replace pixels", "Pixel ersetzen")
+        protocol::LocalizedLabel::native("Replace pixels", "Pixel ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-pixels".into()]

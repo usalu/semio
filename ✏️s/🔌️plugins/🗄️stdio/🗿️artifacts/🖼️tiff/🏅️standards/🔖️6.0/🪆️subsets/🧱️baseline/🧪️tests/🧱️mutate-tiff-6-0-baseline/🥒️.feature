@@ -1,5 +1,5 @@
 @capability-tiff-6-0-baseline-mutate
-@no-oracle-tiff-6-0-baseline-conformance-class-semantics
+@oracle-tiff-tiff-6-0-baseline-mutate-reader
 @comparison-ordered-json-v1
 @mutations-tiff-6-0-baseline
 Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseline class
@@ -24,11 +24,11 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
   `TileWidth`/`TileLength` sit outside that set and travel verbatim. A byte-level exhaustive case
   built on this catalog would therefore report four of its nine rows green while the mutation never
   reached a byte, which is the shape of shallow green this ticket exists to remove. The vocabulary
-  is measured where its axes live instead: on the DECODED SNAPSHOT, against the checker's own
-  verdict. That is also why no oracle is registered — `image` 0.25, the reference the `✳️any` subset
-  does register, decodes and re-encodes a raster under its own choice of these very tags and has no
-  API to set an arbitrary compression, an out-of-range photometric or a tiled IFD (recorded as the
-  `tiff-6-0-baseline-conformance-class-semantics` no-oracle decision).
+  is measured where its axes live instead. The subject applies each row to the DECODED SNAPSHOT and
+  reads its own checker's verdict. The reference, the registered `tiff` crate reader, reads the same
+  five axes out of the real scan's IFD 0, applies the row as TIFF 6.0 defines the field it names, and
+  reads the class off the specification's own tables; the two projections must agree field for
+  field. The decode/re-encode law is its own case, `🔁️round-trip-tiff-6-0-baseline`.
 
   The input is the real scanned TIFF the `✳️any` case reads, shared by both subsets rather than
   copied. The `code` column names the diagnostic each kind must raise on it, and it is empty for
@@ -103,11 +103,3 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
       {"kind": "no-mutation", "code": "", "setup": {}, "params": {}}
       """
     Then the conformance projection is the pre-mutation one again, tag for tag
-
-  @id-identity-round-trip
-  @level-long
-  @mode-round-trip
-  Scenario: Decode and re-encode the real scan without passing bytes through
-    Given the real input document shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff
-    When the scan is decoded into a snapshot and re-serialized from that snapshot alone
-    Then the re-encoded bytes reproduce the reference writer's own file exactly, flipping one byte of the decoded raster changes them, the document is still Baseline-conforming, and the INDEPENDENT IFD reader agrees on the geometry of both

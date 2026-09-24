@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import laws from "../../🧫️fixtures/🔬️wgpu-extension-dispatch/🔣️.json";
+import documentBackbone from "../../🧫️fixtures/📡️wgpu-document-backbone/🔣️.json";
 import integerView from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json";
 import viewContextSchema from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
-import { serializeWgpuActorCall, wgpuBuildScopedContributionsPack, wgpuCommandIngressByteLength, wgpuContributionsIngressSize, wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_ACTOR_CALL_QUEUE_CAPACITY, WGPU_CONTRIBUTIONS_SLIM_VIEW, WgpuActorCallQueueFullError } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
-import { createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framework";
+import { extensionRequestActivationReason, serializeWgpuActorCall, wgpuBackboneMessageEffect, wgpuBuildScopedContributionsPack, wgpuCommandIngressByteLength, wgpuContributionsIngressSize, wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_ACTOR_CALL_QUEUE_CAPACITY, WGPU_CONTRIBUTIONS_SLIM_VIEW, WgpuActorCallQueueFullError } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
+import { activationEventEnvelope, createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framework";
 import { AppChannelClient, type AppChannelHandle, AppChannelRequestSequence, decodeAppCommand, encodeAppCommand, encodeAppFrame, encodePackValue } from "@semio-tech/framework-os";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, evaluateBrowserBootLiveness } from "../../🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts";
 import { SHARD_COMMAND_MAXIMUM_PAGES } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
@@ -254,4 +255,20 @@ describe("wgpu serializeWgpuActorCall causal order", () => {
     expect(ran).toHaveLength(1 + WGPU_ACTOR_CALL_QUEUE_CAPACITY);
     expect(ran).not.toContain("overflow");
   });
+});
+
+describe("wgpu extension request activation", () => {
+  it("activates a request actor on-extension-request with the capability that pulled it up, never manual", () => {
+    const reason = extensionRequestActivationReason("gis.tiles.render");
+    expect(reason).toBe("on-extension-request:gis.tiles.render");
+    expect(activationEventEnvelope(reason)).toEqual({ kind: "activate", payload: { instance: 0, reason: { tag: "on-extension-request", val: "gis.tiles.render" } } });
+  });
+});
+
+describe("wgpu document-backbone effect projection", () => {
+  for (const law of documentBackbone.effects) {
+    it(law.name, () => {
+      expect(wgpuBackboneMessageEffect(law.wire as Parameters<typeof wgpuBackboneMessageEffect>[0])).toEqual(law.host);
+    });
+  }
 });

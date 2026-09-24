@@ -22,7 +22,7 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for InsertVmlPart 
         agg_inverse(&XlsxStrictMutation::InsertVmlPart(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-vml-part", "Vmlbauteil einfügen")
+        protocol::LocalizedLabel::native("Insert VML part", "VML-Paketteil einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

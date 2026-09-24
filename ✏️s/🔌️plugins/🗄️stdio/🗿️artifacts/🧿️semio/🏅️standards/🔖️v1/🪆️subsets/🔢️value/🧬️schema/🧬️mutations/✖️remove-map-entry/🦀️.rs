@@ -23,7 +23,7 @@ impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for RemoveMa
         agg_inverse(&SemioValueMutation::RemoveMapEntry(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-map-entry", "Karteneintrag entfernen")
+        protocol::LocalizedLabel::native("Remove map entry", "Zuordnungseintrag entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

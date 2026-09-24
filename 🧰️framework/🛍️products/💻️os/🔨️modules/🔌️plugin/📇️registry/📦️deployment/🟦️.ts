@@ -22,6 +22,24 @@ export const MODULE_ROUTES = parseModuleRoutes(routes);
 export const MODULE_PLUGIN_ROUTE = MODULE_ROUTES.plugin;
 export const MODULE_EXTENSION_ROUTE = MODULE_ROUTES.extension;
 
+/** 🌐️ CDN page origins keyed by root route. Empty unless a production build injects them. */
+export function readPublishedPageOrigins(): Readonly<Record<string, string>> {
+  let raw: string | undefined;
+  try { raw = import.meta.env.SEMIO_PLAY_PAGE_ORIGINS as string | undefined; } catch { return {}; }
+  if (!raw) return {};
+  const parsed = JSON.parse(raw) as unknown;
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("SEMIO_PLAY_PAGE_ORIGINS must be a route map");
+  return Object.freeze(parsed as Record<string, string>);
+}
+
+/** 🌐️ Prefix a root-relative asset path with the CDN page that publishes it. Absolute URLs stay put. */
+export function publishedPageUrl(path: string, origins: Readonly<Record<string, string>> = readPublishedPageOrigins()): string {
+  if (!path.startsWith("/") || /^[a-z][a-z0-9+.-]*:/i.test(path)) return path;
+  const key = Object.keys(origins).sort((a, b) => b.length - a.length).find((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+  return key ? `${origins[key].replace(/\/$/, "")}${path}` : path;
+}
+
+
 /** 🚏️Decodes one canonical module request path without accepting obsolete routes or traversal aliases. */
 export function moduleRoutePath(rawUrl: string): string | null {
   const encoded = rawUrl.split(/[?#]/, 1)[0] ?? "";

@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddAir
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add terminal zone {} to air loop {}", self.zone_id.0, self.id.0), &format!("Terminalzone {} zu Luftkreis {} hinzufügen", self.zone_id.0, self.id.0))
+        protocol::LocalizedLabel::native(&format!("Add terminal zone {} to air loop {}", self.zone_id.0, self.id.0), &format!("Versorgte Zone {} zu Luftkreislauf {} hinzufügen", self.zone_id.0, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

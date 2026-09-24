@@ -1,0 +1,17 @@
+WG8 (session 11) guest requests — 2026-09-25 01:05
+1. crate semio-s-plugin-block (🧱️block, app s.block.block2d@1/*#editor, schema block.2d): needs to be IN the full trusted catalog on hub 7800
+   (the native two-user collaboration law opens/creates a block.2d hub document; catalog A has no block).
+2. same crate: a component-release build from the post-landing tree (after H9's codec.replay-envelopes ABI row is green),
+   so the native wgpu shell can mount it (the owned interpreter refuses components missing an owned export; the staged
+   release component at ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/dist/component-release/ is from 2026-09-24 03:20).
+   Please append the resulting component path + sha256 + catalog generation here.
+
+[w2 2026-09-25 03:5x] ACK. block is in the full catalog (`--packages all`, `.🧬semio/🌐hub/w2-catalog-all`), built from the post-landing tree
+  (H9 replay-envelopes row included). The open-target fix (one Rust rule, `os-hub trusted-catalog open-targets`) makes block's editor kinds
+  real open targets, where the old TS rule would have left block codec-only. W2 appends the component-release path + sha256 + catalog
+  generation here after publish.
+
+[w2 2026-09-25 12:3x] catalog B published from the post-landing tree: /Users/ueli/Documents/semio/.🧬semio/🌐hub/w2-catalog-b (generation e8167ce8ed3e61f0a4252661df9f2e3043aabb258e474b797fc3f0612c9ecc53, 9 packages stdio,gis,note,animate,block,writer,draw,puzzle,wfc; 12 editor open targets, compressed closed actors, S15 plugin modules). Hub 7800 runs it since 11:50 with binary .tmp-ticket/wp-w2/generated/bin/os-hub-hub-7800-b (Hub Handoff in 📓️wp-w2.md). Open-plan probe 12/12 (wp-w2/generated/open-plan-probe-7800-b.txt). The full --packages all catalog follows.
+
+[w2 2026-09-25 12:3x] catalog B component sha256 (wasm-release): {'animate': '92da825216ee95c01da006d6e552efbcc67c3e0cdd3123a3665e4ae7d5191661', 'block': '0d1a9bcd1fba48f1e6da53e73017419919c813feb3052c03bef6432ecdb3f9f9', 'draw': '476fe9c0c220db7da4dae1f3bc8c59895bc8e6f3a312180a0fe22f62e9f6f22c', 'gis': '8460f7527d7a7c1c9856906e1072451f2634d866411eff4ab75dc760e12989f6', 'note': '4567a6707d77f7afc14a25220821c1148a9946c3e04ec697420dd5791c283940', 'puzzle': '16f5bff8bfb661142ac8cc153b0fabeb1d2d4f1c4909396738cab610bf914a5f', 'stdio': '7791ca932ca1f8733415711b1bf26a892ecf3e74daea16425397e4ad4233bc70', 'wfc': 'b2fe3d3b572e3310d22884d10e95edfbf996a13806a5d892cdad9223af5d7934', 'writer': '5b6af71b49d6e8aef932f9d7f2d7eee35a4c01d2f472331be2bf03828b463d8e'}
+  block dist/component-release: 0d1a9bcd1fba48f1e6da53e73017419919c813feb3052c03bef6432ecdb3f9f9

@@ -43,6 +43,9 @@ internal static class Scenarios
             ["hasOwnershipMarker"] = File.Exists(Path.Combine(ctx.WorkDir, "🧾️marker.json")),
         });
     }
+
+    /// <summary>🪆️ One handler registered under the outline's base id serves every expanded row.</summary>
+    internal static Outcome OutlineRegistration(Context ctx) => new(new Dictionary<string, object?> { ["scenario"] = ctx.Scenario.Id, ["row"] = ctx.Row });
 }
 
 #endregion 🔖️Scenarios
@@ -55,7 +58,8 @@ internal static class Adapter
     internal static Semio.Repo.Test.Adapter Create() => new Semio.Repo.Test.Adapter("dotnet")
         .Subject("digest-and-fixture-resolution", Scenarios.DigestAndFixtureResolution)
         .Subject("fixture-not-in-plan-is-an-error", Scenarios.FixtureNotInPlanIsAnError)
-        .Subject("work-directory-is-cache-local", Scenarios.WorkDirectoryIsCacheLocal);
+        .Subject("work-directory-is-cache-local", Scenarios.WorkDirectoryIsCacheLocal)
+        .Subject("outline-registration", Scenarios.OutlineRegistration);
 }
 
 #endregion 🔖️Registration

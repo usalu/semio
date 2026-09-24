@@ -48,7 +48,7 @@ pub(super) fn host_test_shell() -> ShellState {
         dependencies: vec![],
         contributions: vec![],
     };
-    let bridge = ProgramBridgeEntry::from_wasm("space".into(), None, std::path::PathBuf::from("missing-host-panel-guest.wasm"), manifest).expect("nonrunnable host bridge");
+    let bridge = ProgramBridgeEntry::from_wasm("space".into(), None, None, std::path::PathBuf::from("missing-host-panel-guest.wasm"), manifest).expect("nonrunnable host bridge");
     let mut shell = ShellState::new(vec![bridge], "space".into());
     let base = SpacePanelState {
         active_panel_tab: "s-play-catalogue".into(),

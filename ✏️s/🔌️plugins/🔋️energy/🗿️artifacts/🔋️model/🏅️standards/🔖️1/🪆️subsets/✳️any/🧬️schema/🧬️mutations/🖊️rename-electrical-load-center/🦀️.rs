@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Rename
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename Electrical Load Center of electrical load center {}", self.id.0), &format!("elektrische Lastmittelpunkt von elektrische Lastmittelpunkt {} umbenennen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Rename Electrical Load Center of electrical load center {}", self.id.0), &format!("Stromverteiler {} umbenennen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

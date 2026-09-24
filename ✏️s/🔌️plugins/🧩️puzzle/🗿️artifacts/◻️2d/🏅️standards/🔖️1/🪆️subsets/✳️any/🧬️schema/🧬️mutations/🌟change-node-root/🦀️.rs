@@ -32,7 +32,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeNodeRo
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change node \"{}\" root", self.id), &format!("Knoten \"{}\" Wurzel ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change node \"{}\" root", self.id), &format!("Wurzel von Knoten \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

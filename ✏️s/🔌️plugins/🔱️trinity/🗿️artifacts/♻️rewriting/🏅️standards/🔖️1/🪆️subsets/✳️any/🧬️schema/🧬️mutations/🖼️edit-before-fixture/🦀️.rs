@@ -29,7 +29,7 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for EditBefo
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Edit before-fixture", "vor -Vorrichtung bearbeiten")
+        protocol::LocalizedLabel::native("Edit before-fixture", "Ausgangszustand bearbeiten")
     }
 }
 //#endregion 🔖️Mutation

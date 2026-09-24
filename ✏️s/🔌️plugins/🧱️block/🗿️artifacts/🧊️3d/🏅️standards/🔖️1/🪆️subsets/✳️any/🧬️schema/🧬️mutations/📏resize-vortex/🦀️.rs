@@ -32,7 +32,7 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ResizeVortex {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Resize vortex \"{}\"", self.id), &format!("Wirbel \"{}\" skalieren", self.id))
+        protocol::LocalizedLabel::native(&format!("Resize vortex \"{}\"", self.id), &format!("Größe von Wirbel \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -36,7 +36,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceT
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace trajectory", "Bahn ersetzen")
+        protocol::LocalizedLabel::native("Replace trajectory", "Trajektorie ersetzen")
     }
 }
 //#endregion 🔖️Mutation

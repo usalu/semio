@@ -32,7 +32,7 @@ impl MutationKind<Fem2dSnapshot, Fem2dMutation> for ReplaceLoad {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace load \"{}\" in case \"{}\"", self.load_id, self.case_id), &format!("Last \"{}\" in Fall \"{}\" ersetzen", self.load_id, self.case_id))
+        protocol::LocalizedLabel::native(&format!("Replace load \"{}\" in case \"{}\"", self.load_id, self.case_id), &format!("Last \"{}\" in Lastfall \"{}\" ersetzen", self.load_id, self.case_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone(), self.load_id.clone()]

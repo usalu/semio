@@ -133,7 +133,7 @@
   ],
   "limits": {
     "requestMaxBytes": 1024,
-    "inputMaxBytes": 65536,
+    "inputMaxBytes": 1048576,
     "resultMaxBytes": 16384,
     "proposalMaxBytes": 4096,
     "commandMaxBytes": 8192,

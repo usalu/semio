@@ -35,7 +35,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for ReorderLayer {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder layer \"{}\"", self.layer_id), &format!("Ebene \"{}\" umordnen", self.layer_id))
+        protocol::LocalizedLabel::native(&format!("Reorder layer \"{}\"", self.layer_id), &format!("Reihenfolge von Ebene \"{}\" ändern", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

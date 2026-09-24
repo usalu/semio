@@ -10,7 +10,7 @@
   "binaryTag": 4,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
-  "outcomeClasses": ["applied", "error"],
+  "outcomeClasses": ["applied", "no-op", "rejected"],
   "composition": "atomic",
   "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
 }

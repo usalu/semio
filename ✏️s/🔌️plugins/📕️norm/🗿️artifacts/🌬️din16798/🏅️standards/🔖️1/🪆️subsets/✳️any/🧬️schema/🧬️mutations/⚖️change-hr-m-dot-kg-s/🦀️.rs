@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHrMDot
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change heat recovery mass flow rate to {}", self.new_hr_m_dot_kg_s), &format!("Wärmenrückgewinnungsmassenflussrate auf {} ändern", self.new_hr_m_dot_kg_s))
+        protocol::LocalizedLabel::native(&format!("Change heat recovery mass flow rate to {}", self.new_hr_m_dot_kg_s), &format!("Massenstrom der Wärmerückgewinnung auf {} ändern", self.new_hr_m_dot_kg_s))
     }
 }
 //#endregion 🔖️ChangeHrMDotKgS

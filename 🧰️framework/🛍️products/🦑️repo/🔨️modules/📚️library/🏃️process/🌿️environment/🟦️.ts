@@ -23,7 +23,7 @@ export function semioNxParallelFlag(): readonly [parallel: string, count: string
  * makes Nx's in-process `require()` path (`runPreTasksExecution` → `getPluginsSeparated`) reject it with
  * "require() async module … is unsupported", which fails every `nx run` spawned with this env even
  * though the daemon-served project graph itself resolves. */
-export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+export function devToolingEnv(extra: Partial<NodeJS.ProcessEnv> = {}): NodeJS.ProcessEnv {
   const env = { ...process.env, ...extra };
   delete env.NODE_OPTIONS;
   delete env.VSCODE_INSPECTOR_OPTIONS;
@@ -38,7 +38,7 @@ export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv 
 }
 
 /** ⚡️ Routes Go's build cache and Playwright's browser downloads into the shared cache root; never overrides a value the caller set explicitly. */
-export function repoToolCacheEnv(repoRoot: string, extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+export function repoToolCacheEnv(repoRoot: string, extra: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const env = { ...extra };
   env.GOCACHE ??= repoCacheDirectory(repoRoot, "go");
   env.PLAYWRIGHT_BROWSERS_PATH ??= repoCacheDirectory(repoRoot, "tools", "ms-playwright");

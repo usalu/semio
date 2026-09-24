@@ -228,3 +228,18 @@ async fn report_out_exports_the_computed_check_report() {
     context::close(&mut app);
 }
 //#endregion ðï¸Behavior
+
+/// ⚖️ LAW (S15 matrix, 2026-09-25): `setSnapshot`'s declared argument is `snapshot`, the document's camelCase JSON.
+/// The rail delivered the committed ➡️after fixture and the editor handed that JSON to its DSL-text parser
+/// (`expected Enum, found Absent at 1:1`). The argument now reaches the handler as the same document.
+#[semio_framework_async_macros::async_test]
+async fn the_declared_snapshot_argument_carries_the_documents_json() {
+    const AFTER: &str = include_str!("../../../🧫️fixtures/🧬️mutations/🌬️change-hv/🌬️raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/📸️snapshot/➡️after/🔣️.json");
+    let expected = crate::standards::v1::subsets::any::schema::snapshot::decode_din18599_snapshot_json(AFTER).expect("the committed after fixture decodes");
+    let args = dsl::json::from_json_str::<dsl::DslValue>(&format!("{{\"snapshot\":{AFTER}}}")).expect("rail arguments");
+    let command = <Din18599PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&args)).expect("setSnapshot converts from the declared argument");
+    let Din18599Command::ReplaceSnapshot(payload) = &command else { panic!("setSnapshot resolves to ReplaceSnapshot, got {command:?}") };
+    let carried = <Din18599Snapshot as store::ArtifactDsl>::parse_dsl(&crate::document::unescape_op_text_field(&payload.text)).expect("the payload carries the document's own DSL text");
+    assert_eq!(carried, expected, "the rail's JSON document must reach the handler unchanged");
+    assert!(<Din18599PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&dsl::json::from_json_str::<dsl::DslValue>(r#"{"text":"x"}"#).unwrap())).is_err(), "only the declared `snapshot` argument is read");
+}

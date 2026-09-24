@@ -297,6 +297,19 @@
         "hostPath": {
           "type": "string"
         },
+        "hostImplementation": {
+          "$ref": "#/$defs/Implementation",
+          "description": "🧭️ The case adapter language that drives a `native` reference (a third-party CLI spawned from that adapter's oracle handler). Required when `ecosystem` is `native` and the reference serves a case's oracle role."
+        },
+        "executables": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "🔧️ The commands a `third-party-cli` reference runs. The oracle phase looks each one up on PATH before dispatching the case; a missing command is recorded as `oracle-unavailable` with the command it lacked, and the case's oracle role and parity are not run, rather than failing or passing silently."
+        },
         "productionDebt": {
           "$ref": "#/$defs/ProductionDebt"
         },
@@ -576,6 +589,11 @@
         "subset": {
           "$ref": "#/$defs/Slug"
         },
+        "surface": {
+          "type": "string",
+          "minLength": 1,
+          "description": "🎚️ The editor or viewer state lane the target sits on, spelled exactly like `MutationManifest.surface`. Absent: the subset's document. A state lane is hosted by its subset rather than scoping it, so a surfaced target is never a wildcard of the subset's siblings."
+        },
         "compound": {
           "type": "array",
           "items": {
@@ -770,6 +788,11 @@
         "subsetDirectoryName": {
           "$ref": "#/$defs/ProfileDirectoryName"
         },
+        "surface": {
+          "type": "string",
+          "minLength": 1,
+          "description": "🎚️ The editor or viewer state lane this manifest measures: its owner's path below the subset directory, `<✏️editor|👁️viewer>[/🎭️modes/<mode>[/🪟️windows/<window>]]/<🎚️config|👥️presence|🫧️transient>` spelled with the taxonomy's own directories. Absent: the artifact's document dispatch. A state lane is dispatched through the plugin's config, presence and transient stores, never through the document aggregate, so its runtime inventory is keyed by coordinate and surface."
+        },
         "mutations": {
           "type": "array",
           "items": {
@@ -803,6 +826,11 @@
         },
         "subset": {
           "$ref": "#/$defs/Slug"
+        },
+        "surface": {
+          "type": "string",
+          "minLength": 1,
+          "description": "🎚️ The state lane the bridge measured, echoing the manifest's `surface`; absent for the document dispatch."
         },
         "bridgeVersion": {
           "type": "integer",

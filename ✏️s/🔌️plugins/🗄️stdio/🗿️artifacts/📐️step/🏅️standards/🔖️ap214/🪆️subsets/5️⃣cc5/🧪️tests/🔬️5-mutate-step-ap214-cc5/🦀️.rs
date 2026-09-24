@@ -29,10 +29,6 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, reparsed_not_copie
 /// 🏷️ How this class names itself in a failure message.
 const CLASS: &str = "ISO 10303-214 CC5 (faceted B-Rep)";
 
-/// 🧾️ Case-local mirror of the `step-ap214-cc5` catalog. Duplicated rather than imported: `KINDS`
-/// lives in the SUBJECT crate, which the oracle role must never link. The contract phase fails with
-/// `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list drifts from the catalog.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-schema", "set-product-identity", "set-shape-representation", "demote-shape-representation"];
 
 /// 🪜️ This class's own ceiling type — the one `set-shape-representation` writes and the one a
 /// demotion lands on. Named here because the per-row claim below asserts it by name.
@@ -323,16 +319,14 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
-/// id, so the outline's rows are enumerated here rather than its base id.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), mutate_oracle).oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), subject::mutate).subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

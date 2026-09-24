@@ -97,7 +97,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-header-var",
         "remove-header-var"
@@ -114,37 +113,6 @@
       "subsetDirectoryName": "📰️header",
       "mutations": [
         {
-          "id": "no-mutation",
-          "capability": "dxf-r12-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#DxfMutation::NoMutation",
-          "outcomes": [
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "no-mutation",
-            "bridgeVersion": 1,
-            "variant": "DxfMutation::NoMutation"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "dxf-r12-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "dxf-crate-r12-mutate-reader"
-            }
-          ],
-          "carriers": [
-            "dxf"
-          ],
-          "invariants": {
-            "local": [
-              "semantic-projection-is-unchanged"
-            ],
-            "enclosing": [
-              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
-            ]
-          }
-        },
-        {
           "id": "set-snapshot",
           "capability": "dxf-r12-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#DxfMutation::SetSnapshot",
@@ -156,7 +124,7 @@
           "productionDispatch": {
             "operation": "set-snapshot",
             "bridgeVersion": 1,
-            "variant": "DxfMutation::SetSnapshot"
+            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -188,7 +156,7 @@
           "productionDispatch": {
             "operation": "set-header-var",
             "bridgeVersion": 1,
-            "variant": "DxfMutation::SetHeaderVar"
+            "variant": "SetHeaderVar"
           },
           "oracleRequirements": [
             {
@@ -221,7 +189,7 @@
           "productionDispatch": {
             "operation": "remove-header-var",
             "bridgeVersion": 1,
-            "variant": "DxfMutation::RemoveHeaderVar"
+            "variant": "RemoveHeaderVar"
           },
           "oracleRequirements": [
             {
@@ -237,6 +205,503 @@
             "local": [
               "header-insertion-base-resets-to-origin",
               "only-insbase-is-representable-in-r12"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "insert-layer",
+          "capability": "dxf-r12-tables-mutate",
+          "subset": "tables",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧱insert-layer/🦀️.rs#InsertLayer",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-layer",
+            "bridgeVersion": 1,
+            "variant": "InsertLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-tables-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "layer-table-gains-one-row-at-the-declared-index"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-layer",
+          "capability": "dxf-r12-tables-mutate",
+          "subset": "tables",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🪨remove-layer/🦀️.rs#RemoveLayer",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-layer",
+            "bridgeVersion": 1,
+            "variant": "RemoveLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-tables-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "layer-table-loses-the-named-row"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-layer",
+          "capability": "dxf-r12-tables-mutate",
+          "subset": "tables",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🎚️set-layer/🦀️.rs#SetLayer",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-layer",
+            "bridgeVersion": 1,
+            "variant": "SetLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-tables-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "layer-colour-and-linetype-agree-for-the-named-row"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "insert-style",
+          "capability": "dxf-r12-tables-mutate",
+          "subset": "tables",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🎨insert-style/🦀️.rs#InsertStyle",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-style",
+            "bridgeVersion": 1,
+            "variant": "InsertStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-tables-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "style-table-gains-one-row-at-the-declared-index"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-style",
+          "capability": "dxf-r12-tables-mutate",
+          "subset": "tables",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧽remove-style/🦀️.rs#RemoveStyle",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-style",
+            "bridgeVersion": 1,
+            "variant": "RemoveStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-tables-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "style-table-loses-the-named-row"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-style",
+          "capability": "dxf-r12-tables-mutate",
+          "subset": "tables",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🖌️set-style/🦀️.rs#SetStyle",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-style",
+            "bridgeVersion": 1,
+            "variant": "SetStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-tables-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "style-font-agrees-for-the-named-row"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "insert-linetype",
+          "capability": "dxf-r12-tables-mutate",
+          "subset": "tables",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧵insert-linetype/🦀️.rs#InsertLinetype",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-linetype",
+            "bridgeVersion": 1,
+            "variant": "InsertLinetype"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-tables-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "linetype-table-gains-one-row-at-the-declared-index"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-linetype",
+          "capability": "dxf-r12-tables-mutate",
+          "subset": "tables",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🪚remove-linetype/🦀️.rs#RemoveLinetype",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-linetype",
+            "bridgeVersion": 1,
+            "variant": "RemoveLinetype"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-tables-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "linetype-table-loses-the-named-row"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-linetype",
+          "capability": "dxf-r12-tables-mutate",
+          "subset": "tables",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🪡set-linetype/🦀️.rs#SetLinetype",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-linetype",
+            "bridgeVersion": 1,
+            "variant": "SetLinetype"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-tables-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "linetype-description-agrees-for-the-named-row"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "insert-entity",
+          "capability": "dxf-r12-entities-mutate",
+          "subset": "entities",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧩insert-entity/🦀️.rs#InsertEntity",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-entity",
+            "bridgeVersion": 1,
+            "variant": "InsertEntity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-entities-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "entities-gain-one-typed-entity-at-the-declared-index",
+              "entity-order-is-significant"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-entity",
+          "capability": "dxf-r12-entities-mutate",
+          "subset": "entities",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🗑️remove-entity/🦀️.rs#RemoveEntity",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-entity",
+            "bridgeVersion": 1,
+            "variant": "RemoveEntity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-entities-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "entities-lose-the-entity-at-the-declared-index",
+              "entity-order-is-significant"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-entity",
+          "capability": "dxf-r12-entities-mutate",
+          "subset": "entities",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔧set-entity/🦀️.rs#SetEntity",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-entity",
+            "bridgeVersion": 1,
+            "variant": "SetEntity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-entities-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "entity-at-the-declared-index-agrees-field-by-field"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "insert-block",
+          "capability": "dxf-r12-blocks-mutate",
+          "subset": "blocks",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📦insert-block/🦀️.rs#InsertBlock",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-block",
+            "bridgeVersion": 1,
+            "variant": "InsertBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-blocks-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "blocks-gain-one-block-at-the-declared-index"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-block",
+          "capability": "dxf-r12-blocks-mutate",
+          "subset": "blocks",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🪓remove-block/🦀️.rs#RemoveBlock",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-block",
+            "bridgeVersion": 1,
+            "variant": "RemoveBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-blocks-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "blocks-lose-the-block-at-the-declared-index"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-block",
+          "capability": "dxf-r12-blocks-mutate",
+          "subset": "blocks",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔲set-block/🦀️.rs#SetBlock",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-block",
+            "bridgeVersion": 1,
+            "variant": "SetBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-blocks-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "block-base-point-and-nested-entities-agree"
             ],
             "enclosing": [
               "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
@@ -297,8 +762,6 @@
         "standard": "r12",
         "subset": "header"
       },
-      "mutation": "no-mutation",
-      "outcome": "no-op",
       "units": {
         "length": "unitless",
         "angle": "degree"

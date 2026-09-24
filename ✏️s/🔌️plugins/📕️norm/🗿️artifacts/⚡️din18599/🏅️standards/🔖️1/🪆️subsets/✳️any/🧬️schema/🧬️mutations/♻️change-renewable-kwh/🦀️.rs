@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeRenewa
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change renewable energy contribution [kWh] to {}", self.new_renewable_kwh), &format!("erneuerbare Energienbeitrag [kWh] auf {} ändern", self.new_renewable_kwh))
+        protocol::LocalizedLabel::native(&format!("Change renewable energy contribution [kWh] to {}", self.new_renewable_kwh), &format!("Beitrag erneuerbarer Energien [kWh] auf {} ändern", self.new_renewable_kwh))
     }
 }
 //#endregion 🔖️ChangeRenewableKwh

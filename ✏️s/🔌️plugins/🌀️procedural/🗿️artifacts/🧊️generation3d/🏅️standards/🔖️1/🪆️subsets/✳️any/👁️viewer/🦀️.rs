@@ -1652,6 +1652,7 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         // really does mutate nothing — it hands the shell a `DownloadMediaExport` and returns.
         .action_with(ActionDefinition::new("exportDocument", LocalizedLabel::native("Export Artifact", "Artefakt exportieren"), ActionKind::View, "download"))
         .action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
+        .action_destructive("exportDocument")
         .action_args("exportDocument", vec![semio_framework_plugin::ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), crate::standards::v1::subsets::any::io::document_io::export_format_options()).required().default_value(&"stl")])
         .keybinding("mod+shift+e", "exportDocument")
         // ⏯️ The read-only preview evaluation run: declared so the framework owns its lifecycle and

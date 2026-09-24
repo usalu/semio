@@ -197,6 +197,28 @@ fn ui_turn_patch_transport_round_trip_is_single_claim_and_preserves_populated_ow
     while !owner.close_step() {}
 }
 
+/// 🪪️ A transport session is the granted actor's own id, and `ActorId(0)` is a real actor — the first
+/// app of the first plugin a host activates (plugin ordinal, kind, ordinal and generation all zero).
+/// Refusing session 0 faulted every patch-carrying turn of that actor ("fixed turn patch transport
+/// admission refused the exact owner"), so a native shell's first mounted guest could paint nothing
+/// (ticket 26/09/23 slice WG8, measured on block2d).
+#[test]
+fn ui_turn_patch_transport_admits_the_zero_actor_as_its_session() {
+    let mut owner = UiTurnPatches::default();
+    owner.try_push_ui_patch(patch(4)).expect("one patch");
+    let mut producer = UiTurnPatchTransportProducer::try_new(0, owner).expect("actor 0 owns a transport session");
+    while producer.drive_one(0, false, false) != UiTurnPatchTransportStep::Ready {}
+    let token = producer.take_ready().expect("valid publication authority").expect("complete token");
+    assert!(UiTurnPatchTransportLease::try_from_token(&token, 1).is_err(), "another actor never claims actor 0's patches");
+    let lease = UiTurnPatchTransportLease::try_from_token(&token, 0).expect("actor 0 claims its own patches");
+    let mut owner = match lease.take_owner() {
+        Ok(owner) => owner,
+        Err(_) => panic!("exact transport owner"),
+    };
+    assert_eq!(owner.iter().next().expect("one patch").revision, semio_framework_ui_contract::UiRevision(4));
+    while !owner.close_step() {}
+}
+
 #[test]
 fn ui_turn_patch_transport_producer_drop_hands_back_without_waiting_for_arena() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();

@@ -207,3 +207,25 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
         progress("complete");
     }
 }
+
+/// 🧬️ Generator and law of `📇️registry/📜️native-codec-factories.json`'s `pack_schema_sha256` column: each value is
+/// the live receipt's `os_pack::schema_hash`, the one authority the hub's linked codec also binds. With
+/// `SEMIO_NATIVE_CODEC_PROJECTION=write` (the stdio `native-codec-projection` verb) the committed values are
+/// rewritten in place; otherwise the committed projection must already equal the live receipts byte for byte.
+#[test]
+fn native_codec_projection_pack_schema_hashes_equal_live_receipts() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../📇️registry/📜️native-codec-factories.json");
+    let committed = std::fs::read_to_string(&path).unwrap();
+    let mut generated = committed.clone();
+    let key = "\"pack_schema_sha256\": \"";
+    for receipt in semio_s_plugin_stdio::registry::live_native_codec_factory_receipts().expect("live artifact-owned native codec receipts") {
+        let row = generated.find(&format!("\"factory_id\": \"{}\"", receipt.factory_id)).unwrap_or_else(|| panic!("projection omits {}", receipt.factory_id));
+        let start = row + generated[row..].find(key).expect("projection row carries pack_schema_sha256") + key.len();
+        generated.replace_range(start..start + 64, &receipt.pack_schema_hash.iter().map(|byte| format!("{byte:02x}")).collect::<String>());
+    }
+    if std::env::var("SEMIO_NATIVE_CODEC_PROJECTION").as_deref() == Ok("write") {
+        std::fs::write(&path, &generated).unwrap();
+    } else {
+        assert_eq!(generated, committed, "stdio native codec projection is stale: run the stdio native-codec-projection verb");
+    }
+}

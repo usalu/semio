@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceWorkshop {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace workshop \"{}\"", self.workshop.header.name), &format!("Werkstatt \"{}\" ersetzen", self.workshop.header.name))
+        protocol::LocalizedLabel::native(&format!("Replace workshop \"{}\"", self.workshop.header.name), &format!("Workshop \"{}\" ersetzen", self.workshop.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.workshop.header.id.0.clone()]

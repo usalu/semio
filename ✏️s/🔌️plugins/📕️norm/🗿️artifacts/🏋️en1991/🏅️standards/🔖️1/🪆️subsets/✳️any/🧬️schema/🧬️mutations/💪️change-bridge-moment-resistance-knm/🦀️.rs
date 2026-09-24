@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeBridgeMome
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change bridge moment resistance to {:?}", self.new_bridge_moment_resistance_knm), &format!("Brückenmomentwiderstand auf {:?} ändern", self.new_bridge_moment_resistance_knm))
+        protocol::LocalizedLabel::native(&format!("Change bridge moment resistance to {:?}", self.new_bridge_moment_resistance_knm), &format!("Momententragfähigkeit der Brücke auf {:?} ändern", self.new_bridge_moment_resistance_knm))
     }
 }
 //#endregion 🔖️Payload

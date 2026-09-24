@@ -80,6 +80,15 @@ export function publishFlowBrowserDeclarations(packageRoot = corePackageRoot): v
   writePackageManifest(packageRoot);
 }
 
+/** 🌱️ Writes the static `@semio-tech/flow-core` manifest a fresh clone lacks: the package is a root workspace member,
+ * and `bun install` refuses the whole workspace while a member directory is missing. The wasm-bindgen payload stays with
+ * [[publishFlowBrowserPackage]]. Declared in `⚡️caching/🚀️bootstrap/🌱️sources/🔣️.json`. */
+export function bootstrapFlowCorePackage(): void {
+  if (existsSync(join(corePackageRoot, "package.json"))) return;
+  mkdirSync(corePackageRoot, { recursive: true });
+  writePackageManifest(corePackageRoot);
+}
+
 /** 📤️ Copies native output, publishes browser projections and preserves wasm-bindgen snippets as one package. */
 export async function publishFlowBrowserPackage(familyPackageRoot: string, packageRoot = corePackageRoot): Promise<void> {
   if (!existsSync(familyPackageRoot)) throw new Error(`flow-core wasm build did not emit ${familyPackageRoot}`);

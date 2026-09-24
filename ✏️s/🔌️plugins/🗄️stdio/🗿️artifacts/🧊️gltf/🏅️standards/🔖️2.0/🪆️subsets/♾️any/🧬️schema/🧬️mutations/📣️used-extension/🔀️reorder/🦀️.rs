@@ -63,7 +63,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderUsedEx
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Reorder Used Extensions", "genutzte Erweiterungen umordnen")
+        protocol::LocalizedLabel::native("Reorder Used Extensions", "Verwendete Erweiterungen umordnen")
     }
 
     fn target(&self) -> Vec<String> {

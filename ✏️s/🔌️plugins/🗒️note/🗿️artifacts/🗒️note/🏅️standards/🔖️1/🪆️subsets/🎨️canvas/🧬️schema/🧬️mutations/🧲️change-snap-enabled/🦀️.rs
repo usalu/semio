@@ -32,7 +32,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeSnapEnabled {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change snap enabled to {:?}", self.new_enabled), &format!("aktivierte Fang auf {:?} ändern", self.new_enabled))
+        protocol::LocalizedLabel::native(&format!("Change snap enabled to {:?}", self.new_enabled), &format!("Fangfunktion auf {:?} ändern", self.new_enabled))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

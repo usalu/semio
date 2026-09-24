@@ -19,3 +19,14 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-repo-identity = { path = "../../../🪪️identity/📦️packages/🦀️rust" }
 semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-codebase = { path = "../../../🗂️codebase/📦️packages/🦀️rust" }
+semio-framework-repo-contributors = { path = "../../../🧑️contributors/📦️packages/🦀️rust" }
+semio-framework-repo-events = { path = "../../../📡️events/📦️packages/🦀️rust" }
+semio-framework-repo-goals = { path = "../../../🎯️goals/📦️packages/🦀️rust" }
+semio-framework-repo-languages = { path = "../../../🗣️languages/📦️packages/🦀️rust" }
+semio-framework-repo-move = { path = "../../../🚚️move/📦️packages/🦀️rust" }
+semio-framework-repo-providers = { path = "../../../🧩️providers/📦️packages/🦀️rust" }
+semio-framework-repo-statutes = { path = "../../../📜️statutes/📦️packages/🦀️rust" }
+semio-framework-repo-tickets = { path = "../../../🎫️tickets/📦️packages/🦀️rust" }
+semio-framework-repo-todos = { path = "../../../📝️todos/📦️packages/🦀️rust" }
+semio-framework-repo-workspace = { path = "../../../🏠️workspace/📦️packages/🦀️rust" }

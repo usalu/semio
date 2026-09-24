@@ -61,26 +61,6 @@ SEGMENT_ORDER = ("moveTo", "lineTo", "cubicTo", "quadTo", "arcTo", "close")
 SEGMENT_LETTER = {"moveTo": "M", "lineTo": "L", "cubicTo": "C", "quadTo": "Q", "arcTo": "A", "close": "Z"}
 LETTER_SEGMENT = {letter: kind for kind, letter in SEGMENT_LETTER.items()}
 
-KINDS = (
-    "create-layer",
-    "delete-layer",
-    "create-node",
-    "delete-node",
-    "move-node",
-    "drag-nodes",
-    "rotate-node",
-    "scale-node",
-    "reorder-nodes",
-    "group-nodes",
-    "ungroup-node",
-    "flatten-node",
-    "unflatten-node",
-    "replace-path",
-    "replace-fill",
-    "change-stroke-color",
-    "change-stroke-width",
-)
-
 ARTIFACT_DSL = "shared://🖊️mutate-semio-drawing/🗣️.dsl.semio"
 ARTIFACT_PACK = "shared://🖊️mutate-semio-drawing/🎒️.pack.semio"
 
@@ -1199,11 +1179,10 @@ def identity_round_trip(ctx: Context) -> Outcome:
 
 # region 🔖️Registration
 def adapter() -> Adapter:
-    """🧭️ Registration entry point the Python host calls, keyed by FULL expanded scenario id."""
-    built = Adapter("python")
-    for kind in KINDS:
-        built = built.oracle("mutate-%s" % kind, mutate).oracle("inverse-%s" % kind, inverse).oracle("spec-vector-%s" % kind, spec_vector)
-    return built.oracle("identity-round-trip", identity_round_trip)
+    """🧭️ Registration entry point the Python host calls. Handlers are registered under the Scenario
+    Outline base ids, which the host resolves for every Examples row, and plain scenarios under their
+    own ids."""
+    return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

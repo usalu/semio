@@ -10,6 +10,7 @@
 import React, { Component, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import type { ShellDialogV1 } from "../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
+import type { PluginModuleSourceV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
 import {
   ANCHORS,
   Button,
@@ -124,10 +125,30 @@ export type PluginManifest = {
   readonly topicContributions?: readonly TopicContribution[];
 };
 
+/** 🧩️ The catalog module a hub document's program runs: its plugin, catalog generation and module bundle, where its
+ * verified bytes came from, and the program of every module of its closure (plugin id → program id), so the requests it
+ * makes to its dependencies and extensions stay inside that generation. */
+export type CatalogProgramModuleV1 = Readonly<{
+  pluginId: string;
+  generationId: string;
+  bundleSha256: string;
+  source: PluginModuleSourceV1;
+  peers: Readonly<Record<string, string>>;
+}>;
+
 export type LoadedProgramState = {
   readonly handle: PluginWasmHandle;
   readonly manifest: PluginManifest;
+  /** 🧩️ Present only on a hub document's catalog-resolved program (`handle.pluginId` is then its hub program id): it runs
+   * beside the device's own program of the same plugin and is never one of the device's own programs. */
+  readonly catalogModule?: CatalogProgramModuleV1;
 };
+
+/** 🔌️ The device's own programs — every loaded program except hub documents' catalog-resolved ones: what routing, the
+ * program launcher, contributions and the dialect index read. The same array while no hub program is loaded. */
+export function localProgramsV1(loaded: readonly LoadedProgramState[]): readonly LoadedProgramState[] {
+  return loaded.some((entry) => entry.catalogModule !== undefined) ? loaded.filter((entry) => entry.catalogModule === undefined) : loaded;
+}
 
 /** 🔌️ Lifecycle status of one registry entry for the plugin panel (bottom-right dock): "available" —
  * registered but not (yet) loaded, including a plugin whose first build hasn't landed. Driven by
@@ -772,13 +793,17 @@ export type ShellAction =
 //#endregion actions
 
 //#region slice reducers
+/** 🔌️ The loaded set with `entry` in its plugin's place (appended when new) — the one upsert the reducer applies,
+ * shared with callers that must read the set before the next render commits it. */
+export function upsertLoadedProgramV1(loaded: readonly LoadedProgramState[], entry: LoadedProgramState): readonly LoadedProgramState[] {
+  const index = loaded.findIndex((candidate) => candidate.handle.pluginId === entry.handle.pluginId);
+  return index === -1 ? [...loaded, entry] : loaded.map((candidate, i) => (i === index ? entry : candidate));
+}
+
 function pluginRuntimeReducer(state: PluginRuntimeState, action: ShellAction): PluginRuntimeState {
   switch (action.type) {
-    case "UPSERT_LOADED_PLUGIN": {
-      const index = state.loadedPlugins.findIndex((entry) => entry.handle.pluginId === action.value.handle.pluginId);
-      const loadedPlugins = index === -1 ? [...state.loadedPlugins, action.value] : state.loadedPlugins.map((entry, i) => (i === index ? action.value : entry));
-      return { ...state, loadedPlugins };
-    }
+    case "UPSERT_LOADED_PLUGIN":
+      return { ...state, loadedPlugins: upsertLoadedProgramV1(state.loadedPlugins, action.value) };
     case "REMOVE_LOADED_PLUGIN":
       return { ...state, loadedPlugins: state.loadedPlugins.filter((entry) => entry.handle.pluginId !== action.pluginId) };
     case "SET_PLUGIN_STATUS":

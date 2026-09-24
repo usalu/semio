@@ -20,7 +20,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeDeclared
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change declared application class to \"{}\"", self.new_declared_application_class), &format!("deklarierte Anwendungsklasse auf \"{}\" ändern", self.new_declared_application_class))
+        protocol::LocalizedLabel::native(&format!("Change declared application class to \"{}\"", self.new_declared_application_class), &format!("Deklarierte Anwendungsklasse auf \"{}\" ändern", self.new_declared_application_class))
     }
 }
 //#endregion 🔖️Payload

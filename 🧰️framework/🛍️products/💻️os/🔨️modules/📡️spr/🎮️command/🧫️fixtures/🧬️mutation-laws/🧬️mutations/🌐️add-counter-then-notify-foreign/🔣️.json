@@ -12,7 +12,7 @@
   "diffParticipation": "plan",
   "outcomeClasses": [
     "applied",
-    "fatal"
+    "rejected"
   ],
   "composition": "composite",
   "requiredLanguageSurfaces": [

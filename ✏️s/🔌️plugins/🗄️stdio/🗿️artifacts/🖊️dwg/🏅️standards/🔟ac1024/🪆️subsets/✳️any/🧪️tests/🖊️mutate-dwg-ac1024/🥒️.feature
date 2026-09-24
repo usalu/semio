@@ -1,5 +1,5 @@
 @capability-dwg-ac1024-mutate
-@no-oracle-dwg-ac1024-proprietary-container
+@oracle-libredwg-dwg-preamble-cli
 @comparison-semantic-dwg-preamble-v1
 @mutations-dwg-ac1024-any
 Feature: Apply every typed DWG AC1024 mutation to the container that is actually stamped R2010
@@ -16,15 +16,15 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
   30 (ANSI_1252) as a little-endian u16 at 0x13-0x14. Both roles are measured against those, which
   is what `@mode-conformance` means here — each side answers to the specification, not to the other.
 
-  There is no oracle. DWG is proprietary and undocumented; the only independent implementation of
-  any weight is LibreDWG, which is GPL-3.0 C and would put a copyleft C library on this repository's
-  test host with no owner ruling permitting it, and no permissively licensed Rust DWG reader exists
-  at all (`dxf` 0.6, registered for the sibling 🖋️dxf artifact, reads the PUBLISHED DXF interchange
-  format and explicitly not DWG). The evidence is therefore specification vectors plus the
-  metamorphic laws, exercised by an independently hand-written reader/writer of the one part of DWG
-  that IS publicly specified — the preamble every file since R13 begins with, at the offsets
-  LibreDWG's own `header.spec` documents and this subset's `DwgSnapshot` doc comments already cite.
-  That reader never calls this repository's own 12,000-line R2004+ decoder.
+  The reference is LibreDWG's `dwgread` (libredwg-dwg-preamble-cli), run as a separate process and
+  never linked. The oracle role applies each row with an independently hand-written reader/writer of
+  the one part of DWG that IS publicly specified — six ASCII version characters at 0x00-0x05, the
+  `maint_version` byte at 0x12 and the little-endian `codepage` u16 at 0x13-0x14, the offsets
+  LibreDWG's own `header.spec` documents — and every document it produces is then read by `dwgread`,
+  whose reading of those three fields, or of the byte length of a preamble-only document it refuses,
+  must agree with the projection. That reader never calls this repository's own R2004+ decoder.
+  Where `dwgread` is not installed the platform records the case as oracle-unavailable, naming the
+  missing command, instead of dispatching it.
 
   The narrowness is real and is stated rather than hidden. Everything after the preamble is the
   R2004+ section map — compressed, checksummed, section-encrypted — which nothing here and nothing

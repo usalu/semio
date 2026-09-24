@@ -188,8 +188,10 @@ pub mod owned_abi {
     }
 
     /// 🧬️ Input of the owned `codec` core exports. `document_id` is only read by `genesis`, `ops`
-    /// only by `apply-ops`, and the pair only by `print-mirror`/`apply-ops` — one shape for all four
-    /// keeps the owned ABI's JSON envelope single-valued per export, exactly as `RestoreInput` does.
+    /// only by `apply-ops` (an `encode_ops_vec` batch) and `replay-envelopes` (an `encode_envelopes`
+    /// stream), and the pair only by `print-mirror`/`apply-ops`/`replay-envelopes` — one shape for
+    /// all five keeps the owned ABI's JSON envelope single-valued per export, exactly as
+    /// `RestoreInput` does.
     #[derive(Deserialize, FromValue, Serialize, ToValue)]
     pub struct CodecInput {
         pub artifact_schema: String,
@@ -203,7 +205,7 @@ pub mod owned_abi {
         pub ops: Vec<u8>,
     }
 
-    /// 📦️ Output of the owned `codec.genesis`/`codec.apply-ops` core exports.
+    /// 📦️ Output of the owned `codec.genesis`/`codec.apply-ops`/`codec.replay-envelopes` core exports.
     #[derive(Deserialize, FromValue, Serialize, ToValue)]
     pub struct CodecPair {
         pub pack: Vec<u8>,
@@ -1483,6 +1485,13 @@ pub mod app {
         pub output_schema: &'static str,
         pub progress_unit: &'static str,
         pub artifact_binding: Option<ArtifactInferenceDocumentBinding>,
+        pub commit: Option<ArtifactInferenceCommitBinding>,
+    }
+
+    /// 📌️ The `&'static str` twin of `semio_framework::InferenceCommitBinding`.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct ArtifactInferenceCommitBinding {
+        pub action: &'static str,
     }
 
     /// 🔗️ The `&'static str` twin of `semio_framework::InferenceArtifactBinding`.
@@ -1507,6 +1516,7 @@ pub mod app {
                 output_schema: contract.output_schema.to_owned(),
                 progress_unit: contract.progress_unit.to_owned(),
                 artifact_binding: contract.artifact_binding.map(Into::into),
+                commit: contract.commit.map(|commit| semio_framework::InferenceCommitBinding { action: commit.action.to_owned() }),
             }
         }
     }
@@ -1762,6 +1772,15 @@ pub mod app {
         pub progress_unit: String,
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub artifact_binding: Option<WireInferenceArtifactBinding>,
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub commit: Option<WireInferenceCommitBinding>,
+    }
+
+    /// 📌️ Wire twin of [`ArtifactInferenceCommitBinding`].
+    #[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
+    pub struct WireInferenceCommitBinding {
+        pub action: String,
     }
 
     /// 🔗️ Wire twin of [`ArtifactInferenceDocumentBinding`].
@@ -1836,6 +1855,7 @@ pub mod app {
                 output_schema: contract.output_schema.to_owned(),
                 progress_unit: contract.progress_unit.to_owned(),
                 artifact_binding: contract.artifact_binding.map(|binding| WireInferenceArtifactBinding { field: binding.field.to_owned(), encoding: binding.encoding.to_owned(), required: binding.required }),
+                commit: contract.commit.map(|commit| WireInferenceCommitBinding { action: commit.action.to_owned() }),
             }
         }
     }
@@ -1848,6 +1868,7 @@ pub mod app {
                 output_schema: contract.output_schema,
                 progress_unit: contract.progress_unit,
                 artifact_binding: contract.artifact_binding.map(|binding| semio_framework::InferenceArtifactBinding { field: binding.field, encoding: binding.encoding, required: binding.required }),
+                commit: contract.commit.map(|commit| semio_framework::InferenceCommitBinding { action: commit.action }),
             }
         }
     }
@@ -13107,6 +13128,10 @@ pub mod app {
         /// 🧩️ Applies one `os_spr::encode_ops_vec` batch to a pair of this app's kind and returns the
         /// next pair, again without touching this instance's own document.
         async fn artifact_apply_ops(&self, pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<store::ArtifactPackFiles, Fault>;
+        /// 📜️ Folds one `os_spr::encode_envelopes` ledger stream onto a pair of this app's kind through
+        /// the replica merge gate (`store::replay_envelopes_onto_pair`), again without touching this
+        /// instance's own document.
+        async fn artifact_replay_envelopes(&self, pack: &[u8], spr: &[u8], envelopes: &[u8]) -> Result<store::ArtifactPackFiles, Fault>;
         /// @emoji 📦️ Binary-pack counterpart to {@link Self::load_document_text}.
         async fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault>;
         async fn attach_backbone(&mut self, backbone: store::Backbones) -> Result<(), Fault>;
@@ -18067,7 +18092,7 @@ pub mod app {
         }
     }
 
-    pub const FRAMEWORK_RESERVED_JOB_KIND: &str = "framework.reserved.tool";
+    pub use semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND;
     const FRAMEWORK_RESERVED_JOB_MAGIC: &[u8; 8] = b"FRRESV01";
 
     pub(crate) fn initialize_framework_reserved_jobs() {
@@ -20286,9 +20311,12 @@ pub mod app {
             self.state != ActiveArtifactEnvelopeDecodeState::Ready
         }
 
+        /// 📊️ A decode cancelled after its worker finished is Cancelled, never Ready: maintenance closes
+        /// its completed record, so no consumer may admit it in between.
         fn poll(&self) -> ArtifactEnvelopeDecodeOperationPoll {
             match self.state {
                 ActiveArtifactEnvelopeDecodeState::Active => ArtifactEnvelopeDecodeOperationPoll::Pending,
+                ActiveArtifactEnvelopeDecodeState::Ready if self.cancel.is_cancelled_now() => ArtifactEnvelopeDecodeOperationPoll::Cancelled,
                 ActiveArtifactEnvelopeDecodeState::Ready => ArtifactEnvelopeDecodeOperationPoll::Ready,
                 ActiveArtifactEnvelopeDecodeState::ClosingCancelled => ArtifactEnvelopeDecodeOperationPoll::Cancelled,
                 ActiveArtifactEnvelopeDecodeState::ClosingFault => ArtifactEnvelopeDecodeOperationPoll::Fault,
@@ -32200,6 +32228,10 @@ pub mod app {
             artifact_app_apply_ops::<A>(pack, spr, ops).await.map_err(|error| error.into_fault())
         }
 
+        async fn artifact_replay_envelopes(&self, pack: &[u8], spr: &[u8], envelopes: &[u8]) -> Result<store::ArtifactPackFiles, Fault> {
+            artifact_app_replay_envelopes::<A>(pack, spr, envelopes).await.map_err(|error| error.into_fault())
+        }
+
         async fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
             let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_pack(&files.pack, &files.spr).await.map_err(|error| error.into_fault())?;
             let window_reset = self.prepare_document_window_reset()?;
@@ -32954,313 +32986,66 @@ pub mod app {
         }
     }
 
-    pub const TABLE_WINDOW_COLUMNS: usize = 32;
-    pub const TABLE_WINDOW_ROWS: usize = 32;
-    pub const TABLE_WINDOW_CELLS: usize = 32;
-    pub const TABLE_WINDOW_ROW_ACTIONS: usize = 32;
-    pub const TABLE_WINDOW_RETIRE_SLOTS: usize = 64;
-
-    pub type TableColumns = UiFixedList<UiText, TABLE_WINDOW_COLUMNS>;
-    pub type TableRows = UiFixedList<TableRow, TABLE_WINDOW_ROWS>;
-    pub type TableRowCells = UiFixedList<UiText, TABLE_WINDOW_CELLS>;
-    pub type TableRowActions = UiFixedList<TableRowAction, TABLE_WINDOW_ROW_ACTIONS>;
-
-    /// 🆔️ One retained UI-native row action; no renderer descriptor crosses the SDK boundary.
-    #[derive(Debug, PartialEq)]
-    pub struct TableRowAction {
-        icon: UiText,
-        label: Label,
-        binding: ActionBinding,
+    /// 🎬️ One row action of a windowed table row — an `Activate` binding with its icon and accessible label,
+    /// painted in the table's trailing actions column.
+    pub fn table_row_action(icon: &str, label: &str, action: (ActionId, Option<UiValue>)) -> UiAssemblyResult<RowAction> {
+        Ok(RowAction {
+            icon: UiText::try_from_str(icon).ok_or_else(|| ui_assembly_error("table-window.action-icon"))?,
+            label: Some(Label::try_from(label).map_err(|_| ui_assembly_error("table-window.action-label"))?),
+            action: ActionBinding { trigger: Trigger::Activate, action: action.0, args: action.1, capability: None },
+            placement: RowActionPlacement::Row,
+        })
     }
 
-    impl TableRowAction {
-        pub fn new(icon: UiText, label: Label, action: (ActionId, Option<UiValue>)) -> Self {
-            Self { icon, label, binding: ActionBinding { trigger: Trigger::Activate, action: action.0, args: action.1, capability: None } }
+    /// 📊️ One windowed table row: record key `key` (the row's stable identity, e.g. `"space:<id>"`),
+    /// `cells` positional to the table's columns, `actions` in its actions column and `activate` its primary
+    /// activation (Enter on the focused row). One node record however many cells and actions it carries.
+    pub fn table_window_row(key: &str, cells: &[&str], actions: impl IntoIterator<Item = RowAction>, activate: Option<(ActionId, Option<UiValue>)>) -> UiAssemblyResult<BuiltNode> {
+        let mut row_cells = UiFixedList::default();
+        for cell in cells {
+            row_cells.try_push(UiText::try_from_str(cell).ok_or_else(|| ui_assembly_error("table-window.cell"))?).map_err(|_| ui_assembly_error("table-window.cells"))?;
         }
-
-        fn close_step(&mut self) -> bool {
-            self.binding.args.take().is_none()
+        let mut builder = table_row(row_cells).try_id(key).map_err(|_| ui_assembly_error("table-window.row-id"))?;
+        for action in actions {
+            builder = builder.try_row_action(action).map_err(|_| ui_assembly_error("table-window.row-actions"))?;
         }
-    }
-
-    /// 🆔️ One identified, actionable row for `TableWindowKit::render_rows` — `id` reaches the React DOM
-    /// as `data-row-id` (`Table/component.tsx`'s `getRowId` reads `row.id`) and the wgpu hit-target as
-    /// `"{surfaceId}.row.{id}"` (`🎞️Scenes/component.rs`'s `render_table` reads the same `row.get("id")`);
-    /// `cells` are plain text, positional to `TableRowsView::columns`; `actions` render as one trailing
-    /// "actions" column of row buttons.
-    #[derive(Debug, PartialEq)]
-    pub struct TableRow {
-        id: UiText,
-        cells: TableRowCells,
-        actions: TableRowActions,
-    }
-
-    impl TableRow {
-        pub fn new(id: UiText) -> Self {
-            Self { id, cells: TableRowCells::default(), actions: TableRowActions::default() }
-        }
-
-        #[expect(clippy::result_large_err, reason = "Refusal returns the original fixed-capacity input so its caller can retry or retire that exact owner without an extra allocation.")]
-        pub fn try_push_cell(&mut self, cell: UiText) -> Result<(), UiText> {
-            self.cells.try_push(cell)
-        }
-
-        #[expect(clippy::result_large_err, reason = "Refusal returns the original fixed-capacity input so its caller can retry or retire that exact owner without an extra allocation.")]
-        pub fn try_push_action(&mut self, action: TableRowAction) -> Result<(), TableRowAction> {
-            self.actions.try_push(action)
-        }
-
-        /// 🧹️ Retires one owner of this row and answers `(complete, bytes)` — the retired text's own
-        /// byte count, so the table ladder above can price a retirement run per PAGE instead of per
-        /// item (ticket 26/09/02, W-B2).
-        fn close_step(&mut self) -> (bool, usize) {
-            if let Some(mut action) = self.actions.pop() {
-                let released = action.icon.len();
-                let _ = action.close_step();
-                return (false, released);
-            }
-            if let Some(cell) = self.cells.pop() {
-                return (false, cell.len());
-            }
-            let bytes = self.id.len();
-            self.id = UiText::default();
-            (true, bytes)
-        }
-    }
-
-    /// 📊️ Identified-rows sibling of `TableView` — same flat columns, but each row is a `TableRow`
-    /// carrying a stable id and optional row-scoped actions, the shape the `data-row-id="<kind>:<id>"` /
-    /// row-action grammar (contract §C0 of ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-
-    /// STUDIOS) needs. `TableWindowKit::render_rows` builds it from the exact same `TableScene`/
-    /// `TableCell`/`table_row_json` primitives `TableWindowKit::render` already delegates to; `TableView`
-    /// and `render` are untouched so every existing caller keeps compiling unchanged.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    struct TableRowsRetireKey {
-        slot: usize,
-        epoch: u64,
-    }
-
-    #[derive(Debug, Default, PartialEq)]
-    struct RetiredTableRowsView {
-        columns: TableColumns,
-        rows: TableRows,
-        actions_label: UiText,
-        closing_row: Option<TableRow>,
-    }
-
-    impl RetiredTableRowsView {
-        /// 🧹️ Retires this retired table for a bounded RUN priced by the caller's PAGE grant. A
-        /// retained table window is document-scaled (`TABLE_WINDOW_ROWS` rows of
-        /// `TABLE_WINDOW_CELLS` cells is over a thousand retirement units), and the reactor turn that
-        /// still owns any of it answers `MoreWork`, which the host answers with one more round trip —
-        /// so one owner per turn is one host round trip per cell (ticket 26/09/02, W-B2).
-        fn close_step(&mut self, items: usize, bytes: usize) -> bool {
-            let (mut remaining_items, mut remaining_bytes) = (items.max(1), bytes.max(1));
-            loop {
-                let (complete, released) = self.close_unit();
-                if complete {
-                    return true;
-                }
-                remaining_items -= 1;
-                remaining_bytes = remaining_bytes.saturating_sub(released.max(1));
-                if remaining_items == 0 || remaining_bytes == 0 {
-                    return false;
-                }
-            }
-        }
-
-        fn close_unit(&mut self) -> (bool, usize) {
-            if let Some(row) = self.closing_row.as_mut() {
-                let (complete, released) = row.close_step();
-                if complete {
-                    self.closing_row = None;
-                }
-                return (false, released);
-            }
-            if let Some(row) = self.rows.pop() {
-                self.closing_row = Some(row);
-                return (false, 0);
-            }
-            if let Some(column) = self.columns.pop() {
-                return (false, column.len());
-            }
-            let released = self.actions_label.len();
-            self.actions_label = UiText::default();
-            (true, released)
-        }
-    }
-
-    #[derive(Debug, Default)]
-    struct TableRowsRetireSlot {
-        epoch: u64,
-        reserved: bool,
-        owner: Option<RetiredTableRowsView>,
-    }
-
-    struct TableRowsRetireArena {
-        slots: [TableRowsRetireSlot; TABLE_WINDOW_RETIRE_SLOTS],
-        close_cursor: usize,
-    }
-
-    impl Default for TableRowsRetireArena {
-        fn default() -> Self {
-            Self { slots: std::array::from_fn(|_| TableRowsRetireSlot::default()), close_cursor: 0 }
-        }
-    }
-
-    impl TableRowsRetireArena {
-        fn reserve(&mut self) -> Option<TableRowsRetireKey> {
-            let slot = self.slots.iter().position(|slot| !slot.reserved)?;
-            let epoch = self.slots[slot].epoch.checked_add(1)?;
-            self.slots[slot].epoch = epoch;
-            self.slots[slot].reserved = true;
-            Some(TableRowsRetireKey { slot, epoch })
-        }
-
-        fn release(&mut self, key: TableRowsRetireKey) -> bool {
-            let Some(slot) = self.slots.get_mut(key.slot) else { return false };
-            if !slot.reserved || slot.epoch != key.epoch || slot.owner.is_some() {
-                return false;
-            }
-            slot.reserved = false;
-            true
-        }
-
-        #[expect(clippy::result_large_err, reason = "Refusal returns the original fixed-capacity input so its caller can retry or retire that exact owner without an extra allocation.")]
-        fn handback(&mut self, key: TableRowsRetireKey, owner: RetiredTableRowsView) -> Result<(), RetiredTableRowsView> {
-            let Some(slot) = self.slots.get_mut(key.slot) else { return Err(owner) };
-            if !slot.reserved || slot.epoch != key.epoch || slot.owner.is_some() {
-                return Err(owner);
-            }
-            slot.owner = Some(owner);
-            Ok(())
-        }
-
-        fn close_one(&mut self, items: usize, bytes: usize) -> bool {
-            for offset in 0..TABLE_WINDOW_RETIRE_SLOTS {
-                let Some(next_index) = self.close_cursor.checked_add(offset) else { return false };
-                let index = next_index % TABLE_WINDOW_RETIRE_SLOTS;
-                let Some(owner) = self.slots[index].owner.as_mut() else { continue };
-                let Some(next_cursor) = index.checked_add(1) else { return false };
-                self.close_cursor = next_cursor % TABLE_WINDOW_RETIRE_SLOTS;
-                if owner.close_step(items, bytes) {
-                    self.slots[index].owner = None;
-                    self.slots[index].reserved = false;
-                }
-                return true;
-            }
-            false
-        }
-    }
-
-    fn with_table_rows_retire_arena<T>(f: impl FnOnce(&mut TableRowsRetireArena) -> T) -> T {
-        static ARENA: std::sync::LazyLock<std::sync::Mutex<TableRowsRetireArena>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(TableRowsRetireArena::default()));
-        let mut arena = ARENA.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        f(&mut arena)
-    }
-
-    pub fn close_table_rows_view_one() -> bool {
-        close_table_rows_view_with_grant(1, 4096)
-    }
-
-    /// 🧹️ One retirement unit of the oldest retired table window, against the caller's PAGE grant —
-    /// see [`RetiredTableRowsView::close_step`] for why a retained table must not retire one cell per
-    /// reactor turn. Answers whether this call found work, not whether the arena is empty.
-    pub fn close_table_rows_view_with_grant(items: usize, bytes: usize) -> bool {
-        with_table_rows_retire_arena(|arena| arena.close_one(items, bytes))
-    }
-
-    #[derive(Debug, PartialEq)]
-    pub struct TableRowsView {
-        columns: TableColumns,
-        rows: TableRows,
-        /// 🏷️ Header for the trailing actions column `render_rows` appends when any row declares an
-        /// action (ignored when none do). Caller-supplied so it stays locale-resolved like every other
-        /// column header instead of hardcoding one language; pass an empty string for an icon-only header
-        /// (matches `sourcing::curation`'s own `{"id": "actions", "label": ""}` precedent).
-        actions_label: UiText,
-        retirement: Option<TableRowsRetireKey>,
-    }
-
-    impl TableRowsView {
-        pub fn new(actions_label: UiText) -> Self {
-            Self { columns: TableColumns::default(), rows: TableRows::default(), actions_label, retirement: None }
-        }
-
-        fn ensure_retirement(&mut self) -> bool {
-            if self.retirement.is_some() {
-                return true;
-            }
-            self.retirement = with_table_rows_retire_arena(TableRowsRetireArena::reserve);
-            self.retirement.is_some()
-        }
-
-        #[expect(clippy::result_large_err, reason = "Refusal returns the original fixed-capacity input so its caller can retry or retire that exact owner without an extra allocation.")]
-        pub fn try_push_column(&mut self, column: UiText) -> Result<(), UiText> {
-            if !self.ensure_retirement() {
-                return Err(column);
-            }
-            self.columns.try_push(column)
-        }
-
-        #[expect(clippy::result_large_err, reason = "Refusal returns the original fixed-capacity input so its caller can retry or retire that exact owner without an extra allocation.")]
-        pub fn try_push_row(&mut self, row: TableRow) -> Result<(), TableRow> {
-            if !self.ensure_retirement() {
-                return Err(row);
-            }
-            self.rows.try_push(row)
-        }
-
-        fn into_parts(mut self) -> (TableColumns, TableRows, UiText) {
-            if let Some(retirement) = self.retirement.take() {
-                let _ = with_table_rows_retire_arena(|arena| arena.release(retirement));
-            }
-            (std::mem::take(&mut self.columns), std::mem::take(&mut self.rows), std::mem::take(&mut self.actions_label))
-        }
-    }
-
-    impl Drop for TableRowsView {
-        #[expect(clippy::result_large_err, reason = "The retirement callback returns its exact inline table owner when its reserved slot rejects the transfer.")]
-        fn drop(&mut self) {
-            let Some(retirement) = self.retirement.take() else { return };
-            let owner = RetiredTableRowsView { columns: std::mem::take(&mut self.columns), rows: std::mem::take(&mut self.rows), actions_label: std::mem::take(&mut self.actions_label), closing_row: None };
-            let _ = with_table_rows_retire_arena(|arena| arena.handback(retirement, owner));
-        }
+        let builder = match activate {
+            Some((action, Some(args))) => builder.try_on_with(Trigger::Activate, action, args).map_err(|_| ui_assembly_error("table-window.row-activate"))?,
+            Some((action, None)) => builder.try_on(Trigger::Activate, action).map_err(|_| ui_assembly_error("table-window.row-activate"))?,
+            None => builder,
+        };
+        builder.try_build().map_err(|_| ui_assembly_error("table-window.row-build"))
     }
 
     impl TableWindowKit {
-        /// 🆔️ Consumes fixed UI-native rows directly into semantic header/row/button nodes.
-        pub fn render_rows(view: TableRowsView) -> UiAssemblyResult<BuiltNode> {
-            let has_actions = view.rows.iter().any(|row| !row.actions.is_empty());
-            let (columns, rows, actions_label) = view.into_parts();
-            let mut root = column().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("table-rows-window.id"))?;
-            let mut header = row().try_id("header").map_err(|_| ui_assembly_error("table-rows-window.header-id"))?;
+        /// 📊️ One windowed table as the window body's growing child: the header (`columns`) and accessible
+        /// name (`label`) live on the `Table` node, and only the host's slice of `entries` is built — each a
+        /// single [`table_window_row`] record — so the table costs `1 + materialised rows` on the SAME
+        /// body-wide [`TreeWindows`] ledger the tree panels spend, and its `window` stamp is the contract the
+        /// host virtualises trees with. Any row count stays inside `UI_DOCUMENT_NODES`: the host streams the
+        /// rows its viewport shows, the first paint serves what the unreserved ledger and the viewport budget
+        /// allow.
+        pub fn render_rows<T>(windows: &TreeWindows<'_>, label: &str, columns: &[&str], actions_label: Option<&str>, entries: &[T], row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+            TreeWindows::admit_key(Self::KIND_ID)?;
+            let path = windows.path_of(Self::KIND_ID);
+            windows.claim_window(&path, entries.len())?;
+            windows.debit_container();
+            let slice = windows.sliced(&path, true, entries.len());
+            let mut headers = UiFixedList::default();
             for column in columns {
-                header = header.try_child(text(Label(column))).map_err(|_| ui_assembly_error("table-rows-window.header"))?;
+                headers.try_push(Label::try_from(*column).map_err(|_| ui_assembly_error("table-window.column"))?).map_err(|_| ui_assembly_error("table-window.columns"))?;
             }
-            if has_actions {
-                header = header.try_child(text(Label(actions_label))).map_err(|_| ui_assembly_error("table-rows-window.actions-header"))?;
-            }
-            root = root.try_child(header).map_err(|_| ui_assembly_error("table-rows-window.header-child"))?;
-            for table_row in rows {
-                let TableRow { id, cells, actions } = table_row;
-                let mut row = row().try_id(id.as_str()).map_err(|_| ui_assembly_error("table-rows-window.row-id"))?;
-                for cell in cells {
-                    row = row.try_child(text(Label(cell))).map_err(|_| ui_assembly_error("table-rows-window.cell"))?;
-                }
-                for action in actions {
-                    let TableRowAction { icon, label, binding } = action;
-                    let ActionBinding { trigger, action, args, capability: _ } = binding;
-                    let button = button(label).icon(icon);
-                    let button = match args {
-                        Some(args) => button.try_on_with(trigger, action, args).map_err(|_| ui_assembly_error("table-rows-window.action-binding"))?,
-                        None => button.try_on(trigger, action).map_err(|_| ui_assembly_error("table-rows-window.action-binding"))?,
-                    };
-                    row = row.try_child(button).map_err(|_| ui_assembly_error("table-rows-window.action"))?;
-                }
-                root = root.try_child(row).map_err(|_| ui_assembly_error("table-rows-window.row"))?;
-            }
-            root.try_build().map_err(|_| ui_assembly_error("table-rows-window.build"))
+            let builder = table(Label::try_from(label).map_err(|_| ui_assembly_error("table-window.label"))?, headers).grow(true).try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("table-window.id"))?;
+            let builder = match actions_label {
+                Some(actions_label) => builder.actions_label(Label::try_from(actions_label).map_err(|_| ui_assembly_error("table-window.actions-label"))?),
+                None => builder,
+            };
+            let builder = tree_window_rows(builder, windows, Self::KIND_ID, entries, &slice, row)?;
+            let builder = match windows.stamp(&path, &slice) {
+                Some(window) => builder.window(window),
+                None => builder,
+            };
+            builder.try_build().map_err(|_| ui_assembly_error("table-window.build"))
         }
     }
     //#endregion 🔖️TableWindowKit
@@ -34093,6 +33878,12 @@ pub mod app {
         }
         drop(owner);
         printed
+    }
+
+    /// 📜️ The guest half of `world actor`'s `codec.replay-envelopes` export: the app's own owner
+    /// catalogue around the one kernel fold every codec shares (`store::replay_envelopes_onto_pair`).
+    pub async fn artifact_app_replay_envelopes<A: ArtifactApp>(pack: &[u8], spr: &[u8], envelopes: &[u8]) -> Result<store::ArtifactPackFiles, store::VcsError> {
+        store::replay_envelopes_onto_pair::<A::Snapshot, A::Mutation>(pack, spr, envelopes, || A::build_document_store_owners().unwrap_or_else(store::bounded_artifact_store_owners)).await
     }
     //#endregion 🔖️ArtifactEditor
 
@@ -38358,6 +38149,14 @@ pub mod plugin_runtime {
         applied
     }
 
+    /// 📜️ `codec.replay-envelopes` — the hub's Check In fold for an unlinked package.
+    pub async fn plugin_artifact_replay_envelopes<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, pack: &[u8], spr: &[u8], envelopes: &[u8]) -> Result<store::ArtifactPackFiles, Fault> {
+        let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
+        let replayed = app.artifact_replay_envelopes(pack, spr, envelopes).await;
+        close_artifact_codec_app(app)?;
+        replayed
+    }
+
     /// @emoji 📦️ Serializes the instance's full persistent document as pack+spr bytes
     /// ({@link store::ArtifactPackFiles}) via `store::print_document_pack`.
     pub async fn plugin_document_pack<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Result<store::ArtifactPackFiles, Fault> {
@@ -40810,6 +40609,18 @@ pub mod plugin_runtime {
                         .map(|files| $crate::component::wasip2::exports::semio::framework::codec::DocumentPair { pack: files.pack, spr: files.spr })
                         .map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
                 }
+
+                async fn replay_envelopes(
+                    artifact_schema: String,
+                    pair: $crate::component::wasip2::exports::semio::framework::codec::DocumentPair,
+                    envelopes: Vec<u8>,
+                ) -> Result<$crate::component::wasip2::exports::semio::framework::codec::DocumentPair, $crate::component::wasip2::semio::framework::types::PluginError> {
+                    $ensure();
+                    $runtime
+                        .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_replay_envelopes(runtime, &artifact_schema, &pair.pack, &pair.spr, &envelopes)))
+                        .map(|files| $crate::component::wasip2::exports::semio::framework::codec::DocumentPair { pack: files.pack, spr: files.spr })
+                        .map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                }
             }
 
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -40817,17 +40628,17 @@ pub mod plugin_runtime {
         };
     }
 
-    /// 🧬️ THE thirteen `semio_owned_*_v1` core exports — the owned Semio actor ABI, defined exactly
+    /// 🧬️ THE fourteen `semio_owned_*_v1` core exports — the owned Semio actor ABI, defined exactly
     /// once and invoked by BOTH component owners (`__semio_plugin_actor_exports!` for a plugin,
     /// `extension_exports!`'s single-argument arm for an extension). `OwnedSemioArtifact::
-    /// from_component` (`🧠️interpreter/🦀️.rs`) accepts a component only when all thirteen are present
-    /// with exact core types, so an owner that carries the WIT guest exports but not these thirteen
+    /// from_component` (`🧠️interpreter/🦀️.rs`) accepts a component only when all fourteen are present
+    /// with exact core types, so an owner that carries the WIT guest exports but not these fourteen
     /// cannot be described, loaded by the owned host, or published to the catalog at all.
     ///
-    /// 🌱️ The last four (`pack_schema_hash`/`genesis`/`print_mirror`/`apply_ops`, ticket 26/09/18
-    /// slice TC3b) are the owned twin of `world actor`'s `codec` interface: they are what lets a
-    /// headless hub create and validate a document of ANY package's artifact kind without linking
-    /// that package's Rust codec.
+    /// 🌱️ The last five (`pack_schema_hash`/`genesis`/`print_mirror`/`apply_ops`, ticket 26/09/18
+    /// slice TC3b, and `replay_envelopes`, the hub's Check In fold) are the owned twin of `world
+    /// actor`'s `codec` interface: they are what lets a headless hub create, validate and check in a
+    /// document of ANY package's artifact kind without linking that package's Rust codec.
     ///
     /// 🐛️ Until 2026-09-20 the extension arm expanded `__semio_actor_exports!` DIRECTLY and emitted
     /// none of them, so every extension component in the tree failed validation with "component
@@ -41000,6 +40811,21 @@ pub mod plugin_runtime {
                 let result = match input {
                     Ok(input) => $runtime
                         .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_apply_ops(runtime, &input.artifact_schema, &input.pack, &input.spr, &input.ops)))
+                        .map(|files| $crate::owned_abi::CodecPair { pack: files.pack, spr: files.spr })
+                        .map_err(|fault| $crate::encode_fault_bytes(&fault)),
+                    Err(error) => Err(error),
+                };
+                $crate::owned_abi::return_json(&result)
+            }
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn semio_owned_replay_envelopes_v1(pointer: u32, length: u32) -> u64 {
+                let input = unsafe { $crate::owned_abi::take_json::<$crate::owned_abi::CodecInput>(pointer, length) };
+                $ensure();
+                let result = match input {
+                    Ok(input) => $runtime
+                        .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_replay_envelopes(runtime, &input.artifact_schema, &input.pack, &input.spr, &input.ops)))
                         .map(|files| $crate::owned_abi::CodecPair { pack: files.pack, spr: files.spr })
                         .map_err(|fault| $crate::encode_fault_bytes(&fault)),
                     Err(error) => Err(error),
@@ -42289,7 +42115,7 @@ pub use app::{
     bounded_window_config_store_disposer,
     bounded_window_config_store_owners,
     CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES,
-    artifact_app_apply_ops,
+    artifact_app_apply_ops, artifact_app_replay_envelopes,
     artifact_app_genesis_pair,
     artifact_pair_snapshot,
     built_text_node,
@@ -42349,6 +42175,7 @@ pub use app::{
     ArtifactIdentityNamespace,
     ArtifactInference,
     ArtifactDocumentPayload,
+    ArtifactInferenceCommitBinding,
     ArtifactInferenceDocumentBinding,
     ArtifactInferenceExecution,
     ArtifactInferenceExecutionError,
@@ -42500,6 +42327,7 @@ pub use app::{
     WireArtifactInferenceRequest,
     WireArtifactInferenceResult,
     WireInferenceArtifactBinding,
+    WireInferenceCommitBinding,
     WireInferencePayloadContract,
     ARTIFACT_INFERENCE_WIRE_VERSION,
     MAINTENANCE_STAGES,
@@ -42514,7 +42342,7 @@ pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 // `important.md`'s sequencing constraints).
 pub use plugin_runtime::{
     extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle, install_plugin_bundle_result, plugin_attach_backbone, plugin_cancel_media_export, plugin_detach_backbone,
-    plugin_artifact_apply_ops, plugin_artifact_genesis, plugin_artifact_pack_schema_hash, plugin_artifact_print_mirror, plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack,
+    plugin_artifact_apply_ops, plugin_artifact_replay_envelopes, plugin_artifact_genesis, plugin_artifact_pack_schema_hash, plugin_artifact_print_mirror, plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack,
     plugin_poll_media_export, plugin_submit_media_export, plugin_take_segmented_download_chunk, ExtensionBundle, ExtensionManifest,
 };
 pub use semio_framework::*;

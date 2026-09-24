@@ -1,0 +1,511 @@
+    //#region 🎮️CommandFramework
+
+    /// 🚩️ One typed flag value.
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum FlagValue {
+        Text(String),
+        Bool(bool),
+        Int(i64),
+        Texts(Vec<String>),
+        Ints(Vec<i64>),
+        Duration(i64),
+    }
+
+    impl FlagValue {
+        /// 🧾️ The projection value: a duration in milliseconds, a list always an array.
+        fn projection(&self) -> Json {
+            match self {
+                FlagValue::Text(text) => Json::String(text.clone()),
+                FlagValue::Bool(flag) => Json::Bool(*flag),
+                FlagValue::Int(number) => Json::from(*number),
+                FlagValue::Texts(items) => Json::Array(items.iter().cloned().map(Json::String).collect()),
+                FlagValue::Ints(items) => Json::Array(items.iter().map(|item| Json::from(*item)).collect()),
+                FlagValue::Duration(nanoseconds) => Json::from(nanoseconds / 1_000_000),
+            }
+        }
+    }
+
+    /// 🚩️ One declared flag.
+    #[derive(Clone, Debug)]
+    pub struct Flag {
+        pub name: String,
+        pub shorthand: String,
+        pub usage: String,
+        pub default: FlagValue,
+    }
+
+    impl Flag {
+        /// 🔤️ A string flag.
+        pub fn text(name: &str, default: &str, usage: &str) -> Flag {
+            Flag { name: name.to_string(), shorthand: String::new(), usage: usage.to_string(), default: FlagValue::Text(default.to_string()) }
+        }
+
+        /// ☑️ A boolean flag, false unless passed.
+        pub fn boolean(name: &str, usage: &str) -> Flag {
+            Flag { name: name.to_string(), shorthand: String::new(), usage: usage.to_string(), default: FlagValue::Bool(false) }
+        }
+
+        /// 🔢️ An integer flag.
+        pub fn int(name: &str, default: i64, usage: &str) -> Flag {
+            Flag { name: name.to_string(), shorthand: String::new(), usage: usage.to_string(), default: FlagValue::Int(default) }
+        }
+
+        /// 📜️ A comma-separated string list flag.
+        pub fn texts(name: &str, default: &[&str], usage: &str) -> Flag {
+            Flag { name: name.to_string(), shorthand: String::new(), usage: usage.to_string(), default: FlagValue::Texts(default.iter().map(|item| (*item).to_string()).collect()) }
+        }
+
+        /// 🔢️ A comma-separated integer list flag.
+        pub fn ints(name: &str, usage: &str) -> Flag {
+            Flag { name: name.to_string(), shorthand: String::new(), usage: usage.to_string(), default: FlagValue::Ints(Vec::new()) }
+        }
+
+        /// ⏱️ A duration flag, the default given in nanoseconds.
+        pub fn duration(name: &str, default_nanoseconds: i64, usage: &str) -> Flag {
+            Flag { name: name.to_string(), shorthand: String::new(), usage: usage.to_string(), default: FlagValue::Duration(default_nanoseconds) }
+        }
+
+        /// 🔡️ Adds the one-letter spelling.
+        pub fn short(mut self, shorthand: &str) -> Flag {
+            self.shorthand = shorthand.to_string();
+            self
+        }
+
+        /// 🧮️ Parses a raw argument into this flag's type, refusing with the verbatim reference wording.
+        fn parse(&self, raw: &str) -> Result<FlagValue, String> {
+            match &self.default {
+                FlagValue::Text(_) => Ok(FlagValue::Text(raw.to_string())),
+                FlagValue::Bool(_) => match raw {
+                    "1" | "t" | "T" | "TRUE" | "true" | "True" => Ok(FlagValue::Bool(true)),
+                    "0" | "f" | "F" | "FALSE" | "false" | "False" => Ok(FlagValue::Bool(false)),
+                    _ => Err(format!("invalid boolean for --{}: {raw}", self.name)),
+                },
+                FlagValue::Int(_) => go_atoi(raw).map(FlagValue::Int).ok_or_else(|| format!("invalid integer for --{}: {raw}", self.name)),
+                FlagValue::Texts(_) => Ok(FlagValue::Texts(if raw.is_empty() { Vec::new() } else { raw.split(',').map(str::to_string).collect() })),
+                FlagValue::Ints(_) => {
+                    if raw.is_empty() {
+                        return Ok(FlagValue::Ints(Vec::new()));
+                    }
+                    raw.split(',').map(go_atoi).collect::<Option<Vec<i64>>>().map(FlagValue::Ints).ok_or_else(|| format!("invalid integer list for --{}: {raw}", self.name))
+                }
+                FlagValue::Duration(_) => parse_duration(raw).map(FlagValue::Duration).ok_or_else(|| format!("invalid duration for --{}: {raw}", self.name)),
+            }
+        }
+    }
+
+    /// 🔢️ Go's `strconv.Atoi`: an optional sign and decimal digits, nothing else.
+    fn go_atoi(raw: &str) -> Option<i64> {
+        let digits = raw.strip_prefix(['+', '-']).unwrap_or(raw);
+        if digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
+            return None;
+        }
+        raw.parse().ok()
+    }
+
+    /// ⏱️ Go's `time.ParseDuration` in nanoseconds: signed decimal numbers each with a unit.
+    pub fn parse_duration(raw: &str) -> Option<i64> {
+        let (negative, mut rest) = match raw.strip_prefix('-') {
+            Some(rest) => (true, rest),
+            None => (false, raw.strip_prefix('+').unwrap_or(raw)),
+        };
+        if rest == "0" {
+            return Some(0);
+        }
+        if rest.is_empty() {
+            return None;
+        }
+        let mut total = 0f64;
+        while !rest.is_empty() {
+            let number_end = rest.find(|character: char| !character.is_ascii_digit() && character != '.').unwrap_or(rest.len());
+            let number = &rest[..number_end];
+            if number.is_empty() || number == "." {
+                return None;
+            }
+            let value: f64 = number.parse().ok()?;
+            rest = &rest[number_end..];
+            let unit_end = rest.find(|character: char| character.is_ascii_digit() || character == '.').unwrap_or(rest.len());
+            let scale = match &rest[..unit_end] {
+                "ns" => 1f64,
+                "us" | "µs" | "μs" => 1e3,
+                "ms" => 1e6,
+                "s" => 1e9,
+                "m" => 60e9,
+                "h" => 3600e9,
+                _ => return None,
+            };
+            rest = &rest[unit_end..];
+            total += value * scale;
+        }
+        let nanoseconds = total.round() as i64;
+        Some(if negative { -nanoseconds } else { nanoseconds })
+    }
+
+    /// 🧮️ How many operands a command accepts.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Arity {
+        Any,
+        None,
+        Exact(usize),
+        AtMost(usize),
+        Between(usize, usize),
+    }
+
+    impl Arity {
+        /// ✅️ Checks an operand count, refusing with the verbatim reference wording.
+        fn check(self, count: usize) -> Result<(), String> {
+            match self {
+                Arity::Any => Ok(()),
+                Arity::None if count != 0 => Err(format!("accepts 0 arg(s), received {count}")),
+                Arity::Exact(wanted) if count != wanted => Err(format!("accepts {wanted} arg(s), received {count}")),
+                Arity::AtMost(maximum) if count > maximum => Err(format!("accepts at most {maximum} arg(s), received {count}")),
+                Arity::Between(minimum, maximum) if count < minimum || count > maximum => Err(format!("accepts between {minimum} and {maximum} arg(s), received {count}")),
+                _ => Ok(()),
+            }
+        }
+    }
+
+    /// ▶️ What running a command does.
+    pub type Action = fn(&mut Invocation) -> Result<(), CliError>;
+
+    /// 🌳️ One declared command: an immutable spec, so a parse never leaks state into the next one.
+    #[derive(Clone)]
+    pub struct Command {
+        pub use_line: String,
+        pub short: String,
+        pub arity: Arity,
+        pub aliases: Vec<String>,
+        pub flags: Vec<Flag>,
+        pub persistent: Vec<Flag>,
+        pub raw: bool,
+        pub action: Option<Action>,
+        pub children: Vec<Command>,
+    }
+
+    impl Command {
+        /// 🆕️ A command with its use line and summary.
+        pub fn new(use_line: &str, short: &str) -> Command {
+            Command { use_line: use_line.to_string(), short: short.to_string(), arity: Arity::Any, aliases: Vec::new(), flags: Vec::new(), persistent: Vec::new(), raw: false, action: None, children: Vec::new() }
+        }
+
+        /// 🧮️ Sets the accepted operand count.
+        pub fn args(mut self, arity: Arity) -> Command {
+            self.arity = arity;
+            self
+        }
+
+        /// 🚩️ Adds one local flag unless one of that name exists.
+        pub fn flag(mut self, flag: Flag) -> Command {
+            if !self.flags.iter().any(|existing| existing.name == flag.name) {
+                self.flags.push(flag);
+            }
+            self
+        }
+
+        /// 🚩️ Adds many local flags.
+        pub fn flags(self, flags: Vec<Flag>) -> Command {
+            flags.into_iter().fold(self, Command::flag)
+        }
+
+        /// 🌐️ Adds one flag every descendant sees.
+        pub fn persistent(mut self, flag: Flag) -> Command {
+            self.persistent.push(flag);
+            self
+        }
+
+        /// 🔀️ Adds an alternative name.
+        pub fn alias(mut self, alias: &str) -> Command {
+            self.aliases.push(alias.to_string());
+            self
+        }
+
+        /// 🙈️ Hands every token after the name to the action untouched.
+        pub fn raw(mut self) -> Command {
+            self.raw = true;
+            self
+        }
+
+        /// ▶️ Sets the action.
+        pub fn run(mut self, action: Action) -> Command {
+            self.action = Some(action);
+            self
+        }
+
+        /// 🌿️ Appends children in declaration order.
+        pub fn children(mut self, children: Vec<Command>) -> Command {
+            self.children.extend(children);
+            self
+        }
+
+        /// 🏷️ The name: the first word of the use line.
+        pub fn name(&self) -> &str {
+            self.use_line.split(' ').next().unwrap_or_default()
+        }
+
+        /// 🔎️ The child a token names, by name or alias.
+        pub fn child(&self, name: &str) -> Option<&Command> {
+            self.children.iter().find(|child| child.name() == name || child.aliases.iter().any(|alias| alias == name))
+        }
+
+        /// 📖️ The usage text, twin of `Command.Help`.
+        pub fn help(&self) -> String {
+            let mut text = format!("{}\n\nUsage:\n  {}", self.short, self.use_line);
+            if !self.children.is_empty() {
+                text.push_str("\n\nCommands:\n");
+                for child in &self.children {
+                    text.push_str(&format!("  {:<20} {}\n", child.name(), child.short));
+                }
+            }
+            text
+        }
+    }
+
+    /// 🧾️ One parsed argv: the selected command chain, the operands, every visible flag with its
+    /// effective value and whether the caller passed it, and whether `--help` short-circuited.
+    pub struct Parsed<'a> {
+        pub chain: Vec<&'a Command>,
+        pub positional: Vec<String>,
+        pub flags: BTreeMap<String, (FlagValue, bool)>,
+        pub help: bool,
+    }
+
+    impl<'a> Parsed<'a> {
+        /// 🌳️ The selected command.
+        pub fn selected(&self) -> &'a Command {
+            self.chain.last().copied().expect("a parse always selects the root")
+        }
+    }
+
+    /// 🔎️ The flag a name resolves to from a command chain: the selected command's own flags first,
+    /// then the persistent flags of the chain from the selected command upwards.
+    fn lookup_flag<'a>(chain: &[&'a Command], name: &str, short: bool) -> Option<&'a Flag> {
+        let selected = chain.last()?;
+        let find = |flags: &'a [Flag]| flags.iter().find(|flag| short && !flag.shorthand.is_empty() && flag.shorthand == name).or_else(|| flags.iter().find(|flag| flag.name == name));
+        find(&selected.flags).or_else(|| chain.iter().rev().find_map(|command| find(&command.persistent)))
+    }
+
+    /// 🧭️ Parses one argv against a command tree, twin of `selectAndParse` plus the arity check.
+    pub fn parse(root: &Command, argv: &[String]) -> Result<Parsed<'_>, String> {
+        let mut chain: Vec<&Command> = vec![root];
+        let mut positional: Vec<String> = Vec::new();
+        let mut changed: Vec<(*const Flag, FlagValue)> = Vec::new();
+        let mut help = false;
+        let mut index = 0;
+        while index < argv.len() {
+            let arg = &argv[index];
+            let selected = *chain.last().expect("the chain holds the root");
+            if selected.raw {
+                positional.extend(argv[index..].iter().cloned());
+                break;
+            }
+            if arg == "--help" || arg == "-h" {
+                help = true;
+                positional.clear();
+                break;
+            }
+            if arg == "--" {
+                positional.extend(argv[index + 1..].iter().cloned());
+                break;
+            }
+            if arg.starts_with('-') {
+                let (mut name, short) = match arg.strip_prefix("--") {
+                    Some(rest) => (rest.to_string(), false),
+                    None => (arg[1..].to_string(), true),
+                };
+                let mut inline: Option<String> = None;
+                if let Some((key, value)) = name.clone().split_once('=') {
+                    name = key.to_string();
+                    inline = Some(value.to_string()).filter(|value| !value.is_empty());
+                }
+                let flag = lookup_flag(&chain, &name, short).ok_or_else(|| format!("unknown flag: {arg}"))?;
+                let (raw, consumed) = match (&flag.default, inline) {
+                    (FlagValue::Bool(_), None) => ("true".to_string(), 1),
+                    (_, Some(value)) => (value, 1),
+                    _ => match argv.get(index + 1) {
+                        Some(value) => (value.clone(), 2),
+                        None => return Err(format!("flag needs an argument: {arg}")),
+                    },
+                };
+                let value = flag.parse(&raw)?;
+                let key: *const Flag = flag;
+                changed.retain(|(existing, _)| *existing != key);
+                changed.push((key, value));
+                index += consumed;
+                continue;
+            }
+            if positional.is_empty() {
+                if let Some(child) = selected.child(arg) {
+                    chain.push(child);
+                    index += 1;
+                    continue;
+                }
+            }
+            positional.push(arg.clone());
+            index += 1;
+        }
+        let selected = *chain.last().expect("the chain holds the root");
+        if !help {
+            selected.arity.check(positional.len())?;
+        }
+        let mut flags: BTreeMap<String, (FlagValue, bool)> = BTreeMap::new();
+        let visible = chain.iter().flat_map(|command| command.persistent.iter()).chain(selected.flags.iter());
+        for flag in visible {
+            let key: *const Flag = flag;
+            let entry = match changed.iter().find(|(existing, _)| *existing == key) {
+                Some((_, value)) => (value.clone(), true),
+                None => (flag.default.clone(), false),
+            };
+            flags.insert(flag.name.clone(), entry);
+        }
+        Ok(Parsed { chain, positional, flags, help })
+    }
+
+    /// ❌️ Why an invocation stopped: a message for standard error, or a bare exit code the renderer
+    /// already explained.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub enum CliError {
+        Message(String),
+        Exit(i32),
+    }
+
+    impl From<String> for CliError {
+        fn from(message: String) -> CliError {
+            CliError::Message(message)
+        }
+    }
+
+    impl From<&str> for CliError {
+        fn from(message: &str) -> CliError {
+            CliError::Message(message.to_string())
+        }
+    }
+
+    /// ⚙️ The persistent settings every verb reads.
+    #[derive(Clone, Debug)]
+    pub struct Config {
+        pub format: Format,
+        pub verbose: bool,
+        pub repo: String,
+        pub timeout_nanoseconds: i64,
+    }
+
+    /// 🎬️ One running command: the parse, the resolved settings and the two output streams.
+    pub struct Invocation<'a> {
+        pub parsed: Parsed<'a>,
+        pub config: Config,
+        pub out: &'a mut dyn std::io::Write,
+        pub err: &'a mut dyn std::io::Write,
+        pub is_tty: bool,
+    }
+
+    impl<'a> Invocation<'a> {
+        /// 🔤️ A string flag, empty when it is not visible.
+        pub fn text(&self, name: &str) -> String {
+            match self.parsed.flags.get(name) {
+                Some((FlagValue::Text(text), _)) => text.clone(),
+                _ => String::new(),
+            }
+        }
+
+        /// ☑️ A boolean flag, false when it is not visible.
+        pub fn flag(&self, name: &str) -> bool {
+            matches!(self.parsed.flags.get(name), Some((FlagValue::Bool(true), _)))
+        }
+
+        /// 🔢️ An integer flag, zero when it is not visible.
+        pub fn int(&self, name: &str) -> i64 {
+            match self.parsed.flags.get(name) {
+                Some((FlagValue::Int(number), _)) => *number,
+                _ => 0,
+            }
+        }
+
+        /// 📜️ A string list flag.
+        pub fn texts(&self, name: &str) -> Vec<String> {
+            match self.parsed.flags.get(name) {
+                Some((FlagValue::Texts(items), _)) => items.clone(),
+                _ => Vec::new(),
+            }
+        }
+
+        /// 🔢️ An integer list flag.
+        pub fn ints(&self, name: &str) -> Vec<i64> {
+            match self.parsed.flags.get(name) {
+                Some((FlagValue::Ints(items), _)) => items.clone(),
+                _ => Vec::new(),
+            }
+        }
+
+        /// 🚩️ Whether the caller passed a flag.
+        pub fn changed(&self, name: &str) -> bool {
+            self.parsed.flags.get(name).is_some_and(|(_, changed)| *changed)
+        }
+
+        /// 📜️ The operands.
+        pub fn args(&self) -> &[String] {
+            &self.parsed.positional
+        }
+
+        /// 🔤️ The operand at an index, empty when absent.
+        pub fn arg(&self, index: usize) -> String {
+            self.parsed.positional.get(index).cloned().unwrap_or_default()
+        }
+
+        /// 🏠️ The repository root the invocation runs against.
+        pub fn root(&self) -> std::path::PathBuf {
+            if !self.config.repo.is_empty() {
+                return semio_framework_repo_workspace::find_repo_root(std::path::Path::new(&self.config.repo));
+            }
+            semio_framework_repo_workspace::find_repo_root(&std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")))
+        }
+
+        /// 🗄️ The production repository context of the invocation's root.
+        pub fn context(&self) -> FsRepoContext {
+            FsRepoContext::open(&self.root())
+        }
+
+        /// ✍️ Writes text to standard output.
+        pub fn print(&mut self, text: &str) {
+            let _ = self.out.write_all(text.as_bytes());
+        }
+
+        /// ✍️ Writes one line to standard output.
+        pub fn println(&mut self, text: &str) {
+            self.print(&format!("{text}\n"));
+        }
+
+        /// 🖨️ Renders a produced stream in the invocation's format, failing with its exit code.
+        pub fn render(&mut self, events: &[Event], started: std::time::Instant) -> Result<(), CliError> {
+            let rendered = render(events, self.config.format, self.is_tty, self.config.verbose, started.elapsed().as_millis() as i64);
+            let _ = self.out.write_all(rendered.out.as_bytes());
+            let _ = self.err.write_all(rendered.err.as_bytes());
+            if rendered.exit_code != 0 {
+                return Err(CliError::Exit(rendered.exit_code));
+            }
+            Ok(())
+        }
+
+        /// 🕸️ Executes one document against the repository and renders the stream.
+        pub fn graphql(&mut self, query: &str, variables: Json) -> Result<(), CliError> {
+            let started = std::time::Instant::now();
+            let variables = match variables {
+                Json::Object(members) => members,
+                _ => Map::new(),
+            };
+            let context = self.context();
+            let events = graphql_events(&context, query, &variables);
+            self.render(&events, started)
+        }
+
+        /// 📡️ Renders one collected stream of results under a command name.
+        pub fn stream(&mut self, command: &str, results: Vec<Json>, logs: Vec<String>) -> Result<(), CliError> {
+            let started = std::time::Instant::now();
+            let mut events = vec![Event::start(command)];
+            events.extend(results.into_iter().map(|data| Event::result(command, data)));
+            events.extend(logs.into_iter().map(|line| Event::log(command, line)));
+            events.push(Event::finish(EXIT_OK, "ok"));
+            self.render(&events, started)
+        }
+    }
+
+    //#endregion 🎮️CommandFramework
+

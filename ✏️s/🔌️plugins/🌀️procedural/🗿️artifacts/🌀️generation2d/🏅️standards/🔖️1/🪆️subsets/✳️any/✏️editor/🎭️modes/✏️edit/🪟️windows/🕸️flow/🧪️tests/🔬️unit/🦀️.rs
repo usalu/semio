@@ -30,7 +30,7 @@ async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
     assert!(!domain.edge_target_prefix.is_empty());
     assert!(!domain.handle_target_prefix.is_empty());
     assert!(
-        scene.operators.iter().any(|operator| operator.id.contains("math.")),
+        scene.operators.iter().any(|operator| operator.id == "draw.shape.rect"),
         "operators must be document-derived for the open graph's non-core kinds, carries {:?}",
         scene.operators.iter().map(|operator| operator.id.as_str()).collect::<Vec<_>>()
     );

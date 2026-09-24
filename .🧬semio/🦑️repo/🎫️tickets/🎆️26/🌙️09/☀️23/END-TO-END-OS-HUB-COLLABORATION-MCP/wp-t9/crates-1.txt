@@ -1,0 +1,5 @@
+semio-s-artifact-stdio-semio:conversion-drawing,conversion-mesh,conversion-cad
+semio-s-artifact-raster-raster
+semio-s-artifact-cad-cad
+semio-s-artifact-draw-drawing
+semio-s-artifact-lowpoly-lowpoly

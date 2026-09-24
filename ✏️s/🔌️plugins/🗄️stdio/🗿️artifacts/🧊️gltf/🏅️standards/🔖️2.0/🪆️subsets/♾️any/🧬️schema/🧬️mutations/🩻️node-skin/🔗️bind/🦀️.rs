@@ -60,7 +60,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeSkinM
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Bind Node Skin", "Knotenhaut binden")
+        protocol::LocalizedLabel::native("Bind Node Skin", "Knoten-Skin binden")
     }
 
     fn target(&self) -> Vec<String> {

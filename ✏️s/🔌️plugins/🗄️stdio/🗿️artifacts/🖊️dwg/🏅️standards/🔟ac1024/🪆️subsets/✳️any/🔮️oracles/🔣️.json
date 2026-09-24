@@ -2,20 +2,48 @@
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest. ⚠️ The `dwg-ac1018-any` and `dwg-ac1024-any` catalogs declare the SAME three kinds, and that is correct rather than a copy-paste: `4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` is a one-line `pub use` of `🔟ac1024`'s, as are its `🧬️schema` and `📸️snapshot` facets, so `DwgMutation` is ONE Rust enum shared by both standards. They are identical BY CONSTRUCTION, not by agreement, and the AC1024 oracle module's `every_ac1018_facet_is_a_re_export_of_this_one` test reads the committed sources and fails the moment that stops being true. Two catalogs and two capabilities exist anyway because the contract gate counts coverage per subset and a catalog claimed by no feature is itself a breach.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "oracles": [
     {
-      "id": "dwg-ac1024-proprietary-container",
+      "id": "libredwg-dwg-preamble-cli",
+      "kind": "third-party-cli",
+      "ecosystem": "native",
+      "package": "libredwg",
+      "version": "0.13.3",
+      "source": {
+        "repository": "https://git.savannah.gnu.org/git/libredwg.git",
+        "license": "GPL-3.0-or-later"
+      },
+      "engine": {
+        "family": "libredwg",
+        "implementation": "dwgread -v3 file-header trace",
+        "version": "0.13.3"
+      },
       "capabilities": [
-        "dwg-ac1024-mutate"
+        "dwg-ac1024-mutate",
+        "dwg-ac1018-mutate"
       ],
-      "rationale": "DWG is a proprietary, undocumented format. The only independent implementation of any weight is LibreDWG, which is GPL-3.0 C: linking it would put a copyleft C library on this repository's test host, and no owner ruling permits that. No permissively licensed Rust DWG reader exists at all — `dxf` 0.6, the crate registered for the sibling 🖋️dxf artifact, reads DXF (the PUBLISHED interchange format Autodesk documents) and explicitly not DWG. Confidence instead comes from specification vectors and the metamorphic laws, exercised against a real 148,638-byte committed architectural drawing by an independently hand-written reader/writer of the one part of DWG that IS publicly specified: the plain preamble every file since R13 begins with — six ASCII version characters at 0x00-0x05, the `maint_version` byte at 0x12, and the little-endian `codepage` u16 at 0x13-0x14, the offsets LibreDWG's own `header.spec` documents and this subset's `DwgSnapshot` doc comments already cite (and which the real fixture confirms: 0x02 and 30/ANSI_1252). That reader never calls this repository's own 12,000-line R2004+ decoder. The narrowness is real and is stated rather than hidden: everything after the preamble is the R2004+ section map — compressed, checksummed and section-encrypted — which nothing in this repository or in the permissively licensed Rust ecosystem can regenerate, so it is carried through unchanged and the projection covers the preamble triple plus the document length only. `byteLength` is what keeps `set-snapshot` (a whole-document replacement) distinguishable from `set-version-info` (a field set in place) rather than the two collapsing into one indistinguishable edit. [Narrowed 2026-09-02, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION shard D2: capabilities emptied because a real mutationManifest now requires a qualifying third-party oracle for this exact capability, and noOracleMisuseBreaches correctly refuses to let a recorded decision paper over a real runtime requirement (per shard A10's precedent for mathematical/sequence/draw) -- the honest state is a visible missing-external-oracle gap, not a hidden one. Rationale above is kept for the record: it still explains why no third-party library is credible for this domain, which is exactly why the gap is expected to stay open rather than be filled.]",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "comparisonProfiles": [
+        "semantic-dwg-preamble-v1"
+      ],
+      "license": "GPL-3.0-or-later",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "homepage": "https://www.gnu.org/software/libredwg/",
+      "hostImplementation": "rust",
+      "executables": [
+        "dwgread"
+      ],
+      "rationale": "📖️ A third-party READER of the DWG file header, run as a separate process and never linked, so its GPL-3.0 licence stays with the tool. `dwgread -v3` traces the preamble fields it parses — the version code, `maint_version` and `codepage` — before it decodes the R2004+ section map, and refuses a document shorter than a container with the byte count it was given. The case's oracle role writes every document it produces to disk and requires that reading to agree with the semantic-dwg-preamble-v1 projection (`dwgread_agrees` in `../🔮️oracles/🦀️.rs`); the mutation itself is applied by the independently hand-written preamble writer beside it. Verified on the committed architectural drawing (AC1024, maint 2, codepage 30) and on AC1032/maint 7/codepage 29 and 22-byte preamble-only documents. Installed on macOS through Homebrew (`libredwg`); Ubuntu 24.04 and Windows ship no package, so there the oracle phase records the case as oracle-unavailable with the missing command."
     }
   ],
+  "noOracleDecisions": [],
   "comparisonProfiles": [
     {
       "id": "semantic-dwg-preamble-v1",
@@ -63,7 +91,9 @@
           "capability": "dwg-ac1024-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -73,7 +103,8 @@
           "oracleRequirements": [
             {
               "capability": "dwg-ac1024-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libredwg-dwg-preamble-cli"
             }
           ]
         },
@@ -92,7 +123,8 @@
           "oracleRequirements": [
             {
               "capability": "dwg-ac1024-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libredwg-dwg-preamble-cli"
             }
           ]
         }

@@ -1824,6 +1824,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_destructive("removeSelectedStep")
             // 🐚️ Palette-visible host round-trips.
             .shell_action("exportModel", LocalizedLabel::native("Export Model", "Modell exportieren"))
+            .action_destructive("exportModel")
             .shell_action("loadModelRequest", LocalizedLabel::native("Load Model…", "Modell laden…"))
             // 🔧️ Internal document mutations dispatched by panel/viewport wiring (not palette-worthy).
             .action_with(internal_action("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation))

@@ -23,7 +23,7 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyKit {
         agg_inverse(&SemioMutation::ApplyKit(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("kit", "Kit")
+        protocol::SemanticMutation::label(&self.mutation)
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

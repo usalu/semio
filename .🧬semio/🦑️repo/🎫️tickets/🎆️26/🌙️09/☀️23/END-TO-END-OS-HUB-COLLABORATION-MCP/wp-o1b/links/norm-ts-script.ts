@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/📜️script.ts

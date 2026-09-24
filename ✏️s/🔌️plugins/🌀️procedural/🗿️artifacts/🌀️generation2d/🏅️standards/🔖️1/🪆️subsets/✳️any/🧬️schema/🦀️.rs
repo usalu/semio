@@ -273,8 +273,8 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<No
 pub fn collect_drawing_handles_from_eval(value: &dsl::json::Value, handles: &mut Vec<String>) {
     match value {
         dsl::json::Value::Object(map) => {
-            if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
-                if handle.starts_with("drawing-") {
+            if map.get("$schema").and_then(|entry| entry.as_str()) == Some("draw.drawing") {
+                if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
                     handles.push(handle.into());
                 }
             }
@@ -370,6 +370,37 @@ pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &se
     let evaluated = host.evaluate().unwrap_or_default();
     host.retire_cold();
     evaluated
+}
+
+/// 📤️ The drawings a program OUTPUTS: every drawing a synapse delivers into an output widget
+/// (`output-preview`, `output-export`), read off the evaluation at the synapse's source port, in
+/// synapse order without repeats. Intermediate drawings (a shape before its style) are not outputs.
+#[cfg(feature = "component-app-assembly")]
+pub fn output_drawing_handles(host_snapshot: &FlowHostSnapshot, outputs: &dsl::json::Value) -> Vec<String> {
+    use semio_framework_artifact_flow_flow::Widget;
+    let is_output = |id: &str| host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::OutputPreview { id: output, .. } | Widget::OutputExport { id: output, .. } if output == id));
+    let mut handles = Vec::new();
+    for synapse in host_snapshot.synapses.iter().filter(|synapse| is_output(&synapse.to)) {
+        let Some(out) = outputs.get(&synapse.from).and_then(|node| node.get("out")) else { continue };
+        let delivered = if synapse.from_port.is_empty() { Some(out) } else { out.get(&synapse.from_port) };
+        let mut found = Vec::new();
+        if let Some(value) = delivered {
+            collect_drawing_handles_from_eval(value, &mut found);
+        }
+        for handle in found {
+            if !handles.contains(&handle) {
+                handles.push(handle);
+            }
+        }
+    }
+    handles
+}
+
+/// 🖼️ [`output_drawing_handles`] as the scene layers the `drawing:out` port publishes.
+#[cfg(feature = "component-app-assembly")]
+pub fn generation_output_layers(host_snapshot: &FlowHostSnapshot, eval_json: &str) -> String {
+    let layers: Vec<dsl::json::Value> = dsl::json::parse(eval_json).map(|outputs| output_drawing_handles(host_snapshot, &outputs).iter().flat_map(|handle| scene_layers_from_drawing_handle(handle, "generation2d-drawing-out")).collect()).unwrap_or_default();
+    dsl::json::to_string(&dsl::json::Value::from(layers))
 }
 
 #[cfg(feature = "component-app-assembly")]

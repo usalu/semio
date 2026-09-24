@@ -39,7 +39,7 @@ impl MutationKind<PdfSnapshot, PdfA1Mutation> for ClearPageText {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("clear page text", "Seitentext leeren")
+        protocol::LocalizedLabel::native("Clear page text", "Seitentext leeren")
     }
 
     fn target(&self) -> Vec<String> {

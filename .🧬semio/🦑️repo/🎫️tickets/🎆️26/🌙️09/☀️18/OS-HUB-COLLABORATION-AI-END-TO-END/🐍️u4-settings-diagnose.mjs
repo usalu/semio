@@ -1,0 +1,30 @@
+#!/usr/bin/env bun
+/** 🔎️ U4 diagnose: where the React `s` shell exposes Settings → Theme, so the probe can walk it. */
+import { chromium } from "playwright";
+import { awaitBeacon, dismissIntroduction } from "./🐍️s6-all-kinds-sweep.mjs";
+const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal"] });
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+await page.goto(process.argv[2] ?? "http://127.0.0.1:6400/", { waitUntil: "commit", timeout: 300_000 });
+console.log(await awaitBeacon(page, Date.now() + 300_000));
+await dismissIntroduction(page);
+await page.waitForTimeout(4_000);
+const dump = () => page.evaluate(() => [...document.querySelectorAll("[id]")].map((element) => element.id).filter((id) => /setting|theme|panelTab/iu.test(id)).slice(0, 60));
+console.log("ids", JSON.stringify(await dump()));
+console.log("buttons", JSON.stringify(await page.evaluate(() => [...document.querySelectorAll("button, [role=tab]")].map((element) => `${element.id}|${element.getAttribute("aria-label")}|${(element.textContent ?? "").trim().slice(0, 20)}`).filter((text) => /setting|einstell|theme/iu.test(text)).slice(0, 30))));
+await page.locator('[id="framework.settings"]').first().click({ force: true });
+await page.waitForTimeout(2_500);
+console.log("after settings ids", JSON.stringify(await dump()));
+await page.locator('[id="framework.settings.theme"]').first().click({ force: true });
+await page.waitForTimeout(2_000);
+const themeIds = () => page.evaluate(() => [...document.querySelectorAll('[id^="framework.settings.theme"]')].map((element) => `${element.id}|${element.getAttribute("role")}|${element.getAttribute("aria-expanded")}`).slice(0, 40));
+console.log("theme ids", JSON.stringify(await themeIds()));
+console.log("light html", await page.locator('[id="framework.settings.theme.appearances.light"][role="treeitem"]').first().evaluate((element) => element.outerHTML.slice(0, 1500)));
+const light = page.locator('[id="framework.settings.theme.appearances.light"][role="treeitem"]').first();
+await light.focus();
+await page.keyboard.press("ArrowRight");
+await page.waitForTimeout(1_000);
+console.log("after ArrowRight", await light.getAttribute("aria-expanded"), await page.locator('[id="framework.settings.theme.appearances.light.chrome"]').count());
+console.log("theme ids after", JSON.stringify(await themeIds()));
+console.log("colors", JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('input[type="color"]')].map((input) => `${input.getAttribute("aria-label")}=${input.value}`).slice(0, 30))));
+console.log("tabs", JSON.stringify(await page.evaluate(() => [...document.querySelectorAll("[role=tab], [role=treeitem], button")].map((element) => `${element.id}|${element.getAttribute("role")}|${(element.textContent ?? "").trim().slice(0, 24)}`).filter((text) => /theme|design|appearance|light|chrome/iu.test(text)).slice(0, 30))));
+await browser.close();

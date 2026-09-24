@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Remove
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove zone {} from thermal enclosure {}", self.zone_id.0, self.id.0), &format!("Zone {} aus Wärmenhülle {} entfernen", self.zone_id.0, self.id.0))
+        protocol::LocalizedLabel::native(&format!("Remove zone {} from thermal enclosure {}", self.zone_id.0, self.id.0), &format!("Zone {} aus thermischer Hülle {} entfernen", self.zone_id.0, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

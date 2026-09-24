@@ -16,7 +16,7 @@
 //#region 🔌️Adapters
 import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
-import { type AdapterOutcome, type ResultArtifact, type TestAdapter, type TestCasePlan, type TestResult, contentDigestOf, currentPlatform, digest, makeAdapterContext, projectionHash, repoRootFromHere, setDigest, testId, validateRegistration } from "../📦️packages/🟦️typescript/🟦️.ts";
+import { type AdapterOutcome, type ResultArtifact, type TestAdapter, type TestCasePlan, type TestResult, contentDigestOf, currentPlatform, digest, makeAdapterContext, projectionHash, registeredHandler, repoRootFromHere, setDigest, testId, validateRegistration } from "../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🎛️Arguments
@@ -92,7 +92,7 @@ export async function runAdapter(repoRoot: string, plan: TestCasePlan, adapter: 
   const results: TestResult[] = [];
   const registrationProblems = validateRegistration(plan, adapter, plan.role);
   for (const scenario of plan.scenarios) {
-    const handler = adapter.scenarios[scenario.id]?.[plan.role];
+    const handler = registeredHandler(adapter, scenario, plan.role);
     const started = Date.now();
     if (handler === undefined) {
       results.push(resultFor(plan, scenario.id, scenario.level, plan.role, "errored", Date.now() - started, null, [{ severity: "error", message: `adapter has no ${plan.role} registration for scenario ${scenario.id}`, detail: registrationProblems.join("\n") }], scenario.seed));

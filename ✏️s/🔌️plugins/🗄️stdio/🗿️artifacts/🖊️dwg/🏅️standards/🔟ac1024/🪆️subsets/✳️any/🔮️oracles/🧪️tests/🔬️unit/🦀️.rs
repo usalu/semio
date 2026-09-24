@@ -144,13 +144,13 @@ fn an_unknown_kind_is_an_error_not_a_silent_no_op() {
 fn kinds_match_both_catalogs_and_the_vocabulary() {
     let vocabulary = include_str!("../../../🧬️schema/🧬️mutations/🦀️.rs");
     let variants = ["SetSnapshot", "SetVersionInfo"];
-    assert_eq!(KINDS.len(), variants.len() + 1, "no-mutation is an oracle-only identity scenario with no DwgMutation variant of its own");
+    assert_eq!(KINDS.len(), variants.len());
     for manifest in [include_str!("../../🔣️.json"), include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/🔣️.json")] {
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
         }
     }
-    for (kind, variant) in KINDS.iter().skip(1).zip(variants.iter()) {
+    for (kind, variant) in KINDS.iter().zip(variants.iter()) {
         assert!(vocabulary.contains(&format!("{variant} ")) || vocabulary.contains(&format!("{variant},")) || vocabulary.contains(&format!("{variant} {{")), "DwgMutation is missing variant {variant:?} for kind {kind:?}");
     }
     for feature in [include_str!("../../../🧪️tests/🖊️mutate-dwg-ac1024/🥒️.feature"), include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧪️tests/🖊️mutate-dwg-ac1018/🥒️.feature")] {

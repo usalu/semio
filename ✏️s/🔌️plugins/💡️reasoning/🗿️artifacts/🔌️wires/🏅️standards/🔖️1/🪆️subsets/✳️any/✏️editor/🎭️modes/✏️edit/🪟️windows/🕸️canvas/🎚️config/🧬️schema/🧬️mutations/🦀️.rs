@@ -42,3 +42,13 @@ impl protocol::OpBinary for WiresCanvasWindowConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+
+//#region 🌉️TestBridge
+/// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
+/// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `WiresCanvasWindowConfig`.
+///
+/// @see store::os_store::test_support::mutation_report_json
+pub fn wires_canvas_window_config_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
+    store::os_store::test_support::mutation_report_json::<WiresCanvasWindowConfig, WiresCanvasWindowConfigMutation>(base_json, mutation_json, after_json)
+}
+//#endregion 🌉️TestBridge

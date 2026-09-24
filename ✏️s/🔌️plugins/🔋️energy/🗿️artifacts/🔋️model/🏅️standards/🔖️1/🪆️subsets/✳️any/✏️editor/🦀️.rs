@@ -2550,6 +2550,7 @@ pub fn app_level_action_definitions() -> Vec<semio_framework_plugin::ActionDefin
 pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
     let mut builder = Editor::builder(MODEL_DIALECT)
         .document(["semio", "energy", "model"])
+        .artifact_kind(crate::artifact_kind())
         .terminology("reuse")
         .terminology_document("reuse", ["Entwerfen mit Bestand", "Energie"])
         .icon_id("battery")

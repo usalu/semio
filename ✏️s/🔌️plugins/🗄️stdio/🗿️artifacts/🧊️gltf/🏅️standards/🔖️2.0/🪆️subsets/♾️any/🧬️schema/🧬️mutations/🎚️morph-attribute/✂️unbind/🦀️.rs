@@ -66,7 +66,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindMorphTa
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Unbind Morph Target Attribute", "Morphzielattribut lösen")
+        protocol::LocalizedLabel::native("Unbind Morph Target Attribute", "Bindung des Morphzielattributs aufheben")
     }
 
     fn target(&self) -> Vec<String> {

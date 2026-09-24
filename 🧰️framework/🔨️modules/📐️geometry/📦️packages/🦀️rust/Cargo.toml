@@ -25,4 +25,3 @@ path = "../../🧪️tests/📐️first-party-geometry/🦀️.rs"
 
 [dev-dependencies]
 kurbo = "0.13.1"
-semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

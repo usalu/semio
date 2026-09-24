@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeDMm {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change stud diameter d to {}", self.new_d_mm), &format!("Ständerdurchmesserd auf {} ändern", self.new_d_mm))
+        protocol::LocalizedLabel::native(&format!("Change stud diameter d to {}", self.new_d_mm), &format!("Dübeldurchmesser d auf {} ändern", self.new_d_mm))
     }
 }
 //#endregion 🔖️Payload

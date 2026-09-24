@@ -30,7 +30,7 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveJavascriptAction {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove JavaScript action", "JavaScriptaktion entfernen")
+        protocol::LocalizedLabel::native("Remove JavaScript action", "JavaScript-Aktion entfernen")
     }
 
     fn target(&self) -> Vec<String> {

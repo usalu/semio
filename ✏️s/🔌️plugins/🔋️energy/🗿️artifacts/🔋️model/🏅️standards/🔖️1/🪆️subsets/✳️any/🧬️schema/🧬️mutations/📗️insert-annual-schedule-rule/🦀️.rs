@@ -38,7 +38,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Insert
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Insert rule at {} of annual schedule {}", self.index, self.id.0), &format!("Regel an {} von Jahreszeitplan {} einfügen", self.index, self.id.0))
+        protocol::LocalizedLabel::native(&format!("Insert rule at {} of annual schedule {}", self.index, self.id.0), &format!("Regel an Position {} in Jahreszeitplan {} einfügen", self.index, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

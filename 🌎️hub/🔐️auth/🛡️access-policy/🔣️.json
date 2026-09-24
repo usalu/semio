@@ -1,0 +1,100 @@
+{
+  "schema": "semio.hub.access-policy/v1",
+  "grants": [
+    {
+      "effect": "allow",
+      "roles": [
+        "authenticated"
+      ],
+      "actions": [
+        "space.create"
+      ]
+    },
+    {
+      "effect": "allow",
+      "roles": [
+        "admin"
+      ],
+      "actions": [
+        "space.create",
+        "space.rename",
+        "space.visibility",
+        "space.archive",
+        "space.delete",
+        "member.upsert",
+        "member.remove",
+        "invite.create",
+        "invite.revoke",
+        "document.announce"
+      ]
+    },
+    {
+      "effect": "allow",
+      "roles": [
+        "owner"
+      ],
+      "actions": [
+        "space.archive",
+        "space.delete"
+      ]
+    },
+    {
+      "effect": "allow",
+      "roles": [
+        "author"
+      ],
+      "actions": [
+        "space.rename",
+        "space.visibility",
+        "member.upsert",
+        "member.remove",
+        "invite.create",
+        "invite.revoke",
+        "document.announce",
+        "agent.delegate",
+        "document.read",
+        "document.write",
+        "document.check-in",
+        "artifact.create",
+        "blob.read",
+        "blob.write"
+      ]
+    },
+    {
+      "effect": "allow",
+      "roles": [
+        "spectator"
+      ],
+      "actions": [
+        "document.read",
+        "blob.read"
+      ]
+    },
+    {
+      "effect": "allow",
+      "roles": [
+        "share"
+      ],
+      "actions": [
+        "document.read"
+      ]
+    },
+    {
+      "effect": "deny",
+      "roles": [
+        "admin",
+        "owner",
+        "author"
+      ],
+      "actions": [
+        "document.write",
+        "document.check-in",
+        "artifact.create",
+        "blob.write"
+      ],
+      "spaceKinds": [
+        "archive"
+      ]
+    }
+  ]
+}

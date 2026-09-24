@@ -37,7 +37,7 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ReplacePixelDataMutati
         }
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("replace pixel data", "Pixeldaten ersetzen")
+        protocol::LocalizedLabel::native("Replace pixel data", "Pixeldaten ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-pixel-data".into()]

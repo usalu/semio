@@ -12,7 +12,10 @@
 // #region 🔌️Adapters
 import { cleanup, fireEvent, render, screen, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildTaskManagerTableScene, createTaskManagerDispatcher, runtimeMetricsRowsV1, taskManagerColumns, taskManagerMetricCell, taskManagerRowAction, taskManagerRows, TaskManagerPanel, TaskManagerWindow, TASK_MANAGER_UNOBSERVED_METRIC, type TaskManagerLabels, type TaskManagerRow, type TaskManagerTableCell } from "../../🟦️.tsx";
+import { buildTaskManagerTableScene, createTaskManagerDispatcher, installTasksV1, runtimeMetricsRowsV1, spawnedJobTasksV1, taskManagerColumns, taskManagerElapsedSecondsV1, taskManagerMetricCell, taskManagerRowAction, taskManagerRows, TaskManagerPanel, TaskManagerTasksPanel, TaskManagerWindow, toolCallTasksV1, TASK_MANAGER_UNOBSERVED_METRIC, type TaskManagerLabels, type TaskManagerRow, type TaskManagerSourcesV1, type TaskManagerTableCell, type TaskManagerTaskV1 } from "../../🟦️.tsx";
+import { type SpawnedJobRowV1 } from "../../../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
+import { type AgentConversationEntry } from "../../../🔗️AgentBridge/🟦️.tsx";
+import runningTasks from "../../🧫️fixtures/🏃️running-tasks.json";
 import { ActivationRegistry } from "../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import { ShardClient, type ShardBudget, type ShardWorkerLike } from "../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { OwnedResidentLedger } from "../../../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
@@ -220,15 +223,20 @@ describe("taskManagerMetricCell", () => {
   });
 });
 
+/** 🧪️ A window reads everything through `sources`; these hand it a fixed registry and task list. */
+function sourcesFor(registry: ActivationRegistry | null, tasks: readonly TaskManagerTaskV1[] = [], cancel: (task: TaskManagerTaskV1) => void = () => undefined): TaskManagerSourcesV1 {
+  return { registry: () => registry, tasks: () => tasks, subscribe: () => () => undefined, cancel };
+}
+
 describe("TaskManagerWindow", () => {
   it("distinguishes 'no runtime attached' from 'the runtime reports no actors'", async () => {
-    render(<TaskManagerWindow registry={null} />);
-    expect(screen.getByRole("status").getAttribute("data-semio-task-manager-empty")).toBe("no-runtime");
+    const { container } = render(<TaskManagerWindow sources={sourcesFor(null)} />);
+    expect(container.querySelector("[data-semio-task-manager-empty]")?.getAttribute("data-semio-task-manager-empty")).toBe("no-runtime");
     cleanup();
 
     const registry = new ActivationRegistry({ shardClient: autoReplyingShardClient(), defaultBudget: BUDGET, fetchAssets: async () => [] });
-    render(<TaskManagerWindow registry={registry} />);
-    await waitFor(() => expect(screen.getByRole("status").getAttribute("data-semio-task-manager-empty")).toBe("no-actors"));
+    const second = render(<TaskManagerWindow sources={sourcesFor(registry)} />);
+    await waitFor(() => expect(second.container.querySelector("[data-semio-task-manager-empty]")?.getAttribute("data-semio-task-manager-empty")).toBe("no-actors"));
   });
 
   it("renders the live actor the registry publishes, and follows an os.runtime.metrics event", async () => {
@@ -236,12 +244,71 @@ describe("TaskManagerWindow", () => {
     registry.registerManifest({ pluginId: "s.cad", moduleUrl: "https://x/cad.js", caps: [] });
     await registry.activate("s.cad", "actor-1", "manual");
 
-    render(<TaskManagerWindow registry={registry} />);
+    render(<TaskManagerWindow sources={sourcesFor(registry)} />);
     await waitFor(() => expect(screen.getByText("actor-1")).toBeTruthy());
 
     await registry.activate("s.cad", "actor-2", "manual");
     registry.metricsBus.dispatchEvent(new CustomEvent("os.runtime.metrics", { detail: registry.runtimeMetricsSnapshot() }));
     await waitFor(() => expect(screen.getByText("actor-2")).toBeTruthy());
   });
+
+  it("starts the registry's metrics publisher while mounted and stops it when closed", () => {
+    const registry = new ActivationRegistry({ shardClient: autoReplyingShardClient(), defaultBudget: BUDGET, fetchAssets: async () => [] });
+    const stop = vi.fn();
+    const start = vi.spyOn(registry, "startRuntimeMetricsPublisher").mockReturnValue(stop);
+    const { unmount } = render(<TaskManagerWindow sources={sourcesFor(registry)} />);
+    expect(start).toHaveBeenCalledTimes(1);
+    unmount();
+    expect(stop).toHaveBeenCalledTimes(1);
+  });
 });
 //#endregion 🔖️LiveFeed
+
+//#region 🔖️RunningTasks
+/** 🧪️ Slice U5: the window lists what is RUNNING — spawned jobs, installations, agent tool calls — each with
+ * a progress bar and a cancel control. The row law is replayed from the language-agnostic fixture, and the
+ * rendered semantics are read back through Testing Library's role queries (the third-party oracle for what a
+ * screen reader is told). */
+describe("running tasks", () => {
+  const fixtureJobs: readonly SpawnedJobRowV1[] = runningTasks.jobs.map((job) => ({ ...job, job: BigInt(job.job) }));
+  const fixtureTasks = [...spawnedJobTasksV1(fixtureJobs), ...installTasksV1(runningTasks.installs.pluginIds, new Map(Object.entries(runningTasks.installs.startedAtMs))), ...toolCallTasksV1(runningTasks.conversation as readonly AgentConversationEntry[])];
+
+  it("maps every live job, installation and running tool call onto exactly one task", () => {
+    expect(fixtureTasks).toEqual(runningTasks.expected);
+  });
+
+  it("counts elapsed seconds down to whole seconds and never below zero", () => {
+    for (const row of runningTasks.elapsed) expect(taskManagerElapsedSecondsV1(row.startedAtMs, row.nowMs)).toBe(row.seconds);
+  });
+
+  it("renders a named progress bar and a named cancel control per task, and a cancelling task cannot be cancelled twice", () => {
+    const onCancel = vi.fn();
+    render(<TaskManagerTasksPanel tasks={fixtureTasks} onCancel={onCancel} />);
+    expect(screen.getAllByRole("progressbar")).toHaveLength(runningTasks.expected.length);
+    const fill = screen.getByRole("progressbar", { name: /semio\.puzzle3d\.fill/u });
+    expect(fill.getAttribute("aria-valuetext")).toMatch(/^128 /u);
+    fireEvent.click(screen.getByRole("button", { name: /semio\.puzzle3d\.fill/u }));
+    expect(onCancel).toHaveBeenCalledWith(expect.objectContaining({ id: "job:actor-7#3", lane: "job" }));
+    const cancelling = screen.getByRole("button", { name: /inference_run/u }) as HTMLButtonElement;
+    expect(cancelling.disabled).toBe(true);
+  });
+
+  it("says nothing is running rather than showing an empty list", () => {
+    const { container } = render(<TaskManagerTasksPanel tasks={[]} onCancel={() => undefined} />);
+    expect(container.querySelector("[data-semio-task-manager-tasks-empty]")).not.toBeNull();
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
+  });
+
+  it("re-reads its sources on every notification", async () => {
+    let tasks: readonly TaskManagerTaskV1[] = [];
+    const listeners = new Set<() => void>();
+    const sources: TaskManagerSourcesV1 = { registry: () => null, tasks: () => tasks, subscribe: (listener) => (listeners.add(listener), () => listeners.delete(listener)), cancel: () => undefined };
+    const { container } = render(<TaskManagerWindow sources={sources} />);
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
+    tasks = fixtureTasks.slice(0, 1);
+    for (const listener of listeners) listener();
+    await waitFor(() => expect(screen.getAllByRole("progressbar")).toHaveLength(1));
+  });
+});
+//#endregion 🔖️RunningTasks
+

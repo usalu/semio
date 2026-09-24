@@ -348,7 +348,8 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-annex",
@@ -367,7 +368,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-area-mm2",
@@ -386,7 +389,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bed-joint-thickness-mm",
@@ -405,7 +410,8 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-design-situation",
@@ -424,7 +430,8 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-exposure",
@@ -443,7 +450,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-f-vk-mpa",
@@ -462,7 +471,8 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-fire-resistance-min",
@@ -481,7 +491,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-fk-mpa",
@@ -500,7 +512,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-h-ed-kn",
@@ -519,7 +533,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-h-ef-mm",
@@ -538,7 +554,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-m-ed-knm",
@@ -557,7 +575,8 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-masonry-class",
@@ -576,7 +595,8 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-mortar",
@@ -595,7 +615,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-mu",
@@ -614,7 +636,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-n-ed-kn",
@@ -633,7 +657,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-shear-area-mm2",
@@ -652,7 +678,8 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-storeys",
@@ -671,7 +698,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-t-ef-mm",
@@ -690,7 +719,8 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-unit",
@@ -709,7 +739,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-v-ed-kn",
@@ -728,7 +760,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-wall-thickness-mm",
@@ -747,7 +781,9 @@
           "capability": "en1996-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-z-mm3",

@@ -173,12 +173,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-required-extension",
             "bridgeVersion": 1,
-            "variant": "GltfRequireExtensionPayload"
+            "variant": "AddRequiredExtension"
           },
           "oracleRequirements": [
             {
@@ -193,12 +195,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-used-extension",
             "bridgeVersion": 1,
-            "variant": "GltfDeclareUsedExtensionPayload"
+            "variant": "AddUsedExtension"
           },
           "oracleRequirements": [
             {
@@ -213,12 +217,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "bind-default-scene",
             "bridgeVersion": 1,
-            "variant": "GltfBindDefaultScenePayload"
+            "variant": "BindDefaultScene"
           },
           "oracleRequirements": [
             {
@@ -233,12 +239,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "bind-morph-target-attribute",
             "bridgeVersion": 1,
-            "variant": "GltfBindMorphTargetAttributePayload"
+            "variant": "BindMorphTargetAttribute"
           },
           "oracleRequirements": [
             {
@@ -253,12 +261,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "bind-node-camera",
             "bridgeVersion": 1,
-            "variant": "GltfBindNodeCameraPayload"
+            "variant": "BindNodeCamera"
           },
           "oracleRequirements": [
             {
@@ -273,12 +283,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "bind-node-child",
             "bridgeVersion": 1,
-            "variant": "GltfBindNodeChildPayload"
+            "variant": "BindNodeChild"
           },
           "oracleRequirements": [
             {
@@ -293,12 +305,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "bind-node-mesh",
             "bridgeVersion": 1,
-            "variant": "GltfBindNodeMeshPayload"
+            "variant": "BindNodeMesh"
           },
           "oracleRequirements": [
             {
@@ -313,12 +327,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "bind-node-skin",
             "bridgeVersion": 1,
-            "variant": "GltfBindNodeSkinPayload"
+            "variant": "BindNodeSkin"
           },
           "oracleRequirements": [
             {
@@ -333,12 +349,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "bind-primitive-attribute",
             "bridgeVersion": 1,
-            "variant": "GltfBindPrimitiveAttributePayload"
+            "variant": "BindPrimitiveAttribute"
           },
           "oracleRequirements": [
             {
@@ -353,12 +371,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "bind-primitive-indices",
             "bridgeVersion": 1,
-            "variant": "GltfBindPrimitiveIndicesPayload"
+            "variant": "BindPrimitiveIndices"
           },
           "oracleRequirements": [
             {
@@ -373,12 +393,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "bind-primitive-material",
             "bridgeVersion": 1,
-            "variant": "GltfBindPrimitiveMaterialPayload"
+            "variant": "BindPrimitiveMaterial"
           },
           "oracleRequirements": [
             {
@@ -393,12 +415,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "bind-scene-root-node",
             "bridgeVersion": 1,
-            "variant": "GltfBindSceneRootNodePayload"
+            "variant": "BindSceneRootNode"
           },
           "oracleRequirements": [
             {
@@ -413,12 +437,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-asset-descriptive-metadata",
             "bridgeVersion": 1,
-            "variant": "GltfChangeAssetDescriptiveMetadataPayload"
+            "variant": "ChangeAssetDescriptiveMetadata"
           },
           "oracleRequirements": [
             {
@@ -433,12 +459,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-asset-extension-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangeAssetExtensionDataPayload"
+            "variant": "ChangeAssetExtensionData"
           },
           "oracleRequirements": [
             {
@@ -453,12 +481,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-asset-extra-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangeAssetExtraDataPayload"
+            "variant": "ChangeAssetExtraData"
           },
           "oracleRequirements": [
             {
@@ -473,12 +503,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-asset-version",
             "bridgeVersion": 1,
-            "variant": "GltfChangeAssetVersionPayload"
+            "variant": "ChangeAssetVersion"
           },
           "oracleRequirements": [
             {
@@ -493,12 +525,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-document-extension-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangeDocumentExtensionDataPayload"
+            "variant": "ChangeDocumentExtensionData"
           },
           "oracleRequirements": [
             {
@@ -513,12 +547,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-document-extra-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangeDocumentExtraDataPayload"
+            "variant": "ChangeDocumentExtraData"
           },
           "oracleRequirements": [
             {
@@ -533,12 +569,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-material-alpha-mode",
             "bridgeVersion": 1,
-            "variant": "GltfChangeMaterialAlphaModeRejection"
+            "variant": "ChangeMaterialAlphaMode"
           },
           "oracleRequirements": [
             {
@@ -553,12 +591,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-material-double-sided",
             "bridgeVersion": 1,
-            "variant": "GltfChangeMaterialDoubleSidedRejection"
+            "variant": "ChangeMaterialDoubleSided"
           },
           "oracleRequirements": [
             {
@@ -573,12 +613,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-mesh-extension-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangeMeshExtensionDataPayload"
+            "variant": "ChangeMeshExtensionData"
           },
           "oracleRequirements": [
             {
@@ -593,12 +635,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-mesh-extra-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangeMeshExtraDataPayload"
+            "variant": "ChangeMeshExtraData"
           },
           "oracleRequirements": [
             {
@@ -613,12 +657,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-mesh-morph-weights",
             "bridgeVersion": 1,
-            "variant": "GltfChangeMeshMorphWeightsPayload"
+            "variant": "ChangeMeshMorphWeights"
           },
           "oracleRequirements": [
             {
@@ -633,12 +679,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-mesh-name",
             "bridgeVersion": 1,
-            "variant": "GltfChangeMeshNamePayload"
+            "variant": "ChangeMeshName"
           },
           "oracleRequirements": [
             {
@@ -653,12 +701,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-node-extension-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangeNodeExtensionDataPayload"
+            "variant": "ChangeNodeExtensionData"
           },
           "oracleRequirements": [
             {
@@ -673,12 +723,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-node-extra-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangeNodeExtraDataPayload"
+            "variant": "ChangeNodeExtraData"
           },
           "oracleRequirements": [
             {
@@ -693,12 +745,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-node-morph-weights",
             "bridgeVersion": 1,
-            "variant": "GltfChangeNodeMorphWeightsPayload"
+            "variant": "ChangeNodeMorphWeights"
           },
           "oracleRequirements": [
             {
@@ -714,6 +768,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -734,12 +789,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-node-transform",
             "bridgeVersion": 1,
-            "variant": "GltfTransformNodePayload"
+            "variant": "ChangeNodeTransform"
           },
           "oracleRequirements": [
             {
@@ -754,12 +811,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-primitive-extension-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangePrimitiveExtensionDataPayload"
+            "variant": "ChangePrimitiveExtensionData"
           },
           "oracleRequirements": [
             {
@@ -774,12 +833,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-primitive-extra-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangePrimitiveExtraDataPayload"
+            "variant": "ChangePrimitiveExtraData"
           },
           "oracleRequirements": [
             {
@@ -794,12 +855,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-primitive-topology-mode",
             "bridgeVersion": 1,
-            "variant": "GltfChangePrimitiveTopologyModePayload"
+            "variant": "ChangePrimitiveTopologyMode"
           },
           "oracleRequirements": [
             {
@@ -814,12 +877,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-scene-extension-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangeSceneExtensionDataPayload"
+            "variant": "ChangeSceneExtensionData"
           },
           "oracleRequirements": [
             {
@@ -834,12 +899,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-scene-extra-data",
             "bridgeVersion": 1,
-            "variant": "GltfChangeSceneExtraDataPayload"
+            "variant": "ChangeSceneExtraData"
           },
           "oracleRequirements": [
             {
@@ -854,12 +921,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-scene-name",
             "bridgeVersion": 1,
-            "variant": "GltfChangeSceneNamePayload"
+            "variant": "ChangeSceneName"
           },
           "oracleRequirements": [
             {
@@ -874,12 +943,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-accessor",
             "bridgeVersion": 1,
-            "variant": "GltfCreateAccessorPayload"
+            "variant": "CreateAccessor"
           },
           "oracleRequirements": [
             {
@@ -895,12 +966,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-animation",
             "bridgeVersion": 1,
-            "variant": "GltfCreateAnimationPayload"
+            "variant": "CreateAnimation"
           },
           "oracleRequirements": [
             {
@@ -915,12 +988,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-buffer",
             "bridgeVersion": 1,
-            "variant": "GltfCreateBufferPayload"
+            "variant": "CreateBuffer"
           },
           "oracleRequirements": [
             {
@@ -936,12 +1011,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-buffer-view",
             "bridgeVersion": 1,
-            "variant": "GltfCreateBufferViewPayload"
+            "variant": "CreateBufferView"
           },
           "oracleRequirements": [
             {
@@ -957,12 +1034,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-camera",
             "bridgeVersion": 1,
-            "variant": "GltfCreateCameraPayload"
+            "variant": "CreateCamera"
           },
           "oracleRequirements": [
             {
@@ -977,12 +1056,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-image",
             "bridgeVersion": 1,
-            "variant": "GltfCreateImagePayload"
+            "variant": "CreateImage"
           },
           "oracleRequirements": [
             {
@@ -998,12 +1079,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-material",
             "bridgeVersion": 1,
-            "variant": "GltfCreateMaterialPayload"
+            "variant": "CreateMaterial"
           },
           "oracleRequirements": [
             {
@@ -1018,12 +1101,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-mesh",
             "bridgeVersion": 1,
-            "variant": "GltfCreateMeshPayload"
+            "variant": "CreateMesh"
           },
           "oracleRequirements": [
             {
@@ -1038,12 +1123,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-morph-target",
             "bridgeVersion": 1,
-            "variant": "GltfCreateMorphTargetPayload"
+            "variant": "CreateMorphTarget"
           },
           "oracleRequirements": [
             {
@@ -1058,12 +1145,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-node",
             "bridgeVersion": 1,
-            "variant": "GltfCreateNodePayload"
+            "variant": "CreateNode"
           },
           "oracleRequirements": [
             {
@@ -1078,12 +1167,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-primitive",
             "bridgeVersion": 1,
-            "variant": "GltfCreatePrimitivePayload"
+            "variant": "CreatePrimitive"
           },
           "oracleRequirements": [
             {
@@ -1098,12 +1189,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-sampler",
             "bridgeVersion": 1,
-            "variant": "GltfCreateSamplerPayload"
+            "variant": "CreateSampler"
           },
           "oracleRequirements": [
             {
@@ -1119,12 +1212,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-scene",
             "bridgeVersion": 1,
-            "variant": "GltfCreateScenePayload"
+            "variant": "CreateScene"
           },
           "oracleRequirements": [
             {
@@ -1139,12 +1234,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-skin",
             "bridgeVersion": 1,
-            "variant": "GltfCreateSkinPayload"
+            "variant": "CreateSkin"
           },
           "oracleRequirements": [
             {
@@ -1159,12 +1256,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-texture",
             "bridgeVersion": 1,
-            "variant": "GltfCreateTexturePayload"
+            "variant": "CreateTexture"
           },
           "oracleRequirements": [
             {
@@ -1180,12 +1279,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-accessor",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteAccessorPayload"
+            "variant": "DeleteAccessor"
           },
           "oracleRequirements": [
             {
@@ -1201,12 +1302,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-animation",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteAnimationPayload"
+            "variant": "DeleteAnimation"
           },
           "oracleRequirements": [
             {
@@ -1221,12 +1324,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-buffer",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteBufferPayload"
+            "variant": "DeleteBuffer"
           },
           "oracleRequirements": [
             {
@@ -1242,12 +1347,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-buffer-view",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteBufferViewPayload"
+            "variant": "DeleteBufferView"
           },
           "oracleRequirements": [
             {
@@ -1263,12 +1370,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-camera",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteCameraPayload"
+            "variant": "DeleteCamera"
           },
           "oracleRequirements": [
             {
@@ -1283,12 +1392,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-image",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteImagePayload"
+            "variant": "DeleteImage"
           },
           "oracleRequirements": [
             {
@@ -1304,12 +1415,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-material",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteMaterialPayload"
+            "variant": "DeleteMaterial"
           },
           "oracleRequirements": [
             {
@@ -1324,12 +1437,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-mesh",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteMeshPayload"
+            "variant": "DeleteMesh"
           },
           "oracleRequirements": [
             {
@@ -1344,12 +1459,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-morph-target",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteMorphTargetPayload"
+            "variant": "DeleteMorphTarget"
           },
           "oracleRequirements": [
             {
@@ -1364,12 +1481,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-node",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteNodePayload"
+            "variant": "DeleteNode"
           },
           "oracleRequirements": [
             {
@@ -1384,12 +1503,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-primitive",
             "bridgeVersion": 1,
-            "variant": "GltfDeletePrimitivePayload"
+            "variant": "DeletePrimitive"
           },
           "oracleRequirements": [
             {
@@ -1404,12 +1525,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-sampler",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteSamplerPayload"
+            "variant": "DeleteSampler"
           },
           "oracleRequirements": [
             {
@@ -1425,12 +1548,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-scene",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteScenePayload"
+            "variant": "DeleteScene"
           },
           "oracleRequirements": [
             {
@@ -1445,12 +1570,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-skin",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteSkinPayload"
+            "variant": "DeleteSkin"
           },
           "oracleRequirements": [
             {
@@ -1465,12 +1592,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "delete-texture",
             "bridgeVersion": 1,
-            "variant": "GltfDeleteTexturePayload"
+            "variant": "DeleteTexture"
           },
           "oracleRequirements": [
             {
@@ -1486,12 +1615,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-accessor",
             "bridgeVersion": 1,
-            "variant": "GltfMoveAccessorPayload"
+            "variant": "MoveAccessor"
           },
           "oracleRequirements": [
             {
@@ -1507,12 +1638,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-animation",
             "bridgeVersion": 1,
-            "variant": "GltfMoveAnimationPayload"
+            "variant": "MoveAnimation"
           },
           "oracleRequirements": [
             {
@@ -1527,12 +1660,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-buffer",
             "bridgeVersion": 1,
-            "variant": "GltfMoveBufferPayload"
+            "variant": "MoveBuffer"
           },
           "oracleRequirements": [
             {
@@ -1548,12 +1683,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-buffer-view",
             "bridgeVersion": 1,
-            "variant": "GltfMoveBufferViewPayload"
+            "variant": "MoveBufferView"
           },
           "oracleRequirements": [
             {
@@ -1569,12 +1706,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-camera",
             "bridgeVersion": 1,
-            "variant": "GltfMoveCameraPayload"
+            "variant": "MoveCamera"
           },
           "oracleRequirements": [
             {
@@ -1589,12 +1728,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-image",
             "bridgeVersion": 1,
-            "variant": "GltfMoveImagePayload"
+            "variant": "MoveImage"
           },
           "oracleRequirements": [
             {
@@ -1610,12 +1751,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-material",
             "bridgeVersion": 1,
-            "variant": "GltfMoveMaterialPayload"
+            "variant": "MoveMaterial"
           },
           "oracleRequirements": [
             {
@@ -1630,12 +1773,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-mesh",
             "bridgeVersion": 1,
-            "variant": "GltfMoveMeshPayload"
+            "variant": "MoveMesh"
           },
           "oracleRequirements": [
             {
@@ -1650,12 +1795,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-morph-target",
             "bridgeVersion": 1,
-            "variant": "GltfMoveMorphTargetPayload"
+            "variant": "MoveMorphTarget"
           },
           "oracleRequirements": [
             {
@@ -1670,12 +1817,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-morph-target-attribute",
             "bridgeVersion": 1,
-            "variant": "GltfMoveMorphTargetAttributePayload"
+            "variant": "MoveMorphTargetAttribute"
           },
           "oracleRequirements": [
             {
@@ -1690,12 +1839,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-node",
             "bridgeVersion": 1,
-            "variant": "GltfMoveNodePayload"
+            "variant": "MoveNode"
           },
           "oracleRequirements": [
             {
@@ -1710,12 +1861,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
+            "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
             "operation": "move-node-child",
             "bridgeVersion": 1,
-            "variant": "GltfMoveNodeChildPayload"
+            "variant": "MoveNodeChild"
           },
           "oracleRequirements": [
             {
@@ -1730,12 +1883,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-node-parent",
             "bridgeVersion": 1,
-            "variant": "GltfReparentNodePayload"
+            "variant": "MoveNodeParent"
           },
           "oracleRequirements": [
             {
@@ -1750,12 +1905,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-primitive",
             "bridgeVersion": 1,
-            "variant": "GltfMovePrimitivePayload"
+            "variant": "MovePrimitive"
           },
           "oracleRequirements": [
             {
@@ -1770,12 +1927,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-primitive-attribute",
             "bridgeVersion": 1,
-            "variant": "GltfMovePrimitiveAttributePayload"
+            "variant": "MovePrimitiveAttribute"
           },
           "oracleRequirements": [
             {
@@ -1790,12 +1949,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-required-extension",
             "bridgeVersion": 1,
-            "variant": "GltfMoveRequiredExtensionPayload"
+            "variant": "MoveRequiredExtension"
           },
           "oracleRequirements": [
             {
@@ -1810,12 +1971,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-sampler",
             "bridgeVersion": 1,
-            "variant": "GltfMoveSamplerPayload"
+            "variant": "MoveSampler"
           },
           "oracleRequirements": [
             {
@@ -1831,12 +1994,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-scene",
             "bridgeVersion": 1,
-            "variant": "GltfMoveScenePayload"
+            "variant": "MoveScene"
           },
           "oracleRequirements": [
             {
@@ -1851,12 +2016,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
+            "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
             "operation": "move-scene-root-node",
             "bridgeVersion": 1,
-            "variant": "GltfMoveSceneRootNodePayload"
+            "variant": "MoveSceneRootNode"
           },
           "oracleRequirements": [
             {
@@ -1871,12 +2038,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-skin",
             "bridgeVersion": 1,
-            "variant": "GltfMoveSkinPayload"
+            "variant": "MoveSkin"
           },
           "oracleRequirements": [
             {
@@ -1891,12 +2060,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-texture",
             "bridgeVersion": 1,
-            "variant": "GltfMoveTexturePayload"
+            "variant": "MoveTexture"
           },
           "oracleRequirements": [
             {
@@ -1912,12 +2083,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-used-extension",
             "bridgeVersion": 1,
-            "variant": "GltfMoveUsedExtensionPayload"
+            "variant": "MoveUsedExtension"
           },
           "oracleRequirements": [
             {
@@ -1932,12 +2105,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-required-extension",
             "bridgeVersion": 1,
-            "variant": "GltfUnrequireExtensionPayload"
+            "variant": "RemoveRequiredExtension"
           },
           "oracleRequirements": [
             {
@@ -1952,12 +2127,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-used-extension",
             "bridgeVersion": 1,
-            "variant": "GltfWithdrawUsedExtensionPayload"
+            "variant": "RemoveUsedExtension"
           },
           "oracleRequirements": [
             {
@@ -1972,12 +2149,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-accessors",
             "bridgeVersion": 1,
-            "variant": "GltfReorderAccessorsPayload"
+            "variant": "ReorderAccessors"
           },
           "oracleRequirements": [
             {
@@ -1993,12 +2172,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-animations",
             "bridgeVersion": 1,
-            "variant": "GltfReorderAnimationsPayload"
+            "variant": "ReorderAnimations"
           },
           "oracleRequirements": [
             {
@@ -2013,12 +2194,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-buffer-views",
             "bridgeVersion": 1,
-            "variant": "GltfReorderBufferViewsPayload"
+            "variant": "ReorderBufferViews"
           },
           "oracleRequirements": [
             {
@@ -2034,12 +2217,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-buffers",
             "bridgeVersion": 1,
-            "variant": "GltfReorderBuffersPayload"
+            "variant": "ReorderBuffers"
           },
           "oracleRequirements": [
             {
@@ -2055,12 +2240,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-cameras",
             "bridgeVersion": 1,
-            "variant": "GltfReorderCamerasPayload"
+            "variant": "ReorderCameras"
           },
           "oracleRequirements": [
             {
@@ -2075,12 +2262,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-images",
             "bridgeVersion": 1,
-            "variant": "GltfReorderImagesPayload"
+            "variant": "ReorderImages"
           },
           "oracleRequirements": [
             {
@@ -2096,12 +2285,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-materials",
             "bridgeVersion": 1,
-            "variant": "GltfReorderMaterialsPayload"
+            "variant": "ReorderMaterials"
           },
           "oracleRequirements": [
             {
@@ -2116,12 +2307,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-meshs",
             "bridgeVersion": 1,
-            "variant": "GltfReorderMeshsPayload"
+            "variant": "ReorderMeshs"
           },
           "oracleRequirements": [
             {
@@ -2136,12 +2329,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-morph-target-attributes",
             "bridgeVersion": 1,
-            "variant": "GltfReorderMorphTargetAttributesPayload"
+            "variant": "ReorderMorphTargetAttributes"
           },
           "oracleRequirements": [
             {
@@ -2156,12 +2351,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-morph-targets",
             "bridgeVersion": 1,
-            "variant": "GltfReorderMorphTargetsPayload"
+            "variant": "ReorderMorphTargets"
           },
           "oracleRequirements": [
             {
@@ -2176,12 +2373,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
+            "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-node-children",
             "bridgeVersion": 1,
-            "variant": "GltfReorderNodeChildrenPayload"
+            "variant": "ReorderNodeChildren"
           },
           "oracleRequirements": [
             {
@@ -2196,12 +2395,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-nodes",
             "bridgeVersion": 1,
-            "variant": "GltfReorderNodesPayload"
+            "variant": "ReorderNodes"
           },
           "oracleRequirements": [
             {
@@ -2216,12 +2417,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-primitive-attributes",
             "bridgeVersion": 1,
-            "variant": "GltfReorderPrimitiveAttributesPayload"
+            "variant": "ReorderPrimitiveAttributes"
           },
           "oracleRequirements": [
             {
@@ -2236,12 +2439,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-primitives",
             "bridgeVersion": 1,
-            "variant": "GltfReorderPrimitivesPayload"
+            "variant": "ReorderPrimitives"
           },
           "oracleRequirements": [
             {
@@ -2256,12 +2461,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-required-extensions",
             "bridgeVersion": 1,
-            "variant": "GltfReorderRequiredExtensionsPayload"
+            "variant": "ReorderRequiredExtensions"
           },
           "oracleRequirements": [
             {
@@ -2276,12 +2483,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-samplers",
             "bridgeVersion": 1,
-            "variant": "GltfReorderSamplersPayload"
+            "variant": "ReorderSamplers"
           },
           "oracleRequirements": [
             {
@@ -2297,12 +2506,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
+            "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-scene-root-nodes",
             "bridgeVersion": 1,
-            "variant": "GltfReorderSceneRootNodesPayload"
+            "variant": "ReorderSceneRootNodes"
           },
           "oracleRequirements": [
             {
@@ -2317,12 +2528,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-scenes",
             "bridgeVersion": 1,
-            "variant": "GltfReorderScenesPayload"
+            "variant": "ReorderScenes"
           },
           "oracleRequirements": [
             {
@@ -2337,12 +2550,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-skins",
             "bridgeVersion": 1,
-            "variant": "GltfReorderSkinsPayload"
+            "variant": "ReorderSkins"
           },
           "oracleRequirements": [
             {
@@ -2357,12 +2572,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-textures",
             "bridgeVersion": 1,
-            "variant": "GltfReorderTexturesPayload"
+            "variant": "ReorderTextures"
           },
           "oracleRequirements": [
             {
@@ -2378,12 +2595,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-used-extensions",
             "bridgeVersion": 1,
-            "variant": "GltfReorderUsedExtensionsPayload"
+            "variant": "ReorderUsedExtensions"
           },
           "oracleRequirements": [
             {
@@ -2398,12 +2617,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "unbind-default-scene",
             "bridgeVersion": 1,
-            "variant": "GltfUnbindDefaultScenePayload"
+            "variant": "UnbindDefaultScene"
           },
           "oracleRequirements": [
             {
@@ -2418,12 +2639,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "unbind-morph-target-attribute",
             "bridgeVersion": 1,
-            "variant": "GltfUnbindMorphTargetAttributePayload"
+            "variant": "UnbindMorphTargetAttribute"
           },
           "oracleRequirements": [
             {
@@ -2438,12 +2661,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "unbind-node-camera",
             "bridgeVersion": 1,
-            "variant": "GltfUnbindNodeCameraPayload"
+            "variant": "UnbindNodeCamera"
           },
           "oracleRequirements": [
             {
@@ -2458,12 +2683,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "unbind-node-child",
             "bridgeVersion": 1,
-            "variant": "GltfUnbindNodeChildPayload"
+            "variant": "UnbindNodeChild"
           },
           "oracleRequirements": [
             {
@@ -2478,12 +2705,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "unbind-node-mesh",
             "bridgeVersion": 1,
-            "variant": "GltfUnbindNodeMeshPayload"
+            "variant": "UnbindNodeMesh"
           },
           "oracleRequirements": [
             {
@@ -2498,12 +2727,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "unbind-node-skin",
             "bridgeVersion": 1,
-            "variant": "GltfUnbindNodeSkinPayload"
+            "variant": "UnbindNodeSkin"
           },
           "oracleRequirements": [
             {
@@ -2518,12 +2749,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "unbind-primitive-attribute",
             "bridgeVersion": 1,
-            "variant": "GltfUnbindPrimitiveAttributePayload"
+            "variant": "UnbindPrimitiveAttribute"
           },
           "oracleRequirements": [
             {
@@ -2538,12 +2771,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "unbind-primitive-indices",
             "bridgeVersion": 1,
-            "variant": "GltfUnbindPrimitiveIndicesPayload"
+            "variant": "UnbindPrimitiveIndices"
           },
           "oracleRequirements": [
             {
@@ -2558,12 +2793,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "unbind-primitive-material",
             "bridgeVersion": 1,
-            "variant": "GltfUnbindPrimitiveMaterialPayload"
+            "variant": "UnbindPrimitiveMaterial"
           },
           "oracleRequirements": [
             {
@@ -2578,12 +2815,14 @@
           "capability": "gltf-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "unbind-scene-root-node",
             "bridgeVersion": 1,
-            "variant": "GltfUnbindSceneRootNodePayload"
+            "variant": "UnbindSceneRootNode"
           },
           "oracleRequirements": [
             {

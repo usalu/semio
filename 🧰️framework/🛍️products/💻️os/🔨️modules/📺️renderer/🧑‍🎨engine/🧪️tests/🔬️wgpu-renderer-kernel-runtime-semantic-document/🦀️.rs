@@ -535,6 +535,7 @@ mod semantic_document_tests {
                 Effect::Notify { message: "after".to_string() },
             ],
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            typed_results: Vec::new(),
         };
         let (kind_pointer, input_pointer) = match &outcome.effects[1] {
             Effect::SpawnJob { kind, input, .. } => (kind.as_ptr(), input.as_ptr()),
@@ -559,6 +560,7 @@ mod semantic_document_tests {
             surfaces: UiFixedList::default(),
             effects: vec![Effect::SpawnJob { job: 91, kind: "raw.mount-refusal".to_string(), input: vec![2, 3, 5, 7], placement: JobPlacement::Exclusive }],
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            typed_results: Vec::new(),
         };
         let (kind_pointer, input_pointer) = match &outcome.effects[0] {
             Effect::SpawnJob { kind, input, .. } => (kind.as_ptr(), input.as_ptr()),
@@ -641,6 +643,7 @@ mod semantic_document_tests {
             surfaces: UiFixedList::default(),
             effects: vec![Effect::SpawnJob { job: 101, kind: kind_max, input: vec![1], placement: JobPlacement::Inline }],
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            typed_results: Vec::new(),
         };
         let admitted = match kind_max_outcome.take_product_replay_authority(103, product_admission_permit(103)) {
             MountedProductReplayAdmission::Admitted(owner) => owner,
@@ -655,6 +658,7 @@ mod semantic_document_tests {
             surfaces: UiFixedList::default(),
             effects: vec![Effect::SpawnJob { job: 107, kind: "input.max".to_string(), input: input_max, placement: JobPlacement::Isolated }],
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            typed_results: Vec::new(),
         };
         let admitted = match input_max_outcome.take_product_replay_authority(109, product_admission_permit(109)) {
             MountedProductReplayAdmission::Admitted(owner) => owner,
@@ -673,6 +677,7 @@ mod semantic_document_tests {
                 Effect::Notify { message: "after-kind".to_string() },
             ],
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            typed_results: Vec::new(),
         };
         let refusal = match kind_refusal_outcome.take_product_replay_authority(127, product_admission_permit(127)) {
             MountedProductReplayAdmission::Refused(owner) => owner,
@@ -697,6 +702,7 @@ mod semantic_document_tests {
             surfaces: UiFixedList::default(),
             effects: vec![Effect::SpawnJob { job: 131, kind: "input.max-plus-one".to_string(), input: input_max_plus_one, placement: JobPlacement::Inline }],
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            typed_results: Vec::new(),
         };
         let refusal = match input_refusal_outcome.take_product_replay_authority(137, product_admission_permit(137)) {
             MountedProductReplayAdmission::Refused(owner) => owner,
@@ -725,6 +731,7 @@ mod semantic_document_tests {
                 Effect::Notify { message: "after-recovery".to_string() },
             ],
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            typed_results: Vec::new(),
         };
         let refusal = match outcome.take_product_replay_authority(149, product_admission_permit(149)) {
             MountedProductReplayAdmission::Refused(owner) => owner,
@@ -776,6 +783,7 @@ mod semantic_document_tests {
                 Effect::Notify { message: "drop-after".to_string() },
             ],
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            typed_results: Vec::new(),
         };
         let refusal = match outcome.take_product_replay_authority(157, product_admission_permit(157)) {
             MountedProductReplayAdmission::Refused(owner) => owner,
@@ -1035,13 +1043,14 @@ mod semantic_document_tests {
     fn fixed_kernel_request_queue_shutdown_releases_create_fields_one_owner_per_grant() {
         let queue = KernelRequestQueue::default();
         queue
-            .try_push(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(PathBuf::from("path"), "plugin".to_string(), "app".to_string()) }, Arc::new(ResponseSlot::default()), None)
+            .try_push(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(PathBuf::from("path"), "plugin".to_string(), "app".to_string(), "schema".to_string()) }, Arc::new(ResponseSlot::default()), None)
             .unwrap_or_else(|_| panic!("fixture request queue admission"));
         assert!(queue.begin_shutdown());
         assert_eq!(queue.shutdown_step(3), (false, 0, 0));
         assert_eq!(queue.shutdown_step(4), (false, 1, 4));
         assert_eq!(queue.shutdown_step(6), (false, 1, 6));
-        assert_eq!(queue.shutdown_step(3), (true, 1, 3));
+        assert_eq!(queue.shutdown_step(3), (false, 1, 3));
+        assert_eq!(queue.shutdown_step(6), (true, 1, 6));
     }
 
     #[test]
@@ -1096,7 +1105,6 @@ fn kernel_runtime_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
     let measured = vec![
         semio_framework_async::FixedSlotTableBudget::new("kernel_runtime::RetainedSurfaceRegistry", RETAINED_SURFACE_CAPACITY, size_of::<Option<RetainedSurfaceSlot>>(), size_of::<RetainedSurfaceRegistry>()),
         semio_framework_async::FixedSlotTableBudget::new("kernel_runtime::CommandDocumentRetirementRegistry", COMMAND_DOCUMENT_RETIREMENT_CAPACITY, size_of::<Option<CommandDocumentRetirementState>>(), size_of::<CommandDocumentRetirementRegistry>()),
-        semio_framework_async::FixedSlotTableBudget::new("kernel_runtime::MountedTypedOperationResultExchange", MOUNTED_TYPED_OPERATION_RESULT_PAGES, size_of::<Option<MountedTypedOperationResultPage>>(), size_of::<MountedTypedOperationResultExchange>()),
     ];
     semio_framework_async::assert_fixed_slot_tables(
         "renderer::kernel_runtime",
@@ -1107,7 +1115,6 @@ fn kernel_runtime_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
         || {
             drop(RetainedSurfaceRegistry::new());
             drop(CommandDocumentRetirementRegistry::new());
-            drop(MountedTypedOperationResultExchange::new());
         },
     );
 }

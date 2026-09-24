@@ -299,11 +299,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -928,11 +928,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -1557,11 +1557,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -2186,11 +2186,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -3279,6 +3279,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one named property of one reference in the model's play definition — its target, placement or parameter.",
+                  "de": "Setzt eine benannte Eigenschaft einer Referenz in der Play-Definition des Modells — Ziel, Platzierung oder Parameter."
+                },
+                "reuse": {
+                  "en": "Sets one named property of one reference in the model's play definition — its target, placement or parameter.",
+                  "de": "Setzt eine benannte Eigenschaft einer Referenz in der Play-Definition des Modells — Ziel, Platzierung oder Parameter."
+                }
               }
             }
           },
@@ -3342,7 +3352,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -3369,7 +3379,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -3442,7 +3453,7 @@
             "kind": "view",
             "iconId": "scan",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -3469,7 +3480,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -4255,14 +4267,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -4306,14 +4318,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -4417,14 +4429,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -7119,7 +7131,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio cad.cad.dsl v1\nschema=6361642e646f63756d656e74\nid=68657861676f6e616c2d6375742d636f6e63726574652d666f726573742d6c656674\nshapeModel=[73686170652d6d6f64656c2d36646465623865393364643235623263,73686170652d6d6f64656c2d3664646562386539336464323562326321732e737464696f2e73656d696f4076312f6d6f64656c]\nbuildingModel=[6275696c64696e672d6d6f64656c2d65636635383066666435646664343433,6275696c64696e672d6d6f64656c2d6563663538306666643564666434343321732e737464696f2e73656d696f4076312f6d6f64656c]\nenergyModel=[656e657267792d6d6f64656c2d35633835376630366234383961373036,656e657267792d6d6f64656c2d3563383537663036623438396137303621732e737464696f2e73656d696f4076312f6d6f64656c]\nstructureClassicModel=[7374727563747572652d636c61737369632d6d6f64656c2d38613131376135336563353862633036,7374727563747572652d636c61737369632d6d6f64656c2d3861313137613533656335386263303621732e737464696f2e73656d696f4076312f6d6f64656c]\ndrawings=[]\nreferencesByModelDefinitionId=7b226165632e6275696c64696e67223a5b7b226964223a227265662d636f6e63726574652d666f72657374222c22736f7572636555726c223a222f6361642d6173736574732ff09f8cb2efb88f636f6e63726574652d666f726573742d7265666572656e63652ff09f96bcefb88f2e706e67222c226d656469614b696e64223a22696d616765222c226f726967696e223a5b2d392e372c2d382e3331323030303030303030303030312c302e30315d2c226f7269656e746174696f6e223a6e756c6c2c227363616c65223a6e756c6c2c227769647468576f726c64223a32382e362c2268696464656e223a66616c73652c226c6f636b6564223a747275652c226f706163697479223a312e307d5d2c226165632e6275696c64696e672e656e65726779223a5b7b226964223a227265662d636f6e63726574652d666f72657374222c22736f7572636555726c223a222f6361642d6173736574732ff09f8cb2efb88f636f6e63726574652d666f726573742d7265666572656e63652ff09f96bcefb88f2e706e67222c226d656469614b696e64223a22696d616765222c226f726967696e223a5b2d392e372c2d382e3331323030303030303030303030312c302e30315d2c226f7269656e746174696f6e223a6e756c6c2c227363616c65223a6e756c6c2c227769647468576f726c64223a32382e362c2268696464656e223a66616c73652c226c6f636b6564223a747275652c226f706163697479223a312e307d5d2c226165632e6275696c64696e672e7374727563747572652e636c6173736963223a5b7b226964223a227265662d636f6e63726574652d666f72657374222c22736f7572636555726c223a222f6361642d6173736574732ff09f8cb2efb88f636f6e63726574652d666f726573742d7265666572656e63652ff09f96bcefb88f2e706e67222c226d656469614b696e64223a22696d616765222c226f726967696e223a5b2d392e372c2d382e3331323030303030303030303030312c302e30315d2c226f7269656e746174696f6e223a6e756c6c2c227363616c65223a6e756c6c2c227769647468576f726c64223a32382e362c2268696464656e223a66616c73652c226c6f636b6564223a747275652c226f706163697479223a312e307d5d2c227370617469616c2e7368617065223a5b7b226964223a227265662d636f6e63726574652d666f72657374222c22736f7572636555726c223a222f6361642d6173736574732ff09f8cb2efb88f636f6e63726574652d666f726573742d7265666572656e63652ff09f96bcefb88f2e706e67222c226d656469614b696e64223a22696d616765222c226f726967696e223a5b2d392e372c2d382e3331323030303030303030303030312c302e30315d2c226f7269656e746174696f6e223a6e756c6c2c227363616c65223a6e756c6c2c227769647468576f726c64223a32382e362c2268696464656e223a66616c73652c226c6f636b6564223a747275652c226f706163697479223a312e307d5d7d\nnodes=5b7b226964223a226e6f64652d726f6f74222c226c6162656c223a22436f6e637265746520466f72657374204c656674222c226b696e64223a2267726f7570227d5d",
+        "artifactJson": "semio cad.cad.dsl v1\nschema=cad.document id=hexagonal-cut-concrete-forest-left shape-model=child_id=shape-model-6ddeb8e93dd25b2c target=\"shape-model-6ddeb8e93dd25b2c!s.stdio.semio@v1/model\" building-model=child_id=building-model-ecf580ffd5dfd443 target=\"building-model-ecf580ffd5dfd443!s.stdio.semio@v1/model\" energy-model=child_id=energy-model-5c857f06b489a706 target=\"energy-model-5c857f06b489a706!s.stdio.semio@v1/model\" structure-classic-model=child_id=structure-classic-model-8a117a53ec58bc06 target=\"structure-classic-model-8a117a53ec58bc06!s.stdio.semio@v1/model\" drawings=[ ] references-by-model-definition-id={\n  aec.building=[ id=ref-concrete-forest source-url=\"/cad-assets/🌲️concrete-forest-reference/🖼️.png\" media-kind=image origin=-9.7,-8.312000000000001,0.01 width-world=28.6 hidden=false locked=true opacity=1 ] aec.building.energy=[ id=ref-concrete-forest source-url=\"/cad-assets/🌲️concrete-forest-reference/🖼️.png\" media-kind=image origin=-9.7,-8.312000000000001,0.01 width-world=28.6 hidden=false locked=true opacity=1 ] aec.building.structure.classic=[ id=ref-concrete-forest source-url=\"/cad-assets/🌲️concrete-forest-reference/🖼️.png\" media-kind=image origin=-9.7,-8.312000000000001,0.01 width-world=28.6 hidden=false locked=true opacity=1 ] spatial.shape=[ id=ref-concrete-forest source-url=\"/cad-assets/🌲️concrete-forest-reference/🖼️.png\" media-kind=image origin=-9.7,-8.312000000000001,0.01 width-world=28.6 hidden=false locked=true opacity=1 ]\n}\nnodes=[ id=node-root label=\"Concrete Forest Left\" kind=group ]\n",
         "dialect": {
           "artifactKind": "s.cad.cad",
           "standard": "1",
@@ -7282,99 +7294,8 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.dwg",
-          "standard": "ac1018",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.cad.cad",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.gltf",
-          "standard": "2.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.cad.cad",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.ifc",
-          "standard": "4",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.cad.cad",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
           "artifactKind": "s.stdio.json",
           "standard": "rfc8259",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.cad.cad",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.obj",
-          "standard": "3.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.cad.cad",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.png",
-          "standard": "1.2",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.cad.cad",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.step",
-          "standard": "ap214",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.cad.cad",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.stl",
-          "standard": "ascii",
           "subset": "*"
         },
         "direction": "import"
@@ -7394,43 +7315,8 @@
             "subset": "*"
           },
           {
-            "artifactKind": "s.stdio.dwg",
-            "standard": "ac1018",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.gltf",
-            "standard": "2.0",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.ifc",
-            "standard": "4",
-            "subset": "*"
-          },
-          {
             "artifactKind": "s.stdio.json",
             "standard": "rfc8259",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.obj",
-            "standard": "3.0",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.png",
-            "standard": "1.2",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.step",
-            "standard": "ap214",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.stl",
-            "standard": "ascii",
             "subset": "*"
           }
         ]
@@ -7438,8 +7324,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "a4abb9c8abf6ead5b740bb2f71b6369a371786839fc658f3d1b82af21035e0f8",
-    "coreWasmSha256": "3846db94c71544acc62602a97f031a8d95b7f5e5b5f06ced93cf0fb12f5410ef",
-    "descriptorSha256": "726c72165728428feea55d0f5f034b69f456df7ecb3e2d8cede4eadaafa6ac6b"
+    "wasmSha256": "4eb29035c5601d7fee665035620573902fb392af99aafd9a0d456a176640eae7",
+    "coreWasmSha256": "68b44f491d604ae235939a9f30b4d2e37c8f2f22e42707821664473f4905097f",
+    "descriptorSha256": "380c49a6d4995a3dcc14ff5665436eabdb5c8503a8ed91852578c39ecc6f05b4"
   }
 }

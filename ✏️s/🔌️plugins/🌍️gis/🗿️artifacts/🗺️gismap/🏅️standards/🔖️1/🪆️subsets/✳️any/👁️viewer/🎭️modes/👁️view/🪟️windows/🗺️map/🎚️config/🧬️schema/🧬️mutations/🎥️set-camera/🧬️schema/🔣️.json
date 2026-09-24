@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/gis/gismap/map-viewer-window/config/mutation/set-camera/schema.json",
+  "title": "SetCamera",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["camera"],
+  "properties": {
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "zoom": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

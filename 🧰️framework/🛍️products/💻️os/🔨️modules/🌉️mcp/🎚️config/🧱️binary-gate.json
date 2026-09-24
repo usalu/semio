@@ -49,5 +49,69 @@
     }
   ],
   "artifactRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build",
-  "releaseArtifactRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release"
+  "releaseArtifactRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release",
+  "sourcesFile": "semio-os-mcp.sources.json",
+  "depInfoCases": [
+    {
+      "name": "one rule, emoji paths, relative segments kept",
+      "text": "/r/target/debug/semio-os-mcp: /r/nx.json /r/🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🌉️abi/🦀️.rs\n\n/r/nx.json:\n",
+      "sources": [
+        "/r/nx.json",
+        "/r/🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🌉️abi/🦀️.rs"
+      ]
+    },
+    {
+      "name": "an escaped space stays inside one path",
+      "text": "/r/t/semio-os-mcp: /r/My\\ Docs/lib.rs /r/b.rs\n",
+      "sources": [
+        "/r/My Docs/lib.rs",
+        "/r/b.rs"
+      ]
+    },
+    {
+      "name": "a windows target keeps its drive colon",
+      "text": "C:\\r\\t\\semio-os-mcp.exe: C:\\r\\a.rs C:\\r\\b.rs\n",
+      "sources": [
+        "C:\\r\\a.rs",
+        "C:\\r\\b.rs"
+      ]
+    },
+    {
+      "name": "no rule, no sources",
+      "text": "",
+      "sources": []
+    }
+  ],
+  "freshnessCases": [
+    {
+      "name": "every source older than the build",
+      "builtAtMs": 1000,
+      "modified": {
+        "/r/a.rs": 900,
+        "/r/b.rs": 1000
+      },
+      "fresh": true,
+      "changed": null
+    },
+    {
+      "name": "a dependency crate edited after the build",
+      "builtAtMs": 1000,
+      "modified": {
+        "/r/a.rs": 900,
+        "/r/b.rs": 1001
+      },
+      "fresh": false,
+      "changed": "/r/b.rs"
+    },
+    {
+      "name": "a source that vanished",
+      "builtAtMs": 1000,
+      "modified": {
+        "/r/a.rs": 900,
+        "/r/b.rs": null
+      },
+      "fresh": false,
+      "changed": "/r/b.rs"
+    }
+  ]
 }

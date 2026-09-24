@@ -15,7 +15,7 @@ impl protocol::MutationKind<ArchitectConfig, ArchitectConfigMutation> for Replac
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
     fn diff(&self, base: &ArchitectConfig) -> protocol::MutationOutcome<ArchitectConfig> {
         if &self.config == base {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Requested config already matches.");
+            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Requested config already matches.");
         }
         protocol::MutationOutcome::new(self.config.clone())
     }

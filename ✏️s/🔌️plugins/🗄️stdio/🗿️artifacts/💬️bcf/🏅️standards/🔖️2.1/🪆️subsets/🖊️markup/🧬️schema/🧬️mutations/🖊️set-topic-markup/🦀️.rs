@@ -35,7 +35,7 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetTopicMarkup {
         agg_inverse(&BcfMutation::SetTopicMarkup(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-topic-markup", "Themaauszeichnung setzen")
+        protocol::LocalizedLabel::native("Set topic markup", "Themen-Markup setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for SetNodePos
         agg_inverse(&SemioFlowMutation::SetNodePosition(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-node-position", "Knotenposition setzen")
+        protocol::LocalizedLabel::native("Set node position", "Knotenposition setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

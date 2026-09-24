@@ -32,7 +32,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageBox {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set page {} {:?} box", self.index, self.kind), &format!("Seite {} {:?} Kasten setzen", self.index, self.kind))
+        protocol::LocalizedLabel::native(&format!("Set page {} {:?} box", self.index, self.kind), &format!("Seite {}: {:?}-Box setzen", self.index, self.kind))
     }
 
     fn target(&self) -> Vec<String> {

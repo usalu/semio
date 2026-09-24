@@ -32,7 +32,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for DisconnectKi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Disconnect kind compatibility \"{}\" -> \"{}\"", self.source, self.target), &format!("Artkompatibilität \"{}\" -> \"{}\" trennen", self.source, self.target))
+        protocol::LocalizedLabel::native(&format!("Disconnect kind compatibility \"{}\" -> \"{}\"", self.source, self.target), &format!("Artkompatibilität \"{}\" -> \"{}\" aufheben", self.source, self.target))
     }
     fn target(&self) -> Vec<String> {
         vec![self.source.clone(), self.target.clone()]

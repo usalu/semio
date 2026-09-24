@@ -129,6 +129,8 @@ function* componentStrings(component: Component | import("./📦️wire/🧾️t
     case "image": yield component.alt ?? ""; break;
     case "progress": yield component.valueText; break;
     case "extension": yield component.extension; break;
+    case "table": yield component.label; for (const column of component.columns) yield column; yield component.actionsLabel ?? ""; break;
+    case "tableRow": for (const cell of component.cells) yield cell; break;
   }
 }
 

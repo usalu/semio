@@ -1,0 +1,13 @@
+{
+  "camera": {
+    "x": 0.0,
+    "y": 320.0,
+    "zoom": 1.25
+  },
+  "editorSettings": {
+    "showLineNumbers": false,
+    "fontPx": 14,
+    "lineHeight": 20,
+    "tabSize": 4
+  }
+}

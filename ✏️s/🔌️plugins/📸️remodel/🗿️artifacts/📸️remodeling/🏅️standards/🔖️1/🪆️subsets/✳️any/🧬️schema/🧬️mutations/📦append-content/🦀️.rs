@@ -40,7 +40,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for AppendCo
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Append {} content leaves to \"{}\"", self.chunks.len(), self.content_id), &format!("{} Inhaltblätter an \"{}\" anhängen", self.chunks.len(), self.content_id))
+        protocol::LocalizedLabel::native(&format!("Append {} content leaves to \"{}\"", self.chunks.len(), self.content_id), &format!("{} Inhaltsblätter an \"{}\" anhängen", self.chunks.len(), self.content_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.content_id.clone()]

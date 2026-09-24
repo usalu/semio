@@ -23,7 +23,7 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyBrep {
         agg_inverse(&SemioMutation::ApplyBrep(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("brep", "brep")
+        protocol::SemanticMutation::label(&self.mutation)
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

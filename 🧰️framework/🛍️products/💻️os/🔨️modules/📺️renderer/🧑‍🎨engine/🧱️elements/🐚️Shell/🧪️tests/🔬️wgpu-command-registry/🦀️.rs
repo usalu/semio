@@ -301,7 +301,7 @@ fn inference_driver_approves_only_an_offered_proposal_and_is_terminal_once() {
         applied: true,
         undo: semio_framework_os_kernel::os_directory::GisMapApprovalUndoHandleV1 {
             target_id: "22".repeat(16),
-            expected_current: semio_framework_os_kernel::os_directory::CheckpointPublicationFrontierV1 {
+            expected_current: semio_framework_os_kernel::os_directory::EditedArtifactFrontierV1 {
                 document_id: "document-map".into(),
                 head_edit_ordinal: 2,
                 head_edit_id: "approval-edit".into(),

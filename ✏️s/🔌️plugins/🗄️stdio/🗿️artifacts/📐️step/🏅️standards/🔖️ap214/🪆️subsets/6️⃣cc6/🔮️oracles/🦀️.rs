@@ -39,7 +39,7 @@ const CLASS: &str = "ISO 10303-214 CC6 (advanced B-Rep, top of the ladder)";
 
 /// 🏷️ The declared vocabulary, mirroring `StepCc6Mutation`'s own variants in declaration order.
 /// Duplicated rather than imported: the oracle crate must never link the production crate.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-schema", "set-product-identity", "set-shape-representation"];
+pub const KINDS: &[&str] = &["set-snapshot", "set-file-schema", "set-product-identity", "set-shape-representation"];
 //#endregion 🔖️Class
 
 #[cfg(feature = "oracles")]

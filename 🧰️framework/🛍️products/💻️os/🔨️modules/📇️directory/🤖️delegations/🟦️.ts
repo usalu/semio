@@ -251,6 +251,121 @@ export function agentCredentialCommandV1(receipt: AgentDelegationReceiptV1, hubO
 }
 //#endregion 🔖️Credential
 
+//#region 🔖️McpClient
+/** 🔌️ Schema ids of the host credential install (`📇️directory/🧬️schema/🔣️.json`
+ * `AgentCredentialInstallRequestV1`/`AgentCredentialInstallReceiptV1`). */
+export const AGENT_CREDENTIAL_INSTALL_SCHEMA_V1 = "semio.os.agent-credential-install/v1";
+export const AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1 = "semio.os.agent-credential-install-receipt/v1";
+
+/** 🛰️ The loopback route a development host serves to install one credential file where
+ * `semio-os-mcp --credential-file` reads it, and to remove it again once the delegation is withdrawn. */
+export const AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1 = "/__semio/agent-credentials";
+
+/** 🎟️ The MCP scopes a client configured for one delegation is granted: exactly what the hub
+ * audience admits and nothing a `read` agent could not use anyway. */
+export const AGENT_MCP_SCOPES_BY_AUDIENCE_V1: Readonly<Record<AgentAudienceV1, string>> = {
+  read: "workspace.read",
+  edit: "workspace.read,artifact.write,inference.execute",
+};
+
+/** 🚀️ How this host starts `semio-os-mcp`: the executable plus every argument up to and including
+ * the transport, e.g. `bun <repo>/📜️script.ts dev mcp stdio os` or `<dir>/semio-os-mcp stdio`. */
+export interface AgentMcpLauncherV1 {
+  readonly command: string;
+  readonly args: readonly string[];
+}
+
+/** 📥️ What a host installs: the delegation it belongs to and the exact credential file bytes. */
+export interface AgentCredentialInstallRequestV1 {
+  readonly schema: typeof AGENT_CREDENTIAL_INSTALL_SCHEMA_V1;
+  readonly delegationId: string;
+  readonly contents: string;
+}
+
+/** 🧾️ Where the host put the credential (owner-only) and how it starts the MCP gateway. */
+export interface AgentCredentialInstallReceiptV1 {
+  readonly schema: typeof AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1;
+  readonly credentialPath: string;
+  readonly launcher: AgentMcpLauncherV1;
+}
+
+/** 🧩️ One stdio server entry in the shape MCP clients read from `.mcp.json` /
+ * `claude_desktop_config.json`. */
+export interface AgentMcpServerEntryV1 {
+  readonly type: "stdio";
+  readonly command: string;
+  readonly args: readonly string[];
+}
+
+/** 📄️ The client configuration one delegation produces: exactly one named server. */
+export interface AgentMcpClientConfigV1 {
+  readonly mcpServers: Readonly<Record<string, AgentMcpServerEntryV1>>;
+}
+
+/** 🏷️ The installed credential's file name: derived from the delegation id, so two delegations with
+ * the same label never overwrite each other's still-live credential. */
+export function agentCredentialInstallFileNameV1(delegationId: string): string {
+  if (!/^[A-Za-z0-9_-]{1,128}$/u.test(delegationId)) throw new Error("directory.delegations.invalid-delegation");
+  return `semio-agent-${delegationId}.json`;
+}
+
+/** 📥️ Seals the install request for one freshly minted delegation. */
+export function agentCredentialInstallRequestV1(receipt: AgentDelegationReceiptV1, hubOrigin: string): AgentCredentialInstallRequestV1 {
+  agentCredentialInstallFileNameV1(receipt.delegationId);
+  return { schema: AGENT_CREDENTIAL_INSTALL_SCHEMA_V1, delegationId: receipt.delegationId, contents: agentCredentialFileV1(receipt, hubOrigin).contents };
+}
+
+/** 🚫️ The host serves no credential install (a plain browser, a static deployment): an ordinary
+ * state the pane answers with the download and the command, never a failure. */
+export class AgentCredentialInstallUnavailableV1 extends Error {
+  constructor() {
+    super("directory.delegations.install-unavailable");
+    this.name = "AgentCredentialInstallUnavailableV1";
+  }
+}
+
+/** 🧾️ Parses a host's install receipt, refusing anything that is not an absolute credential path and
+ * a non-empty launcher. */
+export function parseAgentCredentialInstallReceiptV1(body: string): AgentCredentialInstallReceiptV1 {
+  const value = JSON.parse(body) as { schema?: unknown; credentialPath?: unknown; launcher?: { command?: unknown; args?: unknown } };
+  const args = value.launcher?.args;
+  const absolute = typeof value.credentialPath === "string" && (value.credentialPath.startsWith("/") || /^[A-Za-z]:[\\/]/u.test(value.credentialPath));
+  if (value.schema !== AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1 || !absolute || typeof value.launcher?.command !== "string" || value.launcher.command.length === 0 || !Array.isArray(args) || !args.every((arg) => typeof arg === "string")) {
+    throw new Error("directory.delegations.invalid-install-receipt");
+  }
+  return { schema: AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, credentialPath: value.credentialPath as string, launcher: { command: value.launcher.command, args: args as string[] } };
+}
+
+/** 🏷️ The server name a client lists this agent under: `semio-` plus the agent label's slug, so a
+ * human reading their client's server list sees which delegation each entry is. */
+export function agentMcpServerNameV1(receipt: AgentDelegationReceiptV1): string {
+  const slug = receipt.agentLabel.toLowerCase().replace(/[^a-z0-9]+/gu, "-").replace(/^-+|-+$/gu, "").slice(0, 48);
+  return `semio-${slug.length > 0 ? slug : "agent"}`;
+}
+
+/** 📄️ The complete MCP client configuration for one delegation: the host's launcher, bound to the
+ * hub and space the delegation names, authenticated by the installed credential file, with the
+ * scopes its audience admits. The token itself never appears — only the path of the owner-only file
+ * that holds it. Law: `🤖️delegations/🧫️fixtures/🔌️mcp-client-config.json`. */
+export function agentMcpClientConfigV1(receipt: AgentDelegationReceiptV1, hubOrigin: string, installed: AgentCredentialInstallReceiptV1): AgentMcpClientConfigV1 {
+  if (hubOrigin.length === 0 || /\p{Cc}/u.test(hubOrigin)) throw new Error("directory.delegations.invalid-origin");
+  return {
+    mcpServers: {
+      [agentMcpServerNameV1(receipt)]: {
+        type: "stdio",
+        command: installed.launcher.command,
+        args: [...installed.launcher.args, "--hub", hubOrigin, "--space", receipt.spaceId, "--credential-file", installed.credentialPath, "--scopes", AGENT_MCP_SCOPES_BY_AUDIENCE_V1[receipt.audience]],
+      },
+    },
+  };
+}
+
+/** 🧾️ The configuration as the text a human pastes into their client's configuration file. */
+export function agentMcpClientConfigJsonV1(config: AgentMcpClientConfigV1): string {
+  return `${JSON.stringify(config, null, 2)}\n`;
+}
+//#endregion 🔖️McpClient
+
 //#region 🔖️Errors
 /** 🚫️ Closed delegation failure classes, so the pane names a cause instead of a status. Mirrors
  * `AgentErrorCodeV1` plus the two the browser itself can observe. */

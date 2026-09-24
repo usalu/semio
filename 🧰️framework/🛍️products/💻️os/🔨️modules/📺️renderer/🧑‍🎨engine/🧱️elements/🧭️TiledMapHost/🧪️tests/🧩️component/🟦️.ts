@@ -9,6 +9,7 @@
 // #region 🔌️Adapters
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ts from "typescript";
+import { GestureRecognizer } from "@semio-tech/framework";
 import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, MapRenderer, resolveMapInteractionSync } from "../../🟦️.tsx";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 import repaintFixture from "../../🧫️fixtures/🔁️repaint/🔣️.json";
@@ -78,7 +79,8 @@ describe("MapRenderer idle appearance updates", () => {
     const releasePointerCapture = vi.fn();
     const mirrorSessionCameraToReact = vi.fn();
     const emitFeatureSelection = vi.fn();
-    const cancel = new Function("rendererRef", "pointer", "panningRef", "resetMarquee", "canvas", "mirrorSessionCameraToReact", "clientToLocal", "emitFeatureSelection", `${callback}\nreturn callback;`)(
+    const endPinch = vi.fn();
+    const cancel = new Function("rendererRef", "pointer", "panningRef", "resetMarquee", "canvas", "mirrorSessionCameraToReact", "clientToLocal", "emitFeatureSelection", "gestureRecognizer", "endPinch", `${callback}\nreturn callback;`)(
       { current: renderer },
       pointer,
       panningRef,
@@ -87,6 +89,8 @@ describe("MapRenderer idle appearance updates", () => {
       mirrorSessionCameraToReact,
       () => repaintFixture.cancelledPan.point,
       emitFeatureSelection,
+      new GestureRecognizer(),
+      endPinch,
     );
     const target = new EventTarget();
     target.addEventListener(repaintFixture.cancelledPan.event, cancel);
@@ -106,6 +110,7 @@ describe("MapRenderer idle appearance updates", () => {
       expect(releasePointerCapture).toHaveBeenCalledExactlyOnceWith(repaintFixture.cancelledPan.pointerId);
       expect(mirrorSessionCameraToReact).toHaveBeenCalledOnce();
       expect(emitFeatureSelection).not.toHaveBeenCalled();
+      expect(endPinch).not.toHaveBeenCalled();
       const frames = renderFrame.mock.calls.length;
       await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
       expect(renderFrame).toHaveBeenCalledTimes(frames);

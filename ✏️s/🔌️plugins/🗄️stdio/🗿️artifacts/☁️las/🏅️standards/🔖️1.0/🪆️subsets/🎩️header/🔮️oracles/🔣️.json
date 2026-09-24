@@ -85,14 +85,12 @@
           "capability": "las-1-0-any-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
           "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
             "bridgeVersion": 1,
-            "variant": "LasMutation::SetSnapshot"
+            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -118,13 +116,12 @@
           "capability": "las-1-0-any-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetVersion",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-version",
             "bridgeVersion": 1,
-            "variant": "LasMutation::SetVersion"
+            "variant": "SetVersion"
           },
           "oracleRequirements": [
             {
@@ -150,13 +147,12 @@
           "capability": "las-1-0-any-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSystemIdentifier",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-system-identifier",
             "bridgeVersion": 1,
-            "variant": "LasMutation::SetSystemIdentifier"
+            "variant": "SetSystemIdentifier"
           },
           "oracleRequirements": [
             {
@@ -182,13 +178,12 @@
           "capability": "las-1-0-any-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSoftwareInfo",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-software-info",
             "bridgeVersion": 1,
-            "variant": "LasMutation::SetSoftwareInfo"
+            "variant": "SetSoftwareInfo"
           },
           "oracleRequirements": [
             {
@@ -214,13 +209,12 @@
           "capability": "las-1-0-any-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetCreationDate",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-creation-date",
             "bridgeVersion": 1,
-            "variant": "LasMutation::SetCreationDate"
+            "variant": "SetCreationDate"
           },
           "oracleRequirements": [
             {
@@ -252,7 +246,7 @@
           "productionDispatch": {
             "operation": "set-scale-and-offset",
             "bridgeVersion": 1,
-            "variant": "LasMutation::SetScaleAndOffset"
+            "variant": "SetScaleAndOffset"
           },
           "oracleRequirements": [
             {
@@ -278,13 +272,12 @@
           "capability": "las-1-0-any-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetBounds",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-bounds",
             "bridgeVersion": 1,
-            "variant": "LasMutation::SetBounds"
+            "variant": "SetBounds"
           },
           "oracleRequirements": [
             {
@@ -310,13 +303,12 @@
           "capability": "las-1-0-any-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetPointsByReturn",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-points-by-return",
             "bridgeVersion": 1,
-            "variant": "LasMutation::SetPointsByReturn"
+            "variant": "SetPointsByReturn"
           },
           "oracleRequirements": [
             {
@@ -331,6 +323,204 @@
           "invariants": {
             "local": [
               "header-points-by-return-counts-agree-independent-of-real-points"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "insert-point",
+          "capability": "las-1-0-points-mutate",
+          "subset": "points",
+          "payloadSchema": "../🧬️schema/🧬️mutations/➕insert-point/🦀️.rs#InsertPoint",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-point",
+            "bridgeVersion": 1,
+            "variant": "InsertPoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-points-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "point-count-and-inserted-point-fields-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-point",
+          "capability": "las-1-0-points-mutate",
+          "subset": "points",
+          "payloadSchema": "../🧬️schema/🧬️mutations/➖remove-point/🦀️.rs#RemovePoint",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-point",
+            "bridgeVersion": 1,
+            "variant": "RemovePoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-points-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "point-count-and-remaining-point-order-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-point",
+          "capability": "las-1-0-points-mutate",
+          "subset": "points",
+          "payloadSchema": "../🧬️schema/🧬️mutations/✏️set-point/🦀️.rs#SetPoint",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-point",
+            "bridgeVersion": 1,
+            "variant": "SetPoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-points-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "point-fields-at-index-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "insert-vlr",
+          "capability": "las-1-0-vlr-mutate",
+          "subset": "vlr",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📥insert-vlr/🦀️.rs#InsertVlr",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-vlr",
+            "bridgeVersion": 1,
+            "variant": "InsertVlr"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-vlr-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "vlr-count-and-inserted-vlr-fields-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-vlr",
+          "capability": "las-1-0-vlr-mutate",
+          "subset": "vlr",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📤remove-vlr/🦀️.rs#RemoveVlr",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-vlr",
+            "bridgeVersion": 1,
+            "variant": "RemoveVlr"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-vlr-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "vlr-count-and-remaining-vlr-order-agree"
+            ],
+            "enclosing": [
+              "las-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-vlr-data",
+          "capability": "las-1-0-vlr-mutate",
+          "subset": "vlr",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🗃️set-vlr-data/🦀️.rs#SetVlrData",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-vlr-data",
+            "bridgeVersion": 1,
+            "variant": "SetVlrData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "las-1-0-vlr-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "las-1-0-any-mutate"
+            }
+          ],
+          "carriers": [
+            "las"
+          ],
+          "invariants": {
+            "local": [
+              "vlr-data-payload-agrees"
             ],
             "enclosing": [
               "las-reencode-round-trip-agrees-with-reference-reader"

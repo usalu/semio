@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorASMm
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change anchor a s mm2 to {:?}", self.new_anchor_a_s_mm2), &format!("Anker Smm2 auf {:?} ändern", self.new_anchor_a_s_mm2))
+        protocol::LocalizedLabel::native(&format!("Change anchor stressed area A_s [mm2] to {:?}", self.new_anchor_a_s_mm2), &format!("Spannungsquerschnitt des Dübels A_s [mm2] auf {:?} ändern", self.new_anchor_a_s_mm2))
     }
 }
 //#endregion 🔖️ChangeAnchorASMm2

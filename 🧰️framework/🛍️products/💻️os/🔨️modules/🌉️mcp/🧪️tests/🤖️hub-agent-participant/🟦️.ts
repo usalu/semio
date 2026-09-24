@@ -5,24 +5,31 @@
  * remote space: `semio-os-mcp stdio --hub <origin> --space <id> --credential-file <0600 file>`,
  * authenticated by a delegation its human minted, with no launcher, no fd 3 and no local folder.
  *
- * It boots nothing. An `os-hub` with a published trusted catalog and at least one document costs
- * minutes to bring up and every collaboration run already has one; when none answers, the gate says
- * which origin it looked for instead of pretending. Configuration is entirely by environment:
+ * It boots no hub. An `os-hub` with a published trusted catalog costs minutes to bring up and every
+ * collaboration run already has one (`dev s` keeps one at `http://127.0.0.1:8787`); when none
+ * answers, the gate says which origin it looked for instead of pretending. It needs nothing inside
+ * that hub but the human's credential: unless told otherwise it creates its own space through the
+ * directory's `create-space` command and its own note through the hub's server-owned creation
+ * transaction. Configuration is entirely by environment:
  *
- *   OS_MCP_HUB_ORIGIN    default `http://127.0.0.1:7631`
+ *   OS_MCP_HUB_ORIGIN    default `http://127.0.0.1:8787` (the `dev s` local hub)
  *   OS_MCP_HUB_EMAIL     default `user1@semio.dev`
  *   OS_MCP_HUB_PASSWORD  default `gm1-local-dev-pass-1`
- *   OS_MCP_HUB_SPACE     default: the first space the human authors that holds a document
+ *   OS_MCP_HUB_SPACE     an existing space holding a document, instead of a fresh one
  *
  * The rows are the chain, in order. Every one is required: a red row exits non-zero and prints the
  * refusal verbatim, because the whole value of this gate is that it cannot round a missing
  * participant up to a passing one. Ticket 26/09/18 slice M8.
  */
 import { chmodSync, existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { McpClientSession, mcpServerEntries, minimalInputForSchema, requireMcpBinary } from "../../🟦️.ts";
+import { sealSpaceArtifactCreateV1 } from "../../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../📇️directory/🧬️schema/🟦️.ts";
+import { createSpaceCommandV1 } from "../../../📇️directory/🏘️spaces/🟦️.ts";
 
 // 📁️ `new URL(x, import.meta.url).pathname` percent-encodes emoji path segments, and a counted
 // `..` chain silently walks past the root when a file moves — so the root is LOCATED, not counted.
@@ -39,7 +46,9 @@ function findRepoRoot(start: string): string {
 }
 const repoRoot = findRepoRoot(here);
 
-const ORIGIN = process.env.OS_MCP_HUB_ORIGIN ?? "http://127.0.0.1:7631";
+const ORIGIN = process.env.OS_MCP_HUB_ORIGIN ?? "http://127.0.0.1:8787";
+/** ⏳️ How long the hub's server-owned creation transaction may take to make the gate's note ready. */
+const CREATION_BUDGET_MS = 1_800_000;
 const EMAIL = process.env.OS_MCP_HUB_EMAIL ?? "user1@semio.dev";
 const PASSWORD = process.env.OS_MCP_HUB_PASSWORD ?? "gm1-local-dev-pass-1";
 
@@ -83,10 +92,29 @@ row("1 the human signs in", signIn.status === 200 && typeof signIn.json?.token =
 if (signIn.status !== 200) finish();
 const token: string = signIn.json.token;
 
-const spaces = await hub("GET", "/directory/spaces", { token });
-const authored = (Array.isArray(spaces.json) ? spaces.json : []).map((entry: any) => String(entry?.space?.id ?? "")).filter((id: string) => id.length > 0);
-const spaceId = process.env.OS_MCP_HUB_SPACE ?? authored[authored.length - 1] ?? "";
-row("2 the human authors a space", spaceId.length > 0, `spaceId=${spaceId || "<none>"} of ${authored.length} space(s)`);
+/** 🏘️ A fresh space and a fresh note in it, both through the hub's own authorities, so the gate
+ * measures the agent path against a document that matches the catalog the hub serves right now. */
+async function freshSpaceWithNote(): Promise<{ spaceId: string; detail: string }> {
+  const name = `Hub agent participant ${randomBytes(4).toString("hex")}`;
+  const created = await hub("POST", "/directory/commands", { token, body: directoryCommandRequestJson(sealDirectoryCommandRequestV1(randomBytes(16).toString("hex"), createSpaceCommandV1(name, "atelier", "private"))) });
+  const listed = await hub("GET", "/directory/spaces", { token });
+  const spaceId = String((Array.isArray(listed.json) ? listed.json : []).find((entry: any) => entry?.space?.name === name)?.space?.id ?? "");
+  if (!spaceId) return { spaceId, detail: `create-space HTTP ${created.status}: ${created.text.slice(0, 200)}` };
+  const creations = `/spaces/${encodeURIComponent(spaceId)}/artifact-creations`;
+  const catalog = await hub("GET", creations, { token });
+  const kind = (catalog.json?.kinds ?? []).find((entry: any) => String(entry?.schema ?? "").startsWith("note"));
+  const requestId = randomBytes(16).toString("hex");
+  let creation = (await hub("POST", creations, { token, body: JSON.stringify(sealSpaceArtifactCreateV1({ requestId, expectedCatalogGenerationId: String(catalog.json?.catalogGenerationId ?? ""), kindId: String(kind?.kindId ?? ""), name: "Agent participant note" })) })).json;
+  for (const deadline = Date.now() + CREATION_BUDGET_MS; ["accepted", "preparing"].includes(creation?.phase) && Date.now() < deadline; ) {
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    creation = (await hub("GET", `${creations}/${requestId}`, { token })).json;
+  }
+  return { spaceId, detail: `fresh space ${spaceId}, note kind=${kind?.kindId ?? "<none>"} phase=${creation?.phase} document=${creation?.ready?.artifactId ?? "<none>"}` };
+}
+
+const chosen = process.env.OS_MCP_HUB_SPACE ? { spaceId: process.env.OS_MCP_HUB_SPACE, detail: `OS_MCP_HUB_SPACE=${process.env.OS_MCP_HUB_SPACE}` } : await freshSpaceWithNote();
+const spaceId = chosen.spaceId;
+row("2 the human authors a space holding a note", spaceId.length > 0, chosen.detail);
 if (!spaceId) finish();
 
 const delegation = await hub("POST", "/auth/agent-delegations", { token, body: JSON.stringify({ schema: "semio.hub.auth.agent-delegation-create/v1", spaceId, agentLabel: "Participant gate agent", audience: "edit", ttlSecs: 900 }) });

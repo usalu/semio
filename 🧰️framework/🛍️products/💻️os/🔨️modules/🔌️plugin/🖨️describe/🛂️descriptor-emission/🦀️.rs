@@ -21,7 +21,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use semio_framework::{PackageDescriptor, ASSEMBLY_FAILED_PLUGIN_ID};
-use semio_framework_plugin_host::{GuestRuntime, OwnedRuntime, PackageHash, PackageId, PackageRef};
+use semio_framework_plugin_host::{GuestRuntime, OwnedRuntime, PackageHash, PackageId, PackageRef, TurnFault};
 
 //#region 🔖️ActorBindings
 #[cfg(test)]
@@ -478,6 +478,18 @@ pub struct ComponentCodecRow {
     pub pack_schema_hash: String,
 }
 
+/// 🪪️ The exact guest fault `plugin_artifact_codec_app` (`🔌️plugin/🦀️.rs`) answers when no app of the bundle
+/// owns a document schema: a kind a package DECLARES (an input it reads, a companion it lists) without owning its
+/// codec. The emitter reports such a kind as unowned instead of failing, because the codec belongs to another package.
+pub const UNOWNED_ARTIFACT_CODEC_SCHEMA: &str = "artifact codec schema is owned by no app of this bundle";
+
+/// 🧾️ A component's answer for every requested kind: the fingerprint of each kind one of its apps owns, and the
+/// declared kinds it owns no codec for.
+pub struct ComponentCodecRows {
+    pub owned: Vec<ComponentCodecRow>,
+    pub unowned: Vec<(String, String)>,
+}
+
 /// 🧬️ Asks a built component itself for each document kind's structural snapshot fingerprint, so a
 /// catalog builder never has to transcribe a plugin's pack record specification by hand. The answer
 /// comes out of the same hash-identified component bytes the caller is about to publish, through
@@ -490,23 +502,31 @@ pub struct ComponentCodecRow {
 /// uses — so this probe walks the identical guest path the server will, and a package that answers
 /// here is a package the server can pin. The kind travels in the row as the catalog's own kind id.
 ///
-/// A kind the bundle owns no app for is an error, not a silent omission.
-pub async fn component_codec_rows(wasm_path: &Path, pairs: &[(String, String)]) -> Result<Vec<ComponentCodecRow>, DescribeError> {
+/// A kind the bundle owns no app for is answered as UNOWNED ([`UNOWNED_ARTIFACT_CODEC_SCHEMA`]), never silently omitted;
+/// every other fault is an error.
+pub async fn component_codec_rows(wasm_path: &Path, pairs: &[(String, String)]) -> Result<ComponentCodecRows, DescribeError> {
     let (wasm_bytes, _) = read_artifact(wasm_path, "raw component")?;
     let runtime = OwnedRuntime::new();
     let package = PackageRef { package: PackageId(wasm_path.display().to_string()), hash: PackageHash([0; 32]) };
     let compiled = runtime.compile(&package, &wasm_bytes).await.map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", wasm_path.display())))?;
     let budget = semio_framework::kernel::Budget { fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
-    let mut rows = Vec::with_capacity(pairs.len());
+    let mut rows = ComponentCodecRows { owned: Vec::with_capacity(pairs.len()), unowned: Vec::new() };
     for (kind, schema) in pairs {
         if kind.is_empty() || schema.is_empty() || kind.len() > 256 || schema.len() > 256 {
             return Err(DescribeError("component codec pair is not a bounded kind and schema".to_string()));
         }
-        let hash = runtime.codec_pack_schema_hash(&compiled, schema, budget).await.map_err(|error| DescribeError(format!("codec.pack-schema-hash({schema}) on {}: {error}", wasm_path.display())))?;
+        let hash = match runtime.codec_pack_schema_hash(&compiled, schema, budget).await {
+            Ok(hash) => hash,
+            Err(TurnFault::Guest(fault)) if fault.message == UNOWNED_ARTIFACT_CODEC_SCHEMA => {
+                rows.unowned.push((kind.clone(), schema.clone()));
+                continue;
+            }
+            Err(error) => return Err(DescribeError(format!("codec.pack-schema-hash({schema}) on {}: {error}", wasm_path.display()))),
+        };
         if hash == [0; 32] {
             return Err(DescribeError(format!("document schema {schema} has no structural record specification")));
         }
-        rows.push(ComponentCodecRow { artifact_kind: kind.clone(), artifact_schema: schema.clone(), pack_schema_hash: semio_framework_hash::hex_lower(&hash) });
+        rows.owned.push(ComponentCodecRow { artifact_kind: kind.clone(), artifact_schema: schema.clone(), pack_schema_hash: semio_framework_hash::hex_lower(&hash) });
     }
     Ok(rows)
 }
@@ -568,11 +588,13 @@ async fn run_codecs(args: Vec<String>) -> i32 {
     match component_codec_rows(&wasm_path, &kinds).await {
         Ok(rows) => {
             let body = rows
+                .owned
                 .iter()
                 .map(|row| format!("{{\"artifactKind\":\"{}\",\"artifactSchema\":\"{}\",\"packSchemaHash\":\"{}\"}}", row.artifact_kind, row.artifact_schema, row.pack_schema_hash))
                 .collect::<Vec<_>>()
                 .join(",");
-            let document = format!("{{\"schema\":\"semio.plugin.component-codec-rows/v1\",\"rows\":[{body}]}}\n");
+            let unowned = rows.unowned.iter().map(|(kind, schema)| format!("{{\"artifactKind\":\"{kind}\",\"artifactSchema\":\"{schema}\"}}")).collect::<Vec<_>>().join(",");
+            let document = format!("{{\"schema\":\"semio.plugin.component-codec-rows/v1\",\"rows\":[{body}],\"unowned\":[{unowned}]}}\n");
             if let Some(parent) = out_path.parent() {
                 if let Err(error) = fs::create_dir_all(parent) {
                     eprintln!("semio-framework-plugin-describe codecs: creating {}: {error}", parent.display());
@@ -581,7 +603,7 @@ async fn run_codecs(args: Vec<String>) -> i32 {
             }
             match fs::write(&out_path, document.as_bytes()) {
                 Ok(()) => {
-                    println!("codecs {} -> {} ({} rows)", wasm_path.display(), out_path.display(), rows.len());
+                    println!("codecs {} -> {} ({} rows, {} unowned)", wasm_path.display(), out_path.display(), rows.owned.len(), rows.unowned.len());
                     0
                 }
                 Err(error) => {

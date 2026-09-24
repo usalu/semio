@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdatePlatedInpu
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-1-5 plated element buckling inputs", "EN 1993-1-5 beschichtete Elementknickeneingaben aktualisieren")
+        protocol::LocalizedLabel::native("Update EN 1993-1-5 plated element buckling inputs", "EN 1993-1-5 Eingaben zum Plattenbeulen aktualisieren")
     }
 }
 //#endregion 🔖️Payload

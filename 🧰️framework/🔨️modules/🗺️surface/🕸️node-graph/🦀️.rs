@@ -510,16 +510,20 @@ impl GraphHost {
         Ok(self.dag.label_overlay_paint_state_json()?)
     }
 
-    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64, zoom_gesture: bool) {
-        let plan = self.plan_wheel(sx, sy, delta_y, zoom_gesture);
+    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_x: f64, delta_y: f64, zoom_gesture: bool) {
+        let plan = self.plan_wheel(sx, sy, delta_x, delta_y, zoom_gesture);
         let _ = self.commit_wheel(plan);
     }
 
-    pub fn plan_wheel(&self, sx: f64, sy: f64, delta_y: f64, zoom_gesture: bool) -> GraphWheelPlan {
+    /// 🖱️ One wheel step as a camera plan: a zoom gesture scales about the cursor, anything else pans
+    /// BOTH axes — a trackpad's horizontal scroll and a two-finger pinch's sideways drift arrive as
+    /// `delta_x` and move the camera exactly like `delta_y` moves it vertically.
+    pub fn plan_wheel(&self, sx: f64, sy: f64, delta_x: f64, delta_y: f64, zoom_gesture: bool) -> GraphWheelPlan {
         let cam = &self.dag.host_snapshot.camera;
         let expected = [cam.x, cam.y, cam.zoom];
         let next = if !zoom_gesture {
-            [cam.x, cam.y - delta_y / cam.zoom.max(1e-9), cam.zoom.max(1e-9)]
+            let zoom = cam.zoom.max(1e-9);
+            [cam.x - delta_x / zoom, cam.y - delta_y / zoom, zoom]
         } else {
             let (wx, wy) = dag_screen_to_world(&self.dag, sx, sy);
             let new_zoom = (cam.zoom * if delta_y < 0.0 { 1.1 } else { 0.9 }).clamp(0.05, 32.0);
@@ -848,8 +852,8 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = wheelScreen)]
-        pub fn wheel_screen(&self, sx: f64, sy: f64, _delta_x: f64, delta_y: f64, zoom_gesture: bool) {
-            self.state.borrow_mut().host.wheel_screen(sx, sy, delta_y, zoom_gesture);
+        pub fn wheel_screen(&self, sx: f64, sy: f64, delta_x: f64, delta_y: f64, zoom_gesture: bool) {
+            self.state.borrow_mut().host.wheel_screen(sx, sy, delta_x, delta_y, zoom_gesture);
         }
 
         #[wasm_bindgen(js_name = labelOverlayPaintStateJson)]

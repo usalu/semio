@@ -83,7 +83,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMateria
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Material Double Sided", "seitige Materialdoppel ändern")
+        protocol::LocalizedLabel::native("Change Material Double Sided", "Doppelseitigkeit des Materials ändern")
     }
 
     fn target(&self) -> Vec<String> {

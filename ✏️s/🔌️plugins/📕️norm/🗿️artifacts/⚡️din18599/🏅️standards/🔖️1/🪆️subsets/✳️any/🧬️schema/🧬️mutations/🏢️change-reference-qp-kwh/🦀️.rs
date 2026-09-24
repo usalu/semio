@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeRefere
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change reference primary energy demand Q_p [kWh] to {}", self.new_reference_q_p_kwh), &format!("Referenzprimärenergienbedarfq_p [kWh] auf {} ändern", self.new_reference_q_p_kwh))
+        protocol::LocalizedLabel::native(&format!("Change reference primary energy demand Q_p [kWh] to {}", self.new_reference_q_p_kwh), &format!("Primärenergiebedarf Q_p des Referenzgebäudes [kWh] auf {} ändern", self.new_reference_q_p_kwh))
     }
 }
 //#endregion 🔖️ChangeReferenceQPKwh

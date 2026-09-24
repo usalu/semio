@@ -28,6 +28,10 @@ fn work_directory_is_cache_local(ctx: &Context) -> Result<Outcome, String> {
         ("hasOwnershipMarker".to_string(), Json::Bool(ctx.work_dir.join("🧾️marker.json").exists())),
     ])))
 }
+
+fn outline_registration(ctx: &Context) -> Result<Outcome, String> {
+    Ok(Outcome::projection(Json::Object(vec![("scenario".to_string(), Json::String(ctx.scenario.id.clone())), ("row".to_string(), Json::String(ctx.row()?.to_string()))])))
+}
 //#endregion 🔖️Scenarios
 
 //#region 🔖️Registration
@@ -37,5 +41,6 @@ pub fn adapter() -> Adapter {
         .subject("digest-and-fixture-resolution", digest_and_fixture_resolution)
         .subject("fixture-not-in-plan-is-an-error", fixture_not_in_plan_is_an_error)
         .subject("work-directory-is-cache-local", work_directory_is_cache_local)
+        .subject("outline-registration", outline_registration)
 }
 //#endregion 🔖️Registration

@@ -32,7 +32,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerVisibl
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set layer \"{}\" visible to {}", self.layer_id, self.visible), &format!("Ebene \"{}\" sichtbar auf {} setzen", self.layer_id, self.visible))
+        protocol::LocalizedLabel::native(&format!("Set layer \"{}\" visible to {}", self.layer_id, self.visible), &format!("Sichtbarkeit von Ebene \"{}\" auf {} setzen", self.layer_id, self.visible))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

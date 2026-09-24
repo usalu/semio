@@ -31,7 +31,7 @@ pub const JSON_I_JSON_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdi
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum JsonIJsonIJsonEditorCommand {
     SetNode { node_id: String, value: String },
-    /// 🎬️ The navbar example picker's payload — see the `🎬️ExampleSwitch` region below.
+    /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
     SetActiveExample { example_id: String },
 }
 
@@ -92,8 +92,9 @@ impl protocol::OpText for JsonIJsonIJsonEditorCommand {
 
 impl protocol::OpBinary for JsonIJsonIJsonEditorCommand {
     /// 🎯️ The app-owned retained routes this command channel carries — the join key
-    /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The
-    /// window-kind verb stays out: it is declared by the framework window kit, not by this app.
+    /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TreeWindowKit`
+    /// mints `set-node`, but only this editor can reduce it into its own mutation, so it is an
+    /// app-owned route exactly like the example switch.
     const TOOL_JOB_IDS: &'static [&'static str] = JSON_I_JSON_RETAINED_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -106,18 +107,25 @@ impl protocol::OpBinary for JsonIJsonIJsonEditorCommand {
 }
 //#endregion 🔖️Command
 
-//#region 🎬️ExampleSwitch
-/// 🧵️ The ONE app-owned retained route this editor declares. `validate_ui_dispatch_classification`
-/// refuses any verb that is not `Migrated`, and `Migrated` only survives the guest's
-/// `interactive-job.catalog-incomplete` boot check when this roster, the publication contracts and
-/// the `bounded_first_step_tool_proofs!` block below all name the same id.
-const JSON_I_JSON_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
+//#region 🧵️RetainedRoutes
+/// 🪟️ The verb the `TreeWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
+const JSON_I_JSON_KIT_ACTION_ID: &str = "set-node";
+/// 🧵️ The app-owned retained routes this editor declares: the example switch and `set-node`.
+/// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
+/// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
+/// publication contracts and the `bounded_first_step_tool_proofs!` block below all name the same
+/// ids. Without the kit verb's row the reactor refused every `set-node` with
+/// `interactive-job.missing-factory`.
+const JSON_I_JSON_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, JSON_I_JSON_KIT_ACTION_ID];
 const JSON_I_JSON_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.json.i-json.tool-command.v1";
 const JSON_I_JSON_RETAINED_RAW_BYTES: usize = 8_192;
 /// 🚦️ The example switch publishes into NO document lane: it hands the host one
-/// `Effect::LoadDocument`, so its only lane is `HostOnly`.
-const JSON_I_JSON_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
-    &[ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
+/// `Effect::LoadDocument`, so its only lane is `HostOnly`. `set-node` publishes the artifact
+/// mutation it reduces into, so its only lane is `Artifact`.
+const JSON_I_JSON_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: JSON_I_JSON_KIT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn json_i_json_retained_contract() -> ToolExecutionContract {
@@ -143,7 +151,7 @@ fn json_i_json_example_snapshot(example_id: &str) -> JsonSnapshot {
 fn json_i_json_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<JsonIJsonIJsonEditorCommand, Fault> {
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(JsonIJsonIJsonEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        "set-node" => Ok(JsonIJsonIJsonEditorCommand::SetNode { node_id: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["nodeId", "node_id", "id"], ""), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
+        JSON_I_JSON_KIT_ACTION_ID => Ok(JsonIJsonIJsonEditorCommand::SetNode { node_id: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["nodeId", "node_id", "id"], ""), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.json.i-json.unhandled-action"),
@@ -156,21 +164,39 @@ fn json_i_json_command_from_action(action: &str, args: Option<&dsl::DslValue>) -
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn json_i_json_command_id(command: &JsonIJsonIJsonEditorCommand) -> &'static str {
     match command {
-        JsonIJsonIJsonEditorCommand::SetNode { .. } => "set-node",
+        JsonIJsonIJsonEditorCommand::SetNode { .. } => JSON_I_JSON_KIT_ACTION_ID,
         JsonIJsonIJsonEditorCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn json_i_json_retained_extent(command: &JsonIJsonIJsonEditorCommand, _snapshot: &JsonSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    matches!(command, JsonIJsonIJsonEditorCommand::SetActiveExample { .. }).then_some(1)
+fn json_i_json_retained_extent(_command: &JsonIJsonIJsonEditorCommand, _snapshot: &JsonSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    Some(1)
+}
+
+/// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
+/// its document, `set-node` becomes this artifact's own mutation.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn json_i_json_emit(command: &JsonIJsonIJsonEditorCommand, _snapshot: &JsonSnapshot) -> Result<Emit<JsonMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    let (node_id, value) = match command {
+        JsonIJsonIJsonEditorCommand::SetActiveExample { example_id } => {
+            return Ok(Emit {
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&json_i_json_example_snapshot(example_id), STDIO_JSON_DOCUMENT_SCHEMA)],
+                description: Some(format!("Load example {example_id}")),
+                ..Default::default()
+            })
+        }
+        JsonIJsonIJsonEditorCommand::SetNode { node_id, value } => (node_id, value),
+    };
+    let Ok(path) = decode_path_id(node_id) else { return Ok(Emit::default()) };
+    Ok(Emit { artifact_mutations: vec![JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path, value: JsonValue::String { value: value.clone() } }))], description: Some(format!("Set node {node_id}")), ..Default::default() })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn json_i_json_retained_reduce(
     command: &JsonIJsonIJsonEditorCommand,
-    _snapshot: &JsonSnapshot,
+    snapshot: &JsonSnapshot,
     _config: &NoConfig,
     _history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
@@ -178,14 +204,7 @@ fn json_i_json_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<JsonIJsonEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<JsonMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    match command {
-        JsonIJsonIJsonEditorCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&json_i_json_example_snapshot(example_id), STDIO_JSON_DOCUMENT_SCHEMA)],
-            description: Some(format!("Load example {example_id}")),
-            ..Default::default()
-        }),
-        JsonIJsonIJsonEditorCommand::SetNode { .. } => Err(Fault::from("stdio-json-i-json-retained-route-mismatch")),
-    }
+    json_i_json_emit(command, snapshot)
 }
 
 struct JsonIJsonRetainedCommandJobFactory {
@@ -238,7 +257,7 @@ impl ArtifactOwnedToolJobFactory for JsonIJsonRetainedCommandJobFactory {
     const DOCUMENT_SCHEMA: &'static str = STDIO_JSON_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = JSON_I_JSON_RETAINED_PUBLICATION_CONTRACTS;
 }
-//#endregion 🎬️ExampleSwitch
+//#endregion 🧵️RetainedRoutes
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -268,7 +287,7 @@ impl ArtifactEditor for JsonIJsonEditor {
         factory: "JsonIJsonRetainedCommandJobFactory",
         factory_type: JsonIJsonRetainedCommandJobFactory,
         contract: json_i_json_retained_contract(),
-        tools: ["setActiveExample"]
+        tools: ["setActiveExample", "set-node"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -283,6 +302,7 @@ impl ArtifactEditor for JsonIJsonEditor {
         if json_i_json_command_id(&request.command) != request.tool_id {
             return Err(Fault::from("stdio-json-i-json-retained-command-tool-mismatch"));
         }
+        let tool_id = json_i_json_command_id(&request.command);
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id,
@@ -305,7 +325,7 @@ impl ArtifactEditor for JsonIJsonEditor {
             json_i_json_command_id,
             JSON_I_JSON_RETAINED_RAW_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, json_i_json_retained_reduce, json_i_json_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(tool_id, json_i_json_retained_reduce, json_i_json_retained_extent)),
         )?;
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -316,6 +336,13 @@ impl ArtifactEditor for JsonIJsonEditor {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 📤️ The artifact lane's one-item publication authority. The kit verb's route declares the
+    /// `Artifact` lane, and without this authority every such route fails closed with
+    /// `interactive-job.publication-authority-missing`.
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("stdio-json-i-json-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     /// 🧹️ The rest of the close protocol installing a document owner implies: an app that owns its
@@ -387,25 +414,14 @@ impl ArtifactEditor for JsonIJsonEditor {
     /// bool) are a documented future scope, not attempted here.
     fn handle(
         command: &Self::Command,
-        _doc: &ArtifactView<'_, Self::Snapshot>,
+        doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        let (node_id, value) = match command {
-            JsonIJsonIJsonEditorCommand::SetActiveExample { example_id } => {
-                return Ok(Emit {
-                    effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&json_i_json_example_snapshot(example_id), STDIO_JSON_DOCUMENT_SCHEMA)],
-                    description: Some(format!("Load example {example_id}")),
-                    ..Default::default()
-                })
-            }
-            JsonIJsonIJsonEditorCommand::SetNode { node_id, value } => (node_id, value),
-        };
-        let Ok(path) = decode_path_id(node_id) else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path, value: JsonValue::String { value: value.clone() } }))], description: Some(format!("Set node {node_id}")), ..Default::default() })
+        json_i_json_emit(command, doc.snapshot)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

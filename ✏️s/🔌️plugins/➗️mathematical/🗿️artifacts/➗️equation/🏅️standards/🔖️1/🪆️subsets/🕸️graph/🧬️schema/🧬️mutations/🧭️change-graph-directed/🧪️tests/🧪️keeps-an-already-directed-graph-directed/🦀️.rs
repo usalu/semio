@@ -81,17 +81,17 @@ async fn committed_json_is_canonical() {
     assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "change-graph-directed/keeps-an-already-directed-graph-directed: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
 }
 
-/// 🎯️ The declared outcome — applied, with one `mutation.no-op` warning — is exactly what the diff
-/// builder emits. A warn no-op is APPLIED with an empty diff, never a rejection.
+/// 🎯️ The declared outcome — `no-op`, with one `mutation.no-op` warning — is exactly what the diff
+/// builder emits. A warn no-op is a NO-OP with an empty diff, never a rejection.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome = pack::parse_json(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("applied"), "change-graph-directed/keeps-an-already-directed-graph-directed declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("no-op"), "change-graph-directed/keeps-an-already-directed-graph-directed declares a no-op outcome");
     let emitted = produced();
     let messages = emitted.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "restating the current direction is reported as no-op");
-    assert_eq!(messages[0].level, protocol::Severity::Warning, "a no-op is a Warning — the document is still applied, just unchanged");
+    assert_eq!(messages[0].level, protocol::Severity::Warning, "a no-op is a Warning — never a refusal, the document is just unchanged");
     let declared = outcome.get("messages").and_then(pack::JsonValue::as_array).expect("the declared outcome carries its warning");
     assert_eq!(declared[0].get("code").and_then(pack::JsonValue::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
 }

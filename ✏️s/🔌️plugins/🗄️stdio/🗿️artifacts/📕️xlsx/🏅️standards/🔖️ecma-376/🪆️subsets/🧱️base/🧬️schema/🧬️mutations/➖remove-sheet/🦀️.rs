@@ -21,7 +21,7 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveSheet {
         agg_inverse(&XlsxMutation::RemoveSheet(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-sheet", "Blatt entfernen")
+        protocol::LocalizedLabel::native("Remove sheet", "Arbeitsblatt entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

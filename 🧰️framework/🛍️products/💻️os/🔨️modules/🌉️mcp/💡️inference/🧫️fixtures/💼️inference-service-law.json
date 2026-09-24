@@ -1,0 +1,473 @@
+{
+  "$schema": "../🧬️schema/🔣️.json#/$defs/InferenceServiceLawV1",
+  "law": "Every declared inference service is reachable through one job model. Selection resolves the one service a request names on an artifact kind and executes it on the hub only when the bound hub publishes it; a guest result offers the proposal its declared commit action would commit, digested over service, document, capability and exactly the action's declared arguments; a job's journal folds into the same page for either site, and an approval is consumed at most once.",
+  "declared": [
+    {
+      "owner": "wfc",
+      "artifactKind": "s.wfc.bitmap",
+      "artifactSchema": "s.wfc.bitmap",
+      "artifactSchemaVersion": 1,
+      "inferenceSchema": "s.wfc.bitmap.solve",
+      "inferenceSchemaVersion": 1,
+      "algorithmVersion": 1,
+      "policyVersion": 1,
+      "contributor": "wfc",
+      "payload": {
+        "payloadSchemaId": "s.wfc.bitmap.inference.request.v1",
+        "inputSchema": "{}",
+        "outputSchema": "{}",
+        "progressUnit": "cells",
+        "artifactBinding": {
+          "field": "document",
+          "encoding": "artifact-pack-base64",
+          "required": true
+        },
+        "commit": {
+          "action": "pin-solution"
+        }
+      }
+    },
+    {
+      "owner": "gis",
+      "artifactKind": "s.gis.gismap",
+      "artifactSchema": "s.gis.gismap",
+      "artifactSchemaVersion": 1,
+      "inferenceSchema": "s.gis.gismap.inference",
+      "inferenceSchemaVersion": 1,
+      "algorithmVersion": 1,
+      "policyVersion": 1,
+      "contributor": "gis"
+    },
+    {
+      "owner": "cad",
+      "artifactKind": "s.cad.cad",
+      "artifactSchema": "s.cad.cad",
+      "artifactSchemaVersion": 1,
+      "inferenceSchema": "s.cad.cad.summary",
+      "inferenceSchemaVersion": 1,
+      "algorithmVersion": 1,
+      "policyVersion": 1,
+      "contributor": "cad"
+    },
+    {
+      "owner": "cad",
+      "artifactKind": "s.cad.cad",
+      "artifactSchema": "s.cad.cad",
+      "artifactSchemaVersion": 1,
+      "inferenceSchema": "s.cad.cad.summary",
+      "inferenceSchemaVersion": 1,
+      "algorithmVersion": 1,
+      "policyVersion": 1,
+      "contributor": "cad-extension-aec-building"
+    },
+    {
+      "owner": "cad",
+      "artifactKind": "s.cad.cad",
+      "artifactSchema": "s.cad.cad",
+      "artifactSchemaVersion": 1,
+      "inferenceSchema": "s.cad.cad.volume",
+      "inferenceSchemaVersion": 1,
+      "algorithmVersion": 1,
+      "policyVersion": 1,
+      "contributor": "cad"
+    }
+  ],
+  "selection": [
+    {
+      "name": "a guest service with a declared commit action",
+      "artifactKind": "s.wfc.bitmap",
+      "hubServices": [
+        {
+          "serviceId": "s.gis.gismap.inference",
+          "route": "inference/gis-map"
+        }
+      ],
+      "expect": {
+        "serviceId": "s.wfc.bitmap.solve",
+        "pluginId": "wfc",
+        "site": "guest",
+        "commitAction": "pin-solution"
+      }
+    },
+    {
+      "name": "a service the bound hub publishes runs on the hub, over the route it publishes",
+      "artifactKind": "s.gis.gismap",
+      "hubServices": [
+        {
+          "serviceId": "s.gis.gismap.inference",
+          "route": "inference/gis-map"
+        }
+      ],
+      "expect": {
+        "serviceId": "s.gis.gismap.inference",
+        "pluginId": "gis",
+        "site": "hub",
+        "route": "inference/gis-map"
+      }
+    },
+    {
+      "name": "the same service on a workspace whose hub publishes nothing runs in its guest",
+      "artifactKind": "s.gis.gismap",
+      "hubServices": [],
+      "expect": {
+        "serviceId": "s.gis.gismap.inference",
+        "pluginId": "gis",
+        "site": "guest"
+      }
+    },
+    {
+      "name": "a kind with no declared service is refused by name",
+      "artifactKind": "s.note.note",
+      "hubServices": [
+        {
+          "serviceId": "s.gis.gismap.inference",
+          "route": "inference/gis-map"
+        }
+      ],
+      "refusal": {
+        "code": "NOT_FOUND"
+      }
+    },
+    {
+      "name": "a kind with several services needs inferenceSchema",
+      "artifactKind": "s.cad.cad",
+      "hubServices": [],
+      "refusal": {
+        "code": "INPUT_INVALID",
+        "field": "inferenceSchema"
+      }
+    },
+    {
+      "name": "one service declared by two plugins needs pluginId",
+      "artifactKind": "s.cad.cad",
+      "inferenceSchema": "s.cad.cad.summary",
+      "hubServices": [],
+      "refusal": {
+        "code": "INPUT_INVALID",
+        "field": "pluginId"
+      }
+    },
+    {
+      "name": "pluginId disambiguates a contributed service",
+      "artifactKind": "s.cad.cad",
+      "inferenceSchema": "s.cad.cad.summary",
+      "pluginId": "cad-extension-aec-building",
+      "hubServices": [],
+      "expect": {
+        "serviceId": "s.cad.cad.summary",
+        "pluginId": "cad-extension-aec-building",
+        "site": "guest"
+      }
+    }
+  ],
+  "proposals": [
+    {
+      "name": "only the action's declared arguments travel, and the digest binds them",
+      "serviceId": "s.wfc.bitmap.solve",
+      "documentId": "doc-bitmap",
+      "action": "pin-solution",
+      "capabilityId": "wfc.s.wfc.bitmap@1/*#editor.pin-solution",
+      "declaredArgs": [
+        "pixels",
+        "contradiction"
+      ],
+      "result": {
+        "pixels": "AAECAQ==",
+        "contradiction": false,
+        "entropy": [
+          0,
+          1,
+          2
+        ]
+      },
+      "expect": {
+        "input": {
+          "pixels": "AAECAQ==",
+          "contradiction": false
+        },
+        "hash": "f310b30ff7cb68db78195053b0257b3e863a2e1ceb1a4dfb65997c70acdaa9be"
+      }
+    },
+    {
+      "name": "a result field the action does not declare never reaches it",
+      "serviceId": "s.wfc.bitmap.solve",
+      "documentId": "doc-other",
+      "action": "pin-solution",
+      "capabilityId": "wfc.s.wfc.bitmap@1/*#editor.pin-solution",
+      "declaredArgs": [
+        "pixels"
+      ],
+      "result": {
+        "pixels": "AQEB",
+        "contradiction": true
+      },
+      "expect": {
+        "input": {
+          "pixels": "AQEB"
+        },
+        "hash": "4785b34c1350df91076ccbf35aa04acdf56d5a54426e385467e6eb524fe553e7"
+      }
+    },
+    {
+      "name": "a non-object result offers nothing to commit",
+      "serviceId": "s.wfc.bitmap.solve",
+      "documentId": "doc-bitmap",
+      "action": "pin-solution",
+      "capabilityId": "wfc.s.wfc.bitmap@1/*#editor.pin-solution",
+      "declaredArgs": [
+        "pixels"
+      ],
+      "result": [
+        1,
+        2
+      ],
+      "refusal": {
+        "code": "PRECONDITION_FAILED"
+      }
+    }
+  ],
+  "lifecycles": [
+    {
+      "name": "offered, approved once, committed",
+      "proposal": true,
+      "steps": [
+        {
+          "op": "progress",
+          "fraction": 0.25,
+          "expect": {
+            "state": "running",
+            "proposalState": "none"
+          }
+        },
+        {
+          "op": "offer",
+          "expect": {
+            "state": "succeeded",
+            "proposalState": "offered"
+          }
+        },
+        {
+          "op": "approve",
+          "accepted": true,
+          "expect": {
+            "state": "running",
+            "proposalState": "approved"
+          }
+        },
+        {
+          "op": "approve",
+          "accepted": false,
+          "expect": {
+            "state": "running",
+            "proposalState": "approved"
+          }
+        },
+        {
+          "op": "commit",
+          "expect": {
+            "state": "succeeded",
+            "proposalState": "approved"
+          }
+        }
+      ],
+      "journal": [
+        "accepted",
+        "progress",
+        "awaiting-approval",
+        "approved",
+        "committed",
+        "succeeded"
+      ]
+    },
+    {
+      "name": "cancelled while running",
+      "proposal": false,
+      "steps": [
+        {
+          "op": "progress",
+          "fraction": 0.35,
+          "expect": {
+            "state": "running",
+            "proposalState": "none"
+          }
+        },
+        {
+          "op": "cancel",
+          "expect": {
+            "state": "running",
+            "proposalState": "none",
+            "cancelRequested": true
+          }
+        },
+        {
+          "op": "cancelled",
+          "expect": {
+            "state": "cancelled",
+            "proposalState": "none",
+            "cancelRequested": true
+          }
+        }
+      ],
+      "journal": [
+        "accepted",
+        "progress",
+        "cancel-requested",
+        "cancelled"
+      ]
+    },
+    {
+      "name": "a cancel withdraws an offered proposal and no approval can follow",
+      "proposal": true,
+      "steps": [
+        {
+          "op": "offer",
+          "expect": {
+            "state": "succeeded",
+            "proposalState": "offered"
+          }
+        },
+        {
+          "op": "cancel",
+          "expect": {
+            "state": "cancelled",
+            "proposalState": "cancelled",
+            "cancelRequested": true
+          }
+        },
+        {
+          "op": "approve",
+          "accepted": false,
+          "expect": {
+            "state": "cancelled",
+            "proposalState": "cancelled",
+            "cancelRequested": true
+          }
+        }
+      ],
+      "journal": [
+        "accepted",
+        "awaiting-approval",
+        "cancel-requested",
+        "cancelled"
+      ]
+    },
+    {
+      "name": "a refused commit leaves the proposal stale",
+      "proposal": true,
+      "steps": [
+        {
+          "op": "offer",
+          "expect": {
+            "state": "succeeded",
+            "proposalState": "offered"
+          }
+        },
+        {
+          "op": "approve",
+          "accepted": true,
+          "expect": {
+            "state": "running",
+            "proposalState": "approved"
+          }
+        },
+        {
+          "op": "refuse",
+          "expect": {
+            "state": "failed",
+            "proposalState": "stale"
+          }
+        }
+      ],
+      "journal": [
+        "accepted",
+        "awaiting-approval",
+        "approved",
+        "failed"
+      ]
+    },
+    {
+      "name": "a service with no commit action finishes with its result",
+      "proposal": false,
+      "steps": [
+        {
+          "op": "progress",
+          "fraction": 0.35,
+          "expect": {
+            "state": "running",
+            "proposalState": "none"
+          }
+        },
+        {
+          "op": "succeed",
+          "expect": {
+            "state": "succeeded",
+            "proposalState": "none",
+            "result": true
+          }
+        }
+      ],
+      "journal": [
+        "accepted",
+        "progress",
+        "succeeded"
+      ]
+    }
+  ],
+  "hubPages": [
+    {
+      "name": "a hub page projects state, proposal and progress fractions",
+      "page": {
+        "schema": "semio.hub.inference-job-events/v1",
+        "jobId": "11111111111111111111111111111111",
+        "state": "succeeded",
+        "proposalState": "offered",
+        "cancelRequested": false,
+        "stale": false,
+        "proposalHash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "events": [
+          {
+            "ordinal": 1,
+            "kind": "accepted",
+            "atMs": 10
+          },
+          {
+            "ordinal": 2,
+            "kind": "offered",
+            "atMs": 20
+          }
+        ],
+        "progress": [
+          {
+            "cursor": 1,
+            "runEpoch": 1,
+            "completed": 1024,
+            "total": 4096,
+            "atMs": 15
+          },
+          {
+            "cursor": 2,
+            "runEpoch": 1,
+            "completed": 4096,
+            "total": 4096,
+            "atMs": 19
+          }
+        ],
+        "nextCursor": 2
+      },
+      "expect": {
+        "state": "succeeded",
+        "proposalState": "offered",
+        "proposalHash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "fractions": [
+          0.25,
+          1.0
+        ],
+        "events": [
+          "accepted",
+          "offered"
+        ],
+        "nextCursor": 2
+      }
+    }
+  ]
+}

@@ -4,7 +4,7 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`.
 //!
-//! ⚠️ Why this tree pins the NO-OP APPLIED branch rather than a real attachment: an applied
+//! ⚠️ Why this tree pins the NO-OP branch rather than a real attachment: an applied
 //! `add-layer-asset` runs the payload's bytes through `crate::mint_raster_asset_child`,
 //! which mints the composed child handle as `format!("raster-asset-{hash:016x}")` from a
 //! `std::collections::hash_map::DefaultHasher` digest of the decoded `SemioImageSnapshot`'s pack
@@ -91,12 +91,12 @@ async fn committed_json_is_canonical() {
     assert!(dsl::json::value_eq_ignoring_object_order(&reencoded, &original), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared outcome matches what the mutation actually produces: APPLIED with one
+/// 🎯️ The declared outcome matches what the mutation actually produces: NO-OP with one
 /// `mutation.no-op` WARNING — a no-op is never a rejection, the document stays valid.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome = dsl::json::parse(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::json::Value::as_str), Some("applied"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(dsl::json::Value::as_str), Some("no-op"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document declares a no-op outcome");
     let base = before();
     assert!(base.assets.contains_key("cover-art"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the before-snapshot must already carry the key, or the no-op guard would not fire");
     let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &base);
@@ -108,7 +108,7 @@ async fn declared_outcome_holds() {
     assert_eq!(declared.len(), 1, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the declared message list must match the emitted one");
     assert_eq!(declared[0].get("code").and_then(dsl::json::Value::as_str), Some(messages[0].code.0.as_str()), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the declared code must match the emitted one");
     assert_eq!(declared[0].get("level").and_then(dsl::json::Value::as_str), Some("warn"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the declared level must be warn");
-    let applied = apply_raster_mutation(&base, &mutation()).expect("add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: declared applied but the mutation was rejected");
+    let applied = apply_raster_mutation(&base, &mutation()).expect("add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: declared no-op but the mutation was rejected");
     retire(applied);
     retire(base);
 }

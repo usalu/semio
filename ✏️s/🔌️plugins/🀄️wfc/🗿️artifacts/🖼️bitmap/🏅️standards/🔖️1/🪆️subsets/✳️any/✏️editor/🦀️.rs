@@ -26,7 +26,7 @@
 //! and the factory below the whole action roster is dispatch-dead in the live shell no matter how it
 //! is classified.
 
-use crate::editor::bitmap::commands::set_active_example;
+use crate::editor::bitmap::commands::{pin_solution, set_active_example};
 use crate::editor::bitmap::modes::edit;
 use crate::editor::bitmap::modes::edit::tools::fill as fill_tool;
 use crate::editor::bitmap::modes::edit::windows::{input, output};
@@ -91,6 +91,8 @@ pub enum BitmapEditorCommand {
     CommitFillSolve { pixels: String, contradiction: bool, width: u32, height: u32 },
     #[dsl(key = "set-active-example")]
     SetActiveExample { example_id: String },
+    #[dsl(key = "pin-solution")]
+    PinSolution { pixels: String, contradiction: bool },
 }
 
 impl protocol::OpBinary for BitmapEditorCommand {
@@ -128,6 +130,7 @@ pub const BITMAP_TOOL_IDS: &[&str] = &[
     "solve",
     "commit-fill-solve",
     "setActiveExample",
+    "pin-solution",
 ];
 
 /// 🏷️ The manifest action id one command was declared under — command-log labelling and the
@@ -151,6 +154,7 @@ pub fn bitmap_command_id(command: &BitmapEditorCommand) -> &'static str {
         BitmapEditorCommand::Solve => "solve",
         BitmapEditorCommand::CommitFillSolve { .. } => "commit-fill-solve",
         BitmapEditorCommand::SetActiveExample { .. } => "setActiveExample",
+        BitmapEditorCommand::PinSolution { .. } => "pin-solution",
     }
 }
 //#endregion 🔖️Command
@@ -228,6 +232,7 @@ mod args_bridge {
                 width: u32_or("width", 0),
                 height: u32_or("height", 0),
             },
+            "pin-solution" => BitmapEditorCommand::PinSolution { pixels: text(args, "pixels").unwrap_or_default(), contradiction: bool_or("contradiction", false) },
             _ => return Err(unknown(action)),
         })
     }
@@ -267,6 +272,7 @@ const BITMAP_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "solve", lanes: &[ArtifactToolPublicationLane::Transient] },
     ArtifactToolPublicationContract { tool_id: "commit-fill-solve", lanes: &[ArtifactToolPublicationLane::Transient] },
     artifact_route("setActiveExample"),
+    artifact_route("pin-solution"),
 ];
 
 const fn artifact_route(tool_id: &'static str) -> ArtifactToolPublicationContract {
@@ -715,7 +721,8 @@ impl ArtifactEditor for BitmapEditor {
             "stroke-commit",
             "solve",
             "commit-fill-solve",
-            "setActiveExample"
+            "setActiveExample",
+            "pin-solution"
         ]
     }
 
@@ -848,6 +855,7 @@ impl BitmapEditor {
                 BitmapEditorCommand::StrokeExtend { x, y } => Self::accumulate_stroke(cfg, view_state, Some(*x), Some(*y), false),
                 BitmapEditorCommand::StrokeCommit => Self::commit_stroke(doc, cfg, view_state),
                 BitmapEditorCommand::SetActiveExample { example_id } => set_active_example::handle(&set_active_example::SetActiveExample { example_id: example_id.clone() }, doc),
+                BitmapEditorCommand::PinSolution { pixels, contradiction } => pin_solution::handle(&pin_solution::PinSolution { pixels: pixels.clone(), contradiction: *contradiction }, doc),
                 BitmapEditorCommand::Solve => Ok(Emit { effects: vec![fill_tool::start_fill_effect()], description: Some("Solve".to_string()), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
                 BitmapEditorCommand::CommitFillSolve { .. } => Ok(Emit { description: Some("Commit fill solve".to_string()), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
                 _ => Err(Fault::from("wfc-bitmap-command-unmapped")),
@@ -893,7 +901,8 @@ impl BitmapEditor {
             | BitmapEditorCommand::StrokeCommit
             | BitmapEditorCommand::Solve
             | BitmapEditorCommand::CommitFillSolve { .. }
-            | BitmapEditorCommand::SetActiveExample { .. } => return None,
+            | BitmapEditorCommand::SetActiveExample { .. }
+            | BitmapEditorCommand::PinSolution { .. } => return None,
         })
     }
 
@@ -996,6 +1005,16 @@ pub fn create_bitmap_editor() -> semio_framework_plugin::AppDefinition {
             .default_value(&set_active_example::BITMAP_EXAMPLE_BOOT_ID)],
         )
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+        .action_with(ActionDefinition::new(pin_solution::PIN_SOLUTION_ACTION_ID, LocalizedLabel::native("Pin Solution", "Lösung anheften"), ActionKind::Mutation, "check"))
+        .action_destructive(pin_solution::PIN_SOLUTION_ACTION_ID)
+        .action_args(
+            pin_solution::PIN_SOLUTION_ACTION_ID,
+            vec![
+                ActionArgDef::text("pixels", LocalizedLabel::native("Solved Pixels", "Gelöste Pixel")).required(),
+                ActionArgDef::toggle("contradiction", LocalizedLabel::native("Contradiction", "Widerspruch")).default_value(&false),
+            ],
+        )
+        .action_interactive_job(pin_solution::PIN_SOLUTION_ACTION_ID, InteractiveJobClassification::Migrated)
         .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeQSKpa {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change shaft resistance q_s [kPa] to {}", self.new_q_s_kpa), &format!("Schachtwiderstandq_s [kPa] auf {} ändern", self.new_q_s_kpa))
+        protocol::LocalizedLabel::native(&format!("Change shaft resistance q_s [kPa] to {}", self.new_q_s_kpa), &format!("Mantelreibung q_s [kPa] auf {} ändern", self.new_q_s_kpa))
     }
 }
 //#endregion 🔖️ChangeQSKpa

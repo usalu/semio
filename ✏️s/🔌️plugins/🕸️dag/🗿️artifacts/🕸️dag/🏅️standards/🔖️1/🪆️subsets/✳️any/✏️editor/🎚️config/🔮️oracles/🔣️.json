@@ -1,0 +1,235 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The config state lane of `s.dag.dag`'s editor (✏️editor/🎚️config): its mutation vocabulary `DagConfigMutation` over `DagConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-dag-dag-1-any-editor-config` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "dag-dag-1-any-editor-config-state-lane-semantics",
+      "capabilities": [
+        "dag-dag-1-any-editor-config-mutate"
+      ],
+      "rationale": "`DagConfigMutation` is the config state lane of `s.dag.dag`'s ✏️editor/🎚️config surface: it holds the graph camera (x, y, zoom). This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`change-camera`, `replace-config`) changes exactly its own part of `DagConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A persisted key-value store for desktop settings; it has no model of this surface's typed config record, its per-kind setters, their no-op guard or the inverse each kind computes."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it defines no typed config mutations and neither their no-op nor their inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "`DagConfig` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "dag-dag-1-any-editor-config",
+      "capability": "dag-dag-1-any-editor-config-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "change-camera",
+        "replace-config"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.dag.dag",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎚️config",
+      "mutations": [
+        {
+          "id": "change-camera",
+          "capability": "dag-dag-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-camera",
+            "bridgeVersion": 1,
+            "variant": "ChangeCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-dag-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-config",
+          "capability": "dag-dag-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-config",
+            "bridgeVersion": 1,
+            "variant": "ReplaceConfig"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-dag-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-config-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.dag.dag",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "replace-config",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:05e3ebe33b6ba15677d2d2dc6c22627bf1aa9b598fde685b0450463c675b0f07",
+          "bytes": 54
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:87f4e9a5ed875bd2b6b71cfe97e09fcd599074f0933d73bca1ebee119d8cca22",
+          "bytes": 138
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:05e3ebe33b6ba15677d2d2dc6c22627bf1aa9b598fde685b0450463c675b0f07",
+          "bytes": 54
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:507faf29896754b9a7a3ac3d9d4f918b62408609c5b06a5f797f6f0d0c0a55e7",
+          "bytes": 60
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-camera-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.dag.dag",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "change-camera",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:05e3ebe33b6ba15677d2d2dc6c22627bf1aa9b598fde685b0450463c675b0f07",
+          "bytes": 54
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4a919f231d6b86a95fd68906433202d02a0f7375b7411c6454f6eb554892fc7d",
+          "bytes": 91
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a1a32eeffd2dfde67a5dbe55760b0df9d9b9bb3cf5b4cd633ba31ad15584b3e1",
+          "bytes": 54
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dba5e78d652768c8229ea25fcb63145419fde0ba45a80c2293787d52cc55b53a",
+          "bytes": 60
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `change-camera` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own."
+    }
+  ]
+}

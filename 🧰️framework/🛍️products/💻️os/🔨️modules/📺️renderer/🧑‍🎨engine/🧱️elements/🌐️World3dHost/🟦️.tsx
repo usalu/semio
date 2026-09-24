@@ -91,16 +91,11 @@ import { ToolRunProvisionalOutline, ToolRunTraceLayer, TOOL_RUN_PROVISIONAL_PAIN
 
 const { useFrame, useLoader, useThree } = sceneHostPort.fiber;
 import {
-  EMPTY_GESTURE_POINTERS,
-  gestureIsMultiTouch,
-  gesturePointerDown,
-  gesturePointerMove,
-  gesturePointerUp,
+  GestureRecognizer,
   windowElementId,
   world3dComputeStatusV1,
   type ComponentSceneHostProps,
   type ContextMenuItemSpec,
-  type GesturePointers,
   type MergeMode,
   type PluginContextMenuSurfaceTarget,
 } from "@semio-tech/framework";
@@ -5799,11 +5794,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const meshesRef = useRef(meshes);
   meshesRef.current = meshes;
   const marqueeStartRef = useRef<SelectionMarqueePoint | null>(null);
-  /** 🤏️ Every contact on this viewport, `pointerId`-keyed. A second finger hands the surface to the
-   * orbit rig's own two-finger gesture (`TOUCH.DOLLY_PAN`, seeded in `WorldOrbitControlsBridge`): the
-   * host's single-pointer lane — marquee, pick, paint stroke, relocate, engagement — must go quiet for
-   * the whole pinch instead of growing a marquee under it. */
-  const gesturePointersRef = useRef<GesturePointers>(EMPTY_GESTURE_POINTERS);
+  /** 🤏️ The shared `👆️gesture` recognizer for this viewport. A second finger hands the surface to the
+   * orbit rig's pinch (the same recognizer inside `WorldOrbitControlsBridge` drives the camera): the
+   * host's single-pointer lane — marquee, pick, paint stroke, relocate, engagement — stays quiet until
+   * the LAST finger lifts, so the finger left down never grows a marquee or replays a pick. */
+  const [gestureRecognizer] = useState(() => new GestureRecognizer());
   const vorticesRef = useRef(vortices);
   vorticesRef.current = vortices;
   const referencesRef = useRef(references);
@@ -6959,7 +6954,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
    * orbit rig owns the surface alone for the rest of a two-finger pinch/pan. */
   const yieldToPinch = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      for (const tracked of gesturePointersRef.current.pointers) {
+      for (const tracked of gestureRecognizer.pointers) {
         if (event.currentTarget.hasPointerCapture?.(tracked.pointerId)) event.currentTarget.releasePointerCapture(tracked.pointerId);
       }
       endRelocateDrag(null);
@@ -6967,16 +6962,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       marqueeStartRef.current = null;
       marqueeFinalizeOnceRef.current = true;
     },
-    [endRelocateDrag],
+    [endRelocateDrag, gestureRecognizer],
   );
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      gesturePointersRef.current = gesturePointerDown(gesturePointersRef.current, { pointerId: event.pointerId, x: event.clientX, y: event.clientY });
-      if (gestureIsMultiTouch(gesturePointersRef.current)) {
-        yieldToPinch(event);
-        return;
-      }
+      const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: event.clientX, y: event.clientY });
+      if (verdict.kind === "pinchBegin") yieldToPinch(event);
+      if (verdict.kind !== "single") return;
       if (event.button !== 0) return;
       if (relocateMode && beginRelocateDrag(event)) return;
       if (world3dVolumeBrushCommits(volumeBrushMode, event.altKey)) {
@@ -7011,7 +7004,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       marqueeStartRef.current = start;
       setMarqueePath([start]);
     },
-    [beginRelocateDrag, dispatch, handleVoxelPlace, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, toLocalPoint, volumeBrushMode, voxelGroundOriginAt, yieldToPinch],
+    [beginRelocateDrag, dispatch, gestureRecognizer, handleVoxelPlace, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, toLocalPoint, volumeBrushMode, voxelGroundOriginAt, yieldToPinch],
   );
 
   const handlePointerMove = useCallback(
@@ -7027,8 +7020,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       } else {
         publishWorldPresenceView(cameraState.target as [number, number, number], cameraState.position as [number, number, number]);
       }
-      gesturePointersRef.current = gesturePointerMove(gesturePointersRef.current, { pointerId: event.pointerId, x: event.clientX, y: event.clientY });
-      if (gestureIsMultiTouch(gesturePointersRef.current)) return;
+      if (gestureRecognizer.move({ pointerId: event.pointerId, x: event.clientX, y: event.clientY }).kind !== "single") return;
       if (updateRelocateDrag(event)) return;
       if (volumeBrushMode) setVoxelHoverOrigin(voxelGroundOriginAt(event.clientX, event.clientY));
       if (selection.engagementSessionActive && hostRef.current && cameraRef.current) {
@@ -7057,7 +7049,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
       setMarqueePath((path) => [...path, local]);
     },
-    [cameraState.position, cameraState.target, dispatch, marqueeDown, node.surfaceId, publishWorldPresenceView, selection.engagementSessionActive, toLocalPoint, updateRelocateDrag, volumeBrushMode, voxelGroundOriginAt],
+    [gestureRecognizer, cameraState.position, cameraState.target, dispatch, marqueeDown, node.surfaceId, publishWorldPresenceView, selection.engagementSessionActive, toLocalPoint, updateRelocateDrag, volumeBrushMode, voxelGroundOriginAt],
   );
 
   const finalizeMarqueeSelection = useCallback(() => {
@@ -7104,14 +7096,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handlePointerUp = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      const wasMultiTouch = gestureIsMultiTouch(gesturePointersRef.current);
-      gesturePointersRef.current = gesturePointerUp(gesturePointersRef.current, event.pointerId);
+      const verdict = gestureRecognizer.up(event.pointerId);
       if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
-      // 🤏️ Lifting the second finger ENDS the pinch; the finger still down must not resume the
-      // single-pointer lane mid-gesture, so the whole release is swallowed.
-      if (wasMultiTouch) {
+      if (verdict.kind !== "single") {
         setMarqueePath([]);
         marqueeStartRef.current = null;
         return;
@@ -7164,7 +7153,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         handleConnectDragCancel();
       }
     },
-    [activeUtility, dispatch, endRelocateDrag, faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, handleInstancePointerDown, interactionDomainId, interactionGranularity, node.surfaceId, paintMode, paintStrokeActive, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, toLocalPoint],
+    [gestureRecognizer, activeUtility, dispatch, endRelocateDrag, faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, handleInstancePointerDown, interactionDomainId, interactionGranularity, node.surfaceId, paintMode, paintStrokeActive, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, toLocalPoint],
   );
 
   useEffect(() => {

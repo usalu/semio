@@ -26,11 +26,11 @@ import {
   type ContextMenuItem,
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import { type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type MergeMode, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
+import { GestureRecognizer, type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type MergeMode, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type RasterWasmSession, createRasterSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `Canvas2dHost`/`🟦️Interpreter` already landed in a prior batch.
-import { type CanvasCamera, worldToScreenLogical, wheelCameraAtScreen } from "../📐️Canvas2dHost/🟦️.tsx";
+import { type CanvasCamera, canvasPinchCamera, worldToScreenLogical, wheelCameraAtScreen } from "../📐️Canvas2dHost/🟦️.tsx";
 import { WindowInstanceIdContext, world3dHoverActionArgs, world3dSelectionActionArgs } from "../🌐️World3dHost/🟦️.tsx";
 import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 
@@ -195,6 +195,12 @@ type Paint2dMarqueeOverlay =
 //#endregion Paint2dMarqueeOverlay
 
 //#region Paint2dCanvasSurface
+/** 🪜️ The paint surface's root class. `isolate` keeps this host's own layer numbers — the navigator frame at
+ * `z-20`, the full-bleed pointer overlay at `z-30` — inside its own stacking context, so they can never paint over
+ * the window chrome or a floating pane beside it. Without it the `z-30` overlay hit-tested above both raster
+ * windows' `Actions` chips inside `s` (ticket 26/09/23 S15); same law as `NODE_GRAPH_HOST_CLASS`. */
+export const PAINT_2D_HOST_CLASS = "semio-paint-2d-canvas-surface isolate relative h-full min-h-[24rem] w-full ui-surface";
+
 function Paint2dCanvasSurface({
   node,
   scene,
@@ -471,10 +477,30 @@ function Paint2dCanvasSurface({
   //#endregion Marquee
 
   //#region Pointer
+  const [gestureRecognizer] = useState(() => new GestureRecognizer());
+  const containerSize = useCallback((): { readonly width: number; readonly height: number } => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    return { width: rect?.width ?? 0, height: rect?.height ?? 0 };
+  }, []);
+
   const onPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const point = clientPoint(event);
       const session = sessionRef.current;
+      const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: point.x, y: point.y });
+      if (verdict.kind === "pinchBegin") {
+        panRef.current = null;
+        marqueeRef.current = { tracking: false, active: false, start: point, points: [] };
+        setMarqueeOverlay(null);
+        pickInteraction.onCanvasPointerLeave();
+        for (const tracked of gestureRecognizer.pointers) event.currentTarget.setPointerCapture(tracked.pointerId);
+        if (!isNavigator && session) {
+          session.pointerCancelScreen();
+          session.renderFrame();
+        }
+        return;
+      }
+      if (verdict.kind !== "single") return;
       if (event.button === 1) {
         if (isNavigator) panRef.current = { last: point };
         else session?.pointerDownScreen(point.x, point.y, event.button);
@@ -490,13 +516,29 @@ function Paint2dCanvasSurface({
       session.pointerDownScreen(point.x, point.y, event.button);
       session.renderFrame();
     },
-    [clientPoint, isNavigator, pickInteraction, scene.activeUtility, selectionMethod],
+    [clientPoint, gestureRecognizer, isNavigator, pickInteraction, scene.activeUtility, selectionMethod],
   );
 
   const onPointerMove = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const point = clientPoint(event);
       const session = sessionRef.current;
+      const verdict = gestureRecognizer.move({ pointerId: event.pointerId, x: point.x, y: point.y });
+      if (verdict.kind === "pinch") {
+        if (isNavigator) {
+          const contentViewport = parsePaint2dViewport(scene.compositeViewportJson) ?? { width: 800, height: 600 };
+          dispatch("setCamera", { camera: canvasPinchCamera(parsePaint2dCameraJson(scene.cameraJson), verdict.step, contentViewport.width, contentViewport.height) });
+          return;
+        }
+        if (!session) return;
+        const size = containerSize();
+        const next = canvasPinchCamera(parsePaint2dCameraJson(session.cameraJson()), verdict.step, size.width, size.height);
+        session.setCamera(next.x, next.y, next.zoom);
+        cameraRef.current = next;
+        session.renderFrame();
+        return;
+      }
+      if (verdict.kind !== "single") return;
       const pan = panRef.current;
       if (pan) {
         if (isNavigator) {
@@ -533,7 +575,7 @@ function Paint2dCanvasSurface({
       }
       session.renderFrame();
     },
-    [clientPoint, dispatch, isNavigator, pickInteraction, scene.activeUtility, scene.cameraJson, selectionMethod, updateMarqueeOverlay],
+    [clientPoint, containerSize, dispatch, gestureRecognizer, isNavigator, pickInteraction, scene.activeUtility, scene.cameraJson, scene.compositeViewportJson, selectionMethod, updateMarqueeOverlay],
   );
 
   const onPointerUp = useCallback(
@@ -541,6 +583,9 @@ function Paint2dCanvasSurface({
       const point = clientPoint(event);
       const session = sessionRef.current;
       if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+      const verdict = gestureRecognizer.up(event.pointerId);
+      if (verdict.kind === "pinchEnd" && !isNavigator) dispatch("setCamera", { camera: cameraRef.current });
+      if (verdict.kind !== "single") return;
       if (panRef.current) {
         panRef.current = null;
         return;
@@ -562,13 +607,16 @@ function Paint2dCanvasSurface({
       session.pointerUpScreen(point.x, point.y);
       session.renderFrame();
     },
-    [clientPoint, commitMarqueeSelection, isNavigator, pickInteraction, scene.activeUtility],
+    [clientPoint, commitMarqueeSelection, dispatch, gestureRecognizer, isNavigator, pickInteraction, scene.activeUtility],
   );
 
   const onPointerCancel = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const session = sessionRef.current;
       if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+      const verdict = gestureRecognizer.up(event.pointerId);
+      if (verdict.kind === "pinchEnd" && !isNavigator) dispatch("setCamera", { camera: cameraRef.current });
+      if (verdict.kind !== "single") return;
       panRef.current = null;
       marqueeRef.current = { tracking: false, active: false, start: { x: 0, y: 0 }, points: [] };
       setMarqueeOverlay(null);
@@ -577,7 +625,7 @@ function Paint2dCanvasSurface({
       session.pointerCancelScreen();
       session.renderFrame();
     },
-    [isNavigator, pickInteraction],
+    [dispatch, gestureRecognizer, isNavigator, pickInteraction],
   );
 
   const onWheel = useCallback(
@@ -645,7 +693,7 @@ function Paint2dCanvasSurface({
   //#endregion Pointer
 
   return (
-    <div ref={containerRef} className="semio-paint-2d-canvas-surface relative h-full min-h-[24rem] w-full ui-surface" data-level="base" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode} data-layers-json={paintWitness.layersJson} data-assets-json={paintWitness.assetsJson}>
+    <div ref={containerRef} className={PAINT_2D_HOST_CLASS} data-level="base" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode} data-layers-json={paintWitness.layersJson} data-assets-json={paintWitness.assetsJson}>
       <Paint2dWasmCanvas sessionFactory={sessionFactory} onSessionReady={onSessionReady} />
       {attachError ? (
         <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
@@ -656,7 +704,7 @@ function Paint2dCanvasSurface({
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
       {isNavigator && overlayRect ? <div className="pointer-events-none absolute z-20 border-2 border-accent" style={{ left: overlayRect.x, top: overlayRect.y, width: overlayRect.width, height: overlayRect.height }} /> : null}
       <div
-        className="absolute inset-0 z-30"
+        className="absolute inset-0 z-30 touch-none"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

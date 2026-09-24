@@ -65,7 +65,7 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineMutation
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Line", "Linie setzen")
+        protocol::LocalizedLabel::native("Set Line", "Zeile setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-line".to_string()]

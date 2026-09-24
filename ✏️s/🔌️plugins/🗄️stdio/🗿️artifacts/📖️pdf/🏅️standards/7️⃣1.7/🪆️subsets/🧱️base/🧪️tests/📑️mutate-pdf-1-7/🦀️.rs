@@ -37,7 +37,7 @@
 //! full, and repeated in this case's feature description.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pdf_1_7, regenerates_page_content, without_content_operators, KINDS, UNOBSERVABLE};
+use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pdf_1_7, regenerates_page_content, without_content_operators, UNOBSERVABLE};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Input
@@ -111,7 +111,7 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{mutable_input, KINDS, PDF_TOLERANCE, PDF_WRITER_FREEDOM};
+    use super::{mutable_input, PDF_TOLERANCE, PDF_WRITER_FREEDOM};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::UNOBSERVABLE;
@@ -278,28 +278,19 @@ mod subject {
     }
     //#endregion 🔖️Handlers
 
-    /// 🧭️ Re-exported so `super::adapter()` can register the same 16-kind sweep for the subject role
-    /// without duplicating `KINDS` a third time.
-    pub const SUBJECT_KINDS: &[&str] = KINDS;
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 16 kinds -- the scenario id only selects which fixture row's
-/// `<id>`/`<params>` doc string the shared handler reads, per `Adapter::oracle`/`subject`'s own
-/// per-scenario dispatch table.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-    }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        for kind in subject::SUBJECT_KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

@@ -100,8 +100,9 @@
           "capability": "sequence-1-step-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-step-collapsed",
@@ -128,7 +129,8 @@
           "capability": "sequence-1-step-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-step",
@@ -214,8 +216,9 @@
           "capability": "sequence-1-step-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "edit-step-params",
@@ -243,8 +246,9 @@
           "capability": "sequence-1-step-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-step",

@@ -116,7 +116,7 @@ impl ArtifactEditor for Din18599PlayApp {
         command.command_id()
     }
 
-    semio_s_artifact_norm_contract::norm_command_from_action!(Din18599Command, text);
+    semio_s_artifact_norm_contract::norm_command_from_action!(Din18599Command, text, crate::standards::v1::subsets::any::schema::snapshot::decode_din18599_snapshot_json);
 
     fn handle(
         command: &Din18599Command,

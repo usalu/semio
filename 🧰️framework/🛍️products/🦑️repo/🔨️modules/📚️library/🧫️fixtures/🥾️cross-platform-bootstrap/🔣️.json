@@ -1,0 +1,57 @@
+{
+  "pathBudget": {
+    "unit": "utf16",
+    "windowsMaxPath": 260,
+    "cloneRootMax": 20,
+    "componentMax": 255
+  },
+  "scriptEncoding": {
+    "bomExtensions": [".ps1", ".psm1", ".psd1"],
+    "lfExtensions": [".sh"],
+    "excludedPrefixes": [".🧬semio/🦑️repo/🎫️tickets/"]
+  },
+  "cargoLinker": {
+    "config": ".cargo/config.toml",
+    "linuxTable": "cfg(all(target_os = \"linux\", target_env = \"gnu\"))",
+    "linuxRustflags": ["-Z", "threads=8", "-C", "linker-features=+lld", "-C", "link-self-contained=+linker", "-Z", "unstable-options"],
+    "forbiddenRustflagFragments": ["fuse-ld="]
+  },
+  "repoLocalGitConfig": [
+    ["core.symlinks", "true"],
+    ["core.longpaths", "true"]
+  ],
+  "unixBootstrap": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+    "packageManagers": ["apt-get", "dnf", "pacman", "zypper"],
+    "requiredTools": ["cc", "c++", "make", "cmake", "ninja", "pkg-config", "curl", "git", "unzip"],
+    "forbidden": ["git config --global", ".cargo/config.toml", "fuse-ld", "mold"]
+  },
+  "windowsBootstrap": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
+    "required": ["LongPathsEnabled", "[en]", "[de]", "\"toolchain\", \"install\"", "[Console]::OutputEncoding"],
+    "forbidden": ["git config --global", "\"config.toml\"", "\"target\", \"add\""]
+  },
+  "nodePin": {
+    "manifest": "package.json",
+    "dockerfile": ".devcontainer/Dockerfile",
+    "dockerfileArg": "NODE_VERSION"
+  },
+  "workspaceManifests": {
+    "rootManifest": "package.json"
+  },
+  "freshClone": {
+    "bootstrapSources": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🌱️sources/🔣️.json",
+    "bootstrapSourcesSchema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🌱️sources/🛂️schema/🔣️.json",
+    "entries": [
+      "📜️script.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔏️inputs/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts"
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "operation": "setLayerStrokeScale",
+  "layerId": "parcels",
+  "value": 2.5
+}

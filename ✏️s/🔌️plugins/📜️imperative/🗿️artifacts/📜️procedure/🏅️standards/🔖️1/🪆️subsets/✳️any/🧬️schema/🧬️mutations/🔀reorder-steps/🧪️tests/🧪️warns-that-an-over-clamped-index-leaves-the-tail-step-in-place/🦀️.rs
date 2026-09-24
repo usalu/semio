@@ -4,7 +4,7 @@
 //! `to_index.min(ids.len())`, then insert — and only mints a new `flow` handle when that list
 //! actually differs. This case drives the clamp: `step-3` is already last, and index `9` clamps
 //! back onto its own position, so the oracle short-circuits to a Warning `mutation.no-op` with an
-//! empty diff. A no-op is APPLIED with nothing to apply, never a rejection.
+//! empty diff. A no-op is a NO-OP with nothing to apply, never a rejection.
 //!
 //! 🕸️ `flow` is a content-addressed CHILD handle whose `Path` lives in `imperative`'s thread-local
 //! working-scene cache, so the committed `⬅️before` carries the handle and this file caches that
@@ -88,12 +88,12 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "reorder-steps/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place: committed reorderSteps JSON is not canonical");
 }
 
-/// 🎯️ A no-op is `applied` with a single Warning — `step-3` resolves, so this is never the Error
+/// 🎯️ A no-op is `no-op` with a single Warning — `step-3` resolves, so this is never the Error
 /// `mutation.target-missing` branch of the same oracle.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "reorder-steps/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place: a no-op is applied, not rejected");
+    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "reorder-steps/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place: a no-op is its own outcome class, not a rejection");
     let produced = built_outcome();
     assert_eq!(produced.worst_level(), Some(protocol::Severity::Warning), "reorder-steps/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place: an unchanged order is a Warning, never an Error");
     assert_eq!(produced.messages().len(), 1, "reorder-steps/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place: exactly one diagnostic is raised");

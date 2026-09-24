@@ -21,7 +21,7 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetSnapshot 
         agg_inverse(&Ifc2x3Cv20Mutation::SetSnapshot(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
+        protocol::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

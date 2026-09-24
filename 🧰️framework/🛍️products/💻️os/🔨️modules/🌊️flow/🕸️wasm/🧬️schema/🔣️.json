@@ -58,8 +58,8 @@
         },
         "operations": {
           "type": "object",
-          "minProperties": 108,
-          "maxProperties": 108,
+          "minProperties": 109,
+          "maxProperties": 109,
           "additionalProperties": {
             "type": "integer",
             "minimum": 2500,
@@ -90,8 +90,8 @@
         },
         "arguments": {
           "type": "object",
-          "minProperties": 108,
-          "maxProperties": 108,
+          "minProperties": 109,
+          "maxProperties": 109,
           "additionalProperties": {
             "type": "array",
             "maxItems": 8,

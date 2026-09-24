@@ -21,7 +21,7 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for SealRun {
         Vec::new()
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Seal run", "Siegellauf")
+        protocol::LocalizedLabel::native("Seal run", "Lauf versiegeln")
     }
     fn target(&self) -> Vec<String> {
         vec!["sealed".into()]

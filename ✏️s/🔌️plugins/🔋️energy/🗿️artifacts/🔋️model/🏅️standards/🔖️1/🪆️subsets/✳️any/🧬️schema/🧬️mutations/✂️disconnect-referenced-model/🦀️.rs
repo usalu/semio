@@ -30,7 +30,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Discon
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Disconnect the referenced model", "referenzierte Modell trennen")
+        protocol::LocalizedLabel::native("Disconnect the referenced model", "Referenziertes Modell trennen")
     }
 }
 //#endregion 🔖️Mutation

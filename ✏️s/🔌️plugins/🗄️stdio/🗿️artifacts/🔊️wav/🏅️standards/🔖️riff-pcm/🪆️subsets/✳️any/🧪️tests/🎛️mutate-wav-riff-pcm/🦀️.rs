@@ -15,10 +15,6 @@ use semio_s_plugin_stdio_test_oracle::law;
 //#region 🔖️Input
 const INPUT: &str = "shared://🎙️bauen-mit-bestand-ausschnitt/🔊️.wav";
 
-/// 🦠️ The catalog's own kinds (`../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🔣️oracle.json`),
-/// duplicated as a plain constant rather than reached through the subject crate — this loop drives
-/// oracle registration too, which must build and run with the subject crate absent entirely.
-const KINDS: &[&str] = &["set-snapshot", "set-fmt", "set-data", "set-other-chunks"];
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
@@ -225,17 +221,14 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registers by FULL expanded scenario id
-/// (`mutate-<kind>` / `inverse-<kind>`), never the outline's base id — a missing registration is a
-/// hard error, never a skip.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

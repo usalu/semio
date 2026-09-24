@@ -24,7 +24,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for EditStory {
         inverse_edit_story(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Edit story \"{}\"", self.id), &format!("Geschoss \"{}\" bearbeiten", self.id))
+        protocol::LocalizedLabel::native(&format!("Edit story \"{}\"", self.id), &format!("Textfluss \"{}\" bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

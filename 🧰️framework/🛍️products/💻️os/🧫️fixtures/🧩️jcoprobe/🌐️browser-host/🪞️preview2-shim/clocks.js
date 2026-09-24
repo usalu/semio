@@ -1,4 +1,21 @@
+import { checkedU64 } from "./common.js";
 import { pollableCreate } from "./io.js";
+const MAX_TIMEOUT_MS = 0x7fffffff;
+function timeout(durationNs) {
+    let remainingMs = Number((durationNs + 999999n) / 1000000n);
+    return new Promise((resolve) => {
+        const next = () => {
+            if (remainingMs <= 0) {
+                resolve();
+                return;
+            }
+            const delay = Math.min(remainingMs, MAX_TIMEOUT_MS);
+            remainingMs -= delay;
+            setTimeout(next, delay);
+        };
+        next();
+    });
+}
 export const monotonicClock = {
     resolution() {
         // usually we dont get sub-millisecond accuracy in the browser
@@ -10,17 +27,19 @@ export const monotonicClock = {
         return BigInt(Math.floor(performance.now() * 1e6));
     },
     subscribeInstant(instant) {
-        instant = BigInt(instant);
+        instant = checkedU64(instant, "instant");
         const now = monotonicClock.now();
         if (instant <= now) {
-            return pollableCreate(new Promise((resolve) => setTimeout(resolve, 0)));
+            return pollableCreate();
         }
         return monotonicClock.subscribeDuration(instant - now);
     },
     subscribeDuration(duration) {
-        duration = BigInt(duration);
-        const ms = duration <= 0n ? 0 : Number(duration / 1000000n);
-        return pollableCreate(new Promise((resolve) => setTimeout(resolve, ms)));
+        duration = checkedU64(duration, "duration");
+        if (duration === 0n) {
+            return pollableCreate();
+        }
+        return pollableCreate(timeout(duration));
     },
 };
 export const wallClock = {

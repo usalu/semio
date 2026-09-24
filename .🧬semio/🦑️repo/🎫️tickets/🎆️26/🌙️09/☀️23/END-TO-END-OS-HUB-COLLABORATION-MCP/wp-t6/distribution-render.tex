@@ -1,0 +1,57 @@
+\documentclass{article}
+\usepackage{semio-viz-charts-distribution}
+\begin{document}
+\SemioVizProbeOn
+\SemioVizProbeBegin{distribution-render}{all}
+\noindent barcode plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{strip}[data=demo-distribution,variant=barcode-plot,layout=barcode]\end{tikzpicture}\par
+\noindent bean plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{violin}[data=demo-distribution,variant=bean-plot,bean=true]\end{tikzpicture}\par
+\noindent beeswarm plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{strip}[data=demo-distribution,variant=beeswarm-plot,layout=beeswarm,radius=0.7]\end{tikzpicture}\par
+\noindent box plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{box}[data=demo-distribution,variant=box-plot,grouped=false]\end{tikzpicture}\par
+\noindent boxen plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{box}[data=demo-distribution,variant=boxen-plot,letter=4,grouped=true]\end{tikzpicture}\par
+\noindent circular histogram\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{histogram}[data=demo-distribution,variant=circular-histogram,coordinate=circular,bins=8]\end{tikzpicture}\par
+\noindent complementary cdf plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{ecdf}[data=demo-distribution,variant=complementary-cdf-plot,complementary=true,step=true]\end{tikzpicture}\par
+\noindent concentration curve\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{quantile}[data=demo-distribution,variant=concentration-curve,kind=concentration,reference=false]\end{tikzpicture}\par
+\noindent cumulative density plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{density}[data=demo-distribution,variant=cumulative-density-plot,cumulative=true,filled=true]\end{tikzpicture}\par
+\noindent cumulative histogram\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{histogram}[data=demo-distribution,variant=cumulative-histogram,cumulative=true,bins=10]\end{tikzpicture}\par
+\noindent density histogram\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{histogram}[data=demo-distribution,variant=density-histogram,density=true,bins=10]\end{tikzpicture}\par
+\noindent density ridge plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{density}[data=demo-distribution,variant=density-ridge-plot,ridgeline=true,offset=6]\end{tikzpicture}\par
+\noindent dot density plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{strip}[data=demo-distribution,variant=dot-density-plot,layout=dot-density]\end{tikzpicture}\par
+\noindent empirical cdf plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{ecdf}[data=demo-distribution,variant=empirical-cdf-plot,step=true]\end{tikzpicture}\par
+\noindent filled density plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{density}[data=demo-distribution,variant=filled-density-plot,filled=true,samples=48]\end{tikzpicture}\par
+\noindent frequency polygon\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{density}[data=demo-distribution,variant=frequency-polygon,samples=12,bandwidth=0.6]\end{tikzpicture}\par
+\noindent grouped box plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{box}[data=demo-distribution,variant=grouped-box-plot,grouped=true]\end{tikzpicture}\par
+\noindent grouped histogram\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{histogram}[data=demo-distribution,variant=grouped-histogram,mode=grouped,bins=8]\end{tikzpicture}\par
+\noindent grouped violin plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{violin}[data=demo-distribution,variant=grouped-violin-plot,box=true]\end{tikzpicture}\par
+\noindent half violin plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{violin}[data=demo-distribution,variant=half-violin-plot,half=true]\end{tikzpicture}\par
+\noindent histogram\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{histogram}[data=demo-distribution,variant=histogram,bins=10]\end{tikzpicture}\par
+\noindent horizontal box plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{box}[data=demo-distribution,variant=horizontal-box-plot,orient=horizontal,grouped=false]\end{tikzpicture}\par
+\noindent jitter plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{strip}[data=demo-distribution,variant=jitter-plot,layout=jitter,jitter=2]\end{tikzpicture}\par
+\noindent joyplot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{density}[data=demo-distribution,variant=joyplot,ridgeline=true,offset=5,filled=true,samples=32]\end{tikzpicture}\par
+\noindent kernel density estimate plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{density}[data=demo-distribution,variant=kernel-density-estimate-plot,samples=48]\end{tikzpicture}\par
+\noindent letter value plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{box}[data=demo-distribution,variant=letter-value-plot,letter=3,grouped=true]\end{tikzpicture}\par
+\noindent lorenz curve\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{quantile}[data=demo-distribution,variant=lorenz-curve,kind=lorenz]\end{tikzpicture}\par
+\noindent multiple kde plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{density}[data=demo-distribution,variant=multiple-kde-plot,multiple=true,samples=40]\end{tikzpicture}\par
+\noindent notched box plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{box}[data=demo-distribution,variant=notched-box-plot,notched=true,grouped=true]\end{tikzpicture}\par
+\noindent overlaid histogram\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{histogram}[data=demo-distribution,variant=overlaid-histogram,mode=overlaid,bins=8]\end{tikzpicture}\par
+\noindent p p plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{quantile}[data=demo-distribution,variant=p-p-plot,kind=pp]\end{tikzpicture}\par
+\noindent probability plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{quantile}[data=demo-distribution,variant=probability-plot,kind=probability,reference=false]\end{tikzpicture}\par
+\noindent q q plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{quantile}[data=demo-distribution,variant=q-q-plot,kind=qq]\end{tikzpicture}\par
+\noindent quantile dot plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{quantile}[data=demo-distribution,variant=quantile-dot-plot,kind=dotplot,quantiledots=20]\end{tikzpicture}\par
+\noindent quantile plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{quantile}[data=demo-distribution,variant=quantile-plot,kind=quantile,steps=20]\end{tikzpicture}\par
+\noindent raincloud plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{violin}[data=demo-distribution,variant=raincloud-plot,raincloud=true]\end{tikzpicture}\par
+\noindent relative frequency histogram\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{histogram}[data=demo-distribution,variant=relative-frequency-histogram,relative=true,bins=10]\end{tikzpicture}\par
+\noindent ridgeline plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{density}[data=demo-distribution,variant=ridgeline-plot,ridgeline=true,offset=8,filled=true]\end{tikzpicture}\par
+\noindent rug plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{strip}[data=demo-distribution,variant=rug-plot,layout=rug]\end{tikzpicture}\par
+\noindent sina plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{strip}[data=demo-distribution,variant=sina-plot,layout=sina]\end{tikzpicture}\par
+\noindent split violin plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{violin}[data=demo-distribution,variant=split-violin-plot,split=true]\end{tikzpicture}\par
+\noindent stack dot plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{strip}[data=demo-distribution,variant=stack-dot-plot,layout=stack-dot,radius=0.9]\end{tikzpicture}\par
+\noindent stacked histogram\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{histogram}[data=demo-distribution,variant=stacked-histogram,mode=stacked,bins=8]\end{tikzpicture}\par
+\noindent stem and leaf plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{stem-leaf}[data=demo-distribution,variant=stem-and-leaf-plot,unit=1]\end{tikzpicture}\par
+\noindent stem plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{stem-leaf}[data=demo-distribution,variant=stem-plot,stemplot=true]\end{tikzpicture}\par
+\noindent strip plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{strip}[data=demo-distribution,variant=strip-plot,layout=strip]\end{tikzpicture}\par
+\noindent swarm plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{strip}[data=demo-distribution,variant=swarm-plot,layout=beeswarm,radius=0.9]\end{tikzpicture}\par
+\noindent variable width box plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{box}[data=demo-distribution,variant=variable-width-box-plot,varwidth=true,grouped=true]\end{tikzpicture}\par
+\noindent variable width histogram\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{histogram}[data=demo-distribution,variant=variable-width-histogram,variablewidth=true,bins=6]\end{tikzpicture}\par
+\noindent violin plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{violin}[data=demo-distribution,variant=violin-plot]\end{tikzpicture}\par
+\noindent wilkinson dot plot\par\begin{tikzpicture}[x=1mm,y=1mm]\SemioVizRunFamily{strip}[data=demo-distribution,variant=wilkinson-dot-plot,layout=stack-dot,radius=0.7]\end{tikzpicture}\par
+\end{document}

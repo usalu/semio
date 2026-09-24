@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeFYk {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change f yk to {:?}", self.new_f_yk), &format!("Fyk auf {:?} ändern", self.new_f_yk))
+        protocol::LocalizedLabel::native(&format!("Change reinforcement yield strength f_yk to {:?}", self.new_f_yk), &format!("Streckgrenze der Bewehrung f_yk auf {:?} ändern", self.new_f_yk))
     }
 }
 //#endregion 🔖️ChangeFYk

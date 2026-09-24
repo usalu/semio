@@ -78,6 +78,35 @@
       }
     },
 
+    "TrustedDescriptorOpenTargetV1": {
+      "description": "One document-open surface a verified descriptor declares for one of its artifact kinds, before a codec binds its pack fingerprint: an editor or viewer app opens a kind it declares itself, or a plugin-level kind its own dialect names, in its first window kind. TrustedBundleOpenTargetV1 without packSchemaHash.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "artifactSchema", "surfaceId", "appId", "windowKindId", "role", "rendererTarget", "parentDialect", "grant"],
+      "properties": {
+        "artifactKind": { "$ref": "#/$defs/identity" },
+        "artifactSchema": { "$ref": "#/$defs/identity" },
+        "surfaceId": { "$ref": "#/$defs/identity" },
+        "appId": { "$ref": "#/$defs/identity" },
+        "windowKindId": { "$ref": "#/$defs/identity" },
+        "role": { "enum": ["viewer", "editor"] },
+        "rendererTarget": { "enum": ["react", "wgpu", "wasm"] },
+        "parentDialect": { "$ref": "#/$defs/TrustedBundleParentDialectV1" },
+        "grant": { "$ref": "#/$defs/TrustedBundleGrantV1" }
+      }
+    },
+
+    "TrustedCatalogDescriptorOpenTargetsV1": {
+      "description": "What `os-hub trusted-catalog open-targets` answers for one package descriptor read from stdin: every surface the hub's own pairing rule admits, in descriptor app order.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "targets"],
+      "properties": {
+        "schema": { "const": "semio.hub.trusted-catalog-descriptor-open-targets/v1" },
+        "targets": { "type": "array", "maxItems": 1024, "items": { "$ref": "#/$defs/TrustedDescriptorOpenTargetV1" } }
+      }
+    },
+
     "TrustedBundleFileV1": {
       "type": "object",
       "additionalProperties": false,
@@ -136,10 +165,58 @@
       ]
     },
 
+    "TrustedPluginModulePathV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?:(?!\\.{1,2}/)[^/\\\\\\u0000-\\u001f\\u007f?#%]+/){0,15}(?!\\.{1,2}$)[^/\\\\\\u0000-\\u001f\\u007f?#%]+$"
+    },
+
+    "TrustedPluginModuleFileV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "byteLength", "sha256", "blake3"],
+      "properties": {
+        "path": { "$ref": "#/$defs/TrustedPluginModulePathV1" },
+        "byteLength": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+        "sha256": { "$ref": "#/$defs/digest" },
+        "blake3": { "$ref": "#/$defs/digest" }
+      }
+    },
+
+    "TrustedPluginModuleBundleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "pluginId", "packageId", "version", "sourceComponentSha256", "sourceDescriptorByteSha256", "moduleDirectory", "entry", "files"],
+      "properties": {
+        "schema": { "const": "semio.hub.trusted-plugin-module/v1" },
+        "pluginId": { "$ref": "#/$defs/identity" },
+        "packageId": { "$ref": "#/$defs/identity" },
+        "version": { "$ref": "#/$defs/identity" },
+        "sourceComponentSha256": { "$ref": "#/$defs/digest" },
+        "sourceDescriptorByteSha256": { "$ref": "#/$defs/digest" },
+        "moduleDirectory": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?!\\.{1,2}$)[^/\\\\\\u0000-\\u001f\\u007f?#%]+$" },
+        "entry": { "$ref": "#/$defs/TrustedPluginModulePathV1" },
+        "files": { "type": "array", "minItems": 3, "maxItems": 256, "items": { "$ref": "#/$defs/TrustedPluginModuleFileV1" } }
+      }
+    },
+
+    "TrustedBundlePluginModuleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "byteLength", "sha256", "blake3"],
+      "properties": {
+        "path": { "$ref": "#/$defs/relativePath" },
+        "byteLength": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "sha256": { "$ref": "#/$defs/digest" },
+        "blake3": { "$ref": "#/$defs/digest" }
+      }
+    },
+
     "TrustedBundlePackageV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "version", "role", "dependencies", "component", "descriptor", "executionProtocol", "browserActor", "nativeCodecs", "openTargets"],
+      "required": ["pluginId", "packageId", "version", "role", "dependencies", "component", "descriptor", "executionProtocol", "browserActor", "pluginModule", "nativeCodecs", "openTargets"],
       "properties": {
         "pluginId": { "$ref": "#/$defs/identity" },
         "packageId": { "$ref": "#/$defs/identity" },
@@ -150,6 +227,7 @@
         "component": { "$ref": "#/$defs/TrustedBundleComponentV1" },
         "descriptor": { "$ref": "#/$defs/TrustedBundleFileV1" },
         "browserActor": { "$ref": "#/$defs/TrustedBundleBrowserActorV1" },
+        "pluginModule": { "$ref": "#/$defs/TrustedBundlePluginModuleV1" },
         "nativeCodecs": { "type": "array", "maxItems": 16384, "items": { "$ref": "#/$defs/TrustedBundleCodecV1" } },
         "openTargets": { "type": "array", "maxItems": 1024, "items": { "$ref": "#/$defs/TrustedBundleOpenTargetV1" } }
       }
@@ -183,7 +261,7 @@
       "additionalProperties": false,
       "required": ["schemaVersion", "profiles", "packages"],
       "properties": {
-        "schemaVersion": { "const": 2 },
+        "schemaVersion": { "const": 3 },
         "profiles": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "$ref": "#/$defs/TrustedBundleProfileV1" } },
         "packages": { "type": "array", "minItems": 1, "maxItems": 4096, "items": { "$ref": "#/$defs/TrustedBundlePackageV1" } }
       }
@@ -228,6 +306,36 @@
         "publicationRevision": { "$ref": "#/$defs/publicationRevision" },
         "currentSha256": { "$ref": "#/$defs/digest" },
         "outcome": { "enum": ["durable", "replaced-unconfirmed"] }
+      }
+    },
+
+    "TrustedPluginModuleIndexEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "packageId", "version", "componentSha256", "descriptorByteSha256", "dependencies", "dialectArtifactKinds", "extendsPluginId", "bundleSha256", "bundleByteLength", "entry"],
+      "properties": {
+        "pluginId": { "$ref": "#/$defs/identity" },
+        "packageId": { "$ref": "#/$defs/identity" },
+        "version": { "$ref": "#/$defs/identity" },
+        "componentSha256": { "$ref": "#/$defs/digest" },
+        "descriptorByteSha256": { "$ref": "#/$defs/digest" },
+        "dependencies": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "$ref": "#/$defs/identity" } },
+        "dialectArtifactKinds": { "type": "array", "maxItems": 1024, "uniqueItems": true, "items": { "$ref": "#/$defs/identity" } },
+        "extendsPluginId": { "description": "The plugin an extension package extends (one of its dependencies); null for a plugin.", "anyOf": [{ "$ref": "#/$defs/identity" }, { "type": "null" }] },
+        "bundleSha256": { "$ref": "#/$defs/digest" },
+        "bundleByteLength": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "entry": { "$ref": "#/$defs/TrustedPluginModulePathV1" }
+      }
+    },
+
+    "TrustedPluginModuleIndexV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "generationId", "modules"],
+      "properties": {
+        "schema": { "const": "semio.hub.trusted-plugin-module-index/v1" },
+        "generationId": { "$ref": "#/$defs/digest" },
+        "modules": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/TrustedPluginModuleIndexEntryV1" } }
       }
     }
   }

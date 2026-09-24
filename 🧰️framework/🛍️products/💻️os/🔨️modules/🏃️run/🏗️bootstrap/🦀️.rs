@@ -40,16 +40,14 @@ impl FileMediaCache {
 impl MediaCache for FileMediaCache {
     fn get(&self, fingerprint: &MediaFingerprint) -> Option<Media> {
         let text = std::fs::read_to_string(self.entry_path(fingerprint)).ok()?;
-        serde_json::from_str(&text).ok()
+        protocol::os_pack::json::from_json_str(&text).ok()
     }
 
     fn put(&mut self, fingerprint: &MediaFingerprint, media: &Media) {
         if std::fs::create_dir_all(&self.root).is_err() {
             return;
         }
-        if let Ok(text) = serde_json::to_string(media) {
-            let _ = std::fs::write(self.entry_path(fingerprint), text);
-        }
+        let _ = std::fs::write(self.entry_path(fingerprint), protocol::os_pack::json::to_json_string(media));
     }
 }
 //#endregion 🔖️FileMediaCache

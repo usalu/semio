@@ -1,0 +1,24 @@
+{
+  "lodMode": "coarse",
+  "showMode": "wireframe",
+  "camera": {
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
+  },
+  "previewCamera": {
+    "position": [
+      6.0,
+      6.0,
+      6.0
+    ],
+    "target": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "fov": 45.0
+  },
+  "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+  "selectedGenerationId": null
+}

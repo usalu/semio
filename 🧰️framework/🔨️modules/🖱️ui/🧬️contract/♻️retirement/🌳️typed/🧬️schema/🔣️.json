@@ -45,7 +45,9 @@
             "treeItem",
             "image",
             "extension",
-            "surface"
+            "surface",
+            "table",
+            "tableRow"
           ]
         },
         "patchVariants": {

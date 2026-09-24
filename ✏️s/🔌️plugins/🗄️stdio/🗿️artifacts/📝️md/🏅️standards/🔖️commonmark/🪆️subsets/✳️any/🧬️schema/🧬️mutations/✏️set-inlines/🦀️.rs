@@ -23,7 +23,7 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for SetInlines {
         agg_inverse(&MdMutation::SetInlines(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-inlines", "Inlines setzen")
+        protocol::LocalizedLabel::native("Set inlines", "Inline-Elemente setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

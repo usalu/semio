@@ -1627,6 +1627,90 @@ impl From<TreeItemBuilder> for BuiltNode {
 }
 //#endregion 🌲️Tree
 
+//#region 📊️Table
+/// 📊️ A column-headed data table — `Component::Table`. Its rows are [`table_row`] children. Build with
+/// [`table`].
+pub struct TableBuilder {
+    base: NodeBase,
+    label: crate::Label,
+    columns: crate::UiFixedList<crate::Label>,
+    actions_label: Option<crate::Label>,
+    window: Option<crate::TreeWindow>,
+}
+
+/// 📊️ A table named `label` whose header reads `columns`. Its accessible name defaults to `label`.
+pub fn table(label: crate::Label, columns: crate::UiFixedList<crate::Label>) -> TableBuilder {
+    let mut base = NodeBase::stack(crate::Axis::Vertical);
+    base.accessibility.label = Some(label.clone());
+    TableBuilder { base, label, columns, actions_label: None, window: None }
+}
+
+impl TableBuilder {
+    /// 🎬️ Names the trailing actions column.
+    pub fn actions_label(mut self, label: crate::Label) -> Self {
+        self.actions_label = Some(label);
+        self
+    }
+
+    /// 🪟️ Declares which slice of the logical row list the built rows actually are — see
+    /// [`crate::TreeWindow`].
+    pub fn window(mut self, window: crate::TreeWindow) -> Self {
+        self.window = Some(window);
+        self
+    }
+}
+
+impl HasBase for TableBuilder {
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+impl HasChildren for TableBuilder {}
+impl HasStackLayout for TableBuilder {}
+
+impl From<TableBuilder> for BuiltNode {
+    fn from(builder: TableBuilder) -> Self {
+        assemble(builder.base, crate::Component::Table(crate::TableProps { label: builder.label, columns: builder.columns, actions_label: builder.actions_label, window: builder.window }))
+    }
+}
+
+/// 📊️ One table row — `Component::TableRow`. Cells and row actions are props, never child records.
+/// Build with [`table_row`].
+pub struct TableRowBuilder {
+    base: NodeBase,
+    cells: crate::UiFixedList<crate::UiText>,
+    row_actions: crate::UiFixedList<crate::RowAction>,
+}
+
+/// 📊️ A table row reading `cells`, positional to its table's columns.
+pub fn table_row(cells: crate::UiFixedList<crate::UiText>) -> TableRowBuilder {
+    TableRowBuilder { base: NodeBase::stack(crate::Axis::Horizontal), cells, row_actions: crate::UiFixedList::default() }
+}
+
+impl TableRowBuilder {
+    /// 🎬️ Appends one row action.
+    #[expect(clippy::result_large_err, reason = "A full row-action list returns its builder and original action owner for caller-directed retirement.")]
+    pub fn try_row_action(mut self, row_action: crate::RowAction) -> Result<Self, (Self, crate::RowAction)> {
+        match self.row_actions.try_push(row_action) {
+            Ok(()) => Ok(self),
+            Err(row_action) => Err((self, row_action)),
+        }
+    }
+}
+
+impl HasBase for TableRowBuilder {
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<TableRowBuilder> for BuiltNode {
+    fn from(builder: TableRowBuilder) -> Self {
+        assemble(builder.base, crate::Component::TableRow(crate::TableRowProps { cells: builder.cells, row_actions: builder.row_actions }))
+    }
+}
+//#endregion 📊️Table
+
 //#region 🖼️Image
 /// 🖼️ Typestate marker: [`ImageBuilder::alt`]/[`ImageBuilder::decorative`] not yet called. An
 /// `ImageBuilder<NoAlt>` has no `build()` at all — there is no inherent `build` on this state, and the

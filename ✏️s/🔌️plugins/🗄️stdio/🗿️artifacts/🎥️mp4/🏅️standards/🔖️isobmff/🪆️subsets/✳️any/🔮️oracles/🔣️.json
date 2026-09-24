@@ -84,7 +84,8 @@
           "capability": "mp4-isobmff-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-sample",
@@ -103,7 +104,8 @@
           "capability": "mp4-isobmff-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-track",
@@ -122,7 +124,8 @@
           "capability": "mp4-isobmff-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-sample",
@@ -141,7 +144,8 @@
           "capability": "mp4-isobmff-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-track",
@@ -179,7 +183,8 @@
           "capability": "mp4-isobmff-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-sample-sync",
@@ -217,7 +222,8 @@
           "capability": "mp4-isobmff-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-track-codec",
@@ -236,7 +242,8 @@
           "capability": "mp4-isobmff-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-track-dimensions",

@@ -13,37 +13,20 @@ use semio_framework_plugin::{ArtifactView, ArtifactViewer, ComponentTree, Config
 use store::EngineHandles;
 
 //#region 🔖️Command
-/// 👁️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: the viewer's config now
-/// carries the folded hub directory read model (`HomeConfig`, shared with the editor — see
-/// `HomeViewer::Config` below), so this Home viewer session ALSO needs to receive folded directory
-/// events when it is the currently-mounted session (contract §C6: the shell's directory lane folds into
-/// whichever session is mounted, editor or viewer). `Noop` stays the `Default` variant
-/// (`assert_viewer_never_mutates` requires `Command: Default` and only ever dispatches the default).
+/// 👁️ The read-only Home surface accepts no command: its directory projection is written only by the
+/// editor's sealed-page lane (`applyDirectoryEventPage`), which the viewer renders but never advances.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub enum HomeViewCommand {
     #[default]
     Noop,
-    /// 📇️ Mirrors the editor's `fold-directory-events` command — a config-only fold, never an
-    /// artifact/draft mutation (structurally impossible here: `ViewEmit` has no such field).
-    FoldDirectoryEvents { events_json: String },
 }
 
 impl protocol::OpBinary for HomeViewCommand {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        match self {
-            HomeViewCommand::Noop => Ok(vec![0]),
-            HomeViewCommand::FoldDirectoryEvents { events_json } => {
-                let mut out = vec![1u8];
-                out.extend_from_slice(events_json.as_bytes());
-                Ok(out)
-            }
-        }
+        Ok(Vec::new())
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        match bytes.first() {
-            Some(1) => Ok(HomeViewCommand::FoldDirectoryEvents { events_json: String::from_utf8_lossy(&bytes[1..]).into_owned() }),
-            _ => Ok(HomeViewCommand::Noop),
-        }
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Ok(HomeViewCommand::Noop)
     }
 }
 //#endregion 🔖️Command
@@ -81,20 +64,10 @@ impl ArtifactViewer for HomeViewer {
         Some(crate::editor::home::config::schema::app_schema_descriptor())
     }
 
-    /// 👁️ Structurally read-only: neither variant ever carries an artifact/draft mutation (`ViewEmit`
-    /// has no such field to carry one in). `Noop` returns the empty emit; `FoldDirectoryEvents` folds
-    /// each event into `HomeConfigMutation::FoldDirectoryEvent`, the SAME config-only writer the editor
-    /// uses — never an optimistic mutation, never a document edit.
-    fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
-        match command {
-            HomeViewCommand::Noop => Ok(ViewEmit::default()),
-            HomeViewCommand::FoldDirectoryEvents { events_json } => {
-                view_state.and_then(crate::home_session_identity).ok_or_else(|| Fault::from("s.home.session-identity-required"))?;
-                let events: Vec<store::os_directory::DirectoryEvent> = pack::from_json_str(events_json).unwrap_or_default();
-                let config_mutations = events.iter().map(pack::to_json_string).map(|event_json| HomeConfigMutation::FoldDirectoryEvent { event_json }).collect();
-                Ok(ViewEmit::config(config_mutations))
-            }
-        }
+    /// 👁️ Structurally read-only: the sole `HomeViewCommand::Noop` answers the empty emit — no config
+    /// change, no effect, never a document edit.
+    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+        Ok(ViewEmit::default())
     }
 
     /// 👁️ Renders the SAME overview table the editor's main window does, read-only: no create/delete/

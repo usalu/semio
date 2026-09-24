@@ -29,7 +29,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetDocumentId {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set document-id", "Dokument-id setzen")
+        protocol::LocalizedLabel::native("Set document-id", "Dokument-ID setzen")
     }
 
     fn target(&self) -> Vec<String> {

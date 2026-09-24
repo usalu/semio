@@ -26,7 +26,7 @@ pub mod mutation {
         }
 
         fn label(&self) -> protocol::LocalizedLabel {
-            protocol::LocalizedLabel::native(&format!("Set layer {} opacity to {}", self.layer_id, self.new_opacity), &format!("Ebene {} Deckkraft auf {} setzen", self.layer_id, self.new_opacity))
+            protocol::LocalizedLabel::native(&format!("Set layer {} opacity to {}", self.layer_id, self.new_opacity), &format!("Deckkraft von Ebene {} auf {} setzen", self.layer_id, self.new_opacity))
         }
 
         fn target(&self) -> Vec<String> {

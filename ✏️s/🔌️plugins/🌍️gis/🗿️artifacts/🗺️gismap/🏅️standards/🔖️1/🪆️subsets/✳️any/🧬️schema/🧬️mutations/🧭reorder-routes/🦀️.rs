@@ -35,7 +35,7 @@ impl MutationKind<GisMapSnapshot, GisMapMutation> for ReorderRoutes {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder route \"{}\" to {}", self.id, self.to_index), &format!("Route \"{}\" zu {} umordnen", self.id, self.to_index))
+        protocol::LocalizedLabel::native(&format!("Reorder route \"{}\" to {}", self.id, self.to_index), &format!("Route \"{}\" an Stelle {} verschieben", self.id, self.to_index))
     }
 }
 //#endregion 🔹Payload

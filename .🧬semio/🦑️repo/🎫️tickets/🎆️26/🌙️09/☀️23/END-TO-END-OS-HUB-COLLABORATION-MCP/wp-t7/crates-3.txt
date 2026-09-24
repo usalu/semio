@@ -1,0 +1,9 @@
+semio-s-artifact-stdio-semio:conversion-drawing,conversion-mesh,conversion-cad
+semio-framework-os-flow
+semio-s-artifact-stdio-dwg
+semio-s-artifact-raster-raster
+semio-s-artifact-stdio-pptx
+semio-s-artifact-draw-drawing
+semio-s-artifact-fem-2d
+semio-s-artifact-gis-gismap
+semio-s-artifact-stdio-json

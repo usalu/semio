@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DisconnectAdjacency {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Disconnect adjacency \"{}\"", self.id.0), &format!("Nachbarschaft \"{}\" trennen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Disconnect adjacency \"{}\"", self.id.0), &format!("Nachbarschaft \"{}\" aufheben", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

@@ -1,0 +1,192 @@
+    //#region 🧪️Projection
+
+    /// 🧾️ Parses one argv against the repo command tree and projects the selected command path, the
+    /// operands, only the flags the caller passed, and whether `--help` short-circuited, as JSON text.
+    pub fn projection(argv: &[String]) -> Result<String, String> {
+        let root = root();
+        let parsed = parse(&root, argv)?;
+        let path: Vec<Json> = parsed.chain.iter().map(|command| Json::String(command.name().to_string())).collect();
+        let positional: Vec<Json> = if parsed.help { Vec::new() } else { parsed.positional.iter().cloned().map(Json::String).collect() };
+        let flags: Map<String, Json> = parsed.flags.iter().filter(|(_, (_, changed))| *changed).map(|(name, (value, _))| (name.clone(), value.projection())).collect();
+        let mut projection = Map::new();
+        projection.insert("path".to_string(), Json::Array(path));
+        projection.insert("positional".to_string(), Json::Array(positional));
+        projection.insert("flags".to_string(), Json::Object(flags));
+        projection.insert("help".to_string(), Json::Bool(parsed.help));
+        Ok(go_json(&Json::Object(projection)))
+    }
+
+    /// 📖️ The usage text of one command path below the root, `None` when no such command exists.
+    pub fn usage(path: &[String]) -> Option<String> {
+        let root = root();
+        let mut command = &root;
+        for name in path {
+            command = command.child(name)?;
+        }
+        Some(command.help())
+    }
+
+    /// 🗺️ Every command path of the tree, root first, each as `/`-joined names.
+    pub fn command_paths() -> Vec<String> {
+        let root = root();
+        let mut paths = vec![String::new()];
+        for child in &root.children {
+            paths.push(child.name().to_string());
+            for grandchild in &child.children {
+                paths.push(format!("{}/{}", child.name(), grandchild.name()));
+            }
+        }
+        paths
+    }
+
+    /// 🔤️ The format a projection names: `json`, `md`, anything else is the human text.
+    fn projection_format(raw: &str) -> Format {
+        Format::parse(raw)
+    }
+
+    /// 🖨️ Renders one recorded event stream given as JSON text and answers `out`, `err` and
+    /// `exitCode` as JSON text.
+    pub fn render_stream_json(events: &str, format: &str, is_tty: bool, verbose: bool, elapsed_ms: i64) -> Result<String, String> {
+        let events: Vec<Event> = serde_json::from_str(events).map_err(|error| error.to_string())?;
+        let rendered = render(&events, projection_format(format), is_tty, verbose, elapsed_ms);
+        Ok(go_json(&json!({ "out": rendered.out, "err": rendered.err, "exitCode": rendered.exit_code })))
+    }
+
+    /// 🕸️ Executes one document against a recorded repository and answers the three renderings of the
+    /// stream plus its exit code, as JSON text.
+    pub fn graphql_roundtrip_json(records: &str, query: &str, variables: &str) -> Result<String, String> {
+        let recording = RecordingContext::from_text(records).map_err(|error| error.message)?;
+        let variables: Map<String, Json> = if variables.trim().is_empty() { Map::new() } else { serde_json::from_str(variables).map_err(|error| error.to_string())? };
+        let events = graphql_events(&recording, query, &variables);
+        let ndjson = render(&events, Format::Json, false, false, 0);
+        let human = render(&events, Format::Text, false, false, 0);
+        let markdown = render(&events, Format::Markdown, false, false, 0);
+        Ok(go_json(&json!({ "ndjson": ndjson.out, "human": human.out, "markdown": markdown.out, "exitCode": ndjson.exit_code })))
+    }
+
+    /// 🕸️ The invocations the `test` verb would announce for one snapshot and one operand list, as
+    /// JSON text: the `Running: …` lines in order plus the planner's refusals. Nothing executes.
+    pub fn test_verb_lines_json(snapshot: &str, operands: &[String]) -> Result<String, String> {
+        let snapshot: semio_framework_repo_test_runner::FilesystemSnapshot = serde_json::from_str(snapshot).map_err(|error| error.to_string())?;
+        let identity = semio_framework_repo_test_runner::PendingIdentity;
+        let scopes = semio_framework_repo_test_runner::resolve_test_scopes(operands, &snapshot, &identity, &identity);
+        let plan = semio_framework_repo_test_runner::plan_scopes(&snapshot, &scopes);
+        let lines: Vec<String> = plan.invocations.iter().map(|invocation| format!("Running: {} (in {})", invocation.argv.join(" "), invocation.cwd)).collect();
+        Ok(go_json(&json!({ "lines": lines, "problems": plan.problems })))
+    }
+
+    /// 📤️ The event batch the `export` verb would append for one recorded repository, as JSON text:
+    /// the snapshot digest, the per-kind counts in taxonomy order and every input id and record.
+    pub fn export_records_json(records: &str) -> Result<String, String> {
+        let recording = RecordingContext::from_text(records).map_err(|error| error.message)?;
+        let entities = export_entities(&recording)?;
+        let snapshot = semio_framework_repo_events::build_export_snapshot(&entities, &semio_framework_repo_events::Uninterrupted).map_err(|error| error.to_string())?;
+        let counts: Vec<Json> = ["technology", "bundle", "folder", "file", "section", "definition"].iter().map(|kind| json!({ "kind": kind, "count": snapshot.count(kind) })).collect();
+        let ids: Vec<String> = snapshot.inputs.iter().map(|input| input.id.clone()).collect();
+        let encoded: Vec<String> = snapshot.inputs.iter().map(|input| format!("{}\u{1}{}", input.kind, input.data.text())).collect();
+        Ok(go_json(&json!({ "snapshot": snapshot.snapshot, "counts": counts, "inputIds": ids, "records": encoded })))
+    }
+
+    /// 🪝️ What the `hook` verb would write for one native invocation, as JSON text. The environment and
+    /// the test-file resolver are the inert ones, so the projection is a pure function of the request.
+    pub fn hook_verb_dispatch_json(request: &str) -> Result<String, String> {
+        let request: Map<String, Json> = serde_json::from_str(request).map_err(|error| error.to_string())?;
+        let text = |key: &str| request.get(key).and_then(Json::as_str).unwrap_or_default().to_string();
+        let input = request.get("input").cloned().filter(|input| !input.is_null());
+        let mut tool_name = text("toolName");
+        if tool_name.is_empty() {
+            tool_name = semio_framework_repo_hooks::extract_tool_name(input.as_ref());
+        }
+        let client = text("client");
+        let (event, resolved_parent) = semio_framework_repo_hooks::resolve_hook_event(&text("event"), &client, &tool_name, input.as_ref()).map_err(|error| error.message)?;
+        let mut parent = text("parent");
+        if parent.is_empty() {
+            parent = resolved_parent;
+        }
+        let context = semio_framework_repo_hooks::HookContext {
+            event: event.as_str().to_string(),
+            client: client.clone(),
+            second: text("second"),
+            repo_root: text("repoRoot"),
+            tool_name,
+            tool_args: text("toolArgs"),
+            file_path: text("file"),
+            parent_info: parent.clone(),
+            extra: BTreeMap::new(),
+            input: input.clone(),
+        };
+        let result = semio_framework_repo_hooks::dispatch_hook(&context, &semio_framework_repo_hooks::InertEnvironment, &semio_framework_repo_hooks::InertTestFileResolver);
+        let native = semio_framework_repo_hooks::resolve_native_event_name(&client, event, &parent, input.as_ref());
+        let output = semio_framework_repo_hooks::render_hook_output(&client, event, &parent, &native, &result, request.get("json").and_then(Json::as_bool).unwrap_or(false));
+        Ok(go_json(&json!({ "stdout": output.stdout, "stderr": output.stderr, "exitCode": output.exit_code })))
+    }
+
+    //#endregion 🧪️Projection
+
+    //#region 🚀️Run
+
+    /// 🚀️ Runs one repo CLI invocation on the process streams and answers its exit code.
+    pub fn run(argv: &[String]) -> i32 {
+        use std::io::IsTerminal;
+        let stdout = std::io::stdout();
+        let stderr = std::io::stderr();
+        let is_tty = stdout.is_terminal() && std::env::var_os("NO_COLOR").is_none_or(|value| value.is_empty());
+        let mut out = stdout.lock();
+        let mut err = stderr.lock();
+        run_with(argv, &mut out, &mut err, is_tty)
+    }
+
+    /// 🚀️ Runs one repo CLI invocation on the given streams and answers its exit code.
+    pub fn run_with(argv: &[String], out: &mut dyn std::io::Write, err: &mut dyn std::io::Write, is_tty: bool) -> i32 {
+        let root = root();
+        let parsed = match parse(&root, argv) {
+            Ok(parsed) => parsed,
+            Err(message) => {
+                let _ = writeln!(err, "{message}");
+                return EXIT_ERROR;
+            }
+        };
+        if parsed.help {
+            let _ = out.write_all(parsed.selected().help().as_bytes());
+            return EXIT_OK;
+        }
+        let selected = parsed.selected();
+        let text = |name: &str| match parsed.flags.get(name) {
+            Some((FlagValue::Text(value), _)) => value.clone(),
+            _ => String::new(),
+        };
+        let switch = |name: &str| matches!(parsed.flags.get(name), Some((FlagValue::Bool(true), _)));
+        let mut format = Format::parse(&text("format"));
+        if switch("json") {
+            format = Format::Json;
+        } else if switch("text") {
+            format = Format::Text;
+        } else if switch("md") {
+            format = Format::Markdown;
+        }
+        let timeout_nanoseconds = match parsed.flags.get("timeout") {
+            Some((FlagValue::Duration(value), _)) => *value,
+            _ => DEFAULT_TIMEOUT_NANOSECONDS,
+        };
+        let config = Config { format, verbose: switch("verbose"), repo: text("repo"), timeout_nanoseconds };
+        let Some(action) = selected.action else {
+            if let Some(first) = parsed.positional.first() {
+                let _ = writeln!(err, "unknown command {first:?} for {:?}", selected.name());
+                return EXIT_ERROR;
+            }
+            let _ = out.write_all(selected.help().as_bytes());
+            return EXIT_OK;
+        };
+        let mut invocation = Invocation { parsed, config, out, err, is_tty };
+        match action(&mut invocation) {
+            Ok(()) => EXIT_OK,
+            Err(CliError::Exit(code)) => code,
+            Err(CliError::Message(message)) => {
+                let _ = writeln!(invocation.err, "{message}");
+                EXIT_ERROR
+            }
+        }
+    }
+
+    //#endregion 🚀️Run
+

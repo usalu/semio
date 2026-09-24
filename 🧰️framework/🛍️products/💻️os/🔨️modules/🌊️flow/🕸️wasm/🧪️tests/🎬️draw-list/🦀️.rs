@@ -98,7 +98,7 @@ fn render_frame_carries_the_draw_list_the_host_must_paint() {
     assert_eq!(frame["draw"]["version"], Value::from(canvas::draw_list::DRAW_LIST_VERSION));
     assert!(!frame["draw"]["commands"].as_array().expect("commands").is_empty(), "render_frame dropped the scene it painted");
     assert_eq!(frame["clear"].as_array().expect("clear colour").len(), 4, "the replayer needs the host's own clear colour");
-    assert!(frame["hostSnapshot"]["widgets"].as_array().expect("widgets").len() == 7, "the fixture half of the frame must survive the change");
+    assert!(frame["hostDocument"]["widgets"].as_array().expect("widgets").len() == 7, "the fixture half of the frame must survive the change");
     assert!(frame["labels"].is_object(), "the label overlay half of the frame must survive the change");
     adapter.surface = None;
     let FlowDomainHost::Open(host) = std::mem::replace(&mut adapter.host, FlowDomainHost::Closed) else { panic!("open flow host") };
@@ -199,7 +199,7 @@ fn without_a_gpu_adapter_the_frame_replays_a_list_that_covers_the_node_layout() 
 
     // 🎯️ Every node the host reports as on screen must have something drawn at its own screen rect:
     // that is what makes this a CAMERA law and not just a "the list is long" law.
-    let widgets = frame["hostSnapshot"]["widgets"].as_array().expect("widgets").clone();
+    let widgets = frame["hostDocument"]["widgets"].as_array().expect("widgets").clone();
     let mut covered = 0_usize;
     for widget in &widgets {
         let id = widget["id"].as_str().expect("widget id");

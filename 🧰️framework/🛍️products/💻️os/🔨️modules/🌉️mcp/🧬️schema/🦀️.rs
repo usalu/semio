@@ -145,6 +145,7 @@ pub struct SearchHit {
 
 //#region 🔖️JobStatus
 /// 🏃️ Lifecycle state of a `job_`-prefixed handle (long-running `action.invoke`/background work).
+/// `AwaitingApproval` is a job whose work is done and whose effect waits on an explicit approval.
 // 🌱️ `rename_all = "SCREAMING_SNAKE_CASE"` has no `#[value(rename_all = …)]` equivalent — spelled
 // out per-variant instead, same wire names.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
@@ -154,6 +155,8 @@ pub enum JobState {
     Pending,
     #[value(rename = "RUNNING")]
     Running,
+    #[value(rename = "AWAITING_APPROVAL")]
+    AwaitingApproval,
     #[value(rename = "SUCCEEDED")]
     Succeeded,
     #[value(rename = "FAILED")]
@@ -1013,13 +1016,13 @@ fn hex_pattern(length: usize) -> String {
 ///
 /// The authority is `🌎️hub/💡️inference/🧬️schema/🔣️.json#/$defs/InferenceApprovalRequestV1`; hub names
 /// its `jobId`/`proposalHash` patterns through `$ref`s, so the test inlines them before comparing.
-pub fn gis_map_inference_approval_request_schema() -> serde_json::Value {
+pub fn hub_inference_approval_request_schema() -> serde_json::Value {
     serde_json::json!({
         "type": "object",
         "additionalProperties": false,
         "required": ["schema", "version", "jobId", "proposalHash"],
         "properties": {
-            "schema": { "const": crate::inference::GIS_MAP_INFERENCE_APPROVAL_SCHEMA },
+            "schema": { "const": crate::inference::HUB_INFERENCE_APPROVAL_SCHEMA },
             "version": { "const": 1 },
             "jobId": { "type": "string", "pattern": hex_pattern(crate::inference::INFERENCE_REQUEST_ID_HEX_LENGTH) },
             "proposalHash": { "type": "string", "pattern": hex_pattern(crate::inference::INFERENCE_PROPOSAL_HASH_HEX_LENGTH) },
@@ -1041,7 +1044,7 @@ pub fn gis_map_inference_approval_request_schema() -> serde_json::Value {
 ///    Model Context Protocol specification rather than defining it; they are catalogued so the
 ///    surface this crate speaks is visible, never invisible;
 /// 3. **tool schemas** — the hand-authored `inputSchema`/`outputSchema` shapes every facet stamps a
-///    `$id` onto (`🔖️ToolSchemas` above), plus the [`gis_map_inference_approval_request_schema`]
+///    `$id` onto (`🔖️ToolSchemas` above), plus the [`hub_inference_approval_request_schema`]
 ///    mirror of hub's own approval contract.
 pub fn schemas() -> Vec<(&'static str, serde_json::Value)> {
     let mut entries = vec![
@@ -1114,7 +1117,7 @@ pub fn schemas() -> Vec<(&'static str, serde_json::Value)> {
         ("ArtifactInferenceCacheModeV1", serde_json::to_value(schema_for!(ArtifactInferenceCacheModeV1)).expect("ArtifactInferenceCacheModeV1 schema")),
         ("ArtifactInferenceRequestV1", serde_json::to_value(schema_for!(ArtifactInferenceRequestV1)).expect("ArtifactInferenceRequestV1 schema")),
         ("ArtifactInferenceResultV1", serde_json::to_value(schema_for!(ArtifactInferenceResultV1)).expect("ArtifactInferenceResultV1 schema")),
-        ("GisMapInferenceApprovalRequestV1", gis_map_inference_approval_request_schema()),
+        ("HubInferenceApprovalRequestV1", hub_inference_approval_request_schema()),
     ];
     for (_, schema) in entries.iter_mut() {
         normalize_boolean_subschemas(schema);
@@ -1303,7 +1306,7 @@ const EXPORTS: [SchemaExport; 70] = [
     SchemaExport { id: "ConversationReplyOutput", leaves: LEAVES },
     SchemaExport { id: "GatewayError", leaves: LEAVES },
     SchemaExport { id: "GatewayErrorCode", leaves: LEAVES },
-    SchemaExport { id: "GisMapInferenceApprovalRequestV1", leaves: LEAVES },
+    SchemaExport { id: "HubInferenceApprovalRequestV1", leaves: LEAVES },
     SchemaExport { id: "HandleInput", leaves: LEAVES },
     SchemaExport { id: "InferenceApproveInput", leaves: LEAVES },
     SchemaExport { id: "InferenceGetInput", leaves: LEAVES },

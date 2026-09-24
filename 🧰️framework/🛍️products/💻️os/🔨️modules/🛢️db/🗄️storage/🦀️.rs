@@ -257,6 +257,7 @@ fn db_io_operation_add(operation: u64, credit: DbIoCredit) -> Result<(), DbError
     let operation_total = ledger.slots[index].live.checked_add(credit).ok_or(DbError::LimitExceeded("db_io operation aggregate credit"))?;
     let process_total = ledger.totals.checked_add(credit).ok_or(DbError::LimitExceeded("db_io process aggregate credit"))?;
     if !db_io_credit_within_limits(operation_total, false) || !db_io_credit_within_limits(process_total, true) {
+        eprintln!("[DEBUG] h9 db_io add refused op={operation_total:?} process={process_total:?} credit={credit:?} bt={}", std::backtrace::Backtrace::force_capture());
         return Err(DbError::Unavailable("DB I/O aggregate admission exhausted".to_string()));
     }
     ledger.slots[index].live = operation_total;

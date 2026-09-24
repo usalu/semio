@@ -20,7 +20,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeMaterial
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change material id to \"{}\"", self.new_material_id), &format!("Materialid auf \"{}\" ändern", self.new_material_id))
+        protocol::LocalizedLabel::native(&format!("Change material id to \"{}\"", self.new_material_id), &format!("Material-ID auf \"{}\" ändern", self.new_material_id))
     }
 }
 //#endregion 🔖️Payload

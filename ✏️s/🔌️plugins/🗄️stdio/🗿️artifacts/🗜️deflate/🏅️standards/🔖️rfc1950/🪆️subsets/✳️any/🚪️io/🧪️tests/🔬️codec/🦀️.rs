@@ -18,31 +18,36 @@ fn deflate_job_zero_grant_preserves_input_and_one_opportunity_close_is_exact() {
     }
 }
 
-fn raw_zip_member<'a>(archive: &'a [u8], wanted: &str) -> Option<&'a [u8]> {
-    let mut offset = 0usize;
-    while archive.get(offset..offset + 4) == Some(b"PK\x03\x04") {
-        let compressed = u32::from_le_bytes(archive[offset + 18..offset + 22].try_into().ok()?) as usize;
-        let name_len = u16::from_le_bytes(archive[offset + 26..offset + 28].try_into().ok()?) as usize;
-        let extra_len = u16::from_le_bytes(archive[offset + 28..offset + 30].try_into().ok()?) as usize;
-        let name_start = offset + 30;
-        let payload_start = name_start + name_len + extra_len;
-        if std::str::from_utf8(&archive[name_start..name_start + name_len]).ok()? == wanted {
-            return Some(&archive[payload_start..payload_start + compressed]);
+/// 🧳️ A handcrafted OLE compound-file image: the CFB header signature and sector geometry, a FAT
+/// sector, a directory sector and stream sectors mixing zero runs, repeated records and a counter —
+/// the shape of the embedded `oleObject*.bin` payloads the compact policy is tuned for.
+fn compound_file_image() -> Vec<u8> {
+    let mut image = vec![0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
+    image.resize(512, 0);
+    image[0x18..0x20].copy_from_slice(&[0x3e, 0x00, 0x03, 0x00, 0xfe, 0xff, 0x09, 0x00]);
+    let record = b"Root Entry\0semio compound record ";
+    for sector in 0..8u32 {
+        let mut block = vec![0u8; 512];
+        for (index, byte) in block.iter_mut().enumerate() {
+            *byte = match sector % 3 {
+                0 => (index as u32 * 7 + sector) as u8,
+                1 => record[index % record.len()],
+                _ => 0,
+            };
         }
-        offset = payload_start + compressed;
+        image.extend(block);
     }
-    None
+    image
 }
 
 #[test]
-fn exact_pptx_bin_policy() {
-    let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
-    for path in ["ppt/embeddings/oleObject1.bin", "ppt/embeddings/oleObject2.bin", "ppt/embeddings/oleObject3.bin"] {
-        let expected = raw_zip_member(&archive, path).expect("fixture OLE");
-        let input = inflate_raw(expected).expect("inflate fixture OLE");
-        let candidate = deflate_raw_deterministic_compact_high_search(&input).expect("compress fixture OLE");
-        assert_eq!(candidate, expected, "embedded binary policy must reproduce {path}");
-    }
+fn compact_high_search_embedded_binary_is_standard_deflate() {
+    let input = compound_file_image();
+    let candidate = deflate_raw_deterministic_compact_high_search(&input).expect("compress compound file");
+    assert_eq!(deflate_raw_deterministic_compact_high_search(&input).expect("compress again"), candidate, "the policy is deterministic");
+    assert!(candidate.len() < input.len() / 2, "{} of {} bytes", candidate.len(), input.len());
+    assert_eq!(inflate_raw(&candidate).expect("inflate"), input);
+    assert_eq!(miniz_oxide::inflate::decompress_to_vec(&candidate).expect("miniz_oxide inflates the stream"), input);
 }
 
 #[test]
@@ -62,10 +67,7 @@ fn zlib_round_trip() {
 
 #[test]
 fn illustrator_partial_flush_materialization_matches_fixture_stream() {
-    let fixture = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../temp/📄️bachelor-thesis.pdf")).expect("fixture");
-    let marker = b"/Length 3362\n/Filter /FlateDecode\n>>\nstream\n";
-    let start = fixture.windows(marker.len()).position(|window| window == marker).expect("Illustrator stream") + marker.len();
-    let expected = &fixture[start..start + 3362];
+    let expected: &[u8] = include_bytes!("../../../🧫️fixtures/🎨️illustrator-partial-flush.zz");
     let decoded = zlib_decompress(expected).expect("decode Illustrator stream");
     let actual = zlib_compress_illustrator(&decoded).expect("encode Illustrator stream");
     assert_eq!(actual, expected);

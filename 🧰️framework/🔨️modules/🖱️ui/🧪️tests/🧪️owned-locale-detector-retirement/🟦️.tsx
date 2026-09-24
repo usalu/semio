@@ -6574,7 +6574,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       });
     });
 
-    it("installElementsSurfaceBrowserDefaultSuppression blocks native context menu and Tab outside typing targets", () => {
+    it("installElementsSurfaceBrowserDefaultSuppression blocks the native context menu and leaves Tab focus traversal to the browser", () => {
       const bindings = createDOMEventBinding();
       installElementsSurfaceBrowserDefaultSuppression(bindings);
       const panel = document.createElement("div");
@@ -6586,7 +6586,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const tabEvent = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
       const tabPrevent = vi.spyOn(tabEvent, "preventDefault");
       panel.dispatchEvent(tabEvent);
-      expect(tabPrevent).toHaveBeenCalled();
+      expect(tabPrevent).not.toHaveBeenCalled();
       const input = document.createElement("input");
       document.body.appendChild(input);
       input.focus();

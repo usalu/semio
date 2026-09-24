@@ -187,7 +187,7 @@ def diagnoses_as_committed(kind, produced, outcome):
     of what eight of the nine vectors pin, so it is asserted before anything else."""
     status, code, path = declared(outcome)
     derived_code, derived_path = produced
-    derived_status = "rejected" if derived_code == TARGET_MISSING else "applied"
+    derived_status = "rejected" if derived_code == TARGET_MISSING else "no-op" if derived_code == NO_OP else "applied"
     if (derived_status, derived_code) != (status, code):
         raise AssertionError("mutate-%s: this implementation derives %r/%r from the scene, the committed 🎯️outcome vector declares %r/%r" % (kind, derived_status, derived_code, status, code))
     if derived_path is not None and path is not None and derived_path != path:

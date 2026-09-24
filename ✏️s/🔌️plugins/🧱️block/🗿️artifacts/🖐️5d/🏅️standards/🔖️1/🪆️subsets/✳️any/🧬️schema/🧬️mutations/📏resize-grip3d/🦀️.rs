@@ -32,7 +32,7 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ResizeGrip3d {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Resize grip \"{}\" (3D)", self.id), &format!("Griff \"{}\" (3D) skalieren", self.id))
+        protocol::LocalizedLabel::native(&format!("Resize grip \"{}\" (3D)", self.id), &format!("Größe von Griff \"{}\" (3D) ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

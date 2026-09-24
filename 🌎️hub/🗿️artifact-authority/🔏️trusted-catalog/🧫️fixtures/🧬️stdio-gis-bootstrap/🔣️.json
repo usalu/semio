@@ -49,6 +49,12 @@
             "semio:framework/pure@1.0.0"
           ]
         },
+        "pluginModule": {
+          "path": "packages/gis/plugin-module.json",
+          "byteLength": 4096,
+          "sha256": "3434343434343434343434343434343434343434343434343434343434343434",
+          "blake3": "3535353535353535353535353535353535353535353535353535353535353535"
+        },
         "codecCount": 2,
         "targetCount": 1
       },
@@ -67,6 +73,12 @@
         "browserActor": {
           "kind": "none"
         },
+        "pluginModule": {
+          "path": "packages/stdio/plugin-module.json",
+          "byteLength": 4096,
+          "sha256": "3636363636363636363636363636363636363636363636363636363636363636",
+          "blake3": "3737373737373737373737373737373737373737373737373737373737373737"
+        },
         "codecCount": 26,
         "targetCount": 0
       }
@@ -76,6 +88,7 @@
         "pluginId": "gis",
         "artifactKind": "s.gis.gismap",
         "artifactSchema": "gis.map",
+        "packSchemaHash": "9db3600794058afc0186dcaafdcf07c1518cc0b2171132a5732c0e6761b16d64",
         "surfaceId": "s.gis.gismap@1/*#editor",
         "appId": "s.gis.gismap@1/*#editor",
         "windowKindId": "gis2d-main",
@@ -93,7 +106,7 @@
         }
       }
     ],
-    "generationId": "e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52"
+    "generationId": "0ca2d589b7e23e7e34d423b848ac16a88283f59aba23866ab4aba478c1b4126b"
   },
   "sources": {
     "stdioReceipts": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
@@ -310,12 +323,12 @@
         "accepted": false
       }
     ],
-    "initialGenerationId": "e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52",
+    "initialGenerationId": "0ca2d589b7e23e7e34d423b848ac16a88283f59aba23866ab4aba478c1b4126b",
     "failedCandidateGenerationId": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1",
-    "currentAfterFailedCandidate": "e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52",
+    "currentAfterFailedCandidate": "0ca2d589b7e23e7e34d423b848ac16a88283f59aba23866ab4aba478c1b4126b",
     "nextGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
     "stalePlan": {
-      "issuedGenerationId": "e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52",
+      "issuedGenerationId": "0ca2d589b7e23e7e34d423b848ac16a88283f59aba23866ab4aba478c1b4126b",
       "observedGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
       "expected": "stale"
     },

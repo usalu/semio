@@ -29,7 +29,7 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for ChangeTileWeight {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change tile \"{}\" weight", self.id), &format!("Kachel \"{}\" Gewicht ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change tile \"{}\" weight", self.id), &format!("Gewicht von Kachel \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

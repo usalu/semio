@@ -1,0 +1,10 @@
+{
+  "SetDrag": {
+    "nodeId": "node-2",
+    "startX": 4.5,
+    "startY": -3.25,
+    "lastX": 12.5,
+    "lastY": -7.25,
+    "zoom": 2.0
+  }
+}

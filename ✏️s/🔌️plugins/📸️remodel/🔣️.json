@@ -339,11 +339,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -1563,11 +1563,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -2786,11 +2786,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -6506,7 +6506,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -6991,14 +6991,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -10987,8 +10987,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "8ee570157c3cd9548e399ea6f1c6013e719cdb1e1e56679a1a51fb9327a431c3",
-    "coreWasmSha256": "0a4726095a88fe24b36b270969b85df445e55c003dd8eb7fb3947c9d6626ee65",
-    "descriptorSha256": "b56b0c6295b2faae056874f38a73c03c256579475f15a19ef723f0101c10975f"
+    "wasmSha256": "89184d3c42d3ac37a47001e02e34c52f8ffa58b04ef75e6638a929146e072243",
+    "coreWasmSha256": "c97104a9d721f2817785bfe4736a644be9a62e2753cd1daf27fba94b35c85496",
+    "descriptorSha256": "94b7ffb9f91b4a61e6c8ddd841b0b6a25f1ac0230fe90275099758a8a51af916"
   }
 }

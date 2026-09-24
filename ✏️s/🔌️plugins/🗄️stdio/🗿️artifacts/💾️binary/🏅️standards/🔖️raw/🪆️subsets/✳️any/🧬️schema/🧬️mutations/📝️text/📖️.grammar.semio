@@ -11,12 +11,12 @@ start document
 # -- not invented, not assumed:
 #   no-mutation
 #   set-snapshot snapshot { schema=stdio.binary bytes="CQk=" }
-#   splice offset=1 remove-len=2 insert="qrvM"
+#   replace-byte-range offset=1 remove-len=2 insert="qrvM"
 #   append-bytes data="7v8="
 #   truncate-at offset=4
 # Variant keywords and field keys are `to_kebab` of the Rust ident (derive default, no `#[dsl(key=
 # ...)]` override anywhere on `BinaryMutation`): `NoMutation`->`no-mutation`, `SetSnapshot`->
-# `set-snapshot`, `AppendBytes`->`append-bytes`, `TruncateAt`->`truncate-at`, `remove_len`->
+# `set-snapshot`, `ReplaceByteRange`->`replace-byte-range`, `AppendBytes`->`append-bytes`, `TruncateAt`->`truncate-at`, `remove_len`->
 # `remove-len`. `insert`/`data` are `#[dsl(base64)]` `Vec<u8>` fields, so they print as a single
 # QUOTED base64 token (`scalar_to_text`'s `FieldValue::Bytes64` arm: `"{base64}"`), never as a bare
 # hex run -- unlike json/csv's own `hex`-macro payloads, this artifact's byte payloads need no
@@ -26,10 +26,10 @@ start document
 # their declared struct order (`schema` then `bytes`) -- `schema` is `is_bare_ident("stdio.binary")
 # == true` (the shared lexer's `Ident` token includes `.`, confirmed directly), so it prints
 # UNQUOTED; a plain `IDENT` terminal covers it.
-document = no-mutation | set-snapshot | splice | append-bytes | truncate-at
+document = no-mutation | set-snapshot | replace-byte-range | append-bytes | truncate-at
 
 no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "{" "schema" "=" IDENT "bytes" "=" TEXT "}"
-splice = "splice" "offset" "=" INT "remove-len" "=" INT "insert" "=" TEXT
+replace-byte-range = "replace-byte-range" "offset" "=" INT "remove-len" "=" INT "insert" "=" TEXT
 append-bytes = "append-bytes" "data" "=" TEXT
 truncate-at = "truncate-at" "offset" "=" INT

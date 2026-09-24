@@ -49,7 +49,7 @@ There are other agents working on other logical parts, even if they work on the 
 
 ---
 
-Use the main chat with Fable 5.1 High for main plan coordination, use multiple Opus 5.5 High agents for task execution, use multiple Sonnet 5 High agents for read-only exploration and audits.
+Use the main chat with Opus 5.5 Extra High for main plan coordination, use multiple Opus 5.5 High agents for task execution, use multiple Sonnet 5 High agents for read-only exploration and audits.
 Always use a work fleet of maximum possible parallel agents.
 There are other agents working on other logical parts, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 

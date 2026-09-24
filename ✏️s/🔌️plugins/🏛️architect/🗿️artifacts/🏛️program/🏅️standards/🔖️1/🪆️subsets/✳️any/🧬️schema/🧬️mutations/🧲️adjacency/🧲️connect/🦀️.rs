@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ConnectAdjacency {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Connect adjacency between \"{}\" and \"{}\"", self.adjacency.element_a_id.0, self.adjacency.element_b_id.0), &format!("Nachbarschaft zwischen \"{}\" und \"{}\" verbinden", self.adjacency.element_a_id.0, self.adjacency.element_b_id.0))
+        protocol::LocalizedLabel::native(&format!("Connect adjacency between \"{}\" and \"{}\"", self.adjacency.element_a_id.0, self.adjacency.element_b_id.0), &format!("Nachbarschaft zwischen \"{}\" und \"{}\" herstellen", self.adjacency.element_a_id.0, self.adjacency.element_b_id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.adjacency.header.id.0.clone()]

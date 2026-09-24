@@ -30,7 +30,7 @@ pub const XML_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xml", 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum XmlAnyEditorCommand {
     SetNode { node_id: String, value: String },
-    /// 🎬️ The navbar example picker's payload — see the `🎬️ExampleSwitch` region below.
+    /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
     SetActiveExample { example_id: String },
 }
 
@@ -86,8 +86,9 @@ impl protocol::OpText for XmlAnyEditorCommand {
 
 impl protocol::OpBinary for XmlAnyEditorCommand {
     /// 🎯️ The app-owned retained routes this command channel carries — the join key
-    /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The
-    /// window-kind verb stays out: it is declared by the framework window kit, not by this app.
+    /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TreeWindowKit`
+    /// mints `set-node`, but only this editor can reduce it into its own mutation, so it is an
+    /// app-owned route exactly like the example switch.
     const TOOL_JOB_IDS: &'static [&'static str] = XML_ANY_RETAINED_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -100,18 +101,25 @@ impl protocol::OpBinary for XmlAnyEditorCommand {
 }
 //#endregion 🔖️Command
 
-//#region 🎬️ExampleSwitch
-/// 🧵️ The ONE app-owned retained route this editor declares. `validate_ui_dispatch_classification`
-/// refuses any verb that is not `Migrated`, and `Migrated` only survives the guest's
-/// `interactive-job.catalog-incomplete` boot check when this roster, the publication contracts and
-/// the `bounded_first_step_tool_proofs!` block below all name the same id.
-const XML_ANY_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
+//#region 🧵️RetainedRoutes
+/// 🪟️ The verb the `TreeWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
+const XML_ANY_KIT_ACTION_ID: &str = "set-node";
+/// 🧵️ The app-owned retained routes this editor declares: the example switch and `set-node`.
+/// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
+/// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
+/// publication contracts and the `bounded_first_step_tool_proofs!` block below all name the same
+/// ids. Without the kit verb's row the reactor refused every `set-node` with
+/// `interactive-job.missing-factory`.
+const XML_ANY_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, XML_ANY_KIT_ACTION_ID];
 const XML_ANY_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.xml.tool-command.v1";
 const XML_ANY_RETAINED_RAW_BYTES: usize = 8_192;
 /// 🚦️ The example switch publishes into NO document lane: it hands the host one
-/// `Effect::LoadDocument`, so its only lane is `HostOnly`.
-const XML_ANY_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
-    &[ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
+/// `Effect::LoadDocument`, so its only lane is `HostOnly`. `set-node` publishes the artifact
+/// mutation it reduces into, so its only lane is `Artifact`.
+const XML_ANY_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: XML_ANY_KIT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn xml_any_retained_contract() -> ToolExecutionContract {
@@ -137,7 +145,7 @@ fn xml_any_example_snapshot(example_id: &str) -> XmlSnapshot {
 fn xml_any_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<XmlAnyEditorCommand, Fault> {
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(XmlAnyEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        "set-node" => Ok(XmlAnyEditorCommand::SetNode { node_id: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["nodeId", "node_id", "id"], ""), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
+        XML_ANY_KIT_ACTION_ID => Ok(XmlAnyEditorCommand::SetNode { node_id: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["nodeId", "node_id", "id"], ""), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.xml.unhandled-action"),
@@ -150,21 +158,41 @@ fn xml_any_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Re
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn xml_any_command_id(command: &XmlAnyEditorCommand) -> &'static str {
     match command {
-        XmlAnyEditorCommand::SetNode { .. } => "set-node",
+        XmlAnyEditorCommand::SetNode { .. } => XML_ANY_KIT_ACTION_ID,
         XmlAnyEditorCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_any_retained_extent(command: &XmlAnyEditorCommand, _snapshot: &XmlSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    matches!(command, XmlAnyEditorCommand::SetActiveExample { .. }).then_some(1)
+fn xml_any_retained_extent(_command: &XmlAnyEditorCommand, _snapshot: &XmlSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    Some(1)
+}
+
+/// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
+/// its document, `set-node` becomes this artifact's own mutation.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn xml_any_emit(command: &XmlAnyEditorCommand, snapshot: &XmlSnapshot) -> Result<Emit<XmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    let (node_id, value) = match command {
+        XmlAnyEditorCommand::SetActiveExample { example_id } => {
+            return Ok(Emit {
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&xml_any_example_snapshot(example_id), STDIO_XML_DOCUMENT_SCHEMA)],
+                description: Some(format!("Load example {example_id}")),
+                ..Default::default()
+            })
+        }
+        XmlAnyEditorCommand::SetNode { node_id, value } => (node_id, value),
+    };
+    let Ok(path) = decode_node_id(node_id) else { return Ok(Emit::default()) };
+    let Some(root) = &snapshot.doc.root else { return Ok(Emit::default()) };
+    let Some(XmlNode::Text { .. }) = resolve_node(root, &path) else { return Ok(Emit::default()) };
+    Ok(Emit { artifact_mutations: vec![XmlMutation::SetText(SetTextMutation::Apply(SetTextPayload { path: XmlNodePath(path), text: value.clone() }))], description: Some(format!("Set node {node_id}")), ..Default::default() })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn xml_any_retained_reduce(
     command: &XmlAnyEditorCommand,
-    _snapshot: &XmlSnapshot,
+    snapshot: &XmlSnapshot,
     _config: &NoConfig,
     _history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
@@ -172,14 +200,7 @@ fn xml_any_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<XmlAnyEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<XmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    match command {
-        XmlAnyEditorCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&xml_any_example_snapshot(example_id), STDIO_XML_DOCUMENT_SCHEMA)],
-            description: Some(format!("Load example {example_id}")),
-            ..Default::default()
-        }),
-        XmlAnyEditorCommand::SetNode { .. } => Err(Fault::from("stdio-xml-retained-route-mismatch")),
-    }
+    xml_any_emit(command, snapshot)
 }
 
 struct XmlAnyRetainedCommandJobFactory {
@@ -232,7 +253,7 @@ impl ArtifactOwnedToolJobFactory for XmlAnyRetainedCommandJobFactory {
     const DOCUMENT_SCHEMA: &'static str = STDIO_XML_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = XML_ANY_RETAINED_PUBLICATION_CONTRACTS;
 }
-//#endregion 🎬️ExampleSwitch
+//#endregion 🧵️RetainedRoutes
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -262,7 +283,7 @@ impl ArtifactEditor for XmlAnyEditor {
         factory: "XmlAnyRetainedCommandJobFactory",
         factory_type: XmlAnyRetainedCommandJobFactory,
         contract: xml_any_retained_contract(),
-        tools: ["setActiveExample"]
+        tools: ["setActiveExample", "set-node"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -277,6 +298,7 @@ impl ArtifactEditor for XmlAnyEditor {
         if xml_any_command_id(&request.command) != request.tool_id {
             return Err(Fault::from("stdio-xml-retained-command-tool-mismatch"));
         }
+        let tool_id = xml_any_command_id(&request.command);
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id,
@@ -299,7 +321,7 @@ impl ArtifactEditor for XmlAnyEditor {
             xml_any_command_id,
             XML_ANY_RETAINED_RAW_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, xml_any_retained_reduce, xml_any_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(tool_id, xml_any_retained_reduce, xml_any_retained_extent)),
         )?;
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -310,6 +332,13 @@ impl ArtifactEditor for XmlAnyEditor {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 📤️ The artifact lane's one-item publication authority. The kit verb's route declares the
+    /// `Artifact` lane, and without this authority every such route fails closed with
+    /// `interactive-job.publication-authority-missing`.
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("stdio-xml-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     /// 🧹️ The rest of the close protocol installing a document owner implies: an app that owns its
@@ -387,20 +416,7 @@ impl ArtifactEditor for XmlAnyEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        let (node_id, value) = match command {
-            XmlAnyEditorCommand::SetActiveExample { example_id } => {
-                return Ok(Emit {
-                    effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&xml_any_example_snapshot(example_id), STDIO_XML_DOCUMENT_SCHEMA)],
-                    description: Some(format!("Load example {example_id}")),
-                    ..Default::default()
-                })
-            }
-            XmlAnyEditorCommand::SetNode { node_id, value } => (node_id, value),
-        };
-        let Ok(path) = decode_node_id(node_id) else { return Ok(Emit::default()) };
-        let Some(root) = &doc.snapshot.doc.root else { return Ok(Emit::default()) };
-        let Some(XmlNode::Text { .. }) = resolve_node(root, &path) else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![XmlMutation::SetText(SetTextMutation::Apply(SetTextPayload { path: XmlNodePath(path), text: value.clone() }))], description: Some(format!("Set node {node_id}")), ..Default::default() })
+        xml_any_emit(command, doc.snapshot)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

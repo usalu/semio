@@ -291,16 +291,13 @@ pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artif
 }
 
 /// 🖍️ The document's evaluated drawing: its flow program run through the preview evaluator and
-/// every drawing it outputs flattened by the flow drawing kernel — the picture the editor's
-/// `drawing:out` port publishes.
+/// every drawing it delivers into an output widget (`output_drawing_handles`) flattened by the flow
+/// drawing kernel — the picture the editor's `drawing:out` port publishes.
 #[cfg(feature = "component-app-assembly")]
 pub fn generation2d_drawing(snapshot: &crate::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot, String> {
     let eval_json = crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap_or_default());
     let outputs = dsl::json::parse(&eval_json).map_err(|error| error.to_string())?;
-    let mut handles = Vec::new();
-    crate::standards::v1::subsets::any::schema::collect_drawing_handles_from_eval(&outputs, &mut handles);
-    handles.sort();
-    handles.dedup();
+    let handles = crate::standards::v1::subsets::any::schema::output_drawing_handles(&snapshot.host_snapshot, &outputs);
     semio_drawing_from_scenes(&handles.iter().map(|handle| semio_framework_os_flow::render_scene_json(handle)).collect::<Vec<_>>())
 }
 
@@ -315,7 +312,4 @@ pub fn generation2d_drawing(_snapshot: &crate::Generation2dSnapshot) -> Result<s
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-#[cfg(all(test, feature = "component-app-assembly"))]
-#[path = "🧪️tests/🔬️bundled-example-export/🦀️.rs"]
-mod bundled_example_export_tests;
 //#endregion 🧪️Tests

@@ -23,7 +23,7 @@ impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for
         vec![SpaceHistoryMutation::RemoveSpaceCheckpoint(RemoveSpaceCheckpoint { checkpoint_id: self.checkpoint.id.clone() })]
     }
     fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native(&format!("Commit space checkpoint {}", self.checkpoint.id), &format!("Raumprüfpunkt {} festschreiben", self.checkpoint.id))
+        crate::LocalizedLabel::native(&format!("Commit space checkpoint {}", self.checkpoint.id), &format!("Space-Sicherungspunkt {} festschreiben", self.checkpoint.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["checkpoints".into(), self.checkpoint.id.clone()]

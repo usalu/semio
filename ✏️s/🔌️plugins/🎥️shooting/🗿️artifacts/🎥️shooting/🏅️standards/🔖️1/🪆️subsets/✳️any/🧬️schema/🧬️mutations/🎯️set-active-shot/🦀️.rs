@@ -28,8 +28,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for SetActiveShot {
         }
         }, &{
         match &self.shot_id {
-            Some(id) => format!("aktive Aufnahme auf \"{id}\" setzen"),
-            None => "aktive Aufnahme leeren".into(),
+            Some(id) => format!("Aktive Aufnahme auf \"{id}\" setzen"),
+            None => "Aktive Aufnahme entfernen".into(),
         }
         })
     }

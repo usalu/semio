@@ -65,7 +65,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindSceneRo
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Unbind Scene Root Node", "Szenenwurzelknoten lösen")
+        protocol::LocalizedLabel::native("Unbind Scene Root Node", "Bindung des Szenenwurzelknotens aufheben")
     }
 
     fn target(&self) -> Vec<String> {

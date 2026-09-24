@@ -14,6 +14,7 @@ import {
     isIconName,
 } from "@semio-tech/assets";
 import {
+    type PluginModuleAcquisitionProgress,
     type ActionArgControl,
     type ActionArgDef,
     type ActionDefinition,
@@ -88,6 +89,7 @@ import {
     type TutorialUiSnapshot,
     type UiDirtyScope,
     type UiIntent,
+    type UiPatch,
     unresolvedActionArgs,
     type UtilityDefinition,
     type UtilityNode,
@@ -198,6 +200,7 @@ import {
     type ViewModel
 } from "../🐚️Shell/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
+import type { BrowserActorUiPatchVerdictV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
 import { segmentedDownloadSinkFactory, type SegmentedDownloadSinkFactory } from "../📤️SegmentedDownload/🟦️.ts";
 import { loadPluginModule, pluginLoadProgressAt, pluginLoadRemainingMs, PLUGIN_LOAD_IDLE_TIMEOUT_MS, type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 import {
@@ -1721,6 +1724,18 @@ export function retitleWindowLayoutNode(
   } as WindowLayoutNode;
 }
 
+/** @emoji 🪟️ The window instances a framework layout DECLARES beyond one per kind — every leaf whose instance id differs
+ * from its window kind id, for a kind the app declares — as `{ id, windowKindId }`, in layout order, labels untouched.
+ * The identity half of {@link resolveFrameworkLayoutSeed}'s `extraInstances`, for a program whose windows the shell
+ * namespaces itself (a spawned program inside `s`). */
+export function frameworkLayoutDeclaredInstances(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): readonly { readonly id: string; readonly windowKindId: string }[] {
+  if (!layout?.root) return [];
+  const kindIds = new Set(windowKinds.map((kind) => kind.id));
+  return collectFrameworkLayoutWindowSeeds(layout.root)
+    .filter((seed) => seed.windowId !== seed.windowKindId && kindIds.has(seed.windowKindId))
+    .map((seed) => ({ id: seed.windowId, windowKindId: seed.windowKindId }));
+}
+
 /** @emoji 🪟️ Resolves a framework layout into the live mode tree, extra instances, and pending projection templates without inferring window focus (no side effects). */
 export function resolveFrameworkLayoutSeed(
   layout: WindowLayout | undefined,
@@ -1957,13 +1972,13 @@ export function pluginShouldReceiveContributions(pluginId: string, sessionPlugin
  * {@link loadPluginModule}, because the point of a cancel control is that the AWAIT settles now; the
  * underlying fetch finishes into the loader's own cache, so a re-request finds it warm. A cancelled
  * load is not a fault and is logged as such. */
-export async function loadPluginModuleResilient(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginWasmHandle | null> {
+export async function loadPluginModuleResilient(pluginId: string, moduleUrl: string, signal?: AbortSignal, manifestPluginId: string = pluginId): Promise<PluginWasmHandle | null> {
   const startedAtMs = Date.now();
   let timer = 0;
   try {
     if (signal?.aborted === true) throw new Error(`plugin-install.cancelled: ${pluginId}`);
     return await Promise.race([
-      loadPluginModule(pluginId, moduleUrl, signal),
+      loadPluginModule(pluginId, moduleUrl, signal, manifestPluginId),
       new Promise<never>((_, reject) => {
         signal?.addEventListener("abort", () => reject(new Error(`plugin-install.cancelled: ${pluginId}`)), { once: true });
       }),
@@ -1995,11 +2010,35 @@ export async function loadPluginModuleResilient(pluginId: string, moduleUrl: str
  * local-resolution idiom as the rest of this region. */
 const PLUGIN_INSTALL_BAND_LABEL: FrozenLabel = { en: "Loading plugin", de: "Plugin wird geladen" };
 const PLUGIN_INSTALL_CANCEL_LABEL: FrozenLabel = { en: "Cancel", de: "Abbrechen" };
+const PLUGIN_INSTALL_PROGRESS_LABEL: FrozenLabel = { en: "{completed} of {total} MB verified", de: "{completed} von {total} MB geprüft" };
 
-/** 🎬️ "Loading plugin cad, beta" — one band for however many installs are in flight, because they
- * share one progress story and one cancel. */
-export function pluginInstallBandTextV1(pluginIds: readonly string[], locale: string): string {
-  return `${frozenLabelText(PLUGIN_INSTALL_BAND_LABEL, locale)} ${[...pluginIds].sort().join(", ")}`;
+/** 📈️ Every byte the in-flight installs have verified, out of every byte they must verify — `null`
+ * while no install is downloading (a locally staged module has nothing to download). */
+export function pluginInstallProgressTotalV1(progressById: Readonly<Record<string, PluginModuleAcquisitionProgress>>, pluginIds: readonly string[]): PluginModuleAcquisitionProgress | null {
+  const rows = pluginIds.flatMap((pluginId) => (progressById[pluginId] ? [progressById[pluginId]!] : []));
+  if (rows.length === 0) return null;
+  return { completedBytes: rows.reduce((sum, row) => sum + row.completedBytes, 0), totalBytes: rows.reduce((sum, row) => sum + row.totalBytes, 0) };
+}
+
+/** 🎬️ "Loading plugin cad, beta · 12.3 of 81.2 MB verified" — one band for however many installs are
+ * in flight, because they share one progress story and one cancel. */
+export function pluginInstallBandTextV1(pluginIds: readonly string[], locale: string, progress: PluginModuleAcquisitionProgress | null = null): string {
+  const band = `${frozenLabelText(PLUGIN_INSTALL_BAND_LABEL, locale)} ${[...pluginIds].sort().join(", ")}`;
+  if (!progress || progress.totalBytes <= 0) return band;
+  const megabytes = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const verified = frozenLabelText(PLUGIN_INSTALL_PROGRESS_LABEL, locale).replace("{completed}", megabytes.format(progress.completedBytes / 1_000_000)).replace("{total}", megabytes.format(progress.totalBytes / 1_000_000));
+  return `${band} · ${verified}`;
+}
+
+/** 🔔️ The plugin module store's notices, in the person's language: a stored module that lost files is reinstalled; a full
+ * store refuses an install. */
+const PLUGIN_MODULE_STORE_NOTICE_LABEL: Readonly<Record<"reinstalling" | "quota-exceeded", FrozenLabel>> = {
+  reinstalling: { en: "Plugin {plugin} was incomplete on this device and is being reinstalled.", de: "Plugin {plugin} war auf diesem Gerät unvollständig und wird neu installiert." },
+  "quota-exceeded": { en: "Plugin {plugin} could not be installed: this device's storage is full.", de: "Plugin {plugin} konnte nicht installiert werden: Der Speicher dieses Geräts ist voll." },
+};
+
+export function pluginModuleStoreNoticeTextV1(notice: Readonly<{ kind: "reinstalling" | "quota-exceeded"; pluginId: string }>, locale: string): string {
+  return frozenLabelText(PLUGIN_MODULE_STORE_NOTICE_LABEL[notice.kind], locale).replace("{plugin}", notice.pluginId);
 }
 
 export function pluginInstallCancelTextV1(locale: string): string {
@@ -2112,6 +2151,7 @@ export function panelTabDefinitionToNode(
   locale: string = SHELL_LOCALES[0],
   treeWindows: TreeWindowHostV1 | null = null,
   cache?: PanelTreeConfigCacheV1,
+  actorPanels: BrowserActorPanelHostV1 | null = null,
 ): PanelTabNode {
   const tabId = panelTabKindId(tab.kind);
   const label = resolvePanelTabLabel(appLabelsOverlay, tabId, resolveManifestLabel(tab.label, terminology, locale));
@@ -2122,7 +2162,7 @@ export function panelTabDefinitionToNode(
       icon: panelTabIcon(tabId, group),
       name: label,
       order,
-      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder, appLabelsOverlay, terminology, locale, treeWindows, cache)),
+      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder, appLabelsOverlay, terminology, locale, treeWindows, cache, actorPanels)),
     };
   }
   return singleTreeLeaf({
@@ -2130,8 +2170,67 @@ export function panelTabDefinitionToNode(
     icon: panelTabIcon(tabId, group),
     name: label,
     order,
-    tree: staticTreePanelDefinition(cachedTreePanelConfigV1(cache, tabId, panelUiByKey[tabId] ?? pendingPanelUiNodeV1(), tab.bodyKey ?? tabId, onAction, treeWindows)),
+    tree: staticTreePanelDefinition(
+      actorPanels === null
+        ? cachedTreePanelConfigV1(cache, tabId, panelUiByKey[tabId] ?? pendingPanelUiNodeV1(), tab.bodyKey ?? tabId, onAction, treeWindows)
+        : cachedActorTreePanelConfigV1(cache, tabId, actorPanels, tab.bodyKey ?? tabId, treeWindows),
+    ),
   });
+}
+
+/** 🎭️ The panels of an actor-bound (hub) document, rendered by the document's verified browser actor rather than
+ * the shell's local instance, which never sees the live document (ticket 26/09/23 C10, audit G-P1-4). `stores`
+ * holds one retained store per panel-tab id, patched in place by the actor's offers; `onIntent` routes that
+ * panel's gestures back to the same actor; `onAction` refuses a bare descriptor exactly as the actor's window does.
+ * A tab without a store yet shows the pending body — never the local instance's stale one. */
+export type BrowserActorPanelHostV1 = Readonly<{
+  stores: ReadonlyMap<string, UiDocumentStore>;
+  onIntent: (tabId: string, intent: UiIntent) => void;
+  onAction: (action: ActionDescriptor) => void;
+}>;
+
+/** 🗂️ The panel-tab ids whose bodies an actor may render for `app`: its panel-tab leaves with a body, exactly the
+ * panels the local refresh asks a guest for (`buildUiRefreshRequest`). */
+export function browserActorPanelKeysV1(app: Pick<AppDefinition, "panelTabs">): ReadonlySet<string> {
+  return new Set(flattenPanelTabLeaves(app.panelTabs).flatMap((tab) => (tab.bodyKey ? [panelTabKindId(tab.kind)] : [])));
+}
+
+export type BrowserActorUiStoresV1 = Readonly<{ window: UiDocumentStore; panels: Map<string, UiDocumentStore> }>;
+
+/** 🩹️ Applies one browser-actor patch offer surface by surface and answers one verdict per patch, in offer order
+ * — the guest acknowledges and resends per surface (`patch-ack` / `patch-rejected`), so one stale panel never
+ * costs the window its frame. A patch for a surface this app does not render is refused `unknown-surface`; a
+ * patch that does not apply resets its store to the empty document (see `UiDocumentStore.reset`), which is what
+ * the guest's full resend assumes. The FIRST offer of an opening must paint the window, or nothing is retained
+ * and every surface is refused `window-surface-unpainted` so the guest resends them all. */
+export function applyBrowserActorUiPatchesV1(
+  patches: readonly UiPatch[],
+  windowKey: string,
+  panelKeys: ReadonlySet<string>,
+  retained: BrowserActorUiStoresV1 | null,
+): Readonly<{ verdicts: readonly BrowserActorUiPatchVerdictV1[]; stores: BrowserActorUiStoresV1 | null; panelsAdded: boolean }> {
+  const window = retained?.window ?? new UiDocumentStore(windowKey),
+    panels = retained?.panels ?? new Map<string, UiDocumentStore>();
+  let panelsAdded = false;
+  const verdicts = patches.map((patch): BrowserActorUiPatchVerdictV1 => {
+    if (patch.surface !== windowKey && !panelKeys.has(patch.surface)) return { surface: patch.surface, outcome: "rejected", revision: 0, reason: "unknown-surface" };
+    let store = patch.surface === windowKey ? window : panels.get(patch.surface);
+    if (store === undefined) {
+      store = new UiDocumentStore(patch.surface);
+      panels.set(patch.surface, store);
+      panelsAdded = true;
+    }
+    const applied = store.applyPatch(patch);
+    if (applied.ok) return { surface: patch.surface, outcome: "acknowledged", revision: store.getRevisionSnapshot() };
+    store.reset();
+    return { surface: patch.surface, outcome: "rejected", revision: 0, reason: applied.rejection.type };
+  });
+  if (retained !== null || verdicts.some((verdict) => verdict.surface === windowKey && verdict.outcome === "acknowledged")) return { verdicts, stores: { window, panels }, panelsAdded };
+  return {
+    verdicts: verdicts.map((verdict): BrowserActorUiPatchVerdictV1 => (verdict.outcome === "acknowledged" ? { surface: verdict.surface, outcome: "rejected", revision: 0, reason: "window-surface-unpainted" } : verdict)),
+    stores: null,
+    panelsAdded: false,
+  };
 }
 
 export function resolveCanvasBodyKey(app: AppDefinition): string {
@@ -2499,14 +2598,28 @@ function treeWindowOpenSignatureV1(openStates: Readonly<Record<string, boolean>>
  * body refreshing re-parsed and remounted EVERY open tab's tree (📓️audit-host-tree-pipeline.md §8).
  * With a windowed tree that is not merely wasteful: a remount throws away the `<Tree>` instance the
  * scroll observer is attached to, on every scroll of a sibling panel. */
-export type PanelTreeConfigCacheV1 = Map<string, { readonly node: BuiltNode; readonly onAction: unknown; readonly bodyKey: string; readonly treeWindows: TreeWindowHostV1 | null; readonly openSignature: string; readonly config: TreePanelConfig }>;
+export type PanelTreeConfigCacheV1 = Map<string, { readonly source: BuiltNode | UiDocumentStore; readonly onAction: unknown; readonly bodyKey: string; readonly treeWindows: TreeWindowHostV1 | null; readonly openSignature: string; readonly config: TreePanelConfig }>;
 
 function cachedTreePanelConfigV1(cache: PanelTreeConfigCacheV1 | undefined, tabId: string, node: BuiltNode, bodyKey: string, onAction: (action: ActionDescriptor) => void, treeWindows: TreeWindowHostV1 | null): TreePanelConfig {
   const openSignature = treeWindows ? treeWindowOpenSignatureV1(treeWindows.openStatesFor(bodyKey)) : "";
   const entry = cache?.get(tabId);
-  if (entry && entry.node === node && entry.onAction === onAction && entry.bodyKey === bodyKey && entry.treeWindows === treeWindows && entry.openSignature === openSignature) return entry.config;
+  if (entry && entry.source === node && entry.onAction === onAction && entry.bodyKey === bodyKey && entry.treeWindows === treeWindows && entry.openSignature === openSignature) return entry.config;
   const config = uiNodeToTreePanelConfig(node, onAction, bodyKey, treeWindows);
-  cache?.set(tabId, { node, onAction, bodyKey, treeWindows, openSignature, config });
+  cache?.set(tabId, { source: node, onAction, bodyKey, treeWindows, openSignature, config });
+  return config;
+}
+
+/** 🎭️ {@link cachedTreePanelConfigV1} for an actor-rendered panel: the tree hosts the actor's retained store itself,
+ * so a patch updates the mounted panel in place and the config is rebuilt only when the store, the intent route or
+ * the tree-window inputs move. */
+function cachedActorTreePanelConfigV1(cache: PanelTreeConfigCacheV1 | undefined, tabId: string, actorPanels: BrowserActorPanelHostV1, bodyKey: string, treeWindows: TreeWindowHostV1 | null): TreePanelConfig {
+  const store = actorPanels.stores.get(tabId);
+  if (store === undefined) return cachedTreePanelConfigV1(cache, tabId, pendingPanelUiNodeV1(), bodyKey, actorPanels.onAction, treeWindows);
+  const openSignature = treeWindows ? treeWindowOpenSignatureV1(treeWindows.openStatesFor(bodyKey)) : "";
+  const entry = cache?.get(tabId);
+  if (entry && entry.source === store && entry.onAction === actorPanels.onIntent && entry.bodyKey === bodyKey && entry.treeWindows === treeWindows && entry.openSignature === openSignature) return entry.config;
+  const config = interpretedTreePanelConfigV1(store, tabId, actorPanels.onAction, (intent) => actorPanels.onIntent(tabId, intent), bodyKey, treeWindows);
+  cache?.set(tabId, { source: store, onAction: actorPanels.onIntent, bodyKey, treeWindows, openSignature, config });
   return config;
 }
 
@@ -2528,6 +2641,12 @@ function pendingPanelUiNodeV1(): BuiltNode {
 export function uiNodeToTreePanelConfig(node: BuiltNode, onAction: (action: ActionDescriptor) => void, bodyKey: string, treeWindows?: TreeWindowHostV1 | null): TreePanelConfig {
   const store = new UiDocumentStore(`panel:${node.key}`);
   store.loadSnapshot(builtNodeToSnapshot(`panel:${node.key}`, node));
+  return interpretedTreePanelConfigV1(store, node.key, onAction, (intent) => onAction(uiIntentToActionDescriptor(intent)), bodyKey, treeWindows);
+}
+
+/** 🌲️ Hosts one retained panel store full-width in a tree leaf, with its tree-window context — shared by the
+ * authored-body path ({@link uiNodeToTreePanelConfig}) and the actor-rendered path ({@link BrowserActorPanelHostV1}). */
+function interpretedTreePanelConfigV1(store: UiDocumentStore, boundaryKey: string, onAction: (action: ActionDescriptor) => void, onIntent: (intent: UiIntent) => void | Promise<void>, bodyKey: string, treeWindows?: TreeWindowHostV1 | null): TreePanelConfig {
   const treeWindowContext: TreeWindowContextValue | null = treeWindows
     ? {
         bodyKey,
@@ -2545,10 +2664,10 @@ export function uiNodeToTreePanelConfig(node: BuiltNode, onAction: (action: Acti
   return {
     sections: [],
     emptyState: (
-      <ShellFaultBoundary boundaryId={`panel-${node.key}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+      <ShellFaultBoundary boundaryId={`panel-${boundaryKey}`} fallbackLabel={shellLabel("ui.common.renderError")}>
         <div className="min-h-0 min-w-0 w-full flex-1">
           <TreeWindowContext.Provider value={treeWindowContext}>
-            <InterpretedUiNode store={store} onAction={onAction} onIntent={(intent) => onAction(uiIntentToActionDescriptor(intent))} />
+            <InterpretedUiNode store={store} onAction={onAction} onIntent={onIntent} />
           </TreeWindowContext.Provider>
         </div>
       </ShellFaultBoundary>
@@ -2854,6 +2973,35 @@ export function checkinSubmitText(locale: string): string {
 const CHECKIN_CANCEL_LABEL: FrozenLabel = { en: "Cancel", de: "Abbrechen" };
 export function checkinCancelText(locale: string): string {
   return frozenLabelText(CHECKIN_CANCEL_LABEL, locale);
+}
+
+/** 📌️ The hub Check In's own status vocabulary: a running phase with its progress, and one sentence
+ * per terminal outcome and refusal. Mirrors `DocumentCheckInPhaseV1`/`DocumentCheckInRefusalV1`. */
+const CHECKIN_STATUS_LABELS = {
+  running: { en: "Checking in…", de: "Wird eingecheckt…" },
+  ready: { en: "Checked in", de: "Eingecheckt" },
+  cancelled: { en: "Check-in cancelled", de: "Einchecken abgebrochen" },
+  "unknown-head": { en: "Check-in refused: the hub does not know this version", de: "Einchecken abgelehnt: Der Hub kennt diesen Stand nicht" },
+  "stale-head": { en: "Already checked in: a newer check-in exists", de: "Bereits eingecheckt: Es gibt einen neueren Check-in" },
+  "active-checkpoint-changed": { en: "Check-in collided with another check-in; try again", de: "Einchecken kollidierte mit einem anderen Check-in; bitte erneut versuchen" },
+  "ledger-not-replayable": { en: "Check-in refused: an approval in this range is checked in on its own", de: "Einchecken abgelehnt: Eine Freigabe in diesem Bereich wird separat eingecheckt" },
+  "codec-refused": { en: "Check-in refused: the document could not be rebuilt", de: "Einchecken abgelehnt: Das Dokument konnte nicht wiederhergestellt werden" },
+  "authority-changed": { en: "Check-in stopped: you can no longer edit this document", de: "Einchecken gestoppt: Sie dürfen dieses Dokument nicht mehr bearbeiten" },
+  unavailable: { en: "Check-in unavailable; try again", de: "Einchecken nicht verfügbar; bitte erneut versuchen" },
+} as const satisfies Readonly<Record<string, FrozenLabel>>;
+
+/** 📌️ One sentence for a hub Check In status; a running one carries its `completed/total` units. */
+export function checkinStatusText(status: Readonly<{ phase: string; progress: Readonly<{ completedUnits: number; totalUnits: number }>; refusal?: string }>, locale: string): string {
+  if (status.phase === "ready") return frozenLabelText(CHECKIN_STATUS_LABELS.ready, locale);
+  if (status.phase === "cancelled") return frozenLabelText(CHECKIN_STATUS_LABELS.cancelled, locale);
+  if (status.phase === "failed") return frozenLabelText(CHECKIN_STATUS_LABELS[(status.refusal ?? "unavailable") as keyof typeof CHECKIN_STATUS_LABELS] ?? CHECKIN_STATUS_LABELS.unavailable, locale);
+  return `${frozenLabelText(CHECKIN_STATUS_LABELS.running, locale)} ${status.progress.completedUnits}/${status.progress.totalUnits}`;
+}
+
+const CHECKIN_ABORT_LABEL: FrozenLabel = { en: "Cancel check-in", de: "Einchecken abbrechen" };
+/** 🛑️ The running Check In's own cancel control. */
+export function checkinAbortText(locale: string): string {
+  return frozenLabelText(CHECKIN_ABORT_LABEL, locale);
 }
 
 /** 🕰️ The History panel's own five labels. They were English string literals in the JSX, so the whole
@@ -5558,7 +5706,7 @@ const uiRefreshWantsCatalogue = uiDirtyScopeWantsCatalogue;
  */
 export function sessionWindowInstances(
   app: { readonly windowKinds: readonly { readonly id: string; readonly bodyKey: string }[] },
-  extraWindowInstances: readonly ExtraWindowInstance[],
+  extraWindowInstances: readonly Pick<ExtraWindowInstance, "id" | "windowKindId">[],
 ): readonly { readonly id: string; readonly bodyKey: string; readonly windowKindId: string }[] {
   const kindById = new Map(app.windowKinds.map((kind) => [kind.id, kind] as const));
   const base = app.windowKinds.map((kind) => ({ id: kind.id, bodyKey: kind.bodyKey, windowKindId: kind.id }));

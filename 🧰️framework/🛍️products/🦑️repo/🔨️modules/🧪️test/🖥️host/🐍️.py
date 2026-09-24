@@ -90,6 +90,13 @@ class Context:
         self.work_dir = plan["workDir"]
         self.artifact_dir = plan.get("artifactDir") or os.path.join(plan["workDir"], "📦️artifacts")
 
+    def row(self) -> str:
+        """🪆️ The Examples row id this scenario expands, or an error for a plain scenario."""
+        outline = self.scenario.get("outlineOf") or ""
+        if not outline or not self.scenario["id"].startswith(outline + "-"):
+            raise AssertionError("scenario %s expands no Scenario Outline row" % self.scenario["id"])
+        return self.scenario["id"][len(outline) + 1 :]
+
     def artifact(self, role: str, filename: str) -> str:
         """📦️ Absolute path to write one named result artifact to, creating parent directories."""
         directory = os.path.join(self.artifact_dir, role)
@@ -148,18 +155,22 @@ class Adapter:
         self._handlers: Dict[str, Callable[[Context], Outcome]] = {}
 
     def oracle(self, scenario: str, handler: Callable[[Context], Outcome]) -> "Adapter":
-        """🔮️ Registers the reference-implementation handler for one scenario."""
+        """🔮️ Registers the reference-implementation handler for one scenario id, or for a Scenario
+        Outline's base id (``@id-<base>``), which then serves every row the feature expands."""
         self._handlers[scenario + "::oracle"] = handler
         return self
 
     def subject(self, scenario: str, handler: Callable[[Context], Outcome]) -> "Adapter":
-        """🎯️ Registers this repository's handler for one scenario."""
+        """🎯️ Registers this repository's handler for one scenario id, or for a Scenario Outline's base id."""
         self._handlers[scenario + "::subject"] = handler
         return self
 
-    def handler(self, scenario: str, role: str) -> Optional[Callable[[Context], Outcome]]:
-        """🔎️ The registered handler for one (scenario, role), or ``None``."""
-        return self._handlers.get(scenario + "::" + role)
+    def handler(self, scenario: Dict[str, Any], role: str) -> Optional[Callable[[Context], Outcome]]:
+        """🔎️ The handler registered for the scenario's own id, else for its outline's base id, or ``None``."""
+        exact = self._handlers.get(scenario["id"] + "::" + role)
+        if exact is not None or not scenario.get("outlineOf"):
+            return exact
+        return self._handlers.get(scenario["outlineOf"] + "::" + role)
 
 
 # endregion 🔖️Adapter
@@ -241,7 +252,7 @@ def run_main(argv: List[str]) -> int:
             "artifacts": [],
             "diagnostics": [],
         }
-        handler = adapter.handler(scenario["id"], plan["role"])
+        handler = adapter.handler(scenario, plan["role"])
         if handler is None:
             failed = True
             result["status"] = "errored"

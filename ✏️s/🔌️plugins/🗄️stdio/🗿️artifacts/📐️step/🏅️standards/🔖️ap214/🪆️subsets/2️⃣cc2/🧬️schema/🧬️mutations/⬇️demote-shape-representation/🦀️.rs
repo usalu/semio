@@ -24,7 +24,7 @@ impl protocol::MutationKind<StepSnapshot, StepCc2Mutation> for DemoteShapeRepres
         class_inverse(base, &ClassEdit::Demotion { id: self.id })
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Demote shape representation #{} onto this class's ceiling", self.id), &format!("Formrepräsentation #{} auf Diesklassendecke herabstufen", self.id))
+        protocol::LocalizedLabel::native(&format!("Demote shape representation #{} onto this class's ceiling", self.id), &format!("Formrepräsentation #{} auf die Obergrenze dieser Klasse herabstufen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string()]

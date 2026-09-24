@@ -22,7 +22,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeVariableAc
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change variable action #{} value to {}", self.index, self.new_value), &format!("Variablenaktion #{} Wert auf {} ändern", self.index, self.new_value))
+        protocol::LocalizedLabel::native(&format!("Change variable action #{} value to {}", self.index, self.new_value), &format!("Wert der veränderlichen Einwirkung #{} auf {} ändern", self.index, self.new_value))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

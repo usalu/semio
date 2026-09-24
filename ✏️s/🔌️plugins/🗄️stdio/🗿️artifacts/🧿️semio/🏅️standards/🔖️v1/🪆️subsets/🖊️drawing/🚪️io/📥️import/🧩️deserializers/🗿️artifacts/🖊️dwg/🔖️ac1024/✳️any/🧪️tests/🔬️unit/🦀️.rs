@@ -8,7 +8,7 @@ fn sample_dwg() -> DwgSnapshot {
     let layer = drawing.ensure_layer("annotations");
     drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: false, elevation: 0.0, vertices: vec![[0.0, 0.0], [5.0, 0.0]], bulges: vec![0.0, 0.0] } });
     drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Text { at: [1.0, 1.0, 0.0], height: 1.0, rotation: 0.0, content: "hi".into() } });
-    DwgSnapshot { version: "AC1015".into(), drawing: DwgLogicalDrawing::from_native(&drawing).expect("valid sample drawing"), ..DwgSnapshot::default() }
+    DwgSnapshot::from_drawing(&drawing).expect("valid sample drawing")
 }
 
 #[semio_framework_async_macros::async_test]

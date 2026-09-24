@@ -61,7 +61,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeMes
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Unbind Node Mesh", "Knotennetz lösen")
+        protocol::LocalizedLabel::native("Unbind Node Mesh", "Bindung des Knotennetzes aufheben")
     }
 
     fn target(&self) -> Vec<String> {

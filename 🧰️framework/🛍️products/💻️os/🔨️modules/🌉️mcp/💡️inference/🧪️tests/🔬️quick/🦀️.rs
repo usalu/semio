@@ -286,7 +286,7 @@ async fn bound_tier_inference_resources_list_names_every_known_artifact() {
 /// dispatch path. The workspace is a real `--folder` one over `catalog`, so the declared roster is
 /// read from the plugins' own COMMITTED `🔣️.json` descriptors — no fixture roster is invented here.
 fn inference_run_harness(catalog: Arc<Catalog>) -> (InMemoryToolRegistry, crate::actions::MockArtifactChannel, Arc<HeadlessWorkspace>) {
-    let workspace = open_workspace(catalog);
+    let workspace = open_workspace(catalog.clone());
     let channel = crate::actions::MockArtifactChannel::new();
     let actions = Arc::new(crate::actions::ActionAdapter::new(
         Box::new(crate::workspace::ArtifactChannels::Mock(channel.clone())),
@@ -298,7 +298,7 @@ fn inference_run_harness(catalog: Arc<Catalog>) -> (InMemoryToolRegistry, crate:
     ));
     let principal = AgentPrincipal::from_scope_names("agent:test", "claude-code", &["artifacts.read".to_string(), "jobs.spawn".to_string()], None);
     let mut registry = InMemoryToolRegistry::new();
-    register_inference_job_tools(&mut registry, Some(workspace.clone()), actions, principal, crate::handles::SessionHandle::new("sess_inference"));
+    register_inference_job_tools(&mut registry, catalog, Some(workspace.clone()), actions, principal, crate::handles::SessionHandle::new("sess_inference"));
     (registry, channel, workspace)
 }
 
@@ -314,13 +314,13 @@ async fn inference_run_dispatches_the_gis_map_oracle_through_the_infer_command()
     let (registry, channel, _workspace) = inference_run_harness(plugin_only_catalog("gis"));
     let result = call_inference_run(
         &registry,
-        serde_json::json!({ "artifactKind": GIS_MAP_INFERENCE_ARTIFACT_KIND, "inferenceSchema": GIS_MAP_INFERENCE_SERVICE_ID, "payload": { "probe": 1 }, "cancellationId": "cancel-gis" }),
+        serde_json::json!({ "artifactKind": "s.gis.gismap", "inferenceSchema": "s.gis.gismap.inference", "payload": { "probe": 1 }, "cancellationId": "cancel-gis" }),
     );
     assert!(!result.is_error, "gis map inference must not be a tool error: {result:?}");
     let structured = result.structured_content.expect("inference_run answers structured content");
     assert_eq!(structured["status"], "SUCCEEDED");
     assert_eq!(structured["pluginId"], "gis");
-    assert_eq!(structured["inferenceSchema"], GIS_MAP_INFERENCE_SERVICE_ID);
+    assert_eq!(structured["inferenceSchema"], "s.gis.gismap.inference");
     assert_eq!(structured["payload"], serde_json::json!({ "probe": 1 }), "the guest's own result payload, not a host-synthesised one");
     assert!(structured["jobId"].as_str().expect("a job handle").starts_with("job_"), "an expensive call always mints a job for job_get/job_cancel");
 
@@ -328,8 +328,8 @@ async fn inference_run_dispatches_the_gis_map_oracle_through_the_infer_command()
     assert_eq!(log.len(), 1, "exactly one command left the dispatch path: {log:?}");
     let crate::actions::AppCommand::Infer(command) = &log[0].1 else { panic!("expected an Infer command, got {:?}", log[0].1) };
     assert_eq!(command.plugin_id, "gis");
-    assert_eq!(command.artifact_kind, GIS_MAP_INFERENCE_ARTIFACT_KIND);
-    assert_eq!(command.inference_schema, GIS_MAP_INFERENCE_SERVICE_ID);
+    assert_eq!(command.artifact_kind, "s.gis.gismap");
+    assert_eq!(command.inference_schema, "s.gis.gismap.inference");
     assert_eq!(command.cancellation_id, "cancel-gis");
 }
 
@@ -366,7 +366,8 @@ async fn inference_run_refuses_an_undeclared_service() {
 /// plugin is touched — the same scope gate every other inference tool applies.
 #[tokio::test]
 async fn inference_run_is_scope_gated() {
-    let workspace = open_workspace(wfc_only_catalog());
+    let catalog = wfc_only_catalog();
+    let workspace = open_workspace(catalog.clone());
     let channel = crate::actions::MockArtifactChannel::new();
     let actions = Arc::new(crate::actions::ActionAdapter::new(
         Box::new(crate::workspace::ArtifactChannels::Mock(channel.clone())),
@@ -377,7 +378,7 @@ async fn inference_run_is_scope_gated() {
         crate::audit::ClientInfo { name: "test".into(), version: "0".into() },
     ));
     let mut registry = InMemoryToolRegistry::new();
-    register_inference_job_tools(&mut registry, Some(workspace), actions, AgentPrincipal::from_scope_names("agent:test", "claude-code", &[], None), crate::handles::SessionHandle::new("sess_unscoped"));
+    register_inference_job_tools(&mut registry, catalog, Some(workspace), actions, AgentPrincipal::from_scope_names("agent:test", "claude-code", &[], None), crate::handles::SessionHandle::new("sess_unscoped"));
     let result = call_inference_run(&registry, serde_json::json!({ "artifactKind": "s.wfc.wfc3d", "inferenceSchema": "s.wfc.wfc3d.solve" }));
     assert!(result.is_error);
     assert!(channel.frame_log().is_empty());
@@ -404,6 +405,7 @@ fn contract_row(required: bool, input_schema: &str) -> DeclaredInference {
             output_schema: "{}".to_string(),
             progress_unit: "cells".to_string(),
             artifact_binding: Some(semio_framework::InferenceArtifactBinding { field: "document".to_string(), encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64.to_string(), required }),
+            commit: None,
         }),
     }
 }

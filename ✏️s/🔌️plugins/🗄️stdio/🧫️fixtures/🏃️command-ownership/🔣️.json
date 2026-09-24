@@ -5,6 +5,17 @@
       "id": "artifact-inventory",
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts",
       "exports": [
+        "CARGO_COMPOSITION_NAME",
+        "CARGO_CONTRACT_NAME",
+        "COMPOSITION_RUST_NAME",
+        "COMPOSITION_TYPESCRIPT_NAME",
+        "JsonMap",
+        "NX_CONTRACT_NAME",
+        "STDIO_RELATIVE_ROOT",
+        "StdioArtifactPackageRecord",
+        "canonicalStdioArtifactNames",
+        "readStdioJson",
+        "slashStdioPath",
         "stdioArtifactDefinitionPaths",
         "stdioArtifactPackageContract"
       ]

@@ -21,14 +21,15 @@ use store::EngineHandles;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum MdEditCommand {
     ReplaceText { text: String },
-    /// 🎬️ The navbar example picker's payload — see the `🎬️ExampleSwitch` region below.
+    /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
     SetActiveExample { example_id: String },
 }
 
 impl protocol::OpBinary for MdEditCommand {
     /// 🎯️ The app-owned retained routes this command channel carries — the join key
-    /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The
-    /// window-kind verb stays out: it is declared by the framework window kit, not by this app.
+    /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TextWindowKit`
+    /// mints `replace-text`, but only this editor can reduce it into its own mutation, so it is an
+    /// app-owned route exactly like the example switch.
     const TOOL_JOB_IDS: &'static [&'static str] = MD_RETAINED_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -41,18 +42,27 @@ impl protocol::OpBinary for MdEditCommand {
 }
 //#endregion 🔖️Command
 
-//#region 🎬️ExampleSwitch
-/// 🧵️ The ONE app-owned retained route this editor declares. `validate_ui_dispatch_classification`
-/// refuses any verb that is not `Migrated`, and `Migrated` only survives the guest's
-/// `interactive-job.catalog-incomplete` boot check when this roster, the publication contracts and
-/// the `bounded_first_step_tool_proofs!` block below all name the same id.
-const MD_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
+//#region 🧵️RetainedRoutes
+/// 🪟️ The verb the `TextWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
+const MD_KIT_ACTION_ID: &str = "replace-text";
+/// 🧵️ The app-owned retained routes this editor declares: the example switch and `replace-text`.
+/// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
+/// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
+/// publication contracts and the `bounded_first_step_tool_proofs!` block below all name the same
+/// ids. Without the kit verb's row the reactor refused every `replace-text` with
+/// `interactive-job.missing-factory`.
+const MD_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, MD_KIT_ACTION_ID];
 const MD_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.md.tool-command.v1";
-const MD_RETAINED_RAW_BYTES: usize = 8_192;
+/// 📏️ `replace-text` carries the whole buffer, so the wire bound is the largest document this route
+/// admits — kept under the guest's 64 KiB contiguous-request ceiling.
+const MD_RETAINED_RAW_BYTES: usize = 32_768;
 /// 🚦️ The example switch publishes into NO document lane: it hands the host one
-/// `Effect::LoadDocument`, so its only lane is `HostOnly`.
-const MD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
-    &[ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
+/// `Effect::LoadDocument`, so its only lane is `HostOnly`. `replace-text` publishes the artifact
+/// mutation it reduces into, so its only lane is `Artifact`.
+const MD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: MD_KIT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn md_retained_contract() -> ToolExecutionContract {
@@ -78,7 +88,7 @@ fn md_example_snapshot(example_id: &str) -> MdSnapshot {
 fn md_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<MdEditCommand, Fault> {
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(MdEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        "replace-text" => Ok(MdEditCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text"], "") }),
+        MD_KIT_ACTION_ID => Ok(MdEditCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text"], "") }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.md.unhandled-action"),
@@ -91,21 +101,38 @@ fn md_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn md_command_id(command: &MdEditCommand) -> &'static str {
     match command {
-        MdEditCommand::ReplaceText { .. } => "replace-text",
+        MdEditCommand::ReplaceText { .. } => MD_KIT_ACTION_ID,
         MdEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn md_retained_extent(command: &MdEditCommand, _snapshot: &MdSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    matches!(command, MdEditCommand::SetActiveExample { .. }).then_some(1)
+fn md_retained_extent(_command: &MdEditCommand, _snapshot: &MdSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    Some(1)
+}
+
+/// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
+/// its document, `replace-text` becomes this artifact's own mutation.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn md_emit(command: &MdEditCommand, _snapshot: &MdSnapshot) -> Result<Emit<MdMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    match command {
+        MdEditCommand::ReplaceText { text } => match <MdSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+            Ok(snapshot) => Ok(Emit::mutations(vec![MdMutation::SetSnapshot(SetSnapshot { snapshot })])),
+            Err(error) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.md.invalid-text"), error.to_string())),
+        },
+        MdEditCommand::SetActiveExample { example_id } => Ok(Emit {
+            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&md_example_snapshot(example_id), STDIO_MD_DOCUMENT_SCHEMA)],
+            description: Some(format!("Load example {example_id}")),
+            ..Default::default()
+        }),
+    }
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn md_retained_reduce(
     command: &MdEditCommand,
-    _snapshot: &MdSnapshot,
+    snapshot: &MdSnapshot,
     _config: &NoConfig,
     _history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
@@ -113,14 +140,7 @@ fn md_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<MdEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<MdMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    match command {
-        MdEditCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&md_example_snapshot(example_id), STDIO_MD_DOCUMENT_SCHEMA)],
-            description: Some(format!("Load example {example_id}")),
-            ..Default::default()
-        }),
-        MdEditCommand::ReplaceText { .. } => Err(Fault::from("stdio-md-retained-route-mismatch")),
-    }
+    md_emit(command, snapshot)
 }
 
 struct MdRetainedCommandJobFactory {
@@ -173,7 +193,7 @@ impl ArtifactOwnedToolJobFactory for MdRetainedCommandJobFactory {
     const DOCUMENT_SCHEMA: &'static str = STDIO_MD_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = MD_RETAINED_PUBLICATION_CONTRACTS;
 }
-//#endregion 🎬️ExampleSwitch
+//#endregion 🧵️RetainedRoutes
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -203,7 +223,7 @@ impl ArtifactEditor for MdEditor {
         factory: "MdRetainedCommandJobFactory",
         factory_type: MdRetainedCommandJobFactory,
         contract: md_retained_contract(),
-        tools: ["setActiveExample"]
+        tools: ["setActiveExample", "replace-text"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -218,6 +238,7 @@ impl ArtifactEditor for MdEditor {
         if md_command_id(&request.command) != request.tool_id {
             return Err(Fault::from("stdio-md-retained-command-tool-mismatch"));
         }
+        let tool_id = md_command_id(&request.command);
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id,
@@ -240,7 +261,7 @@ impl ArtifactEditor for MdEditor {
             md_command_id,
             MD_RETAINED_RAW_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, md_retained_reduce, md_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(tool_id, md_retained_reduce, md_retained_extent)),
         )?;
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -251,6 +272,13 @@ impl ArtifactEditor for MdEditor {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 📤️ The artifact lane's one-item publication authority. The kit verb's route declares the
+    /// `Artifact` lane, and without this authority every such route fails closed with
+    /// `interactive-job.publication-authority-missing`.
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("stdio-md-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     /// 🧹️ The rest of the close protocol installing a document owner implies: an app that owns its
@@ -319,24 +347,14 @@ impl ArtifactEditor for MdEditor {
 
     fn handle(
         command: &Self::Command,
-        _doc: &ArtifactView<'_, Self::Snapshot>,
+        doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        match command {
-            MdEditCommand::ReplaceText { text } => match <MdSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                Ok(snapshot) => Ok(Emit::mutations(vec![MdMutation::SetSnapshot(SetSnapshot { snapshot })])),
-                Err(_) => Ok(Emit::default()),
-            },
-            MdEditCommand::SetActiveExample { example_id } => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&md_example_snapshot(example_id), STDIO_MD_DOCUMENT_SCHEMA)],
-                description: Some(format!("Load example {example_id}")),
-                ..Default::default()
-            }),
-        }
+        md_emit(command, doc.snapshot)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

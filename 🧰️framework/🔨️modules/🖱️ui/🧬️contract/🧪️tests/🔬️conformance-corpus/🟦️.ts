@@ -28,6 +28,6 @@ export function conformanceCorpusSelfTests(): number {
       count++;
     }
   }
-  assert.equal(count, 63);
+  assert.equal(count, 64);
   return count;
 }

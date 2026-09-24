@@ -22,20 +22,6 @@
 
 use semio_repo_test_host::{parse_json, Json};
 
-//#region 🔖️ScenarioIds
-/// 🏷️ The registered scenario id of one mutation-outline row. `no-mutation` is a test-only control
-/// row with no mutation variant behind it, so every feature tags its two scenarios
-/// `@id-no-mutation-baseline-mutate`/`-inverse` instead of `mutate-`/`inverse-` prefixed, which keeps
-/// the catalog coverage check from claiming them.
-pub fn scenario_id(kind: &str, verb: &str) -> String {
-    if kind == "no-mutation" {
-        format!("no-mutation-baseline-{verb}")
-    } else {
-        format!("{verb}-{kind}")
-    }
-}
-//#endregion 🔖️ScenarioIds
-
 //#region 🔖️FeatureRows
 /// 🧾️ The `<id>` / `<params>` rows of a case's own `Examples` table, read straight out of the
 /// feature file's text.
@@ -244,6 +230,11 @@ pub fn carrier_is_exact(output: &[u8], input: &[u8]) -> Result<(), String> {
     Ok(())
 }
 //#endregion 🔖️Laws
+
+//#region 🔖️Vector
+#[path = "🧬️vector/🦀️.rs"]
+pub mod vector;
+//#endregion 🔖️Vector
 
 //#region 🧪️Tests
 #[cfg(test)]

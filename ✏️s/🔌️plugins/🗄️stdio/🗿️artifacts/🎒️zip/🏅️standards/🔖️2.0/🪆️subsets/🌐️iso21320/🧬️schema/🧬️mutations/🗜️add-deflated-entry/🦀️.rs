@@ -22,7 +22,7 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for AddDeflatedEnt
         agg_inverse(&ZipIso21320Mutation::AddDeflatedEntry(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("add-deflated-entry", "entleerte Eintrag hinzufügen")
+        protocol::LocalizedLabel::native("Add deflated entry", "Komprimierten Eintrag hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

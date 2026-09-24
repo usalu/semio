@@ -82,7 +82,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeParen
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Move Node Parent", "Knotenelternteil verschieben")
+        protocol::LocalizedLabel::native("Move Node Parent", "Elternknoten verschieben")
     }
 
     fn target(&self) -> Vec<String> {

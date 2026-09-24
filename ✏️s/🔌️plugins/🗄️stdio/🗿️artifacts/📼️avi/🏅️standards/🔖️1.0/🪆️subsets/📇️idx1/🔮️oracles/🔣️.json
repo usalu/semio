@@ -5,38 +5,6 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "mutationManifests": [
-    {
-      "schema": "semio.repository-test.mutation-manifest/v2",
-      "artifact": "s.stdio.avi",
-      "standard": "1.0",
-      "subset": "idx1",
-      "standardDirectoryName": "🔖️1.0",
-      "subsetDirectoryName": "📇️idx1",
-      "mutations": [
-        {
-          "id": "set-idx1-present",
-          "capability": "avi-1-0-idx1-mutate",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-idx1-present",
-            "bridgeVersion": 1,
-            "variant": "SetIdx1Present"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "avi-1-0-idx1-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "riff-avi-1-0-mutate-reader"
-            }
-          ],
-          "payloadSchema": "../../🎛️hdrl/🧬️schema/🧬️mutations/📇️set-idx1-present/🦀️.rs#SetIdx1Present"
-        }
-      ]
-    }
-  ],
   "fixtureManifests": [
     {
       "schema": "semio.repository-test.fixture/v2",

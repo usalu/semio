@@ -1,0 +1,10 @@
+{
+  "schema": "semio.plugin-registry.rebuild-chain/v1",
+  "steps": [
+    { "id": "describe", "stage": "descriptors", "command": ["nx", "run-many", "-t", "describe", "--exclude", "@semio-tech/os-plugin-describe-rs", "--parallel=1"] },
+    { "id": "generate", "stage": "registry", "command": ["nx", "run", "@semio-tech/plugin-registry:generate"] },
+    { "id": "check", "stage": "registry", "command": ["nx", "run", "@semio-tech/plugin-registry:check"] },
+    { "id": "activate-s", "stage": "guests", "command": ["nx", "run", "@semio-tech/framework-os-dev:activate-s-react-dev"] },
+    { "id": "publish-catalog", "stage": "catalog", "command": ["nx", "run", "os-hub:trusted-catalog-bootstrap", "--packages", "all"] }
+  ]
+}

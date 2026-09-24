@@ -21,7 +21,7 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for RemoveTrack {
         agg_inverse(&Mp4Mutation::RemoveTrack(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-track", "Spur entfernen")
+        protocol::LocalizedLabel::native("Remove track", "Spur entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

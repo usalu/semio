@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Se
         agg_inverse(&SemioDocumentMutation::SetStyleName(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-style-name", "Stilname setzen")
+        protocol::LocalizedLabel::native("Set style name", "Stilname setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1,10 +1,13 @@
-#region 🧲️Header
+﻿#region 🧲️Header
 #
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 #
 # Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, verifies a user-created native Neo4j Desktop compose DBMS, and installs the local VS Code extension when editor CLIs are available.
 #
-# Summary: Windows-native bootstrap for the compose monorepo. Invoke `.\🪟️script.ps1 setup` (full) or `.\🪟️script.ps1 start` (IDE session).
+# Summary: Windows-native bootstrap for the compose monorepo. Invoke from a fresh clone with Windows PowerShell 5.1 or PowerShell 7:
+# `powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🔵️.ps1" setup` (full) or `… start`
+# (IDE session); `bun ./📜️script.ts setup native` routes here once Bun exists. Saved as UTF-8 with BOM: Windows PowerShell 5.1
+# decodes a BOM-less script with the ANSI code page and would turn every emoji path literal below into a different path.
 #
 #endregion 🧲️Header
 
@@ -23,6 +26,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
 $sessionStartEffective = $SessionStart.IsPresent -or ($Command -eq "start")
 
@@ -257,22 +262,19 @@ function Install-EditorExtensions {
     }
 }
 
-function Configure-GitSafeDirectories {
-    param([string]$RepoRoot)
+function Test-WindowsLongPathsEnabled {
+    $setting = Get-ItemProperty -LiteralPath "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -ErrorAction SilentlyContinue
+    return ($null -ne $setting) -and ($setting.LongPathsEnabled -eq 1)
+}
 
-    & git config --global --add safe.directory $RepoRoot | Out-Null
-    $gitmodulesPath = Join-Path $RepoRoot ".gitmodules"
-    if (-not (Test-Path -LiteralPath $gitmodulesPath)) {
+function Write-WindowsLongPathsGuidance {
+    if (Test-WindowsLongPathsEnabled) {
+        Write-Step "Windows long paths (LongPathsEnabled) are enabled."
         return
     }
-
-    $submodulePaths = & git config -f $gitmodulesPath --get-regexp '^submodule\..*\.path$' 2>$null
-    foreach ($line in $submodulePaths) {
-        $parts = $line -split "\s+", 2
-        if ($parts.Count -eq 2 -and $parts[1]) {
-            & git config --global --add safe.directory (Join-Path $RepoRoot $parts[1]) | Out-Null
-        }
-    }
+    $enable = 'New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force'
+    Write-Warning "[en] Windows long paths are disabled. This repository's fixtures and Rust build outputs reach 240+ characters below the clone root, and Python, CMake and every other tool that relies on this switch fail past 260. Run once in an elevated PowerShell, then open a new terminal: $enable"
+    Write-Warning "[de] Lange Windows-Pfade sind deaktiviert. Fixtures und Rust-Build-Ausgaben dieses Repositorys erreichen unterhalb des Klon-Verzeichnisses 240+ Zeichen, und Python, CMake und jedes andere Werkzeug, das auf diesen Schalter angewiesen ist, scheitern ab 260. Einmal in einer PowerShell mit Administratorrechten ausführen und danach ein neues Terminal öffnen: $enable"
 }
 
 function Configure-GitKrakenWorkspace {
@@ -743,6 +745,7 @@ if ($sessionStartEffective) {
 
 $repoRoot = Get-RepoRoot
 Set-Location $repoRoot
+Write-WindowsLongPathsGuidance
 $nxWorkspaceData = Join-Path $repoRoot ".nx\workspace-data"
 Ensure-Directory -Path $nxWorkspaceData
 $env:NX_WORKSPACE_DATA_DIRECTORY = $nxWorkspaceData
@@ -757,6 +760,7 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "jqlang.jq" -Label "jq"
     Sync-WingetPackage -Id "SQLite.SQLite" -Label "SQLite"
     Sync-WingetPackage -Id "Oven-sh.Bun" -Label "Bun"
+    Sync-WingetPackage -Id "OpenJS.NodeJS.LTS" -Label "Node.js LTS"
     Sync-WingetPackage -Id "Kitware.CMake" -Label "CMake"
     Sync-WingetPackage -Id "Ninja-build.Ninja" -Label "Ninja"
     Sync-WingetPackage -Id "Microsoft.OpenJDK.21" -Label "Microsoft OpenJDK 21"
@@ -846,12 +850,7 @@ if (-not $SkipGlobalCliInstall) {
 
     Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("add", "--global", "@google/gemini-cli", "typescript-language-server", "typescript", "pyright") -WorkingDirectory $repoRoot
     Install-UvTool -ToolName "ruff" -UvPath $uvPath
-    Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("target", "add", "wasm32-unknown-unknown") -WorkingDirectory $repoRoot
-    $cargoConfigPath = Join-HomePath @(".cargo", "config.toml")
-    @"
-[target.wasm32-unknown-unknown]
-rustflags = ['--cfg', 'getrandom_backend="wasm_js"']
-"@ | Set-Content -Path $cargoConfigPath -Encoding UTF8
+    Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("toolchain", "install") -WorkingDirectory $repoRoot
 }
 #endregion 🌐️GlobalCliInstall
 
@@ -860,12 +859,10 @@ if (-not $SkipRepoBootstrap) {
     Refresh-CurrentProcessPath
     $bunPath = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
 
-    Configure-GitSafeDirectories -RepoRoot $repoRoot
     Stop-RepoPythonProcesses -RepoRoot $repoRoot
-    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("install") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("nx", "run", "workspace:setup") -WorkingDirectory $repoRoot
     Write-Step "Building repo client binary…"
     Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("nx", "run", "@semio-tech/repo-client:build") -WorkingDirectory $repoRoot
-    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("nx", "run", "workspace:setup") -WorkingDirectory $repoRoot
     Configure-GitKrakenWorkspace -RepoRoot $repoRoot
 }
 #endregion 🧱️RepoBootstrap
@@ -891,4 +888,5 @@ if (-not $SkipPlaywrightInstall) {
 }
 #endregion 🎬️Playwright
 
+Write-WindowsLongPathsGuidance
 Write-Step "Native bootstrap complete. Open a new shell to pick up the persisted PATH/env vars."

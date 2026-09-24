@@ -176,3 +176,9 @@ async fn owned_core_exports_are_defined_once_and_invoked_by_both_owners() {
     assert_eq!(extension_only_arm, plugin_arm, "`extension_exports!`'s single-argument arm exports a different core symbol set than `plugin_exports!`");
 }
 //#endregion 🔖️OwnedCoreExportLaw
+
+/// 🪪️ The emitter classifies a declared-but-unowned kind by the plugin crate's own fault text; the law keeps the two in step.
+#[semio_framework_async_macros::async_test]
+async fn unowned_codec_schema_fault_is_the_plugin_crates_own_text() {
+    assert!(PLUGIN_SDK_SOURCE.contains(&format!("plugin_internal_fault(\"{UNOWNED_ARTIFACT_CODEC_SCHEMA}\")")), "the plugin crate no longer faults with UNOWNED_ARTIFACT_CODEC_SCHEMA");
+}

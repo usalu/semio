@@ -41,7 +41,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ReplaceEdgeG
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace edge \"{}\" geometry", self.id), &format!("Kante \"{}\" Geometrie ersetzen", self.id))
+        protocol::LocalizedLabel::native(&format!("Replace edge \"{}\" geometry", self.id), &format!("Geometrie von Kante \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

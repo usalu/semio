@@ -31,6 +31,8 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
   return {
     pluginId: "draw",
     manifest: { pluginId: "draw", label: "Draw", version: "0.1.0", apps: [], workflows: [], examples: [] },
+    packageId: "semio:draw",
+    componentSha256: "d".repeat(64),
     createApp: async () => 1,
     destroyApp: async () => {},
     readWindowConfigPacks: async () => [],
@@ -49,15 +51,39 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     invoke: async () => new Uint8Array(),
     dispatchInvokeExtension: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
     pushScopedContributions: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
+    documentBackbone: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
+    receiveDocumentBackbone: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
+    applyMutations: async () => {},
+    loadAppDocumentArchive: async () => {},
+    loadAppDocumentPack: async () => {},
     dispose: async () => {},
     ...overrides,
   };
 }
 
 describe("framework renderer wgpu plugin bridge", () => {
+  it("crosses the document-backbone door with an exact u64 binding generation and refuses an unknown operation", async () => {
+    const seen: { operation: string; bindingGeneration: bigint; uri: string }[] = [];
+    const bridge = pluginHandleForBridge(fakeHandle({
+      documentBackbone: async (_instanceId, operation, bindingGeneration, uri) => {
+        seen.push({ operation, bindingGeneration, uri });
+        return { output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] }, requestedEffects: [{ sendMessage: { target: { backbone: { uri } }, payload: [7] } }] };
+      },
+    }));
+    const answer = JSON.parse(await bridge.documentBackbone(3, "bind", "18446744073709551615", "actor://doc-1")) as { readonly requestedEffects: readonly unknown[] };
+    expect(seen).toEqual([{ operation: "bind", bindingGeneration: 18446744073709551615n, uri: "actor://doc-1" }]);
+    expect(answer.requestedEffects).toEqual([{ sendMessage: { target: { backbone: { uri: "actor://doc-1" } }, payload: [7] } }]);
+    await expect(bridge.documentBackbone(3, "detach", "1", "actor://doc-1")).rejects.toThrow("actor-document-control.operation:detach");
+  });
+
   it("builds a JS bridge whose manifest() is synchronous JSON, matching ProgramBridge.rs's Reflect::get(handle, \"manifest\") contract", () => {
     const bridge = pluginHandleForBridge(fakeHandle());
     expect(JSON.parse(bridge.manifest()).pluginId).toBe("draw");
+  });
+
+  it("answers the mounted package identity as the synchronous JSON ProgramBridge.rs's from_js requires", () => {
+    const bridge = pluginHandleForBridge(fakeHandle());
+    expect(JSON.parse(bridge.packageIdentity())).toEqual({ packageId: "semio:draw", componentSha256: "d".repeat(64) });
   });
 
   it("forwards createApp/destroyApp by identity", async () => {

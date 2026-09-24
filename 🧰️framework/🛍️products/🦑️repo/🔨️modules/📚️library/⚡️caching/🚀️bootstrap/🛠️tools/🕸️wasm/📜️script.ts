@@ -85,13 +85,15 @@ export async function prepareBinaryen(workspace: string, signal: AbortSignal): P
       if (!response.ok || !response.body) throw new Error(`Binaryen download failed: ${response.status}`);
       const archive = join(temporary, "binaryen.tar.gz"), file = await open(archive, "wx"), hash = createHash("sha256");
       let bytes = 0;
+      const reader = response.body.getReader();
       try {
-        for await (const chunk of response.body) {
+        for (let read = await reader.read(); !read.done; read = await reader.read()) {
+          const chunk = read.value;
           signal.throwIfAborted(); bytes += chunk.byteLength;
           if (bytes > row.bytes) throw new Error("Binaryen archive exceeds its pinned size");
           hash.update(chunk); await file.writeFile(chunk);
         }
-      } finally { await file.close(); }
+      } catch (error) { await reader.cancel().catch(() => undefined); throw error; } finally { await file.close(); }
       if (bytes !== row.bytes || hash.digest("hex") !== row.sha256) throw new Error("Binaryen archive checksum mismatch");
       const members = (await runTool("tar", ["-tzf", archive], temporary, signal, true)).trim().split(/\r?\n/);
       const selected = binaryenMembers(members, process.platform), prefix = `binaryen-version_${manifest.version}`;

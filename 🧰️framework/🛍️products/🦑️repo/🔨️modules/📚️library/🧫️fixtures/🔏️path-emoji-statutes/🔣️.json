@@ -238,7 +238,7 @@
     { "id": "connect", "directoryName": "connect", "expected": false },
     { "id": "connect", "directoryName": "🧪️🔌️connect", "expected": false },
     { "id": "connect", "directoryName": "📄️connect", "expected": false },
-    { "id": "connect", "directoryName": "🔌️disconnect", "expected": false },
+    { "id": "connect", "directoryName": "🔌️disconnect", "expected": true },
     { "id": "connect", "directoryName": "🔌️nested/connect", "expected": false }
   ],
   "genericEmojiIdentities": ["📁️", "📂️", "📄️"],

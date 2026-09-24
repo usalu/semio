@@ -137,7 +137,7 @@
     "afterWidgetReverse",
     "afterSynapse",
     "afterSynapseReverse",
-    "afterLayoutRelation",
+    "afterLayoutRoot",
     "afterRedoOwner",
     "afterHistoryOwner",
     "afterSurfaceOwner",
@@ -1387,7 +1387,7 @@
       ]
     },
     {
-      "boundary": "afterLayoutRelation",
+      "boundary": "afterLayoutRoot",
       "protocol": {
         "document": "oracle.initial",
         "session": {
@@ -1411,8 +1411,10 @@
           }
         },
         "target": {
-          "phase": "ReplaceLayout",
-          "candidateLayout": 1
+          "phase": "TransferHistory",
+          "kind": "ReplaceDocument",
+          "mutated": true,
+          "candidateLayout": 2
         },
         "grant": "valid",
         "expectedHandle": {
@@ -1745,7 +1747,7 @@
         },
         "target": {
           "phase": "Rollback",
-          "rollbackSteps": 1,
+          "rollbackSteps": 9,
           "historyTransferred": true,
           "surfaceTransferred": true,
           "visibilityPublished": false,
@@ -1848,7 +1850,7 @@
         },
         "target": {
           "phase": "Rollback",
-          "rollbackSteps": 2,
+          "rollbackSteps": 10,
           "historyTransferred": true,
           "surfaceTransferred": false,
           "visibilityPublished": false,
@@ -1951,7 +1953,7 @@
         },
         "target": {
           "phase": "Rollback",
-          "rollbackSteps": 3,
+          "rollbackSteps": 11,
           "historyTransferred": false,
           "surfaceTransferred": false,
           "visibilityPublished": false,
@@ -2054,7 +2056,7 @@
         },
         "target": {
           "phase": "Rollback",
-          "rollbackSteps": 6,
+          "rollbackSteps": 14,
           "historyTransferred": false,
           "surfaceTransferred": false,
           "visibilityPublished": false,
@@ -2157,7 +2159,7 @@
         },
         "target": {
           "phase": "Scan",
-          "rollbackSteps": 7,
+          "rollbackSteps": 15,
           "historyTransferred": false,
           "surfaceTransferred": false,
           "visibilityPublished": false,
@@ -2956,17 +2958,17 @@
       "14860936598148502484",
       "5999539928759069248",
       "670430576230409282",
-      "16658726179642662943",
+      "15580509148195357500",
       "11999069147777044765",
       "11460280419832150998",
       "6670380168659571917",
       "7990330587134555549",
       "1936733399001868215",
-      "17922552276160874724",
-      "7048606562888364787",
-      "5508508074825649303",
-      "12537281780130619414",
-      "4323772329486665967"
+      "8512093244745714229",
+      "7975368054280624629",
+      "4147921482329213583",
+      "4309954611733785992",
+      "1839132044169579372"
     ],
     "fingerprints": {
       "base": "14062942916437410942",

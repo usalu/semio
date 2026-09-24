@@ -52,7 +52,16 @@
       ],
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
-      "productionDebt": {"reachableFrom": ["🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml", "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"], "owner": "🧰️framework/🔨️modules/🗺️surface", "plan": "The same package the `image-bmp` oracle records: raster decode in the framework surface, intrinsic sizing and the os world and renderer crates. None of them is the stdio bmp codec under test. The debt retires when those call sites decode through stdio's own decoders. No path may join."},
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
+          "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+        ],
+        "owner": "🧰️framework/🔨️modules/🗺️surface",
+        "plan": "The same package the `image-bmp` oracle records: raster decode in the framework surface, intrinsic sizing and the os world and renderer crates. None of them is the stdio bmp codec under test. The debt retires when those call sites decode through stdio's own decoders. No path may join."
+      },
       "productionReachable": false,
       "networkDuringExecution": false,
       "platforms": [
@@ -526,7 +535,7 @@
           "productionDispatch": {
             "operation": "change-header-fields",
             "bridgeVersion": 1,
-            "variant": "ChangeHeaderFieldsMutation"
+            "variant": "ChangeHeaderFields"
           },
           "oracleRequirements": [
             {
@@ -541,12 +550,13 @@
           "capability": "bmp-3-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-palette-entry",
             "bridgeVersion": 1,
-            "variant": "InsertPaletteEntryMutation"
+            "variant": "InsertPaletteEntry"
           },
           "oracleRequirements": [
             {
@@ -561,12 +571,14 @@
           "capability": "bmp-3-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-palette-entry",
             "bridgeVersion": 1,
-            "variant": "RemovePaletteEntryMutation"
+            "variant": "RemovePaletteEntry"
           },
           "oracleRequirements": [
             {
@@ -581,12 +593,14 @@
           "capability": "bmp-3-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-palette-entry",
             "bridgeVersion": 1,
-            "variant": "ReplacePaletteEntryMutation"
+            "variant": "ReplacePaletteEntry"
           },
           "oracleRequirements": [
             {
@@ -606,7 +620,7 @@
           "productionDispatch": {
             "operation": "replace-pixel-data",
             "bridgeVersion": 1,
-            "variant": "ReplacePixelDataMutation"
+            "variant": "ReplacePixelData"
           },
           "oracleRequirements": [
             {

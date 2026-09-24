@@ -3399,13 +3399,7 @@ impl Puzzle3dPlayApp {
         interaction: &Puzzle3dInteractionSnapshot,
     ) -> Puzzle3dActionEmission {
         let action = command.action_id();
-        if action == "openImportFixture" {
-            eprintln!("[DEBUG] puzzle3d.openImport.enter action={action} window={window_id:?} payload=shell-only");
-        }
         if let Some(shell) = puzzle3d_shell_only_emit(action) {
-            if action == "openImportFixture" {
-                eprintln!("[DEBUG] puzzle3d.openImport.exit action={action} path=shell-only effects=1");
-            }
             return shell;
         }
         let mut prologue = Puzzle3dActionPrologue::default();
@@ -3413,23 +3407,11 @@ impl Puzzle3dPlayApp {
         let mut sync_turns = 0_u32;
         while prologue.sync_step(self, action, config, view_state, window_id) {
             sync_turns += 1;
-            eprintln!("[DEBUG] puzzle3d.prologue.sync action={action} turn={sync_turns} stage={:?}", prologue.sync_stage);
-            if action == "openImportFixture" {
-                eprintln!("[DEBUG] puzzle3d.openImport.step action={action} turn={sync_turns} stage={:?}", prologue.sync_stage);
-            }
             if sync_turns >= 8 {
-                eprintln!("[DEBUG] puzzle3d.prologue.sync action={action} hang-point=sync-budget turns={sync_turns}");
-                if action == "openImportFixture" {
-                    eprintln!("[DEBUG] puzzle3d.openImport.exit action={action} hang-point=sync-budget turns={sync_turns}");
-                }
                 break;
             }
         }
-        let emission = prologue.dispatch_step(self, None, command, window_id, config, view_state, interaction);
-        if action == "openImportFixture" {
-            eprintln!("[DEBUG] puzzle3d.openImport.exit action={action} path=dispatch sync_turns={sync_turns} effects={}", emission.0.effects.len());
-        }
-        emission
+        prologue.dispatch_step(self, None, command, window_id, config, view_state, interaction)
     }
 }
 
@@ -3478,8 +3460,6 @@ impl Puzzle3dActionPrologue {
     /// (`puzzle3d_operations_from_host_snapshot_change`'s `before`).
     pub(crate) fn scene_step(&mut self, action: &str, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) {
         let active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
-        let map_hit = window_id.and_then(|wid| view_state.and_then(|view| puzzle3d_utility_map_hit(view, wid))).is_some();
-        eprintln!("[DEBUG] puzzle3d.utility.publish action={action} window={window_id:?} utility={active_utility} map_hit={map_hit}");
         self.before = puzzle3d_action_artifact_intent(action).then(|| puzzle3d_projection_value(snapshot.value()));
         self.scene = Some(scene_from_snapshot(snapshot.typed(), config.clone(), &active_utility));
     }
@@ -8690,6 +8670,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("deleteTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("exportFixture", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_destructive("exportFixture")
             .action_interactive_job("importFixture", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("openImportFixture", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::Migrated)

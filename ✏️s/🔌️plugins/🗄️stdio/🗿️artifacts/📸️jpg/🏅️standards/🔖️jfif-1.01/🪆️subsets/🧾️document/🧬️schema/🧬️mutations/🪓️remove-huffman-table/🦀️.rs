@@ -38,7 +38,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for RemoveHuffmanTableMuta
         }
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove huffman table", "Huffmantabelle entfernen")
+        protocol::LocalizedLabel::native("Remove huffman table", "Huffman-Tabelle entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-huffman-table".into()]

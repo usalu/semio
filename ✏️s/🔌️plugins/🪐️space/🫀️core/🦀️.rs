@@ -477,6 +477,7 @@ app_labels! {
         column_updated: native_en "Updated", native_de "Aktualisiert", reuse_en "Updated", reuse_de "Aktualisiert";
         column_origin: native_en "Origin", native_de "Herkunft", reuse_en "Origin", reuse_de "Herkunft";
         column_actions: native_en "Actions", native_de "Aktionen", reuse_en "Actions", reuse_de "Aktionen";
+        table_name: native_en "Studios", native_de "Studios", reuse_en "Studios", reuse_de "Studios";
         origin_hub: native_en "hub", native_de "Hub", reuse_en "hub", reuse_de "Hub";
         origin_local: native_en "local", native_de "lokal", reuse_en "local", reuse_de "lokal";
     }

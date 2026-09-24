@@ -31,7 +31,7 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ScaleCamera3d 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Scale camera to {}", self.new_zoom), &format!("Kamera auf {} skalieren", self.new_zoom))
+        protocol::LocalizedLabel::native(&format!("Scale camera to {}", self.new_zoom), &format!("Kamerazoom auf {} setzen", self.new_zoom))
     }
 }
 //#endregion 🔖️Mutation

@@ -431,18 +431,18 @@ fn every_callable_tool_result_validates_against_its_own_output_schema() {
 
 //#region 🧪️HubInferenceRouting
 #[test]
-fn the_hub_inference_route_table_resolves_by_descriptor_kind_only() {
-    let route = crate::inference::hub_inference_route_for(crate::inference::GIS_MAP_INFERENCE_ARTIFACT_KIND, crate::inference::GIS_MAP_INFERENCE_ARTIFACT_SCHEMA).expect("the gis map row is declared");
-    assert_eq!(route.service_id, crate::inference::GIS_MAP_INFERENCE_SERVICE_ID);
-    assert!(crate::inference::hub_inference_route_for("s.note", "note.document").is_none(), "a kind with no hub-backed service must not resolve to one");
-    assert!(crate::inference::hub_inference_route_for(crate::inference::GIS_MAP_INFERENCE_ARTIFACT_KIND, "some.other.schema").is_none(), "the kind AND the schema both have to match");
+fn a_submit_request_validates_any_well_formed_service_id_and_refuses_a_malformed_one() {
+    let good = crate::inference::HubInferenceSubmitRequestV1::new("s.gis.gismap.inference", "0".repeat(crate::inference::INFERENCE_REQUEST_ID_HEX_LENGTH), 1000);
+    assert!(good.validate().is_ok());
+    let hostile = crate::inference::HubInferenceSubmitRequestV1::new("../s.gis", "0".repeat(crate::inference::INFERENCE_REQUEST_ID_HEX_LENGTH), 1000);
+    assert!(hostile.validate().is_err(), "a service id outside the InferenceIdV1 shape must never be submittable");
 }
 
 #[test]
-fn a_submit_request_only_validates_for_a_declared_hub_backed_service() {
-    let good = crate::inference::GisMapInferenceSubmitRequestV1::new(crate::inference::GIS_MAP_INFERENCE_SERVICE_ID, "0".repeat(crate::inference::INFERENCE_REQUEST_ID_HEX_LENGTH), 1000);
-    assert!(good.validate().is_ok());
-    let foreign = crate::inference::GisMapInferenceSubmitRequestV1::new("s.note.inference", "0".repeat(crate::inference::INFERENCE_REQUEST_ID_HEX_LENGTH), 1000);
-    assert!(foreign.validate().is_err(), "a service id no route declares must never be submittable");
+fn a_published_route_family_is_relative_and_lower_case_only() {
+    assert!(crate::inference::is_hub_inference_route("inference/gis-map"));
+    for hostile in ["", "/inference", "inference//jobs", "../escape", "inference/Gis", "inference?x=1"] {
+        assert!(!crate::inference::is_hub_inference_route(hostile), "{hostile:?} must never steer a protected request");
+    }
 }
 //#endregion 🧪️HubInferenceRouting

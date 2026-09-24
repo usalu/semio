@@ -1,0 +1,235 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The config state lane of `s.playbook.playbook`'s editor (✏️editor/🎚️config): its mutation vocabulary `PlaybookConfigMutation` over `PlaybookConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-playbook-playbook-1-any-editor-config` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "playbook-playbook-1-any-editor-config-state-lane-semantics",
+      "capabilities": [
+        "playbook-playbook-1-any-editor-config-mutate"
+      ],
+      "rationale": "`PlaybookConfigMutation` is the config state lane of `s.playbook.playbook`'s ✏️editor/🎚️config surface: it holds the host-pushed block-kind contribution list (`contributionsJson`) that hot-swaps `playbook.blockKind` installs. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`replace-config`, `set-contributions`) changes exactly its own part of `PlaybookConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A persisted key-value store for desktop settings; it has no model of this surface's typed config record, its per-kind setters, their no-op guard or the inverse each kind computes."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it defines no typed config mutations and neither their no-op nor their inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "`PlaybookConfig` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "playbook-playbook-1-any-editor-config",
+      "capability": "playbook-playbook-1-any-editor-config-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "replace-config",
+        "set-contributions"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.playbook.playbook",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎚️config",
+      "mutations": [
+        {
+          "id": "replace-config",
+          "capability": "playbook-playbook-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-config",
+            "bridgeVersion": 1,
+            "variant": "ReplaceConfig"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "playbook-playbook-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-contributions",
+          "capability": "playbook-playbook-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-contributions",
+            "bridgeVersion": 1,
+            "variant": "SetContributions"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "playbook-playbook-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-config-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.playbook.playbook",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "replace-config",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a2d3e60c5b387e704811f94657a9fc9ea0424318e28c75584e9c5608a6503ec7",
+          "bytes": 32
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:802f96c19cf95b904cd9c8576d80557d831965b29a7b5cb6864145c87fe6c414",
+          "bytes": 103
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1a0011203c70cd5c8176ef6f7f4a8ddb58a14d454333edda406e24a76adfa441",
+          "bytes": 52
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1a0011203c70cd5c8176ef6f7f4a8ddb58a14d454333edda406e24a76adfa441",
+          "bytes": 52
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-contributions-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.playbook.playbook",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-contributions",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🧩️set-contributions/✅️set-contributions-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a2d3e60c5b387e704811f94657a9fc9ea0424318e28c75584e9c5608a6503ec7",
+          "bytes": 32
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🧩️set-contributions/✅️set-contributions-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3bf9ed968b4c6b934664f84b1eda6dcdd4b6cd23fe3990fdbcd58a24656f8def",
+          "bytes": 69
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🧩️set-contributions/✅️set-contributions-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1a0011203c70cd5c8176ef6f7f4a8ddb58a14d454333edda406e24a76adfa441",
+          "bytes": 52
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🧩️set-contributions/✅️set-contributions-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1a0011203c70cd5c8176ef6f7f4a8ddb58a14d454333edda406e24a76adfa441",
+          "bytes": 52
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🧩️set-contributions/✅️set-contributions-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `set-contributions` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    }
+  ]
+}

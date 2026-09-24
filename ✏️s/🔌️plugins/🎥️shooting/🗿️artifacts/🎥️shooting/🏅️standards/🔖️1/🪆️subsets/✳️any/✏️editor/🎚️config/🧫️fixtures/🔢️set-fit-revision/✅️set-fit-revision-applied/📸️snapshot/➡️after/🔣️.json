@@ -1,0 +1,23 @@
+{
+  "defaultShotFormat": "png",
+  "defaultShotShape": "rectangle",
+  "defaultAssetFormat": "glb",
+  "selectedShotIds": [],
+  "centerModel": true,
+  "fitRevision": 4294967295,
+  "cameraDraftLabel": "",
+  "camera": {
+    "position": [
+      420.0,
+      -420.0,
+      320.0
+    ],
+    "target": [
+      0.0,
+      0.0,
+      40.0
+    ],
+    "zoom": 1.0,
+    "fov": 50.0
+  }
+}

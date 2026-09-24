@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertFrameComponent {
-    pub(crate) index: usize,
-    pub(crate) component: JpgFrameComponent,
+    pub index: usize,
+    pub component: JpgFrameComponent,
 }
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for InsertFrameComponent {
@@ -22,7 +22,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for InsertFrameCom
         agg_inverse(&JpgBaselineMutation::InsertFrameComponent(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-frame-component", "Rahmenkomponente einfügen")
+        protocol::LocalizedLabel::native("Insert frame component", "Frame-Komponente einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -21,7 +21,7 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveSharedString {
         agg_inverse(&XlsxMutation::RemoveSharedString(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-shared-string", "geteilte Zeichenkette entfernen")
+        protocol::LocalizedLabel::native("Remove shared string", "Gemeinsame Zeichenfolge entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

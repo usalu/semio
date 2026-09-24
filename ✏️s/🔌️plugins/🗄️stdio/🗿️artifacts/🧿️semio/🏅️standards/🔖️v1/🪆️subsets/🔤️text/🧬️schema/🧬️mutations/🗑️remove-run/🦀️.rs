@@ -20,7 +20,7 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for RemoveRun 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove run #{}", self.index), &format!("Lauf #{} entfernen", self.index))
+        protocol::LocalizedLabel::native(&format!("Remove run #{}", self.index), &format!("Textlauf #{} entfernen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

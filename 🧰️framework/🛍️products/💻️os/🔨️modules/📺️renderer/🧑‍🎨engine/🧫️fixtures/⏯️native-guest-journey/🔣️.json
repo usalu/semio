@@ -1,0 +1,17 @@
+{
+  "$comment": "⏯️ Language-agnostic journey of one real guest mounted by a native shell on the kernel thread, with no hub: the open relay's arguments, the verb it authors, the framework reserved verbs it then drives (undo, redo, the selection and clipboard verbs) and what the guest's own ledger must show after each. Read by the native `a_native_guest_*` laws and by the two-user hub law, so all of them drive the one kind the staged native runtime carries. block2d has no clipboard producer of its own, so its framework clipboard routes answer empty and leave the ledger as it was.",
+  "variant": "block2d",
+  "profile": "release",
+  "pluginId": "block",
+  "artifactRef": "s.block.block2d@1/*",
+  "appId": "s.block.block2d@1/*#editor",
+  "schema": "block.2d",
+  "verb": "addHandleKind",
+  "undo": "undo",
+  "redo": "redo",
+  "clipboard": ["selectAll", "copy", "paste"],
+  "expectedEditsAfterVerb": 1,
+  "expectedAppliedAfterUndo": 0,
+  "expectedAppliedAfterRedo": 1,
+  "expectedEditsAfterClipboard": 0
+}

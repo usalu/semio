@@ -86,12 +86,12 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "edit-text/warns-that-the-brief-body-is-unchanged: committed editText JSON is not canonical");
 }
 
-/// 🎯️ An unchanged body is `applied` with a single Warning — `edit-text` has no target to miss, so
+/// 🎯️ An unchanged body is `no-op` with a single Warning — `edit-text` has no target to miss, so
 /// `mutation.no-op` is the only diagnostic this oracle can ever raise.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "edit-text/warns-that-the-brief-body-is-unchanged: a no-op is applied, not rejected");
+    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "edit-text/warns-that-the-brief-body-is-unchanged: a no-op is its own outcome class, not a rejection");
     let produced = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), Some(protocol::Severity::Warning), "edit-text/warns-that-the-brief-body-is-unchanged: an unchanged body is a Warning, never an Error");
     assert_eq!(produced.messages().len(), 1, "edit-text/warns-that-the-brief-body-is-unchanged: exactly one diagnostic is raised");

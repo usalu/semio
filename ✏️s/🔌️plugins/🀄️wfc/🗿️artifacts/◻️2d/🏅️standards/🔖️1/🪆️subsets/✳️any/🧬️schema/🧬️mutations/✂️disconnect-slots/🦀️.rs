@@ -29,7 +29,7 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for DisconnectSlots {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Disconnect Slots", "Plätze trennen")
+        protocol::LocalizedLabel::native("Disconnect Slots", "Slots trennen")
     }
 }
 //#endregion 🔖️DisconnectSlots

@@ -27,18 +27,28 @@ export const FlowOperationFields = Object.freeze({
  * that on script, i.e. the thread was idle waiting for timers for most of a frame the user was
  * scrolling through (`📓️flow-scroll-render-perf-2026-09-15.md` §3).
  *
- * A `MessageChannel` post is an unclamped macrotask: it still yields between rounds, so input,
- * rendering and every other task keep their turn and the pump never starves the frame — it simply
- * stops paying 4 ms for each of its own. `unref` exists only on Node's port and keeps a host that a
- * test never closed from holding that process open. */
+ * A `MessageChannel` post is an unclamped macrotask, but not a fair one on every runtime: Bun drains a
+ * self-reposting message chain before any due timer (a 10 ms timer waited 3 011 ms behind 667 210
+ * message rounds, where Node fired it at 201 ms; ticket 26/09/23 `📓️wp-r8.md`), so a request that
+ * stays pending — a held open reply, a slow guest turn, a bounded close drain — starved every timer of
+ * the thread until it settled. Rounds therefore alternate: a message round, then a `setTimeout(step, 0)`
+ * round that every runtime orders behind the timers already due. A timer scheduled from a message
+ * task starts a fresh nesting level, so the alternation never reaches the 4 ms clamp. `unref` exists
+ * only on Node's port and keeps a host that a test never closed from holding that process open. */
 export function createFlowPumpScheduler() {
   if (typeof MessageChannel !== "function") return (step) => setTimeout(step, 0);
   const channel = new MessageChannel();
   const queue = [];
+  let timerRound = false;
   channel.port1.onmessage = () => queue.shift()?.();
   channel.port1.unref?.();
   channel.port2.unref?.();
   return (step) => {
+    timerRound = !timerRound;
+    if (timerRound) {
+      setTimeout(step, 0);
+      return;
+    }
     queue.push(step);
     channel.port2.postMessage(0);
   };

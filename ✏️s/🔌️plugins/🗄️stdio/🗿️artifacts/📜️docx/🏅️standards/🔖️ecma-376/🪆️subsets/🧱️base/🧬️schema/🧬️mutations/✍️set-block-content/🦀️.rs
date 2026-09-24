@@ -22,7 +22,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetBlockContent {
         agg_inverse(&DocxMutation::SetBlockContent(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-block-content", "Blockinhalt setzen")
+        protocol::LocalizedLabel::native("Set block content", "Blockinhalt setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1,0 +1,94 @@
+{
+  "effects": [
+    {
+      "name": "a backbone send-message crosses as the host SendMessage effect byte for byte",
+      "wire": {
+        "tag": "send-message",
+        "val": {
+          "target": {
+            "tag": "backbone",
+            "val": "actor://doc-1"
+          },
+          "payload": [
+            1,
+            2,
+            3,
+            255
+          ]
+        }
+      },
+      "host": {
+        "sendMessage": {
+          "target": {
+            "backbone": {
+              "uri": "actor://doc-1"
+            }
+          },
+          "payload": [
+            1,
+            2,
+            3,
+            255
+          ]
+        }
+      }
+    },
+    {
+      "name": "a shell send-message is reply transport, never a host effect",
+      "wire": {
+        "tag": "send-message",
+        "val": {
+          "target": {
+            "tag": "shell",
+            "val": "7"
+          },
+          "payload": [
+            9
+          ]
+        }
+      },
+      "host": null
+    },
+    {
+      "name": "a non-message effect is not a backbone message",
+      "wire": {
+        "tag": "notify",
+        "val": {
+          "message": "hello"
+        }
+      },
+      "host": null
+    }
+  ],
+  "answer": {
+    "name": "the bridge answer the shell parses carries the backbone effect in requestedEffects",
+    "json": {
+      "output": null,
+      "mutations": [],
+      "inverseGroup": {
+        "invocationId": "",
+        "mutations": [],
+        "inverseMutations": []
+      },
+      "diagnostics": [],
+      "requestedEffects": [
+        {
+          "sendMessage": {
+            "target": {
+              "backbone": {
+                "uri": "actor://doc-1"
+              }
+            },
+            "payload": [
+              1,
+              2,
+              3,
+              255
+            ]
+          }
+        }
+      ],
+      "events": []
+    }
+  }
+}

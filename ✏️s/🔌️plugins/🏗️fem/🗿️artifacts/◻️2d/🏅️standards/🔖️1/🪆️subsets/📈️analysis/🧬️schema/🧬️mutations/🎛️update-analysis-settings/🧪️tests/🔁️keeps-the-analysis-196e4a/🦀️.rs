@@ -32,7 +32,7 @@ fn mutation() -> Fem2dMutation {
     dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
-/// ▶️ A no-op `update-analysis-settings` is APPLIED, not rejected — it simply changes nothing, so the document comes
+/// ▶️ A no-op `update-analysis-settings` is a NO-OP, not rejected — it simply changes nothing, so the document comes
 /// out byte-identical to the committed `after`, which is the committed `before`.
 #[test]
 fn no_op_leaves_the_document_untouched() {
@@ -40,7 +40,7 @@ fn no_op_leaves_the_document_untouched() {
     let mut snapshot = base.clone();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("update-analysis-settings's no-op diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "update-analysis-settings/keeps-the-analysis-196e4a: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot, base, "update-analysis-settings/keeps-the-analysis-196e4a: an APPLIED no-op still leaves the document exactly where it was");
+    assert_eq!(snapshot, base, "update-analysis-settings/keeps-the-analysis-196e4a: an accepted no-op still leaves the document exactly where it was");
 }
 
 /// ⚠️ A value that is already what the payload asks for is a Warning-level `mutation.no-op`, never
@@ -71,12 +71,12 @@ fn inverse_restores_before() {
     assert_eq!(snapshot, base, "update-analysis-settings/keeps-the-analysis-196e4a: inverse did not restore the before-snapshot");
 }
 
-/// 🎯️ The declared outcome — applied, with exactly one `warn`-level `mutation.no-op` — is what this
+/// 🎯️ The declared outcome — `no-op`, with exactly one `warn`-level `mutation.no-op` — is what this
 /// kind really emits here.
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("applied"), "update-analysis-settings/keeps-the-analysis-196e4a declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("no-op"), "update-analysis-settings/keeps-the-analysis-196e4a declares a no-op outcome");
     let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
     let declared = outcome.get("messages").and_then(dsl::DslValue::as_array).expect("a no-op outcome declares its diagnostics");
     assert_eq!(declared.len(), produced.messages().len(), "the declared diagnostic count must match the emitted one");

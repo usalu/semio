@@ -31,7 +31,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { HostReactFlow, HostReactFlowProvider } from "../🔌️Ports/🟦️.tsx";
-import { useLabel } from "../🏷️Label/🟦️.tsx";
+import { resolveTranslationLabel, useLabel, useUiTranslation } from "../🏷️Label/🟦️.tsx";
 import { createDiagramLayoutPublication, diagramLayoutCredits, DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_UNIT, type DiagramLayoutOptions, type DiagramLayoutPublicationResult } from "./📐️layout/🟦️.ts";
 export { DIAGRAM_UNIT, DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_INGRESS_ITEMS, DIAGRAM_LAYOUT_MAX_EDGE_BYTES, DIAGRAM_LAYOUT_MAX_ID_CHARACTERS, DIAGRAM_LAYOUT_MAX_INPUT_ITEMS, DIAGRAM_LAYOUT_MAX_NODE_BYTES, DIAGRAM_LAYOUT_MAX_RESERVED_BYTES, DIAGRAM_LAYOUT_OUTPUT_ITEMS } from "./📐️layout/🟦️.ts";
 export type { DiagramLayoutDescriptor, DiagramLayoutDirection, DiagramLayoutEdgeWire, DiagramLayoutIngressPage, DiagramLayoutNodeWire, DiagramLayoutOptions, DiagramLayoutPosition, DiagramLayoutPositionPage, DiagramLayoutTerminal } from "./📐️layout/🟦️.ts";
@@ -1077,7 +1077,8 @@ export type DiagramArrowDirection = "up" | "down" | "left" | "right";
  * and its test cannot disagree. */
 export const DIAGRAM_ARROW_KEYS: Readonly<Record<string, DiagramArrowDirection>> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
 
-type DiagramNavigableNode = { readonly id: string; readonly position: { readonly x: number; readonly y: number } };
+/** ♿️ The only node facts keyboard navigation reads: identity and canvas position. */
+export type DiagramNavigableNode = { readonly id: string; readonly position: { readonly x: number; readonly y: number } };
 
 /**
  * ♿️ The node an arrow press moves to: the nearest node in that half-plane, measured with the
@@ -1127,6 +1128,75 @@ export function diagramArrowNavigationTarget(nodes: readonly DiagramNavigableNod
 export function diagramActivateSelection(selectedIds: readonly string[], focusedId: string, additive: boolean): string[] {
   if (!additive) return [focusedId];
   return selectedIds.includes(focusedId) ? selectedIds.filter((id) => id !== focusedId) : [...selectedIds, focusedId];
+}
+
+/** ♿️ What ONE key press does to a keyboard-walked node graph — `null` when the key is not the graph's.
+ * `select.added` says whether the focused node ended up IN the selection (Shift+Enter can remove it). */
+export type DiagramKeyboardStep =
+  | { readonly kind: "focus"; readonly focusedId: string }
+  | { readonly kind: "select"; readonly focusedId: string; readonly selectedIds: readonly string[]; readonly added: boolean }
+  | { readonly kind: "clear" }
+  | null;
+
+/**
+ * ♿️ The whole keyboard law of every node-graph surface — the React Flow {@link Diagram} and the dag/flow
+ * canvas hosts (`🕸️NodeGraph`) run THIS function, so arrows, Enter, Shift+Enter and Escape mean one thing
+ * wherever a graph is drawn. Arrows move focus ({@link diagramArrowNavigationTarget}); Enter/Space select
+ * the focused node ({@link diagramActivateSelection}); Escape clears. Selection keys are inert on a
+ * read-only surface, navigation is not (reading a graph is not editing it).
+ */
+export function diagramKeyboardStep(nodes: readonly DiagramNavigableNode[], focusedId: string | null, selectedIds: readonly string[], key: string, shift: boolean, editable: boolean): DiagramKeyboardStep {
+  const direction = DIAGRAM_ARROW_KEYS[key];
+  if (direction) {
+    const next = diagramArrowNavigationTarget(nodes, focusedId, direction);
+    return next ? { kind: "focus", focusedId: next } : null;
+  }
+  if (!editable) return null;
+  if (key === "Escape") return selectedIds.length === 0 && focusedId === null ? null : { kind: "clear" };
+  if ((key !== "Enter" && key !== " ") || focusedId === null || !nodes.some((node) => node.id === focusedId)) return null;
+  const next = diagramActivateSelection(selectedIds, focusedId, shift);
+  return { kind: "select", focusedId, selectedIds: next, added: next.includes(focusedId) };
+}
+
+/** ♿️ A node's 1-based position in reading order (top-to-bottom, then left-to-right, then id) — the
+ * "3 of 7" a screen reader speaks, independent of the order the graph happens to store its nodes in. */
+export function diagramReadingOrderPosition(nodes: readonly DiagramNavigableNode[], id: string): number {
+  const ordered = [...nodes].sort((a, b) => a.position.y - b.position.y || a.position.x - b.position.x || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return ordered.findIndex((node) => node.id === id) + 1;
+}
+
+/** ♿️ The visible keyboard-focus ring on the focused node — the sighted twin of what the live region
+ * speaks. (React Flow reserves a node's DOM `id`, so there is no `aria-activedescendant` target: the
+ * {@link DiagramLiveRegion} sentence is the assistive-technology channel.) */
+export const DIAGRAM_KEYBOARD_FOCUS_CLASS = "outline-solid outline-2 outline-offset-2 outline-accent";
+
+/** ♿️ Resolves a translation key with interpolation outside render (keyboard handlers run there). */
+export type DiagramTranslate = (key: "ui.diagram.focusedNode" | "ui.diagram.selectedNode" | "ui.diagram.deselectedNode" | "ui.diagram.selectionCleared", options?: Record<string, unknown>) => string;
+
+/** ♿️ The localized sentence a {@link DiagramLiveRegion} speaks for one {@link diagramKeyboardStep}: the
+ * focused node's label with its reading-order position, the (de)selection with the new selection size,
+ * or "selection cleared". Pure — the locale lives entirely in `translate`. */
+export function diagramKeyboardAnnouncement(step: NonNullable<DiagramKeyboardStep>, nodes: readonly DiagramNavigableNode[], labelOf: (id: string) => string, translate: DiagramTranslate): string {
+  if (step.kind === "clear") return translate("ui.diagram.selectionCleared");
+  if (step.kind === "focus") return translate("ui.diagram.focusedNode", { node: labelOf(step.focusedId), position: diagramReadingOrderPosition(nodes, step.focusedId), count: nodes.length });
+  return translate(step.added ? "ui.diagram.selectedNode" : "ui.diagram.deselectedNode", { node: labelOf(step.focusedId), count: step.selectedIds.length });
+}
+
+/** ♿️ {@link DiagramTranslate} bound to the active shell locale and label tier (no default language:
+ * whatever the scope's i18n instance stands at is what is spoken). */
+export function useDiagramTranslate(): DiagramTranslate {
+  const { t } = useUiTranslation();
+  return reactHostPort.useCallback<DiagramTranslate>((key, options) => resolveTranslationLabel(t(key, options)) ?? "", [t]);
+}
+
+/** ♿️ The polite live region every node-graph surface announces keyboard steps through. Visually
+ * hidden; `aria-atomic` so the whole sentence is re-read when it changes. */
+export function DiagramLiveRegion({ text }: { readonly text: string }) {
+  return (
+    <span role="status" aria-live="polite" aria-atomic="true" className="sr-only" data-diagram-announcement="">
+      {text}
+    </span>
+  );
 }
 // #endregion ♿️Accessibility
 
@@ -1321,6 +1391,8 @@ const DiagramInner: React.FC<DiagramProps> = ({
   const diagramEdgesLabel = useLabel("ui.diagram.edges");
   const diagramKeyboardHelpId = reactHostPort.useId();
   const [keyboardFocusedNodeId, setKeyboardFocusedNodeId] = reactHostPort.useState<string | null>(null);
+  const [keyboardAnnouncement, setKeyboardAnnouncement] = reactHostPort.useState("");
+  const diagramTranslate = useDiagramTranslate();
 
   const [internalNodes, setInternalNodes] = reactHostPort.useState<Node[]>(initialNodes);
   const [internalEdges, setInternalEdges] = reactHostPort.useState<Edge[]>(initialEdges);
@@ -1338,6 +1410,10 @@ const DiagramInner: React.FC<DiagramProps> = ({
   renderedNodesRef.current = renderedNodes;
   const keyboardFocusedNodeIdRef = reactHostPort.useRef(keyboardFocusedNodeId);
   keyboardFocusedNodeIdRef.current = keyboardFocusedNodeId;
+  const accessibleNodes = reactHostPort.useMemo(
+    () => (keyboardFocusedNodeId === null ? renderedNodes : renderedNodes.map((node) => (node.id === keyboardFocusedNodeId ? { ...node, className: cn(node.className, DIAGRAM_KEYBOARD_FOCUS_CLASS), domAttributes: { ...node.domAttributes, "data-keyboard-focused": "" } } : node))),
+    [keyboardFocusedNodeId, renderedNodes],
+  );
 
   const onNodesChangeReactFlowRef = reactHostPort.useRef(onNodesChangeReactFlow);
   onNodesChangeReactFlowRef.current = onNodesChangeReactFlow;
@@ -1380,30 +1456,27 @@ const DiagramInner: React.FC<DiagramProps> = ({
       const target = event.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
       const nodes = renderedNodesRef.current;
-      const direction = DIAGRAM_ARROW_KEYS[event.key];
-      if (direction) {
-        const next = diagramArrowNavigationTarget(nodes, keyboardFocusedNodeIdRef.current, direction);
-        if (!next) return;
-        event.preventDefault();
-        setKeyboardFocusedNodeId(next);
+      const selectedIds = nodes.filter((node) => node.selected).map((node) => node.id);
+      const step = diagramKeyboardStep(nodes, keyboardFocusedNodeIdRef.current, selectedIds, event.key, event.shiftKey, true);
+      if (!step) return;
+      event.preventDefault();
+      const labelOf = (id: string) => {
+        const label = nodes.find((node) => node.id === id)?.data?.label;
+        return typeof label === "string" && label.length > 0 ? label : id;
+      };
+      setKeyboardAnnouncement(diagramKeyboardAnnouncement(step, nodes, labelOf, diagramTranslate));
+      if (step.kind === "focus") {
+        setKeyboardFocusedNodeId(step.focusedId);
         return;
       }
-      if (event.key === "Escape") {
-        if (nodes.every((node) => !node.selected) && keyboardFocusedNodeIdRef.current === null) return;
-        event.preventDefault();
+      if (step.kind === "clear") {
         setKeyboardFocusedNodeId(null);
         handleNodesChangeRef.current(nodes.filter((node) => node.selected).map((node) => ({ id: node.id, type: "select", selected: false })));
         return;
       }
-      if (event.key !== "Enter" && event.key !== " ") return;
-      const focused = keyboardFocusedNodeIdRef.current;
-      if (!focused) return;
-      event.preventDefault();
-      const selectedIds = nodes.filter((node) => node.selected).map((node) => node.id);
-      const nextSelected = diagramActivateSelection(selectedIds, focused, event.shiftKey);
-      handleNodesChangeRef.current(nodes.filter((node) => Boolean(node.selected) !== nextSelected.includes(node.id)).map((node) => ({ id: node.id, type: "select", selected: nextSelected.includes(node.id) })));
+      handleNodesChangeRef.current(nodes.filter((node) => Boolean(node.selected) !== step.selectedIds.includes(node.id)).map((node) => ({ id: node.id, type: "select", selected: step.selectedIds.includes(node.id) })));
     },
-    [keyboardFocusedNodeId],
+    [diagramTranslate],
   );
 
   const handleEdgesChange = reactHostPort.useCallback(
@@ -1694,15 +1767,15 @@ const DiagramInner: React.FC<DiagramProps> = ({
       aria-roledescription={diagramRoleDescriptionLabel}
       aria-label={`${diagramLabel} — ${renderedNodes.length} ${diagramNodesLabel}, ${renderedEdges.length} ${diagramEdgesLabel}`}
       aria-describedby={diagramKeyboardHelpId}
-      aria-activedescendant={keyboardFocusedNodeId ?? undefined}
       data-diagram-focused-node={keyboardFocusedNodeId ?? undefined}
       onKeyDown={handleDiagramKeyDown}
     >
       <span id={diagramKeyboardHelpId} className="sr-only">
         {diagramKeyboardHelpLabel}
       </span>
+      <DiagramLiveRegion text={keyboardAnnouncement} />
       <HostReactFlow
-        nodes={renderedNodes}
+        nodes={accessibleNodes}
         edges={renderedEdges}
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}

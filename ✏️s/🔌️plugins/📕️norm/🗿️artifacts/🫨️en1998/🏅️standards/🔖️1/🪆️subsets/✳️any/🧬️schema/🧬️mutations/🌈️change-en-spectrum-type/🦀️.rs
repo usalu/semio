@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeEnSpectrum
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change EN spectrum type to \"{}\"", self.new_en_spectrum_type), &format!("ENspektrumtyp auf \"{}\" ändern", self.new_en_spectrum_type))
+        protocol::LocalizedLabel::native(&format!("Change EN spectrum type to \"{}\"", self.new_en_spectrum_type), &format!("EN-Spektrumtyp auf \"{}\" ändern", self.new_en_spectrum_type))
     }
 }
 //#endregion 🔖️ChangeEnSpectrumType

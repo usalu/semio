@@ -19,7 +19,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for RemoveTileTa
         agg_inverse(&TiffBaselineMutation::RemoveTileTags(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-tile-tags", "Kacheltags entfernen")
+        protocol::LocalizedLabel::native("Remove tile tags", "Kachel-Tags entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -76,12 +76,20 @@ async fn every_catalogue_section_stamps_its_total_and_none_continues() {
     assert!(!json.contains(r#""label":"+"#), "a windowed catalogue publishes no `+n` label: {json}");
 }
 
-/// 🖱️ Default-open input rows and an opened outputs window drag `application/x-flow-widget`, including format and action.
+/// 🖱️ Opened input and output windows drag `application/x-flow-widget`, including format and action.
+/// The inputs window is requested explicitly: which group opens by default is the FIRST registered
+/// section, and the process-wide flow registry this test binary shares may hold operator sections
+/// that sort before it.
 #[semio_framework_async_macros::async_test]
 async fn component_rows_drag_the_flow_widget_descriptor() {
     let inputs_json = {
+        let input_section = semio_framework_os_flow::flow_palette_catalogue_sections().into_iter().find(|section| section.id == "inputs").expect("inputs section");
         let mut app = app().await;
-        let json = render_body(&mut app, GENERATION2D_PLAY_BODY_CATALOGUE).await;
+        let view = ViewModel {
+            tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key: format!("{GENERATION2D_PLAY_CATALOGUE_SECTION}{}procedural2d-play-catalogue.inputs", semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR), open: Some(true), offset: 0, rows: input_section.items.len() as u32 }],
+            ..Default::default()
+        };
+        let json = render_with_view(&mut app, GENERATION2D_PLAY_BODY_CATALOGUE, &view).await;
         close(app);
         json
     };

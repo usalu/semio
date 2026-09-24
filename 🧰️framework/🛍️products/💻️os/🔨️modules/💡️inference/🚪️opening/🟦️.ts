@@ -54,9 +54,13 @@ export class InferencePortOpeningMailboxV1 {
   private pending: { readonly request: InferencePortOpeningRequestV1; readonly timer: ReturnType<typeof setTimeout>; readonly resolve: (result: InferencePortOpeningResultV1) => void; readonly reject: (error: Error) => void } | null = null;
   private closed = false;
   private lastEpoch = 0;
+  private readonly send: (request: InferencePortOpeningRequestV1) => void;
+  private readonly timeoutMs: number;
 
-  constructor(private readonly send: (request: InferencePortOpeningRequestV1) => void, private readonly timeoutMs = 30_000) {
+  constructor(send: (request: InferencePortOpeningRequestV1) => void, timeoutMs = 30_000) {
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 300_000) throw new Error("inference-opening: invalid timeout");
+    this.send = send;
+    this.timeoutMs = timeoutMs;
   }
 
   /** 📨️ Installs the waiter before sending, so a synchronous receipt cannot be lost. */

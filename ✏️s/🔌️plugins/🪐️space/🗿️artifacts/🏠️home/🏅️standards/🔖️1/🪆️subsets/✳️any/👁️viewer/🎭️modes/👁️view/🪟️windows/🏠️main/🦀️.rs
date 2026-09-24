@@ -11,7 +11,7 @@
 //! `ViewEmit` by construction.
 
 use crate::HomeTableLabels;
-use semio_framework_plugin::app::{TableRow, TableRowsView, TableWindowKit, WindowKit};
+use semio_framework_plugin::app::{table_window_row, TableWindowKit, TreeWindows, WindowKit};
 use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
@@ -36,33 +36,17 @@ pub fn definition() -> WindowKindDefinition {
 /// test in this crate's test binary — a `DirectoryReadModel::default()` alone is NOT enough to reach an
 /// empty row list, since the local catalog half is unconditionally unioned in and never guaranteed
 /// empty once any other test has created a studio).
-fn render_rows(rows: &[crate::HomeSpaceRow], labels: &HomeTableLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn render_rows(rows: &[crate::HomeSpaceRow], labels: &HomeTableLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if rows.is_empty() {
         return semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(labels.empty_message.as_str().to_string()))
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.empty", "empty table text admission failed"));
     }
-    let empty = semio_framework_plugin::UiText::try_from_str("").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.actions-label", "fixed table label admission failed"))?;
-    let mut view = TableRowsView::new(empty);
-    for column in [labels.column_name, labels.column_kind, labels.column_visibility, labels.column_members, labels.column_updated, labels.column_origin] {
-        let column = semio_framework_plugin::UiText::try_from_str(column.as_str()).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.column", "fixed table column admission failed"))?;
-        view.try_push_column(column).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.columns", "fixed table column admission failed"))?;
-    }
-    for row in rows {
-        let row_id = semio_framework_plugin::UiText::try_format(format_args!("space:{}", row.id)).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-id", "fixed table row id admission failed"))?;
-        let mut table_row = TableRow::new(row_id);
-        for cell in [&row.name, &row.kind, &row.visibility, &row.members, &row.updated] {
-            let cell = semio_framework_plugin::UiText::try_from_str(cell).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.cell", "fixed table cell admission failed"))?;
-            table_row.try_push_cell(cell).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cells", "fixed table cell admission failed"))?;
-        }
+    let columns = [labels.column_name.as_str(), labels.column_kind.as_str(), labels.column_visibility.as_str(), labels.column_members.as_str(), labels.column_updated.as_str(), labels.column_origin.as_str()];
+    TableWindowKit::render_rows(windows, labels.table_name.as_str(), &columns, None, rows, |row| {
         let origin = if row.origin == "hub" { labels.origin_hub.as_str() } else { labels.origin_local.as_str() };
-        let origin = semio_framework_plugin::UiText::try_from_str(origin).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.origin", "fixed table origin admission failed"))?;
-        table_row.try_push_cell(origin).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cells", "fixed table cell admission failed"))?;
-        view.try_push_row(table_row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.rows", "fixed table row admission failed"))?;
-    }
-    // 🆔️ No row has an action (the viewer never renders row affordances), so
-    // `TableWindowKit::render_rows` never appends the trailing actions column — `actions_label` is
-    // therefore inert here, kept empty rather than reaching for a label nothing displays.
-    TableWindowKit::render_rows(view)
+        let key = format!("space:{}", row.id);
+        table_window_row(&key, &[row.name.as_str(), row.kind.as_str(), row.visibility.as_str(), row.members.as_str(), row.updated.as_str(), origin], std::iter::empty(), None)
+    })
 }
 
 /// 👁️ No `SHomeSnapshot` argument: exactly like the editor's own main-window render, Home's table rows
@@ -79,7 +63,7 @@ pub fn render(directory: &store::os_directory::DirectoryReadModel, view_state: &
         Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(directory, &identity.user_id)),
         None => Vec::new(),
     };
-    render_rows(&rows, labels)
+    render_rows(&rows, labels, &TreeWindows::for_body(view_state, S_HOME_VIEW_BODY))
 }
 //#endregion 🔖️Render
 

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/gis/gismap/map-viewer-window/config/schema.json",
+  "title": "GisMapViewerWindowConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["camera"],
+  "properties": {
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "zoom": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "x-semio-state": "config",
+      "x-semio-owner": "window"
+    }
+  }
+}

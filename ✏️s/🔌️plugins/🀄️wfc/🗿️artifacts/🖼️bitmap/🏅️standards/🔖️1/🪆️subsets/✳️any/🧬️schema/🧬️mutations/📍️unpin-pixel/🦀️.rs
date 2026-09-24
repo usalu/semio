@@ -32,7 +32,7 @@ impl MutationKind<BitmapSnapshot, BitmapMutation> for UnpinPixel {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Unpin ({}, {})", self.x, self.y), &format!("({}, {}) abheften", self.x, self.y))
+        protocol::LocalizedLabel::native(&format!("Unpin ({}, {})", self.x, self.y), &format!("Fixierung von ({}, {}) aufheben", self.x, self.y))
     }
     fn target(&self) -> Vec<String> {
         vec![crate::schema::snapshot::pin_key(self.x, self.y)]

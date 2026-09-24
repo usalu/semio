@@ -38,7 +38,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for RemoveOtherSegmentMuta
         }
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove other segment", "sonstige Segment entfernen")
+        protocol::LocalizedLabel::native("Remove other segment", "Sonstiges Segment entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-other-segment".into()]

@@ -122,5 +122,5 @@ fn kinds_match_the_catalog_and_the_vocabulary() {
         assert!(vocabulary.contains(&format!("\"{kind}\"")), "StepCc3Mutation::KINDS is missing {kind:?}");
         assert!(feature.contains(&format!("| {kind} ")), "the case's Examples table is missing kind {kind:?}");
     }
-    assert_eq!(KINDS.len(), 6);
+    assert_eq!(KINDS.len(), 5);
 }

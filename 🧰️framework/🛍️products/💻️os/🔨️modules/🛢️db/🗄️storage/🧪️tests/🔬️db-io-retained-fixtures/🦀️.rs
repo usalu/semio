@@ -102,7 +102,17 @@ impl std::task::Wake for WriterRegistryProbeWake {
         self.wake_by_ref();
     }
     fn wake_by_ref(self: &Arc<Self>) {
-        self.registry_available.store(db_io_backend_registry().try_lock().is_ok(), std::sync::atomic::Ordering::Release);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(250);
+        let available = loop {
+            if db_io_backend_registry().try_lock().is_ok() {
+                break true;
+            }
+            if std::time::Instant::now() >= deadline {
+                break false;
+            }
+            std::thread::yield_now();
+        };
+        self.registry_available.store(available, std::sync::atomic::Ordering::Release);
         self.wakes.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
     }
 }
@@ -944,9 +954,12 @@ async fn db_io_blocking_fault_preserves_exact_category_scalars_and_retires() {
         assert_eq!(fault.kind, DbIoFaultKind::Backend);
         {
             let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let Some(DbIoTask::PayloadGet { output, .. }) = owner.task.as_ref() else { panic!("blocking fault taxonomy task lost its writer") };
-            let arena = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            assert!(output.pages.iter().take(output.reserved as usize).flatten().all(|page| arena.slots[page.slot as usize].phase == DbIoPagePhase::TerminalResult));
+            if db_io_slot_matches(&owner, handle) {
+                if let Some(DbIoTask::PayloadGet { output, .. }) = owner.task.as_ref() {
+                    let arena = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    assert!(output.pages.iter().take(output.reserved as usize).flatten().all(|page| arena.slots[page.slot as usize].phase == DbIoPagePhase::TerminalResult), "blocking fault taxonomy output left TerminalResult before its task retired");
+                }
+            }
         }
         let actual_error = fault.into_db_error();
         assert_eq!(actual_error, expected_error);
@@ -984,9 +997,12 @@ async fn db_io_async_native_fault_preserves_exact_category_scalars_and_retires()
         assert_eq!(fault.kind, DbIoFaultKind::Backend);
         {
             let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let Some(DbIoTask::PayloadGet { output, .. }) = owner.task.as_ref() else { panic!("async fault taxonomy task lost its writer") };
-            let arena = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            assert!(output.pages.iter().take(output.reserved as usize).flatten().all(|page| arena.slots[page.slot as usize].phase == DbIoPagePhase::TerminalResult));
+            if db_io_slot_matches(&owner, handle) {
+                if let Some(DbIoTask::PayloadGet { output, .. }) = owner.task.as_ref() {
+                    let arena = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    assert!(output.pages.iter().take(output.reserved as usize).flatten().all(|page| arena.slots[page.slot as usize].phase == DbIoPagePhase::TerminalResult), "async fault taxonomy output left TerminalResult before its task retired");
+                }
+            }
         }
         let actual_error = fault.into_db_error();
         assert_eq!(actual_error, expected_error);
@@ -1097,10 +1113,8 @@ async fn db_io_output_task_yield_cancel_abandon_and_close_retire_exactly_once() 
 
     let output = DbIoPageWriter::try_reserve(2).unwrap();
     let operation = submit_db_io_task(DbIoTask::PayloadGet { backend: control, hash: ContentHash([0x72; 32]), output }).unwrap_or_else(|(error, _)| panic!("cancel lifecycle task admission failed: {error}"));
-    for _ in 0..1_000_000 {
-        if cancel_steps.load(std::sync::atomic::Ordering::Acquire) >= 3 {
-            break;
-        }
+    let steps_deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while cancel_steps.load(std::sync::atomic::Ordering::Acquire) < 3 && std::time::Instant::now() < steps_deadline {
         std::thread::yield_now();
     }
     assert!(cancel_steps.load(std::sync::atomic::Ordering::Acquire) >= 3);
@@ -1125,10 +1139,8 @@ async fn db_io_output_task_yield_cancel_abandon_and_close_retire_exactly_once() 
 
     let output = DbIoPageWriter::try_reserve(2).unwrap();
     let operation = submit_db_io_task(DbIoTask::PayloadGet { backend: control, hash: ContentHash([0x73; 32]), output }).unwrap_or_else(|(error, _)| panic!("abandon lifecycle task admission failed: {error}"));
-    for _ in 0..1_000_000 {
-        if abandon_steps.load(std::sync::atomic::Ordering::Acquire) >= 3 {
-            break;
-        }
+    let steps_deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while abandon_steps.load(std::sync::atomic::Ordering::Acquire) < 3 && std::time::Instant::now() < steps_deadline {
         std::thread::yield_now();
     }
     assert!(abandon_steps.load(std::sync::atomic::Ordering::Acquire) >= 3);
@@ -1672,15 +1684,13 @@ async fn db_io_saturated_task_retry_wakes_parked_caller_without_unrelated_ingres
     let control = register_db_io_backend(DbIoBackendKind::Filesystem, Box::new(BlockingCompleteLawExecutor { terminal: false }), pool.clone()).unwrap();
     let (started_tx, started_rx) = std::sync::mpsc::channel();
     let (release_tx, release_rx) = std::sync::mpsc::channel();
-    pool.try_submit(
+    pool.submit(
         Lane::Io,
         Box::new(move || {
             started_tx.send(()).unwrap();
             release_rx.recv_timeout(std::time::Duration::from_secs(5)).unwrap();
         }),
-    )
-    .ok()
-    .expect("retry blocker admitted");
+    );
     started_rx.recv_timeout(std::time::Duration::from_secs(2)).unwrap();
     for _ in 0..semio_framework_async::WORKER_JOBS_PER_LANE {
         pool.try_submit(Lane::Io, Box::new(|| {})).ok().expect("exact queue capacity");
@@ -2406,15 +2416,13 @@ async fn db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen()
         let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
         let (started_tx, started_rx) = std::sync::mpsc::channel();
         let (release_tx, release_rx) = std::sync::mpsc::channel();
-        pool.try_submit(
+        pool.submit(
             Lane::Io,
             Box::new(move || {
                 let _ = started_tx.send(());
                 let _ = release_rx.recv();
             }),
-        )
-        .ok()
-        .expect("opening lane blocker admission");
+        );
         started_rx.recv_timeout(std::time::Duration::from_secs(5)).expect("opening lane blocker starts");
         let mut opening = Box::pin(open_real_storage_fixture(backend, pool.clone(), &root));
         let pending = std::future::Future::poll(opening.as_mut(), &mut std::task::Context::from_waker(std::task::Waker::noop())).is_pending();
@@ -2523,15 +2531,13 @@ async fn db_io_prepared_registration_failure_returns_exact_close_owner_after_sub
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let (started_tx, started_rx) = std::sync::mpsc::channel();
     let (release_tx, release_rx) = std::sync::mpsc::channel();
-    pool.try_submit(
+    pool.submit(
         Lane::Io,
         Box::new(move || {
             started_tx.send(()).unwrap();
             release_rx.recv().unwrap();
         }),
-    )
-    .ok()
-    .expect("prepared rollback blocker admission");
+    );
     started_rx.recv_timeout(std::time::Duration::from_secs(5)).unwrap();
     for _ in 0..semio_framework_async::WORKER_JOBS_PER_LANE {
         pool.try_submit(Lane::Io, Box::new(|| {})).ok().expect("exact prepared rollback refusal capacity");

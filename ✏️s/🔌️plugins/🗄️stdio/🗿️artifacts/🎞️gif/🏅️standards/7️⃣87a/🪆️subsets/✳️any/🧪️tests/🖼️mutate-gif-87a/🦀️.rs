@@ -28,12 +28,6 @@ const INPUT: &str = "shared://🐘️dancing-87a-large/🖼️.gif";
 /// still name literally, so nothing it proved is given up.
 const SMALL_INPUT: &str = "shared://💃️dancing-87a/🖼️.gif";
 
-/// 🏷️ Mirrors `GifMutation::KINDS` (`../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
-/// 🦀️.rs`) as a literal, like the OBJ/PDF adapters' own `SCENARIOS` constants — the
-/// oracle-only host never links the production plugin crate, so this loop cannot import the
-/// constant from it. `kinds_match_enum_variants_and_manifest_catalog` (in that mutations module)
-/// is what keeps this list honest against the enum.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"];
 
 fn empty_params() -> Json {
     Json::Object(Vec::new())
@@ -112,7 +106,7 @@ mod subject {
         apply_gif_mutation, insert_image, move_image, remove_image, set_background_color_index, set_global_color_table, set_image_geometry, set_image_interlace, set_image_pixels, set_pixel_aspect_ratio, set_screen_size, set_snapshot, GifMutation,
     };
     use semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
-    use crate::STDIO_GIF_DOCUMENT_SCHEMA;
+    use semio_s_artifact_stdio_gif::STDIO_GIF_DOCUMENT_SCHEMA;
 
     //#region 🔖️JsonBridge
     /// 🌉️ Mirrors the oracle's own JSON bridge (`../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔮️oracles/
@@ -296,17 +290,14 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registers by the FULL expanded scenario
-/// id (`mutate-<kind>`/`inverse-<kind>`), one loop iteration per declared `KINDS` entry, plus the
-/// standalone identity round trip.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

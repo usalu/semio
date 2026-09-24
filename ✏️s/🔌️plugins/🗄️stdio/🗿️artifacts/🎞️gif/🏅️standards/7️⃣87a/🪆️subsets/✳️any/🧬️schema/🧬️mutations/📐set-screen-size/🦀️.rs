@@ -23,7 +23,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetScreenSize {
         agg_inverse(&GifMutation::SetScreenSize(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-screen-size", "Bildschirmgröße setzen")
+        protocol::LocalizedLabel::native("Set screen size", "Bildschirmgröße setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

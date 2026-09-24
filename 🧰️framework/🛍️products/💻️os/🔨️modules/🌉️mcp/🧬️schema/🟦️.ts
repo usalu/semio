@@ -96,7 +96,7 @@ function parseExport(exportId: string, value: unknown): unknown {
 
 //#region 🔖️Exports
 /** 🆔️ Every ExportId this scope publishes, in the document's own (key-sorted) order. */
-export const OS_MCP_EXPORT_IDS = ["ActionInvokeInput", "ActionPrepareInput", "ArtifactCreateInput", "ArtifactCreateOutput", "ArtifactCreateTemplateInput", "ArtifactExportInput", "ArtifactExportOutput", "ArtifactInferenceBudgetV1", "ArtifactInferenceCacheModeV1", "ArtifactInferenceRequestV1", "ArtifactInferenceResultV1", "ArtifactOpenInput", "ArtifactOpenOutput", "ArtifactSnapshotInput", "ArtifactSnapshotOutput", "ArtifactValidateInput", "ArtifactValidateOutput", "CallToolResult", "CapabilitiesDescribeInput", "CapabilitiesDescribeOutput", "CapabilitiesSearchInput", "CapabilitiesSearchOutput", "CapabilityActionInput", "CapabilityGenericInput", "CapabilityGenericOutput", "ContentBlock", "ContextResolveInput", "ContextResolveOutput", "ContextSummary", "ConversationReplyInput", "ConversationReplyOutput", "GatewayError", "GatewayErrorCode", "GisMapInferenceApprovalRequestV1", "HandleInput", "InferenceApproveInput", "InferenceGetInput", "InferenceGetOutput", "InferenceJobHandleInput", "InferenceJobOutput", "InferenceListInput", "InferenceListOutput", "InferenceRunInput", "InferenceRunOutput", "InferenceSubmitInput", "InvocationReport", "InvocationStatus", "JobCancelInput", "JobGetInput", "JobSnapshotOutput", "JobState", "JobStatus", "NullableRevisionStamp", "PreparedActionReport", "Prompt", "PromptArgument", "PromptGetResult", "PromptMessage", "Resource", "ResourceContent", "ResourceTemplate", "RevisionStamp", "SearchHit", "Tool", "TransactionBeginInput", "UiDialogOpenInput", "UiFocusInput", "UiFocusOutput", "UiRevealInput", "UiRevealOutput"] as const;
+export const OS_MCP_EXPORT_IDS = ["ActionInvokeInput", "ActionPrepareInput", "ArtifactCreateInput", "ArtifactCreateOutput", "ArtifactCreateTemplateInput", "ArtifactExportInput", "ArtifactExportOutput", "ArtifactInferenceBudgetV1", "ArtifactInferenceCacheModeV1", "ArtifactInferenceRequestV1", "ArtifactInferenceResultV1", "ArtifactOpenInput", "ArtifactOpenOutput", "ArtifactSnapshotInput", "ArtifactSnapshotOutput", "ArtifactValidateInput", "ArtifactValidateOutput", "CallToolResult", "CapabilitiesDescribeInput", "CapabilitiesDescribeOutput", "CapabilitiesSearchInput", "CapabilitiesSearchOutput", "CapabilityActionInput", "CapabilityGenericInput", "CapabilityGenericOutput", "ContentBlock", "ContextResolveInput", "ContextResolveOutput", "ContextSummary", "ConversationReplyInput", "ConversationReplyOutput", "GatewayError", "GatewayErrorCode", "HandleInput", "HubInferenceApprovalRequestV1", "InferenceApproveInput", "InferenceGetInput", "InferenceGetOutput", "InferenceJobHandleInput", "InferenceJobOutput", "InferenceListInput", "InferenceListOutput", "InferenceRunInput", "InferenceRunOutput", "InferenceSubmitInput", "InvocationReport", "InvocationStatus", "JobCancelInput", "JobGetInput", "JobSnapshotOutput", "JobState", "JobStatus", "NullableRevisionStamp", "PreparedActionReport", "Prompt", "PromptArgument", "PromptGetResult", "PromptMessage", "Resource", "ResourceContent", "ResourceTemplate", "RevisionStamp", "SearchHit", "Tool", "TransactionBeginInput", "UiDialogOpenInput", "UiFocusInput", "UiFocusOutput", "UiRevealInput", "UiRevealOutput"] as const;
 
 export type OsMcpExportId = (typeof OS_MCP_EXPORT_IDS)[number];
 
@@ -340,19 +340,19 @@ export type GatewayError = {
 
 export type GatewayErrorCode = "INPUT_INVALID" | "PRECONDITION_FAILED" | "REVISION_CONFLICT" | "PERMISSION_DENIED" | "APPROVAL_REQUIRED" | "PLUGIN_UNAVAILABLE" | "SIDE_EFFECT_REJECTED" | "CANCELLED" | "COMPENSATION_FAILED" | "NOT_FOUND" | "BUDGET_EXCEEDED" | "INTERNAL";
 
-export type GisMapInferenceApprovalRequestV1 = {
-  readonly "jobId": string;
-  readonly "proposalHash": string;
-  readonly "schema": "semio.hub.inference-approval/v1";
-  readonly "version": 1;
-};
-
 export type HandleInput = {
   readonly "preparedActionHandle": string;
 } | {
   readonly "transactionHandle": string;
 } | {
   readonly "undoToken": string;
+};
+
+export type HubInferenceApprovalRequestV1 = {
+  readonly "jobId": string;
+  readonly "proposalHash": string;
+  readonly "schema": "semio.hub.inference-approval/v1";
+  readonly "version": 1;
 };
 
 export type InferenceApproveInput = {
@@ -449,7 +449,7 @@ export type JobSnapshotOutput = {
   readonly "status"?: string;
 };
 
-export type JobState = "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED" | "CANCELLED";
+export type JobState = "PENDING" | "RUNNING" | "AWAITING_APPROVAL" | "SUCCEEDED" | "FAILED" | "CANCELLED";
 
 export type JobStatus = {
   readonly "error"?: GatewayError | null;
@@ -611,8 +611,8 @@ export const parseConversationReplyInput = (value: unknown): ConversationReplyIn
 export const parseConversationReplyOutput = (value: unknown): ConversationReplyOutput => parseExport("ConversationReplyOutput", value) as ConversationReplyOutput;
 export const parseGatewayError = (value: unknown): GatewayError => parseExport("GatewayError", value) as GatewayError;
 export const parseGatewayErrorCode = (value: unknown): GatewayErrorCode => parseExport("GatewayErrorCode", value) as GatewayErrorCode;
-export const parseGisMapInferenceApprovalRequestV1 = (value: unknown): GisMapInferenceApprovalRequestV1 => parseExport("GisMapInferenceApprovalRequestV1", value) as GisMapInferenceApprovalRequestV1;
 export const parseHandleInput = (value: unknown): HandleInput => parseExport("HandleInput", value) as HandleInput;
+export const parseHubInferenceApprovalRequestV1 = (value: unknown): HubInferenceApprovalRequestV1 => parseExport("HubInferenceApprovalRequestV1", value) as HubInferenceApprovalRequestV1;
 export const parseInferenceApproveInput = (value: unknown): InferenceApproveInput => parseExport("InferenceApproveInput", value) as InferenceApproveInput;
 export const parseInferenceGetInput = (value: unknown): InferenceGetInput => parseExport("InferenceGetInput", value) as InferenceGetInput;
 export const parseInferenceGetOutput = (value: unknown): InferenceGetOutput => parseExport("InferenceGetOutput", value) as InferenceGetOutput;

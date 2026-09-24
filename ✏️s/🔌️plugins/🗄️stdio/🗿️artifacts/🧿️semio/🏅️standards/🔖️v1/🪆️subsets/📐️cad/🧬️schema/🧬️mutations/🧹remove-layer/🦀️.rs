@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for RemoveLayer 
         agg_inverse(&SemioCadMutation::RemoveLayer(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-layer", "Ebene entfernen")
+        protocol::LocalizedLabel::native("Remove layer", "Ebene entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

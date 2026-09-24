@@ -95,8 +95,7 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     use protocol::{DiffCodec, Mutation, OpBinary, OpText};
     use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
 
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../temp/bauen-mit-bestand.mp4");
-    let bytes = std::fs::read(path).expect("read exact MP4 fixture");
+    let bytes = include_bytes!("../../../🧫️fixtures/🎬️.mp4").to_vec();
     let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
     assert_eq!(encode_mp4(&snapshot), bytes);
 

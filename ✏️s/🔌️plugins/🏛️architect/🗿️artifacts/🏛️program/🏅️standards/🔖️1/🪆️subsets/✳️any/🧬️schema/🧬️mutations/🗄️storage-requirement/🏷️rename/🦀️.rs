@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameStorageRequirement
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename storage requirement to \"{}\"", self.new_name), &format!("Speicheranforderung in \"{}\" umbenennen", self.new_name))
+        protocol::LocalizedLabel::native(&format!("Rename storage requirement to \"{}\"", self.new_name), &format!("Stauraumanforderung in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

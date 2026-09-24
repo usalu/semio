@@ -37,7 +37,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create Electrical Load Center {} at index {}", self.id.0, self.index), &format!("elektrische Lastmittelpunkt {} an Index {} erstellen", self.id.0, self.index))
+        protocol::LocalizedLabel::native(&format!("Create Electrical Load Center {} at index {}", self.id.0, self.index), &format!("Stromverteiler {} an Index {} erstellen", self.id.0, self.index))
     }
 
     fn target(&self) -> Vec<String> {

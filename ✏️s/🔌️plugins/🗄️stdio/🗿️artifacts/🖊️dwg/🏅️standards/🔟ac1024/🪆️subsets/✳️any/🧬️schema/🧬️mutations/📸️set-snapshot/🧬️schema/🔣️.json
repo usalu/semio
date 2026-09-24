@@ -3115,10 +3115,170 @@
           "additionalProperties": false,
           "properties": {
             "kind": {
-              "const": "geometry"
+              "const": "point"
             },
             "value": {
-              "$ref": "#/$defs/DwgGeometryEntity"
+              "$ref": "#/$defs/DwgPointEntity"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "value": {
+              "$ref": "#/$defs/DwgCircleEntity"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "ellipse"
+            },
+            "value": {
+              "$ref": "#/$defs/DwgEllipseEntity"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "value": {
+              "$ref": "#/$defs/DwgTextEntity"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "spline"
+            },
+            "value": {
+              "$ref": "#/$defs/DwgSplineEntity"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "face3d"
+            },
+            "value": {
+              "$ref": "#/$defs/DwgFace3dEntity"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "polyline3d"
+            },
+            "value": {
+              "$ref": "#/$defs/DwgPolyline3dEntity"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "polyfaceMesh"
+            },
+            "value": {
+              "$ref": "#/$defs/DwgPolyfaceMeshEntity"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "vertex"
+            },
+            "value": {
+              "$ref": "#/$defs/DwgVertexEntity"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "polyfaceFace"
+            },
+            "value": {
+              "$ref": "#/$defs/DwgPolyfaceFaceEntity"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "sequenceEnd"
+            },
+            "value": {
+              "$ref": "#/$defs/DwgSequenceEndEntity"
             }
           },
           "required": [
@@ -4063,6 +4223,401 @@
         }
       }
     },
+    "DwgPointEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common",
+        "point",
+        "thickness",
+        "extrusion",
+        "xAxisAngle"
+      ],
+      "properties": {
+        "common": {
+          "$ref": "#/$defs/DwgEntityCommon"
+        },
+        "point": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "extrusion": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "xAxisAngle": {
+          "type": "number"
+        }
+      }
+    },
+    "DwgCircleEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common",
+        "center",
+        "radius",
+        "thickness",
+        "extrusion"
+      ],
+      "properties": {
+        "common": {
+          "$ref": "#/$defs/DwgEntityCommon"
+        },
+        "center": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "radius": {
+          "type": "number"
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "extrusion": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "DwgEllipseEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common",
+        "center",
+        "majorAxis",
+        "extrusion",
+        "axisRatio",
+        "startParameter",
+        "endParameter"
+      ],
+      "properties": {
+        "common": {
+          "$ref": "#/$defs/DwgEntityCommon"
+        },
+        "center": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "majorAxis": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "extrusion": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "axisRatio": {
+          "type": "number"
+        },
+        "startParameter": {
+          "type": "number"
+        },
+        "endParameter": {
+          "type": "number"
+        }
+      }
+    },
+    "DwgTextEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common",
+        "elevation",
+        "insertion",
+        "extrusion",
+        "thickness",
+        "obliqueAngle",
+        "rotation",
+        "height",
+        "widthFactor",
+        "value",
+        "generation",
+        "horizontalAlignment",
+        "verticalAlignment",
+        "styleHandle"
+      ],
+      "properties": {
+        "common": {
+          "$ref": "#/$defs/DwgEntityCommon"
+        },
+        "elevation": {
+          "type": "number"
+        },
+        "insertion": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "alignment": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "extrusion": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "obliqueAngle": {
+          "type": "number"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "widthFactor": {
+          "type": "number"
+        },
+        "value": {
+          "type": "string"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "horizontalAlignment": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "verticalAlignment": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "styleHandle": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DwgSplineEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common",
+        "degree",
+        "rational",
+        "closed",
+        "periodic",
+        "knotTolerance",
+        "controlTolerance"
+      ],
+      "properties": {
+        "common": {
+          "$ref": "#/$defs/DwgEntityCommon"
+        },
+        "degree": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rational": {
+          "type": "boolean"
+        },
+        "closed": {
+          "type": "boolean"
+        },
+        "periodic": {
+          "type": "boolean"
+        },
+        "knotTolerance": {
+          "type": "number"
+        },
+        "controlTolerance": {
+          "type": "number"
+        },
+        "knots": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "controlPoints": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "DwgFace3dEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common",
+        "corners",
+        "invisibleEdges"
+      ],
+      "properties": {
+        "common": {
+          "$ref": "#/$defs/DwgEntityCommon"
+        },
+        "corners": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "invisibleEdges": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DwgPolyline3dEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common",
+        "curveType",
+        "flags",
+        "sequenceEndHandle"
+      ],
+      "properties": {
+        "common": {
+          "$ref": "#/$defs/DwgEntityCommon"
+        },
+        "curveType": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "vertexHandles": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "sequenceEndHandle": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DwgPolyfaceMeshEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common",
+        "vertexCount",
+        "faceCount",
+        "sequenceEndHandle"
+      ],
+      "properties": {
+        "common": {
+          "$ref": "#/$defs/DwgEntityCommon"
+        },
+        "vertexCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "faceCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "vertexHandles": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "sequenceEndHandle": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DwgVertexEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common",
+        "flags",
+        "point"
+      ],
+      "properties": {
+        "common": {
+          "$ref": "#/$defs/DwgEntityCommon"
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "point": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "DwgPolyfaceFaceEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common",
+        "indices"
+      ],
+      "properties": {
+        "common": {
+          "$ref": "#/$defs/DwgEntityCommon"
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "DwgSequenceEndEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "common"
+      ],
+      "properties": {
+        "common": {
+          "$ref": "#/$defs/DwgEntityCommon"
+        }
+      }
+    },
     "DwgViewportStatusFlag": {
       "type": "string",
       "enum": [
@@ -4129,22 +4684,6 @@
         "oneDistantLight",
         "twoDistantLights"
       ]
-    },
-    "DwgGeometryEntity": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "common",
-        "geometry"
-      ],
-      "properties": {
-        "common": {
-          "$ref": "#/$defs/DwgEntityCommon"
-        },
-        "geometry": {
-          "$ref": "#/$defs/DwgLogicalGeometry"
-        }
-      }
     },
     "DwgLogicalGeometry": {
       "type": "object",

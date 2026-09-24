@@ -29,7 +29,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetNamedDestination {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set named destination {}", self.destination.name), &format!("benannte Ziel {} setzen", self.destination.name))
+        protocol::LocalizedLabel::native(&format!("Set named destination {}", self.destination.name), &format!("Benanntes Ziel {} setzen", self.destination.name))
     }
 
     fn target(&self) -> Vec<String> {

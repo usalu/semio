@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🦀️.rs

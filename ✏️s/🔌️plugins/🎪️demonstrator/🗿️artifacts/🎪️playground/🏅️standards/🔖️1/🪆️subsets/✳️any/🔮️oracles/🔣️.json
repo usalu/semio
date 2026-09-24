@@ -88,7 +88,8 @@
           "capability": "playground-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-schema",

@@ -185,8 +185,9 @@
           "capability": "playbook-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-block",
@@ -205,7 +206,8 @@
           "capability": "playbook-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "add-step",
@@ -224,7 +226,8 @@
           "capability": "playbook-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-title",
@@ -243,8 +246,9 @@
           "capability": "playbook-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-block",
@@ -263,8 +267,9 @@
           "capability": "playbook-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-step",
@@ -323,8 +328,9 @@
           "capability": "playbook-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-block",
@@ -343,8 +349,9 @@
           "capability": "playbook-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "update-step",

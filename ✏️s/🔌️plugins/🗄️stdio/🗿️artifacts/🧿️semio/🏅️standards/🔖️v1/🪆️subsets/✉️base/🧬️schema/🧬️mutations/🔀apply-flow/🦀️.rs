@@ -23,7 +23,7 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyFlow {
         agg_inverse(&SemioMutation::ApplyFlow(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("flow", "Fluss")
+        protocol::SemanticMutation::label(&self.mutation)
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

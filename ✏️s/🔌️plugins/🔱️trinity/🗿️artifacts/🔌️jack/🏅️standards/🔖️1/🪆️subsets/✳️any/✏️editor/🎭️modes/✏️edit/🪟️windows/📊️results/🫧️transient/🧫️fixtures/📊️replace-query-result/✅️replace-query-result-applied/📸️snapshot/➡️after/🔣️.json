@@ -1,0 +1,5 @@
+{
+  "queryExecutionId": "exec-1",
+  "result": null,
+  "queryError": "unexpected token at 1:7"
+}

@@ -71,7 +71,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderNodeCh
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Reorder Node Children", "Knotenkinder umordnen")
+        protocol::LocalizedLabel::native("Reorder Node Children", "Kindknoten umordnen")
     }
 
     fn target(&self) -> Vec<String> {

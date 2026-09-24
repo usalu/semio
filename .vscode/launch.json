@@ -2599,6 +2599,28 @@
       }
     },
     {
+      "name": "🛠️dev🧰️repo⌨️cli🦀️semio-repo",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-cli-rs:repo --args=\"--help\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 280.16
+      }
+    },
+    {
+      "name": "🛠️dev🧰️repo🔌️mcp🦀️rust",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-cli-rs:mcp",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 280.17
+      }
+    },
+    {
       "name": "🛠️dev🧰️repo⌨️client",
       "type": "node-terminal",
       "request": "launch",
@@ -3499,6 +3521,21 @@
       }
     },
     {
+      "name": "🛠️dev🗄️os-hub🎫️local",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:local-hub",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_HUB_URL": "http://127.0.0.1:8787",
+        "OS_HUB_DATA": "${workspaceFolder}/.🧬semio/🌐hub/hub-dev"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.01
+      }
+    },
+    {
       "name": "🛠️dev🗄️os-hub🛡️admin",
       "type": "node-terminal",
       "request": "launch",
@@ -3628,11 +3665,22 @@
       "name": "🛠️dev🪐️os-s🔭️foreign-kind",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:s-host-foreign-kind-s -- http://127.0.0.1:6071/ draw note layout",
+      "command": "bun nx run @semio-tech/framework-os-dev:s-host-foreign-kind-s -- http://127.0.0.1:6070/ --tag launch raster dag block=s.block.block2d@1/*#editor block=s.block.block3d@1/*#editor block=s.block.block5d@1/*#editor",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
         "order": 387.066
+      }
+    },
+    {
+      "name": "🛠️dev🪐️os-s🤏️pinch-a11y",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:s-host-pinch-diagram-contrast-s -- http://127.0.0.1:6070/ --tag launch",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.067
       }
     },
     {
@@ -4305,6 +4353,28 @@
       }
     },
     {
+      "name": "📦️generate🌐️gis🧬️native-codec-projection",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/gis-plugin:native-codec-projection",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.16013
+      }
+    },
+    {
+      "name": "📦️generate🗄️stdio🧬️native-codec-projection",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-plugin:native-codec-projection",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.16014
+      }
+    },
+    {
       "name": "🚚️publish-catalog🗄️os-hub",
       "type": "node-terminal",
       "request": "launch",
@@ -4313,6 +4383,17 @@
       "presentation": {
         "group": "4_build",
         "order": 206.16015
+      }
+    },
+    {
+      "name": "🔁️rebuild-all🔌️plugin-registry",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/plugin-registry:rebuild-all",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.16016
       }
     },
     {
@@ -4525,6 +4606,28 @@
       }
     },
     {
+      "name": "📦️test🥾️bootstrap🪟️cross-platform",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-cross-platform-bootstrap",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.176
+      }
+    },
+    {
+      "name": "📦️test🏃️process🪓️tree-termination",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-process-tree-termination",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.177
+      }
+    },
+    {
       "name": "📦️check🗿️taxonomy",
       "type": "node-terminal",
       "request": "launch",
@@ -4577,6 +4680,17 @@
       "presentation": {
         "group": "4_build",
         "order": 206.169
+      }
+    },
+    {
+      "name": "📦️generate🖨️print📊️viz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:generate-viz",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1689
       }
     },
     {
@@ -4668,6 +4782,50 @@
       }
     },
     {
+      "name": "⚖️gate🔐️hub-auth🧊️wgpu-live-journey",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:hub-live-journey-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107575
+      }
+    },
+    {
+      "name": "⚖️gate🔐️hub-auth🧊️wgpu-live-creation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:hub-live-creation-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107575
+      }
+    },
+    {
+      "name": "⚖️gate🔐️hub-auth🧊️wgpu-live-collaboration",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:hub-live-collaboration-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107575
+      }
+    },
+    {
+      "name": "⚖️gate🧊️wgpu⏯️native-guest-journey",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:native-guest-journey-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107575
+      }
+    },
+    {
       "name": "⚖️gate🌉️os-mcp🚨️capability-audit",
       "type": "node-terminal",
       "request": "launch",
@@ -4690,6 +4848,20 @@
       }
     },
     {
+      "name": "⚖️gate🌉️os-mcp🤖️live-agent-loop🌐️de",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp-rs:live-agent-loop-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_MCP_LIVE_LOCALE": "de"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107582
+      }
+    },
+    {
       "name": "⚖️gate🌉️os-mcp🤝️hub-edit-durability",
       "type": "node-terminal",
       "request": "launch",
@@ -4698,6 +4870,28 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.107585
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🤝️hub-agent-participant",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp-rs:hub-agent-participant-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10759
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp💬️agent-reply",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp-rs:agent-reply-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107595
       }
     },
     {
@@ -4720,6 +4914,105 @@
       "presentation": {
         "group": "4_gate",
         "order": 410.19
+      }
+    },
+    {
+      "name": "⚖️gate🌊️flow🌐️startup",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run semio-framework-os-flow-core:test-browser",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 407.8
+      }
+    },
+    {
+      "name": "⚖️gate🌊️flow⏱️consumed-clock",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run semio-framework-os-flow-core:test-browser-clock",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 407.81
+      }
+    },
+    {
+      "name": "⚖️gate🌊️flow🏷️browser-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run semio-framework-os-flow-core:test-browser-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 407.82
+      }
+    },
+    {
+      "name": "📦️preview🤖️flow-browser-package",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run semio-framework-os-flow-core:preview-generated",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 407.83
+      }
+    },
+    {
+      "name": "📦️build🗄️stdio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-js:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 407.84
+      }
+    },
+    {
+      "name": "📦️check🗄️stdio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-js:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 407.85
+      }
+    },
+    {
+      "name": "⚖️gate🗄️stdio🧩️composition",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-js:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 407.86
+      }
+    },
+    {
+      "name": "⚖️gate🗄️stdio🛂️package-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-js:package-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 407.87
+      }
+    },
+    {
+      "name": "⚖️gate🗄️stdio🕸️package-graph",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-js:package-graph",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 407.88
       }
     },
     {
@@ -5105,6 +5398,39 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.1
+      }
+    },
+    {
+      "name": "⚖️gate📌️check-in🧬️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:check-in-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.11
+      }
+    },
+    {
+      "name": "⚖️gate📌️check-in🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:check-in-native-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.12
+      }
+    },
+    {
+      "name": "⚖️gate📌️check-in🌉️process",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:check-in-process-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.13
       }
     },
     {

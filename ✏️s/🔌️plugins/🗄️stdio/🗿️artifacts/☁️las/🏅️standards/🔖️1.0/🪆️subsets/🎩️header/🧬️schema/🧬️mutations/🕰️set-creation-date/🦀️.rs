@@ -25,7 +25,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetCreationDate {
         agg_inverse(&LasMutation::SetCreationDate(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-creation-date", "Erstellungsdatum setzen")
+        protocol::LocalizedLabel::native("Set creation date", "Erstellungsdatum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

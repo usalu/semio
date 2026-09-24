@@ -28,7 +28,10 @@ impl MutationKind<FlowSnapshot, FlowMutation> for MoveWidgets {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Move {} widget(s)", self.entries.len()), &format!("{} Widget(s) verschieben", self.entries.len()))
+        match self.entries.len() {
+            1 => protocol::LocalizedLabel::native("Move 1 widget", "1 Widget verschieben"),
+            count => protocol::LocalizedLabel::native(&format!("Move {count} widgets"), &format!("{count} Widgets verschieben")),
+        }
     }
     fn target(&self) -> Vec<String> {
         self.entries.iter().map(|entry| entry.id.clone()).collect()

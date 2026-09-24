@@ -2505,6 +2505,7 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("saveSelected", LocalizedLabel::native("Exports only the selected objects to a downloadable CAD file.", "Exportiert nur die ausgewählten Objekte als herunterladbare CAD-Datei."))
             .action_describe("saveInPlay", LocalizedLabel::native("Writes the current model back into the playground document it was opened from.", "Schreibt das aktuelle Modell in das Playground-Dokument zurück, aus dem es geöffnet wurde."))
             .action_describe("loadRawRequest", LocalizedLabel::native("Asks the host to open a raw geometry file and load it into the model.", "Fordert den Host auf, eine Rohgeometriedatei zu öffnen und in das Modell zu laden."))
+            .action_describe("patchCadPlayReference", LocalizedLabel::native("Sets one named property of one reference in the model's play definition — its target, placement or parameter.", "Setzt eine benannte Eigenschaft einer Referenz in der Play-Definition des Modells — Ziel, Platzierung oder Parameter."))
             .action_describe("setProjection", LocalizedLabel::native("Switches the viewport between perspective and the orthographic projections.", "Schaltet das Ansichtsfenster zwischen Perspektive und den orthografischen Projektionen um."))
             .action_describe("toggleSun", LocalizedLabel::native("Turns the scene's sun light on or off.", "Schaltet das Sonnenlicht der Szene ein oder aus."))
             .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the sun's compass direction, in degrees.", "Legt die Himmelsrichtung der Sonne in Grad fest."))
@@ -2513,6 +2514,9 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
             .action_destructive("deleteObject")
             .action_destructive("setActiveExample")
+            .action_destructive("saveCurrent")
+            .action_destructive("saveSelected")
+            .action_destructive("saveInPlay")
             // 🖱️ Raw input plumbing — the 3D viewport and the engagement bar feed these, agents never do.
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
@@ -2522,6 +2526,8 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("worldPointerMove", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("referenceHover", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("setProjectionParam", semio_framework_plugin::CapabilityAudience::Chrome)
             .utility(cad_dislocate_utility())
             .window_kind_utilities(shape::WINDOW_KIND_ID, cad_dislocate_utility_refs())
             .window_kind_utilities(building::WINDOW_KIND_ID, cad_dislocate_utility_refs())

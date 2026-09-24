@@ -744,6 +744,12 @@ impl JobPlacement {
     pub const ALL: [Self; 3] = [Self::Inline, Self::Isolated, Self::Exclusive];
 }
 
+/// 🧰️ The `Effect::SpawnJob` kind of every framework reserved tool verb (undo, redo, copy/paste,
+/// selection and interaction verbs): a live job each host starts on the spawning instance, steps to its
+/// end and answers with `Event::JobCompleted`, never a replayable product job. Twin of TypeScript
+/// `FRAMEWORK_RESERVED_JOB_KIND` in `🎠️kernel/🟦️.ts`; both are read from `🧫️fixtures/🧵️spawned-job-drive`.
+pub const FRAMEWORK_RESERVED_JOB_KIND: &str = "framework.reserved.tool";
+
 /// 🧵 How many `step-job` observations ONE host admission of a spawned job may take before it gives
 /// up. A framework reserved tool job (`interactionSelect`/`interactionHover`/`clearSelection`) reaches
 /// `Done` in two; the ceiling is the host's patience, not the job's expected cost.
@@ -1881,9 +1887,6 @@ impl Default for UiTurnPatchTransportArena {
 impl UiTurnPatchTransportArena {
     #[expect(clippy::result_large_err, reason = "Admission refusal preserves the exact patch owner without allocating.")]
     fn reserve(&mut self, session: u64, owner: UiTurnPatches) -> Result<UiTurnPatchTransportKey, UiTurnPatches> {
-        if session == 0 {
-            return Err(owner);
-        }
         let Some(slot) = self.slots.iter().position(|slot| slot.state == UiTurnPatchTransportState::Vacant) else { return Err(owner) };
         let Some(epoch) = self.slots[slot].epoch.checked_add(1) else { return Err(owner) };
         self.slots[slot] = UiTurnPatchTransportSlot { epoch, session, state: UiTurnPatchTransportState::Building, owner: Some(owner), external: true };
@@ -2094,7 +2097,7 @@ impl UiTurnPatchTransportLease {
         let slot = usize::try_from(u64::from_le_bytes(token[8..16].try_into().map_err(|_| "invalid turn patch slot")?)).map_err(|_| "invalid turn patch slot")?;
         let epoch = u64::from_le_bytes(token[16..24].try_into().map_err(|_| "invalid turn patch epoch")?);
         let session = u64::from_le_bytes(token[24..32].try_into().map_err(|_| "invalid turn patch session")?);
-        if session != expected_session || session == 0 {
+        if session != expected_session {
             return Err("stale turn patch session");
         }
         let key = UiTurnPatchTransportKey { slot, epoch, session };

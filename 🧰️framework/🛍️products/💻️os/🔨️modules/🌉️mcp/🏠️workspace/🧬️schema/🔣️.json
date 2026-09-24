@@ -65,7 +65,7 @@
     "CanonicalCheckpointResourceContractV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "limits", "selector", "resource", "hostile", "lifecycle"],
+      "required": ["schema", "limits", "resource", "hostile", "lifecycle"],
       "properties": {
         "schema": { "const": "semio.mcp.canonical-checkpoint-resource.fixture/v1" },
         "limits": {
@@ -76,30 +76,6 @@
             "pairBytes": { "const": 4194304 },
             "textBytes": { "const": 6291456 },
             "metadataBytes": { "const": 16384 }
-          }
-        },
-        "selector": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["artifactKind", "artifactSchema", "hostile"],
-          "properties": {
-            "artifactKind": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "artifactSchema": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "hostile": {
-              "type": "array",
-              "minItems": 3,
-              "uniqueItems": true,
-              "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["name", "artifactKind", "artifactSchema"],
-                "properties": {
-                  "name": { "enum": ["wrong-kind", "wrong-schema", "wrong-kind-and-schema"] },
-                  "artifactKind": { "type": "string", "minLength": 1 },
-                  "artifactSchema": { "type": "string", "minLength": 1 }
-                }
-              }
-            }
           }
         },
         "resource": {

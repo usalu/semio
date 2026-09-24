@@ -5205,7 +5205,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio sequence.sequence.dsl v1\nschema=73657175656e63652e73657175656e6365\ncontent=[73657175656e63652d636f6e74656e742d35613239326333396164393136653763,73657175656e63652d636f6e74656e742d3561323932633339616439313665376321732e737464696f2e73656d696f4076312f666c6f77]\n",
+        "artifactJson": "semio sequence.sequence.dsl v1\nschema=sequence.sequence content=child_id=sequence-content-5a292c39ad916e7c target=\"sequence-content-5a292c39ad916e7c!s.stdio.semio@v1/flow\"\n",
         "dialect": {
           "artifactKind": "s.sequence.sequence",
           "standard": "1",
@@ -5349,8 +5349,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "46f1a8e9c35975137c7dc653776276e0bd8cf41e3cb35eeaa99d59c5f1a10ee8",
-    "coreWasmSha256": "584ccffaa4383f412f5b6ad73d57c06c9ea9cfc3ee4040781ef6f531625c26c0",
-    "descriptorSha256": "fb4d36e26443716f56b9338fd24eb359b340ec6f5422a7936aa3fc6fdf86ee30"
+    "wasmSha256": "35078eb01867c9e54fa2974181e68dfd73e3b4189ae2735624f4a7854c2624ac",
+    "coreWasmSha256": "1dc70e044a0931f09d775b298103b41c2d23b4c5887e5a8cb85c99ef4c80ccc9",
+    "descriptorSha256": "9c6de8b4e2b830f793ca6a0ab5ea02c28ab756128497fb32c0e52e7d88b72f8c"
   }
 }

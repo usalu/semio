@@ -1,5 +1,5 @@
 @capability-jpg-jfif-1-01-baseline-mutate
-@no-oracle-jpg-jfif-1-01-baseline-conformance-class-semantics
+@oracle-libjpeg-jpg-jfif-1-01-baseline-marker-cli
 @comparison-ordered-json-v1
 @mutations-jpg-jfif-1-01-baseline
 Feature: Move a real photographic JPEG across every axis of the T.81 baseline conformance class
@@ -26,11 +26,11 @@ Feature: Move a real photographic JPEG across every axis of the T.81 baseline co
   exhaustive case built on this catalog would report the four normalized kinds green while the
   mutation never reached a byte, which is the exact shape of shallow green this ticket exists to
   remove. The vocabulary is therefore measured where its axes actually live:
-  on the DECODED SNAPSHOT, against the checker's own verdict. That is also why no oracle is
-  registered — `image` 0.25, the reference the `🧾️document` subset does register, hands back pixels and
-  dimensions and cannot see a SOF marker, a DAC flag or a DHT table at all, so it could neither
-  perform nor judge any row below (recorded as the
-  `jpg-jfif-1-01-baseline-conformance-class-semantics` no-oracle decision).
+  the subject applies each row to the DECODED SNAPSHOT and reads its own checker's verdict, and the
+  reference — libjpeg-turbo's `djpeg -v -v` marker trace and `rdjpgcom -verbose`, run as separate
+  processes — reads the same axes out of the real scan, applies the row as T.81 defines the field it
+  names and reads the class off the specification's own tables. The two projections must agree field
+  for field. The decode/re-encode law is its own case, `🔁️round-trip-jpg-jfif-1-01-baseline`.
 
   The input is the real 2275x2560 architectural scan the `🧾️document` case reads, shared by both subsets
   rather than copied: two DQT, SOF0 with three components, four DHT and SOS. The `code` column names
@@ -106,11 +106,3 @@ Feature: Move a real photographic JPEG across every axis of the T.81 baseline co
       {"kind": "no-mutation", "code": "", "params": {}}
       """
     Then the conformance projection is the original one again, axis for axis
-
-  @id-identity-round-trip
-  @level-long
-  @mode-round-trip
-  Scenario: Decode and re-encode the real scan without passing bytes through
-    Given the real input document shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg
-    When the scan is decoded into a snapshot and re-serialized from that snapshot alone
-    Then the re-encoded bytes differ from the input, the document is still baseline-conforming, and the INDEPENDENT image reader agrees on the geometry of both

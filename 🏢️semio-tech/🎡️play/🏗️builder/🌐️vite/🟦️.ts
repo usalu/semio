@@ -14,6 +14,7 @@ import { playDevStaticDirMounts, playRuntimeAssetSources } from "../../🔨️mo
 import { playActivationComponents, playExtensionDirectory, readPlayActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
 import { playUnionReceiptVitePlugin } from "../../🔨️modules/🧩️runtime/♻️activation/🌐️vite/🟦️.ts";
 import { PLAY_HOST, PLAY_RUNTIME_TARGETS, playRuntimeModuleLayout } from "../../🔨️modules/🧩️runtime/🟦️.ts";
+import { playPageOrigins } from "../../🔨️modules/📦️site/📄pages/🟦️.ts";
 
 const playDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const repoRoot = path.resolve(playDir, "../..");
@@ -38,7 +39,7 @@ export default defineConfig(({ command }) => {
     publicDir: path.join(playDir, "public"),
     assetsInclude: ["**/*.wasm"],
     worker: { format: "es" },
-    define: { "import.meta.vitest": "undefined" },
+    define: { "import.meta.vitest": "undefined", ...(command === "build" ? { "import.meta.env.SEMIO_PLAY_PAGE_ORIGINS": JSON.stringify(JSON.stringify(playPageOrigins(PLAY_HOST))) } : {}) },
     resolve: {
       alias: [
         ...playgroundSceneHostResolveAliases(repoRoot),

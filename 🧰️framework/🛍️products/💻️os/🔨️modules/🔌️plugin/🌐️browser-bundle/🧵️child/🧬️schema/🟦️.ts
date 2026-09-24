@@ -72,6 +72,16 @@ export function childRecord(value: unknown, keys: readonly string[]): value is R
   return Reflect.ownKeys(value).length === keys.length && keys.every(key => Object.hasOwn(descriptors, key) && Object.hasOwn(descriptors[key]!, "value"));
 }
 
+/** 🔢️ The typed arrays jco lifts WIT numeric lists into — `list<u8>` → `Uint8Array`, `list<node-id>` (`list<u64>`, a
+ * `set-children` patch op) → `BigUint64Array`, and so on (`_liftFlatList`'s `new typedArray(values)`, always a fresh
+ * exclusive buffer). Each crosses as ONE transferable buffer; a `DataView` or `Uint8ClampedArray` is no WIT lift. */
+const WIT_NUMERIC_LIST_TYPES = [Uint8Array, Int8Array, Uint16Array, Int16Array, Uint32Array, Int32Array, BigUint64Array, BigInt64Array, Float32Array, Float64Array] as const;
+
+/** 🔢️ Whether `value` is one of {@link WIT_NUMERIC_LIST_TYPES}. */
+export function isWitNumericList(value: unknown): value is InstanceType<(typeof WIT_NUMERIC_LIST_TYPES)[number]> {
+  return WIT_NUMERIC_LIST_TYPES.some((type) => value instanceof type);
+}
+
 /** 🧮️ Charges framing and ordinary transferable owners before crossing the child boundary.
  *
  * `undefined` is a value here, not a refusal: an absent `option<T>` lifts to `undefined` across the
@@ -92,9 +102,9 @@ export function measureChildValue(value: unknown, limit: number): { bytes: numbe
     if (typeof item !== "object") throw new Error("browser actor child: unsupported value type " + typeof item);
     if (objects.has(item)) throw new Error("browser actor child: value alias");
     objects.add(item);
-    if (item instanceof ArrayBuffer || item instanceof Uint8Array) {
+    if (item instanceof ArrayBuffer || isWitNumericList(item)) {
       const buffer = item instanceof ArrayBuffer ? item : item.buffer;
-      if (!(buffer instanceof ArrayBuffer) || (buffer as ArrayBuffer & { resizable?: boolean }).resizable || (item instanceof Uint8Array && (item.byteOffset !== 0 || item.byteLength !== buffer.byteLength)) || transfers.includes(buffer)) throw new Error("browser actor child: exclusive fixed buffer required");
+      if (!(buffer instanceof ArrayBuffer) || (buffer as ArrayBuffer & { resizable?: boolean }).resizable || (!(item instanceof ArrayBuffer) && (item.byteOffset !== 0 || item.byteLength !== buffer.byteLength)) || transfers.includes(buffer)) throw new Error("browser actor child: exclusive fixed buffer required");
       new Uint8Array(buffer);
       charge(buffer.byteLength); transfers.push(buffer); return;
     }
@@ -201,4 +211,6 @@ export async function childSha256(bytes: ArrayBuffer): Promise<string> {
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️browser-actor-child-rejection-carries-a-bounded-typed-reason/🟦️.ts");
   await registerTests1(import.meta.vitest, { BROWSER_ACTOR_CHILD_REJECTION_LIMITS, BROWSER_ACTOR_CHILD_REJECTION_PHASES, boundChildText, childRejectionFrame, childRejectionReason, childRejectionText, isChildRejectionReason }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
+  const { registerTests2 } = await import("./🧪️tests/🧪️browser-actor-child-admits-wit-numeric-lists/🟦️.ts");
+  await registerTests2(import.meta.vitest, { measureChildValue }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }

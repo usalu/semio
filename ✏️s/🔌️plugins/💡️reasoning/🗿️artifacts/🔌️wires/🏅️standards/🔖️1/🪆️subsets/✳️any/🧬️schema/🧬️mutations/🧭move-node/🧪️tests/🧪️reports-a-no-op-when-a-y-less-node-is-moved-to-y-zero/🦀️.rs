@@ -7,7 +7,7 @@
 //! ⚠️ A position-CHANGING `➡️after` is not hand-authorable for this artifact: `diff_board_fixture`
 //! re-mints the composed `s.stdio.semio.graph` child handle as a `DefaultHasher` digest of the
 //! child content, and `std`'s default hasher is deliberately unspecified. `move-node` still yields
-//! a real APPLIED case because its diff builder has three exits before that point — a
+//! a real NO-OP case because its diff builder has three exits before that point — a
 //! `target-missing` Error, a non-finite `invariant` Fatal, and the already-there `mutation.no-op`
 //! warn this fixture pins.
 //!
@@ -85,13 +85,13 @@ async fn committed_json_is_canonical() {
     assert_eq!(original.get("newY").and_then(serde_json::Value::as_f64), Some(0.0), "the payload asks for the origin ordinate explicitly, which is what the missing key defaults to");
 }
 
-/// 🎯️ The declared outcome — `applied` with one `warn`/`mutation.no-op` — is what the
+/// 🎯️ The declared outcome — `no-op` with one `warn`/`mutation.no-op` — is what the
 /// already-at-that-point guard emits, and it is reached only after the finite-coordinate check
 /// passes.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "move-node/reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "move-node/reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero declares a no-op outcome");
     let produced = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its diagnostics");

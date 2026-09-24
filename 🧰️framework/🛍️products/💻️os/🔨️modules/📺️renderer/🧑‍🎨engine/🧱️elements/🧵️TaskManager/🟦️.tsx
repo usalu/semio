@@ -27,6 +27,12 @@
  * it subscribes to `ActivationRegistry.metricsBus`'s `os.runtime.metrics` topic — the publisher that
  * until now had no consumer anywhere in the codebase.
  *
+ * ✅️ Slice U5 (session 11) made the window say what is RUNNING, not only which actors exist: the React shell's
+ * plugin runtime does own an `ActivationRegistry` (`pluginRuntimeActivationRegistryV1`), the window itself starts
+ * that registry's metrics publisher for as long as it is mounted (the deliberate consumer-side choice
+ * `autoStartMetricsPublisher`'s doc asks for), and `TaskManagerTasksPanel` lists every live spawned plugin job,
+ * plugin installation and agent tool call with its progress and a cancel control (`TaskManagerSourcesV1`).
+ *
  * `TaskManagerPanel`'s three row actions are REAL on web: `createTaskManagerDispatcher` (region
  * `🔖️LiveDispatch` below) routes them through `ActivationRegistry.suspend`/`resume`/`cancel`, which
  * call straight through to a real `ShardClient` — not stubbed. K1 (sibling packet) landed the native
@@ -37,10 +43,12 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactElement } from "react";
 import { Button, Table, registerUiTranslationBundles, useLabel, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor } from "@semio-tech/framework";
 import { type ActivationRegistry, type RuntimeMetricsSnapshot } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { type SpawnedJobRowV1 } from "../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
+import { type AgentConversationEntry } from "../🔗️AgentBridge/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Types
@@ -154,6 +162,23 @@ export const taskManagerUiLabel = registerUiTranslationBundles({
           },
           empty: { label: { normal: "No actors are running.", beginner: "Nothing is running right now." } },
           noRuntime: { label: { normal: "No actor runtime is attached to this shell.", beginner: "This window has nothing to watch yet." } },
+          actorsTitle: { label: { normal: "Actors", beginner: "Running programs" } },
+          tasks: {
+            title: { label: { normal: "Running tasks", beginner: "Work in progress" } },
+            empty: { label: { normal: "No task is running.", beginner: "Nothing is being worked on right now." } },
+            lanes: {
+              job: { label: { normal: "Plugin job", beginner: "Background work" } },
+              activation: { label: { normal: "Plugin installation", beginner: "Installing" } },
+              toolCall: { label: { normal: "Agent tool call", beginner: "Assistant action" } },
+            },
+            running: { label: { normal: "Running", beginner: "Working" } },
+            cancelling: { label: { normal: "Cancelling…", beginner: "Stopping…" } },
+            cancel: { label: { normal: "Cancel", beginner: "Stop" } },
+            cancelTask: { label: { normal: "Cancel {{task}}", beginner: "Stop {{task}}" } },
+            progressSteps: { label: { normal: "{{steps}} steps · {{seconds}} s", beginner: "{{steps}} steps done · {{seconds}} s" } },
+            progressElapsed: { label: { normal: "{{seconds}} s", beginner: "{{seconds}} s so far" } },
+            progressLabel: { label: { normal: "Progress of {{task}}", beginner: "How far {{task}} is" } },
+          },
         },
       },
     },
@@ -199,6 +224,23 @@ export const taskManagerUiLabel = registerUiTranslationBundles({
           },
           empty: { label: { normal: "Es laufen keine Akteure.", beginner: "Im Moment läuft nichts." } },
           noRuntime: { label: { normal: "Mit dieser Shell ist keine Akteur-Laufzeit verbunden.", beginner: "Dieses Fenster hat noch nichts zu beobachten." } },
+          actorsTitle: { label: { normal: "Akteure", beginner: "Laufende Programme" } },
+          tasks: {
+            title: { label: { normal: "Laufende Aufgaben", beginner: "Arbeit in Bearbeitung" } },
+            empty: { label: { normal: "Es läuft keine Aufgabe.", beginner: "Im Moment wird an nichts gearbeitet." } },
+            lanes: {
+              job: { label: { normal: "Plugin-Auftrag", beginner: "Hintergrundarbeit" } },
+              activation: { label: { normal: "Plugin-Installation", beginner: "Wird installiert" } },
+              toolCall: { label: { normal: "Werkzeugaufruf des Agenten", beginner: "Aktion des Assistenten" } },
+            },
+            running: { label: { normal: "Läuft", beginner: "In Arbeit" } },
+            cancelling: { label: { normal: "Wird abgebrochen…", beginner: "Wird gestoppt…" } },
+            cancel: { label: { normal: "Abbrechen", beginner: "Stoppen" } },
+            cancelTask: { label: { normal: "{{task}} abbrechen", beginner: "{{task}} stoppen" } },
+            progressSteps: { label: { normal: "{{steps}} Schritte · {{seconds}} s", beginner: "{{steps}} Schritte erledigt · {{seconds}} s" } },
+            progressElapsed: { label: { normal: "{{seconds}} s", beginner: "bisher {{seconds}} s" } },
+            progressLabel: { label: { normal: "Fortschritt von {{task}}", beginner: "Wie weit {{task}} ist" } },
+          },
         },
       },
     },
@@ -447,18 +489,152 @@ export function useRuntimeMetricsRows(registry: ActivationRegistry | null | unde
       if (snapshot) setRows(runtimeMetricsRowsV1(snapshot));
     };
     registry.metricsBus.addEventListener("os.runtime.metrics", listener);
-    return () => registry.metricsBus.removeEventListener("os.runtime.metrics", listener);
+    const stopPublisher = registry.startRuntimeMetricsPublisher((topic, snapshot) => registry.metricsBus.dispatchEvent(new CustomEvent(topic, { detail: snapshot })));
+    return () => {
+      stopPublisher();
+      registry.metricsBus.removeEventListener("os.runtime.metrics", listener);
+    };
   }, [registry]);
   return rows;
 }
-
-/** @emoji 🧵️ The mounted pane: live rows from `registry`, the three real row actions dispatched
- * through {@link createTaskManagerDispatcher}. This is what `os.task-manager` renders. */
-export function TaskManagerWindow({ registry }: { readonly registry: ActivationRegistry | null | undefined }): ReactElement {
-  const rows = useRuntimeMetricsRows(registry);
-  return <TaskManagerPanel rows={rows} runtimeAttached={Boolean(registry)} onAction={registry ? createTaskManagerDispatcher(registry) : () => undefined} />;
-}
 //#endregion 🔖️LiveFeed
+
+//#region 🔖️RunningTasks
+/** 🛣️ Where a running task comes from: a guest's spawned job, a plugin installation, or a tool call the
+ * connected agent is executing. */
+export type TaskManagerTaskLaneV1 = "job" | "activation" | "toolCall";
+
+/** 🏃️ One running task as the window lists it. `steps` is the only progress measure every job has
+ * (admitted step slices); `null` for work that reports none, which then shows elapsed time alone. */
+export interface TaskManagerTaskV1 {
+  readonly id: string;
+  readonly lane: TaskManagerTaskLaneV1;
+  readonly title: string;
+  readonly owner: string;
+  readonly startedAtMs: number;
+  readonly steps: number | null;
+  readonly state: "running" | "cancelling";
+}
+
+/** 🔌️ Where the window reads its live content from. Every member is a stable function the host hands in once,
+ * so the window re-reads on `subscribe` notifications instead of being re-created by its dock tab. */
+export interface TaskManagerSourcesV1 {
+  readonly registry: () => ActivationRegistry | null;
+  readonly tasks: () => readonly TaskManagerTaskV1[];
+  readonly subscribe: (listener: () => void) => () => void;
+  readonly cancel: (task: TaskManagerTaskV1) => void;
+}
+
+/** 💼️ A spawned plugin job as a task: its kind is what it is doing, its plugin who asked for it. */
+export function spawnedJobTasksV1(rows: readonly SpawnedJobRowV1[]): readonly TaskManagerTaskV1[] {
+  return rows.map((row) => ({ id: `job:${row.key}`, lane: "job", title: row.kind, owner: row.pluginId, startedAtMs: row.startedAtMs, steps: row.steps, state: row.cancelling ? "cancelling" : "running" }));
+}
+
+/** 🧩️ Every plugin installation in flight as a task, timed from when the shell first saw it installing. */
+export function installTasksV1(pluginIds: readonly string[], startedAtMs: ReadonlyMap<string, number>): readonly TaskManagerTaskV1[] {
+  return pluginIds.map((pluginId) => ({ id: `install:${pluginId}`, lane: "activation", title: pluginId, owner: "", startedAtMs: startedAtMs.get(pluginId) ?? Date.now(), steps: null, state: "running" }));
+}
+
+/** 🤖️ Every agent tool call still running (or asked to stop) as a task. */
+export function toolCallTasksV1(conversation: readonly AgentConversationEntry[]): readonly TaskManagerTaskV1[] {
+  return conversation.flatMap((entry): TaskManagerTaskV1[] =>
+    entry.kind === "toolCall" && (entry.state === "running" || entry.state === "cancelling") ? [{ id: `tool:${entry.id}`, lane: "toolCall", title: entry.toolName, owner: "", startedAtMs: entry.atMs, steps: null, state: entry.state }] : [],
+  );
+}
+
+/** ⏱️ Whole seconds a task has run — never negative, whatever the clocks say. */
+export function taskManagerElapsedSecondsV1(startedAtMs: number, nowMs: number): number {
+  return Math.max(0, Math.floor((nowMs - startedAtMs) / 1000));
+}
+
+function TaskManagerTaskRow({ task, nowMs, onCancel }: { readonly task: TaskManagerTaskV1; readonly nowMs: number; readonly onCancel: (task: TaskManagerTaskV1) => void }): ReactElement {
+  const laneLabels: Readonly<Record<TaskManagerTaskLaneV1, string>> = {
+    job: useLabel(taskManagerUiLabel("os.taskManager.tasks.lanes.job")),
+    activation: useLabel(taskManagerUiLabel("os.taskManager.tasks.lanes.activation")),
+    toolCall: useLabel(taskManagerUiLabel("os.taskManager.tasks.lanes.toolCall")),
+  };
+  const seconds = String(taskManagerElapsedSecondsV1(task.startedAtMs, nowMs));
+  const withSteps = useLabel(taskManagerUiLabel("os.taskManager.tasks.progressSteps"), { steps: String(task.steps ?? 0), seconds });
+  const elapsedOnly = useLabel(taskManagerUiLabel("os.taskManager.tasks.progressElapsed"), { seconds });
+  const progressLabel = useLabel(taskManagerUiLabel("os.taskManager.tasks.progressLabel"), { task: task.title });
+  const runningLabel = useLabel(taskManagerUiLabel("os.taskManager.tasks.running"));
+  const cancellingLabel = useLabel(taskManagerUiLabel("os.taskManager.tasks.cancelling"));
+  const cancelLabel = useLabel(taskManagerUiLabel("os.taskManager.tasks.cancel"));
+  const cancelTaskLabel = useLabel(taskManagerUiLabel("os.taskManager.tasks.cancelTask"), { task: task.title });
+  const progressText = task.steps === null ? elapsedOnly : withSteps;
+  const cancelling = task.state === "cancelling";
+  return (
+    <li data-semio-task-manager-task={task.id} data-semio-task-manager-lane={task.lane} data-semio-task-manager-state={task.state} className="flex min-w-0 flex-col gap-single py-single">
+      <div className="flex min-w-0 items-baseline justify-between gap-single">
+        <span className="min-w-0 truncate text-xs font-medium" title={task.title}>
+          {task.title}
+        </span>
+        <span className="shrink-0 text-2xs text-muted-foreground">{cancelling ? cancellingLabel : runningLabel}</span>
+      </div>
+      <div className="flex min-w-0 items-center gap-single text-2xs text-muted-foreground">
+        <span className="shrink-0">{laneLabels[task.lane]}</span>
+        {task.owner ? <span className="min-w-0 truncate">· {task.owner}</span> : null}
+      </div>
+      <div className="flex min-w-0 items-center gap-single">
+        <div role="progressbar" aria-label={progressLabel} aria-valuetext={progressText} aria-busy={!cancelling} data-semio-task-manager-progress={task.steps ?? ""} className="relative h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
+          <div className={`absolute inset-y-0 w-1/3 rounded-full bg-emphasized ${cancelling ? "opacity-40" : "animate-pulse"}`} />
+        </div>
+        <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">{progressText}</span>
+        <Button type="button" variant="ghost" icon="square" id={`os.task-manager.cancel.${task.id}`} data-semio-task-manager-cancel={task.id} aria-label={cancelTaskLabel} title={cancelTaskLabel} text={cancelLabel} disabled={cancelling} onClick={() => onCancel(task)} />
+      </div>
+    </li>
+  );
+}
+
+/** @emoji 🏃️ Every task running right now, with its progress and a cancel control per task. A tick once a
+ * second keeps the elapsed time honest while anything runs, and costs nothing while the list is empty. */
+export function TaskManagerTasksPanel({ tasks, onCancel }: { readonly tasks: readonly TaskManagerTaskV1[]; readonly onCancel: (task: TaskManagerTaskV1) => void }): ReactElement {
+  const title = useLabel(taskManagerUiLabel("os.taskManager.tasks.title"));
+  const empty = useLabel(taskManagerUiLabel("os.taskManager.tasks.empty"));
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (tasks.length === 0) return;
+    setNowMs(Date.now());
+    const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(ticker);
+  }, [tasks.length]);
+  return (
+    <section aria-label={title} data-semio-task-manager-tasks={tasks.length} className="flex min-w-0 flex-col gap-single px-single">
+      <h3 className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
+      {tasks.length === 0 ? (
+        <p data-semio-task-manager-tasks-empty="" className="text-xs text-muted-foreground">
+          {empty}
+        </p>
+      ) : (
+        <ul aria-live="polite" className="flex min-w-0 flex-col divide-y divide-border">
+          {tasks.map((task) => (
+            <TaskManagerTaskRow key={task.id} task={task} nowMs={nowMs} onCancel={onCancel} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/** @emoji 🧵️ The mounted `os.task-manager` window: running tasks (spawned jobs, plugin installations, agent
+ * tool calls — progress + cancel) above the live actor table (suspend/resume/cancel through
+ * {@link createTaskManagerDispatcher}). Everything is read from `sources` on every notification. */
+export function TaskManagerWindow({ sources }: { readonly sources: TaskManagerSourcesV1 }): ReactElement {
+  useSyncExternalStore(sources.subscribe, () => sources.tasks());
+  const registry = sources.registry();
+  const rows = useRuntimeMetricsRows(registry);
+  const actorsTitle = useLabel(taskManagerUiLabel("os.taskManager.actorsTitle"));
+  return (
+    <div data-semio-task-manager-window="" className="flex min-w-0 flex-col gap-double py-single">
+      <TaskManagerTasksPanel tasks={sources.tasks()} onCancel={sources.cancel} />
+      <section aria-label={actorsTitle} className="flex min-w-0 flex-col gap-single">
+        <h3 className="px-single text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{actorsTitle}</h3>
+        <TaskManagerPanel rows={rows} runtimeAttached={Boolean(registry)} onAction={registry ? createTaskManagerDispatcher(registry) : () => undefined} />
+      </section>
+    </div>
+  );
+}
+//#endregion 🔖️RunningTasks
 
 //#region 🔖️LiveDispatch
 /** @emoji 🎬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1 follow-up, K1 landed): the REAL dispatch

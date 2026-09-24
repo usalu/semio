@@ -22,7 +22,7 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdatePileInputs
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-5 pile foundation inputs", "EN 1993-5 Pfahlgründungseingaben aktualisieren")
+        protocol::LocalizedLabel::native("Update EN 1993-5 pile foundation inputs", "EN 1993-5 Eingaben für Pfahlgründungen aktualisieren")
     }
 }
 //#endregion 🔖️Payload

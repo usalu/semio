@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for InsertSp
         agg_inverse(&SemioModelMutation::InsertSpatialNode(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-spatial-node", "Raumknoten einfügen")
+        protocol::LocalizedLabel::native("Insert spatial node", "Raumknoten einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

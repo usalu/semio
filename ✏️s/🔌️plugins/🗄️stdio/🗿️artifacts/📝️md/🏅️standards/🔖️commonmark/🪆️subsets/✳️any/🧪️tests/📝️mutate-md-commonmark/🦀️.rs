@@ -13,17 +13,6 @@
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::{inverse_mutation_spec, oracle_apply_mutation, project_md};
 
-//#region 🔖️Kinds
-/// 🗂️ `no-mutation` plus `MdMutation`'s kebab-case `KINDS` (schema/mutations/component.rs).
-/// Duplicated here, rather than imported, because the oracle-only host build never links the SUT
-/// crate at all (it is an optional dependency gated behind the `sut` feature this crate's own
-/// registration loop runs unconditionally), so this list has to be reachable without it.
-/// `no-mutation` is NOT one of that production `KINDS`' entries -- it carries no `MdMutation`
-/// variant of its own (dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration: `no` is not
-/// an approved semantic verb) and is handled directly by `subject::mutate`/`subject::inverse` below
-/// as the identity probe this case's own feature file names it.
-const KINDS: [&str; 6] = ["no-mutation", "set-snapshot", "insert-block", "remove-block", "replace-block", "set-inlines"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 /// 📄️ One real fixture serves both roles: the mutate/inverse scenarios and the identity round trip
@@ -121,7 +110,7 @@ mod subject {
     use semio_s_artifact_stdio_md::schema::mutations::{apply_md_mutation, MdPathStep};
     use semio_s_artifact_stdio_md::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, set_snapshot::SetSnapshot};
     use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
-    use crate::{MdMutation, MdSnapshot};
+    use semio_s_artifact_stdio_md::{MdMutation, MdSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::project_md;
 
     //#region 🔖️Json
@@ -209,7 +198,7 @@ mod subject {
 
     fn build_snapshot(json: &Json) -> Result<MdSnapshot, String> {
         let blocks = json.array("blocks").iter().map(build_block).collect::<Result<Vec<_>, _>>()?;
-        Ok(MdSnapshot { schema: crate::STDIO_MD_DOCUMENT_SCHEMA.to_string(), blocks })
+        Ok(MdSnapshot { schema: semio_s_artifact_stdio_md::STDIO_MD_DOCUMENT_SCHEMA.to_string(), blocks })
     }
 
     /// 🦠️ Builds the real `MdMutation` the spec describes — the same shape `oracle_apply_mutation`
@@ -360,12 +349,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

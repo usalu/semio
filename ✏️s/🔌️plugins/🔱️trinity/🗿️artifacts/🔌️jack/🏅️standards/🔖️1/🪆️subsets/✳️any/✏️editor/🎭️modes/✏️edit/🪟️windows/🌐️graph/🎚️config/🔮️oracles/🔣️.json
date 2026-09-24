@@ -1,0 +1,235 @@
+{
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The config state lane of `s.trinity.jack`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config): its mutation vocabulary `JackGraphWindowConfigMutation` over `JackGraphWindowConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-trinity-jack-1-any-editor-edit-graph-config` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "trinity-jack-1-any-editor-edit-graph-config-state-lane-semantics",
+      "capabilities": [
+        "trinity-jack-1-any-editor-edit-graph-config-mutate"
+      ],
+      "rationale": "`JackGraphWindowConfigMutation` is the config state lane of `s.trinity.jack`'s ✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config surface: it holds one jack graph window's camera and LOD mode. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-camera`, `set-lod-mode`) changes exactly its own part of `JackGraphWindowConfig`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A persisted key-value store for desktop settings; it has no model of this surface's typed state record, its per-kind setters or the inverse each kind computes."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it defines no typed state mutations and neither their no-op nor their inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "`JackGraphWindowConfig` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "trinity-jack-1-any-editor-edit-graph-config",
+      "capability": "trinity-jack-1-any-editor-edit-graph-config-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-camera",
+        "set-lod-mode"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.trinity.jack",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config",
+      "mutations": [
+        {
+          "id": "set-camera",
+          "capability": "trinity-jack-1-any-editor-edit-graph-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-camera",
+            "bridgeVersion": 1,
+            "variant": "SetCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "trinity-jack-1-any-editor-edit-graph-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-lod-mode",
+          "capability": "trinity-jack-1-any-editor-edit-graph-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-lod-mode",
+            "bridgeVersion": 1,
+            "variant": "SetLodMode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "trinity-jack-1-any-editor-edit-graph-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-camera-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.trinity.jack",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config"
+      },
+      "mutation": "set-camera",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5d540219e7cfe2d9d1865c431ccd96fea7564526e321f36b18c50be80ebda1e2",
+          "bytes": 47
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:eac86a3094af264fcddc4ba0f8c28ba98738343b84816e0d6986247a7349e01f",
+          "bytes": 94
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a9b573f96a15f737dc1725de2405bf1133d614e04f88618e6ae8f4feed70c88a",
+          "bytes": 96
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a9b573f96a15f737dc1725de2405bf1133d614e04f88618e6ae8f4feed70c88a",
+          "bytes": 96
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Panning the jack graph window retains its camera and leaves the LOD mode alone."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-lod-mode-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.trinity.jack",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config"
+      },
+      "mutation": "set-lod-mode",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔍️set-lod-mode/✅️set-lod-mode-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5d540219e7cfe2d9d1865c431ccd96fea7564526e321f36b18c50be80ebda1e2",
+          "bytes": 47
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🔍️set-lod-mode/✅️set-lod-mode-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6c732a21b9f89f9243ab6f0bb89d7d6f37d7679bd119aeeb788f7416f870a10e",
+          "bytes": 52
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔍️set-lod-mode/✅️set-lod-mode-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:9fc1b6eca397839fdde5e7273ced244d1f4cb0abe37c226709106368e85c586a",
+          "bytes": 46
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🔍️set-lod-mode/✅️set-lod-mode-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:9fc1b6eca397839fdde5e7273ced244d1f4cb0abe37c226709106368e85c586a",
+          "bytes": 46
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🔍️set-lod-mode/✅️set-lod-mode-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Picking a LOD tier in the graph window's measure replaces the mode and leaves the camera alone."
+    }
+  ]
+}

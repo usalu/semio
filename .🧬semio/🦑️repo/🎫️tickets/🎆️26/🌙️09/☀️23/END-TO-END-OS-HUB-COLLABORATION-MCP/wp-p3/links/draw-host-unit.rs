@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/🧪️tests/🔬️host-unit/🦀️.rs

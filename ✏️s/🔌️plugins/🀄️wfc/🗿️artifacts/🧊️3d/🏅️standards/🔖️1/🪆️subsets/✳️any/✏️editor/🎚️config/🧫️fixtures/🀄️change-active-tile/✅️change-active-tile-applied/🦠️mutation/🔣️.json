@@ -1,0 +1,6 @@
+{
+  "mutation": "changeActiveTile",
+  "payload": {
+    "tileId": "grass"
+  }
+}

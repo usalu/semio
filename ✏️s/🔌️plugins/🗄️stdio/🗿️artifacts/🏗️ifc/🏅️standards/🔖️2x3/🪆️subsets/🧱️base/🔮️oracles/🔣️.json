@@ -85,7 +85,7 @@
     {
       "id": "semantic-ifc-v1",
       "description": "IFC2X3 (ISO 10303-21 physical file under the IFC2X3 EXPRESS schema) exchange structures compared by declared FILE_SCHEMA and the full id-keyed entity graph (every instance's type name(s) plus positional argument values, complex/multi-type instances kept whole, reals tolerant). Header timestamp, preprocessor/originating-system strings, comment placement and line-wrapping are writer freedom -- the same normative surface `Ifc2x3Diff`/`Ifc2x3Mutation` themselves operate over.",
-      "tolerance": 0.000001,
+      "tolerance": 1e-06,
       "ignoreKeys": [
         "timestamp",
         "preprocessorVersion",
@@ -110,7 +110,9 @@
           "capability": "ifc-2x3-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-instance",
@@ -129,7 +131,9 @@
           "capability": "ifc-2x3-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-header",
@@ -148,7 +152,9 @@
           "capability": "ifc-2x3-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -167,7 +173,9 @@
           "capability": "ifc-2x3-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "upsert-instance",

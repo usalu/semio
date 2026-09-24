@@ -18,7 +18,7 @@ impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransient
         vec![Self { value: base.lint_generation }.into()]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Writer Window Lint Generation", "Schreiberfensterprüfungserzeugung setzen")
+        protocol::LocalizedLabel::native("Set Writer Window Lint Generation", "Prüfstand des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["lint_generation".into()]

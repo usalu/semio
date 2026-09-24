@@ -25,7 +25,7 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Rota
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("RotateNode node in layer #{}", self.at.layer), &format!("RotateNodenknoten in Ebene #{}", self.at.layer))
+        protocol::LocalizedLabel::native(&format!("Rotate node in layer #{}", self.at.layer), &format!("Knoten in Ebene #{} drehen", self.at.layer))
     }
     fn target(&self) -> Vec<String> {
         vec![self.at.layer.to_string()]

@@ -27,7 +27,7 @@ impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for SetSnaps
         agg_inverse(&SemioValueMutation::SetSnapshot(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
+        protocol::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

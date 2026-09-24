@@ -21,7 +21,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxTransitionalMutation> for SetConfo
         agg_inverse(&DocxTransitionalMutation::SetConformanceAttribute(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-conformance-attribute", "Konformitätsattribut setzen")
+        protocol::LocalizedLabel::native("Set conformance attribute", "Konformitätsattribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

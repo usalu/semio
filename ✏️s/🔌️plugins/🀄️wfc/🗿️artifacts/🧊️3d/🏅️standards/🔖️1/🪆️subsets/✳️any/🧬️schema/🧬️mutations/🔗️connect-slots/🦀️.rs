@@ -29,7 +29,7 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for ConnectSlots {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Connect slots \"{}\" ↔ \"{}\"", self.edge.from_slot_id, self.edge.to_slot_id), &format!("Plätze \"{}\" ↔ \"{}\" verbinden", self.edge.from_slot_id, self.edge.to_slot_id))
+        protocol::LocalizedLabel::native(&format!("Connect slots \"{}\" ↔ \"{}\"", self.edge.from_slot_id, self.edge.to_slot_id), &format!("Slots \"{}\" ↔ \"{}\" verbinden", self.edge.from_slot_id, self.edge.to_slot_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.edge.id.clone()]

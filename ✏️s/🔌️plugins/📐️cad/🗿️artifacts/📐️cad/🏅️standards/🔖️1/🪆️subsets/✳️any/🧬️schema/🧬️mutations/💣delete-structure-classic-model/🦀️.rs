@@ -23,7 +23,7 @@ impl MutationKind<CadSnapshot, CadMutation> for DeleteStructureClassicModel {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Delete structure-classic-model child", "Klassisches-Strukturmodell-Kind löschen")
+        protocol::LocalizedLabel::native("Delete structure-classic-model child", "Klassisches-Tragwerksmodell-Kind löschen")
     }
     fn target(&self) -> Vec<String> {
         vec!["structure_classic_model".to_string()]

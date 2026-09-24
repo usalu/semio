@@ -1,0 +1,150 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The transient state lane of `s.wfc.wfc3d`'s editor (✏️editor/🫧️transient): its mutation vocabulary `Wfc3dTransientMutation` over `Wfc3dTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-wfc-wfc3d-1-any-editor-transient` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "wfc-wfc3d-1-any-editor-transient-state-lane-semantics",
+      "capabilities": [
+        "wfc-wfc3d-1-any-editor-transient-mutate"
+      ],
+      "rationale": "`Wfc3dTransientMutation` is the transient state lane of `s.wfc.wfc3d`'s ✏️editor/🫧️transient surface: it holds the last solve's slot assignments and whether it ended in a contradiction. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-solve`) changes exactly its own part of `Wfc3dTransient`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "zustand",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "An in-memory state container with arbitrary setter functions; it has no typed transient record, no per-kind mutation vocabulary and no computed inverse."
+          },
+          {
+            "package": "im",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Persistent immutable collections; they version values structurally but define no mutation kinds, no-op guards or inverses over this surface's record."
+          }
+        ],
+        "whyNoneQualifies": "`Wfc3dTransient` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "wfc-wfc3d-1-any-editor-transient",
+      "capability": "wfc-wfc3d-1-any-editor-transient-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-solve"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.wfc.wfc3d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🫧️transient",
+      "mutations": [
+        {
+          "id": "set-solve",
+          "capability": "wfc-wfc3d-1-any-editor-transient-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-solve",
+            "bridgeVersion": 1,
+            "variant": "SetSolve"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-wfc3d-1-any-editor-transient-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-solve-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.wfc.wfc3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🫧️transient"
+      },
+      "mutation": "set-solve",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a239185921d49426d1dd30170e7e02566a0d3dbe8ee5ae06246ac34613826c8",
+          "bytes": 50
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:02367d12602539a8a4b7e59a653f172c870c4b92b0633013b18b901c91823f3d",
+          "bytes": 216
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:cbf80387c87535c667c49ea83bd675c5bca96b121a77114b888b76ef208597d9",
+          "bytes": 174
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:cbf80387c87535c667c49ea83bd675c5bca96b121a77114b888b76ef208597d9",
+          "bytes": 174
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "A finished solve replaces the empty assignment table with its two slot assignments."
+    }
+  ]
+}

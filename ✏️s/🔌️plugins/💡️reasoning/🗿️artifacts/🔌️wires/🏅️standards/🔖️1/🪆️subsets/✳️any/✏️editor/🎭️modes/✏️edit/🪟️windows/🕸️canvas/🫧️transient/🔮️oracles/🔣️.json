@@ -1,0 +1,150 @@
+{
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The transient state lane of `s.reasoning.wires`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient): its mutation vocabulary `WiresCanvasTransientMutation` over `WiresCanvasTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-reasoning-wires-1-any-editor-edit-canvas-transient` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "reasoning-wires-1-any-editor-edit-canvas-transient-state-lane-semantics",
+      "capabilities": [
+        "reasoning-wires-1-any-editor-edit-canvas-transient-mutate"
+      ],
+      "rationale": "`WiresCanvasTransientMutation` is the transient state lane of `s.reasoning.wires`'s ✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient surface: it holds the in-progress node drag on the canvas (node, start and last pointer position, zoom). This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-drag`) changes exactly its own part of `WiresCanvasTransient`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "zustand",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "An in-memory state container with arbitrary setter functions; it has no typed transient record, no per-kind mutation vocabulary and no computed inverse."
+          },
+          {
+            "package": "im",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Persistent immutable collections; they version values structurally but define no mutation kinds, no-op guards or inverses over this surface's record."
+          }
+        ],
+        "whyNoneQualifies": "`WiresCanvasTransient` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "reasoning-wires-1-any-editor-edit-canvas-transient",
+      "capability": "reasoning-wires-1-any-editor-edit-canvas-transient-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-drag"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.reasoning.wires",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient",
+      "mutations": [
+        {
+          "id": "set-drag",
+          "capability": "reasoning-wires-1-any-editor-edit-canvas-transient-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-drag",
+            "bridgeVersion": 1,
+            "variant": "SetDrag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "reasoning-wires-1-any-editor-edit-canvas-transient-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-drag-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.reasoning.wires",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient"
+      },
+      "mutation": "set-drag",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🖱️set-drag/✅️set-drag-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e6c2ad6e69e682870b948aa64add0eece296ac4a6e35fe5cb15820647aed5906",
+          "bytes": 135
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🖱️set-drag/✅️set-drag-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e344c7df800fa3272b843dd18b39b4ba4efdd533ebb396498a3e35b71248367f",
+          "bytes": 142
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🖱️set-drag/✅️set-drag-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2adb17be3862079e9a12d8b7ea05b0eccde9c223543cdc53c11608f555e2d5c5",
+          "bytes": 135
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🖱️set-drag/✅️set-drag-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2adb17be3862079e9a12d8b7ea05b0eccde9c223543cdc53c11608f555e2d5c5",
+          "bytes": 135
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🖱️set-drag/✅️set-drag-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "The owner's committed contract vector for `set-drag` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    }
+  ]
+}

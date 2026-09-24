@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeThetaC {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fatigue detail category theta_C [MPa] to {}", self.new_theta_c), &format!("Ermüdungsdetailkategorientheta_C [MPa] auf {} ändern", self.new_theta_c))
+        protocol::LocalizedLabel::native(&format!("Change fatigue detail category theta_C [MPa] to {}", self.new_theta_c), &format!("Kerbfall θ_C [MPa] auf {} ändern", self.new_theta_c))
     }
 }
 //#endregion 🔖️ChangeThetaC

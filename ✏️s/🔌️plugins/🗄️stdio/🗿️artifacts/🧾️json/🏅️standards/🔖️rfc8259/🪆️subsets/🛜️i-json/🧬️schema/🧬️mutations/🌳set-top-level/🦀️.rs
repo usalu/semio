@@ -21,7 +21,7 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetTopLevel {
         agg_inverse(&JsonIJsonMutation::SetTopLevel(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-top-level", "Oberstufe setzen")
+        protocol::LocalizedLabel::native("Set top level", "Wurzelwert setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

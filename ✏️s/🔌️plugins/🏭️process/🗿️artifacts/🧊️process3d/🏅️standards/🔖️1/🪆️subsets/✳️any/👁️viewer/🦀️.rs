@@ -58,6 +58,12 @@ impl ArtifactViewer for Process3dViewer {
         crate::genesis_process3d_child_pack(snapshot, slot, child_id)
     }
 
+    /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
+    /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::spr::process3d_document_store_owners())
+    }
+
     fn initial_snapshot() -> Process3dSnapshot {
         crate::schema::default_document()
     }

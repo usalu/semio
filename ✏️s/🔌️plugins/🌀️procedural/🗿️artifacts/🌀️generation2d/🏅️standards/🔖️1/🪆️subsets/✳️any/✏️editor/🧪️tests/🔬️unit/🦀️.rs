@@ -458,8 +458,10 @@ async fn a_generation_command_carries_the_run_start_and_the_run_publishes_the_sh
         let (generations_view, previews) = context::generate_shell_views();
         let before_generations = snapshot_read(&app).generation.as_state().generations.len();
         let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(generations_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("preview-owner") };
-        app.dispatch_typed(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "rect".into() }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        for widget_id in ["rect", "outline"] {
+            app.dispatch_typed(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: widget_id.into() }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
+            semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        }
         let settled = context::drive_preview_run(&mut app, &action_meta, &[]).await;
         let before_transient = app.ephemeral_snapshot().await.transient_generation;
         app.dispatch_typed(Generation2dCommand::AddGeneration(add_generation::AddGeneration {}), &action_meta).await.map_err(|error| format!("{error:?}"))?;
@@ -521,8 +523,10 @@ async fn the_preview_eval_run_finalizes_nothing_and_an_abort_leaves_the_document
     let result: Result<(), String> = async {
         let (flow_view, _) = context::edit_shell_views();
         let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
-        app.dispatch_typed(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "rect".into() }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        for widget_id in ["rect", "outline"] {
+            app.dispatch_typed(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: widget_id.into() }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
+            semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        }
         let document = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
         let config = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
         let history = app.artifact_generation_now();

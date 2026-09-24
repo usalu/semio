@@ -22,7 +22,7 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProductPl
         agg_inverse(&Ifc2x3Cv20Mutation::SetProductPlacement(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-product-placement", "Produktplatzierung setzen")
+        protocol::LocalizedLabel::native("Set product placement", "Produktplatzierung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

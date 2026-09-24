@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeGenera
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change generation energy reference to {}", self.new_generation_reference_kwh), &format!("Erzeugungsenergienreferenz auf {} ändern", self.new_generation_reference_kwh))
+        protocol::LocalizedLabel::native(&format!("Change generation energy reference to {}", self.new_generation_reference_kwh), &format!("Referenzwert Erzeugungsenergie auf {} ändern", self.new_generation_reference_kwh))
     }
 }
 //#endregion 🔖️ChangeGenerationReferenceKwh

@@ -299,11 +299,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -924,11 +924,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -2929,7 +2929,7 @@
         "mediaOutputs": [],
         "artifactKinds": [
           {
-            "id": "vcs.vcs",
+            "id": "s.vcs.vcs",
             "name": "VCS Document",
             "sourceFormat": "vcs.vcs",
             "componentKind": "vcs",
@@ -7960,6 +7960,19 @@
                   "claims": [
                     {
                       "namespace": "dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "dbbdaed7fe71844174fe745f130e32f3704848d9513c2ba26345429442bc7609",
+                  "executable": false,
+                  "identity": "s.stdio.json.composer.dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
                       "value": "s.stdio.json@rfc8259/i-json"
                     }
                   ],
@@ -8187,6 +8200,19 @@
                   "executable": false,
                   "identity": "s.stdio.json.standard.rfc8259.representation.mime-application-json-extension-json",
                   "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "5086cf3e6128d39e038f0724bd1d62f5235aa8bcf709c6f829c50c464cccf7d2",
+                  "executable": false,
+                  "identity": "s.stdio.json.subset-validator.validated-dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "subset-validator",
                   "localizations": []
                 },
                 {
@@ -12779,7 +12805,7 @@
   "activationEvents": [
     {
       "onArtifactKind": {
-        "kind": "vcs.vcs"
+        "kind": "s.vcs.vcs"
       }
     }
   ],
@@ -16724,6 +16750,19 @@
                   "claims": [
                     {
                       "namespace": "dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "dbbdaed7fe71844174fe745f130e32f3704848d9513c2ba26345429442bc7609",
+                  "executable": false,
+                  "identity": "s.stdio.json.composer.dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
                       "value": "s.stdio.json@rfc8259/i-json"
                     }
                   ],
@@ -16951,6 +16990,19 @@
                   "executable": false,
                   "identity": "s.stdio.json.standard.rfc8259.representation.mime-application-json-extension-json",
                   "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "5086cf3e6128d39e038f0724bd1d62f5235aa8bcf709c6f829c50c464cccf7d2",
+                  "executable": false,
+                  "identity": "s.stdio.json.subset-validator.validated-dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "subset-validator",
                   "localizations": []
                 },
                 {
@@ -21533,8 +21585,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "25f5a2be169e26190310940c7bb999b2880cadbe9e894fcca100b64d636c5660",
-    "coreWasmSha256": "0cc72a58978751893939dde8cc2d147d6808e9c0d9a796bb53924c53cfb13fa4",
-    "descriptorSha256": "1cc32fa09ce8c1b9364a3e9bbed4daeb11d156ba33ef28666d1567182c64c6ea"
+    "wasmSha256": "468ae787b50c532918f424091e66ae9f3396138a83dc889efcf86cf61458183d",
+    "coreWasmSha256": "1ad8a3c56355ed8d14f926004b9a2fcb392d7fb99b8f5ea62b35825be9fa7db7",
+    "descriptorSha256": "5f851ffe78181711540b828086e8c5b22e6af4838c83233e28f85ab424112ff9"
   }
 }

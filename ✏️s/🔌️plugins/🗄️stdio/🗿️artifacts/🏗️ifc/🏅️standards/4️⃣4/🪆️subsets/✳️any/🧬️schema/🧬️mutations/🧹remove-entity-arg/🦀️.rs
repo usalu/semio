@@ -23,7 +23,7 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for RemoveEntityArg {
         agg_inverse(&IfcMutation::RemoveEntityArg(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-entity-arg", "Entitätsargument entfernen")
+        protocol::LocalizedLabel::native("Remove entity arg", "Entitätsargument entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

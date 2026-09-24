@@ -28,7 +28,7 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeAbbreviation
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change node \"{}\" abbreviation to \"{}\"", self.id, self.new_abbreviation), &format!("Knoten \"{}\" Abkürzung auf \"{}\" ändern", self.id, self.new_abbreviation))
+        protocol::LocalizedLabel::native(&format!("Change node \"{}\" abbreviation to \"{}\"", self.id, self.new_abbreviation), &format!("Abkürzung von Knoten \"{}\" auf \"{}\" ändern", self.id, self.new_abbreviation))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

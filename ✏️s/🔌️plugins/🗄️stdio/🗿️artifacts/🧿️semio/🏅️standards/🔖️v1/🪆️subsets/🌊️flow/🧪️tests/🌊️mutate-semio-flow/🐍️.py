@@ -676,11 +676,9 @@ def identity_round_trip(ctx: Context) -> Outcome:
 
 # region 🔖️Registration
 def adapter() -> Adapter:
-    """🧭️ Registration entry point the host calls — by FULL expanded scenario id, one per row."""
-    built = Adapter("python")
-    for kind in KINDS:
-        built = built.oracle("mutate-%s" % kind, mutate).oracle("inverse-%s" % kind, inverse).oracle("spec-vector-%s" % kind, spec_vector)
-    return built.oracle("identity-round-trip", identity_round_trip)
+    """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
+    ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
+    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

@@ -2234,17 +2234,11 @@
             "importFormats": [],
             "exportStdioKinds": [
               "stdio.json",
-              "stdio.obj",
-              "stdio.png",
-              "stdio.stl",
               "stdio.txt",
               "stdio.zip"
             ],
             "importStdioKinds": [
               "stdio.json",
-              "stdio.obj",
-              "stdio.png",
-              "stdio.stl",
               "stdio.txt",
               "stdio.zip"
             ]
@@ -6342,17 +6336,11 @@
             "importFormats": [],
             "exportStdioKinds": [
               "stdio.json",
-              "stdio.obj",
-              "stdio.png",
-              "stdio.stl",
               "stdio.txt",
               "stdio.zip"
             ],
             "importStdioKinds": [
               "stdio.json",
-              "stdio.obj",
-              "stdio.png",
-              "stdio.stl",
               "stdio.txt",
               "stdio.zip"
             ]
@@ -10296,17 +10284,11 @@
             "importFormats": [],
             "exportStdioKinds": [
               "stdio.json",
-              "stdio.obj",
-              "stdio.png",
-              "stdio.stl",
               "stdio.txt",
               "stdio.zip"
             ],
             "importStdioKinds": [
               "stdio.json",
-              "stdio.obj",
-              "stdio.png",
-              "stdio.stl",
               "stdio.txt",
               "stdio.zip"
             ]
@@ -11875,8 +11857,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "a40f2832de5d4cad936a7723f377e7a1778ec9f143c73bcf4a180095d53d976a",
-    "coreWasmSha256": "5590e4c73ba344f41826193cfd2dec1842a427043abf360498838f0f11d17850",
-    "descriptorSha256": "af9c1dea00f63c154cb7cc334d2eefd03c5fbd79d35870218b65f6b1928a9aa4"
+    "wasmSha256": "68466cac901ff45c8dcd349306f25b562df75e42edac61bd06c61966a3fedb02",
+    "coreWasmSha256": "e89ce164f63931e6024c3ae558934caa7884364d2b369375f21364cfcf6f9962",
+    "descriptorSha256": "5ed116276a0ec6b198f7f67177d647cc62f70660f2220a7f2b9faf322ca958d7"
   }
 }

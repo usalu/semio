@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertTileTags {
-    pub(crate) tile_width: u32,
-    pub(crate) tile_length: u32,
+    pub tile_width: u32,
+    pub tile_length: u32,
 }
 
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for InsertTileTags {
@@ -22,7 +22,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for InsertTileTa
         agg_inverse(&TiffBaselineMutation::InsertTileTags(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-tile-tags", "Kacheltags einfügen")
+        protocol::LocalizedLabel::native("Insert tile tags", "Kachel-Tags einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

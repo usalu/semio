@@ -60,7 +60,6 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                          | params                                                                   |
-      | no-mutation                 | {}                                                                       |
       | set-snapshot                | {"width":2,"height":2,"globalPalette":[[4,5,6],[4,5,6]],"backgroundColorIndex":0,"aspectRatio":0,"loopCount":0,"frames":[{"left":0,"top":0,"width":2,"height":2,"interlace":false,"palette":[[9,9,9],[9,9,9]],"indices":[0,1,1,0],"delayCs":10,"disposal":"doNotDispose","transparentIndex":null,"userInput":false}],"comments":["c0"],"appExtensions":[]} |
       | set-screen-size             | {"width":801,"height":799}                                              |
       | set-global-color-table      | {"colors":[[10,20,30],[40,50,60]]}                                      |
@@ -72,6 +71,17 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       | set-frame-geometry          | {"index":0,"left":5,"top":5,"width":100,"height":100}                   |
       | set-frame-pixels            | {"index":0,"fillIndex":7}                                                |
       | set-frame-interlace         | {"index":1,"interlace":true}                                             |
+
+  @id-no-mutation-baseline-mutate
+  @level-exhaustive
+  @mode-differential
+  Scenario: Apply no-mutation to the real animation
+    Given the real input document asset://💃️dancing/🧪️dancing/🖼️.gif
+    When the no-mutation mutation is applied with its parameters
+      """
+      {"kind": "no-mutation", "params": {}}
+      """
+    Then the oracle and the subject agree on the semantic projection
 
   @id-inverse
   @level-exhaustive
@@ -85,7 +95,6 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
     Then the original semantic projection is recovered
     Examples:
       | id                          | params                                                                   |
-      | no-mutation                 | {}                                                                       |
       | set-snapshot                | {"width":2,"height":2,"globalPalette":[[4,5,6],[4,5,6]],"backgroundColorIndex":0,"aspectRatio":0,"loopCount":0,"frames":[{"left":0,"top":0,"width":2,"height":2,"interlace":false,"palette":[[9,9,9],[9,9,9]],"indices":[0,1,1,0],"delayCs":10,"disposal":"doNotDispose","transparentIndex":null,"userInput":false}],"comments":["c0"],"appExtensions":[]} |
       | set-screen-size             | {"width":801,"height":799}                                              |
       | set-global-color-table      | {"colors":[[10,20,30],[40,50,60]]}                                      |
@@ -97,6 +106,17 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       | set-frame-geometry          | {"index":0,"left":5,"top":5,"width":100,"height":100}                   |
       | set-frame-pixels            | {"index":0,"fillIndex":7}                                                |
       | set-frame-interlace         | {"index":1,"interlace":true}                                             |
+
+  @id-no-mutation-baseline-inverse
+  @level-exhaustive
+  @mode-property
+  Scenario: Undoing no-mutation restores the real animation
+    Given the real input document asset://💃️dancing/🧪️dancing/🖼️.gif
+    When the no-mutation mutation is applied and its computed inverse is applied back
+      """
+      {"kind": "no-mutation", "params": {}}
+      """
+    Then the original semantic projection is recovered
 
   @id-identity-round-trip
   @level-long

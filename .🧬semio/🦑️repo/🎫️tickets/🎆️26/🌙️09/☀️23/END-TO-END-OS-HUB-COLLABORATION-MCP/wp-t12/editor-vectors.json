@@ -1,0 +1,4752 @@
+{
+ "1": {
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+  "scenarios": [
+   {
+    "kind": "change-simulation-settings",
+    "status": "applied",
+    "before": {
+     "zoneTimestepMinutes": 60,
+     "systemTimestepMinutes": 60,
+     "warmupDays": 7,
+     "resultField": "conductionLoss"
+    },
+    "mutation": {
+     "mutation": "changeSimulationSettings",
+     "payload": {
+      "zoneTimestepMinutes": 15,
+      "systemTimestepMinutes": 5,
+      "warmupDays": 1
+     }
+    },
+    "after": {
+     "zoneTimestepMinutes": 15,
+     "systemTimestepMinutes": 5,
+     "warmupDays": 1,
+     "resultField": "conductionLoss"
+    },
+    "source": "🧫️fixtures/🔁️mutations.json",
+    "story": "The owner's committed contract vector for `change-simulation-settings` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own.",
+    "diff": {
+     "zoneTimestepMinutes": 15,
+     "systemTimestepMinutes": 5,
+     "warmupDays": 1,
+     "resultField": "conductionLoss"
+    },
+    "messages": []
+   },
+   {
+    "kind": "change-result-field",
+    "status": "applied",
+    "before": {
+     "zoneTimestepMinutes": 15,
+     "systemTimestepMinutes": 5,
+     "warmupDays": 1,
+     "resultField": "conductionLoss"
+    },
+    "mutation": {
+     "mutation": "changeResultField",
+     "payload": {
+      "field": "solarTransmitted"
+     }
+    },
+    "after": {
+     "zoneTimestepMinutes": 15,
+     "systemTimestepMinutes": 5,
+     "warmupDays": 1,
+     "resultField": "solarTransmitted"
+    },
+    "source": "🧫️fixtures/🔁️mutations.json",
+    "story": "The owner's committed contract vector for `change-result-field` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own.",
+    "diff": {
+     "zoneTimestepMinutes": 15,
+     "systemTimestepMinutes": 5,
+     "warmupDays": 1,
+     "resultField": "solarTransmitted"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "3": {
+  "owner": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+  "scenarios": [
+   {
+    "kind": "replace-config",
+    "status": "applied",
+    "before": {
+     "contributionsJson": "[]"
+    },
+    "mutation": {
+     "ReplaceConfig": {
+      "config": {
+       "contributionsJson": "[{\"kind\":\"über\"}]"
+      }
+     }
+    },
+    "after": {
+     "contributionsJson": "[{\"kind\":\"über\"}]"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "contributionsJson": "[{\"kind\":\"über\"}]"
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-contributions",
+    "status": "applied",
+    "before": {
+     "contributionsJson": "[]"
+    },
+    "mutation": {
+     "SetContributions": {
+      "json": "[{\"kind\":\"über\"}]"
+     }
+    },
+    "after": {
+     "contributionsJson": "[{\"kind\":\"über\"}]"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-contributions` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "contributionsJson": "[{\"kind\":\"über\"}]"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "5": {
+  "owner": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config",
+  "scenarios": [
+   {
+    "kind": "set-camera",
+    "status": "applied",
+    "before": {
+     "camera": {
+      "x": 1.0,
+      "y": 2.0,
+      "zoom": 2.0
+     }
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "x": 4.0,
+      "y": 5.0,
+      "zoom": 3.0
+     }
+    },
+    "after": {
+     "camera": {
+      "x": 4.0,
+      "y": 5.0,
+      "zoom": 3.0
+     }
+    },
+    "source": "🧫️fixtures/🔁️mutations.json",
+    "story": "The owner's committed contract vector for `set-camera` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own.",
+    "diff": {
+     "camera": {
+      "x": 4.0,
+      "y": 5.0,
+      "zoom": 3.0
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-camera",
+    "status": "no-op",
+    "before": {
+     "camera": {
+      "x": 4.0,
+      "y": 5.0,
+      "zoom": 3.0
+     }
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "x": 4.0,
+      "y": 5.0,
+      "zoom": 3.0
+     }
+    },
+    "after": {
+     "camera": {
+      "x": 4.0,
+      "y": 5.0,
+      "zoom": 3.0
+     }
+    },
+    "source": "🧫️fixtures/🔁️mutations.json",
+    "story": "Re-applying `set-camera` to the record its own contract vector produced is the leaf's warned no-op.",
+    "diff": {
+     "camera": {
+      "x": 4.0,
+      "y": 5.0,
+      "zoom": 3.0
+     }
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   }
+  ],
+  "missingKinds": []
+ },
+ "6": {
+  "owner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+  "scenarios": [
+   {
+    "kind": "replace-presence",
+    "status": "applied",
+    "before": {
+     "selectedShotIds": [],
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "mutation": {
+     "ReplacePresence": {
+      "presence": {
+       "selectedShotIds": [
+        "shot-überblick",
+        "shot-detail"
+       ],
+       "camera": {
+        "position": [
+         1.0,
+         2.0,
+         3.0
+        ],
+        "target": [
+         0.0,
+         0.0,
+         0.0
+        ],
+        "zoom": 2.0,
+        "fov": 35.0,
+        "up": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "projection": "orthographic"
+       }
+      }
+     }
+    },
+    "after": {
+     "selectedShotIds": [
+      "shot-überblick",
+      "shot-detail"
+     ],
+     "camera": {
+      "position": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "zoom": 2.0,
+      "fov": 35.0,
+      "up": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "projection": "orthographic"
+     }
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `replace-presence` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "selectedShotIds": [
+      "shot-überblick",
+      "shot-detail"
+     ],
+     "camera": {
+      "position": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "zoom": 2.0,
+      "fov": 35.0,
+      "up": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "projection": "orthographic"
+     }
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "7": {
+  "owner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+  "scenarios": [
+   {
+    "kind": "replace-config",
+    "status": "applied",
+    "before": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "mutation": {
+     "ReplaceConfig": {
+      "config": {
+       "defaultShotFormat": "png",
+       "defaultShotShape": "rectangle",
+       "defaultAssetFormat": "glb",
+       "selectedShotIds": [],
+       "centerModel": true,
+       "fitRevision": 0,
+       "cameraDraftLabel": "Übersicht",
+       "camera": {
+        "position": [
+         420.0,
+         -420.0,
+         320.0
+        ],
+        "target": [
+         0.0,
+         0.0,
+         40.0
+        ],
+        "zoom": 1.0,
+        "fov": 50.0
+       }
+      }
+     }
+    },
+    "after": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "Übersicht",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "Übersicht",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-shot-selection",
+    "status": "applied",
+    "before": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "mutation": {
+     "SetShotSelection": {
+      "shotIds": [
+       "shot-a",
+       "shot-b"
+      ]
+     }
+    },
+    "after": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [
+      "shot-a",
+      "shot-b"
+     ],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-shot-selection` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [
+      "shot-a",
+      "shot-b"
+     ],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-center-model",
+    "status": "applied",
+    "before": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "mutation": {
+     "SetCenterModel": {
+      "value": false
+     }
+    },
+    "after": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": false,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-center-model` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": false,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-fit-revision",
+    "status": "applied",
+    "before": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "mutation": {
+     "SetFitRevision": {
+      "value": 4294967295
+     }
+    },
+    "after": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 4294967295,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-fit-revision` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 4294967295,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-camera-draft-label",
+    "status": "applied",
+    "before": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "mutation": {
+     "SetCameraDraftLabel": {
+      "value": "Übersicht"
+     }
+    },
+    "after": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "Übersicht",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-camera-draft-label` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "Übersicht",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-camera",
+    "status": "applied",
+    "before": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "mutation": {
+     "SetCamera": {
+      "camera": {
+       "position": [
+        1.0,
+        2.0,
+        3.0
+       ],
+       "target": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "zoom": 2.0,
+       "fov": 35.0,
+       "up": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "projection": "orthographic"
+      }
+     }
+    },
+    "after": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "zoom": 2.0,
+      "fov": 35.0,
+      "up": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "projection": "orthographic"
+     }
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-camera` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "zoom": 2.0,
+      "fov": 35.0,
+      "up": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "projection": "orthographic"
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-defaults",
+    "status": "applied",
+    "before": {
+     "defaultShotFormat": "png",
+     "defaultShotShape": "rectangle",
+     "defaultAssetFormat": "glb",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "mutation": {
+     "SetDefaults": {
+      "shotFormat": "svg",
+      "shotShape": "ellipse",
+      "assetFormat": "obj"
+     }
+    },
+    "after": {
+     "defaultShotFormat": "svg",
+     "defaultShotShape": "ellipse",
+     "defaultAssetFormat": "obj",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-defaults` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "defaultShotFormat": "svg",
+     "defaultShotShape": "ellipse",
+     "defaultAssetFormat": "obj",
+     "selectedShotIds": [],
+     "centerModel": true,
+     "fitRevision": 0,
+     "cameraDraftLabel": "",
+     "camera": {
+      "position": [
+       420.0,
+       -420.0,
+       320.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       40.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+     }
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "8": {
+  "owner": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+  "scenarios": [
+   {
+    "kind": "replace-presence",
+    "status": "applied",
+    "before": {
+     "activeRegister": "elements",
+     "graphCameraX": 0.0,
+     "graphCameraY": 0.0,
+     "graphCameraZoom": 1.0
+    },
+    "mutation": {
+     "ReplacePresence": {
+      "presence": {
+       "activeRegister": "risks",
+       "graphCameraX": 10.0,
+       "graphCameraY": -5.0,
+       "graphCameraZoom": 3.0,
+       "adjacencyKindFilter": "prohibited"
+      }
+     }
+    },
+    "after": {
+     "activeRegister": "risks",
+     "graphCameraX": 10.0,
+     "graphCameraY": -5.0,
+     "graphCameraZoom": 3.0,
+     "adjacencyKindFilter": "prohibited"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `replace-presence` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "activeRegister": "risks",
+     "adjacencyKindFilter": "prohibited",
+     "graphCameraX": 10.0,
+     "graphCameraY": -5.0,
+     "graphCameraZoom": 3.0
+    },
+    "messages": []
+   },
+   {
+    "kind": "replace-presence",
+    "status": "no-op",
+    "before": {
+     "activeRegister": "risks",
+     "graphCameraX": 10.0,
+     "graphCameraY": -5.0,
+     "graphCameraZoom": 3.0,
+     "adjacencyKindFilter": "prohibited"
+    },
+    "mutation": {
+     "ReplacePresence": {
+      "presence": {
+       "activeRegister": "risks",
+       "graphCameraX": 10.0,
+       "graphCameraY": -5.0,
+       "graphCameraZoom": 3.0,
+       "adjacencyKindFilter": "prohibited"
+      }
+     }
+    },
+    "after": {
+     "activeRegister": "risks",
+     "graphCameraX": 10.0,
+     "graphCameraY": -5.0,
+     "graphCameraZoom": 3.0,
+     "adjacencyKindFilter": "prohibited"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "Re-applying `replace-presence` to the record its own contract vector produced is the leaf's warned no-op.",
+    "diff": {
+     "activeRegister": "risks",
+     "adjacencyKindFilter": "prohibited",
+     "graphCameraX": 10.0,
+     "graphCameraY": -5.0,
+     "graphCameraZoom": 3.0
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   }
+  ],
+  "missingKinds": []
+ },
+ "9": {
+  "owner": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+  "scenarios": [
+   {
+    "kind": "replace-config",
+    "status": "applied",
+    "before": {
+     "searchQuery": "",
+     "searchHistoryJson": "",
+     "lastResultJson": "",
+     "lastAnalysisJson": ""
+    },
+    "mutation": {
+     "ReplaceConfig": {
+      "config": {
+       "searchQuery": "Überblick",
+       "searchHistoryJson": "[]",
+       "lastResultJson": "[]",
+       "lastAnalysisJson": "{}"
+      }
+     }
+    },
+    "after": {
+     "searchQuery": "Überblick",
+     "searchHistoryJson": "[]",
+     "lastResultJson": "[]",
+     "lastAnalysisJson": "{}"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "searchQuery": "Überblick",
+     "searchHistoryJson": "[]",
+     "lastResultJson": "[]",
+     "lastAnalysisJson": "{}"
+    },
+    "messages": []
+   },
+   {
+    "kind": "replace-config",
+    "status": "no-op",
+    "before": {
+     "searchQuery": "Überblick",
+     "searchHistoryJson": "[]",
+     "lastResultJson": "[]",
+     "lastAnalysisJson": "{}"
+    },
+    "mutation": {
+     "ReplaceConfig": {
+      "config": {
+       "searchQuery": "Überblick",
+       "searchHistoryJson": "[]",
+       "lastResultJson": "[]",
+       "lastAnalysisJson": "{}"
+      }
+     }
+    },
+    "after": {
+     "searchQuery": "Überblick",
+     "searchHistoryJson": "[]",
+     "lastResultJson": "[]",
+     "lastAnalysisJson": "{}"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "Re-applying `replace-config` to the record its own contract vector produced is the leaf's warned no-op.",
+    "diff": {
+     "searchQuery": "Überblick",
+     "searchHistoryJson": "[]",
+     "lastResultJson": "[]",
+     "lastAnalysisJson": "{}"
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   }
+  ],
+  "missingKinds": []
+ },
+ "10": {
+  "owner": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+  "scenarios": [
+   {
+    "kind": "replace-config",
+    "status": "applied",
+    "before": {
+     "contributionsJson": "[]"
+    },
+    "mutation": {
+     "ReplaceConfig": {
+      "config": {
+       "contributionsJson": "[{\"pluginId\":\"replace\"}]"
+      }
+     }
+    },
+    "after": {
+     "contributionsJson": "[{\"pluginId\":\"replace\"}]"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "contributionsJson": "[{\"pluginId\":\"replace\"}]"
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-contributions",
+    "status": "applied",
+    "before": {
+     "contributionsJson": "[]"
+    },
+    "mutation": {
+     "SetContributions": {
+      "json": "[{\"pluginId\":\"set\"}]"
+     }
+    },
+    "after": {
+     "contributionsJson": "[{\"pluginId\":\"set\"}]"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-contributions` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "contributionsJson": "[{\"pluginId\":\"set\"}]"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "11": {
+  "owner": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+  "scenarios": [
+   {
+    "kind": "replace-presence",
+    "status": "applied",
+    "before": {
+     "cameraX": 0.25,
+     "cameraY": 0.75,
+     "cameraZoom": 1.5
+    },
+    "mutation": {
+     "ReplacePresence": {
+      "presence": {
+       "cameraX": 2.5,
+       "cameraY": -3.25,
+       "cameraZoom": 1.75
+      }
+     }
+    },
+    "after": {
+     "cameraX": 2.5,
+     "cameraY": -3.25,
+     "cameraZoom": 1.75
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `replace-presence` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "cameraX": 2.5,
+     "cameraY": -3.25,
+     "cameraZoom": 1.75
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "12": {
+  "owner": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+  "scenarios": [
+   {
+    "kind": "replace-config",
+    "status": "applied",
+    "before": {
+     "runOutputJson": "",
+     "contributionsJson": "[{\"id\":\"base\"}]"
+    },
+    "mutation": {
+     "ReplaceConfig": {
+      "config": {
+       "runOutputJson": "{\"done\":true}",
+       "contributionsJson": "[]"
+      }
+     }
+    },
+    "after": {
+     "runOutputJson": "{\"done\":true}",
+     "contributionsJson": "[]"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "runOutputJson": "{\"done\":true}",
+     "contributionsJson": "[]"
+    },
+    "messages": []
+   },
+   {
+    "kind": "replace-config",
+    "status": "no-op",
+    "before": {
+     "runOutputJson": "{\"done\":true}",
+     "contributionsJson": "[]"
+    },
+    "mutation": {
+     "ReplaceConfig": {
+      "config": {
+       "runOutputJson": "{\"done\":true}",
+       "contributionsJson": "[]"
+      }
+     }
+    },
+    "after": {
+     "runOutputJson": "{\"done\":true}",
+     "contributionsJson": "[]"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "Re-applying `replace-config` to the record its own contract vector produced is the leaf's warned no-op.",
+    "diff": {
+     "runOutputJson": "{\"done\":true}",
+     "contributionsJson": "[]"
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   },
+   {
+    "kind": "set-run-output",
+    "status": "applied",
+    "before": {
+     "runOutputJson": "",
+     "contributionsJson": "[{\"id\":\"base\"}]"
+    },
+    "mutation": {
+     "SetRunOutput": {
+      "json": "{\"Grüße\":2}"
+     }
+    },
+    "after": {
+     "runOutputJson": "{\"Grüße\":2}",
+     "contributionsJson": "[{\"id\":\"base\"}]"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-run-output` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "runOutputJson": "{\"Grüße\":2}",
+     "contributionsJson": "[{\"id\":\"base\"}]"
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-run-output",
+    "status": "no-op",
+    "before": {
+     "runOutputJson": "{\"Grüße\":2}",
+     "contributionsJson": "[{\"id\":\"base\"}]"
+    },
+    "mutation": {
+     "SetRunOutput": {
+      "json": "{\"Grüße\":2}"
+     }
+    },
+    "after": {
+     "runOutputJson": "{\"Grüße\":2}",
+     "contributionsJson": "[{\"id\":\"base\"}]"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "Re-applying `set-run-output` to the record its own contract vector produced is the leaf's warned no-op.",
+    "diff": {
+     "runOutputJson": "{\"Grüße\":2}",
+     "contributionsJson": "[{\"id\":\"base\"}]"
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   },
+   {
+    "kind": "set-contributions",
+    "status": "applied",
+    "before": {
+     "runOutputJson": "",
+     "contributionsJson": "[{\"id\":\"base\"}]"
+    },
+    "mutation": {
+     "SetContributions": {
+      "json": "[]"
+     }
+    },
+    "after": {
+     "runOutputJson": "",
+     "contributionsJson": "[]"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-contributions` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "runOutputJson": "",
+     "contributionsJson": "[]"
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-contributions",
+    "status": "no-op",
+    "before": {
+     "runOutputJson": "",
+     "contributionsJson": "[]"
+    },
+    "mutation": {
+     "SetContributions": {
+      "json": "[]"
+     }
+    },
+    "after": {
+     "runOutputJson": "",
+     "contributionsJson": "[]"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "Re-applying `set-contributions` to the record its own contract vector produced is the leaf's warned no-op.",
+    "diff": {
+     "runOutputJson": "",
+     "contributionsJson": "[]"
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   }
+  ],
+  "missingKinds": []
+ },
+ "25": {
+  "owner": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+  "scenarios": [
+   {
+    "kind": "replace-presence",
+    "status": "applied",
+    "before": {},
+    "mutation": {
+     "ReplacePresence": {
+      "presence": {}
+     }
+    },
+    "after": {},
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `replace-presence` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {},
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "26": {
+  "owner": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+  "scenarios": [
+   {
+    "kind": "set-engagement-input",
+    "status": "applied",
+    "before": {
+     "engagementInput": ""
+    },
+    "mutation": {
+     "SetEngagementInput": {
+      "value": "2×2\nGrüße"
+     }
+    },
+    "after": {
+     "engagementInput": "2×2\nGrüße"
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-engagement-input` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "engagementInput": "2×2\nGrüße"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "29": {
+  "owner": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient",
+  "scenarios": [
+   {
+    "kind": "set-drag",
+    "status": "applied",
+    "before": {
+     "dragNodeId": "node-1",
+     "dragStartX": -1.5,
+     "dragStartY": 2.25,
+     "dragLastX": 0.25,
+     "dragLastY": -0.75,
+     "dragZoom": 1.5
+    },
+    "mutation": {
+     "SetDrag": {
+      "nodeId": "node-2",
+      "startX": 4.5,
+      "startY": -3.25,
+      "lastX": 12.5,
+      "lastY": -7.25,
+      "zoom": 2.0
+     }
+    },
+    "after": {
+     "dragNodeId": "node-2",
+     "dragStartX": 4.5,
+     "dragStartY": -3.25,
+     "dragLastX": 12.5,
+     "dragLastY": -7.25,
+     "dragZoom": 2.0
+    },
+    "source": "🧫️fixtures/🔁️mutation-contracts.json",
+    "story": "The owner's committed contract vector for `set-drag` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own.",
+    "diff": {
+     "dragNodeId": "node-2",
+     "dragStartX": 4.5,
+     "dragStartY": -3.25,
+     "dragLastX": 12.5,
+     "dragLastY": -7.25,
+     "dragZoom": 2.0
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "31": {
+  "owner": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+  "scenarios": [
+   {
+    "kind": "replace-presence",
+    "status": "applied",
+    "before": {
+     "cameraX": 1.0,
+     "cameraY": 2.0,
+     "cameraZoom": 3.0
+    },
+    "mutation": {
+     "mutation": "replacePresence",
+     "payload": {
+      "presence": {
+       "cameraX": 4.0,
+       "cameraY": 5.0,
+       "cameraZoom": 6.0
+      }
+     }
+    },
+    "after": {
+     "cameraX": 4.0,
+     "cameraY": 5.0,
+     "cameraZoom": 6.0
+    },
+    "source": "🧫️fixtures/🔁️mutations.json",
+    "story": "The owner's committed contract vector for `replace-presence` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own.",
+    "diff": {
+     "cameraX": 4.0,
+     "cameraY": 5.0,
+     "cameraZoom": 6.0
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "32": {
+  "owner": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+  "scenarios": [
+   {
+    "kind": "replace-config",
+    "status": "applied",
+    "before": {
+     "cameraX": 1,
+     "cameraY": 2,
+     "cameraZoom": 3
+    },
+    "mutation": {
+     "mutation": "replaceConfig",
+     "payload": {
+      "config": {
+       "cameraX": 1,
+       "cameraY": 2,
+       "cameraZoom": 3
+      }
+     }
+    },
+    "after": {
+     "cameraX": 1,
+     "cameraY": 2,
+     "cameraZoom": 3
+    },
+    "source": "🧫️fixtures/🔁️mutations.json",
+    "story": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own.",
+    "diff": {
+     "cameraX": 1.0,
+     "cameraY": 2.0,
+     "cameraZoom": 3.0
+    },
+    "messages": []
+   },
+   {
+    "kind": "change-camera",
+    "status": "applied",
+    "before": {
+     "cameraX": 1,
+     "cameraY": 2,
+     "cameraZoom": 3
+    },
+    "mutation": {
+     "mutation": "changeCamera",
+     "payload": {
+      "x": 9,
+      "y": 8,
+      "zoom": 7
+     }
+    },
+    "after": {
+     "cameraX": 9,
+     "cameraY": 8,
+     "cameraZoom": 7
+    },
+    "source": "🧫️fixtures/🔁️mutations.json",
+    "story": "The owner's committed contract vector for `change-camera` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own.",
+    "diff": {
+     "cameraX": 9.0,
+     "cameraY": 8.0,
+     "cameraZoom": 7.0
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "0": {
+  "scenarios": [
+   {
+    "kind": "set-camera",
+    "status": "applied",
+    "before": {
+     "camera": {
+      "position": [
+       10.0,
+       -10.0,
+       8.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "zoom": 1.0
+     }
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "after": {
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "story": "Orbiting the 3d model window to a new pose replaces the camera and nothing else.",
+    "diff": {
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-camera",
+    "status": "no-op",
+    "before": {
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "after": {
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "story": "Setting the camera to the pose it already holds is the leaf's warned no-op.",
+    "diff": {
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   }
+  ],
+  "missingKinds": []
+ },
+ "2": {
+  "scenarios": [
+   {
+    "kind": "set-camera",
+    "status": "applied",
+    "before": {
+     "camera": {
+      "position": [
+       10.0,
+       -10.0,
+       8.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "zoom": 1.0
+     }
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "after": {
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "story": "Orbiting the 3d model window to a new pose replaces the camera and nothing else.",
+    "diff": {
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-camera",
+    "status": "no-op",
+    "before": {
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "after": {
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "story": "Setting the camera to the pose it already holds is the leaf's warned no-op.",
+    "diff": {
+     "camera": {
+      "position": [
+       4.0,
+       -6.0,
+       5.0
+      ],
+      "target": [
+       1.0,
+       2.0,
+       0.5
+      ],
+      "zoom": 2.0
+     }
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   }
+  ],
+  "missingKinds": []
+ },
+ "4": {
+  "scenarios": [
+   {
+    "kind": "set-playback-clock",
+    "status": "applied",
+    "before": {
+     "clock": null
+    },
+    "mutation": {
+     "SetPlaybackClock": {
+      "clock": {
+       "phase": 0.25,
+       "reverse": false
+      }
+     }
+    },
+    "after": {
+     "clock": {
+      "phase": 0.25,
+      "reverse": false
+     }
+    },
+    "story": "Starting playback from a stopped results window sets the clock to a quarter phase, running forward.",
+    "diff": {
+     "clock": {
+      "phase": 0.25,
+      "reverse": false
+     }
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "13": {
+  "scenarios": [
+   {
+    "kind": "set-solve",
+    "status": "applied",
+    "before": {
+     "assignments": [],
+     "contradiction": false
+    },
+    "mutation": {
+     "SetSolve": {
+      "assignments": [
+       {
+        "slotId": "r0c0",
+        "tileId": "grass"
+       },
+       {
+        "slotId": "r0c1",
+        "tileId": "water"
+       }
+      ],
+      "contradiction": false
+     }
+    },
+    "after": {
+     "assignments": [
+      {
+       "slotId": "r0c0",
+       "tileId": "grass"
+      },
+      {
+       "slotId": "r0c1",
+       "tileId": "water"
+      }
+     ],
+     "contradiction": false
+    },
+    "story": "A finished solve replaces the empty assignment table with its two slot assignments.",
+    "diff": {
+     "assignments": [
+      {
+       "slotId": "r0c0",
+       "tileId": "grass"
+      },
+      {
+       "slotId": "r0c1",
+       "tileId": "water"
+      }
+     ],
+     "contradiction": false
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "16": {
+  "scenarios": [
+   {
+    "kind": "set-solve",
+    "status": "applied",
+    "before": {
+     "assignments": [],
+     "contradiction": false
+    },
+    "mutation": {
+     "SetSolve": {
+      "assignments": [
+       {
+        "slotId": "r0c0",
+        "tileId": "grass"
+       },
+       {
+        "slotId": "r0c1",
+        "tileId": "water"
+       }
+      ],
+      "contradiction": false
+     }
+    },
+    "after": {
+     "assignments": [
+      {
+       "slotId": "r0c0",
+       "tileId": "grass"
+      },
+      {
+       "slotId": "r0c1",
+       "tileId": "water"
+      }
+     ],
+     "contradiction": false
+    },
+    "story": "A finished solve replaces the empty assignment table with its two slot assignments.",
+    "diff": {
+     "assignments": [
+      {
+       "slotId": "r0c0",
+       "tileId": "grass"
+      },
+      {
+       "slotId": "r0c1",
+       "tileId": "water"
+      }
+     ],
+     "contradiction": false
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "14": {
+  "scenarios": [
+   {
+    "kind": "change-active-tile",
+    "status": "applied",
+    "before": {
+     "cameraX": 0.0,
+     "cameraY": 0.0,
+     "cameraZoom": 1.0,
+     "activeTileId": ""
+    },
+    "mutation": {
+     "mutation": "changeActiveTile",
+     "payload": {
+      "tileId": "grass"
+     }
+    },
+    "after": {
+     "cameraX": 0.0,
+     "cameraY": 0.0,
+     "cameraZoom": 1.0,
+     "activeTileId": "grass"
+    },
+    "story": "Choosing the grass tile makes it the tile a pin gesture assigns in this pane.",
+    "diff": {
+     "cameraX": 0.0,
+     "cameraY": 0.0,
+     "cameraZoom": 1.0,
+     "activeTileId": "grass"
+    },
+    "messages": []
+   },
+   {
+    "kind": "change-camera",
+    "status": "applied",
+    "before": {
+     "cameraX": 0.0,
+     "cameraY": 0.0,
+     "cameraZoom": 1.0,
+     "activeTileId": ""
+    },
+    "mutation": {
+     "mutation": "changeCamera",
+     "payload": {
+      "x": 12.5,
+      "y": -3.0,
+      "zoom": 1.5
+     }
+    },
+    "after": {
+     "cameraX": 12.5,
+     "cameraY": -3.0,
+     "cameraZoom": 1.5,
+     "activeTileId": ""
+    },
+    "story": "Panning and zooming the pane moves its camera and leaves the active tile alone.",
+    "diff": {
+     "cameraX": 12.5,
+     "cameraY": -3.0,
+     "cameraZoom": 1.5,
+     "activeTileId": ""
+    },
+    "messages": []
+   },
+   {
+    "kind": "replace-config",
+    "status": "applied",
+    "before": {
+     "cameraX": 0.0,
+     "cameraY": 0.0,
+     "cameraZoom": 1.0,
+     "activeTileId": ""
+    },
+    "mutation": {
+     "mutation": "replaceConfig",
+     "payload": {
+      "config": {
+       "cameraX": 12.5,
+       "cameraY": -3.0,
+       "cameraZoom": 1.5,
+       "activeTileId": "water"
+      }
+     }
+    },
+    "after": {
+     "cameraX": 12.5,
+     "cameraY": -3.0,
+     "cameraZoom": 1.5,
+     "activeTileId": "water"
+    },
+    "story": "Replacing the pane config swaps the camera and the active tile in one step.",
+    "diff": {
+     "cameraX": 12.5,
+     "cameraY": -3.0,
+     "cameraZoom": 1.5,
+     "activeTileId": "water"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "17": {
+  "scenarios": [
+   {
+    "kind": "change-active-tile",
+    "status": "applied",
+    "before": {
+     "cameraX": 0.0,
+     "cameraY": 0.0,
+     "cameraZoom": 1.0,
+     "activeTileId": ""
+    },
+    "mutation": {
+     "mutation": "changeActiveTile",
+     "payload": {
+      "tileId": "grass"
+     }
+    },
+    "after": {
+     "cameraX": 0.0,
+     "cameraY": 0.0,
+     "cameraZoom": 1.0,
+     "activeTileId": "grass"
+    },
+    "story": "Choosing the grass tile makes it the tile a pin gesture assigns in this pane.",
+    "diff": {
+     "cameraX": 0.0,
+     "cameraY": 0.0,
+     "cameraZoom": 1.0,
+     "activeTileId": "grass"
+    },
+    "messages": []
+   },
+   {
+    "kind": "change-camera",
+    "status": "applied",
+    "before": {
+     "cameraX": 0.0,
+     "cameraY": 0.0,
+     "cameraZoom": 1.0,
+     "activeTileId": ""
+    },
+    "mutation": {
+     "mutation": "changeCamera",
+     "payload": {
+      "x": 12.5,
+      "y": -3.0,
+      "zoom": 1.5
+     }
+    },
+    "after": {
+     "cameraX": 12.5,
+     "cameraY": -3.0,
+     "cameraZoom": 1.5,
+     "activeTileId": ""
+    },
+    "story": "Panning and zooming the pane moves its camera and leaves the active tile alone.",
+    "diff": {
+     "cameraX": 12.5,
+     "cameraY": -3.0,
+     "cameraZoom": 1.5,
+     "activeTileId": ""
+    },
+    "messages": []
+   },
+   {
+    "kind": "replace-config",
+    "status": "applied",
+    "before": {
+     "cameraX": 0.0,
+     "cameraY": 0.0,
+     "cameraZoom": 1.0,
+     "activeTileId": ""
+    },
+    "mutation": {
+     "mutation": "replaceConfig",
+     "payload": {
+      "config": {
+       "cameraX": 12.5,
+       "cameraY": -3.0,
+       "cameraZoom": 1.5,
+       "activeTileId": "water"
+      }
+     }
+    },
+    "after": {
+     "cameraX": 12.5,
+     "cameraY": -3.0,
+     "cameraZoom": 1.5,
+     "activeTileId": "water"
+    },
+    "story": "Replacing the pane config swaps the camera and the active tile in one step.",
+    "diff": {
+     "cameraX": 12.5,
+     "cameraY": -3.0,
+     "cameraZoom": 1.5,
+     "activeTileId": "water"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "15": {
+  "scenarios": [
+   {
+    "kind": "set-solve",
+    "status": "applied",
+    "before": {
+     "outputPixels": null,
+     "contradiction": false,
+     "outputWidth": 0,
+     "outputHeight": 0
+    },
+    "mutation": {
+     "SetSolve": {
+      "outputPixels": "AAECAw==",
+      "contradiction": false,
+      "outputWidth": 2,
+      "outputHeight": 2
+     }
+    },
+    "after": {
+     "outputPixels": "AAECAw==",
+     "contradiction": false,
+     "outputWidth": 2,
+     "outputHeight": 2
+    },
+    "story": "A finished 2x2 solve caches its four palette indices and the extent they were solved for.",
+    "diff": {
+     "outputPixels": "AAECAw==",
+     "contradiction": false,
+     "outputWidth": 2,
+     "outputHeight": 2
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "18": {
+  "scenarios": [
+   {
+    "kind": "set-layer-visibility",
+    "status": "applied",
+    "before": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "mutation": {
+     "operation": "setLayerVisibility",
+     "layerId": "parcels",
+     "visible": false
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": false
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "story": "Hiding the parcels layer flips its visibility entry and nothing else.",
+    "diff": {
+     "steps": [
+      {
+       "layerVisibility": {
+        "parcels": false
+       },
+       "cameraJson": null,
+       "renderMode": null,
+       "vectorStyle": null,
+       "lodMode": null,
+       "layerStrokeScale": {}
+      }
+     ]
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-camera",
+    "status": "applied",
+    "before": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "mutation": {
+     "operation": "setCamera",
+     "cameraJson": "{\"x\":120,\"y\":-40,\"zoom\":3}"
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":120,\"y\":-40,\"zoom\":3}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "story": "Panning the map replaces the camera JSON.",
+    "diff": {
+     "steps": [
+      {
+       "layerVisibility": {},
+       "cameraJson": "{\"x\":120,\"y\":-40,\"zoom\":3}",
+       "renderMode": null,
+       "vectorStyle": null,
+       "lodMode": null,
+       "layerStrokeScale": {}
+      }
+     ]
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-render-mode",
+    "status": "applied",
+    "before": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "mutation": {
+     "operation": "setRenderMode",
+     "value": "vector"
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "vector",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "story": "Switching to vector rendering replaces the render mode.",
+    "diff": {
+     "steps": [
+      {
+       "layerVisibility": {},
+       "cameraJson": null,
+       "renderMode": "vector",
+       "vectorStyle": null,
+       "lodMode": null,
+       "layerStrokeScale": {}
+      }
+     ]
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-vector-style",
+    "status": "applied",
+    "before": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "mutation": {
+     "operation": "setVectorStyle",
+     "value": "figureGround"
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "figureGround",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "story": "Switching to the figure-ground style replaces the vector style.",
+    "diff": {
+     "steps": [
+      {
+       "layerVisibility": {},
+       "cameraJson": null,
+       "renderMode": null,
+       "vectorStyle": "figureGround",
+       "lodMode": null,
+       "layerStrokeScale": {}
+      }
+     ]
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-lod-mode",
+    "status": "applied",
+    "before": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "mutation": {
+     "operation": "setLodMode",
+     "value": "fine"
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "fine",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "story": "Pinning the fine LOD tier replaces the automatic one.",
+    "diff": {
+     "steps": [
+      {
+       "layerVisibility": {},
+       "cameraJson": null,
+       "renderMode": null,
+       "vectorStyle": null,
+       "lodMode": "fine",
+       "layerStrokeScale": {}
+      }
+     ]
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-layer-stroke-scale",
+    "status": "applied",
+    "before": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "mutation": {
+     "operation": "setLayerStrokeScale",
+     "layerId": "parcels",
+     "value": 2.5
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 2.5
+     }
+    },
+    "story": "Thickening the parcels strokes sets their multiplier to 2.5.",
+    "diff": {
+     "steps": [
+      {
+       "layerVisibility": {},
+       "cameraJson": null,
+       "renderMode": null,
+       "vectorStyle": null,
+       "lodMode": null,
+       "layerStrokeScale": {
+        "parcels": 2.5
+       }
+      }
+     ]
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-layer-visibility",
+    "status": "no-op",
+    "before": {
+     "layerVisibility": {
+      "parcels": false
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "mutation": {
+     "operation": "setLayerVisibility",
+     "layerId": "parcels",
+     "visible": false
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": false
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "story": "Setting a map window field to the value it already holds is the leaf's warned no-op.",
+    "diff": {
+     "steps": []
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   },
+   {
+    "kind": "set-camera",
+    "status": "no-op",
+    "before": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":120,\"y\":-40,\"zoom\":3}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "mutation": {
+     "operation": "setCamera",
+     "cameraJson": "{\"x\":120,\"y\":-40,\"zoom\":3}"
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":120,\"y\":-40,\"zoom\":3}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "story": "Setting a map window field to the value it already holds is the leaf's warned no-op.",
+    "diff": {
+     "steps": []
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   },
+   {
+    "kind": "set-render-mode",
+    "status": "no-op",
+    "before": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "vector",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "mutation": {
+     "operation": "setRenderMode",
+     "value": "vector"
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "vector",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "story": "Setting a map window field to the value it already holds is the leaf's warned no-op.",
+    "diff": {
+     "steps": []
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   },
+   {
+    "kind": "set-vector-style",
+    "status": "no-op",
+    "before": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "figureGround",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "mutation": {
+     "operation": "setVectorStyle",
+     "value": "figureGround"
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "figureGround",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "story": "Setting a map window field to the value it already holds is the leaf's warned no-op.",
+    "diff": {
+     "steps": []
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   },
+   {
+    "kind": "set-lod-mode",
+    "status": "no-op",
+    "before": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "fine",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "mutation": {
+     "operation": "setLodMode",
+     "value": "fine"
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "fine",
+     "layerStrokeScale": {
+      "parcels": 1.0
+     }
+    },
+    "story": "Setting a map window field to the value it already holds is the leaf's warned no-op.",
+    "diff": {
+     "steps": []
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   },
+   {
+    "kind": "set-layer-stroke-scale",
+    "status": "no-op",
+    "before": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 2.5
+     }
+    },
+    "mutation": {
+     "operation": "setLayerStrokeScale",
+     "layerId": "parcels",
+     "value": 2.5
+    },
+    "after": {
+     "layerVisibility": {
+      "parcels": true
+     },
+     "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+     "renderMode": "combined",
+     "vectorStyle": "colored",
+     "lodMode": "automatic",
+     "layerStrokeScale": {
+      "parcels": 2.5
+     }
+    },
+    "story": "Setting a map window field to the value it already holds is the leaf's warned no-op.",
+    "diff": {
+     "steps": []
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   }
+  ],
+  "missingKinds": []
+ },
+ "19": {
+  "scenarios": [
+   {
+    "kind": "set-generation-preview",
+    "status": "applied",
+    "before": {
+     "generationPreviewText": null
+    },
+    "mutation": {
+     "SetGenerationPreview": {
+      "preview_text": "generation 1: 12 parts"
+     }
+    },
+    "after": {
+     "generationPreviewText": "generation 1: 12 parts"
+    },
+    "story": "The first generation preview caches its text where there was none.",
+    "diff": {
+     "generationPreviewText": "generation 1: 12 parts"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "20": {
+  "scenarios": [
+   {
+    "kind": "set-generation-preview",
+    "status": "applied",
+    "before": {
+     "generationPreviewText": null
+    },
+    "mutation": {
+     "SetGenerationPreview": {
+      "preview_text": "generation 1: 12 parts"
+     }
+    },
+    "after": {
+     "generationPreviewText": "generation 1: 12 parts"
+    },
+    "story": "The first generation preview caches its text where there was none.",
+    "diff": {
+     "generationPreviewText": "generation 1: 12 parts"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "21": {
+  "scenarios": [
+   {
+    "kind": "set-snapshot",
+    "status": "applied",
+    "before": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "mutation": {
+     "SetSnapshot": {
+      "config": {
+       "lodMode": "fine",
+       "showMode": "wireframe",
+       "camera": {
+        "x": 40.0,
+        "y": 25.0,
+        "zoom": 0.75
+       },
+       "previewCamera": {
+        "position": [
+         2.0,
+         -8.0,
+         3.0
+        ],
+        "target": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "fov": 35.0
+       },
+       "sunJson": "{\"azimuth\":90,\"elevation\":30}",
+       "selectedGenerationId": "generation-2"
+      }
+     }
+    },
+    "after": {
+     "lodMode": "fine",
+     "showMode": "wireframe",
+     "camera": {
+      "x": 40.0,
+      "y": 25.0,
+      "zoom": 0.75
+     },
+     "previewCamera": {
+      "position": [
+       2.0,
+       -8.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "fov": 35.0
+     },
+     "sunJson": "{\"azimuth\":90,\"elevation\":30}",
+     "selectedGenerationId": "generation-2"
+    },
+    "story": "Restoring a saved config replaces every field at once.",
+    "diff": {
+     "lodMode": "fine",
+     "showMode": "wireframe",
+     "camera": {
+      "x": 40.0,
+      "y": 25.0,
+      "zoom": 0.75
+     },
+     "previewCamera": {
+      "position": [
+       2.0,
+       -8.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "fov": 35.0
+     },
+     "sunJson": "{\"azimuth\":90,\"elevation\":30}",
+     "selectedGenerationId": "generation-2"
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-sun",
+    "status": "applied",
+    "before": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "mutation": {
+     "SetSun": {
+      "json": "{\"azimuth\":90,\"elevation\":30}"
+     }
+    },
+    "after": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":90,\"elevation\":30}",
+     "selectedGenerationId": null
+    },
+    "story": "Moving the sun replaces its JSON.",
+    "diff": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":90,\"elevation\":30}",
+     "selectedGenerationId": null
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-show-mode",
+    "status": "applied",
+    "before": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "mutation": {
+     "SetShowMode": {
+      "value": "wireframe"
+     }
+    },
+    "after": {
+     "lodMode": "coarse",
+     "showMode": "wireframe",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "story": "Switching to wireframe replaces the preview shading mode.",
+    "diff": {
+     "lodMode": "coarse",
+     "showMode": "wireframe",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-preview-camera",
+    "status": "applied",
+    "before": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "mutation": {
+     "SetPreviewCamera": {
+      "camera": {
+       "position": [
+        2.0,
+        -8.0,
+        3.0
+       ],
+       "target": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "fov": 35.0
+      }
+     }
+    },
+    "after": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       2.0,
+       -8.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "fov": 35.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "story": "Orbiting the 3d preview replaces its camera.",
+    "diff": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       2.0,
+       -8.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "fov": 35.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-lod-mode",
+    "status": "applied",
+    "before": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "mutation": {
+     "SetLodMode": {
+      "value": "fine"
+     }
+    },
+    "after": {
+     "lodMode": "fine",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "story": "Choosing the fine tessellation replaces the LOD tier.",
+    "diff": {
+     "lodMode": "fine",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-camera",
+    "status": "applied",
+    "before": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "mutation": {
+     "SetCamera": {
+      "camera": {
+       "x": 40.0,
+       "y": 25.0,
+       "zoom": 0.75
+      }
+     }
+    },
+    "after": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 40.0,
+      "y": 25.0,
+      "zoom": 0.75
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "story": "Panning the flow-graph canvas replaces its camera.",
+    "diff": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 40.0,
+      "y": 25.0,
+      "zoom": 0.75
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-selected-generation",
+    "status": "applied",
+    "before": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "mutation": {
+     "SetSelectedGeneration": {
+      "selectedGenerationId": "generation-2"
+     }
+    },
+    "after": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": "generation-2"
+    },
+    "story": "Selecting the second generation records its id.",
+    "diff": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": "generation-2"
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-preview-camera",
+    "status": "no-op",
+    "before": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       2.0,
+       -8.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "fov": 35.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "mutation": {
+     "SetPreviewCamera": {
+      "camera": {
+       "position": [
+        2.0,
+        -8.0,
+        3.0
+       ],
+       "target": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "fov": 35.0
+      }
+     }
+    },
+    "after": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       2.0,
+       -8.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "fov": 35.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "story": "Setting the camera to the one the config already holds is the leaf's warned no-op.",
+    "diff": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "previewCamera": {
+      "position": [
+       2.0,
+       -8.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "fov": 35.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   },
+   {
+    "kind": "set-camera",
+    "status": "no-op",
+    "before": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 40.0,
+      "y": 25.0,
+      "zoom": 0.75
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "mutation": {
+     "SetCamera": {
+      "camera": {
+       "x": 40.0,
+       "y": 25.0,
+       "zoom": 0.75
+      }
+     }
+    },
+    "after": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 40.0,
+      "y": 25.0,
+      "zoom": 0.75
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "story": "Setting the camera to the one the config already holds is the leaf's warned no-op.",
+    "diff": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "camera": {
+      "x": 40.0,
+      "y": 25.0,
+      "zoom": 0.75
+     },
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "selectedGenerationId": null
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   }
+  ],
+  "missingKinds": []
+ },
+ "22": {
+  "scenarios": [
+   {
+    "kind": "set-preview-eval",
+    "status": "applied",
+    "before": {
+     "previewEvalText": null
+    },
+    "mutation": {
+     "SetPreviewEval": {
+      "evalText": "{\"meshes\":1}"
+     }
+    },
+    "after": {
+     "previewEvalText": "{\"meshes\":1}"
+    },
+    "story": "The first flow evaluation caches its JSON for the preview window.",
+    "diff": {
+     "previewEvalText": "{\"meshes\":1}"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "23": {
+  "scenarios": [
+   {
+    "kind": "set-show-mode",
+    "status": "applied",
+    "before": {
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "showMode": "shaded"
+    },
+    "mutation": {
+     "SetShowMode": {
+      "value": "points"
+     }
+    },
+    "after": {
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "showMode": "points"
+    },
+    "story": "Switching this viewer to points replaces the shading mode it broadcasts.",
+    "diff": {
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "showMode": "points"
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-preview-camera",
+    "status": "applied",
+    "before": {
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "showMode": "shaded"
+    },
+    "mutation": {
+     "SetPreviewCamera": {
+      "camera": {
+       "position": [
+        2.0,
+        -8.0,
+        3.0
+       ],
+       "target": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "fov": 35.0
+      }
+     }
+    },
+    "after": {
+     "previewCamera": {
+      "position": [
+       2.0,
+       -8.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "fov": 35.0
+     },
+     "showMode": "shaded"
+    },
+    "story": "Orbiting this viewer's preview replaces the camera it broadcasts.",
+    "diff": {
+     "previewCamera": {
+      "position": [
+       2.0,
+       -8.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "fov": 35.0
+     },
+     "showMode": "shaded"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "24": {
+  "scenarios": [
+   {
+    "kind": "set-sun",
+    "status": "applied",
+    "before": {
+     "lodMode": "",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": null
+    },
+    "mutation": {
+     "SetSun": {
+      "json": "{\"azimuth\":90,\"elevation\":30}"
+     }
+    },
+    "after": {
+     "lodMode": "",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":90,\"elevation\":30}",
+     "activeExampleId": null
+    },
+    "story": "Moving the sun replaces its JSON.",
+    "diff": {
+     "lodMode": "",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":90,\"elevation\":30}",
+     "activeExampleId": null
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-active-example",
+    "status": "applied",
+    "before": {
+     "lodMode": "",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": null
+    },
+    "mutation": {
+     "SetActiveExample": {
+      "value": "box-fillet-preview"
+     }
+    },
+    "after": {
+     "lodMode": "",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": "box-fillet-preview"
+    },
+    "story": "Picking the box-fillet example makes it what this read-only surface shows.",
+    "diff": {
+     "lodMode": "",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": "box-fillet-preview"
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-show-mode",
+    "status": "applied",
+    "before": {
+     "lodMode": "",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": null
+    },
+    "mutation": {
+     "SetShowMode": {
+      "value": "shaded+edges"
+     }
+    },
+    "after": {
+     "lodMode": "",
+     "showMode": "shaded+edges",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": null
+    },
+    "story": "Switching to shaded with edges replaces the shading mode.",
+    "diff": {
+     "lodMode": "",
+     "showMode": "shaded+edges",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": null
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-preview-camera",
+    "status": "applied",
+    "before": {
+     "lodMode": "",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": null
+    },
+    "mutation": {
+     "SetPreviewCamera": {
+      "camera": {
+       "position": [
+        2.0,
+        -8.0,
+        3.0
+       ],
+       "target": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "fov": 35.0
+      }
+     }
+    },
+    "after": {
+     "lodMode": "",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       2.0,
+       -8.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "fov": 35.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": null
+    },
+    "story": "Orbiting the preview replaces its camera.",
+    "diff": {
+     "lodMode": "",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       2.0,
+       -8.0,
+       3.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "fov": 35.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": null
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-lod-mode",
+    "status": "applied",
+    "before": {
+     "lodMode": "",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": null
+    },
+    "mutation": {
+     "SetLodMode": {
+      "value": "coarse"
+     }
+    },
+    "after": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": null
+    },
+    "story": "Choosing the coarse tessellation replaces the LOD tier.",
+    "diff": {
+     "lodMode": "coarse",
+     "showMode": "shaded",
+     "previewCamera": {
+      "position": [
+       6.0,
+       6.0,
+       6.0
+      ],
+      "target": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fov": 45.0
+     },
+     "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+     "activeExampleId": null
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "27": {
+  "scenarios": [
+   {
+    "kind": "set-engagement-input",
+    "status": "applied",
+    "before": {
+     "editorSelection": null,
+     "lintGeneration": 0,
+     "engagementInput": ""
+    },
+    "mutation": {
+     "kind": "set-engagement-input",
+     "value": "shorten the second paragraph"
+    },
+    "after": {
+     "editorSelection": null,
+     "lintGeneration": 0,
+     "engagementInput": "shorten the second paragraph"
+    },
+    "story": "Typing an engagement prompt replaces the engagement input.",
+    "diff": {
+     "editorSelection": null,
+     "lintGeneration": 0,
+     "engagementInput": "shorten the second paragraph"
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-editor-selection",
+    "status": "applied",
+    "before": {
+     "editorSelection": null,
+     "lintGeneration": 0,
+     "engagementInput": ""
+    },
+    "mutation": {
+     "kind": "set-editor-selection",
+     "selection": {
+      "start": 4,
+      "end": 17
+     }
+    },
+    "after": {
+     "editorSelection": {
+      "start": 4,
+      "end": 17
+     },
+     "lintGeneration": 0,
+     "engagementInput": ""
+    },
+    "story": "Selecting characters 4 to 17 records the editor selection.",
+    "diff": {
+     "editorSelection": {
+      "start": 4,
+      "end": 17
+     },
+     "lintGeneration": 0,
+     "engagementInput": ""
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-lint-generation",
+    "status": "applied",
+    "before": {
+     "editorSelection": null,
+     "lintGeneration": 0,
+     "engagementInput": ""
+    },
+    "mutation": {
+     "kind": "set-lint-generation",
+     "value": 3
+    },
+    "after": {
+     "editorSelection": null,
+     "lintGeneration": 3,
+     "engagementInput": ""
+    },
+    "story": "A third lint pass bumps the lint generation to 3.",
+    "diff": {
+     "editorSelection": null,
+     "lintGeneration": 3,
+     "engagementInput": ""
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "28": {
+  "scenarios": [
+   {
+    "kind": "set-editor-settings",
+    "status": "applied",
+    "before": {
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "editorSettings": {
+      "showLineNumbers": false,
+      "fontPx": 14,
+      "lineHeight": 20,
+      "tabSize": 4
+     }
+    },
+    "mutation": {
+     "kind": "set-editor-settings",
+     "settings": {
+      "showLineNumbers": true,
+      "fontPx": 16,
+      "lineHeight": 24,
+      "tabSize": 2
+     }
+    },
+    "after": {
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "editorSettings": {
+      "showLineNumbers": true,
+      "fontPx": 16,
+      "lineHeight": 24,
+      "tabSize": 2
+     }
+    },
+    "story": "Turning on line numbers with a larger font replaces the editor settings.",
+    "diff": {
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "editorSettings": {
+      "showLineNumbers": true,
+      "fontPx": 16,
+      "lineHeight": 24,
+      "tabSize": 2
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-camera",
+    "status": "applied",
+    "before": {
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     },
+     "editorSettings": {
+      "showLineNumbers": false,
+      "fontPx": 14,
+      "lineHeight": 20,
+      "tabSize": 4
+     }
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "x": 0.0,
+      "y": 320.0,
+      "zoom": 1.25
+     }
+    },
+    "after": {
+     "camera": {
+      "x": 0.0,
+      "y": 320.0,
+      "zoom": 1.25
+     },
+     "editorSettings": {
+      "showLineNumbers": false,
+      "fontPx": 14,
+      "lineHeight": 20,
+      "tabSize": 4
+     }
+    },
+    "story": "Scrolling and zooming the main window replaces its camera.",
+    "diff": {
+     "camera": {
+      "x": 0.0,
+      "y": 320.0,
+      "zoom": 1.25
+     },
+     "editorSettings": {
+      "showLineNumbers": false,
+      "fontPx": 14,
+      "lineHeight": 20,
+      "tabSize": 4
+     }
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "30": {
+  "scenarios": [
+   {
+    "kind": "set-camera",
+    "status": "applied",
+    "before": {
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     }
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "x": -80.0,
+      "y": 45.0,
+      "zoom": 0.8
+     }
+    },
+    "after": {
+     "camera": {
+      "x": -80.0,
+      "y": 45.0,
+      "zoom": 0.8
+     }
+    },
+    "story": "Panning the canvas replaces the window camera.",
+    "diff": {
+     "camera": {
+      "x": -80.0,
+      "y": 45.0,
+      "zoom": 0.8
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-camera",
+    "status": "no-op",
+    "before": {
+     "camera": {
+      "x": -80.0,
+      "y": 45.0,
+      "zoom": 0.8
+     }
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "x": -80.0,
+      "y": 45.0,
+      "zoom": 0.8
+     }
+    },
+    "after": {
+     "camera": {
+      "x": -80.0,
+      "y": 45.0,
+      "zoom": 0.8
+     }
+    },
+    "story": "Setting the canvas camera to the one it already holds is the leaf's warned no-op.",
+    "diff": {
+     "camera": {
+      "x": -80.0,
+      "y": 45.0,
+      "zoom": 0.8
+     }
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   }
+  ],
+  "missingKinds": []
+ },
+ "33": {
+  "scenarios": [
+   {
+    "kind": "set-brush-preview",
+    "status": "applied",
+    "before": {
+     "brushPreview": null
+    },
+    "mutation": {
+     "SetBrushPreview": {
+      "preview": {
+       "position": [
+        3.0,
+        1.0,
+        -2.0
+       ],
+       "direction": [
+        0.0,
+        1.0,
+        0.0
+       ]
+      }
+     }
+    },
+    "after": {
+     "brushPreview": {
+      "position": [
+       3.0,
+       1.0,
+       -2.0
+      ],
+      "direction": [
+       0.0,
+       1.0,
+       0.0
+      ]
+     }
+    },
+    "story": "Hovering a block face shows the brush preview at that position, facing up.",
+    "diff": {
+     "brushPreview": {
+      "position": [
+       3.0,
+       1.0,
+       -2.0
+      ],
+      "direction": [
+       0.0,
+       1.0,
+       0.0
+      ]
+     }
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "39": {
+  "scenarios": [
+   {
+    "kind": "set-camera",
+    "status": "applied",
+    "before": {
+     "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+     }
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "x": 1250.5,
+      "y": -830.25,
+      "zoom": 3.5
+     }
+    },
+    "after": {
+     "camera": {
+      "x": 1250.5,
+      "y": -830.25,
+      "zoom": 3.5
+     }
+    },
+    "story": "Panning and zooming the read-only map window retains the new camera and nothing else.",
+    "diff": {
+     "camera": {
+      "x": 1250.5,
+      "y": -830.25,
+      "zoom": 3.5
+     }
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-camera",
+    "status": "no-op",
+    "before": {
+     "camera": {
+      "x": 1250.5,
+      "y": -830.25,
+      "zoom": 3.5
+     }
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "x": 1250.5,
+      "y": -830.25,
+      "zoom": 3.5
+     }
+    },
+    "after": {
+     "camera": {
+      "x": 1250.5,
+      "y": -830.25,
+      "zoom": 3.5
+     }
+    },
+    "story": "A debounced pan that repeats the camera the window already holds is the leaf's warned no-op.",
+    "diff": {
+     "camera": {
+      "x": 1250.5,
+      "y": -830.25,
+      "zoom": 3.5
+     }
+    },
+    "messages": [
+     {
+      "level": "warning",
+      "code": "mutation.no-op"
+     }
+    ]
+   }
+  ],
+  "missingKinds": []
+ },
+ "35": {
+  "scenarios": [
+   {
+    "kind": "set-camera",
+    "status": "applied",
+    "before": {
+     "camera": null,
+     "lodMode": "automatic"
+    },
+    "mutation": {
+     "kind": "set-camera",
+     "camera": {
+      "x": 120.0,
+      "y": -40.0,
+      "zoom": 1.5
+     }
+    },
+    "after": {
+     "camera": {
+      "x": 120.0,
+      "y": -40.0,
+      "zoom": 1.5
+     },
+     "lodMode": "automatic"
+    },
+    "story": "Panning the jack graph window retains its camera and leaves the LOD mode alone.",
+    "diff": {
+     "camera": {
+      "x": 120.0,
+      "y": -40.0,
+      "zoom": 1.5
+     },
+     "lodMode": "automatic"
+    },
+    "messages": []
+   },
+   {
+    "kind": "set-lod-mode",
+    "status": "applied",
+    "before": {
+     "camera": null,
+     "lodMode": "automatic"
+    },
+    "mutation": {
+     "kind": "set-lod-mode",
+     "value": "detailed"
+    },
+    "after": {
+     "camera": null,
+     "lodMode": "detailed"
+    },
+    "story": "Picking a LOD tier in the graph window's measure replaces the mode and leaves the camera alone.",
+    "diff": {
+     "camera": null,
+     "lodMode": "detailed"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "36": {
+  "scenarios": [
+   {
+    "kind": "replace-query-result",
+    "status": "applied",
+    "before": {
+     "queryExecutionId": null,
+     "result": null,
+     "queryError": null
+    },
+    "mutation": {
+     "kind": "replace-query-result",
+     "result": null,
+     "error": "unexpected token at 1:7",
+     "execution_id": "exec-1"
+    },
+    "after": {
+     "queryExecutionId": "exec-1",
+     "result": null,
+     "queryError": "unexpected token at 1:7"
+    },
+    "story": "A query run that fails records its execution id and error in the results window and no result.",
+    "diff": {
+     "queryExecutionId": "exec-1",
+     "result": null,
+     "queryError": "unexpected token at 1:7"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "37": {
+  "scenarios": [
+   {
+    "kind": "set-editor-selection",
+    "status": "applied",
+    "before": {
+     "selection": null
+    },
+    "mutation": {
+     "SetEditorSelection": {
+      "selection": {
+       "start": 3,
+       "end": 9
+      }
+     }
+    },
+    "after": {
+     "selection": {
+      "start": 3,
+      "end": 9
+     }
+    },
+    "story": "Selecting query text records the caret range the text host reports.",
+    "diff": {
+     "selection": {
+      "start": 3,
+      "end": 9
+     }
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ },
+ "38": {
+  "scenarios": [
+   {
+    "kind": "set-query",
+    "status": "applied",
+    "before": {
+     "jackQuery": "MATCH (a:Piece) RETURN a"
+    },
+    "mutation": {
+     "kind": "set-query",
+     "value": "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name"
+    },
+    "after": {
+     "jackQuery": "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name"
+    },
+    "story": "Typing a new query replaces the editor window's query text.",
+    "diff": {
+     "jackQuery": "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name"
+    },
+    "messages": []
+   }
+  ],
+  "missingKinds": []
+ }
+}

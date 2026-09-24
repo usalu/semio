@@ -47,6 +47,20 @@ fn close_bridge(bridge: &mut FlowBridge<FlowDomainAdapter>) {
     panic!("retained Flow domain did not close within fixture bound");
 }
 
+/// 🧹️ Ends a domain law the way a session ends: the adapter's vcs, surface and host retire to terminal-empty within
+/// the declared close bound — every Flow owner refuses a bare drop.
+fn close_domain(domain: &mut FlowDomainAdapter) {
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap();
+    domain.begin_close();
+    for _ in 0..fixture["close"]["maximumTurns"].as_u64().unwrap() {
+        if domain.close_step(bridge_budget()).unwrap() {
+            assert!(domain.terminal_is_empty());
+            return;
+        }
+    }
+    panic!("retained Flow domain did not close within fixture bound");
+}
+
 #[test]
 fn compiled_session_close_retires_the_real_vcs_and_host_before_terminal_empty() {
     let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap();
@@ -187,6 +201,7 @@ fn malformed_omitted_and_unknown_selection_data_remain_owned() {
         run(&mut domain, 2_525, text_payload(json)).unwrap();
     }
     assert_eq!(domain.host.selected_widget_ids_json(), "[]");
+    close_domain(&mut domain);
 }
 
 #[test]
@@ -202,6 +217,7 @@ fn surface_generation_cancel_loss_and_recovery_fail_closed() {
     run(&mut domain, 2_576, surface_status_payload(7, 2, "recovered")).unwrap();
     run(&mut domain, 2_576, surface_status_payload(7, 2, "cancelled")).unwrap();
     assert!(domain.surface.is_none());
+    close_domain(&mut domain);
 }
 
 #[test]
@@ -212,11 +228,12 @@ fn malformed_fixed_width_is_rejected_before_surface_mutation() {
     let rejected = run(&mut domain, 2_575, payload).unwrap_err();
     assert_eq!(rejected.code, AbiErrorCode::MalformedLength);
     assert!(domain.surface.is_none());
+    close_domain(&mut domain);
 }
 
 #[test]
 fn every_schema_feature_has_a_distinct_action_binding() {
-    let expected: Vec<u16> = (2_504..=2_610).filter(|operation| !matches!(operation, 2_603 | 2_604 | 2_608)).collect();
+    let expected: Vec<u16> = (2_504..=2_610).filter(|operation| !matches!(operation, 2_603 | 2_604)).collect();
     let actions: Vec<u16> = expected
         .iter()
         .copied()
@@ -230,12 +247,20 @@ fn synchronized_document_json_is_the_exact_retained_document() {
     let mut domain = FlowDomainAdapter::default();
     let mut expected = crate::artifact::FlowHostSnapshot::default();
     expected.schema = "flow.host_snapshot.synchronized".into();
+    for (index, widget) in ["slider", "add", "preview"].into_iter().enumerate() {
+        expected.layout.insert(widget.into(), crate::artifact::WidgetLayout { x: 240.0 * index as f64, y: 40.0 });
+    }
     let json = crate::os_pack::json::to_json_string(&expected);
     run(&mut domain, 2_610, text_payload(&json)).unwrap();
     let bytes = run(&mut domain, 2_609, Vec::new()).unwrap();
     let value = crate::os_pack::json::parse(std::str::from_utf8(&bytes).unwrap()).unwrap();
     let actual = <crate::artifact::FlowHostSnapshot as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&value)).unwrap();
-    assert_eq!(actual, expected);
+    let equal = actual == expected;
+    let report = format!("{actual:?}\n!=\n{expected:?}");
+    actual.retire_cold();
+    expected.retire_cold();
+    close_domain(&mut domain);
+    assert!(equal, "{report}");
 }
 
 /// 🧾️ Retained rows the measured document carries. Sized so the JSON is worth measuring
@@ -478,10 +503,13 @@ fn cancellation_prevents_the_bound_domain_action() {
     writer.u64(0);
     writer.u64(0);
     let admission = FlowFeatureAdmission { session, request_generation: 1 };
-    let mut feature = FlowDomainAdapter::start_feature(domain, admission, 2_501, writer.finish()).unwrap();
+    let mut feature = FlowDomainAdapter::start_feature(Rc::clone(&domain), admission, 2_501, writer.finish()).unwrap();
     assert!(matches!(feature.step(AbiWorkBudget::credits(64)), FlowFeatureStep::Progress { completed: 0, total: 3 }));
     feature.cancel(AbiWorkBudget::credits(64)).unwrap();
     assert!(!feature.close_step(AbiWorkBudget::credits(64)).unwrap());
+    while !feature.close_step(AbiWorkBudget::credits(64)).unwrap() {}
+    drop(feature);
+    close_domain(&mut domain.borrow_mut());
 }
 
 #[test]
@@ -669,6 +697,7 @@ fn selected_widget_query_uses_census_and_multiple_cancellable_grants() {
     let mut cancelled = AbiWorkBudget::credits(1);
     cancelled.cancelled = true;
     assert!(matches!(action.advance(&mut domain, &arguments, cancelled), FlowFeatureStep::Failed(FlowFailure { code: AbiErrorCode::Cancelled, .. })));
+    close_domain(&mut domain);
 }
 
 //#region 🪜️RetirementLadder

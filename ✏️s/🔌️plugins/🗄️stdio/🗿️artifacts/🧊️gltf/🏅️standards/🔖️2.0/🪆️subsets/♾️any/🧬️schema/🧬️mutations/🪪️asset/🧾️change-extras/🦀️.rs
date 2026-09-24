@@ -61,7 +61,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetEx
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Asset Extra Data", "zusätzliche Assetdaten ändern")
+        protocol::LocalizedLabel::native("Change Asset Extra Data", "Zusatzdaten des Assets ändern")
     }
 
     fn target(&self) -> Vec<String> {

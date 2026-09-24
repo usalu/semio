@@ -23,7 +23,7 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetComments1 {
         agg_inverse(&EpwMutation::SetComments1(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-comments1", "Kommentare1 setzen")
+        protocol::LocalizedLabel::native("Set comments 1", "Kommentare 1 setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

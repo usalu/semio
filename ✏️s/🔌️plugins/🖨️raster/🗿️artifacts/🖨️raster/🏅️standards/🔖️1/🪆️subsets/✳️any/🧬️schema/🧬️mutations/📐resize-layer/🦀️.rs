@@ -29,7 +29,7 @@ pub mod mutation {
         }
 
         fn label(&self) -> protocol::LocalizedLabel {
-            protocol::LocalizedLabel::native(&format!("Resize layer {} to {}x{}", self.layer_id, self.new_width, self.new_height), &format!("Ebene {} auf {}x{} skalieren", self.layer_id, self.new_width, self.new_height))
+            protocol::LocalizedLabel::native(&format!("Resize layer {} to {}x{}", self.layer_id, self.new_width, self.new_height), &format!("Größe von Ebene {} auf {}×{} ändern", self.layer_id, self.new_width, self.new_height))
         }
 
         fn target(&self) -> Vec<String> {

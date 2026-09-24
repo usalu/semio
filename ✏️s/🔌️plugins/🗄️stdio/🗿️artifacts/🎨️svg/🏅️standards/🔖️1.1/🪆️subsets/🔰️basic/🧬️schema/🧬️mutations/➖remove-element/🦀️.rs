@@ -23,7 +23,7 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for RemoveElement {
         agg_inverse(&SvgBasicMutation::RemoveElement(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-element", "Element entfernen")
+        protocol::LocalizedLabel::native("Remove element", "Element entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

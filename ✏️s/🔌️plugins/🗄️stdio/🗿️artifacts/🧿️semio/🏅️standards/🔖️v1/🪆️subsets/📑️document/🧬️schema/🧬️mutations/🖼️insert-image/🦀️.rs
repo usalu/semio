@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for In
         agg_inverse(&SemioDocumentMutation::InsertImage(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-image", "Bild einfügen")
+        protocol::LocalizedLabel::native("Insert image", "Bild einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -37,7 +37,7 @@ impl protocol::Mutation<ArchitectRegisterWindowConfig> for ArchitectRegisterWind
         binary_tag: None,
         invertibility: protocol::MutationInvertibility::ExplicitMutation,
         diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::Warning],
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::NoOp],
         composition: protocol::MutationComposition::Atomic,
         required_language_surfaces: &[
             protocol::MutationLanguageSurface::Rust,

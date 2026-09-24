@@ -33,7 +33,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceT
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace tracks", "Spuren ersetzen")
+        protocol::LocalizedLabel::native("Replace tracks", "Merkmalsspuren ersetzen")
     }
 }
 //#endregion 🔖️Mutation

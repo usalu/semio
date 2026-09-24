@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeCategory {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change imposed category to {:?}", self.new_category), &format!("Nutzkategorie auf {:?} ändern", self.new_category))
+        protocol::LocalizedLabel::native(&format!("Change imposed category to {:?}", self.new_category), &format!("Nutzungskategorie auf {:?} ändern", self.new_category))
     }
 }
 //#endregion 🔖️Payload

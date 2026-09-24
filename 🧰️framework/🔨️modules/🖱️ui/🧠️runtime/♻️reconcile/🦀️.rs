@@ -1164,6 +1164,61 @@ impl SurfaceSemanticCensusCursor {
                 3 => self.bindings_step(&props.bindings),
                 _ => SurfaceSemanticCensusStep::Complete,
             },
+            Table(props) => match self.container {
+                0 => {
+                    self.container = 1;
+                    progress(self.inline_text(&props.label.0))
+                }
+                1 => {
+                    self.container = 2;
+                    progress(props.actions_label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)))
+                }
+                2 => {
+                    self.container = 3;
+                    progress(self.backing::<ui_contract::Label>(props.columns.capacity()))
+                }
+                3 => {
+                    let Some(column) = props.columns.get(self.entry) else { return SurfaceSemanticCensusStep::Complete };
+                    self.entry += 1;
+                    progress(self.inline_text(&column.0))
+                }
+                _ => SurfaceSemanticCensusStep::Complete,
+            },
+            TableRow(props) => match self.container {
+                0 => {
+                    self.container = 1;
+                    progress(self.backing::<ui_contract::UiText>(props.cells.capacity()))
+                }
+                1 => {
+                    let Some(cell) = props.cells.get(self.entry) else {
+                        self.container = 2;
+                        self.entry = 0;
+                        return progress(SurfaceSemanticUsage::default());
+                    };
+                    self.entry += 1;
+                    progress(self.inline_text(cell))
+                }
+                2 => {
+                    self.container = 3;
+                    progress(self.backing::<ui_contract::RowAction>(props.row_actions.capacity()))
+                }
+                3 => {
+                    let Some(action) = props.row_actions.get(self.entry) else { return SurfaceSemanticCensusStep::Complete };
+                    let step = match self.data_attribute {
+                        0 => progress(self.inline_text(&action.icon)),
+                        1 => progress(action.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0))),
+                        _ => self.binding_step(&action.action),
+                    };
+                    if matches!(step, SurfaceSemanticCensusStep::Complete) {
+                        self.data_attribute = 0;
+                        self.entry += 1;
+                        return progress(SurfaceSemanticUsage::default());
+                    }
+                    self.data_attribute += 1;
+                    step
+                }
+                _ => SurfaceSemanticCensusStep::Complete,
+            },
             Extension(props) => match self.container {
                 0 => {
                     self.container = 1;

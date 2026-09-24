@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { type GraphWasmSession, GraphWasmCanvas } from "@semio-tech/infinite-canvas-react-renderer";
-import { currentStylingAppearanceName, resolveColorHex, serializeCanvasThemeJson, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
+import { STYLING_METRICS, currentStylingAppearanceName, resolveColorHex, serializeCanvasThemeJson, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import {
   borderNormalBottomClass,
   CanvasPickMenu,
@@ -16,6 +16,9 @@ import {
   cn,
   ContextMenuController,
   Diagram,
+  DiagramLiveRegion,
+  diagramKeyboardAnnouncement,
+  diagramKeyboardStep,
   floatingMenuItemClass,
   floatingMenuSurfaceClass,
   getActiveCatalogueDragPayload,
@@ -30,6 +33,7 @@ import {
   surfaceClass,
   useCanvasAppearanceSync,
   useCanvasPickInteraction,
+  useDiagramTranslate,
   useLabel,
   useShellScopeOptional,
   type CanvasPickTarget,
@@ -42,14 +46,17 @@ import {
   type NodeTypes,
 } from "@semio-tech/ui-react";
 import {
+  GestureRecognizer,
   createContinuousGestureLane,
   nodeGraphActions,
+  pinchZoomNotches,
   parseViewport2d,
   windowElementId,
   type ActionDescriptor,
   type ContinuousGestureLane,
   type ComponentSceneHostProps,
   type ContextMenuItemSpec,
+  type PinchStep,
   type NodeGraphEdgeRecord,
   type NodeGraphFindItem,
   type NodeGraphHover,
@@ -111,6 +118,7 @@ type FrameworkGraphSession = GraphWasmSession & {
   entityScreenJson?(domain: string, id: string): string;
   setHover?(widgetId: string | null): void;
   setHoverChannel?(widgetId: string | null, port?: string | null): void;
+  syncInteraction?(selectedIdsJson: string, hoveredId?: string | null): void;
   alignSelection?(mode: string): void;
   hostSnapshotJson?(): string;
   setCanvasThemeJson?(json: string): void;
@@ -640,12 +648,54 @@ function isEditableGraphKeyTarget(target: EventTarget | null): boolean {
  * `🗑️generated/react-reds/outline-selection/console.txt`: `dropped action "setMediaNodeSelection"
  * dispatched from window kind "procedural-main"` between the last arrow and the re-entry, with the
  * previously selected outline row still `aria-selected="true"` afterwards. */
-function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boolean, _parsedNodes: readonly NodeGraphNodeRecord[], dispatch: (action: string, args?: Record<string, unknown>) => void) {
-  if (!editable || isEditableGraphKeyTarget(event.target)) return;
-  if (event.key === "Escape") {
-    event.preventDefault();
-    dispatch(nodeGraphActions.clearSelection);
+/** ♿️ What a canvas graph surface lends its host's keyboard law: the selection it is PAINTING (the dag
+ * engine keeps a domain-less graph's selection in its own session, exactly as a pointer pick leaves it),
+ * and the two writes a key press makes — a focus highlight and a selection — which the surface applies to
+ * its session and then publishes through its OWN `emitInteractionState`, the lane a pointer pick uses. */
+type GraphKeyboardPort = {
+  readonly selectedIds: () => readonly string[];
+  readonly focus: (nodeId: string) => void;
+  readonly select: (nodeIds: readonly string[], focusedId: string | null) => void;
+};
+
+/** ♿️ The canvas node-graph surfaces' side of `🕸️Diagram`'s keyboard law: the SAME
+ * {@link diagramKeyboardStep} decides, the surface's {@link GraphKeyboardPort} applies and publishes it
+ * like a pointer pick, and the SAME localized sentence ({@link diagramKeyboardAnnouncement}) is spoken.
+ * A key the React Flow fallback already handled (`defaultPrevented`) is left alone so a graph never takes
+ * two steps for one press. */
+function handleGraphKeyboard(
+  event: KeyboardEvent<HTMLDivElement>,
+  editable: boolean,
+  scene: NodeGraphScene,
+  focusedId: string | null,
+  port: GraphKeyboardPort | null,
+  dispatch: (action: string, args?: Record<string, unknown>) => void,
+  onStep: (focusedId: string | null, announcement: string) => void,
+  translate: ReturnType<typeof useDiagramTranslate>,
+) {
+  if (event.defaultPrevented || isEditableGraphKeyTarget(event.target)) return;
+  const nodes = (scene.nodes ?? []).map((record) => ({ id: record.id, position: { x: record.x, y: record.y } }));
+  const step = diagramKeyboardStep(nodes, focusedId, port?.selectedIds() ?? scene.selection ?? [], event.key, event.shiftKey, editable);
+  if (!step) return;
+  event.preventDefault();
+  const labelOf = (id: string) => (scene.nodes ?? []).find((record) => record.id === id)?.label || id;
+  const announcement = diagramKeyboardAnnouncement(step, nodes, labelOf, translate);
+  if (step.kind === "focus") {
+    if (port) port.focus(step.focusedId);
+    else publishNodeGraphHover(dispatch, scene.interactionDomain, step.focusedId);
+    onStep(step.focusedId, announcement);
+    return;
   }
+  if (step.kind === "clear") {
+    port?.select([], null);
+    dispatch(nodeGraphActions.clearSelection);
+    onStep(null, announcement);
+    return;
+  }
+  if (port) port.select(step.selectedIds, step.focusedId);
+  else if (step.selectedIds.length === 0) dispatch(nodeGraphActions.clearSelection);
+  else publishNodeGraphSelection(dispatch, scene.interactionDomain, { nodeIds: [...step.selectedIds] });
+  onStep(step.focusedId, announcement);
 }
 //#endregion Keyboard
 
@@ -690,6 +740,29 @@ const workflowNodeTypes: NodeTypes = { workflow: WorkflowDiagramNode };
 //#endregion DiagramNode
 
 //#region WasmGraphSurface
+/** 🔍️ One wheel notch of the node-graph engines' zoom — the schema tokens `camera.wheelZoomInFactor` /
+ * `camera.wheelZoomOutFactor` that the flow host reads as `WHEEL_ZOOM_IN_FACTOR`/`WHEEL_ZOOM_OUT_FACTOR`
+ * and the dag `GraphHost::plan_wheel` applies as the same `1.1`/`0.9`: both engines zoom by a fixed factor
+ * per wheel event whatever its delta, so a pinch reaches them as whole notches. */
+export const GRAPH_WHEEL_ZOOM_NOTCH = { in: STYLING_METRICS.camera.wheelZoomInFactor, out: STYLING_METRICS.camera.wheelZoomOutFactor } as const;
+
+/** 🤏️ One `wheelScreen(sx, sy, deltaX, deltaY, zoomGesture)` call a node-graph surface replays for a pinch. */
+export type GraphPinchWheelCall = { readonly sx: number; readonly sy: number; readonly deltaX: number; readonly deltaY: number; readonly zoomGesture: boolean };
+
+/**
+ * 🤏️ Translates one shared-recognizer {@link PinchStep} into a node-graph session's existing wheel lane —
+ * the ONE pinch path of the dag surface and the flow surface: whole zoom notches anchored at the
+ * centroid (the sub-notch remainder is carried in `pendingLogScale`), then the centroid travel as one
+ * non-zoom wheel, which both engines apply as `camera -= delta / zoom` so the graph stays under the
+ * fingers — horizontally too: the dag `GraphHost::plan_wheel` pans by `deltaX / zoom` like the flow engine.
+ */
+export function graphPinchWheelPlan(step: PinchStep, pendingLogScale: number): { readonly calls: readonly GraphPinchWheelCall[]; readonly pendingLogScale: number } {
+  const zoom = pinchZoomNotches(pendingLogScale, step.scale, GRAPH_WHEEL_ZOOM_NOTCH);
+  const calls: GraphPinchWheelCall[] = Array.from({ length: Math.abs(zoom.notches) }, () => ({ sx: step.centroidX, sy: step.centroidY, deltaX: 0, deltaY: zoom.notches > 0 ? -1 : 1, zoomGesture: true }));
+  if (step.panX !== 0 || step.panY !== 0) calls.push({ sx: step.centroidX, sy: step.centroidY, deltaX: step.panX, deltaY: step.panY, zoomGesture: false });
+  return { calls, pendingLogScale: zoom.pendingLogScale };
+}
+
 function WasmGraphSurface({
   scene,
   surfaceId,
@@ -697,6 +770,7 @@ function WasmGraphSurface({
   editable,
   requestContextMenu,
   onAction,
+  keyboardPort,
 }: {
   readonly scene: NodeGraphScene;
   readonly surfaceId: string;
@@ -704,6 +778,7 @@ function WasmGraphSurface({
   readonly editable: boolean;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
   readonly onAction: (action: ActionDescriptor) => void;
+  readonly keyboardPort: React.MutableRefObject<GraphKeyboardPort | null>;
 }) {
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const sessionRef = useRef<FrameworkGraphSession | null>(null);
@@ -723,6 +798,8 @@ function WasmGraphSurface({
   const dispatchRef = useRef(dispatch);
   dispatchRef.current = dispatch;
   const { sliderLane, beginSliderGesture } = useGraphSliderLanes(surfaceId, dispatchRef);
+  const [gestureRecognizer] = useState(() => new GestureRecognizer());
+  const pinchLogScaleRef = useRef(0);
 
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
   const shellContextMenuFallback = useShellContextMenuFallback();
@@ -754,6 +831,12 @@ function WasmGraphSurface({
       /* session not ready */
     }
     setOverlaySize((prev) => (prev.w === rect.width && prev.h === rect.height ? prev : { w: rect.width, h: rect.height }));
+    try {
+      container.setAttribute("data-viewport-camera-json", JSON.stringify(session.viewport()));
+      container.setAttribute("data-session-selection-json", session.selectedNodeIdsJson());
+    } catch {
+      /* session not ready */
+    }
   }, []);
 
   useEffect(() => {
@@ -832,6 +915,7 @@ function WasmGraphSurface({
       selectedNodeIdsJson: () => "[]",
       hoveredNodeId: () => null,
       hoveredChannelJson: () => "{}",
+      syncInteraction: () => {},
       viewport: () => scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT,
       pickTargetsAtScreenJson: () => "[]",
       setHover: () => {},
@@ -857,6 +941,32 @@ function WasmGraphSurface({
     }
     paintOverlays();
   }, [dispatch, paintOverlays]);
+
+  useEffect(() => {
+    keyboardPort.current = {
+      selectedIds: () => {
+        const session = sessionRef.current;
+        return session ? parseDagNodeIdArray(session.selectedNodeIdsJson()) : [];
+      },
+      focus: (nodeId) => {
+        const session = sessionRef.current;
+        if (!session?.syncInteraction) return;
+        session.syncInteraction(session.selectedNodeIdsJson(), nodeId);
+        session.renderFrame();
+        paintOverlays();
+      },
+      select: (nodeIds, focusedId) => {
+        const session = sessionRef.current;
+        if (!session?.syncInteraction) return;
+        session.syncInteraction(JSON.stringify(nodeIds), focusedId);
+        session.renderFrame();
+        emitInteractionState();
+      },
+    };
+    return () => {
+      keyboardPort.current = null;
+    };
+  }, [emitInteractionState, keyboardPort, paintOverlays]);
 
   const commitGraphFixture = useCallback(() => {
     const session = sessionRef.current;
@@ -1001,13 +1111,27 @@ function WasmGraphSurface({
         )
       ) : null}
       <div
-        className="absolute inset-0 z-30"
+        className="absolute inset-0 z-30 touch-none"
+        data-gesture-surface="dag"
         onPointerDown={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top });
+          if (verdict.kind === "pinchBegin") {
+            const session = sessionRef.current;
+            gestureSignatureRef.current = null;
+            pinchLogScaleRef.current = 0;
+            pickInteraction.onCanvasPointerLeave();
+            for (const tracked of gestureRecognizer.pointers) event.currentTarget.setPointerCapture?.(tracked.pointerId);
+            session?.pointerCancelScreen?.();
+            session?.renderFrame();
+            paintOverlays();
+            return;
+          }
+          if (verdict.kind !== "single") return;
           if (!editable) return;
           if (event.button === 2) return;
           const session = sessionRef.current;
           if (!session?.pointerDownScreen) return;
-          const rect = event.currentTarget.getBoundingClientRect();
           const client = { x: event.clientX, y: event.clientY };
           pickInteraction.onCanvasPointerDown(client);
           gestureSignatureRef.current = graphEditSignature();
@@ -1017,8 +1141,20 @@ function WasmGraphSurface({
         }}
         onPointerMove={(event) => {
           const session = sessionRef.current;
-          if (!session?.pointerMoveScreen) return;
           const rect = event.currentTarget.getBoundingClientRect();
+          const verdict = gestureRecognizer.move({ pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top });
+          if (verdict.kind === "pinch") {
+            if (!session?.wheelScreen) return;
+            const plan = graphPinchWheelPlan(verdict.step, pinchLogScaleRef.current);
+            pinchLogScaleRef.current = plan.pendingLogScale;
+            if (plan.calls.length === 0) return;
+            for (const call of plan.calls) session.wheelScreen(call.sx, call.sy, call.deltaX, call.deltaY, call.zoomGesture);
+            session.renderFrame();
+            paintOverlays();
+            return;
+          }
+          if (verdict.kind !== "single") return;
+          if (!session?.pointerMoveScreen) return;
           const client = { x: event.clientX, y: event.clientY };
           pickInteraction.onCanvasPointerMove(client);
           session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
@@ -1027,6 +1163,12 @@ function WasmGraphSurface({
         }}
         onPointerUp={(event) => {
           const session = sessionRef.current;
+          const verdict = gestureRecognizer.up(event.pointerId);
+          if (verdict.kind === "pinchEnd") {
+            pinchLogScaleRef.current = 0;
+            emitInteractionState();
+          }
+          if (verdict.kind !== "single") return;
           if (!session?.pointerUpScreen) return;
           const rect = event.currentTarget.getBoundingClientRect();
           const client = { x: event.clientX, y: event.clientY };
@@ -1036,8 +1178,14 @@ function WasmGraphSurface({
           emitInteractionState();
           commitGraphFixtureIfEdited();
         }}
-        onPointerCancel={() => {
+        onPointerCancel={(event) => {
           const session = sessionRef.current;
+          const verdict = gestureRecognizer.up(event.pointerId);
+          if (verdict.kind === "pinchEnd") {
+            pinchLogScaleRef.current = 0;
+            emitInteractionState();
+          }
+          if (verdict.kind !== "single") return;
           gestureSignatureRef.current = null;
           pickInteraction.onCanvasPointerLeave();
           if (!session?.pointerCancelScreen) return;
@@ -1347,6 +1495,17 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
   const presencePeers = useMemo(() => parseJsonArray<PresencePeer>(scene?.presencePeersJson), [scene?.presencePeersJson]);
   const isClient = useClient();
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const graphLabel = useLabel("ui.diagram.label");
+  const graphRoleDescriptionLabel = useLabel("ui.diagram.roleDescription");
+  const graphKeyboardHelpLabel = useLabel("ui.diagram.keyboardHelp");
+  const graphNodesLabel = useLabel("ui.diagram.nodes");
+  const graphEdgesLabel = useLabel("ui.diagram.edges");
+  const graphKeyboardHelpId = React.useId();
+  const diagramTranslate = useDiagramTranslate();
+  const [keyboardFocusedNodeId, setKeyboardFocusedNodeId] = useState<string | null>(null);
+  const keyboardPortRef = useRef<GraphKeyboardPort | null>(null);
+  const [keyboardAnnouncement, setKeyboardAnnouncement] = useState("");
+  const liveKeyboardFocusedNodeId = keyboardFocusedNodeId !== null && parsedNodes.some((record) => record.id === keyboardFocusedNodeId) ? keyboardFocusedNodeId : null;
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -1386,14 +1545,28 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
       data-status-json={scene.statusJson ?? undefined}
       data-host-snapshot-json={scene.hostSnapshotJson ?? undefined}
       data-selection-json={JSON.stringify(nodeGraphSurfaceSelectionDomV1(scene))}
-      tabIndex={editable ? 0 : undefined}
-      onKeyDown={(event) => handleGraphKeyboard(event, editable, parsedNodes, dispatch)}
+      data-diagram-focused-node={liveKeyboardFocusedNodeId ?? undefined}
+      role="application"
+      tabIndex={0}
+      aria-roledescription={graphRoleDescriptionLabel}
+      aria-label={`${graphLabel} — ${parsedNodes.length} ${graphNodesLabel}, ${parsedEdges.length} ${graphEdgesLabel}`}
+      aria-describedby={graphKeyboardHelpId}
+      onKeyDown={(event) =>
+        handleGraphKeyboard(event, editable, scene, liveKeyboardFocusedNodeId, keyboardPortRef.current, dispatch, (focusedId, announcement) => {
+          setKeyboardFocusedNodeId(focusedId);
+          setKeyboardAnnouncement(announcement);
+        }, diagramTranslate)
+      }
     >
+      <span id={graphKeyboardHelpId} className="sr-only">
+        {graphKeyboardHelpLabel}
+      </span>
+      <DiagramLiveRegion text={keyboardAnnouncement} />
       {isClient ? (
         useFlowEngine ? (
-          <FlowGraphCanvasHost scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} requestContextMenu={requestContextMenu} onAction={onAction} />
+          <FlowGraphCanvasHost scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} requestContextMenu={requestContextMenu} onAction={onAction} keyboardPort={keyboardPortRef} />
         ) : (
-          <WasmGraphSurface scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} requestContextMenu={requestContextMenu} onAction={onAction} />
+          <WasmGraphSurface scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} requestContextMenu={requestContextMenu} onAction={onAction} keyboardPort={keyboardPortRef} />
         )
       ) : (
         <DiagramGraphFallback scene={scene} node={node} editable={editable} parsedNodes={parsedNodes} parsedEdges={parsedEdges} findItems={findItems} requestContextMenu={requestContextMenu} onAction={onAction} />
@@ -2729,6 +2902,7 @@ export function FlowGraphCanvasHost({
   editable,
   requestContextMenu,
   onAction,
+  keyboardPort,
 }: {
   readonly scene: NodeGraphScene;
   readonly surfaceId: string;
@@ -2736,6 +2910,7 @@ export function FlowGraphCanvasHost({
   readonly editable: boolean;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
   readonly onAction: (action: ActionDescriptor) => void;
+  readonly keyboardPort: React.MutableRefObject<GraphKeyboardPort | null>;
 }) {
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const sessionRef = useRef<FlowWasmSession | null>(null);
@@ -2955,6 +3130,8 @@ export function FlowGraphCanvasHost({
   }, [beginGesture]);
 
   const { sliderLane, beginSliderGesture } = useGraphSliderLanes(surfaceId, dispatchRef);
+  const [gestureRecognizer] = useState(() => new GestureRecognizer());
+  const pinchLogScaleRef = useRef(0);
 
   /** 🏷️ Paints the label/slider/selection overlay, and COALESCES instead of pre-empting — the same
    * law `renderFlow` below carries, on the other canvas of this surface.
@@ -3170,6 +3347,27 @@ export function FlowGraphCanvasHost({
     }).catch(() => {});
     paintOverlays();
   }, [dispatch, interactionLedger, paintOverlays]);
+
+  useEffect(() => {
+    keyboardPort.current = {
+      selectedIds: () => sceneRef.current.selection ?? [],
+      focus: (nodeId) => {
+        const session = sessionRef.current;
+        if (!session) return;
+        observeFlowTask(session, "setHover", session.setHover(nodeId));
+        emitInteractionState();
+      },
+      select: (nodeIds) => {
+        const session = sessionRef.current;
+        if (!session) return;
+        observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify(nodeIds)));
+        emitInteractionState();
+      },
+    };
+    return () => {
+      keyboardPort.current = null;
+    };
+  }, [emitInteractionState, keyboardPort]);
 
   useEffect(() => {
     let cancelled = false;
@@ -3693,14 +3891,28 @@ export function FlowGraphCanvasHost({
         )
       ) : null}
       <div
-        className="absolute inset-0 z-30"
+        className="absolute inset-0 z-30 touch-none"
+        data-gesture-surface="flow"
         onPointerDown={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top });
+          if (verdict.kind === "pinchBegin") {
+            const session = sessionRef.current;
+            pinchLogScaleRef.current = 0;
+            cameraPanRef.current = false;
+            cameraOnlyGestureEndRef.current = false;
+            setWireRefusal(null);
+            pickInteraction.onCanvasPointerLeave();
+            for (const tracked of gestureRecognizer.pointers) event.currentTarget.setPointerCapture?.(tracked.pointerId);
+            endGesture("gesture");
+            if (session) issueFlowGestureStep(session.pointerCancelScreen(), () => schedulerRef.current?.invalidate());
+            return;
+          }
+          if (verdict.kind !== "single") return;
           if (!editable) return;
-          // 🖱️ Secondary button opens the context menu — never start node drag / marquee from it.
           if (event.button === 2) return;
           const session = sessionRef.current;
           if (!session) return;
-          const rect = event.currentTarget.getBoundingClientRect();
           const client = { x: event.clientX, y: event.clientY };
           // 🖱️ The gesture belongs to this canvas until the button comes back up. Without capture, a
           // drag that leaves the canvas — dragging a wire out to cut it, or past the edge on the way
@@ -3722,11 +3934,24 @@ export function FlowGraphCanvasHost({
           const session = sessionRef.current;
           if (!session) return;
           const rect = event.currentTarget.getBoundingClientRect();
+          const verdict = gestureRecognizer.move({ pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top });
+          if (verdict.kind === "pinch") {
+            const plan = graphPinchWheelPlan(verdict.step, pinchLogScaleRef.current);
+            pinchLogScaleRef.current = plan.pendingLogScale;
+            if (plan.calls.length === 0) return;
+            for (const call of plan.calls) issueFlowGestureStep(session.wheelScreen(call.sx, call.sy, call.deltaX, call.deltaY, call.zoomGesture));
+            wheelGesture.tick();
+            return;
+          }
+          if (verdict.kind !== "single") return;
           pickInteraction.onCanvasPointerMove({ x: event.clientX, y: event.clientY });
           issueFlowGestureStep(session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey));
           schedulerRef.current?.invalidate();
         }}
         onPointerUp={(event) => {
+          const verdict = gestureRecognizer.up(event.pointerId);
+          if (verdict.kind === "pinchEnd") pinchLogScaleRef.current = 0;
+          if (verdict.kind !== "single") return;
           if (event.button === 2) return;
           const session = sessionRef.current;
           if (!session) return;
@@ -3763,6 +3988,9 @@ export function FlowGraphCanvasHost({
           else emitInteractionState();
         }}
         onPointerCancel={(event) => {
+          const verdict = gestureRecognizer.up(event.pointerId);
+          if (verdict.kind === "pinchEnd") pinchLogScaleRef.current = 0;
+          if (verdict.kind !== "single") return;
           const session = sessionRef.current;
           try {
             if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);

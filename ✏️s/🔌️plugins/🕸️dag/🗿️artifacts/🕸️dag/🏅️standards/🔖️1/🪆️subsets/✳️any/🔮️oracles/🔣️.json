@@ -245,8 +245,9 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-node-abbreviation",
@@ -265,8 +266,9 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-node-icon",
@@ -285,8 +287,9 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-node-name",
@@ -305,8 +308,9 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-node-operator-kind",
@@ -325,8 +329,9 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "connect-nodes",
@@ -345,7 +350,8 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-node",
@@ -404,8 +410,9 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-node",
@@ -424,8 +431,9 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-node",
@@ -444,7 +452,9 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-nodes",
@@ -463,8 +473,9 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-node-kind",
@@ -483,8 +494,9 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-node-properties",
@@ -503,8 +515,9 @@
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "resize-node",
@@ -519,6 +532,13 @@
           ]
         }
       ]
+    }
+  ],
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
     }
   ]
 }

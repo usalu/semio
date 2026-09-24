@@ -32,7 +32,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeEdgeKi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change edge \"{}\" kind", self.id), &format!("Kante \"{}\" Art ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change edge \"{}\" kind", self.id), &format!("Art von Kante \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

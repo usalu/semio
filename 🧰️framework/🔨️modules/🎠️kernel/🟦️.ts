@@ -138,12 +138,43 @@ async function readDescriptorText(response: Response, onProgress: () => void): P
   return text + decoder.decode();
 }
 
+/** 🪪️ The package a served module was admitted as: its descriptor's own package id and component digest,
+ * beside the manifest {@link fetchDescriptorManifest} answers. */
+export interface PluginPackageDescriptor {
+  readonly manifest: PluginManifest;
+  readonly packageId: string;
+  readonly componentSha256: string;
+}
+
+/** 🪪️ {@link fetchDescriptorManifest} plus the package identity a host binds hub documents by — a
+ * descriptor without a package id or a 64-digit lower-hex component digest is refused, never guessed. */
+export async function fetchPackageDescriptor(pluginId: string, moduleUrl: string, signal?: AbortSignal, onProgress: () => void = () => {}): Promise<PluginPackageDescriptor> {
+  const { descriptor, manifest } = await fetchDescriptorDocument(pluginId, moduleUrl, signal, onProgress);
+  const packageId = "packageId" in descriptor && typeof descriptor.packageId === "string" ? descriptor.packageId : "";
+  const hashes = "hashes" in descriptor && descriptor.hashes && typeof descriptor.hashes === "object" ? descriptor.hashes : undefined;
+  const componentSha256 = hashes && "wasmSha256" in hashes && typeof hashes.wasmSha256 === "string" ? hashes.wasmSha256 : "";
+  if (packageId.length === 0 || !/^[0-9a-f]{64}$/u.test(componentSha256)) {
+    throw new SemioFaultError({ origin: "os", code: "plugin.descriptor-invalid", severity: "error", message: "plugin.descriptor-invalid: missing package identity", scope: { pluginId }, retryable: true });
+  }
+  return { manifest, packageId, componentSha256 };
+}
+
 /** `onProgress` is called on the response headers and on every streamed chunk — see
  * {@link readDescriptorText} for why this fetch owes its caller a heartbeat at all. */
 export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal, onProgress: () => void = () => {}): Promise<PluginManifest> {
-  signal?.throwIfAborted();
+  return (await fetchDescriptorDocument(pluginId, moduleUrl, signal, onProgress)).manifest;
+}
+
+/** 📇️ The JSON descriptor a served plugin module carries beside its entry, read before any actor starts. */
+export function pluginDescriptorUrl(moduleUrl: string): string {
   const path = moduleUrl.split(/[?#]/u)[0]!;
-  const descriptorUrl = path.slice(0, path.lastIndexOf("/") + 1) + "🔣️.json";
+  return path.slice(0, path.lastIndexOf("/") + 1) + "🔣️.json";
+}
+
+/** 📇️ Reads and admits one served package descriptor: owner, app roster, bounded size. */
+async function fetchDescriptorDocument(pluginId: string, moduleUrl: string, signal: AbortSignal | undefined, onProgress: () => void): Promise<{ readonly descriptor: object; readonly manifest: PluginManifest }> {
+  signal?.throwIfAborted();
+  const descriptorUrl = pluginDescriptorUrl(moduleUrl);
   const fault = (code: string, detail: string) => new SemioFaultError({
     origin: "os", code, severity: "error", message: `${code}: ${detail}`,
     scope: { pluginId }, retryable: true,
@@ -167,7 +198,7 @@ export async function fetchDescriptorManifest(pluginId: string, moduleUrl: strin
   if (!manifest || typeof manifest !== "object" || !("pluginId" in manifest) || typeof manifest.pluginId !== "string") throw fault("plugin.descriptor-invalid", "missing manifest owner");
   if (manifest.pluginId !== pluginId) throw fault("plugin.descriptor-identity-mismatch", `expected ${pluginId}, received ${manifest.pluginId}`);
   if (!("apps" in manifest) || !Array.isArray(manifest.apps)) throw fault("plugin.descriptor-invalid", "missing app roster");
-  return normalizeManifestExamples(manifest as PluginManifest) as PluginManifest;
+  return { descriptor: descriptor as object, manifest: normalizeManifestExamples(manifest as PluginManifest) as PluginManifest };
 }
 //#endregion 📇️DescriptorAdmission
 
@@ -1644,6 +1675,11 @@ export function jobPlacementFromWireName(name: unknown): JobPlacement | undefine
   return typeof name === "string" && (JOB_PLACEMENTS as readonly string[]).includes(name) ? (name as JobPlacement) : undefined;
 }
 
+/** 🧰️ The `spawn-job` kind of every framework reserved tool verb (undo, redo, copy/paste, selection and
+ * interaction verbs): a live job each host starts, steps to its end and completes on the spawning
+ * instance, never a replayable product job. Twin of Rust `kernel::FRAMEWORK_RESERVED_JOB_KIND`. */
+export const FRAMEWORK_RESERVED_JOB_KIND = "framework.reserved.tool";
+
 /** 🧵 How many `step-job` observations ONE host admission may take. Twin of Rust
  * `kernel::SPAWNED_JOB_STEP_CEILING`. */
 export const SPAWNED_JOB_STEP_CEILING = 32;
@@ -2186,6 +2222,9 @@ export interface ActivationManifestEntry {
   readonly pluginId: string;
   readonly moduleUrl: string;
   readonly caps: readonly ShardCapabilityGrant[];
+  /** 🪪️ The plugin id the program's own descriptor names, when the program id differs from it (a hub document's
+   * catalog-resolved program): what an extension's activation event names as its host. */
+  readonly manifestPluginId?: string;
 }
 
 /** 🔐️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the web mirror of
@@ -2414,6 +2453,15 @@ export class ActivationRegistry {
     }
   }
 
+  /** 🧩️ Indexes one extension program under its parent program — the web mirror of one catalog extension row, for
+   * programs outside the build-time catalog (a hub document's catalog-resolved programs). Both ids are program ids whose
+   * manifests `registerManifest` records; registering the same pair twice indexes it once. */
+  registerExtension(parentPluginId: string, extensionPluginId: string): void {
+    const siblings = this.extensionsByParent.get(parentPluginId) ?? [];
+    if (!siblings.includes(extensionPluginId)) siblings.push(extensionPluginId);
+    this.extensionsByParent.set(parentPluginId, siblings);
+  }
+
   manifestFor(pluginId: string): ActivationManifestEntry | undefined {
     return this.manifests.get(pluginId);
   }
@@ -2497,7 +2545,7 @@ export class ActivationRegistry {
         const assets = await this.loadAssets(manifest.moduleUrl);
         await this.shardClient.activate(childActorId, manifest.moduleUrl, scopedCaps, this.defaultBudget, assets);
         this.markResident(childActorId, extensionId);
-        const activation = activationEventEnvelope(`${ON_EXTENSION_REQUEST_ACTIVATION_PREFIX}${pluginId}`);
+        const activation = activationEventEnvelope(`${ON_EXTENSION_REQUEST_ACTIVATION_PREFIX}${this.manifests.get(pluginId)?.manifestPluginId ?? pluginId}`);
         if (activation) this.enqueueTurn(childActorId, "Maintenance", [activation]);
         children.push(childActorId);
       } catch (error) {
@@ -2801,22 +2849,55 @@ if (import.meta.vitest) {
  * the cache-busting query value {@link PluginSource.moduleUrl} mints. */
 export type PluginSourceEvent = { readonly kind: "snapshot"; readonly plugins: readonly { readonly pluginId: string; readonly rebuiltAt?: number }[] } | { readonly kind: "built"; readonly pluginId: string; readonly rebuiltAt: number };
 
+/** 📈️ Bytes one module acquisition has verified so far, out of every byte it must verify. */
+export type PluginModuleAcquisitionProgress = { readonly completedBytes: number; readonly totalBytes: number };
+
+/** 🛑️ How a caller bounds one module acquisition: its cancellation and its progress listener. */
+export type PluginModuleAcquisition = { readonly signal: AbortSignal; readonly onProgress?: (progress: PluginModuleAcquisitionProgress) => void };
+
+/** 📦️ One acquired module: the URL to load and the build stamp the loaded module is at least as new as.
+ * The stamp is what later availability events are compared against, so the connect-time `snapshot` of
+ * the very build a boot install just loaded is recognised as a replay instead of a newer build. */
+export type PluginModuleAcquired = { readonly moduleUrl: string; readonly rebuiltAt: number | undefined };
+
+/** 🚫️ A source that cannot serve `pluginId`'s module on this device — not listed, or its module is not
+ * served here. A multiplexed source asks the next one; every other failure stays a failure. */
+export class PluginModuleUnavailableError extends Error {
+  override readonly name = "PluginModuleUnavailableError";
+  readonly sourceId: string;
+  readonly pluginId: string;
+  constructor(sourceId: string, pluginId: string, detail: string) {
+    super(`plugin module ${pluginId} is unavailable from source ${sourceId}: ${detail}`);
+    this.sourceId = sourceId;
+    this.pluginId = pluginId;
+  }
+}
+
+/** 🔎️ Answers whether a locally served module is actually served here: its descriptor must answer. A
+ * device that never staged a plugin answers 404 for it, and that is an unavailability, not a fault. */
+async function requireServedPluginModule(sourceId: string, pluginId: string, moduleUrl: string, signal: AbortSignal): Promise<void> {
+  const response = await fetch(pluginDescriptorUrl(moduleUrl), { method: "HEAD", signal, cache: "no-store" });
+  if (!response.ok) throw new PluginModuleUnavailableError(sourceId, pluginId, `descriptor answered HTTP ${response.status}`);
+}
+
 /**
  * @emoji 🔌️ Where the shell's incremental plugin runtime (install/uninstall/reload — see the react
- * renderer's plugin panel) gets its catalog and availability notifications from. `createDevPluginSource`
- * is the only implementation today; a future `HubPluginSource` (fetching manifests and artifacts from
- * the plugin hub over HTTP/SSE instead of the local dev server) implements the same three methods and
- * needs no changes anywhere else — the shell only ever depends on this interface.
+ * renderer's plugin panel) gets its catalog, its modules and its availability notifications from. The
+ * dev, bundled and extension sources serve modules staged beside the shell; the hub source
+ * (`🔌️plugin/📇️registry/🌎️hub-source`) installs trusted catalog modules on first use. The shell only
+ * ever depends on this interface.
  */
 export interface PluginSource {
   readonly id: string;
   /** Every plugin this source can currently install (built or not — the panel shows "available"
    * entries that haven't finished their first build yet). */
   list(): Promise<readonly PluginRegistryEntry[]>;
-  /** Mints a concrete, cache-busted module URL for one install/reload of `pluginId`. Omitting
-   * `rebuiltAt` (initial install, before any `built` event) falls back to the registry's own
-   * `moduleUrl`, unbusted — correct for a first load, where there is nothing stale to bust. */
-  moduleUrl(pluginId: string, rebuiltAt?: number): string;
+  /** Makes one install/reload of `pluginId` importable and answers its concrete module URL and stamp: a
+   * local source checks the module is served and cache-busts it with `rebuiltAt` (its own boot version
+   * before any `built` event, which then is the stamp); a remote source downloads and verifies it first,
+   * reporting progress and honouring cancellation, and stamps it with the moment it was acquired.
+   * {@link PluginModuleUnavailableError} means "not from here". */
+  acquireModule(pluginId: string, rebuiltAt: number | undefined, acquisition: PluginModuleAcquisition): Promise<PluginModuleAcquired>;
   /** Subscribes to availability events; returns an unsubscribe function. Fires an immediate `snapshot`
    * on subscribe against sources that support it (the dev source's SSE endpoint always sends one —
    * and when the page-shared stream is already open, its cached snapshot is replayed instead, which is
@@ -2914,11 +2995,13 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[], 
     async list() {
       return registry;
     },
-    moduleUrl(pluginId, rebuiltAt) {
+    async acquireModule(pluginId, rebuiltAt, acquisition) {
       const entry = byId.get(pluginId);
-      if (!entry) throw new Error(`[DEBUG] plugin source "dev" has no registry entry for ${pluginId}`);
+      if (!entry) throw new PluginModuleUnavailableError("dev", pluginId, "no registry entry");
+      await requireServedPluginModule("dev", pluginId, entry.moduleUrl, acquisition.signal);
       const separator = entry.moduleUrl.includes("?") ? "&" : "?";
-      return `${entry.moduleUrl}${separator}v=${rebuiltAt ?? bootVersion}`;
+      const stamp = rebuiltAt ?? bootVersion;
+      return { moduleUrl: `${entry.moduleUrl}${separator}v=${stamp}`, rebuiltAt: stamp };
     },
     subscribe(listener) {
       return subscribeSharedWatchStream(watchUrl, (data) => {
@@ -2949,11 +3032,13 @@ export function createBundledPluginSource(registry: readonly PluginRegistryEntry
     async list() {
       return registry;
     },
-    moduleUrl(pluginId, rebuiltAt) {
+    async acquireModule(pluginId, rebuiltAt, acquisition) {
       const entry = byId.get(pluginId);
-      if (!entry) throw new Error(`[DEBUG] plugin source "bundled" has no registry entry for ${pluginId}`);
+      if (!entry) throw new PluginModuleUnavailableError("bundled", pluginId, "no registry entry");
+      await requireServedPluginModule("bundled", pluginId, entry.moduleUrl, acquisition.signal);
       const separator = entry.moduleUrl.includes("?") ? "&" : "?";
-      return `${entry.moduleUrl}${separator}v=${rebuiltAt ?? bootVersion}`;
+      const stamp = rebuiltAt ?? bootVersion;
+      return { moduleUrl: `${entry.moduleUrl}${separator}v=${stamp}`, rebuiltAt: stamp };
     },
     subscribe(listener) {
       queueMicrotask(() => listener(snapshot));
@@ -3004,10 +3089,10 @@ export function createExtensionSource(catalog: PluginCatalog, watchUrl: string):
     async list() {
       return registry;
     },
-    moduleUrl(pluginId, rebuiltAt) {
+    async acquireModule(pluginId, rebuiltAt) {
       const entry = byId.get(pluginId);
-      if (!entry) throw new Error(`[DEBUG] plugin source "extensions" has no registry entry for ${pluginId}`);
-      return rebuiltAt === undefined ? entry.moduleUrl : `${entry.moduleUrl}?v=${rebuiltAt}`;
+      if (!entry) throw new PluginModuleUnavailableError("extensions", pluginId, "no registry entry");
+      return { moduleUrl: rebuiltAt === undefined ? entry.moduleUrl : `${entry.moduleUrl}?v=${rebuiltAt}`, rebuiltAt };
     },
     subscribe(listener) {
       return subscribeSharedWatchStream(watchUrl, (data) => {
@@ -3024,7 +3109,7 @@ export function createExtensionSource(catalog: PluginCatalog, watchUrl: string):
 /** @emoji 🔌️ Merges multiple {@link PluginSource} implementations into one catalog the shell's
  * incremental runtime can treat as a single source. */
 export function multiplexPluginSources(...sources: readonly PluginSource[]): PluginSource {
-  if (sources.length === 0) throw new Error("[DEBUG] multiplexPluginSources requires at least one source");
+  if (sources.length === 0) throw new Error("multiplexPluginSources requires at least one source");
   if (sources.length === 1) return sources[0];
   return {
     id: sources.map((source) => source.id).join("+"),
@@ -3035,15 +3120,17 @@ export function multiplexPluginSources(...sources: readonly PluginSource[]): Plu
       }
       return [...merged.values()];
     },
-    moduleUrl(pluginId, rebuiltAt) {
+    async acquireModule(pluginId, rebuiltAt, acquisition) {
+      const refusals: string[] = [];
       for (const source of sources) {
         try {
-          return source.moduleUrl(pluginId, rebuiltAt);
-        } catch {
-          continue;
+          return await source.acquireModule(pluginId, rebuiltAt, acquisition);
+        } catch (error) {
+          if (!(error instanceof PluginModuleUnavailableError)) throw error;
+          refusals.push(error.message);
         }
       }
-      throw new Error(`[DEBUG] multiplexed plugin sources have no registry entry for ${pluginId}`);
+      throw new PluginModuleUnavailableError(sources.map((source) => source.id).join("+"), pluginId, refusals.join("; "));
     },
     subscribe(listener) {
       const unsubscribes = sources.map((source) => source.subscribe(listener));
@@ -3101,6 +3188,8 @@ export const PLUGIN_GRAPH_CHUNK_ROWS = 16;
  * (dependency expansion), `order` (activation order). Each `step()` performs one and answers whether
  * more remains. */
 export class PlaygroundBootPlanner {
+  private readonly catalog: PluginCatalog;
+  private readonly variant: string;
   private readonly targets: readonly PluginCatalogTarget[];
   private readonly defaultAppId: string | undefined;
   private readonly registryPluginId: string;
@@ -3113,11 +3202,9 @@ export class PlaygroundBootPlanner {
   private order: readonly PluginRegistryEntry[] = [];
   private errors: readonly PluginGraphError[] = [];
 
-  constructor(
-    private readonly catalog: PluginCatalog,
-    private readonly variant: string,
-    session?: PlaygroundBootSession,
-  ) {
+  constructor(catalog: PluginCatalog, variant: string, session?: PlaygroundBootSession) {
+    this.catalog = catalog;
+    this.variant = variant;
     this.defaultAppId = resolvePlaygroundDefaultAppId(catalog, variant);
     this.registryPluginId = resolvePluginRegistryId(catalog, variant);
     this.hostMode = resolvePluginHostConfig(catalog, variant) !== undefined;

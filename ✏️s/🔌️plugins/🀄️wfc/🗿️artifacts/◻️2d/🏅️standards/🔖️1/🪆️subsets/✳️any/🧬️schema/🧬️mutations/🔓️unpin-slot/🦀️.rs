@@ -29,7 +29,7 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for UnpinSlot {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Unpin Slot", "Platz abheften")
+        protocol::LocalizedLabel::native("Unpin Slot", "Fixierung des Slots aufheben")
     }
 }
 //#endregion 🔖️UnpinSlot

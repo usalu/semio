@@ -1,0 +1,58 @@
+{
+  "schema": "semio.hub.trusted-catalog-descriptor-open-targets-cases/v1",
+  "answerSchema": "semio.hub.trusted-catalog-descriptor-open-targets/v1",
+  "windowKindId": "fixture-main",
+  "cases": [
+    {
+      "name": "plugin-level-kind-named-by-its-own-dialect",
+      "kindId": "s.fixture.document",
+      "declaredOn": "plugin",
+      "execution": "isolated",
+      "targets": [
+        { "role": "editor", "surfaceId": "s.fixture.document@1/*#editor", "write": true },
+        { "role": "viewer", "surfaceId": "s.fixture.document@1/*#viewer", "write": false }
+      ]
+    },
+    {
+      "name": "plugin-level-kind-also-listed-by-its-own-editor",
+      "kindId": "s.fixture.document",
+      "declaredOn": "plugin-and-editor",
+      "execution": "isolated",
+      "targets": [
+        { "role": "editor", "surfaceId": "s.fixture.document@1/*#editor", "write": true },
+        { "role": "viewer", "surfaceId": "s.fixture.document@1/*#viewer", "write": false }
+      ]
+    },
+    {
+      "name": "plugin-level-kind-listed-by-a-sibling-dialect",
+      "kindId": "s.fixture.other",
+      "declaredOn": "plugin-and-editor",
+      "execution": "isolated",
+      "targets": []
+    },
+    {
+      "name": "plugin-level-kind-no-dialect-names",
+      "kindId": "fixture.document",
+      "declaredOn": "plugin",
+      "execution": "isolated",
+      "targets": []
+    },
+    {
+      "name": "kind-declared-by-its-editor-app",
+      "kindId": "fixture.document",
+      "declaredOn": "editor",
+      "execution": "isolated",
+      "targets": [
+        { "role": "editor", "surfaceId": "s.fixture.document@1/*#editor", "write": true },
+        { "role": "viewer", "surfaceId": "s.fixture.document@1/*#viewer", "write": false }
+      ]
+    },
+    {
+      "name": "non-isolated-package-opens-nothing",
+      "kindId": "s.fixture.document",
+      "declaredOn": "plugin",
+      "execution": "linked",
+      "targets": []
+    }
+  ]
+}

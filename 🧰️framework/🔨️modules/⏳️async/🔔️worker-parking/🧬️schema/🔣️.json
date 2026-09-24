@@ -7,7 +7,7 @@
     "WorkerParkingFixture": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "idle", "timer", "periodicTimer", "protocol", "cancellation"],
+      "required": ["schema", "idle", "timer", "periodicTimer", "farKeeper", "protocol", "cancellation"],
       "properties": {
         "schema": { "const": "https://json.schemas.assets.semio-tech.com/framework/async/worker-parking/schema.json#/$defs/WorkerParkingFixture" },
         "idle": {
@@ -40,6 +40,19 @@
             "intervalMs": { "type": "integer", "minimum": 1, "maximum": 1000 },
             "maximumSleepsPerTick": { "const": 1 },
             "startupSleeps": { "type": "integer", "minimum": 0, "maximum": 64 }
+          }
+        },
+        "farKeeper": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["workers", "farDeadlineMs", "chains", "rearmsPerChain", "intervalMs", "chainBoundMs"],
+          "properties": {
+            "workers": { "const": 2 },
+            "farDeadlineMs": { "type": "integer", "minimum": 60000, "maximum": 3600000 },
+            "chains": { "type": "integer", "minimum": 1, "maximum": 1000 },
+            "rearmsPerChain": { "type": "integer", "minimum": 1, "maximum": 64 },
+            "intervalMs": { "type": "integer", "minimum": 1, "maximum": 1000 },
+            "chainBoundMs": { "type": "integer", "minimum": 1000, "maximum": 30000 }
           }
         },
         "protocol": {

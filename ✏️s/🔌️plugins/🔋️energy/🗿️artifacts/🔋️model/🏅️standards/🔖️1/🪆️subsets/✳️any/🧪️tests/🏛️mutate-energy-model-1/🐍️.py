@@ -644,6 +644,11 @@ def applied(*messages):
     return {"status": "applied", "messages": [{"level": level, "code": code} for level, code in messages]}
 
 
+def no_op():
+    """🟰️ A no-op outcome: nothing changes, and the one diagnostic says so."""
+    return {"status": "no-op", "messages": [{"level": "warning", "code": "mutation.no-op"}]}
+
+
 def rejected(code, path):
     """⛔️ A refusal: one fault code and the offending address."""
     return {"status": "rejected", "code": code, "path": list(path)}
@@ -684,7 +689,7 @@ def rename_model(before, payload):
     if not name.strip():
         return unchanged(before), rejected("mutation.invariant", [name])
     if before["model"]["name"] == name:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     after["model"]["name"] = name
     return after, applied()
@@ -696,7 +701,7 @@ def change_model_version(before, payload):
     if not version.strip():
         return unchanged(before), rejected("mutation.invariant", [version])
     if before["model"]["version"] == version:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     after["model"]["version"] = version
     return after, applied()
@@ -714,7 +719,7 @@ def update_site(before, payload):
     if not -90.0 <= site["latitude_deg"] <= 90.0 or not -180.0 <= site["longitude_deg"] <= 180.0 or not -12.0 <= site["time_zone_hours"] <= 14.0:
         return unchanged(before), rejected("mutation.invariant", [])
     if before["model"]["site"] == site:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     after["model"]["site"] = site
     return after, applied()
@@ -728,7 +733,7 @@ def update_ground_temperature(before, payload):
         return unchanged(before), rejected("mutation.invariant", [])
     ground = {"building_surface_c": building, "shallow_c": shallow, "deep_c": payload["deepC"]}
     if before["model"]["ground_temperature"] == ground:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     after["model"]["ground_temperature"] = ground
     return after, applied()
@@ -748,7 +753,7 @@ def update_run_period(before, payload):
     if not months_ok or not days_ok:
         return unchanged(before), rejected("mutation.invariant", [])
     if before["model"]["run_period"] == run_period:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     after["model"]["run_period"] = run_period
     return after, applied()
@@ -768,7 +773,7 @@ def replace_airflow_network(before, payload):
     if payload["present"]:
         network = {"zone_node_ids": [[zone, node] for zone, node in zip(zone_ids, node_ids)], "outdoor_node_id": payload["outdoorNodeId"], "link_ids": link_ids}
     if before["model"]["airflow_network"] == network:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     after["model"]["airflow_network"] = network
     return after, applied()
@@ -803,7 +808,7 @@ def bind_weather_file(before, payload):
         return unchanged(before), rejected("mutation.invariant", [payload["targetUri"]])
     link = head_link(target, "weather")
     if before.get("weatherLink") == link:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     after["weatherLink"] = link
     return after, applied()
@@ -826,7 +831,7 @@ def connect_referenced_model(before, payload):
         return unchanged(before), rejected("mutation.invariant", [payload["targetUri"]])
     link = head_link(target, "model")
     if before.get("referencedModel") == link:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     after["referencedModel"] = link
     return after, applied()
@@ -869,7 +874,7 @@ def rename_zone(before, payload):
     if any(other["id"] != entity_id and other["name"] == name for other in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(entity_id)])
     if zone["name"] == name:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     return _with_zone(before, entity_id, "name", name), applied()
 
 
@@ -882,7 +887,7 @@ def change_zone_volume(before, payload):
     if volume != volume or volume in (float("inf"), float("-inf")) or volume <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if zone["volume_m3"] == volume:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     return _with_zone(before, entity_id, "volume_m3", volume), applied()
 
 
@@ -895,7 +900,7 @@ def change_zone_multiplier(before, payload):
     if multiplier == 0:
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if zone["multiplier"] == multiplier:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     return _with_zone(before, entity_id, "multiplier", multiplier), applied()
 
 
@@ -906,7 +911,7 @@ def change_zone_conditioned(before, payload):
     if zone is None:
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if zone["conditioned"] == conditioned:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     return _with_zone(before, entity_id, "conditioned", conditioned), applied()
 
 
@@ -918,7 +923,7 @@ def change_zone_floor_area_participation(before, payload):
     if zone is None:
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if zone["part_of_total_floor_area"] == participates:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     return _with_zone(before, entity_id, "part_of_total_floor_area", participates), applied()
 
 
@@ -1017,7 +1022,7 @@ def rename_space(before, payload):
     if any(row["id"] != entity_id and row["name"] == value for row in before["model"]["spaces"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(entity_id)])
     if item["name"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["spaces"]:
         if row["id"] == entity_id:
@@ -1039,7 +1044,7 @@ def change_space_floor_area(before, payload):
     if not (value == value and abs(value) != float("inf") and value >= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["floor_area_m2"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["spaces"]:
         if row["id"] == entity_id:
@@ -1061,7 +1066,7 @@ def change_space_zone(before, payload):
     if not any(row["id"] == value for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if item["zone_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["spaces"]:
         if row["id"] == entity_id:
@@ -1152,7 +1157,7 @@ def rename_surface(before, payload):
     if any(row["id"] != entity_id and row["name"] == value for row in before["model"]["surfaces"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(entity_id)])
     if item["name"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["surfaces"]:
         if row["id"] == entity_id:
@@ -1174,7 +1179,7 @@ def change_surface_zone(before, payload):
     if not any(row["id"] == value for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if item["zone_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["surfaces"]:
         if row["id"] == entity_id:
@@ -1194,7 +1199,7 @@ def change_surface_class(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if item["class"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["surfaces"]:
         if row["id"] == entity_id:
@@ -1216,7 +1221,7 @@ def replace_surface_vertices(before, payload):
     if len(value) < 3:
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["vertices_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["surfaces"]:
         if row["id"] == entity_id:
@@ -1238,7 +1243,7 @@ def change_surface_construction(before, payload):
     if not any(row["id"] == value for row in before["model"]["constructions"]):
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if item["construction_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["surfaces"]:
         if row["id"] == entity_id:
@@ -1264,7 +1269,7 @@ def change_surface_boundary_condition(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     boundary = {"Interzone": partner} if partner is not None else tag
     if item["outside_boundary_condition"] == boundary:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["surfaces"]:
         if row["id"] == entity_id:
@@ -1286,7 +1291,7 @@ def change_surface_sun_exposed(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if item["sun_exposed"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["surfaces"]:
         if row["id"] == entity_id:
@@ -1306,7 +1311,7 @@ def change_surface_wind_exposed(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if item["wind_exposed"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["surfaces"]:
         if row["id"] == entity_id:
@@ -1328,7 +1333,7 @@ def change_surface_multiplier(before, payload):
     if value == 0:
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["multiplier"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["surfaces"]:
         if row["id"] == entity_id:
@@ -1403,7 +1408,7 @@ def rename_fenestration(before, payload):
     if any(row["id"] != entity_id and row["name"] == value for row in before["model"]["fenestrations"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(entity_id)])
     if item["name"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1425,7 +1430,7 @@ def change_fenestration_surface(before, payload):
     if not any(row["id"] == value for row in before["model"]["surfaces"]):
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if item["surface_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1447,7 +1452,7 @@ def change_fenestration_u_value(before, payload):
     if not (value == value and abs(value) != float("inf") and value > 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["u_value_w_m2k"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1469,7 +1474,7 @@ def change_fenestration_shgc(before, payload):
     if not (value == value and 0.0 <= value <= 1.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["shgc"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1491,7 +1496,7 @@ def change_fenestration_vlt(before, payload):
     if not (value == value and 0.0 <= value <= 1.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["vlt"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1513,7 +1518,7 @@ def change_fenestration_area(before, payload):
     if not (value == value and abs(value) != float("inf") and value > 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["area_m2"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1535,7 +1540,7 @@ def change_fenestration_frame_conductance(before, payload):
     if not (value == value and abs(value) != float("inf") and value >= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["frame_conductance_w_k"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1557,7 +1562,7 @@ def change_fenestration_divider_conductance(before, payload):
     if not (value == value and abs(value) != float("inf") and value >= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["divider_conductance_w_k"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1620,7 +1625,7 @@ def rename_shading_surface(before, payload):
     if any(row["id"] != entity_id and row["name"] == value for row in before["model"]["shading_surfaces"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(entity_id)])
     if item["name"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["shading_surfaces"]:
         if row["id"] == entity_id:
@@ -1642,7 +1647,7 @@ def replace_shading_surface_vertices(before, payload):
     if len(value) < 3:
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["vertices_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["shading_surfaces"]:
         if row["id"] == entity_id:
@@ -1664,7 +1669,7 @@ def change_shading_surface_transmittance_schedule(before, payload):
     if (value is not None and not any(row["id"] == value for family in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][family])):
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if item["transmittance_schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["shading_surfaces"]:
         if row["id"] == entity_id:
@@ -1725,7 +1730,7 @@ def bind_fenestration_glazing_construction(before, payload):
     if not any(row["id"] == construction_id for row in before["model"]["constructions"]):
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if item["glazing_construction_id"] == construction_id:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1768,7 +1773,7 @@ def change_fenestration_height(before, payload):
     if not (value == value and abs(value) != float("inf") and value > 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["height_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1790,7 +1795,7 @@ def change_fenestration_sill_height(before, payload):
     if not (value == value and abs(value) != float("inf") and value >= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["sill_height_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1812,7 +1817,7 @@ def change_fenestration_overhang_depth(before, payload):
     if not (value == value and abs(value) != float("inf") and value >= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["overhang_depth_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1834,7 +1839,7 @@ def change_fenestration_overhang_offset(before, payload):
     if not (value == value and abs(value) != float("inf") and value >= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["overhang_offset_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1856,7 +1861,7 @@ def change_fenestration_fin_depth(before, payload):
     if not (value == value and abs(value) != float("inf") and value >= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["fin_depth_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1878,7 +1883,7 @@ def change_fenestration_fin_offset(before, payload):
     if not (value == value and abs(value) != float("inf") and value >= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["fin_offset_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -1939,7 +1944,7 @@ def rename_material(before, payload):
     if any(row["id"] != payload["id"] and row["name"] == value for row in before["model"]["materials"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if item["name"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["materials"]:
         if row["id"] == payload["id"]:
@@ -1962,7 +1967,7 @@ def change_material_thickness(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["thickness_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["materials"]:
         if row["id"] == payload["id"]:
@@ -1985,7 +1990,7 @@ def change_material_conductivity(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["conductivity_w_m_k"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["materials"]:
         if row["id"] == payload["id"]:
@@ -2008,7 +2013,7 @@ def change_material_density(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["density_kg_m3"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["materials"]:
         if row["id"] == payload["id"]:
@@ -2031,7 +2036,7 @@ def change_material_specific_heat(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["specific_heat_j_kg_k"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["materials"]:
         if row["id"] == payload["id"]:
@@ -2054,7 +2059,7 @@ def change_material_thermal_absorptance(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["thermal_absorptance"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["materials"]:
         if row["id"] == payload["id"]:
@@ -2077,7 +2082,7 @@ def change_material_solar_absorptance(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["solar_absorptance"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["materials"]:
         if row["id"] == payload["id"]:
@@ -2100,7 +2105,7 @@ def change_material_visible_absorptance(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["visible_absorptance"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["materials"]:
         if row["id"] == payload["id"]:
@@ -2165,7 +2170,7 @@ def rename_construction(before, payload):
     if any(row["id"] != payload["id"] and row["name"] == value for row in before["model"]["constructions"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if item["name"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["constructions"]:
         if row["id"] == payload["id"]:
@@ -2232,7 +2237,7 @@ def reorder_construction_layers(before, payload):
     if sorted(wanted) != sorted(construction["layer_material_ids"]):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if construction["layer_material_ids"] == wanted:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["constructions"]:
         if row["id"] == payload["id"]:
@@ -2296,7 +2301,7 @@ def change_people_gain_zone(before, payload):
     if not any(row["id"] == value for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["zone_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["people"]:
         if row["id"] == payload["id"]:
@@ -2319,7 +2324,7 @@ def change_people_gain_schedule(before, payload):
     if not any(row["id"] == value for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["people"]:
         if row["id"] == payload["id"]:
@@ -2342,7 +2347,7 @@ def change_people_gain_activity_schedule(before, payload):
     if not any(row["id"] == value for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["activity_schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["people"]:
         if row["id"] == payload["id"]:
@@ -2365,7 +2370,7 @@ def change_people_gain_people_per_area(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["people_per_area"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["people"]:
         if row["id"] == payload["id"]:
@@ -2388,7 +2393,7 @@ def change_people_gain_sensible_fraction(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["sensible_fraction"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["people"]:
         if row["id"] == payload["id"]:
@@ -2411,7 +2416,7 @@ def change_people_gain_latent_fraction(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["latent_fraction"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["people"]:
         if row["id"] == payload["id"]:
@@ -2434,7 +2439,7 @@ def change_people_gain_radiant_fraction(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["radiant_fraction"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["people"]:
         if row["id"] == payload["id"]:
@@ -2496,7 +2501,7 @@ def change_lighting_gain_zone(before, payload):
     if not any(row["id"] == value for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["zone_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["lighting"]:
         if row["id"] == payload["id"]:
@@ -2519,7 +2524,7 @@ def change_lighting_gain_schedule(before, payload):
     if not any(row["id"] == value for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["lighting"]:
         if row["id"] == payload["id"]:
@@ -2542,7 +2547,7 @@ def change_lighting_gain_watts_per_area(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["watts_per_area"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["lighting"]:
         if row["id"] == payload["id"]:
@@ -2565,7 +2570,7 @@ def change_lighting_gain_radiant_fraction(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["radiant_fraction"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["lighting"]:
         if row["id"] == payload["id"]:
@@ -2588,7 +2593,7 @@ def change_lighting_gain_visible_fraction(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["visible_fraction"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["lighting"]:
         if row["id"] == payload["id"]:
@@ -2611,7 +2616,7 @@ def change_lighting_gain_return_air_fraction(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["return_air_fraction"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["lighting"]:
         if row["id"] == payload["id"]:
@@ -2673,7 +2678,7 @@ def change_equipment_gain_zone(before, payload):
     if not any(row["id"] == value for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["zone_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["equipment"]:
         if row["id"] == payload["id"]:
@@ -2696,7 +2701,7 @@ def change_equipment_gain_schedule(before, payload):
     if not any(row["id"] == value for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["equipment"]:
         if row["id"] == payload["id"]:
@@ -2719,7 +2724,7 @@ def change_equipment_gain_watts_per_area(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["watts_per_area"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["equipment"]:
         if row["id"] == payload["id"]:
@@ -2742,7 +2747,7 @@ def change_equipment_gain_radiant_fraction(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["radiant_fraction"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["equipment"]:
         if row["id"] == payload["id"]:
@@ -2765,7 +2770,7 @@ def change_equipment_gain_latent_fraction(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["latent_fraction"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["equipment"]:
         if row["id"] == payload["id"]:
@@ -2827,7 +2832,7 @@ def change_infiltration_zone(before, payload):
     if not any(row["id"] == value for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["zone_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -2850,7 +2855,7 @@ def change_infiltration_schedule(before, payload):
     if not any(row["id"] == value for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -2873,7 +2878,7 @@ def change_infiltration_flow_per_exterior_area(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["flow_per_exterior_area_m3_s_m2"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -2896,7 +2901,7 @@ def change_infiltration_constant_term_coefficient(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["constant_term_coefficient"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -2919,7 +2924,7 @@ def change_infiltration_temperature_term_coefficient(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["temperature_term_coefficient"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -2942,7 +2947,7 @@ def change_infiltration_velocity_term_coefficient(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["velocity_term_coefficient"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -2965,7 +2970,7 @@ def change_infiltration_velocity_squared_term_coefficient(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["velocity_squared_term_coefficient"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -3027,7 +3032,7 @@ def change_mechanical_ventilation_zone(before, payload):
     if not any(row["id"] == value for row in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["zone_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["mechanical_ventilations"]:
         if row["id"] == payload["id"]:
@@ -3050,7 +3055,7 @@ def change_mechanical_ventilation_schedule(before, payload):
     if not any(row["id"] == value for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["mechanical_ventilations"]:
         if row["id"] == payload["id"]:
@@ -3073,7 +3078,7 @@ def change_mechanical_ventilation_design_flow(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["design_flow_m3_s"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["mechanical_ventilations"]:
         if row["id"] == payload["id"]:
@@ -3096,7 +3101,7 @@ def change_mechanical_ventilation_fan_total_efficiency(before, payload):
     if not 0.0 < value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["fan_total_efficiency"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["mechanical_ventilations"]:
         if row["id"] == payload["id"]:
@@ -3119,7 +3124,7 @@ def change_mechanical_ventilation_fan_delta_pressure(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["fan_delta_pressure_pa"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["mechanical_ventilations"]:
         if row["id"] == payload["id"]:
@@ -3140,7 +3145,7 @@ def change_infiltration_method(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if item["method"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -3163,7 +3168,7 @@ def change_infiltration_design_flow_ach(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["design_flow_ach"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -3186,7 +3191,7 @@ def change_infiltration_effective_leakage_area(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["effective_leakage_area_m2"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -3209,7 +3214,7 @@ def change_infiltration_discharge_coefficient(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["discharge_coefficient"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -3232,7 +3237,7 @@ def change_infiltration_stack_height(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["stack_height_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["infiltrations"]:
         if row["id"] == payload["id"]:
@@ -3295,7 +3300,7 @@ def change_thermostat_zone(before, payload):
     if not any(entry["id"] == payload["newZoneId"] for entry in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newZoneId"])])
     if item["zone_id"] == payload["newZoneId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["thermostats"]:
         if entry["id"] == payload["id"]:
@@ -3317,7 +3322,7 @@ def change_thermostat_heating_setpoint_schedule(before, payload):
     if not any(entry["id"] == payload["newHeatingSetpointScheduleId"] for family in ("constants", "daily", "weekly", "annual", "time_series",) for entry in before["model"]["schedules"][family]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newHeatingSetpointScheduleId"])])
     if item["heating_setpoint_schedule_id"] == payload["newHeatingSetpointScheduleId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["thermostats"]:
         if entry["id"] == payload["id"]:
@@ -3339,7 +3344,7 @@ def change_thermostat_cooling_setpoint_schedule(before, payload):
     if not any(entry["id"] == payload["newCoolingSetpointScheduleId"] for family in ("constants", "daily", "weekly", "annual", "time_series",) for entry in before["model"]["schedules"][family]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newCoolingSetpointScheduleId"])])
     if item["cooling_setpoint_schedule_id"] == payload["newCoolingSetpointScheduleId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["thermostats"]:
         if entry["id"] == payload["id"]:
@@ -3361,7 +3366,7 @@ def change_thermostat_heating_throttle_range(before, payload):
     if payload["newHeatingThrottleRangeK"] != payload["newHeatingThrottleRangeK"] or payload["newHeatingThrottleRangeK"] in (float("inf"), float("-inf")) or payload["newHeatingThrottleRangeK"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["heating_throttle_range_k"] == payload["newHeatingThrottleRangeK"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["thermostats"]:
         if entry["id"] == payload["id"]:
@@ -3383,7 +3388,7 @@ def change_thermostat_cooling_throttle_range(before, payload):
     if payload["newCoolingThrottleRangeK"] != payload["newCoolingThrottleRangeK"] or payload["newCoolingThrottleRangeK"] in (float("inf"), float("-inf")) or payload["newCoolingThrottleRangeK"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["cooling_throttle_range_k"] == payload["newCoolingThrottleRangeK"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["thermostats"]:
         if entry["id"] == payload["id"]:
@@ -3446,7 +3451,7 @@ def change_humidistat_zone(before, payload):
     if not any(entry["id"] == payload["newZoneId"] for entry in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newZoneId"])])
     if item["zone_id"] == payload["newZoneId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["humidistats"]:
         if entry["id"] == payload["id"]:
@@ -3468,7 +3473,7 @@ def change_humidistat_humidifying_setpoint_schedule(before, payload):
     if not any(entry["id"] == payload["newHumidifyingSetpointScheduleId"] for family in ("constants", "daily", "weekly", "annual", "time_series",) for entry in before["model"]["schedules"][family]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newHumidifyingSetpointScheduleId"])])
     if item["humidifying_setpoint_schedule_id"] == payload["newHumidifyingSetpointScheduleId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["humidistats"]:
         if entry["id"] == payload["id"]:
@@ -3490,7 +3495,7 @@ def change_humidistat_dehumidifying_setpoint_schedule(before, payload):
     if not any(entry["id"] == payload["newDehumidifyingSetpointScheduleId"] for family in ("constants", "daily", "weekly", "annual", "time_series",) for entry in before["model"]["schedules"][family]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newDehumidifyingSetpointScheduleId"])])
     if item["dehumidifying_setpoint_schedule_id"] == payload["newDehumidifyingSetpointScheduleId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["humidistats"]:
         if entry["id"] == payload["id"]:
@@ -3512,7 +3517,7 @@ def change_humidistat_humidifying_throttle_range(before, payload):
     if payload["newHumidifyingThrottleRange"] != payload["newHumidifyingThrottleRange"] or payload["newHumidifyingThrottleRange"] in (float("inf"), float("-inf")) or payload["newHumidifyingThrottleRange"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["humidifying_throttle_range"] == payload["newHumidifyingThrottleRange"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["humidistats"]:
         if entry["id"] == payload["id"]:
@@ -3534,7 +3539,7 @@ def change_humidistat_dehumidifying_throttle_range(before, payload):
     if payload["newDehumidifyingThrottleRange"] != payload["newDehumidifyingThrottleRange"] or payload["newDehumidifyingThrottleRange"] in (float("inf"), float("-inf")) or payload["newDehumidifyingThrottleRange"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["dehumidifying_throttle_range"] == payload["newDehumidifyingThrottleRange"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["humidistats"]:
         if entry["id"] == payload["id"]:
@@ -3605,7 +3610,7 @@ def change_ideal_loads_system_zone(before, payload):
     if not any(entry["id"] == payload["newZoneId"] for entry in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newZoneId"])])
     if item["zone_id"] == payload["newZoneId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["ideal_loads"]:
         if entry["id"] == payload["id"]:
@@ -3627,7 +3632,7 @@ def change_ideal_loads_system_max_heating_supply_air_temp(before, payload):
     if payload["newMaxHeatingSupplyAirTempC"] != payload["newMaxHeatingSupplyAirTempC"] or payload["newMaxHeatingSupplyAirTempC"] in (float("inf"), float("-inf")) or not -100.0 <= payload["newMaxHeatingSupplyAirTempC"] <= 200.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["max_heating_supply_air_temp_c"] == payload["newMaxHeatingSupplyAirTempC"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["ideal_loads"]:
         if entry["id"] == payload["id"]:
@@ -3649,7 +3654,7 @@ def change_ideal_loads_system_min_cooling_supply_air_temp(before, payload):
     if payload["newMinCoolingSupplyAirTempC"] != payload["newMinCoolingSupplyAirTempC"] or payload["newMinCoolingSupplyAirTempC"] in (float("inf"), float("-inf")) or not -100.0 <= payload["newMinCoolingSupplyAirTempC"] <= 200.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["min_cooling_supply_air_temp_c"] == payload["newMinCoolingSupplyAirTempC"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["ideal_loads"]:
         if entry["id"] == payload["id"]:
@@ -3675,7 +3680,7 @@ def change_ideal_loads_system_max_heating_capacity(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     value = payload["newMaxHeatingCapacityW"] if payload["newCapacityPresent"] else None
     if item["max_heating_capacity_w"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["ideal_loads"]:
         if entry["id"] == payload["id"]:
@@ -3702,7 +3707,7 @@ def change_ideal_loads_system_max_cooling_capacity(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     value = payload["newMaxCoolingCapacityW"] if payload["newCapacityPresent"] else None
     if item["max_cooling_capacity_w"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["ideal_loads"]:
         if entry["id"] == payload["id"]:
@@ -3725,7 +3730,7 @@ def change_ideal_loads_system_outdoor_air_per_person(before, payload):
     if payload["newOutdoorAirPerPersonM3S"] != payload["newOutdoorAirPerPersonM3S"] or payload["newOutdoorAirPerPersonM3S"] in (float("inf"), float("-inf")) or payload["newOutdoorAirPerPersonM3S"] < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["outdoor_air_per_person_m3_s"] == payload["newOutdoorAirPerPersonM3S"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["ideal_loads"]:
         if entry["id"] == payload["id"]:
@@ -3747,7 +3752,7 @@ def change_ideal_loads_system_outdoor_air_per_area(before, payload):
     if payload["newOutdoorAirPerAreaM3SM2"] != payload["newOutdoorAirPerAreaM3SM2"] or payload["newOutdoorAirPerAreaM3SM2"] in (float("inf"), float("-inf")) or payload["newOutdoorAirPerAreaM3SM2"] < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["outdoor_air_per_area_m3_s_m2"] == payload["newOutdoorAirPerAreaM3SM2"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["ideal_loads"]:
         if entry["id"] == payload["id"]:
@@ -3808,7 +3813,7 @@ def change_zone_equipment_zone(before, payload):
     if not any(entry["id"] == payload["newZoneId"] for entry in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newZoneId"])])
     if item["zone_id"] == payload["newZoneId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["zone_equipment"]:
         if entry["id"] == payload["id"]:
@@ -3829,7 +3834,7 @@ def change_zone_equipment_type(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
 
     if item["equipment_type"] == payload["newEquipmentType"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["zone_equipment"]:
         if entry["id"] == payload["id"]:
@@ -3851,7 +3856,7 @@ def change_zone_equipment_priority(before, payload):
     if payload["newPriority"] == 0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["priority"] == payload["newPriority"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["zone_equipment"]:
         if entry["id"] == payload["id"]:
@@ -3873,7 +3878,7 @@ def change_zone_equipment_heating_capacity(before, payload):
     if payload["newHeatingCapacityW"] != payload["newHeatingCapacityW"] or payload["newHeatingCapacityW"] in (float("inf"), float("-inf")) or payload["newHeatingCapacityW"] < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["heating_capacity_w"] == payload["newHeatingCapacityW"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["zone_equipment"]:
         if entry["id"] == payload["id"]:
@@ -3895,7 +3900,7 @@ def change_zone_equipment_cooling_capacity(before, payload):
     if payload["newCoolingCapacityW"] != payload["newCoolingCapacityW"] or payload["newCoolingCapacityW"] in (float("inf"), float("-inf")) or payload["newCoolingCapacityW"] < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["cooling_capacity_w"] == payload["newCoolingCapacityW"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["zone_equipment"]:
         if entry["id"] == payload["id"]:
@@ -3956,7 +3961,7 @@ def change_daylight_zone_zone(before, payload):
     if not any(entry["id"] == payload["newZoneId"] for entry in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newZoneId"])])
     if item["zone_id"] == payload["newZoneId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["daylight_zones"]:
         if entry["id"] == payload["id"]:
@@ -3978,7 +3983,7 @@ def change_daylight_zone_illuminance_target(before, payload):
     if payload["newIlluminanceTargetLux"] != payload["newIlluminanceTargetLux"] or payload["newIlluminanceTargetLux"] in (float("inf"), float("-inf")) or payload["newIlluminanceTargetLux"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["illuminance_target_lux"] == payload["newIlluminanceTargetLux"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["daylight_zones"]:
         if entry["id"] == payload["id"]:
@@ -4000,7 +4005,7 @@ def change_daylight_zone_glare_limit(before, payload):
     if payload["newGlareLimit"] != payload["newGlareLimit"] or payload["newGlareLimit"] in (float("inf"), float("-inf")) or payload["newGlareLimit"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["glare_limit"] == payload["newGlareLimit"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["daylight_zones"]:
         if entry["id"] == payload["id"]:
@@ -4022,7 +4027,7 @@ def change_daylight_zone_window_transmittance(before, payload):
     if payload["newWindowTransmittance"] != payload["newWindowTransmittance"] or payload["newWindowTransmittance"] in (float("inf"), float("-inf")) or not 0.0 <= payload["newWindowTransmittance"] <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["window_transmittance"] == payload["newWindowTransmittance"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["daylight_zones"]:
         if entry["id"] == payload["id"]:
@@ -4077,7 +4082,7 @@ def change_sizing_object_zone(before, payload):
     if not any(entry["id"] == payload["newZoneId"] for entry in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newZoneId"])])
     if item["zone_id"] == payload["newZoneId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["sizing_objects"]:
         if entry["id"] == payload["id"]:
@@ -4098,7 +4103,7 @@ def change_sizing_object_sizing_type(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
 
     if item["sizing_type"] == payload["newSizingType"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["sizing_objects"]:
         if entry["id"] == payload["id"]:
@@ -4119,7 +4124,7 @@ def change_sizing_object_design_day_type(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
 
     if item["design_day_type"] == payload["newDesignDayType"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["sizing_objects"]:
         if entry["id"] == payload["id"]:
@@ -4173,7 +4178,7 @@ def change_room_air_model(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["zoneId"])])
 
     if item["model"] == payload["newModel"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["room_air_models"]:
         if entry["zone_id"] == payload["zoneId"]:
@@ -4242,7 +4247,7 @@ def rename_setpoint_manager(before, payload):
     if any(entry["id"] != payload["id"] and entry["name"] == payload["newName"] for entry in before["model"]["setpoint_managers"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if item["name"] == payload["newName"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["setpoint_managers"]:
         if entry["id"] == payload["id"]:
@@ -4269,7 +4274,7 @@ def replace_setpoint_manager_kind(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     kind = ({"OutdoorAirReset": {"low_outdoor_c": payload["newLowOutdoorC"], "high_outdoor_c": payload["newHighOutdoorC"], "low_setpoint_c": payload["newLowSetpointC"], "high_setpoint_c": payload["newHighSetpointC"]}} if payload["newKind"] == "OutdoorAirReset" else payload["newKind"])
     if item["kind"] == kind:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["setpoint_managers"]:
         if entry["id"] == payload["id"]:
@@ -4296,7 +4301,7 @@ def change_setpoint_manager_schedule(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newScheduleId"])])
     value = payload["newScheduleId"] if payload["newSchedulePresent"] else None
     if item["schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["setpoint_managers"]:
         if entry["id"] == payload["id"]:
@@ -4367,7 +4372,7 @@ def rename_air_loop(before, payload):
     if any(entry["id"] != payload["id"] and entry["name"] == payload["newName"] for entry in before["model"]["air_loops"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if item["name"] == payload["newName"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["air_loops"]:
         if entry["id"] == payload["id"]:
@@ -4389,7 +4394,7 @@ def change_air_loop_supply_node(before, payload):
     if payload["newSupplyNodeId"] == 0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["supply_node_id"] == payload["newSupplyNodeId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["air_loops"]:
         if entry["id"] == payload["id"]:
@@ -4411,7 +4416,7 @@ def change_air_loop_return_node(before, payload):
     if payload["newReturnNodeId"] == 0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["return_node_id"] == payload["newReturnNodeId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["air_loops"]:
         if entry["id"] == payload["id"]:
@@ -4433,7 +4438,7 @@ def change_air_loop_design_supply_air_flow(before, payload):
     if payload["newDesignSupplyAirFlowM3S"] != payload["newDesignSupplyAirFlowM3S"] or payload["newDesignSupplyAirFlowM3S"] in (float("inf"), float("-inf")) or payload["newDesignSupplyAirFlowM3S"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["design_supply_air_flow_m3_s"] == payload["newDesignSupplyAirFlowM3S"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["air_loops"]:
         if entry["id"] == payload["id"]:
@@ -4544,7 +4549,7 @@ def rename_plant_loop(before, payload):
     if any(entry["id"] != payload["id"] and entry["name"] == payload["newName"] for entry in before["model"]["plant_loops"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if item["name"] == payload["newName"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["plant_loops"]:
         if entry["id"] == payload["id"]:
@@ -4565,7 +4570,7 @@ def change_plant_loop_type(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
 
     if item["loop_type"] == payload["newLoopType"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["plant_loops"]:
         if entry["id"] == payload["id"]:
@@ -4587,7 +4592,7 @@ def change_plant_loop_supply_temperature(before, payload):
     if payload["newSupplyTemperatureC"] != payload["newSupplyTemperatureC"] or payload["newSupplyTemperatureC"] in (float("inf"), float("-inf")) or not -100.0 <= payload["newSupplyTemperatureC"] <= 300.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["supply_temperature_c"] == payload["newSupplyTemperatureC"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["plant_loops"]:
         if entry["id"] == payload["id"]:
@@ -4609,7 +4614,7 @@ def change_plant_loop_return_temperature(before, payload):
     if payload["newReturnTemperatureC"] != payload["newReturnTemperatureC"] or payload["newReturnTemperatureC"] in (float("inf"), float("-inf")) or not -100.0 <= payload["newReturnTemperatureC"] <= 300.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["return_temperature_c"] == payload["newReturnTemperatureC"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["plant_loops"]:
         if entry["id"] == payload["id"]:
@@ -4631,7 +4636,7 @@ def change_plant_loop_design_flow(before, payload):
     if payload["newDesignFlowKgS"] != payload["newDesignFlowKgS"] or payload["newDesignFlowKgS"] in (float("inf"), float("-inf")) or payload["newDesignFlowKgS"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["design_flow_kg_s"] == payload["newDesignFlowKgS"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["plant_loops"]:
         if entry["id"] == payload["id"]:
@@ -4730,7 +4735,7 @@ def change_outdoor_air_system_air_loop(before, payload):
     if not any(entry["id"] == payload["newAirLoopId"] for entry in before["model"]["air_loops"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newAirLoopId"])])
     if item["air_loop_id"] == payload["newAirLoopId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["outdoor_air_systems"]:
         if entry["id"] == payload["id"]:
@@ -4752,7 +4757,7 @@ def change_outdoor_air_system_min_oa_flow(before, payload):
     if payload["newMinOaFlowM3S"] != payload["newMinOaFlowM3S"] or payload["newMinOaFlowM3S"] in (float("inf"), float("-inf")) or payload["newMinOaFlowM3S"] < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["min_oa_flow_m3_s"] == payload["newMinOaFlowM3S"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["outdoor_air_systems"]:
         if entry["id"] == payload["id"]:
@@ -4773,7 +4778,7 @@ def change_outdoor_air_system_economizer_enabled(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
 
     if item["economizer_enabled"] == payload["newEconomizerEnabled"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for entry in after["model"]["outdoor_air_systems"]:
         if entry["id"] == payload["id"]:
@@ -4839,7 +4844,7 @@ def rename_electrical_load_center(before, payload):
     if any(row["id"] != payload["id"] and row["name"] == value for row in before["model"]["electrical_load_centers"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if item["name"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["electrical_load_centers"]:
         if row["id"] == payload["id"]:
@@ -4863,7 +4868,7 @@ def add_electrical_load_center_pv(before, payload):
     if payload["index"] > len(item["pv_ids"]):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["pvId"] in item["pv_ids"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["electrical_load_centers"]:
         if row["id"] == payload["id"]:
@@ -4906,7 +4911,7 @@ def add_electrical_load_center_battery(before, payload):
     if payload["index"] > len(item["battery_ids"]):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["batteryId"] in item["battery_ids"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["electrical_load_centers"]:
         if row["id"] == payload["id"]:
@@ -4985,7 +4990,7 @@ def change_pv_system_dc_capacity(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["dc_capacity_w"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["pv_systems"]:
         if row["id"] == payload["id"]:
@@ -5008,7 +5013,7 @@ def change_pv_system_area(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["area_m2"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["pv_systems"]:
         if row["id"] == payload["id"]:
@@ -5031,7 +5036,7 @@ def change_pv_system_tilt(before, payload):
     if value != value or not 0.0 <= value <= 90.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["tilt_deg"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["pv_systems"]:
         if row["id"] == payload["id"]:
@@ -5054,7 +5059,7 @@ def change_pv_system_azimuth(before, payload):
     if value != value or not 0.0 <= value <= 360.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["azimuth_deg"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["pv_systems"]:
         if row["id"] == payload["id"]:
@@ -5077,7 +5082,7 @@ def change_pv_system_module_efficiency(before, payload):
     if not 0.0 < value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["module_efficiency"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["pv_systems"]:
         if row["id"] == payload["id"]:
@@ -5100,7 +5105,7 @@ def change_pv_system_inverter_efficiency(before, payload):
     if not 0.0 < value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["inverter_efficiency"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["pv_systems"]:
         if row["id"] == payload["id"]:
@@ -5160,7 +5165,7 @@ def change_battery_capacity(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["capacity_kwh"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["battery_storage"]:
         if row["id"] == payload["id"]:
@@ -5183,7 +5188,7 @@ def change_battery_max_charge(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["max_charge_w"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["battery_storage"]:
         if row["id"] == payload["id"]:
@@ -5206,7 +5211,7 @@ def change_battery_max_discharge(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["max_discharge_w"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["battery_storage"]:
         if row["id"] == payload["id"]:
@@ -5229,7 +5234,7 @@ def change_battery_round_trip_efficiency(before, payload):
     if not 0.0 < value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["round_trip_efficiency"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["battery_storage"]:
         if row["id"] == payload["id"]:
@@ -5289,7 +5294,7 @@ def change_shw_system_heater_capacity(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["heater_capacity_w"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["shw_systems"]:
         if row["id"] == payload["id"]:
@@ -5312,7 +5317,7 @@ def change_shw_system_storage_volume(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["storage_volume_m3"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["shw_systems"]:
         if row["id"] == payload["id"]:
@@ -5335,7 +5340,7 @@ def change_shw_system_setpoint(before, payload):
     if value != value or not 0.0 <= value <= 100.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["setpoint_c"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["shw_systems"]:
         if row["id"] == payload["id"]:
@@ -5358,7 +5363,7 @@ def change_shw_system_schedule(before, payload):
     if not any(row["id"] == value for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["shw_systems"]:
         if row["id"] == payload["id"]:
@@ -5416,7 +5421,7 @@ def change_solar_thermal_system_collector_area(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["collector_area_m2"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["solar_thermal_systems"]:
         if row["id"] == payload["id"]:
@@ -5439,7 +5444,7 @@ def change_solar_thermal_system_efficiency(before, payload):
     if not 0.0 < value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["efficiency"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["solar_thermal_systems"]:
         if row["id"] == payload["id"]:
@@ -5462,7 +5467,7 @@ def change_solar_thermal_system_storage_volume(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["storage_volume_m3"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["solar_thermal_systems"]:
         if row["id"] == payload["id"]:
@@ -5485,7 +5490,7 @@ def change_solar_thermal_system_tilt(before, payload):
     if value != value or not 0.0 <= value <= 90.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["tilt_deg"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["solar_thermal_systems"]:
         if row["id"] == payload["id"]:
@@ -5508,7 +5513,7 @@ def change_solar_thermal_system_azimuth(before, payload):
     if value != value or not 0.0 <= value <= 360.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["azimuth_deg"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["solar_thermal_systems"]:
         if row["id"] == payload["id"]:
@@ -5568,7 +5573,7 @@ def change_refrigeration_system_case_count(before, payload):
     if value == 0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["case_count"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["refrigeration_systems"]:
         if row["id"] == payload["id"]:
@@ -5591,7 +5596,7 @@ def change_refrigeration_system_design_load(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["design_load_w"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["refrigeration_systems"]:
         if row["id"] == payload["id"]:
@@ -5614,7 +5619,7 @@ def change_refrigeration_system_defrost_schedule(before, payload):
     if not any(row["id"] == value for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["defrost_schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["refrigeration_systems"]:
         if row["id"] == payload["id"]:
@@ -5674,7 +5679,7 @@ def change_water_system_fixture_count(before, payload):
     if value == 0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["fixture_count"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["water_systems"]:
         if row["id"] == payload["id"]:
@@ -5697,7 +5702,7 @@ def change_water_system_peak_flow(before, payload):
     if value != value or value in (float("inf"), float("-inf")) or value <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["peak_flow_l_s"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["water_systems"]:
         if row["id"] == payload["id"]:
@@ -5720,7 +5725,7 @@ def change_water_system_schedule(before, payload):
     if not any(row["id"] == value for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["water_systems"]:
         if row["id"] == payload["id"]:
@@ -5782,7 +5787,7 @@ def change_fault_target_equipment(before, payload):
     if not any(row["id"] == value for row in before["model"]["ideal_loads"]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["target_equipment_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["faults"]:
         if row["id"] == payload["id"]:
@@ -5803,7 +5808,7 @@ def change_fault_type(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if item["fault_type"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["faults"]:
         if row["id"] == payload["id"]:
@@ -5826,7 +5831,7 @@ def change_fault_severity(before, payload):
     if not 0.0 <= value <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["severity"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["faults"]:
         if row["id"] == payload["id"]:
@@ -5849,7 +5854,7 @@ def change_fault_start_schedule(before, payload):
     if not any(row["id"] == value for group in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][group]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["start_schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["faults"]:
         if row["id"] == payload["id"]:
@@ -5912,7 +5917,7 @@ def rename_space_list(before, payload):
     if any(row["id"] != payload["id"] and row["name"] == value for row in before["model"]["space_lists"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if item["name"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["space_lists"]:
         if row["id"] == payload["id"]:
@@ -5936,7 +5941,7 @@ def add_space_list_member(before, payload):
     if payload["index"] > len(item["space_ids"]):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["spaceId"] in item["space_ids"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["space_lists"]:
         if row["id"] == payload["id"]:
@@ -6018,7 +6023,7 @@ def rename_thermal_enclosure(before, payload):
     if any(row["id"] != payload["id"] and row["name"] == value for row in before["model"]["thermal_enclosures"]):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if item["name"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["thermal_enclosures"]:
         if row["id"] == payload["id"]:
@@ -6042,7 +6047,7 @@ def add_thermal_enclosure_zone(before, payload):
     if payload["index"] > len(item["zone_ids"]):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["zoneId"] in item["zone_ids"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["thermal_enclosures"]:
         if row["id"] == payload["id"]:
@@ -6127,7 +6132,7 @@ def change_constant_schedule_value(before, payload):
     if value != value or value in (float("inf"), float("-inf")):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["value"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["schedules"]["constants"]:
         if row["id"] == payload["id"]:
@@ -6201,7 +6206,7 @@ def replace_daily_schedule_hourly_values(before, payload):
     if any(entry != entry or entry in (float("inf"), float("-inf")) for entry in value):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["hourly_values"] == list(value):
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["schedules"]["daily"]:
         if row["id"] == payload["id"]:
@@ -6222,7 +6227,7 @@ def change_daily_schedule_interpolation(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     if item["interpolation"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["schedules"]["daily"]:
         if row["id"] == payload["id"]:
@@ -6247,7 +6252,7 @@ def change_daily_schedule_limits(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     limits = {"min": payload["newLimitsMin"], "max": payload["newLimitsMax"]} if payload["newLimitsMin"] is not None else None
     if item["limits"] == limits:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["schedules"]["daily"]:
         if row["id"] == payload["id"]:
@@ -6318,7 +6323,7 @@ def change_weekly_schedule_day(before, payload):
     if not any(row["id"] == payload["newDailyScheduleId"] for row in before["model"]["schedules"]["daily"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["newDailyScheduleId"])])
     if item["daily_schedule_ids"][payload["dayIndex"]] == payload["newDailyScheduleId"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["schedules"]["weekly"]:
         if row["id"] == payload["id"]:
@@ -6434,7 +6439,7 @@ def reorder_annual_schedule_rules(before, payload):
     if payload["from"] >= len(item["rules"]) or payload["to"] >= len(item["rules"]):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["from"] == payload["to"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["schedules"]["annual"]:
         if row["id"] == payload["id"]:
@@ -6457,7 +6462,7 @@ def change_annual_schedule_default_daily_schedule(before, payload):
     if not any(row["id"] == value for row in before["model"]["schedules"]["daily"]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["default_daily_schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["schedules"]["annual"]:
         if row["id"] == payload["id"]:
@@ -6480,7 +6485,7 @@ def change_annual_schedule_holiday_daily_schedule(before, payload):
     if value is not None and not any(row["id"] == value for row in before["model"]["schedules"]["daily"]):
         return unchanged(before), rejected("mutation.target-missing", [str(value)])
     if item["holiday_daily_schedule_id"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["schedules"]["annual"]:
         if row["id"] == payload["id"]:
@@ -6505,7 +6510,7 @@ def add_annual_schedule_holiday(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     date = [payload["year"], payload["month"], payload["day"]]
     if date in item["holiday_dates"]:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["schedules"]["annual"]:
         if row["id"] == payload["id"]:
@@ -6598,7 +6603,7 @@ def replace_time_series_schedule_values(before, payload):
     if any(entry != entry or entry in (float("inf"), float("-inf")) for entry in value):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["values"] == list(value):
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["schedules"]["time_series"]:
         if row["id"] == payload["id"]:
@@ -6621,7 +6626,7 @@ def change_time_series_schedule_timestep(before, payload):
     if value == 0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if item["timestep_seconds"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["schedules"]["time_series"]:
         if row["id"] == payload["id"]:
@@ -6651,7 +6656,7 @@ def replace_fenestration_vertices(before, payload):
     if host is not None and not _on_plane(value, host["vertices_m"]):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["vertices_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["fenestrations"]:
         if row["id"] == entity_id:
@@ -6697,7 +6702,7 @@ def _change_glazing_scalar(before, payload, key, field, fraction):
     if not admissible:
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item[field] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["glazing_materials"]:
         if row["id"] == entity_id:
@@ -6756,7 +6761,7 @@ def change_glazing_material_infrared_emissivity(before, payload):
     if any(not (_finite(value) and 0.0 <= value <= 1.0) for value in (front, back)):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["infrared_emissivity_front"] == front and item["infrared_emissivity_back"] == back:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["glazing_materials"]:
         if row["id"] == entity_id:
@@ -6779,7 +6784,7 @@ def rename_glazing_material(before, payload):
     if not value.strip():
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["name"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["glazing_materials"]:
         if row["id"] == entity_id:
@@ -6801,7 +6806,7 @@ def change_gas_material_thickness(before, payload):
     if not (_finite(value) and value > 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["thickness_m"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["gas_materials"]:
         if row["id"] == entity_id:
@@ -6821,7 +6826,7 @@ def change_gas_material_gas(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if item["gas"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["gas_materials"]:
         if row["id"] == entity_id:
@@ -6843,7 +6848,7 @@ def rename_gas_material(before, payload):
     if not value.strip():
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if item["name"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["gas_materials"]:
         if row["id"] == entity_id:
@@ -6863,7 +6868,7 @@ def change_material_roughness(before, payload):
     if item is None:
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if item["roughness"] == value:
-        return unchanged(before), applied(("warning", "mutation.no-op"))
+        return unchanged(before), no_op()
     after = copy.deepcopy(before)
     for row in after["model"]["materials"]:
         if row["id"] == entity_id:

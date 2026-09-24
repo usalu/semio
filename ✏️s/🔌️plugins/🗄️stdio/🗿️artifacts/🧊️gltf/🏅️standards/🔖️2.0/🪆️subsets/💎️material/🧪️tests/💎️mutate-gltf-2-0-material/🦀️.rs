@@ -21,26 +21,6 @@ use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets:
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
 
 //#region 🔖️Kinds
-const KINDS: &[&str] = &[
-    "create-material",
-    "delete-material",
-    "move-material",
-    "reorder-materials",
-    "create-texture",
-    "delete-texture",
-    "move-texture",
-    "reorder-textures",
-    "create-image",
-    "delete-image",
-    "move-image",
-    "reorder-images",
-    "create-sampler",
-    "delete-sampler",
-    "move-sampler",
-    "reorder-samplers",
-    "change-material-alpha-mode",
-    "change-material-double-sided",
-];
 const DELETE_KINDS: &[&str] = &["delete-material", "delete-texture", "delete-image", "delete-sampler"];
 //#endregion 🔖️Kinds
 
@@ -322,12 +302,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built
 }

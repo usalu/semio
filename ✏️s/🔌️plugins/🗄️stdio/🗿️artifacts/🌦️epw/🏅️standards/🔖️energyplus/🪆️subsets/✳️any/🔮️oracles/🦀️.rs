@@ -14,7 +14,7 @@
 //! EPW field MEANING, and no third-party crate validates that meaning here (`epw-rs` is alpha and
 //! read-only, rejected per the fleet brief's §6). `set-snapshot`/`set-location`/
 //! `set-design-conditions`/`set-typical-extreme-periods`/`set-ground-temperatures`/
-//! `set-holidays-dst`/`set-comments-1`/`set-comments-2`/`set-data-periods` are performed by this
+//! `set-holidays-dst`/`set-comments1`/`set-comments2`/`set-data-periods` are performed by this
 //! module writing the header bytes itself (hand-rolled, independent of the subject crate — this
 //! oracle role must never link it) and are typed `@mode-property`: no independent second PRODUCER
 //! exists for header semantics, only this module's own self-consistent construction, read back with
@@ -265,12 +265,12 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             doc.header[4] = params.str("value");
             encode_doc(&doc)
         }
-        "set-comments-1" => {
+        "set-comments1" => {
             let mut doc = parse_doc(input)?;
             doc.header[5] = params.str("value");
             encode_doc(&doc)
         }
-        "set-comments-2" => {
+        "set-comments2" => {
             let mut doc = parse_doc(input)?;
             doc.header[6] = params.str("value");
             encode_doc(&doc)

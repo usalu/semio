@@ -22,7 +22,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetPixelAspectRatio {
         agg_inverse(&GifMutation::SetPixelAspectRatio(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-pixel-aspect-ratio", "Pixelaspektverhältnis setzen")
+        protocol::LocalizedLabel::native("Set pixel aspect ratio", "Pixel-Seitenverhältnis setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

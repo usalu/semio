@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetArithmetic {
-    pub(crate) arithmetic: bool,
+    pub arithmetic: bool,
 }
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetArithmetic {
@@ -21,7 +21,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetArithmetic 
         agg_inverse(&JpgBaselineMutation::SetArithmetic(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-arithmetic", "arithmetisch setzen")
+        protocol::LocalizedLabel::native("Set arithmetic", "Arithmetische Kodierung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

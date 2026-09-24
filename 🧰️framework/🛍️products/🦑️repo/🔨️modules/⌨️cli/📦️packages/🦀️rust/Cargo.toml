@@ -22,6 +22,10 @@ path = "../../🚪️entrypoint/🦀️.rs"
 name = "repo"
 path = "📦️mcp-main.rs"
 
+[[bin]]
+name = "semio-repo"
+path = "📦️cli-main.rs"
+
 [dependencies]
 semio-framework-repo-dashboard = { path = "../../../🎛️dashboard/📦️packages/🦀️rust" }
 serde = { workspace = true }
@@ -46,3 +50,4 @@ semio-framework-repo-events = { path = "../../../📡️events/📦️packages/�
 semio-framework-repo-search = { path = "../../../🔎️search/📦️packages/🦀️rust" }
 semio-framework-repo-graphql = { path = "../../../🔗️graphql/📦️packages/🦀️rust" }
 semio-framework-repo-mcp = { path = "../../../🔌️mcp/📦️packages/🦀️rust" }
+semio-framework-repo-yaml = { path = "../../../🧾️yaml/📦️packages/🦀️rust" }

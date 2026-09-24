@@ -409,6 +409,22 @@ async fn the_action_bridge_reads_the_declared_arg_names() {
     assert!(<SourcingCurationApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err(), "an undeclared action must fault, not silently no-op");
 }
 
+/// ⚖️ LAW (S15 matrix, 2026-09-25): the rail stages `curationSetCount`'s `delta`/`value` through the argument schema
+/// the manifest declares, and the bridge reads them as numbers. Declared as text, the staged `"1"` read as no delta,
+/// the command resolved to a no-op and the rail journaled a row that changed nothing. The count args are numeric, and
+/// the numeric staging reaches the command as the delta the user entered.
+#[semio_framework_async_macros::async_test]
+async fn the_rail_stages_numeric_curation_counts_into_one_curated_edit() {
+    let definition = create_sourcing_curation_app();
+    let action = definition.actions.iter().find(|action| action.id == "curationSetCount").expect("curationSetCount is declared on the rail");
+    for id in ["delta", "value"] {
+        let arg = action.args.iter().find(|arg| arg.id == id).unwrap_or_else(|| panic!("curationSetCount declares {id}"));
+        assert!(matches!(arg.schema, semio_framework_plugin::ArgSchema::Number { .. }), "curationSetCount.{id} must be a number argument, found {:?}", arg.schema);
+    }
+    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("curationSetCount", Some(&protocol::DslValue::from(&serde_json::json!({ "objectId": "beam-glulam-gl24h", "delta": 1 })))).expect("curationSetCount must convert");
+    assert_eq!(built, SourcingCurationCommand::CurationSetCount(curation_set_count::CurationSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None }));
+}
+
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row — the
 /// permanent successor of the old `📡️protocol` crate's
 /// `sourcing_curation_command_op_text_round_trips_every_variant`.

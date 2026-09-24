@@ -26,7 +26,7 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangePartAn
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change part \"{}\" anchor", self.id), &format!("Bauteil \"{}\" Anker ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change part \"{}\" anchor", self.id), &format!("Anker von Bauteil \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

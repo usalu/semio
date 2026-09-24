@@ -36,7 +36,7 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for UpdatePart2d {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update part 2D presentation", "Bauteil 2Dpräsentation aktualisieren")
+        protocol::LocalizedLabel::native("Update part 2D presentation", "2D-Darstellung des Bauteils aktualisieren")
     }
 }
 //#endregion 🔖️Mutation

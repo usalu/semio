@@ -308,7 +308,7 @@ pub trait ArtifactChannel: Send {
 
 /// ↩️ Private durable-history port; only a Hub-bound workspace implements the remote member.
 pub trait HistoryUndoPort: Send + Sync {
-    fn undo_hub_gis_map_approval(&self, member: &HubGisMapApprovalUndoMemberV1) -> Result<(), GatewayError>;
+    fn undo_hub_inference_approval(&self, member: &HubInferenceApprovalUndoMemberV1) -> Result<(), GatewayError>;
 }
 
 /// 🧯️ `Fault.code` → `GatewayErrorCode` — `📋️master.md` §3.3's Fault code table, plus this crate's
@@ -591,19 +591,20 @@ struct SagaRecord {
 #[serde(tag = "kind", content = "member", rename_all = "kebab-case", deny_unknown_fields)]
 enum UndoMember {
     LocalGuestTransaction { instance: u32, transaction_id: String },
-    HubGisMapApproval(HubGisMapApprovalUndoMemberV1),
+    HubInferenceApproval(HubInferenceApprovalUndoMemberV1),
 }
 
 /// 🌐 Exact server-owned remote history member; it carries a locator/frontier, never inverse bytes.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubGisMapApprovalUndoMemberV1 {
+pub struct HubInferenceApprovalUndoMemberV1 {
     pub hub_origin: String,
+    pub route: String,
     pub space_id: String,
     pub document_id: String,
     pub target_id: String,
     pub idempotency_key: String,
-    pub expected_current: semio_framework_os_kernel::os_directory::CheckpointPublicationFrontierV1,
+    pub expected_current: semio_framework_os_kernel::os_directory::EditedArtifactFrontierV1,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -661,6 +662,7 @@ enum SettledApproval {
     Approved,
     Denied { channel: &'static str, note: Option<String> },
     Unreachable { details: serde_json::Value },
+    Cancelled,
 }
 
 struct AuditContext<'a> {
@@ -765,27 +767,30 @@ impl ActionAdapter {
     }
 
     /// 🪪 Mints one session-private undo token from a Hub receipt without retaining mutation bytes.
-    pub fn retain_hub_gis_map_approval_undo(
+    pub fn retain_hub_inference_approval_undo(
         &self,
         session: &SessionHandle,
         hub_origin: &str,
         scope: &semio_framework_os_kernel::os_directory::DocumentScope,
+        route: &str,
         handle: &semio_framework_os_kernel::os_directory::GisMapApprovalUndoHandleV1,
         now_ms: u64,
     ) -> Result<String, GatewayError> {
         if hub_origin.is_empty()
             || hub_origin.len() > 2048
+            || !crate::inference::is_hub_inference_route(route)
             || handle.target_id.len() != 32
             || !handle.target_id.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
             || !handle.expected_current.validate()
             || handle.expected_current.document_id != scope.document_id
         {
-            return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "invalid durable GIS approval undo authority"));
+            return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "invalid durable hub inference approval undo authority"));
         }
-        let identity = format!("semio.mcp.hub-gis-map-approval-undo/v1\0{}\0{}\0{}\0{}\0{}", session.0, hub_origin, scope.space_id, scope.document_id, handle.target_id);
+        let identity = format!("semio.mcp.hub-inference-approval-undo/v1\0{}\0{}\0{}\0{}\0{}\0{}", session.0, hub_origin, route, scope.space_id, scope.document_id, handle.target_id);
         let idempotency_key = framework_hash::hash_bytes(identity.as_bytes())[..32].to_owned();
-        let member = UndoMember::HubGisMapApproval(HubGisMapApprovalUndoMemberV1 {
+        let member = UndoMember::HubInferenceApproval(HubInferenceApprovalUndoMemberV1 {
             hub_origin: hub_origin.to_owned(),
+            route: route.to_owned(),
             space_id: scope.space_id.clone(),
             document_id: scope.document_id.clone(),
             target_id: handle.target_id.clone(),
@@ -793,7 +798,7 @@ impl ActionAdapter {
             expected_current: handle.expected_current.clone(),
         });
         let payload = serde_json::to_value(UndoRecord { members: vec![member] }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
-        Ok(self.handles.mint(HandleKind::Undo, session.clone(), Attachment::Other { label: "hub-gis-map-approval".into() }, payload, now_ms))
+        Ok(self.handles.mint(HandleKind::Undo, session.clone(), Attachment::Other { label: "hub-inference-approval".into() }, payload, now_ms))
     }
     //#endregion 💡️Inference
 
@@ -1011,6 +1016,10 @@ impl ActionAdapter {
                     ),
                     "approval_required",
                 ),
+                SettledApproval::Cancelled => (
+                    Some(GatewayError::new(GatewayErrorCode::Cancelled, format!("the call to capability {} was cancelled while it awaited a human approval", capability.id)).with_details(serde_json::json!({ "approvalHandle": approval_handle }))),
+                    "cancelled",
+                ),
             };
             if let Some(error) = error {
                 self.record_audit(
@@ -1167,6 +1176,10 @@ impl ActionAdapter {
                 SettledApproval::Denied { channel: channel.as_str(), note }
             }
             ApprovalResolution::Unreachable { details } => SettledApproval::Unreachable { details },
+            ApprovalResolution::Cancelled => {
+                let _ = self.policy.resolve_approval(session, approval_handle, false, now_ms);
+                SettledApproval::Cancelled
+            }
         }
     }
     //#endregion 🔖️ApprovalResolution
@@ -1306,14 +1319,14 @@ impl ActionAdapter {
                     )),
                     Err(error) => Err((format!("local transaction {transaction_id} on instance {instance}"), error)),
                 },
-                UndoMember::HubGisMapApproval(remote) if redo => Err((
+                UndoMember::HubInferenceApproval(remote) if redo => Err((
                     format!("Hub GIS approval target {}", remote.target_id),
                     GatewayError::new(GatewayErrorCode::SideEffectRejected, "durable Hub GIS approval redo requires a new authenticated approval"),
                 )),
-                UndoMember::HubGisMapApproval(remote) => {
+                UndoMember::HubInferenceApproval(remote) => {
                     let port = self.history_undo_port.lock().expect("history undo port lock poisoned").clone();
                     port.ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "Hub durable history port is unavailable").retryable())
-                        .and_then(|port| port.undo_hub_gis_map_approval(remote))
+                        .and_then(|port| port.undo_hub_inference_approval(remote))
                         .map_err(|error| (format!("Hub GIS approval target {}", remote.target_id), error))
                 }
             };

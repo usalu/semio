@@ -20,7 +20,7 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RemovePartNu
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove part-number input \"{}\"", self.key), &format!("Bauteilnummer-Eingabe \"{}\" entfernen", self.key))
+        protocol::LocalizedLabel::native(&format!("Remove part-number input \"{}\"", self.key), &format!("Artikelnummer-Eingabe \"{}\" entfernen", self.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]

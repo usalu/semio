@@ -34,7 +34,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for RemoveCo
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove content \"{}\" leaves from {}", self.content_id, self.from), &format!("Inhalt \"{}\" Blätter aus {} entfernen", self.content_id, self.from))
+        protocol::LocalizedLabel::native(&format!("Remove content \"{}\" leaves from {}", self.content_id, self.from), &format!("Blätter von Inhalt \"{}\" aus {} entfernen", self.content_id, self.from))
     }
     fn target(&self) -> Vec<String> {
         vec![self.content_id.clone()]

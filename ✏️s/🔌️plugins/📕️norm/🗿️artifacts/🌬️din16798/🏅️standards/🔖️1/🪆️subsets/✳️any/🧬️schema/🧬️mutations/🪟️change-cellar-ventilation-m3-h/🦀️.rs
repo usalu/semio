@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCellar
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change cellar ventilation air flow to {}", self.new_cellar_ventilation_m3_h), &format!("Kellerlüftungsluftfluss auf {} ändern", self.new_cellar_ventilation_m3_h))
+        protocol::LocalizedLabel::native(&format!("Change cellar ventilation air flow to {}", self.new_cellar_ventilation_m3_h), &format!("Luftvolumenstrom der Kellerlüftung auf {} ändern", self.new_cellar_ventilation_m3_h))
     }
 }
 //#endregion 🔖️ChangeCellarVentilationM3H

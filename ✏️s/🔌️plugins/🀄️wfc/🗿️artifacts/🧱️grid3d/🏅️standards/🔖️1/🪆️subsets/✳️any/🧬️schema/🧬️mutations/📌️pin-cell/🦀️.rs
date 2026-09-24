@@ -31,7 +31,7 @@ impl MutationKind<Grid3dSnapshot, Grid3dMutation> for PinCell {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Pin cell {} to tile \"{}\"", cell_key(self.pinned.x, self.pinned.y, self.pinned.z), self.pinned.tile_id), &format!("Zelle {} an Kachel \"{}\" anheften", cell_key(self.pinned.x, self.pinned.y, self.pinned.z), self.pinned.tile_id))
+        protocol::LocalizedLabel::native(&format!("Pin cell {} to tile \"{}\"", cell_key(self.pinned.x, self.pinned.y, self.pinned.z), self.pinned.tile_id), &format!("Zelle {} auf Kachel \"{}\" fixieren", cell_key(self.pinned.x, self.pinned.y, self.pinned.z), self.pinned.tile_id))
     }
     fn target(&self) -> Vec<String> {
         vec![cell_key(self.pinned.x, self.pinned.y, self.pinned.z)]

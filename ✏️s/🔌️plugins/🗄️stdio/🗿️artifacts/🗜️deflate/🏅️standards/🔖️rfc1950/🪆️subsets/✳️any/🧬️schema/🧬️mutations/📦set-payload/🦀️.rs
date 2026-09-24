@@ -29,7 +29,7 @@ impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetPayload {
         agg_inverse(&DeflateMutation::SetPayload(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-payload", "Nutzlast setzen")
+        protocol::LocalizedLabel::native("Set payload", "Nutzlast setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

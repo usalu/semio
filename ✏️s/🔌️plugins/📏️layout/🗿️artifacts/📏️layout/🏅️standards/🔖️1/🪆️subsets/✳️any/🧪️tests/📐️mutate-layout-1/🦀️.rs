@@ -58,6 +58,7 @@ const KINDS: &[&str] = &[
     "delete-frame",
     "move-frame",
     "resize-frame",
+    "rotate-frame",
     "change-frame-fill",
     "change-frame-stroke",
     "change-frame-wrap-mode",
@@ -187,6 +188,11 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
             include_str!("../../🧫️fixtures/🧬️mutations/🕹️move-frame/📍️moves-the-rect-frame/📸️snapshot/⬅️before/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🕹️move-frame/📍️moves-the-rect-frame/🦠️mutation/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🕹️move-frame/📍️moves-the-rect-frame/📸️snapshot/➡️after/🔣️.json"),
+        ),
+        "rotate-frame" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates-the-rect-frame/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates-the-rect-frame/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates-the-rect-frame/📸️snapshot/➡️after/🔣️.json"),
         ),
         "resize-frame" => (
             include_str!("../../🧫️fixtures/🧬️mutations/📏resize-frame/📐️resizes-the-rect-frame/📸️snapshot/⬅️before/🔣️.json"),

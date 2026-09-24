@@ -304,7 +304,13 @@ declare module "bun:test" {
     (label: string, body: () => void | Promise<void>, timeoutMs?: number): void;
     readonly concurrent: TestFunction;
     readonly skip: TestFunction;
+    readonly if: (condition: boolean) => TestFunction;
     readonly todo: (label: string, body?: () => void | Promise<void>) => void;
+  }
+  /** 🗂️ One suite; `describe.if(condition)` registers its cases only when the condition holds (test levels). */
+  export interface DescribeFunction {
+    (label: string, body: () => void | Promise<void>): void;
+    readonly if: (condition: boolean) => DescribeFunction;
   }
   /** 🧪️ The asymmetric matchers and the entry point in one callable. */
   export interface ExpectFunction {
@@ -326,7 +332,7 @@ declare module "bun:test" {
   /** 🧪️ `it` is Bun's alias for `test`; both spellings are live in `🧰️framework/🔨️modules/**` suites. */
   export const it: TestFunction;
   export const expect: ExpectFunction;
-  export function describe(label: string, body: () => void | Promise<void>): void;
+  export const describe: DescribeFunction;
   export function afterAll(body: () => void | Promise<void>): void;
   export function mock<T extends (...args: never[]) => unknown>(implementation: T): Mock<T>;
   /** 🧪️ `mock.module` replaces a resolved module for the rest of the suite; the factory returns the substitute namespace. */

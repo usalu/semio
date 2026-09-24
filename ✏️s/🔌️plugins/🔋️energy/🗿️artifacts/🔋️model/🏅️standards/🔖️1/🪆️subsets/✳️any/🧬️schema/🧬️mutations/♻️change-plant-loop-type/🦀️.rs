@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change plant loop {} loop type to {:?}", self.id.0, self.new_loop_type), &format!("Anlagenkreis {} Kreistyp auf {:?} ändern", self.id.0, self.new_loop_type))
+        protocol::LocalizedLabel::native(&format!("Change plant loop {} loop type to {:?}", self.id.0, self.new_loop_type), &format!("Kreislauftyp von Anlagenkreislauf {} auf {:?} ändern", self.id.0, self.new_loop_type))
     }
 
     fn target(&self) -> Vec<String> {

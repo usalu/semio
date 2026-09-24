@@ -24,7 +24,7 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for StripNonTiny {
         agg_inverse(&SvgTinyMutation::StripNonTiny(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("strip-non-tiny", "winzige Streifennicht")
+        protocol::LocalizedLabel::native("Strip non-Tiny content", "Nicht-Tiny-Inhalte entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

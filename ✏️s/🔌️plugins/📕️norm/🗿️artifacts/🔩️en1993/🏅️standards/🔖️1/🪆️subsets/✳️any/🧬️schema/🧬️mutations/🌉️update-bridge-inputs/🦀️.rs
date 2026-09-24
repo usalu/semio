@@ -22,7 +22,7 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateBridgeInpu
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-2 steel bridge inputs", "EN 1993-2 Stahlbrückeneingaben aktualisieren")
+        protocol::LocalizedLabel::native("Update EN 1993-2 steel bridge inputs", "EN 1993-2 Eingaben für Stahlbrücken aktualisieren")
     }
 }
 //#endregion 🔖️Payload

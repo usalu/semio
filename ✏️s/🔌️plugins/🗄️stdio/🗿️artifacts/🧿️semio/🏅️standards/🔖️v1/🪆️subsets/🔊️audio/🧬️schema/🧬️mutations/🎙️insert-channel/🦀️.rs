@@ -24,7 +24,7 @@ impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for InsertCh
         agg_inverse(&SemioAudioMutation::InsertChannel(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-channel", "Kanal einfügen")
+        protocol::LocalizedLabel::native("Insert channel", "Kanal einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

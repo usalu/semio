@@ -32,7 +32,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetTrailerEntry {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set trailer entry {}", self.key), &format!("Nachspanneintrag {} setzen", self.key))
+        protocol::LocalizedLabel::native(&format!("Set trailer entry {}", self.key), &format!("Trailer-Eintrag {} setzen", self.key))
     }
 
     fn target(&self) -> Vec<String> {

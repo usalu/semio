@@ -26,7 +26,7 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStoc
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename stock to \"{}\"", self.new_label), &format!("Bestand in \"{}\" umbenennen", self.new_label))
+        protocol::LocalizedLabel::native(&format!("Rename stock to \"{}\"", self.new_label), &format!("Rohteil in \"{}\" umbenennen", self.new_label))
     }
 }
 //#endregion 🔖️ChangeStockLabel

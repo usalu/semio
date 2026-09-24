@@ -26,7 +26,7 @@ pub const VCS_DIALECT: Dialect = Dialect { artifact_kind: "s.vcs.vcs", standard:
 /// `crate::editor::vcs::create_vcs_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: VCS_DOCUMENT_SCHEMA.into(),
+        id: VCS_DIALECT.artifact_kind.into(),
         name: "VCS Document".into(),
         source_format: VCS_DOCUMENT_SCHEMA.into(),
         component_kind: "vcs".into(),

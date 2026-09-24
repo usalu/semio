@@ -2782,6 +2782,86 @@
             }
           },
           {
+            "id": "pin-solution",
+            "label": {
+              "native": {
+                "en": "Pin Solution",
+                "de": "Lösung anheften"
+              },
+              "reuse": {
+                "en": "Pin Solution",
+                "de": "Lösung anheften"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "check",
+            "args": [
+              {
+                "id": "pixels",
+                "label": {
+                  "native": {
+                    "en": "Solved Pixels",
+                    "de": "Gelöste Pixel"
+                  },
+                  "reuse": {
+                    "en": "Solved Pixels",
+                    "de": "Gelöste Pixel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "contradiction",
+                "label": {
+                  "native": {
+                    "en": "Contradiction",
+                    "de": "Widerspruch"
+                  },
+                  "reuse": {
+                    "en": "Contradiction",
+                    "de": "Widerspruch"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": false,
+                "default": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -12243,11 +12323,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -13507,11 +13587,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -19585,11 +19665,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -20809,11 +20889,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -25629,11 +25709,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -26893,11 +26973,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -31938,6 +32018,9 @@
             "field": "document",
             "encoding": "artifact-pack-base64",
             "required": true
+          },
+          "commit": {
+            "action": "pin-solution"
           }
         }
       },
@@ -32032,8 +32115,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "afcc3a1f4d6f5daf36c733562cd1b419c2b033011fcbe1a64bf0b0d3e385dfc3",
-    "coreWasmSha256": "ba3f3484a9bd9fce199b083ef9d1b985a93ec34461e9b18525ab2dfa0fbcd7a5",
-    "descriptorSha256": "b52cd78b304011616a8d859d44a9a25ab3e94fad959ff61f2f3af655f8f189fd"
+    "wasmSha256": "8372675514205127cc41356fc7def7b50a4fe87d86e3a85682cc6bee77847672",
+    "coreWasmSha256": "f35b3a62cb02cd69ed6b054469c6f8be3103f8c2f2aea17fbb99820142a04562",
+    "descriptorSha256": "3781bac8a3a4662b5c83258842a5d057f93bad5b9e0aaf963eb179136a81b907"
   }
 }

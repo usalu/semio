@@ -452,15 +452,11 @@ macro_rules! norm_command_from_action {
     // and decode the shell's camelCase JSON into it; `⚖️en1990` and `⚡️din18599` declare
     // `ReplaceSnapshot { text: String }` instead, because their snapshot types stopped implementing
     // `dsl::DslField` when `q_k`/`climate` became composed `ArtifactChild<S>` slots, so their payload
-    // carries the artifact's own `.en1990`/`.din18599` DSL text on one op-text line. S9's macro knew
-    // only the first shape, which is why those two crates failed to check (U3b's 106-crate sweep,
-    // 2026-09-21). This arm MUST precede the `$decode:path` arm — `text` would otherwise match
-    // `$decode:path` and expand into the wrong body.
-    //
-    // The argument is taken verbatim: the handler runs `unescape_op_text_field` over it, which is the
-    // identity for text carrying no backslash escapes, so a caller passing the document's plain DSL
-    // text and a caller passing it in the escaped one-line op-text form both arrive correctly.
-    ($command:ident, text) => {
+    // carries the artifact's own `.en1990`/`.din18599` DSL text on one op-text line. The ARGUMENT is
+    // the same for all fifteen: `snapshot`, the document's camelCase JSON the manifest declares, decoded
+    // here with `$decode` and re-printed as the document's own escaped DSL text. This arm MUST precede
+    // the `$decode:path` arm — `text` would otherwise match `$decode:path` and expand into the wrong body.
+    ($command:ident, text, $decode:path) => {
         /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into this editor's typed command,
         /// for the two editors whose `setSnapshot` payload carries DSL TEXT rather than a decoded
         /// snapshot struct.
@@ -476,11 +472,12 @@ macro_rules! norm_command_from_action {
                     Ok($command::SetActiveExample(set_active_example::SetActiveExample { example_id }))
                 }
                 "setSnapshot" => {
-                    let text = args
-                        .and_then(|value| value.get("text").or_else(|| value.get("snapshot")))
+                    let json = args
+                        .and_then(|value| value.get("snapshot"))
                         .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
-                        .ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-missing"), "setSnapshot needs a 'text' argument carrying the document's own DSL text"))?;
-                    Ok($command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text }))
+                        .ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-missing"), "setSnapshot needs a 'snapshot' argument carrying the document's camelCase JSON"))?;
+                    let snapshot = $decode(&json).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-invalid"), error))?;
+                    Ok($command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: $crate::document::escape_op_text_field(&store::ArtifactDsl::print_dsl(&snapshot)) }))
                 }
                 other => Err(semio_framework_plugin::Fault::new(
                     semio_framework_plugin::FaultOrigin::App,

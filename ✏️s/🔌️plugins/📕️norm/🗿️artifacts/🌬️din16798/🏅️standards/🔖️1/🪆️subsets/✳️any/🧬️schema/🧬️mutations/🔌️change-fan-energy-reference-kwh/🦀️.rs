@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeFanEne
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fan energy reference to {}", self.new_fan_energy_reference_kwh), &format!("Ventilatorenergienreferenz auf {} ändern", self.new_fan_energy_reference_kwh))
+        protocol::LocalizedLabel::native(&format!("Change fan energy reference to {}", self.new_fan_energy_reference_kwh), &format!("Referenzwert Ventilatorenergie auf {} ändern", self.new_fan_energy_reference_kwh))
     }
 }
 //#endregion 🔖️ChangeFanEnergyReferenceKwh

@@ -13,12 +13,6 @@ use semio_s_plugin_stdio_test_oracle::artifacts::stl::standards::v_ascii::subset
 use semio_s_plugin_stdio_test_oracle::mesh::project_stl;
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, round_trip_preserves_within};
 
-//#region 🔖️Kinds
-/// 🧾️ Mirrors `StlMutation::KINDS` (`../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`)
-/// — kept in sync by the contract phase's `mutation-kind-uncovered`/`mutation-kind-undeclared`
-/// gates, which fail loudly if this list and the catalog ever drift apart.
-const KINDS: [&str; 7] = ["no-mutation", "set-snapshot", "set-solid-name", "insert-triangle", "remove-triangle", "set-triangle-normal", "set-triangle-vertices"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Profile
 /// 📏️ `semantic-stl-ascii-v1`'s own declared tolerances (`../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/
@@ -273,12 +267,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

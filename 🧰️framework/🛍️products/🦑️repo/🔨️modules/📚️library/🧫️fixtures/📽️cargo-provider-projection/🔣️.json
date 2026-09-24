@@ -34,7 +34,7 @@
     },
     {
       "id": "workspace-inheritance-and-proc-macro",
-      "locator": "✏️s/🔌️plugins/providerCargo.toml",
+      "locator": "✏️s/🔌️plugins/provider/Cargo.toml",
       "source": "[package]\nname = \"provider\"\n\n[lib]\nname = \"dsl_derive\"\nproc-macro = true\n\n[dependencies]\nprotocol = { workspace = true }\n",
       "tomlOracle": {
         "package": { "name": "provider" },
@@ -42,7 +42,7 @@
         "dependencies": { "protocol": { "workspace": true } }
       },
       "expected": {
-        "locator": "✏️s/🔌️plugins/providerCargo.toml",
+        "locator": "✏️s/🔌️plugins/provider/Cargo.toml",
         "package": { "name": "provider" },
         "library": { "name": "dsl_derive", "crateTypes": [], "procMacro": true },
         "workspaceDependencies": [],

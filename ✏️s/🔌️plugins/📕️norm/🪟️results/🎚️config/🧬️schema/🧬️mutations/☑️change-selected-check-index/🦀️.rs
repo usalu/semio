@@ -33,7 +33,7 @@ impl protocol::MutationKind<NormResultsWindowConfig, NormResultsWindowConfigMuta
         }, &{
         match self.index {
             Some(index) => format!("Konformitätsprüfung {index} auswählen"),
-            None => "ausgewählte Konformitätsprüfung leeren".into(),
+            None => "Auswahl der Konformitätsprüfung aufheben".into(),
         }
         })
     }

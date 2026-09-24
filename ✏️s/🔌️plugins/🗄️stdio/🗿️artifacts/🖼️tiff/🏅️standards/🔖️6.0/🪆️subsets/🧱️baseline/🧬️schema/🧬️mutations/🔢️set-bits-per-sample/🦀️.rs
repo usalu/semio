@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetBitsPerSample {
-    pub(crate) bits: Vec<u16>,
+    pub bits: Vec<u16>,
 }
 
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetBitsPerSample {
@@ -21,7 +21,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetBitsPerSa
         agg_inverse(&TiffBaselineMutation::SetBitsPerSample(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-bits-per-sample", "Bits pro Probe setzen")
+        protocol::LocalizedLabel::native("Set bits per sample", "Bits pro Abtastwert setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -398,7 +398,6 @@ describe("strict plugin catalog completion", () => {
       expect(readFileSync(join(ownerRoot, "🔣️.json"), "utf8")).toBe("old-json");
       expect(readFileSync(join(ownerRoot, "🛂️.descriptor.semio"), "utf8")).toBe("old-pack");
     }
-    console.log("[DEBUG] descriptor-emission-budget fixture=5 ajv=1 decimal=5 native-emitter-started=0");
   });
 
   it("refuses every unusable emission input and never half-publishes an owner pair", async () => {

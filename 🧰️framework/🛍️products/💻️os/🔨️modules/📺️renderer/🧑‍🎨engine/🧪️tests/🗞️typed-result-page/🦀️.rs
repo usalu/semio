@@ -100,3 +100,24 @@ fn one_shell_message_stream_splits_into_app_frames_and_typed_operation_pages() {
     assert_eq!(terminal, expect["terminal"].as_bool().unwrap(), "the stream's terminal page");
     assert!(stream["messages"].as_array().unwrap().iter().any(|message| message["lane"].as_u64() == Some(13)), "the stream must exercise the window-transient lane this demux used to refuse");
 }
+
+/// 📏️ A page is bounded by the renderer's fixed page authority: the exact maximum copies and decodes,
+/// one byte more is refused on both doors, so an oversized guest page can never reach a settle.
+#[test]
+fn a_page_at_the_fixed_maximum_decodes_and_one_byte_more_is_refused() {
+    let token = TypedOperationResultToken { receiver: 7, operation: 11, generation: 13, sequence: 17, attempt: 1 };
+    assert!(TypedOperationResultPage::try_copy_from(token, 0, &[0; super::TYPED_OPERATION_RESULT_PAGE_BYTES]).is_ok());
+    assert!(TypedOperationResultPage::try_copy_from(token, 0, &[0; super::TYPED_OPERATION_RESULT_PAGE_BYTES + 1]).is_err());
+    let mut wire = Vec::from(TypedOperationResultPage::PAGE_MAGIC);
+    wire.extend_from_slice(&token.receiver.to_le_bytes());
+    wire.extend_from_slice(&token.operation.to_le_bytes());
+    wire.extend_from_slice(&token.generation.to_le_bytes());
+    wire.extend_from_slice(&token.sequence.to_le_bytes());
+    wire.push(token.attempt);
+    wire.push(0);
+    wire.extend_from_slice(&(super::TYPED_OPERATION_RESULT_PAGE_BYTES as u32).to_le_bytes());
+    wire.extend_from_slice(&[0x2a; super::TYPED_OPERATION_RESULT_PAGE_BYTES]);
+    assert_eq!(TypedOperationResultPage::decode_guest_message(&wire).expect("exact maximum guest page").bytes(), &[0x2a; super::TYPED_OPERATION_RESULT_PAGE_BYTES]);
+    wire.push(0);
+    assert!(TypedOperationResultPage::decode_guest_message(&wire).is_none(), "maximum plus one wire byte is rejected");
+}

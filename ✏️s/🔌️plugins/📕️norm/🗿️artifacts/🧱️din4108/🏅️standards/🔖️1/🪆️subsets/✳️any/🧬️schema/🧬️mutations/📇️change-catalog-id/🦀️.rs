@@ -20,7 +20,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeCatalogI
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change catalog id to \"{}\"", self.new_catalog_id), &format!("Katalogid auf \"{}\" ändern", self.new_catalog_id))
+        protocol::LocalizedLabel::native(&format!("Change catalog id to \"{}\"", self.new_catalog_id), &format!("Katalog-ID auf \"{}\" ändern", self.new_catalog_id))
     }
 }
 //#endregion 🔖️Payload

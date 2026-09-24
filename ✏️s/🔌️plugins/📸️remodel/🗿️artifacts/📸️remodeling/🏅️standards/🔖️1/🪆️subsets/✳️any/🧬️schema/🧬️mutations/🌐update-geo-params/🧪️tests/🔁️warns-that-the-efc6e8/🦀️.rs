@@ -33,7 +33,7 @@ fn json_of<T: dsl::ToValue>(value: &T) -> pack::JsonValue {
 }
 
 /// 🔁️ A warned no-op leaves the document byte-identical to its committed after-document, which for
-/// a no-op IS the before-document — and, unlike a refusal, it is still an APPLIED outcome.
+/// a no-op IS the before-document — and, unlike a refusal, it is still a NO-OP outcome.
 #[semio_framework_async_macros::async_test]
 async fn no_op_leaves_the_document_untouched() {
     let base = before();
@@ -47,7 +47,7 @@ async fn no_op_leaves_the_document_untouched() {
 #[semio_framework_async_macros::async_test]
 async fn declared_warning_holds() {
     let declared = pack::parse_json(OUTCOME).expect("outcome decodes");
-    assert_eq!(declared.get("status").and_then(|status| status.as_str()), Some("applied"), "update-geo-params/warns-that-the-efc6e8 declares an applied outcome");
+    assert_eq!(declared.get("status").and_then(|status| status.as_str()), Some("no-op"), "update-geo-params/warns-that-the-efc6e8 declares a no-op outcome");
     let produced = produced();
     assert_eq!(produced.diff(), &RemodelingDiff::default(), "update-geo-params/warns-that-the-efc6e8: a no-op leaf must carry an empty diff");
     let messages = produced.messages();

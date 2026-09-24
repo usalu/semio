@@ -19,7 +19,7 @@ import {
   runProbe,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
-import { type McpBuildProfile, MCP_BINARY_NAME, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
+import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
 
 import { buildCargoArtifacts, packageNativeRelease, signExecutableForDistribution, workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 
@@ -97,7 +97,7 @@ function proveMcpEntrypointCredentialMarker(executable: string, root: string): v
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP build has a fixed binary output contract");
-    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot);
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { sourcesRecord: MCP_BINARY_SOURCES_FILE });
   }
 }
 
@@ -413,13 +413,11 @@ class CanonicalCheckpointResourceOracleScript extends BundleScript {
     );
     const scopedUri = (spaceId: string, documentId: string): string => `semio://workspace/scopes/${encodeURIComponent(spaceId)}/${encodeURIComponent(documentId)}/checkpoint`;
     if (scopedUri(fixture.resource.value.scope.spaceId, fixture.resource.value.scope.documentId) !== fixture.resource.uri) throw new Error("checkpoint URI is not exact percent-encoded scope");
-    const matchesGis = (candidate: { artifactKind: string; artifactSchema: string }): boolean => candidate.artifactKind === fixture.selector.artifactKind && candidate.artifactSchema === fixture.selector.artifactSchema;
-    if (!matchesGis(fixture.selector) || fixture.selector.hostile.some(matchesGis)) throw new Error("GIS kind/schema selector admitted a partial identity");
     const rawLength = pack.byteLength + spr.byteLength;
     const base64Length = (length: number): number => Math.ceil(length / 3) * 4;
     if (rawLength > fixture.limits.pairBytes || base64Length(pack.byteLength) + base64Length(spr.byteLength) + fixture.limits.metadataBytes > fixture.limits.textBytes)
       throw new Error("fixture violates checkpoint resource budgets");
-    console.log(`canonical-checkpoint-resource-oracle: AJV=1 parts=2 hostile=${fixture.hostile.length} lifecycle=${fixture.lifecycle.length} selector=${fixture.selector.hostile.length}`);
+    console.log(`canonical-checkpoint-resource-oracle: AJV=1 parts=2 hostile=${fixture.hostile.length} lifecycle=${fixture.lifecycle.length}`);
   }
 }
 
@@ -434,16 +432,15 @@ class CanonicalCheckpointResourceCheckScript extends BundleScript {
       if (!remote.includes(marker)) throw new Error("remote checkpoint source missing " + marker);
     for (const marker of ["project_mounted_canonical_pair", "project_mounted", "validate_mount_current"])
       if (!pair.includes(marker)) throw new Error("retained pair projection missing " + marker);
-    if (!workspace.includes("parse_checkpoint_resource_uri") || !workspace.includes("checkpoint_resource_uri") || !workspace.includes("is_gis_map_descriptor"))
-      throw new Error("workspace checkpoint routing or exact GIS selector is missing");
+    if (!workspace.includes("parse_checkpoint_resource_uri") || !workspace.includes("checkpoint_resource_uri")) throw new Error("workspace checkpoint routing is missing");
     if (!context.includes('uri.starts_with("semio://workspace/scopes/")')) throw new Error("workspace resource registry rejects exact scoped checkpoint URIs");
-    console.log("canonical-checkpoint-resource-source: uri=scope-exact retained-pair=private final-fence=2 raw-limit=4MiB text-limit=6MiB GIS-selector=exact");
+    console.log("canonical-checkpoint-resource-source: uri=scope-exact retained-pair=private final-fence=2 raw-limit=4MiB text-limit=6MiB");
   }
 }
 
 class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
   run(): void {
-    const suffixes = ["authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_never_crosses_scope", "gis_map_inference_selector_requires_the_exact_kind_and_schema_pair"];
+    const suffixes = ["authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_never_crosses_scope"];
     for (const suffix of suffixes) {
       const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", suffix, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
       const matches = listed.stdout
@@ -455,7 +452,7 @@ class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
       const executed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", matches[0]!, "--", "--exact", "--test-threads=1"], { cwd: this.root, ...orchestratorBudgetOpts() });
       if (executed.status !== 0) throw new Error(`canonical checkpoint resource exact law failed ${matches[0]}: status=${executed.status} stdout=${executed.stdout.slice(-8_000)} stderr=${executed.stderr.slice(-8_000)}`);
     }
-    console.log(`canonical-checkpoint-resource-native: laws=${suffixes.length} retained-pair=1 GIS-selector=exact`);
+    console.log(`canonical-checkpoint-resource-native: laws=${suffixes.length} retained-pair=1`);
   }
 }
 

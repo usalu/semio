@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeTEfMm {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change effective thickness t_ef [mm] to {}", self.new_t_ef_mm), &format!("Effektivdickent_ef [mm] auf {} ändern", self.new_t_ef_mm))
+        protocol::LocalizedLabel::native(&format!("Change effective thickness t_ef [mm] to {}", self.new_t_ef_mm), &format!("Effektive Wanddicke t_ef [mm] auf {} ändern", self.new_t_ef_mm))
     }
 }
 //#endregion 🔖️ChangeTEfMm

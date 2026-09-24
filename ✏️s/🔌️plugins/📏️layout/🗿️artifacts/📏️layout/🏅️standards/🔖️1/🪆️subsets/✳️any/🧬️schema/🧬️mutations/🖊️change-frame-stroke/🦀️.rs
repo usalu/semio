@@ -26,7 +26,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameStroke {
         inverse_change_frame_stroke(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change frame \"{}\" stroke", self.frame_id), &format!("Rahmen \"{}\" Strich ändern", self.frame_id))
+        protocol::LocalizedLabel::native(&format!("Change frame \"{}\" stroke", self.frame_id), &format!("Kontur von Rahmen \"{}\" ändern", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

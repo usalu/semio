@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeShellRMm {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change shell radius r [mm] to {}", self.new_shell_r_mm), &format!("Schalenradiusr [mm] auf {} ändern", self.new_shell_r_mm))
+        protocol::LocalizedLabel::native(&format!("Change shell radius r [mm] to {}", self.new_shell_r_mm), &format!("Schalenradius r [mm] auf {} ändern", self.new_shell_r_mm))
     }
 }
 //#endregion 🔖️ChangeShellRMm

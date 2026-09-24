@@ -30,7 +30,7 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for CreateSlot {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create slot \"{}\"", self.slot.id), &format!("Platz \"{}\" erstellen", self.slot.id))
+        protocol::LocalizedLabel::native(&format!("Create slot \"{}\"", self.slot.id), &format!("Slot \"{}\" erstellen", self.slot.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.slot.id.clone()]

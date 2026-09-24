@@ -14,7 +14,11 @@ export async function registerTests1(
     | "GESTURE_MULTI_TOUCH_POINTERS"
     | "IDENTITY_PINCH_STEP"
     | "PINCH_WHEEL_PIXELS_PER_DOUBLING"
+    | "GestureRecognizer"
+    | "IDLE_GESTURE_RECOGNIZER"
     | "applyPinchToCamera"
+    | "applyPinchToOffsetCamera"
+    | "applyPinchToOrbit"
     | "clampZoom"
     | "gestureIsMultiTouch"
     | "gesturePointerDown"
@@ -23,12 +27,24 @@ export async function registerTests1(
     | "pinchFrame"
     | "pinchStep"
     | "pinchWheelDelta"
+    | "pinchZoomNotches"
+    | "recognizeGesturePointerDown"
+    | "recognizeGesturePointerMove"
+    | "recognizeGesturePointerUp"
     | "shortestAngleDelta"
     | "zoomAboutPoint"
   >,
-  _source: TestSource,
+  source: TestSource,
 ): Promise<void> {
   const {
+    GestureRecognizer,
+    IDLE_GESTURE_RECOGNIZER,
+    applyPinchToOrbit,
+    applyPinchToOffsetCamera,
+    pinchZoomNotches,
+    recognizeGesturePointerDown,
+    recognizeGesturePointerMove,
+    recognizeGesturePointerUp,
     EMPTY_GESTURE_POINTERS,
     GESTURE_MULTI_TOUCH_POINTERS,
     IDENTITY_PINCH_STEP,
@@ -47,6 +63,134 @@ export async function registerTests1(
   } = dependencies;
 
   const { describe, expect, it } = vitest;
+  const { readFileSync } = await import("node:fs");
+  const threeOracle = await import("three");
+  const { join } = await import("node:path");
+  type FixtureEvent = { readonly type: "down" | "move" | "up"; readonly pointerId: number; readonly x?: number; readonly y?: number };
+  type FixtureVerdict = { readonly kind: string } & Readonly<Record<string, number | string>>;
+  const fixture = JSON.parse(readFileSync(join(source.directory, "🧫️fixtures", "🤏️recognizer.json"), "utf8")) as {
+    readonly recognizer: readonly { readonly name: string; readonly events: readonly FixtureEvent[]; readonly verdicts: readonly FixtureVerdict[] }[];
+    readonly notches: readonly { readonly name: string; readonly pendingLogScale: number; readonly scale: number; readonly in: number; readonly out: number; readonly notches: number; readonly remainderScale: number }[];
+  };
+  const verdictFields = (verdict: ReturnType<InstanceType<typeof GestureRecognizer>["down"]>): Readonly<Record<string, number | string>> =>
+    verdict.kind === "pinch" ? { kind: verdict.kind, ...verdict.step } : verdict.kind === "pinchBegin" ? { kind: verdict.kind, ...verdict.frame } : { kind: verdict.kind };
+
+  describe("🧭️ gesture recognizer — 🧫️fixtures/🤏️recognizer.json", () => {
+    for (const row of fixture.recognizer) {
+      it(`${row.name} (class cell)`, () => {
+        const recognizer = new GestureRecognizer();
+        row.events.forEach((event, index) => {
+          const verdict = event.type === "down" ? recognizer.down({ pointerId: event.pointerId, x: event.x ?? 0, y: event.y ?? 0 }) : event.type === "move" ? recognizer.move({ pointerId: event.pointerId, x: event.x ?? 0, y: event.y ?? 0 }) : recognizer.up(event.pointerId);
+          const expected = row.verdicts[index]!;
+          const actual = verdictFields(verdict);
+          expect(actual.kind, `${row.name} event ${index}`).toBe(expected.kind);
+          for (const [key, value] of Object.entries(expected)) {
+            if (key === "kind") continue;
+            expect(actual[key] as number, `${row.name} event ${index} ${key}`).toBeCloseTo(value as number, 9);
+          }
+        });
+      });
+      it(`${row.name} (pure transitions agree with the class cell)`, () => {
+        let state = IDLE_GESTURE_RECOGNIZER;
+        const recognizer = new GestureRecognizer();
+        for (const event of row.events) {
+          const pointer = { pointerId: event.pointerId, x: event.x ?? 0, y: event.y ?? 0 };
+          const transition = event.type === "down" ? recognizeGesturePointerDown(state, pointer) : event.type === "move" ? recognizeGesturePointerMove(state, pointer) : recognizeGesturePointerUp(state, event.pointerId);
+          const verdict = event.type === "down" ? recognizer.down(pointer) : event.type === "move" ? recognizer.move(pointer) : recognizer.up(event.pointerId);
+          state = transition.state;
+          expect(transition.verdict).toEqual(verdict);
+          expect(recognizer.state).toEqual(state);
+        }
+      });
+    }
+
+    it("the latch releases to the idle state once every contact lifted", () => {
+      const recognizer = new GestureRecognizer();
+      recognizer.down({ pointerId: 1, x: 0, y: 0 });
+      recognizer.down({ pointerId: 2, x: 10, y: 0 });
+      expect(recognizer.latched).toBe(true);
+      recognizer.up(1);
+      expect(recognizer.latched).toBe(true);
+      expect(recognizer.up(2).kind).toBe("pinchEnd");
+      expect(recognizer.state).toBe(IDLE_GESTURE_RECOGNIZER);
+      expect(recognizer.pointers).toEqual([]);
+    });
+  });
+
+  describe("🛰️ orbit pinch law — validated against three.js camera basis (third-party oracle)", () => {
+    const { PerspectiveCamera, Vector3 } = threeOracle;
+    const bounds = { distance: { min: 0.1, max: 1000 }, zoom: { min: 0.01, max: 100 } };
+    const pose = { position: [4, 3, 12] as const, target: [1, -1, 2] as const, up: [0, 1, 0] as const, zoom: 1 };
+    const identity = { scale: 1, panX: 0, panY: 0, rotation: 0, centroidX: 0, centroidY: 0 };
+
+    it("a pure two-finger pan moves eye and target by three's screen-space pan (camera matrix columns 0/1)", () => {
+      const fov = 50;
+      const height = 600;
+      const panX = 37;
+      const panY = -21;
+      const camera = new PerspectiveCamera(fov, 1.5, 0.1, 1000);
+      camera.position.set(...pose.position);
+      camera.up.set(...pose.up);
+      camera.lookAt(new Vector3(...pose.target));
+      camera.updateMatrix();
+      const offset = new Vector3(...pose.position).sub(new Vector3(...pose.target));
+      const targetDistance = offset.length() * Math.tan(((fov / 2) * Math.PI) / 180);
+      const left = new Vector3().setFromMatrixColumn(camera.matrix, 0).multiplyScalar(-((2 * panX * targetDistance) / height));
+      const up = new Vector3().setFromMatrixColumn(camera.matrix, 1).multiplyScalar((2 * panY * targetDistance) / height);
+      const expectedTarget = new Vector3(...pose.target).add(left).add(up);
+      const next = applyPinchToOrbit(pose, { ...identity, panX, panY }, { kind: "perspective", fovYRadians: (fov * Math.PI) / 180 }, height, bounds);
+      expect(next.target[0]).toBeCloseTo(expectedTarget.x, 9);
+      expect(next.target[1]).toBeCloseTo(expectedTarget.y, 9);
+      expect(next.target[2]).toBeCloseTo(expectedTarget.z, 9);
+      expect(next.position[0] - next.target[0]).toBeCloseTo(offset.x, 9);
+      expect(next.position[1] - next.target[1]).toBeCloseTo(offset.y, 9);
+      expect(next.position[2] - next.target[2]).toBeCloseTo(offset.z, 9);
+    });
+
+    it("spreading the fingers dollies toward the target by the separation ratio, inside the distance bounds", () => {
+      const distance = Math.hypot(3, 4, 10);
+      const next = applyPinchToOrbit(pose, { ...identity, scale: 2 }, { kind: "perspective", fovYRadians: 1 }, 600, bounds);
+      expect(Math.hypot(next.position[0] - next.target[0], next.position[1] - next.target[1], next.position[2] - next.target[2])).toBeCloseTo(distance / 2, 9);
+      expect(next.target).toEqual(pose.target);
+      const clamped = applyPinchToOrbit(pose, { ...identity, scale: 1e6 }, { kind: "perspective", fovYRadians: 1 }, 600, bounds);
+      expect(Math.hypot(clamped.position[0] - clamped.target[0], clamped.position[1] - clamped.target[1], clamped.position[2] - clamped.target[2])).toBeCloseTo(0.1, 9);
+    });
+
+    it("an orthographic camera zooms by the factor instead of moving the eye", () => {
+      const next = applyPinchToOrbit(pose, { ...identity, scale: 3 }, { kind: "orthographic", frustumHeight: 20 }, 600, bounds);
+      expect(next.zoom).toBeCloseTo(3, 12);
+      expect(next.position).toEqual(pose.position);
+    });
+
+    it("a degenerate pose (eye on target, or looking along up) is returned unchanged", () => {
+      const onTarget = { ...pose, position: pose.target };
+      expect(applyPinchToOrbit(onTarget, { ...identity, scale: 2 }, { kind: "perspective", fovYRadians: 1 }, 600, bounds)).toBe(onTarget);
+      const alongUp = { ...pose, position: [1, 9, 2] as const };
+      expect(applyPinchToOrbit(alongUp, { ...identity, scale: 2 }, { kind: "perspective", fovYRadians: 1 }, 600, bounds)).toBe(alongUp);
+    });
+  });
+
+  describe("🔍️ step-quantized pinch zoom — 🧫️fixtures/🤏️recognizer.json", () => {
+    for (const row of fixture.notches) {
+      it(row.name, () => {
+        const result = pinchZoomNotches(row.pendingLogScale, row.scale, { in: row.in, out: row.out });
+        expect(result.notches).toBe(row.notches);
+        expect(Math.exp(result.pendingLogScale)).toBeCloseTo(row.remainderScale, 9);
+      });
+    }
+
+    it("replaying the notches reproduces the pinch scale within one notch", () => {
+      let pending = 0;
+      let zoom = 1;
+      for (const scale of [1.02, 1.03, 1.07, 1.01, 0.97, 1.2, 1.15]) {
+        const result = pinchZoomNotches(pending, scale, { in: 1.1, out: 0.9 });
+        pending = result.pendingLogScale;
+        zoom *= result.notches >= 0 ? 1.1 ** result.notches : 0.9 ** -result.notches;
+      }
+      const target = 1.02 * 1.03 * 1.07 * 1.01 * 0.97 * 1.2 * 1.15;
+      expect(Math.abs(Math.log(zoom / target))).toBeLessThan(Math.log(1 / 0.9));
+    });
+  });
 
   const twoFingers = (ax: number, ay: number, bx: number, by: number) =>
     gesturePointerDown(gesturePointerDown(EMPTY_GESTURE_POINTERS, { pointerId: 1, x: ax, y: ay }), { pointerId: 2, x: bx, y: by });
@@ -193,14 +337,29 @@ export async function registerTests1(
       expect(after.y).toBeCloseTo(before.y, 10);
     });
 
-    it("applyPinchToCamera zooms about the centroid, then pans by the centroid travel in world units", () => {
+    it("applyPinchToCamera keeps the world point under the PREVIOUS centroid under the new centroid (fingers hold the content)", () => {
       const camera = { x: 0, y: 0, zoom: 1 };
       const viewport = { w: 800, h: 600 };
       const step = { scale: 2, panX: 40, panY: -20, rotation: 0, centroidX: 400, centroidY: 300 };
       const next = applyPinchToCamera(camera, step, viewport, { min: 0.1, max: 12 });
       expect(next.zoom).toBeCloseTo(2, 10);
-      expect(next.x).toBeCloseTo(-20, 10);
-      expect(next.y).toBeCloseTo(10, 10);
+      expect(next.x).toBeCloseTo(-40, 10);
+      expect(next.y).toBeCloseTo(20, 10);
+      const toScreen = (cam: { x: number; y: number; zoom: number }, world: { x: number; y: number }) => ({ x: (world.x - cam.x) * cam.zoom + viewport.w / 2, y: (world.y - cam.y) * cam.zoom + viewport.h / 2 });
+      const heldWorld = { x: camera.x + (360 - 400) / camera.zoom, y: camera.y + (320 - 300) / camera.zoom };
+      expect(toScreen(next, heldWorld).x).toBeCloseTo(400, 10);
+      expect(toScreen(next, heldWorld).y).toBeCloseTo(300, 10);
+    });
+
+    it("applyPinchToOffsetCamera holds the same finger anchor in the screen-offset transform (screen = world * zoom + camera)", () => {
+      const camera = { x: 30, y: -12, zoom: 1.5 };
+      const step = { scale: 1.25, panX: -18, panY: 9, rotation: 0, centroidX: 210, centroidY: 140 };
+      const next = applyPinchToOffsetCamera(camera, step, { min: 0.1, max: 12 });
+      const heldWorld = { x: (step.centroidX - step.panX - camera.x) / camera.zoom, y: (step.centroidY - step.panY - camera.y) / camera.zoom };
+      expect(next.zoom).toBeCloseTo(1.875, 12);
+      expect(heldWorld.x * next.zoom + next.x).toBeCloseTo(step.centroidX, 10);
+      expect(heldWorld.y * next.zoom + next.y).toBeCloseTo(step.centroidY, 10);
+      expect(applyPinchToOffsetCamera(camera, { ...step, scale: 1e9 }, { min: 0.1, max: 12 }).zoom).toBe(12);
     });
 
     it("applyPinchToCamera never leaves the surface's zoom bounds", () => {

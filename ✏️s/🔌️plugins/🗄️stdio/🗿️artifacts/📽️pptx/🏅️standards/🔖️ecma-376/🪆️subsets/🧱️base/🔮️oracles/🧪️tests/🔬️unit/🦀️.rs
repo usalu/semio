@@ -62,5 +62,5 @@ fn kinds_matches_the_catalog() {
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "the pptx-ecma-376-base catalog is missing {kind:?}");
     }
-    assert_eq!(KINDS.len(), 9, "PptxMutation declares nine kinds");
+    assert_eq!(KINDS.len(), 8, "PptxMutation declares eight kinds");
 }

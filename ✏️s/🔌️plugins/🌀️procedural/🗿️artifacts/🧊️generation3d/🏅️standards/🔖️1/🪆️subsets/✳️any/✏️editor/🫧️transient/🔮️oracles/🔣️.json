@@ -1,0 +1,150 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The transient state lane of `s.procedural.generation3d`'s editor (✏️editor/🫧️transient): its mutation vocabulary `Generation3dTransientMutation` over `Generation3dTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-procedural-generation3d-1-any-editor-transient` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "procedural-generation3d-1-any-editor-transient-state-lane-semantics",
+      "capabilities": [
+        "procedural-generation3d-1-any-editor-transient-mutate"
+      ],
+      "rationale": "`Generation3dTransientMutation` is the transient state lane of `s.procedural.generation3d`'s ✏️editor/🫧️transient surface: it holds the text of the last generation preview, or none before the first one. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-generation-preview`) changes exactly its own part of `Generation3dTransient`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "zustand",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "An in-memory state container with arbitrary setter functions; it has no typed transient record, no per-kind mutation vocabulary and no computed inverse."
+          },
+          {
+            "package": "im",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Persistent immutable collections; they version values structurally but define no mutation kinds, no-op guards or inverses over this surface's record."
+          }
+        ],
+        "whyNoneQualifies": "`Generation3dTransient` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "procedural-generation3d-1-any-editor-transient",
+      "capability": "procedural-generation3d-1-any-editor-transient-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-generation-preview"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.procedural.generation3d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🫧️transient",
+      "mutations": [
+        {
+          "id": "set-generation-preview",
+          "capability": "procedural-generation3d-1-any-editor-transient-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-generation-preview",
+            "bridgeVersion": 1,
+            "variant": "SetGenerationPreview"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-generation3d-1-any-editor-transient-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-generation-preview-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🫧️transient"
+      },
+      "mutation": "set-generation-preview",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/👁️set-generation-preview/✅️set-generation-preview-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:90a18c0c8ed8806451cb736dad2f73de27794930607c1cb651967d6f7394fa9b",
+          "bytes": 36
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/👁️set-generation-preview/✅️set-generation-preview-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0de99fc288024da15145f5ebeb4b342184ce9d8cda893bfa75ecd7cf12e4b12b",
+          "bytes": 81
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/👁️set-generation-preview/✅️set-generation-preview-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:84ba4d97e4db52c75e7c73fe652ac25c020669c7a1b16a17e9688f964c9b3eda",
+          "bytes": 56
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/👁️set-generation-preview/✅️set-generation-preview-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:84ba4d97e4db52c75e7c73fe652ac25c020669c7a1b16a17e9688f964c9b3eda",
+          "bytes": 56
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/👁️set-generation-preview/✅️set-generation-preview-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "The first generation preview caches its text where there was none."
+    }
+  ]
+}

@@ -20,7 +20,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeMoisture
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change moisture mu exterior to {}", self.new_moisture_mu_exterior), &format!("Feuchtenmuaußen auf {} ändern", self.new_moisture_mu_exterior))
+        protocol::LocalizedLabel::native(&format!("Change exterior vapour diffusion resistance μ to {}", self.new_moisture_mu_exterior), &format!("Diffusionswiderstandszahl μ außen auf {} ändern", self.new_moisture_mu_exterior))
     }
 }
 //#endregion 🔖️Payload

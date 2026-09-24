@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/.tmp-ticket-0918/📓️s13-thirty-five-on-rebuilt-guests.md

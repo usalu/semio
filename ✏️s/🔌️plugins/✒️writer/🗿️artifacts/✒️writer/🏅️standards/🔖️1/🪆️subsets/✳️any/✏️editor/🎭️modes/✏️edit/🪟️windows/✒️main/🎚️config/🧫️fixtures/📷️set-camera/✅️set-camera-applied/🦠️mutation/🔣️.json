@@ -1,0 +1,8 @@
+{
+  "kind": "set-camera",
+  "camera": {
+    "x": 0.0,
+    "y": 320.0,
+    "zoom": 1.25
+  }
+}

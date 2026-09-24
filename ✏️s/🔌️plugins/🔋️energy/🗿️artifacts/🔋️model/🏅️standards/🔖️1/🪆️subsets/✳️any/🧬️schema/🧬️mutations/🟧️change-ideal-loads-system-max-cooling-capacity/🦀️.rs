@@ -34,7 +34,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change ideal loads system {} maximum cooling capacity to {:?}", self.id.0, self.new_capacity_present.then_some(self.new_max_cooling_capacity_w)), &format!("ideale Lastensystem {} Maximalkühlungskapazität auf {:?} ändern", self.id.0, self.new_capacity_present.then_some(self.new_max_cooling_capacity_w)))
+        protocol::LocalizedLabel::native(&format!("Change ideal loads system {} maximum cooling capacity to {:?}", self.id.0, self.new_capacity_present.then_some(self.new_max_cooling_capacity_w)), &format!("Maximale Kühlleistung von Ideallastsystem {} auf {:?} ändern", self.id.0, self.new_capacity_present.then_some(self.new_max_cooling_capacity_w)))
     }
 
     fn target(&self) -> Vec<String> {

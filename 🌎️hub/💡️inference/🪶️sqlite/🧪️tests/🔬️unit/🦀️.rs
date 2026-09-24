@@ -11,7 +11,7 @@ fn selected(fixture: &serde_json::Value) -> InferenceIdentityV1 {
 
 fn memory() -> InferenceJobLedgerV1 {
     let connection = Connection::open_in_memory().unwrap();
-    connection.execute_batch(SCHEMA).unwrap();
+    connection.execute_batch(&ledger_schema()).unwrap();
     InferenceJobLedgerV1 { connection: Mutex::new(connection) }
 }
 
@@ -299,7 +299,7 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
     #[cfg(feature = "native-artifact-execution")]
     {
         let (witness, fence) = super::super::wal::tests::committed_fixture_witness().await;
-        let frontier = directory::os_directory::CheckpointPublicationFrontierV1 {
+        let frontier = directory::os_directory::EditedArtifactFrontierV1 {
             document_id: selected.document_id.clone(),
             head_edit_ordinal: selected.head_ordinal + 1,
             head_edit_id: prepared.mutation_id.clone(),
@@ -369,4 +369,17 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
     }
     drop(reopened);
     std::fs::remove_file(path).unwrap();
+}
+
+#[test]
+fn a_ledger_stores_every_input_its_declared_bound_admits() {
+    let fixture = fixture();
+    for length in [65_537, INPUT_MAX_BYTES] {
+        let bytes = vec![b'm'; length];
+        let mut candidate = fixture["identity"].clone();
+        candidate["inputHash"] = sha256(&bytes).into();
+        let identity: InferenceIdentityV1 = serde_json::from_value(candidate).unwrap();
+        let accepted = memory().accept(&identity, &InferencePrivateBytesV1::new(bytes, INPUT_MAX_BYTES).unwrap(), 1000);
+        assert!(accepted.is_ok(), "an input of {length} bytes is within INPUT_MAX_BYTES, so the ledger stores it: {:?}", accepted.err());
+    }
 }

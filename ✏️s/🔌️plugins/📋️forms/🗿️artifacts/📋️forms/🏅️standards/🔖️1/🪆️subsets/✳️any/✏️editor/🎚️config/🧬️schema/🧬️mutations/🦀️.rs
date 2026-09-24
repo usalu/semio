@@ -43,3 +43,13 @@ impl protocol::OpBinary for FormsConfigMutation {
         protocol::OpText::parse_op(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
 }
+
+//#region 🌉️TestBridge
+/// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
+/// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `FormsConfig`.
+///
+/// @see store::os_store::test_support::mutation_report_json
+pub fn forms_config_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
+    store::os_store::test_support::mutation_report_json::<FormsConfig, FormsConfigMutation>(base_json, mutation_json, after_json)
+}
+//#endregion 🌉️TestBridge

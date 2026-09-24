@@ -59,12 +59,13 @@
           "capability": "json-rfc8259-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-array-element",
             "bridgeVersion": 1,
-            "variant": "InsertArrayElementPayload"
+            "variant": "InsertArrayElement"
           },
           "oracleRequirements": [
             {
@@ -78,12 +79,13 @@
           "capability": "json-rfc8259-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-array-element",
             "bridgeVersion": 1,
-            "variant": "RemoveArrayElementPayload"
+            "variant": "RemoveArrayElement"
           },
           "oracleRequirements": [
             {
@@ -97,12 +99,13 @@
           "capability": "json-rfc8259-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-member",
             "bridgeVersion": 1,
-            "variant": "RemoveMemberPayload"
+            "variant": "RemoveMember"
           },
           "oracleRequirements": [
             {
@@ -116,12 +119,14 @@
           "capability": "json-rfc8259-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-member",
             "bridgeVersion": 1,
-            "variant": "SetMemberPayload"
+            "variant": "SetMember"
           },
           "oracleRequirements": [
             {
@@ -135,12 +140,13 @@
           "capability": "json-rfc8259-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-scalar",
             "bridgeVersion": 1,
-            "variant": "SetScalarPayload"
+            "variant": "SetScalar"
           },
           "oracleRequirements": [
             {

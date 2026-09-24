@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSamplePrecision {
-    pub(crate) precision: u8,
+    pub precision: u8,
 }
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSamplePrecision {
@@ -21,7 +21,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSamplePreci
         agg_inverse(&JpgBaselineMutation::SetSamplePrecision(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-sample-precision", "Probengenauigkeit setzen")
+        protocol::LocalizedLabel::native("Set sample precision", "Abtastgenauigkeit setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

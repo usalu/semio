@@ -33,7 +33,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for SetDpartMetadata {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set PDF/VT partition metadata {}", self.job), &format!("PDF/VTpartitionsmetadaten {} setzen", self.job))
+        protocol::LocalizedLabel::native(&format!("Set PDF/VT partition metadata {}", self.job), &format!("PDF/VT-Partitionsmetadaten {} setzen", self.job))
     }
 
     fn target(&self) -> Vec<String> {

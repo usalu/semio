@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeHEdKn {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change design horizontal force H_Ed [kN] to {}", self.new_h_ed_kn), &format!("Bemessungshorizontalkrafth_Ed [kN] auf {} ändern", self.new_h_ed_kn))
+        protocol::LocalizedLabel::native(&format!("Change design horizontal force H_Ed [kN] to {}", self.new_h_ed_kn), &format!("Bemessungshorizontalkraft H_Ed [kN] auf {} ändern", self.new_h_ed_kn))
     }
 }
 //#endregion 🔖️ChangeHEdKn

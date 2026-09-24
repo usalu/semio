@@ -29,7 +29,7 @@ impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for AppendBytes {
         agg_inverse(&BinaryMutation::AppendBytes(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("append-bytes", "Bytes anhängen")
+        protocol::LocalizedLabel::native("Append bytes", "Bytes anhängen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

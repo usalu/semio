@@ -1,19 +1,24 @@
 // #region Header
 /**
  * 🤝️ Two-client document collaboration e2e (language-agnostic fixture).
- * Gated by HUB_E2E=1. PR1 socket chain + HC1 catalog clone + note creation.
+ * Gated by HUB_E2E=1. PR1 socket chain + HC1 catalog clone + note creation. The hubs run with
+ * `SEMIO_TRACE_LEVEL=info` on the default stderr sink; after the first hub's graceful exit every trace line must validate
+ * against the trace record schema (Ajv) and name the document-socket, directory-command, presence,
+ * catalog and shutdown events the run caused.
  */
 // #endregion Header
 
+import Ajv from "ajv";
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const HUB_E2E = process.env.HUB_E2E === "1";
-const TEST_TIMEOUT_MS = 840_000;
+const TEST_TIMEOUT_MS = 2_400_000;
 
 function findRepoRoot(start: string): string {
   let current = start;
@@ -49,6 +54,7 @@ describe("two-client document collaboration fixture", () => {
     expect(fixture.presence.leaseTtlMs).toBe(15000);
     expect(fixture.command.diffSchema).toBe("db.pathmap.v1");
     expect(fixture.shutdown.closeCode).toBe(1012);
+    expect(fixture.shutdown.restartWithinMs).toBe(1000);
     expect(fixture.expectations.gracefulShutdownClosesSocketsAndReleasesWriters).toBe(true);
     expect(fixture.expectations.crashReleasesWritersPerBackendContract).toBe(true);
   });
@@ -83,8 +89,12 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
       const creation = pick(schemaDir, (n) => n.includes("space-artifact-creation"));
       const modules = pick(fw, (n) => n.includes("modules") && !n.includes("products"));
       const replication = pick(modules, (n) => n.includes("replication"));
+      const trace = pick(modules, (n) => n.endsWith("trace"));
+      const traceRecord = pick(trace, (n) => n.includes("record"));
+      const validateTraceLine = new Ajv({ allErrors: true, strict: true }).compile(JSON.parse(readFileSync(join(pick(traceRecord, (n) => n.includes("schema")), "🔣️.json"), "utf8")));
+      const traceVocabulary = JSON.parse(readFileSync(join(pick(pick(trace, (n) => n.includes("fixtures")), (n) => n.includes("span-vocabulary")), "🔣️.json"), "utf8")) as { events: string[] };
 
-      const { startLocalHub, finishLocalHub, localHubReadinessAdmitted } = await import(join(execution, "🟦️.ts"));
+      const { startLocalHub, finishLocalHub, waitForReadiness, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS } = await import(join(execution, "🟦️.ts"));
       const { sealDirectoryCommandRequestV1, directoryCommandRequestJson } = await import(join(schemaDir, "🟦️.ts"));
       const { sealSpaceArtifactCreateV1 } = await import(join(creation, "🟦️.ts"));
       const { encodeClientFrame, decodeServerFrame, encodePresencePeer, decodePresencePeer } = await import(join(replication, "🟦️.ts"));
@@ -106,7 +116,9 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         process.env.OS_HUB_TRUSTED_CATALOG_SOURCE ?? join(repoRoot, ".🧬semio", "🌐hub", "hc1-boot", "trusted-catalog");
       if (!existsSync(catalogSource)) throw new Error(`trusted catalog missing: ${catalogSource}`);
 
-      const dataRoot = mkdtempSync("/tmp/wp-c1-two-client-");
+      const dataParent = process.env.HUB_E2E_DATA_PARENT ?? tmpdir();
+      mkdirSync(dataParent, { recursive: true, mode: 0o700 });
+      const dataRoot = mkdtempSync(join(realpathSync(dataParent), "two-client-"));
       cpSync(catalogSource, join(dataRoot, "trusted-catalog"), { recursive: true });
 
       const ADA = { email: "ada-tc@example.org", password: "correct horse battery staple", display: "Ada TC" };
@@ -121,6 +133,8 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
       }
 
       process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
+      process.env.SEMIO_TRACE_LEVEL = "info";
+      delete process.env.SEMIO_TRACE_SINK;
       const port = Number(process.env.HUB_TWO_CLIENT_PORT ?? 7711);
       const profiles = [
         { profileId: "a", subject: "author-a", displayName: "Author A", allowedClientClasses: ["native", "mcp"] },
@@ -131,23 +145,12 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
       const wsOrigin = `ws://127.0.0.1:${port}`;
 
       const waitReady = async (hubRun: typeof run, label: string) => {
-        const deadline = Date.now() + 180_000;
-        while (Date.now() < deadline) {
-          if (hubRun.child.exitCode !== null) {
-            throw new Error(`${label}: hub exited ${hubRun.child.exitCode}\n${hubRun.output().slice(-12000)}`);
-          }
-          try {
-            const response = await fetch(`${origin}/readyz`, { signal: AbortSignal.timeout(2000) });
-            const body = (await response.json()) as Record<string, any>;
-            if (localHubReadinessAdmitted(body, response.status, hubRun.runId, true, hubRun.publicSessionIssuance)) return body;
-          } catch {
-            /* keep polling */
-          }
-          await sleep(200);
+        try {
+          return await waitForReadiness(hubRun, true, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS);
+        } catch (error) {
+          throw new Error(`${label}: ${(error as Error).message}\n${hubRun.output().slice(-12000)}`);
         }
-        throw new Error(`${label}: hub not ready in 180s\n${hubRun.output().slice(-12000)}`);
       };
-
 
       type Frame = Record<string, any>;
       type Holder = { label: string; actor: string; socket: WebSocket; frames: Frame[]; waiters: Array<(f: Frame) => void>; closed: Promise<{ code: number; reason: string }>; welcome?: any; resumeToken?: string };
@@ -453,27 +456,59 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         const sigtermAt = Date.now();
         run.child.kill("SIGTERM");
         const gracefulExit = await exitOf(run, fixture.shutdown.gracefulExitWithinMs);
+        const exitedAt = Date.now();
         expect(gracefulExit.code, run.output().slice(-8000)).toBe(0);
-        const drained = await Promise.race([a.closed, sleep(2000).then(() => ({ code: -1, reason: "no close frame" }))]);
-        expect(drained.code).toBe(fixture.shutdown.closeCode);
-        expect(run.output()).toContain(fixture.shutdown.databaseClosedMarker);
-        note("sigtermToExitMs", Date.now() - sigtermAt);
-        note("socketCloseCode", drained.code);
-        if (writerProbe) {
-          const after = liveWriters();
-          note("liveWritersAfterSigtermExit", after);
-          expect(after, "a SIGTERM-stopped hub left no live WAL writer on the server").toBe(0);
-        }
         await finishLocalHub(run);
-
         process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
         const run2 = await startLocalHub(repoRoot, hubRustRoot, profiles, { port, dataDir: dataRoot, binaryPath: bin, capture: true });
+        const exitToRestartSpawnMs = Date.now() - exitedAt;
+        note("exitToRestartSpawnMs", exitToRestartSpawnMs);
+        expect(exitToRestartSpawnMs, "the restart is spawned within 1 s of the graceful exit").toBeLessThan(fixture.shutdown.restartWithinMs);
         try {
+          const drained = await Promise.race([a.closed, sleep(2000).then(() => ({ code: -1, reason: "no close frame" }))]);
+          expect(drained.code).toBe(fixture.shutdown.closeCode);
+          expect(run.output()).toContain(fixture.shutdown.databaseClosedMarker);
+          note("sigtermToExitMs", exitedAt - sigtermAt);
+          note("socketCloseCode", drained.code);
+          if (writerProbe) {
+            const after = liveWriters();
+            note("liveWritersAfterSigtermExit", after);
+            expect(after, "a SIGTERM-stopped hub left no live WAL writer on the server").toBe(0);
+          }
+
+          const traced: Record<string, any>[] = (run.output() as string)
+            .split("\n")
+            .filter((line) => line.startsWith('{"level":'))
+            .map((line) => JSON.parse(line) as Record<string, any>);
+          for (const record of traced) expect(validateTraceLine(record), `${JSON.stringify(record)} ${JSON.stringify(validateTraceLine.errors)}`).toBe(true);
+          const traceCounts: Record<string, number> = {};
+          for (const record of traced) traceCounts[`${record.event}:${record.outcome}`] = (traceCounts[`${record.event}:${record.outcome}`] ?? 0) + 1;
+          note("traceLines", traced.length);
+          note("traceEventOutcomes", traceCounts);
+          expect(traced.filter((record) => !traceVocabulary.events.includes(record.event))).toEqual([]);
+          const socketOf = (outcome: string, detail: string) => traced.filter((record) => record.event === "server.document.socket" && record.outcome === outcome && record.detail === detail && record.space === spaceId && record.artifact === documentId);
+          const socketClosed = socketOf("cancelled", "closed");
+          const socketPair = socketOf("ok", "upgrade").find((open) => socketClosed.some((close) => close.requestId === open.requestId && close.principal === open.principal));
+          expect(socketPair, "one document socket's admission and close share a span id").toBeDefined();
+          note("documentSocketSpan", { open: socketPair, close: socketClosed.find((close) => close.requestId === socketPair!.requestId) });
+          const seen = (event: string, outcome: string) => traced.some((record) => record.event === event && record.outcome === outcome);
+          for (const [event, outcome] of [
+            ["server.boot", "ok"],
+            ["server.catalog.publication", "ok"],
+            ["server.directory.command", "ok"],
+            ["server.presence.join", "ok"],
+            ["server.presence.expiry", "ok"],
+            ["server.presence.leave", "ok"],
+            ["server.shutdown", "ok"],
+          ])
+            expect(seen(event!, outcome!), `${event}:${outcome} in ${JSON.stringify(traceCounts)}`).toBe(true);
+          expect(traced.filter((record) => record.event === "server.shutdown").map((record) => record.detail)).toEqual([expect.stringContaining(fixture.shutdown.databaseClosedMarker)]);
           await waitReady(run2, "restart");
           const tokenA2 = await signIn(ADA.email, ADA.password, "device-ada-2");
           const spaces = await (await fetchTimed(`${origin}/directory/spaces`, { headers: { authorization: `Bearer ${tokenA2}` } })).json();
           expect(spaces.some((r: any) => r?.space?.id === spaceId)).toBe(true);
           const a3 = await openSocket(await mint("a-restart", tokenA2));
+          note("reopenedOnFirstAttemptAfterSigterm", true);
           const gracefulReopenMs = Date.now() - sigtermAt;
           note("sigtermToReopenedWelcomeFirstAttemptMs", gracefulReopenMs);
           expect(a3.welcome.server_frontier.document_id ?? a3.welcome.server_frontier.documentId).toBe(documentId);

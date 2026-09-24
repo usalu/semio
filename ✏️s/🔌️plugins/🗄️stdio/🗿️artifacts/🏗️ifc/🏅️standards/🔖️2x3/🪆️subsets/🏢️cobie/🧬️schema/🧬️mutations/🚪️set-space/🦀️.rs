@@ -22,7 +22,7 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetSpace {
         agg_inverse(&Ifc2x3CobieMutation::SetSpace(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-space", "Raum setzen")
+        protocol::LocalizedLabel::native("Set space", "Raum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

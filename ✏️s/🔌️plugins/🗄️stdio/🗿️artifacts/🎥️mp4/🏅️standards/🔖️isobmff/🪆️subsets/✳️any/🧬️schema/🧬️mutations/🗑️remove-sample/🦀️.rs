@@ -22,7 +22,7 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for RemoveSample {
         agg_inverse(&Mp4Mutation::RemoveSample(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-sample", "Probe entfernen")
+        protocol::LocalizedLabel::native("Remove sample", "Sample entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -22,7 +22,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeIrradian
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change irradiance w m2 to {}", self.new_irradiance_w_m2), &format!("Bestrahlungsstärkenwm2 auf {} ändern", self.new_irradiance_w_m2))
+        protocol::LocalizedLabel::native(&format!("Change irradiance [W/m2] to {}", self.new_irradiance_w_m2), &format!("Bestrahlungsstärke [W/m2] auf {} ändern", self.new_irradiance_w_m2))
     }
 }
 //#endregion 🔖️Payload

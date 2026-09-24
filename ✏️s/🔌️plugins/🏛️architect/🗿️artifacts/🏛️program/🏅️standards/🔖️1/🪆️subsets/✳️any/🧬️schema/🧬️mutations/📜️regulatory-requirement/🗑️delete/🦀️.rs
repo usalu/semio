@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteRegulatoryRequirem
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete regulatory requirement \"{}\"", self.id.0), &format!("Regulierungsanforderung \"{}\" löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete regulatory requirement \"{}\"", self.id.0), &format!("Regulatorische Anforderung \"{}\" löschen", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

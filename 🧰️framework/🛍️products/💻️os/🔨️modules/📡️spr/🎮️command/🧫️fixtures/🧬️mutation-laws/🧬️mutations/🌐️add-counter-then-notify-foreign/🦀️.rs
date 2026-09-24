@@ -24,7 +24,7 @@ impl CompositeMutationKind<Counter, CounterMutation> for AddCounterThenNotifyFor
         Ok(())
     }
     fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native("Add then notify foreign", "fremde Danachbenachrichtigung hinzufügen")
+        crate::LocalizedLabel::native("Add then notify foreign", "Hinzufügen und Fremddokument benachrichtigen")
     }
 }
 

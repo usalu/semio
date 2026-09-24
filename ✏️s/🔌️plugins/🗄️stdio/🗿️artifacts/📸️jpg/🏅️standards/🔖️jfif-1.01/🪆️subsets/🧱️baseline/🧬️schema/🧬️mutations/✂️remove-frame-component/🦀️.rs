@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveFrameComponent {
-    pub(crate) id: u8,
+    pub id: u8,
 }
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for RemoveFrameComponent {
@@ -21,7 +21,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for RemoveFrameCom
         agg_inverse(&JpgBaselineMutation::RemoveFrameComponent(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-frame-component", "Rahmenkomponente entfernen")
+        protocol::LocalizedLabel::native("Remove frame component", "Frame-Komponente entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

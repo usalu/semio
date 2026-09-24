@@ -86,7 +86,9 @@
           "capability": "ifc-2x3-cobie-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-facility-name",
@@ -106,7 +108,9 @@
           "capability": "ifc-2x3-cobie-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-floor-elevation",
@@ -126,7 +130,9 @@
           "capability": "ifc-2x3-cobie-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -146,7 +152,9 @@
           "capability": "ifc-2x3-cobie-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-space",
@@ -166,7 +174,9 @@
           "capability": "ifc-2x3-cobie-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-type-assignment",
@@ -186,7 +196,9 @@
           "capability": "ifc-2x3-cobie-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-view-definition",

@@ -1,12 +1,12 @@
 import { matchesTarget, readSelectors } from "../../🔍️discovery/🎛️selection/🟦️.ts";
-import { type MutationManifest, type RuntimeMutationInventory, compareInventories, loadOracleRegistry, subsetCoordinate, writeRuntimeInventory } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { type MutationManifest, type RuntimeMutationInventory, compareInventories, loadOracleRegistry, surfaceCoordinate, writeRuntimeInventory } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { Script, runProbe, testLevelBudgetMs } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { existsSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
 /**
  * 🏭️ The language-neutral production mutation bridge an owner exposes. It is a plain executable
- * beside the owner that answers `listMutations(artifact, standard, subset)` on stdout. Keeping it a
+ * beside the owner that answers `listMutations(artifact, standard, subset[, surface])` on stdout. Keeping it a
  * process rather than a linked entry point is what lets one gate cover Rust, TypeScript and every
  * other implementation without the framework knowing which language an artifact is written in.
  */
@@ -18,7 +18,7 @@ export function mutationBridgeFor(repoRoot: string, owner: string, manifest: Mut
   let candidate = owner;
   for (;;) {
     const abs = join(repoRoot, candidate, MUTATION_BRIDGE_REL);
-    if (existsSync(abs)) return { command: "bun", args: [abs, "list-mutations", manifest.artifact, manifest.standard, manifest.subset] };
+    if (existsSync(abs)) return { command: "bun", args: [abs, "list-mutations", manifest.artifact, manifest.standard, manifest.subset, ...(manifest.surface === undefined ? [] : [manifest.surface])] };
     const parent = candidate.split("/").slice(0, -1).join("/");
     if (parent === "" || parent === candidate) return null;
     candidate = parent;
@@ -43,7 +43,7 @@ export class InventoryScript extends Script {
     }
     let failed = 0;
     for (const { contribution, manifest } of manifests) {
-      const coordinate = subsetCoordinate({ artifact: manifest.artifact, standard: manifest.standard, subset: manifest.subset });
+      const coordinate = surfaceCoordinate(manifest);
       const bridge = mutationBridgeFor(this.repoRoot, contribution.owner, manifest);
       if (bridge === null) {
         console.error(`[inventory] ${coordinate}: no production mutation bridge — expected an executable at ${MUTATION_BRIDGE_REL} beside the owner`);
@@ -53,7 +53,7 @@ export class InventoryScript extends Script {
       const probe = runProbe(bridge.command, bridge.args, {
         cwd: this.repoRoot,
         budgetMs: testLevelBudgetMs("long"),
-        env: { ...process.env, SEMIO_MUTATION_ARTIFACT: manifest.artifact, SEMIO_MUTATION_STANDARD: manifest.standard, SEMIO_MUTATION_SUBSET: manifest.subset },
+        env: { ...process.env, SEMIO_MUTATION_ARTIFACT: manifest.artifact, SEMIO_MUTATION_STANDARD: manifest.standard, SEMIO_MUTATION_SUBSET: manifest.subset, SEMIO_MUTATION_SURFACE: manifest.surface ?? "" },
       });
       if ((probe.status ?? 1) !== 0) {
         console.error(`[inventory] ${coordinate}: bridge exited ${probe.status} — ${probe.stderr.trim().split("\n").slice(-3).join(" | ")}`);
@@ -70,6 +70,11 @@ export class InventoryScript extends Script {
       }
       if (inventory.schema !== "semio.repository-test.runtime-inventory/v2") {
         console.error(`[inventory] ${coordinate}: bridge emitted schema ${JSON.stringify(inventory.schema)}`);
+        failed += 1;
+        continue;
+      }
+      if (inventory.surface !== manifest.surface) {
+        console.error(`[inventory] ${coordinate}: bridge answered surface ${JSON.stringify(inventory.surface ?? null)}, not the manifest's — it does not measure state lanes`);
         failed += 1;
         continue;
       }

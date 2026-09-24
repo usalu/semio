@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCoolin
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change cooling internal gains to {}", self.new_cooling_gains_kwh), &format!("Kühlungsinnengewinne auf {} ändern", self.new_cooling_gains_kwh))
+        protocol::LocalizedLabel::native(&format!("Change cooling internal gains to {}", self.new_cooling_gains_kwh), &format!("Interne Wärmegewinne (Kühlung) auf {} ändern", self.new_cooling_gains_kwh))
     }
 }
 //#endregion 🔖️ChangeCoolingGainsKwh

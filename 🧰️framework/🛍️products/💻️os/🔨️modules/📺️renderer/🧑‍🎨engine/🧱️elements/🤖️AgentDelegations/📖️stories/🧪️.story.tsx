@@ -29,7 +29,10 @@ const CREDENTIAL = {
   file: { fileName: "semio-agent-drafting-agent.json", contents: `{\n  "schema": "semio.hub.agent-credential/v1",\n  "hubOrigin": "https://hub.example.org",\n  "spaceId": "space-mine",\n  "audience": "edit",\n  "token": "${TOKEN}"\n}\n`, mediaType: "application/json" },
   command: "semio-os-mcp stdio --hub https://hub.example.org --space space-mine --credential-file <path>",
   save: "idle" as const,
+  mcpClient: { phase: "idle" as const, config: null },
 };
+
+const MCP_CONFIG = `${JSON.stringify({ mcpServers: { "semio-drafting-agent": { type: "stdio", command: "/usr/local/bin/semio-os-mcp", args: ["stdio", "--hub", "https://hub.example.org", "--space", "space-mine", "--credential-file", "/Users/ada/.semio/agent/credentials/semio-agent-dlg_drafting.json", "--scopes", "workspace.read,artifact.write,inference.execute"] } } }, null, 2)}\n`;
 
 const meta = {
   title: "💻️os⚛️react/AgentDelegations",
@@ -48,6 +51,8 @@ const meta = {
     onCreate: () => undefined,
     onDownloadCredential: () => undefined,
     onDismissCredential: () => undefined,
+    onInstallMcpClient: () => undefined,
+    onCopyMcpClientConfig: () => undefined,
     onRevoke: () => undefined,
   },
 } satisfies Meta<typeof AgentDelegations>;
@@ -65,6 +70,10 @@ export const Loading: Story = { args: { rows: [], phase: "loading" } };
 export const CredentialShownOnce: Story = { args: { credential: CREDENTIAL } };
 
 export const DownloadRefused: Story = { args: { credential: { ...CREDENTIAL, save: "failed" } } };
+
+export const McpClientReady: Story = { args: { credential: { ...CREDENTIAL, mcpClient: { phase: "ready", config: MCP_CONFIG } } } };
+
+export const McpClientUnavailable: Story = { args: { credential: { ...CREDENTIAL, mcpClient: { phase: "unavailable", config: null } } } };
 
 export const SpectatorCannotDelegate: Story = { args: { canDelegate: false, rows: [] } };
 

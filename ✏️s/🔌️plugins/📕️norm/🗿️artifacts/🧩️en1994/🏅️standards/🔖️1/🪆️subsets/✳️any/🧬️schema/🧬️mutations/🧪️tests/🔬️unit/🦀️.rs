@@ -103,7 +103,7 @@ async fn semantic_kinds_cover_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn labels_are_human_readable() {
     let mutation = En1994Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: 12.0 });
-    assert_eq!(mutation.label(), "Change span to 12");
+    assert_eq!(mutation.label(), protocol::LocalizedLabel::native("Change span to 12", "Spannweite auf 12 ändern"));
 }
 
 //#region 🔖️OutcomeLaws

@@ -1,7 +1,8 @@
 //! ✅️ wgpu twin of the `🤖️AgentApprovals` element (`🟦️.tsx`, 160 lines) — the `os.agent.approvals`
 //! human-in-the-loop modal. It lists every parked approval request delivered by `🔗️AgentBridge`'s
-//! `approvalRequested` frames (capability, change summary, requested-by, risk) and offers the three
-//! decisions that go back as an `Approval` frame.
+//! `approvalRequested` frames with React `AgentApprovalAffordance`'s lines (verb or title, capability,
+//! description, target, change summary, requested-by, risk, live countdown — [`approval_row_lines`])
+//! and offers the three decisions that go back as an `Approval` frame.
 //!
 //! 🪟️ The React original is a Radix `Dialog` that opens purely from `approvals.length > 0` and can
 //! be dismissed without deciding (a newly arrived approval re-opens it). This file owns the same
@@ -149,12 +150,53 @@ pub fn approvals_risk_label(locale: Locale) -> String {
     agent_label("Risk", "Risiko", locale)
 }
 
+/// 🏷️ The subject prefix when the producer named the verb's own title (`os.agent.chat.approvalVerb`).
+pub fn approvals_verb_label(locale: Locale) -> String {
+    agent_label("Action", "Aktion", locale)
+}
+
+/// 🏷️ The subject prefix when it did not (`os.agent.chat.approvalRole`).
+pub fn approvals_role_label(locale: Locale) -> String {
+    agent_label("Approval", "Freigabe", locale)
+}
+
+/// 🗿️ What the verb applies to (`os.agent.chat.approvalTarget`).
+pub fn approvals_target_label(locale: Locale) -> String {
+    agent_label("Applies to", "Betrifft", locale)
+}
+
+/// ⏳️ A pending request the producer named no wait for (`os.agent.chat.approvalPending`).
+pub fn approvals_pending_label(locale: Locale) -> String {
+    agent_label("Waiting for your decision", "Wartet auf deine Entscheidung", locale)
+}
+
+/// ⏱️ The live countdown (`os.agent.chat.approvalCountdown`).
+pub fn approvals_countdown_label(seconds: u64, locale: Locale) -> String {
+    match locale {
+        Locale::De => format!("Noch {seconds} s für die Entscheidung"),
+        _ => format!("{seconds}s left to decide"),
+    }
+}
+
+/// ⌛️ A wait that ran out (`os.agent.chat.approvalExpired`).
+pub fn approvals_expired_label(locale: Locale) -> String {
+    agent_label("Out of time — the agent was refused", "Zeit abgelaufen — der Agent wurde abgelehnt", locale)
+}
+
 /// 🔘️ Button copy per decision — `Deny` / `Approve Once` / `Approve for Session`.
 pub fn approvals_decision_label(decision: ApprovalDecision, locale: Locale) -> String {
     match decision {
         ApprovalDecision::Deny => agent_label("Deny", "Ablehnen", locale),
         ApprovalDecision::Once => agent_label("Approve Once", "Einmal genehmigen", locale),
         ApprovalDecision::Session => agent_label("Approve for Session", "Für Sitzung genehmigen", locale),
+    }
+}
+/// 🪦️ Why a request left without a decision — React's `os.agent.approvals.withdrawn*`.
+pub fn approvals_withdrawal_label(reason: crate::agent_bridge::ApprovalWithdrawal, locale: Locale) -> String {
+    match reason {
+        crate::agent_bridge::ApprovalWithdrawal::Cancelled => agent_label("Withdrawn — the agent's request was cancelled", "Zurückgezogen — die Anfrage des Agenten wurde abgebrochen", locale),
+        crate::agent_bridge::ApprovalWithdrawal::TimedOut => agent_label("Withdrawn — nobody decided in time", "Zurückgezogen — niemand hat rechtzeitig entschieden", locale),
+        crate::agent_bridge::ApprovalWithdrawal::Superseded => agent_label("Withdrawn — moved to your newer window", "Zurückgezogen — in dein neueres Fenster verschoben", locale),
     }
 }
 //#endregion 🌐️Labels
@@ -190,10 +232,63 @@ pub fn parse_approval_decision_control_id(control_id: &str) -> Option<(String, A
     (!approval_id.is_empty()).then(|| (approval_id.to_string(), decision))
 }
 
-/// 📏️ How many text lines one request occupies: the change summary always, plus capability,
-/// requested-by and risk when the producer supplied them.
+/// 🎨️ How one affordance line is tinted: body text, muted, or the risk badge's own token.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ApprovalLineTone {
+    Text,
+    Muted,
+    Risk(ApprovalRisk),
+}
+
+/// 📝️ One text line of a pending request's affordance.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ApprovalLine {
+    pub text: String,
+    pub tone: ApprovalLineTone,
+}
+
+/// 📝️ The lines a pending request shows, in React `AgentApprovalAffordance`'s order: WHAT happens
+/// (the verb's title, else its id, else the change itself), the capability id beside a title, the
+/// description, WHAT it applies to, the change summary, WHO asked, the risk, and the polite countdown
+/// (`seconds_left` from [`approval_seconds_remaining`]; `None` = no wait was named).
+pub fn approval_row_lines(parsed: &ParsedApprovalSummary, seconds_left: Option<u64>, locale: Locale) -> Vec<ApprovalLine> {
+    let line = |text: String, tone: ApprovalLineTone| ApprovalLine { text, tone };
+    let subject = parsed.capability_title.as_deref().or(parsed.capability_id.as_deref()).unwrap_or(parsed.diff_summary.as_str());
+    let prefix = if parsed.capability_title.is_some() { approvals_verb_label(locale) } else { approvals_role_label(locale) };
+    let mut lines = vec![line(format!("{prefix}: {subject}"), ApprovalLineTone::Text)];
+    if let (Some(capability), Some(_)) = (parsed.capability_id.as_ref(), parsed.capability_title.as_ref()) {
+        lines.push(line(format!("{}: {capability}", approvals_capability_label(locale)), ApprovalLineTone::Muted));
+    }
+    if let Some(description) = parsed.description.as_ref() {
+        lines.push(line(description.clone(), ApprovalLineTone::Muted));
+    }
+    if let Some(kind) = parsed.artifact_kind.as_ref() {
+        lines.push(line(format!("{}: {kind}", approvals_target_label(locale)), ApprovalLineTone::Muted));
+    }
+    lines.push(line(format!("{}: {}", approvals_diff_label(locale), parsed.diff_summary), ApprovalLineTone::Text));
+    if let Some(requested_by) = parsed.requested_by.as_ref() {
+        lines.push(line(format!("{}: {requested_by}", approvals_requested_by_label(locale)), ApprovalLineTone::Muted));
+    }
+    if let Some(risk) = parsed.risk {
+        lines.push(line(format!("{}: {}", approvals_risk_label(locale), risk.label(locale)), ApprovalLineTone::Risk(risk)));
+    }
+    let countdown = match seconds_left {
+        None => approvals_pending_label(locale),
+        Some(0) => approvals_expired_label(locale),
+        Some(seconds) => approvals_countdown_label(seconds, locale),
+    };
+    lines.push(line(countdown, ApprovalLineTone::Muted));
+    lines
+}
+
+/// 📏️ How many text lines one pending request occupies — exactly [`approval_row_lines`]' count, which
+/// does not depend on the countdown's value.
 pub fn approval_row_line_count(parsed: &ParsedApprovalSummary) -> usize {
-    1 + usize::from(parsed.capability_id.is_some()) + usize::from(parsed.requested_by.is_some()) + usize::from(parsed.risk.is_some())
+    3 + usize::from(parsed.capability_id.is_some() && parsed.capability_title.is_some())
+        + usize::from(parsed.description.is_some())
+        + usize::from(parsed.artifact_kind.is_some())
+        + usize::from(parsed.requested_by.is_some())
+        + usize::from(parsed.risk.is_some())
 }
 
 /// 📏️ One request's total height: its text lines, the decision-button row, and the `py-3` gutter

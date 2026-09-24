@@ -59,8 +59,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/💾️resident/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧫️fixtures/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/📐️schema/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🤝️contract.json",
         "sharedGlobals"
       ]
@@ -68,21 +67,27 @@
     "targets": {
       "test": {
         "executor": "nx:run-commands",
-        "cache": false,
+        "cache": true,
         "options": {
           "cwd": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
           "command": "bun ./📜️script.ts test",
           "forwardAllArgs": true
-        }
+        },
+        "outputs": []
       },
       "check-wasm": {
         "executor": "nx:run-commands",
-        "cache": false,
+        "cache": true,
+        "inputs": [
+          "nativeSources",
+          "^nativeSources"
+        ],
         "options": {
           "cwd": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
           "command": "bun ./📜️script.ts check-wasm",
           "forwardAllArgs": true
-        }
+        },
+        "outputs": []
       }
     }
   },

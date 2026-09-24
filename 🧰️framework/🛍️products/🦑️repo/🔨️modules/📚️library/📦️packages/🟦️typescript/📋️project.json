@@ -225,6 +225,32 @@
         "{workspaceRoot}/bun.lock"
       ]
     },
+    "test-cross-platform-bootstrap": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test cross-platform-bootstrap"
+      }
+    },
+    "test-process-tree-termination": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test process-tree-termination"
+      },
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪓️process-tree-termination/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪓️process-tree-termination/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🪓️process-tree-termination/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/bun.lock"
+      ]
+    },
     "test-kind-only-basename": {
       "executor": "nx:run-commands",
       "cache": true,

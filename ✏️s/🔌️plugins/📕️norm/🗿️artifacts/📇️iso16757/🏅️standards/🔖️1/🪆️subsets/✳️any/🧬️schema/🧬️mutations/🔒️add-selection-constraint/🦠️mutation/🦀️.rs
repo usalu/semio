@@ -20,7 +20,7 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for AddSelection
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add selection constraint on \"{}\"", self.constraint.property_id), &format!("Auswahlrandbedingung auf \"{}\" hinzufügen", self.constraint.property_id))
+        protocol::LocalizedLabel::native(&format!("Add selection constraint on \"{}\"", self.constraint.property_id), &format!("Auswahlbedingung für \"{}\" hinzufügen", self.constraint.property_id))
     }
 }
 //#endregion 🔖️Payload

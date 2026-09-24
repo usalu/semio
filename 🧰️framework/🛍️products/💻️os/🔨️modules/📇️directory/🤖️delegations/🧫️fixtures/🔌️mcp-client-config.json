@@ -1,0 +1,117 @@
+{
+  "schema": "semio.os.agent-mcp-client-config-law/v1",
+  "law": "A delegation receipt, the hub origin and the host's install receipt determine exactly one MCP client configuration: one `semio-<agent slug>` stdio server whose argv is the host launcher followed by `--hub <origin> --space <space> --credential-file <installed path> --scopes <audience scopes>`. The delegation token never appears in it. The installed file is named by the delegation id; an id that is not a safe file-name segment is refused before anything is written.",
+  "cases": [
+    {
+      "name": "an edit agent on a development host",
+      "receipt": {
+        "delegationId": "01a0d5ae-9ae4-7072-b721-4869feec1cd7",
+        "agentPrincipalId": "agent:01a0d5ae-9ae4-7072-b721-4869feec1cd7",
+        "agentLabel": "Claude — Drafting",
+        "spaceId": "01a0d5b0-0000-7000-8000-000000000001",
+        "audience": "edit",
+        "expiresAtMs": 1790000000000,
+        "token": "delegation.v1.0123456789abcdef0123456789abcdef.fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+      },
+      "hubOrigin": "http://127.0.0.1:7800",
+      "installed": {
+        "schema": "semio.os.agent-credential-install-receipt/v1",
+        "credentialPath": "/Users/ada/.semio/agent/credentials/semio-agent-01a0d5ae-9ae4-7072-b721-4869feec1cd7.json",
+        "launcher": {
+          "command": "/Users/ada/.bun/bin/bun",
+          "args": [
+            "/Users/ada/semio/📜️script.ts",
+            "dev",
+            "mcp",
+            "stdio",
+            "os"
+          ]
+        }
+      },
+      "fileName": "semio-agent-01a0d5ae-9ae4-7072-b721-4869feec1cd7.json",
+      "expected": {
+        "mcpServers": {
+          "semio-claude-drafting": {
+            "type": "stdio",
+            "command": "/Users/ada/.bun/bin/bun",
+            "args": [
+              "/Users/ada/semio/📜️script.ts",
+              "dev",
+              "mcp",
+              "stdio",
+              "os",
+              "--hub",
+              "http://127.0.0.1:7800",
+              "--space",
+              "01a0d5b0-0000-7000-8000-000000000001",
+              "--credential-file",
+              "/Users/ada/.semio/agent/credentials/semio-agent-01a0d5ae-9ae4-7072-b721-4869feec1cd7.json",
+              "--scopes",
+              "workspace.read,artifact.write,inference.execute"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "a read-only agent on a host that ships the binary",
+      "receipt": {
+        "delegationId": "7f3c",
+        "agentPrincipalId": "agent:7f3c",
+        "agentLabel": "Überprüfer",
+        "spaceId": "space-b",
+        "audience": "read",
+        "expiresAtMs": 1790000000000,
+        "token": "delegation.v1.0123456789abcdef0123456789abcdef.fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+      },
+      "hubOrigin": "https://hub.example.org",
+      "installed": {
+        "schema": "semio.os.agent-credential-install-receipt/v1",
+        "credentialPath": "C:\\Users\\bo\\.semio\\agent\\credentials\\semio-agent-7f3c.json",
+        "launcher": {
+          "command": "C:\\Program Files\\semio\\semio-os-mcp.exe",
+          "args": [
+            "stdio"
+          ]
+        }
+      },
+      "fileName": "semio-agent-7f3c.json",
+      "expected": {
+        "mcpServers": {
+          "semio-berpr-fer": {
+            "type": "stdio",
+            "command": "C:\\Program Files\\semio\\semio-os-mcp.exe",
+            "args": [
+              "stdio",
+              "--hub",
+              "https://hub.example.org",
+              "--space",
+              "space-b",
+              "--credential-file",
+              "C:\\Users\\bo\\.semio\\agent\\credentials\\semio-agent-7f3c.json",
+              "--scopes",
+              "workspace.read"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "name": "a path traversal id",
+      "delegationId": "../../etc/passwd",
+      "error": "directory.delegations.invalid-delegation"
+    },
+    {
+      "name": "an empty id",
+      "delegationId": "",
+      "error": "directory.delegations.invalid-delegation"
+    },
+    {
+      "name": "a separator inside the id",
+      "delegationId": "a/b",
+      "error": "directory.delegations.invalid-delegation"
+    }
+  ]
+}

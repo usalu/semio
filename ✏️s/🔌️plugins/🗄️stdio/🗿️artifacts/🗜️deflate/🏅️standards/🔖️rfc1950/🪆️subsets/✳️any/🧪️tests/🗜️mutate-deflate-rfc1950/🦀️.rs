@@ -13,13 +13,6 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::deflate::standards::v_rfc1950::subsets::any::{independent_payload, inverse_mutation_spec, oracle_apply_mutation, project_deflate};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
-//#region 🔖️Kinds
-/// 🗂️ Mirrors `DeflateMutation`'s kebab-case `KINDS` (schema/mutations/component.rs). Duplicated
-/// here, rather than imported, because the oracle-only host build never links the SUT crate at all
-/// (it is an optional dependency gated behind the `sut` feature this crate's own registration loop
-/// runs unconditionally), so this list has to be reachable without it.
-const KINDS: [&str; 4] = ["set-snapshot", "set-compression-params", "set-preset-dictionary", "set-payload"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const MUTATE_INPUT: &str = "shared://🗜️readme-level9.zz";
@@ -111,7 +104,7 @@ mod subject {
     use semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
     use semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::schema::mutations::{apply_deflate_mutation, set_compression_params, set_payload, set_preset_dictionary, set_snapshot};
     use semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateLevelHint;
-    use crate::{DeflateMutation, DeflateSnapshot};
+    use semio_s_artifact_stdio_deflate::{DeflateMutation, DeflateSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::deflate::standards::v_rfc1950::subsets::any::project_deflate;
 
     /// 🎚️ Independent of `DeflateLevelHint::from_bits`/`to_bits` — mirrors the oracle module's own
@@ -154,6 +147,7 @@ mod subject {
     fn spec_to_mutation(spec: &Json, base: &DeflateSnapshot) -> Result<DeflateMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         match spec.str("kind").as_str() {
+            "no-mutation" => Ok(DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })),
             "set-snapshot" => Ok(DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot {
                 snapshot: DeflateSnapshot {
                     schema: base.schema.clone(),
@@ -178,6 +172,7 @@ mod subject {
         let dict_id_json = base.dict_id.map(|id| Json::Number(id as f64)).unwrap_or(Json::Null);
         let payload_text = String::from_utf8(base.payload.clone()).map_err(|error| format!("original payload is not UTF-8 text: {error}"))?;
         let params = match kind {
+            "no-mutation" => Json::Object(Vec::new()),
             "set-snapshot" => Json::Object(vec![
                 ("method".to_string(), Json::Number(base.compression_method as f64)),
                 ("windowBits".to_string(), Json::Number(base.window_bits as f64)),
@@ -248,12 +243,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

@@ -460,8 +460,9 @@ mod wasm_program_exchange {
     /// never poll the guest or emit visibility twice; exhausting the exact opportunity ceiling fails
     /// closed rather than returning an empty tree.
     pub async fn render_with_document(client: &KernelClient, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
-        let surface = SurfaceId::try_from(surface_id).map_err(|_| "program surface id exceeds the retained contract".to_string())?;
-        let mut outcome = client.exchange_events(instance_id, vec![semio_framework::kernel::Event::SurfaceVisible { surface: surface_id.to_string(), body_key: body_key.to_string(), view_state: pack_view_state(view_state)? }]).await?;
+        let kernel_surface = kernel_surface_id(instance_id, surface_id);
+        let surface = SurfaceId::try_from(kernel_surface.as_str()).map_err(|_| "program surface id exceeds the retained contract".to_string())?;
+        let mut outcome = client.exchange_events(instance_id, vec![semio_framework::kernel::Event::SurfaceVisible { surface: kernel_surface.clone(), body_key: body_key.to_string(), view_state: pack_view_state(view_state)? }]).await?;
         if let Some(sink) = refresh_effects {
             sink.append(&mut outcome.effects);
         }
@@ -471,19 +472,43 @@ mod wasm_program_exchange {
             }
         }
         for _ in 0..(UI_DOCUMENT_PATCH_OPS + UI_DOCUMENT_NODES * UI_DOCUMENT_NODES + UI_DOCUMENT_LEASE_SLOTS) {
-            if let Some(document) = outcome.take_surface(surface_id) {
+            if let Some(document) = outcome.take_surface(&kernel_surface) {
                 return Ok(document);
             }
             outcome = client.advance_retained(instance_id, surface.clone()).await?;
         }
-        if let Some(document) = outcome.take_surface(surface_id) {
+        if let Some(document) = outcome.take_surface(&kernel_surface) {
             return Ok(document);
         }
         Err(format!("plugin retained document for surface '{surface_id}' exceeded its bounded opportunity budget"))
     }
 
+    /// 🪪️ The kernel's name for one instance's surface: `"<instance>:<surface>"`. A guest mounts, and
+    /// its patches name, exactly this (`⚛️reactor/📨️pending`'s `parse_surface_instance`); the wasmtime
+    /// host spells the same identity as the WIT `surface-ref { instance, surface }`
+    /// (`🖥️host`'s `wit_surface_ref` and `📥️ui-patch`), and the owned interpreter hands the guest the
+    /// kernel event verbatim, so a bare surface id reaches a guest that mounts nothing (measured on
+    /// native block2d: every `SurfaceVisible` answered no patch, ticket 26/09/23 slice WG8).
+    fn kernel_surface_id(instance_id: u32, surface_id: &str) -> String {
+        format!("{instance_id}:{surface_id}")
+    }
+
     #[cfg(test)]
     include!("../../🧪️tests/🕹️wgpu-reserved-verb-answer/🦀️.rs");
+}
+
+#[cfg(test)]
+#[path = "../../🧪️tests/📡️wgpu-document-backbone-effect/🦀️.rs"]
+mod document_backbone_effect_tests;
+
+/// 🪪️ The package a browser program mounts, as the JS bridge's `packageIdentity` reads it off the
+/// served package descriptor the module was admitted with.
+#[cfg(target_arch = "wasm32")]
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ProgramPackageIdentityV1 {
+    package_id: String,
+    component_sha256: String,
 }
 
 enum ProgramBridgeBackend {
@@ -513,6 +538,9 @@ impl Clone for ProgramBridgeBackend {
 pub struct ProgramBridgeEntry {
     pub plugin_id: String,
     pub package_id: Option<String>,
+    /// 🪪️ The SHA-256 of the component this entry mounts, as its verified package descriptor names it —
+    /// what a hub-selected execution-target lease must name for this entry to carry its document.
+    pub component_sha256: Option<String>,
     pub manifest: PluginManifest,
     backend: ProgramBridgeBackend,
     #[cfg(test)]
@@ -529,9 +557,12 @@ impl ProgramBridgeEntry {
         let manifest_json = manifest_fn.call0(&JsValue::NULL).map_err(|_| "manifest call failed")?.as_string().ok_or("manifest not string")?;
         let manifest: PluginManifest = serde_json::from_str(&manifest_json).map_err(|err| format!("manifest parse: {err}"))?;
         let _create_app = get_fn(&handle, "createApp")?;
+        let identity_json = get_fn(&handle, "packageIdentity")?.call0(&JsValue::NULL).map_err(|_| "packageIdentity call failed")?.as_string().ok_or("packageIdentity not string")?;
+        let identity: ProgramPackageIdentityV1 = serde_json::from_str(&identity_json).map_err(|err| format!("packageIdentity parse: {err}"))?;
         Ok(Self {
             plugin_id,
-            package_id: None,
+            package_id: Some(identity.package_id),
+            component_sha256: Some(identity.component_sha256),
             manifest,
             backend: ProgramBridgeBackend::Js(Rc::new(handle)),
             #[cfg(test)]
@@ -548,10 +579,11 @@ impl ProgramBridgeEntry {
     /// packet still in flight). The kernel thread only ever sees `wasm_path` once `create_app` is
     /// actually called.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn from_wasm(plugin_id: String, package_id: Option<String>, wasm_path: std::path::PathBuf, manifest: PluginManifest) -> Result<Self, String> {
+    pub fn from_wasm(plugin_id: String, package_id: Option<String>, component_sha256: Option<String>, wasm_path: std::path::PathBuf, manifest: PluginManifest) -> Result<Self, String> {
         Ok(Self {
             plugin_id: plugin_id.clone(),
             package_id,
+            component_sha256,
             manifest,
             backend: ProgramBridgeBackend::Wasm { client: KernelClient::get(), wasm_path },
             #[cfg(test)]
@@ -588,12 +620,24 @@ impl ProgramBridgeEntry {
         }
     }
 
+    /// 🧬️ The document schema `app_id` opens: its own declared schema, or — for a viewer, which declares
+    /// none — the schema its package declares for the same dialect, so a spectator's mount makes the
+    /// component the kind's codec exactly as an author's does. Empty for an app that opens no document.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn app_document_schema(&self, app_id: &str) -> String {
+        let Some(app) = self.manifest.apps.iter().find(|app| app.id == app_id) else { return String::new() };
+        if !app.io.artifact_schema.is_empty() {
+            return app.io.artifact_schema.clone();
+        }
+        self.manifest.apps.iter().find(|other| other.dialect == app.dialect && !other.io.artifact_schema.is_empty()).map(|other| other.io.artifact_schema.clone()).unwrap_or_default()
+    }
+
     pub async fn create_app(&self, app_id: &str) -> Result<u32, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => create_app_js(handle, app_id).await,
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm { client, wasm_path } => client.create_app(wasm_path.clone(), self.plugin_id.clone(), app_id.to_string()).await,
+            ProgramBridgeBackend::Wasm { client, wasm_path } => client.create_app(wasm_path.clone(), self.plugin_id.clone(), app_id.to_string(), self.app_document_schema(app_id)).await,
         }
     }
 
@@ -674,10 +718,15 @@ impl ProgramBridgeEntry {
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     pub async fn load_app_document_archive(&self, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), String> {
         match &self.backend {
+            #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::load_app_document_archive(client, instance_id, archive).await,
+            #[cfg(target_arch = "wasm32")]
+            ProgramBridgeBackend::Js(handle) => {
+                let bytes = protocol::encode_document_archive_bytes(archive).map_err(|error| error.to_string())?;
+                call_js_bytes(handle, "loadAppDocumentArchive", instance_id, &[bytes.as_slice()]).await
+            }
         }
     }
 
@@ -751,30 +800,30 @@ impl ProgramBridgeEntry {
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     pub async fn bind_document_backbone(&self, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, String> {
         match &self.backend {
+            #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::bind_document_backbone(client, instance_id, binding_generation, uri).await,
             #[cfg(target_arch = "wasm32")]
-            _ => Err("bind_document_backbone unavailable".into()),
+            ProgramBridgeBackend::Js(handle) => document_backbone_js(handle, instance_id, "bind", binding_generation, uri).await,
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     pub async fn retire_document_backbone(&self, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, String> {
         match &self.backend {
+            #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::retire_document_backbone(client, instance_id, binding_generation, uri).await,
             #[cfg(target_arch = "wasm32")]
-            _ => Err("retire_document_backbone unavailable".into()),
+            ProgramBridgeBackend::Js(handle) => document_backbone_js(handle, instance_id, "retire", binding_generation, uri).await,
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     pub async fn receive_document_backbone(&self, instance_id: u32, uri: &str, payload: Vec<u8>) -> Result<Vec<Effect>, String> {
         match &self.backend {
+            #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::receive_document_backbone(client, instance_id, uri, payload).await,
             #[cfg(target_arch = "wasm32")]
-            _ => Err("receive_document_backbone unavailable".into()),
+            ProgramBridgeBackend::Js(handle) => receive_document_backbone_js(handle, instance_id, uri, &payload).await,
         }
     }
 
@@ -787,12 +836,12 @@ impl ProgramBridgeEntry {
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     pub async fn apply_mutations(&self, instance_id: u32, operations: &[u8]) -> Result<(), String> {
         match &self.backend {
+            #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::apply_mutations(client, instance_id, operations).await,
             #[cfg(target_arch = "wasm32")]
-            _ => Err("apply_mutations unavailable".into()),
+            ProgramBridgeBackend::Js(handle) => call_js_bytes(handle, "applyMutations", instance_id, &[operations]).await,
         }
     }
 
@@ -862,6 +911,59 @@ fn describe_js_rejection(error: &JsValue) -> String {
         return text;
     }
     format!("{error:?}")
+}
+
+#[cfg(target_arch = "wasm32")]
+/// ⏳️ Calls one bridge function and settles its promise, keeping the rejection's own reason.
+async fn call_js(handle: &Rc<JsValue>, name: &str, args: &Array) -> Result<JsValue, String> {
+    let function = get_fn(handle.as_ref(), name)?;
+    let result = function.apply(&JsValue::NULL, args).map_err(|error| format!("{name} failed: {}", describe_js_rejection(&error)))?;
+    match result.dyn_ref::<js_sys::Promise>() {
+        Some(promise) => JsFuture::from(promise.clone()).await.map_err(|error| format!("{name} promise failed: {}", describe_js_rejection(&error))),
+        None => Ok(result),
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+/// 📦️ Calls a bridge function whose arguments are one instance id and byte payloads.
+async fn call_js_bytes(handle: &Rc<JsValue>, name: &str, instance_id: u32, payloads: &[&[u8]]) -> Result<(), String> {
+    let args = Array::new();
+    args.push(&JsValue::from_f64(f64::from(instance_id)));
+    for payload in payloads {
+        args.push(&js_sys::Uint8Array::from(*payload));
+    }
+    call_js(handle, name, &args).await.map(|_| ())
+}
+
+#[cfg(target_arch = "wasm32")]
+/// 📡️ The host effects a document-backbone door call left for the shell, read from the SAME
+/// `InvocationResponse` JSON projection every other bridge verb answers with — so a guest's
+/// `SendMessage { Backbone }` reaches `route_document_backbone_effects` exactly as it does natively.
+fn document_backbone_effects(name: &str, answer: &JsValue) -> Result<Vec<Effect>, String> {
+    let text = answer.as_string().ok_or_else(|| format!("{name} result not string"))?;
+    dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map(|result| result.requested_effects).map_err(|error| format!("{name} result parse failed: {error}"))
+}
+
+#[cfg(target_arch = "wasm32")]
+/// 📡️ Binds or retires one instance's document backbone — `bindingGeneration` crosses as a decimal
+/// string because a JS `number` cannot carry a `u64` exactly.
+async fn document_backbone_js(handle: &Rc<JsValue>, instance_id: u32, operation: &str, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, String> {
+    let args = Array::new();
+    args.push(&JsValue::from_f64(f64::from(instance_id)));
+    args.push(&JsValue::from_str(operation));
+    args.push(&JsValue::from_str(&binding_generation.to_string()));
+    args.push(&JsValue::from_str(uri));
+    document_backbone_effects("documentBackbone", &call_js(handle, "documentBackbone", &args).await?)
+}
+
+#[cfg(target_arch = "wasm32")]
+/// 📥️ Delivers one hot backbone message to the instance and answers the effects it left.
+async fn receive_document_backbone_js(handle: &Rc<JsValue>, instance_id: u32, uri: &str, payload: &[u8]) -> Result<Vec<Effect>, String> {
+    let args = Array::new();
+    args.push(&JsValue::from_f64(f64::from(instance_id)));
+    args.push(&JsValue::from_str(uri));
+    args.push(&js_sys::Uint8Array::from(payload));
+    document_backbone_effects("receiveDocumentBackbone", &call_js(handle, "receiveDocumentBackbone", &args).await?)
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1235,33 +1337,73 @@ pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) ->
 /// 📋️ Loads only the completed components named by the Nx runtime manifest.
 pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
     use crate::native_runtime_modules::{NativeJsonPages, NativeRuntimeManifest};
-    let mut payload = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(modules_root.join("🔣️runtime.json"))).await? {
-        semio_framework_os_services::NativeIoValue::Bytes(bytes) => bytes,
-        _ => return Err("Native runtime manifest returned the wrong I/O value".into()),
-    };
-    let runtime = NativeRuntimeManifest::read(NativeJsonPages::new((0..payload.page_count()).filter_map(|index| payload.page(index))), plugin_filter);
-    while !matches!(payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+    let mut pages = read_native_json_pages(&modules_root.join("🔣️runtime.json"), NATIVE_RUNTIME_MANIFEST_MAX_BYTES).await?;
+    let runtime = NativeRuntimeManifest::read(NativeJsonPages::new(pages.iter().flat_map(|page| (0..page.page_count()).filter_map(move |index| page.page(index)))), plugin_filter);
+    close_native_json_pages(&mut pages);
     let mut entries = Vec::new();
     for module in runtime?.modules {
         let descriptor = read_descriptor_manifest(&modules_root.join(module.descriptor_path), &module.plugin_id, &module.wasm_sha256).await?;
-        entries.push(ProgramBridgeEntry::from_wasm(module.plugin_id, Some(descriptor.package_id), modules_root.join(module.wasm_path), descriptor.manifest)?);
+        entries.push(ProgramBridgeEntry::from_wasm(module.plugin_id, Some(descriptor.package_id), Some(module.wasm_sha256), modules_root.join(module.wasm_path), descriptor.manifest)?);
     }
     Ok(entries)
 }
+
+/// 📏️ The native runtime manifest's own bound (`NativeRuntimeManifest::read` refuses more).
+#[cfg(not(target_arch = "wasm32"))]
+const NATIVE_RUNTIME_MANIFEST_MAX_BYTES: u64 = 1024 * 1024;
 
 /// 🧾️ Reads the matching completed descriptor across borrowed native payload pages.
 #[cfg(not(target_arch = "wasm32"))]
 async fn read_descriptor_manifest(path: &std::path::Path, plugin_id: &str, wasm_sha256: &str) -> Result<semio_framework::manifest::PackageDescriptor, String> {
     use crate::native_runtime_modules::NativeJsonPages;
-    let mut payload = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(path.to_path_buf())).await? {
-        semio_framework_os_services::NativeIoValue::Bytes(bytes) => bytes,
-        _ => return Err("Native descriptor returned the wrong I/O value".into()),
-    };
-    let descriptor = serde_json::from_reader::<_, semio_framework::manifest::PackageDescriptor>(NativeJsonPages::new((0..payload.page_count()).filter_map(|index| payload.page(index))));
-    while !matches!(payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+    let mut pages = read_native_json_pages(path, semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await?;
+    let descriptor = serde_json::from_reader::<_, semio_framework::manifest::PackageDescriptor>(NativeJsonPages::new(pages.iter().flat_map(|page| (0..page.page_count()).filter_map(move |index| page.page(index)))));
+    close_native_json_pages(&mut pages);
     let descriptor = descriptor.map_err(|error| format!("Native descriptor {}: {error}", path.display()))?;
     if descriptor.manifest.plugin_id != plugin_id || descriptor.hashes.wasm_sha256 != wasm_sha256 {
         return Err(format!("Native descriptor identity mismatch: {plugin_id}"));
     }
     Ok(descriptor)
+}
+
+/// 📄️ Reads one bounded JSON file as consecutive `ReadPage` payloads. The mounted native I/O
+/// authority answers at most one `JOB_PAYLOAD_PAGE_BYTES` page per request, so a whole-file
+/// `ReadBytes` refuses every real descriptor (block's is 344 KB); the pages stay borrowed until the
+/// caller's reader is done and are then closed together.
+#[cfg(not(target_arch = "wasm32"))]
+async fn read_native_json_pages(path: &std::path::Path, max_bytes: u64) -> Result<Vec<semio_framework_job::RetainedJobPayload>, String> {
+    let mut pages = Vec::new();
+    let mut offset = 0u64;
+    loop {
+        let value = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadPage { path: path.to_path_buf(), offset, max_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES }).await {
+            Ok(value) => value,
+            Err(error) => {
+                close_native_json_pages(&mut pages);
+                return Err(error);
+            }
+        };
+        let semio_framework_os_services::NativeIoValue::Page { bytes, eof } = value else {
+            close_native_json_pages(&mut pages);
+            return Err(format!("{}: native I/O returned the wrong value for a page read", path.display()));
+        };
+        let count = bytes.len() as u64;
+        pages.push(bytes);
+        offset = offset.saturating_add(count);
+        if offset > max_bytes || (count == 0 && !eof) {
+            close_native_json_pages(&mut pages);
+            return Err(format!("{}: native JSON exceeds {max_bytes} bytes or produced an empty nonterminal page", path.display()));
+        }
+        if eof {
+            return Ok(pages);
+        }
+    }
+}
+
+/// 🧹️ Closes every borrowed page a native JSON read retained.
+#[cfg(not(target_arch = "wasm32"))]
+fn close_native_json_pages(pages: &mut Vec<semio_framework_job::RetainedJobPayload>) {
+    for page in pages.iter_mut() {
+        while !matches!(page.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+    }
+    pages.clear();
 }

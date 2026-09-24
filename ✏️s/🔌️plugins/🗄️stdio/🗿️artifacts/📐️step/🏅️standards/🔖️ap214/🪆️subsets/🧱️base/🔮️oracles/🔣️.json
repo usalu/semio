@@ -91,7 +91,7 @@
     {
       "id": "semantic-step-v1",
       "description": "STEP (ISO 10303-21) exchange structures compared by declared FILE_SCHEMA and the full id-keyed entity graph (name plus positional argument values, reals tolerant). Header timestamp, preprocessor/originating-system strings, comment placement and line-wrapping are writer freedom -- the same normative surface `StepDiff`/`StepMutation` themselves operate over.",
-      "tolerance": 0.000001,
+      "tolerance": 1e-06,
       "ignoreKeys": [
         "timestamp",
         "preprocessorVersion",
@@ -116,7 +116,8 @@
           "capability": "step-ap214-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-entity",
@@ -136,7 +137,8 @@
           "capability": "step-ap214-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-entity-arg",
@@ -156,7 +158,8 @@
           "capability": "step-ap214-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-entity",
@@ -176,7 +179,8 @@
           "capability": "step-ap214-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-entity-arg",
@@ -196,7 +200,8 @@
           "capability": "step-ap214-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-entity-arg",
@@ -216,7 +221,8 @@
           "capability": "step-ap214-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-entity-name",
@@ -256,7 +262,8 @@
           "capability": "step-ap214-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-file-name",
@@ -296,7 +303,9 @@
           "capability": "step-ap214-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",

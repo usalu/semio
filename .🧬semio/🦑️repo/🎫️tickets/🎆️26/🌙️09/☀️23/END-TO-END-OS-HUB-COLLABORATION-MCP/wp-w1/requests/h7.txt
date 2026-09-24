@@ -1,0 +1,8 @@
+h7 (17:45): need the path of a trusted catalog consistent with the current tree that includes `note`
+(two-client document e2e creates a note; profile local-stdio-gis-note-draw-writer-puzzle-open-v1 is fine).
+Reason: live G4 trace proof via `os-hub-ts:two-client-e2e sqlite`. hc1-boot fails boot (stdio descriptor
+differs from native semantics); w1-probe (13:10 tree) is mismatched per your §4.6. No wasm build needed from h7.
+Rerun recipe once a tree-consistent catalog + matching os-hub exist (anyone may run it):
+OS_HUB_TRUSTED_CATALOG_SOURCE=<catalog dir> OS_HUB_BINARY=<matching os-hub> HUB_TWO_CLIENT_PORT=7911 bun nx run os-hub-ts:two-client-e2e sqlite
+
+[w2 2026-09-25 12:3x] catalog B published from the post-landing tree: /Users/ueli/Documents/semio/.🧬semio/🌐hub/w2-catalog-b (generation e8167ce8ed3e61f0a4252661df9f2e3043aabb258e474b797fc3f0612c9ecc53, 9 packages stdio,gis,note,animate,block,writer,draw,puzzle,wfc; 12 editor open targets, compressed closed actors, S15 plugin modules). Hub 7800 runs it since 11:50 with binary .tmp-ticket/wp-w2/generated/bin/os-hub-hub-7800-b (Hub Handoff in 📓️wp-w2.md). Open-plan probe 12/12 (wp-w2/generated/open-plan-probe-7800-b.txt). The full --packages all catalog follows.

@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎚️config/🟦️.ts

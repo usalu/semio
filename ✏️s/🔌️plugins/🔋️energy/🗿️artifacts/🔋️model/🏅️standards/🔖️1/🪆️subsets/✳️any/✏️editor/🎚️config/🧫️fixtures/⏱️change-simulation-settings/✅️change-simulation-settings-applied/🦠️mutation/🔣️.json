@@ -1,0 +1,8 @@
+{
+  "mutation": "changeSimulationSettings",
+  "payload": {
+    "zoneTimestepMinutes": 15,
+    "systemTimestepMinutes": 5,
+    "warmupDays": 1
+  }
+}

@@ -26,7 +26,7 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ReplaceRefer
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace reference \"{}\" source", self.id), &format!("Referenz \"{}\" Quelle ersetzen", self.id))
+        protocol::LocalizedLabel::native(&format!("Replace reference \"{}\" source", self.id), &format!("Quelle von Referenz \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

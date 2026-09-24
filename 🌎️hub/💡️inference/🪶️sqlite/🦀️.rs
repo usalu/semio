@@ -1,11 +1,15 @@
 //! 🪶️ Bounded SQLite private-job ledger with durable idempotency and first-terminal-wins.
 
-use super::{schema::*, sha256, InferenceErrorV1, InferencePrivateBytesV1};
+use super::{command::COMMAND_MAX_BYTES, schema::*, sha256, InferenceErrorV1, InferencePrivateBytesV1};
 use rusqlite::{params, Connection, OptionalExtension, Transaction, TransactionBehavior};
 use std::path::Path;
 use std::sync::Mutex;
 
-const SCHEMA: &str = "
+/// 🧱️ The ledger's SQL, with every size and cursor CHECK taken from the declared bounds, so the store
+/// admits exactly what the service admits and a bound changes in one place.
+fn ledger_schema() -> String {
+    format!(
+        "
 PRAGMA foreign_keys=ON;
 PRAGMA secure_delete=ON;
 CREATE TABLE IF NOT EXISTS inference_job_v1 (
@@ -16,17 +20,17 @@ CREATE TABLE IF NOT EXISTS inference_job_v1 (
  space_id TEXT NOT NULL,
  document_id TEXT NOT NULL,
  identity_digest TEXT NOT NULL CHECK(length(identity_digest)=64),
- identity_json TEXT NOT NULL CHECK(length(identity_json)<=8192),
+ identity_json TEXT NOT NULL CHECK(length(identity_json)<={IDENTITY_JSON_MAX_BYTES}),
  expires_at INTEGER NOT NULL,
  state TEXT NOT NULL CHECK(state IN ('accepted','running','succeeded','failed','cancelled')),
  proposal_state TEXT NOT NULL CHECK(proposal_state IN ('none','offered','approved','stale','cancelled')),
  run_epoch INTEGER NOT NULL DEFAULT 0,
  lease_expires_at INTEGER NOT NULL DEFAULT 0,
  cancel_requested_at INTEGER,
- progress_cursor INTEGER NOT NULL DEFAULT 0 CHECK(progress_cursor BETWEEN 0 AND 16),
- input BLOB NOT NULL CHECK(length(input)<=65536),
- result BLOB NOT NULL CHECK(length(result)<=16384),
- proposal BLOB NOT NULL CHECK(length(proposal)<=4096),
+ progress_cursor INTEGER NOT NULL DEFAULT 0 CHECK(progress_cursor BETWEEN 0 AND {PROGRESS_MAX_CURSOR}),
+ input BLOB NOT NULL CHECK(length(input)<={INPUT_MAX_BYTES}),
+ result BLOB NOT NULL CHECK(length(result)<={RESULT_MAX_BYTES}),
+ proposal BLOB NOT NULL CHECK(length(proposal)<={PROPOSAL_MAX_BYTES}),
  terminal_at INTEGER,
  CHECK((state IN ('accepted','running') AND terminal_at IS NULL) OR (state IN ('succeeded','failed','cancelled') AND terminal_at IS NOT NULL)),
  CHECK(state='succeeded' OR (length(result)=0 AND length(proposal)=0)),
@@ -44,7 +48,7 @@ CREATE TABLE IF NOT EXISTS inference_job_event_v1 (
 );
 CREATE TABLE IF NOT EXISTS inference_job_progress_v1 (
  job_id TEXT NOT NULL REFERENCES inference_job_v1(job_id),
- cursor INTEGER NOT NULL CHECK(cursor BETWEEN 1 AND 16),
+ cursor INTEGER NOT NULL CHECK(cursor BETWEEN 1 AND {PROGRESS_MAX_CURSOR}),
  run_epoch INTEGER NOT NULL,
  completed INTEGER NOT NULL,
  total INTEGER NOT NULL,
@@ -62,7 +66,7 @@ CREATE TABLE IF NOT EXISTS inference_approval_outbox_v1 (
  mutation_id TEXT NOT NULL UNIQUE CHECK(length(mutation_id)=32),
  command_hash TEXT NOT NULL CHECK(length(command_hash)=64),
  proposal_hash TEXT NOT NULL CHECK(length(proposal_hash)=64),
- command BLOB NOT NULL CHECK(length(command)<=8192),
+ command BLOB NOT NULL CHECK(length(command)<={COMMAND_MAX_BYTES}),
  prepared_at INTEGER NOT NULL,
  phase TEXT NOT NULL CHECK(phase IN ('prepared','committed','abandoned')),
  CHECK(phase='prepared' OR length(command)=0)
@@ -84,13 +88,13 @@ CREATE TABLE IF NOT EXISTS inference_approval_undo_v1 (
  after_chain_sha256 TEXT NOT NULL CHECK(length(after_chain_sha256)=64),
  descriptor_digest TEXT NOT NULL CHECK(length(descriptor_digest)=64),
  after_base_digest TEXT NOT NULL CHECK(length(after_base_digest)=64),
- original_command BLOB NOT NULL CHECK(length(original_command)<=8192),
+ original_command BLOB NOT NULL CHECK(length(original_command)<={COMMAND_MAX_BYTES}),
  undo_idempotency_key TEXT,
  undo_job_id TEXT,
  undo_proposal_hash TEXT,
  undo_mutation_id TEXT,
  undo_command_hash TEXT,
- undo_command BLOB NOT NULL DEFAULT X'' CHECK(length(undo_command)<=8192),
+ undo_command BLOB NOT NULL DEFAULT X'' CHECK(length(undo_command)<={COMMAND_MAX_BYTES}),
  undo_frontier_head_ordinal INTEGER,
  undo_frontier_head_edit_id TEXT,
  undo_frontier_commit_seq INTEGER,
@@ -100,7 +104,9 @@ CREATE TABLE IF NOT EXISTS inference_approval_undo_v1 (
  CHECK(phase<>'prepared' OR length(undo_command)>0),
  CHECK(phase<>'committed' OR (length(original_command)=0 AND length(undo_command)=0 AND length(undo_frontier_chain_sha256)=64))
 );
-";
+"
+    )
+}
 
 pub struct InferenceJobLedgerV1 {
     connection: Mutex<Connection>,
@@ -146,7 +152,7 @@ pub(crate) struct GisMapApprovalUndoTargetV1 {
     pub session_id: String,
     pub authorization_generation: u64,
     pub scope: directory::os_directory::DocumentScope,
-    pub after_frontier: directory::os_directory::CheckpointPublicationFrontierV1,
+    pub after_frontier: directory::os_directory::EditedArtifactFrontierV1,
     pub descriptor_digest: String,
     pub after_base_digest: String,
     pub original_command: InferencePrivateBytesV1,
@@ -304,7 +310,7 @@ impl InferenceJobLedgerV1 {
     pub fn open(path: &Path) -> Result<Self, InferenceErrorV1> {
         let connection = Connection::open(path).map_err(storage)?;
         connection.busy_timeout(std::time::Duration::from_secs(2)).map_err(storage)?;
-        connection.execute_batch(SCHEMA).map_err(storage)?;
+        connection.execute_batch(&ledger_schema()).map_err(storage)?;
         Ok(Self { connection: Mutex::new(connection) })
     }
 
@@ -655,7 +661,7 @@ impl InferenceJobLedgerV1 {
             }
             proposal_hash = Some(approval.2.clone());
             let expected_current =
-                directory::os_directory::CheckpointPublicationFrontierV1 { document_id: reader.document_id.to_owned(), head_edit_ordinal: approval.5, head_edit_id: approval.6, last_commit_seq: approval.7, chain_sha256: approval.8 };
+                directory::os_directory::EditedArtifactFrontierV1 { document_id: reader.document_id.to_owned(), head_edit_ordinal: approval.5, head_edit_id: approval.6, last_commit_seq: approval.7, chain_sha256: approval.8 };
             if !expected_current.validate() {
                 return Err(InferenceErrorV1::Storage);
             }
@@ -783,7 +789,7 @@ impl InferenceJobLedgerV1 {
 
     pub fn prepare_approval(&self, job_id: &str, current: &InferenceIdentityV1, proposal_hash: &str, command: &InferencePrivateBytesV1, now: u64) -> Result<InferenceApprovalOutboxV1, InferenceErrorV1> {
         current.validate()?;
-        if command.as_slice().is_empty() || command.as_slice().len() > 8192 || now > SAFE_INTEGER_MAX || !hex(proposal_hash, 64) {
+        if command.as_slice().is_empty() || command.as_slice().len() > COMMAND_MAX_BYTES || now > SAFE_INTEGER_MAX || !hex(proposal_hash, 64) {
             return Err(InferenceErrorV1::Bounds);
         }
         let mutation_id = sha256(format!("semio.hub.inference-approval-mutation/v1\0{job_id}\0{proposal_hash}").as_bytes())[..32].to_string();
@@ -816,14 +822,14 @@ impl InferenceJobLedgerV1 {
                 return Err(InferenceErrorV1::Expired);
             }
             if outbox_phase == "prepared" {
-                return Ok(InferenceApprovalOutboxV1 { job_id: job_id.to_string(), mutation_id, command_hash, proposal_hash: proposal_hash.to_string(), prepared_at_ms, command: InferencePrivateBytesV1::new(command.as_slice().to_vec(), 8192)? });
+                return Ok(InferenceApprovalOutboxV1 { job_id: job_id.to_string(), mutation_id, command_hash, proposal_hash: proposal_hash.to_string(), prepared_at_ms, command: InferencePrivateBytesV1::new(command.as_slice().to_vec(), COMMAND_MAX_BYTES)? });
             }
             if outbox_phase != "abandoned" {
                 return Err(InferenceErrorV1::Conflict);
             }
             tx.execute("UPDATE inference_approval_outbox_v1 SET command=?2,prepared_at=?3,phase='prepared' WHERE job_id=?1 AND phase='abandoned'", params![job_id, command.as_slice(), sql_integer(now)?]).map_err(storage)?;
             tx.commit().map_err(storage)?;
-            return Ok(InferenceApprovalOutboxV1 { job_id: job_id.to_string(), mutation_id, command_hash, proposal_hash: proposal_hash.to_string(), prepared_at_ms: now, command: InferencePrivateBytesV1::new(command.as_slice().to_vec(), 8192)? });
+            return Ok(InferenceApprovalOutboxV1 { job_id: job_id.to_string(), mutation_id, command_hash, proposal_hash: proposal_hash.to_string(), prepared_at_ms: now, command: InferencePrivateBytesV1::new(command.as_slice().to_vec(), COMMAND_MAX_BYTES)? });
         }
         if accepted != *current || now >= expires_at {
             tx.execute("UPDATE inference_job_v1 SET proposal_state='stale',result=X'',proposal=X'' WHERE job_id=?1", [job_id]).map_err(storage)?;
@@ -838,7 +844,7 @@ impl InferenceJobLedgerV1 {
         tx.execute("INSERT INTO inference_approval_outbox_v1 VALUES (?1,?2,?3,?4,?5,?6,'prepared')", params![job_id, mutation_id, command_hash, proposal_hash, command.as_slice(), sql_integer(now)?]).map_err(storage)?;
         event(&tx, job_id, "approval-prepared", now)?;
         tx.commit().map_err(storage)?;
-        Ok(InferenceApprovalOutboxV1 { job_id: job_id.to_string(), mutation_id, command_hash, proposal_hash: proposal_hash.to_string(), prepared_at_ms: now, command: InferencePrivateBytesV1::new(command.as_slice().to_vec(), 8192)? })
+        Ok(InferenceApprovalOutboxV1 { job_id: job_id.to_string(), mutation_id, command_hash, proposal_hash: proposal_hash.to_string(), prepared_at_ms: now, command: InferencePrivateBytesV1::new(command.as_slice().to_vec(), COMMAND_MAX_BYTES)? })
     }
 
     pub(crate) fn abandon_prepared_approval(&self, reader: &InferenceReaderV1<'_>, job_id: &str, mutation_id: &str, command_hash: &str, proposal_hash: &str) -> Result<bool, InferenceErrorV1> {
@@ -890,7 +896,7 @@ impl InferenceJobLedgerV1 {
                 command_hash: row.get(2).map_err(storage)?,
                 proposal_hash: row.get(3).map_err(storage)?,
                 prepared_at_ms: read_integer(row, 4).map_err(storage)?,
-                command: InferencePrivateBytesV1::new(row.get(5).map_err(storage)?, 8192)?,
+                command: InferencePrivateBytesV1::new(row.get(5).map_err(storage)?, COMMAND_MAX_BYTES)?,
             });
         }
         Ok(InferenceApprovalPageV1 { rows, next_cursor })
@@ -907,7 +913,7 @@ impl InferenceJobLedgerV1 {
             })
             .optional()
             .map_err(storage)?;
-        row.map(|(job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command)| Ok(InferenceApprovalOutboxV1 { job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command: InferencePrivateBytesV1::new(command, 8192)? }))
+        row.map(|(job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command)| Ok(InferenceApprovalOutboxV1 { job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command: InferencePrivateBytesV1::new(command, COMMAND_MAX_BYTES)? }))
             .transpose()
     }
 
@@ -929,7 +935,7 @@ impl InferenceJobLedgerV1 {
         };
         let accepted = identity(&tx, &job_id)?;
         tx.commit().map_err(storage)?;
-        let outbox = InferenceApprovalOutboxV1 { job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command: InferencePrivateBytesV1::new(command, 8192)? };
+        let outbox = InferenceApprovalOutboxV1 { job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command: InferencePrivateBytesV1::new(command, COMMAND_MAX_BYTES)? };
         Ok(Some((outbox, accepted, phase == "committed")))
     }
 
@@ -938,7 +944,7 @@ impl InferenceJobLedgerV1 {
         job_id: &str,
         witness: &super::wal::CommittedInferenceWalWitnessV1,
         document_generation: u64,
-        after_frontier: &directory::os_directory::CheckpointPublicationFrontierV1,
+        after_frontier: &directory::os_directory::EditedArtifactFrontierV1,
         descriptor_digest: &str,
         after_base_digest: &str,
         now: u64,
@@ -994,7 +1000,7 @@ impl InferenceJobLedgerV1 {
         if job_phase != "succeeded" || proposal_phase != "offered" {
             return Err(approval_reconciliation_conflict(ApprovalReconciliationConflictV1::JobOrProposalPhaseDiffers));
         }
-        if command.is_empty() || command.len() > 8192 || sha256(&command) != accepted_command {
+        if command.is_empty() || command.len() > COMMAND_MAX_BYTES || sha256(&command) != accepted_command {
             return Err(approval_reconciliation_conflict(ApprovalReconciliationConflictV1::OutboxCommandDiffers));
         }
         tx.execute(
@@ -1032,7 +1038,7 @@ impl InferenceJobLedgerV1 {
         if reader.user_id != row.4 || reader.session_id != row.5 || reader.authorization_generation != row.6 || reader.space_id != row.7 || reader.document_id != row.8 {
             return Err(InferenceErrorV1::Denied);
         }
-        let after_frontier = directory::os_directory::CheckpointPublicationFrontierV1 { document_id: row.8.clone(), head_edit_ordinal: row.9, head_edit_id: row.10, last_commit_seq: row.11, chain_sha256: row.12 };
+        let after_frontier = directory::os_directory::EditedArtifactFrontierV1 { document_id: row.8.clone(), head_edit_ordinal: row.9, head_edit_id: row.10, last_commit_seq: row.11, chain_sha256: row.12 };
         if !after_frontier.validate() || !hex(&row.13, 64) || !hex(&row.14, 64) || sha256(&row.15) != row.2 {
             return Err(InferenceErrorV1::Conflict);
         }
@@ -1049,7 +1055,7 @@ impl InferenceJobLedgerV1 {
             after_frontier,
             descriptor_digest: row.13,
             after_base_digest: row.14,
-            original_command: InferencePrivateBytesV1::new(row.15, 8192)?,
+            original_command: InferencePrivateBytesV1::new(row.15, COMMAND_MAX_BYTES)?,
         })
     }
 
@@ -1094,7 +1100,7 @@ impl InferenceJobLedgerV1 {
             "available" => Ok(None),
             "prepared" if row.7.as_deref() == Some(idempotency_key) => Ok(None),
             "committed" if row.7.as_deref() == Some(idempotency_key) => {
-                let frontier = directory::os_directory::CheckpointPublicationFrontierV1 {
+                let frontier = directory::os_directory::EditedArtifactFrontierV1 {
                     document_id: row.5,
                     head_edit_ordinal: row.10.ok_or(InferenceErrorV1::Storage)?,
                     head_edit_id: row.11.ok_or(InferenceErrorV1::Storage)?,
@@ -1165,7 +1171,7 @@ impl InferenceJobLedgerV1 {
                 Ok(GisMapApprovalUndoAdmissionV1::Prepared)
             }
             "committed" if exact => {
-                let frontier = directory::os_directory::CheckpointPublicationFrontierV1 {
+                let frontier = directory::os_directory::EditedArtifactFrontierV1 {
                     document_id: target.scope.document_id.clone(),
                     head_edit_ordinal: row.6.ok_or(InferenceErrorV1::Storage)?,
                     head_edit_id: row.7.ok_or(InferenceErrorV1::Storage)?,
@@ -1197,7 +1203,7 @@ impl InferenceJobLedgerV1 {
         target_id: &str,
         witness: &super::wal::CommittedInferenceWalWitnessV1,
         document_generation: u64,
-        frontier: &directory::os_directory::CheckpointPublicationFrontierV1,
+        frontier: &directory::os_directory::EditedArtifactFrontierV1,
     ) -> Result<bool, InferenceErrorV1> {
         if !hex(target_id, 32) || !frontier.validate() {
             return Err(InferenceErrorV1::Bounds);
@@ -1298,7 +1304,7 @@ impl InferenceJobLedgerV1 {
             .optional()
             .map_err(storage)?;
         let Some(row) = row else { return Ok(None) };
-        let after_frontier = directory::os_directory::CheckpointPublicationFrontierV1 { document_id: row.9.clone(), head_edit_ordinal: row.10, head_edit_id: row.11.clone(), last_commit_seq: row.12, chain_sha256: row.13.clone() };
+        let after_frontier = directory::os_directory::EditedArtifactFrontierV1 { document_id: row.9.clone(), head_edit_ordinal: row.10, head_edit_id: row.11.clone(), last_commit_seq: row.12, chain_sha256: row.13.clone() };
         let prepared = row.23 == "prepared";
         if !after_frontier.validate()
             || !hex(&row.0, 32)
@@ -1331,14 +1337,14 @@ impl InferenceJobLedgerV1 {
                 after_frontier,
                 descriptor_digest: row.14,
                 after_base_digest: row.15,
-                original_command: InferencePrivateBytesV1::new(row.16, 8192)?,
+                original_command: InferencePrivateBytesV1::new(row.16, COMMAND_MAX_BYTES)?,
             },
             idempotency_key: row.17,
             operation_id: row.18,
             proposal_hash: row.19,
             mutation_id: row.20,
             command_hash: row.21,
-            command: InferencePrivateBytesV1::new(row.22, 8192)?,
+            command: InferencePrivateBytesV1::new(row.22, COMMAND_MAX_BYTES)?,
             ledger_applied: !prepared,
         }))
     }

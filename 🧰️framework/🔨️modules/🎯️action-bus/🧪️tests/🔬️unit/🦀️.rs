@@ -223,7 +223,7 @@ fn wire_dispatch_uses_the_factory_decoder_and_preserves_the_restart_checkpoint()
     let StepOutcome::Complete(mut candidate) = dispatch.job.step(&mut context) else { panic!("wire job did not complete") };
     assert_eq!(candidate.output.page(0), Some(expected.as_slice()));
     assert_eq!(candidate.output.page_count(), 1);
-    assert_eq!(candidate.output.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Pending { released_items: 1, released_bytes: expected.len() },);
+    assert_eq!(candidate.output.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Pending { released_items: 1, released_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES });
     assert_eq!(candidate.output.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete);
     dispatch.job.begin_close();
     while !dispatch.job.terminal_is_empty() {

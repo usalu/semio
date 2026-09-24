@@ -24,7 +24,7 @@ impl MutationKind<FormsSnapshot, FormMutation> for ChangeStepDescription {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change step \"{}\" description", self.id), &format!("Schritt \"{}\" Beschreibung ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change step \"{}\" description", self.id), &format!("Beschreibung von Schritt \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

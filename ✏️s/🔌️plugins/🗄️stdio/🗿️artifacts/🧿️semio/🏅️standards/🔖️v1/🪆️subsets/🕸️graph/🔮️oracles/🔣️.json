@@ -207,8 +207,9 @@
           "capability": "semio-v1-graph-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-node-port",
@@ -227,8 +228,9 @@
           "capability": "semio-v1-graph-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-node-property",
@@ -247,8 +249,9 @@
           "capability": "semio-v1-graph-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-node-kind",
@@ -267,8 +270,9 @@
           "capability": "semio-v1-graph-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-node-label",
@@ -287,7 +291,8 @@
           "capability": "semio-v1-graph-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-edge",
@@ -306,7 +311,8 @@
           "capability": "semio-v1-graph-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-node",
@@ -365,8 +371,9 @@
           "capability": "semio-v1-graph-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-node",

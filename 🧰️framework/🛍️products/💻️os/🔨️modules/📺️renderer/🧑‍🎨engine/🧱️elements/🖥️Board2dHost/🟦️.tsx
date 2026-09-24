@@ -23,21 +23,7 @@ import {
   getActiveCataloguePointerDragData,
 } from "@semio-tech/ui-react";
 import { STYLING_METRICS, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import {
-  EMPTY_GESTURE_POINTERS,
-  applyPinchToCamera,
-  gestureIsMultiTouch,
-  gesturePointerDown,
-  gesturePointerMove,
-  gesturePointerUp,
-  pinchFrame,
-  pinchStep,
-  type ComponentSceneHostProps,
-  type Board2dScene,
-  type ContextMenuItemSpec,
-  type GesturePointers,
-  type PinchFrame,
-} from "@semio-tech/framework";
+import { GestureRecognizer, applyPinchToCamera, type ComponentSceneHostProps, type Board2dScene, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type Board2dWasmSession, type Board2dPeer, type BoardPeerScope, BoardSessionFactoryContext, createBoardPeerScope } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { createCoalescingActionDispatcher } from "../🛠️ShellHelpers/🟦️.tsx";
@@ -666,8 +652,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const cameraSettleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const renderScheduledRef = useRef(false);
   const pendingCameraDispatchRef = useRef<{ readonly camera: BoardCamera } | null>(null);
-  const gesturePointersRef = useRef<GesturePointers>(EMPTY_GESTURE_POINTERS);
-  const pinchFrameRef = useRef<PinchFrame | null>(null);
+  const [gestureRecognizer] = useState(() => new GestureRecognizer());
   const pendingSelectionJsonRef = useRef<string | null>(null);
   const onPeerGestureEndedRef = useRef<(flushed: boolean) => void>(() => {});
   const boardStatusRef = useRef<Board2dStatus>({ fixtureParsed: null, fixtureChars: 0, refusalReason: "", pendingEvents: 0, guestRevision: 0 });
@@ -1332,7 +1317,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     const yieldToPinch = (session: Board2dWasmSession, point: { x: number; y: number }): void => {
       session.cancelAreaSelect?.();
       session.pointerUpScreen(point.x, point.y, false, false, false);
-      for (const tracked of gesturePointersRef.current.pointers) {
+      for (const tracked of gestureRecognizer.pointers) {
         if (canvas.hasPointerCapture?.(tracked.pointerId)) canvas.releasePointerCapture(tracked.pointerId);
       }
     };
@@ -1342,13 +1327,13 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       const session = sessionRef.current;
       if (!session) return;
       const point = clientToLocal(event.clientX, event.clientY);
-      gesturePointersRef.current = gesturePointerDown(gesturePointersRef.current, { pointerId: event.pointerId, x: point.x, y: point.y });
-      if (gestureIsMultiTouch(gesturePointersRef.current)) {
+      const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: point.x, y: point.y });
+      if (verdict.kind === "pinchBegin") {
         yieldToPinch(session, point);
-        pinchFrameRef.current = pinchFrame(gesturePointersRef.current);
         beginCameraInteraction();
         return;
       }
+      if (verdict.kind !== "single") return;
       if (event.button === 0 || event.button === 1) {
         canvas.setPointerCapture?.(event.pointerId);
       }
@@ -1362,14 +1347,10 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (!session) return;
       const point = clientToLocal(event.clientX, event.clientY);
       publishBoardPresenceView(point);
-      gesturePointersRef.current = gesturePointerMove(gesturePointersRef.current, { pointerId: event.pointerId, x: point.x, y: point.y });
-      if (gestureIsMultiTouch(gesturePointersRef.current)) {
-        const next = pinchFrame(gesturePointersRef.current);
-        const previous = pinchFrameRef.current;
-        pinchFrameRef.current = next;
-        if (!next || !previous) return;
+      const verdict = gestureRecognizer.move({ pointerId: event.pointerId, x: point.x, y: point.y });
+      if (verdict.kind === "pinch") {
         beginCameraInteraction();
-        const camera = board2dPinchCamera(session.cameraJson(), pinchStep(previous, next), readContainerSize());
+        const camera = board2dPinchCamera(session.cameraJson(), verdict.step, readContainerSize());
         if (!camera) return;
         if (session.setCameraSilent) session.setCameraSilent(camera.x, camera.y, camera.zoom);
         else session.setCamera(camera.x, camera.y, camera.zoom);
@@ -1377,6 +1358,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
         scheduleRender();
         return;
       }
+      if (verdict.kind !== "single") return;
       session.pointerMoveScreen(point.x, point.y, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
       scheduleRender();
       drainAndMaybeFlush();
@@ -1385,13 +1367,9 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     const onPointerUp = (event: PointerEvent): void => {
       const session = sessionRef.current;
       if (!session) return;
-      const wasMultiTouch = gestureIsMultiTouch(gesturePointersRef.current);
-      gesturePointersRef.current = gesturePointerUp(gesturePointersRef.current, event.pointerId);
-      // 🤏️ Re-seed from the contacts that REMAIN: a pinch ending one finger at a time must not diff the
-      // next frame against a frame the lifted finger was still in, which would snap the camera.
-      pinchFrameRef.current = pinchFrame(gesturePointersRef.current);
+      const verdict = gestureRecognizer.up(event.pointerId);
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
-      if (wasMultiTouch) return;
+      if (verdict.kind !== "single") return;
       const point = clientToLocal(event.clientX, event.clientY);
       session.pointerUpScreen(point.x, point.y, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
       endPuzzle2dPeerGesture(peerScope, node.controllerId, node.surfaceId, peerRef.current);
@@ -1403,10 +1381,9 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
 
     const onPointerCancel = (event: PointerEvent): void => {
       const session = sessionRef.current;
-      gesturePointersRef.current = gesturePointerUp(gesturePointersRef.current, event.pointerId);
-      pinchFrameRef.current = pinchFrame(gesturePointersRef.current);
+      const verdict = gestureRecognizer.up(event.pointerId);
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
-      if (!session) return;
+      if (!session || verdict.kind !== "single") return;
       session.pointerCancelScreen();
       endPuzzle2dPeerGesture(peerScope, node.controllerId, node.surfaceId, peerRef.current);
       pendingCameraDispatchRef.current = null;

@@ -1,6 +1,6 @@
 //! 📤️ `s.stdio.semio/v1/cad` → `dwg` (ac1024) — every layer becomes a DWG layer and every model-space
 //! entity its DWG counterpart in the logical drawing model (`DwgLogicalDrawing`), which the DWG
-//! codec writes as real AC1015 bytes: line, circle, arc and text keep their geometry (DXF-style
+//! codec writes as real AC1024 bytes: line, circle, arc and text keep their geometry (DXF-style
 //! degree angles become DWG radians), an ellipse keeps its relative major axis, a polyline becomes an
 //! `LWPOLYLINE`, a solid a `3DFACE` and a dimension its text at the text position.
 //!
@@ -57,7 +57,7 @@ impl ArtifactSerializer for SemioCadToDwg {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(DwgSnapshot { version: "AC1015".into(), drawing: DwgLogicalDrawing::from_native(&cad_to_dwg_drawing(from)).map_err(store::PackError::Schema)?, ..DwgSnapshot::default() })
+        DwgSnapshot::from_drawing(&cad_to_dwg_drawing(from)).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️Serializer

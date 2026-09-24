@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/📜️script.ts

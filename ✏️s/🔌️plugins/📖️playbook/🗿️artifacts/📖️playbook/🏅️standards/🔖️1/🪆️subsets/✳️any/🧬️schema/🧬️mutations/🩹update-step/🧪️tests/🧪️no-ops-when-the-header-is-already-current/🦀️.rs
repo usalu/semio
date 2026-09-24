@@ -96,11 +96,11 @@ async fn committed_json_is_canonical() {
     assert!(original.get("description").and_then(serde_json::Value::as_str).is_some(), "this case exercises the both-fields-match branch, so the description must be present");
 }
 
-/// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op`.
+/// 🎯️ The declared outcome holds: `no-op`, with one untargeted Warning `mutation.no-op`.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "update-step/no-ops-when-the-header-is-already-current declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "update-step/no-ops-when-the-header-is-already-current declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <PlaybookMutation as protocol::Mutation<PlaybookSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

@@ -31,7 +31,10 @@ impl MutationKind<CadSnapshot, CadMutation> for MoveObjects {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Move {} object(s)", self.placements.len()), &format!("{} Objekt(s) verschieben", self.placements.len()))
+        match self.placements.len() {
+            1 => protocol::LocalizedLabel::native("Move 1 object", "1 Objekt verschieben"),
+            count => protocol::LocalizedLabel::native(&format!("Move {count} objects"), &format!("{count} Objekte verschieben")),
+        }
     }
     fn target(&self) -> Vec<String> {
         self.placements.iter().map(|placement| placement.object_id.clone()).collect()

@@ -61,11 +61,11 @@ export const submitRequestSchema = {
 };
 
 /** ✅️ NOT declared here: the approval intent is the ONE body in this file whose contract the
- * `os.mcp` scope already owns (`🌉️mcp/🧬️schema/🦀️.rs`'s `GisMapInferenceApprovalRequestV1`, itself
+ * `os.mcp` scope already owns (`🌉️mcp/🧬️schema/🦀️.rs`'s `HubInferenceApprovalRequestV1`, itself
  * an explicit mirror of hub's authority). Taking it from the registry rather than restating it is
  * what makes `theOsMirrorMatchesHubsApprovalAuthority` below a real conformance check instead of two
  * copies agreeing with each other. */
-export const approvalRequestSchema = { $schema: "http://json-schema.org/draft-07/schema#", ...(osMcpSchema("GisMapInferenceApprovalRequestV1") as object) };
+export const approvalRequestSchema = { $schema: "http://json-schema.org/draft-07/schema#", ...(osMcpSchema("HubInferenceApprovalRequestV1") as object) };
 
 export const jobReceiptSchema = {
   $schema: "http://json-schema.org/draft-07/schema#",
@@ -200,7 +200,7 @@ export function proveOsMirrorsHubApprovalAuthority(repoRoot: string): { readonly
   const hub = JSON.parse(readFileSync(resolve(repoRoot, authorityPath), "utf8")) as { $defs: Record<string, unknown> };
   must("InferenceApprovalRequestV1" in hub.$defs, `${authorityPath} publishes no InferenceApprovalRequestV1 export`);
   const authority = inlineLocalRefs(hub.$defs.InferenceApprovalRequestV1, hub) as Record<string, unknown>;
-  const mirror = osMcpSchema("GisMapInferenceApprovalRequestV1") as Record<string, unknown>;
+  const mirror = osMcpSchema("HubInferenceApprovalRequestV1") as Record<string, unknown>;
   let compared = 0;
   for (const keyword of ["type", "additionalProperties", "required", "properties"] as const) {
     must(canonicalJson(mirror[keyword]) === canonicalJson(authority[keyword]), `the os.mcp approval mirror drifted from hub on \`${keyword}\`: ${canonicalJson(mirror[keyword])} vs ${canonicalJson(authority[keyword])}`);

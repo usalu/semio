@@ -1,0 +1,814 @@
+//#region 🔖️WasmActor
+/// @emoji 🌐️ Browser wgpu build: the document actor runs on the isolate's own executor and reaches its
+/// hub through the same `semio.session.v1` admission the native actor uses (open plan → plan-bound socket
+/// grant → one socket whose single subprotocol value carries the session capability), over the socket
+/// the host's injected [`DocumentSocketDialer`] opens. No filesystem, so a folder binding is never
+/// served here — the shell refuses one before an actor exists.
+/// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this is a browser-only bridge, so it is
+/// narrowed to exclude the WASI component target.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+mod wasm_actor {
+    use super::*;
+    use std::sync::{Arc, RwLock};
+    use wasm_bindgen::JsCast;
+
+    /// ⏱️ How often a dialed socket's page-owned receive queue is read while it is connecting or live.
+    const DOCUMENT_SOCKET_POLL_MS: u64 = 16;
+    /// ⏱️ The longest the actor sleeps with nothing dialed and nothing scheduled.
+    const DOCUMENT_ACTOR_IDLE_MS: u64 = 1_000;
+    /// 📃️ Frames one socket turn hands to the actor before it yields to its mailbox again.
+    const DOCUMENT_SOCKET_FRAMES_PER_TURN: usize = 32;
+    /// ⏱️ The admission deadline, the native actor's own.
+    const DOCUMENT_ADMISSION_TIMEOUT_MS: u64 = 5_000;
+
+    type SharedCredential = Arc<RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>;
+    type SharedGrantSource = Arc<RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>;
+    type SharedDialer = Arc<RwLock<Option<Arc<dyn DocumentSocketDialer>>>>;
+
+    /// 🔐️ What the host lends one browser actor for its hub binding: the late-bound credential, grant
+    /// source and dialer (sign-in may come after the open), the verified lease, and the document's cancel.
+    pub(super) struct WasmActorHub {
+        pub(super) credential: SharedCredential,
+        pub(super) socket_grant_source: SharedGrantSource,
+        pub(super) dialer: SharedDialer,
+        pub(super) lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+        pub(super) cancel: semio_framework_async::CancelToken,
+    }
+
+    struct PendingWasmArtifactBootstrap {
+        assembler: ArtifactBootstrapAssembler,
+        started_ms: u64,
+        resume_token: String,
+        baseline_frontier: RuntimeFrontierSummary,
+        required_tail_frontier: RuntimeFrontierSummary,
+        pack_schema_hash: [u8; 32],
+    }
+
+    struct WasmBootstrapControl {
+        cancelled: bool,
+        now_ms: u64,
+        events: broadcast::Sender<ArtifactEvent>,
+    }
+
+    impl ArtifactBootstrapControl for WasmBootstrapControl {
+        fn is_cancelled(&mut self) -> bool {
+            self.cancelled
+        }
+
+        fn now_ms(&mut self) -> u64 {
+            self.now_ms
+        }
+
+        fn on_progress(&mut self, progress: ArtifactBootstrapProgress) {
+            let _ = self.events.send(ArtifactEvent::BootstrapProgress { received_bytes: progress.received_bytes, total_bytes: progress.total_bytes, received_chunks: progress.received_chunks, total_chunks: progress.total_chunks });
+        }
+    }
+
+    /// 🕰️ Wall-clock milliseconds; `std`'s `SystemTime` panics on this target.
+    fn wall_ms() -> u64 {
+        js_sys::Date::now() as u64
+    }
+
+    /// 💤️ Resolves after `ms` on the global `setTimeout`, which a page and a dedicated Worker both own —
+    /// the actor's own cadence, independent of whoever pumps the renderer's cooperative pool.
+    async fn sleep_ms(ms: u64) {
+        let promise = js_sys::Promise::new(&mut |resolve, _reject| {
+            let global = js_sys::global();
+            if let Ok(set_timeout) = js_sys::Reflect::get(&global, &wasm_bindgen::JsValue::from_str("setTimeout")).and_then(|value| value.dyn_into::<js_sys::Function>().map_err(Into::into)) {
+                let _ = set_timeout.call2(&global, &resolve, &wasm_bindgen::JsValue::from_f64(ms as f64));
+            }
+        });
+        let _ = semio_framework_async::browser::JsFuture::from(promise).await;
+    }
+
+    /// 🧯️ Overwrites a secret string's bytes before it is dropped.
+    fn wipe(value: &mut String) {
+        unsafe { value.as_mut_vec().fill(0) };
+    }
+
+    struct WasmActor {
+        document_id: String,
+        schema: String,
+        remote: ChannelBackboneRemote,
+        events: broadcast::Sender<ArtifactEvent>,
+        hub_base_url: Option<String>,
+        hub_space_id: Option<String>,
+        hub_surface: Option<String>,
+        credential: SharedCredential,
+        socket_grant_source: SharedGrantSource,
+        dialer: SharedDialer,
+        document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+        operation_cancel: semio_framework_async::CancelToken,
+        socket: Option<Box<dyn DocumentSocket>>,
+        hello: Option<ClientFrame>,
+        socket_actor: Option<String>,
+        socket_actor_confirmed: bool,
+        socket_authority: Option<crate::os_directory::client::DocumentSocketAuthorityV1>,
+        /// @emoji 🎨️ See the native actor's matching field — same role, browser side.
+        session_color: Option<u8>,
+        server_frontier: Option<RuntimeFrontierSummary>,
+        resume_token: Option<String>,
+        pending_resume_token: Option<String>,
+        required_tail_frontier: Option<RuntimeFrontierSummary>,
+        artifact_rebootstrap_required: bool,
+        artifact_bootstrap: Option<PendingWasmArtifactBootstrap>,
+        pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
+        outbox: Vec<MutationEnvelope>,
+        document_backbone_retention: DocumentBackboneRetentionV1,
+        next_batch_id: u64,
+        next_local_rejection_batch_id: u64,
+        hlc_seed: Option<u64>,
+        hlc_counter: u64,
+        remote_state: RemoteState,
+        last_status: Option<ArtifactSyncStatus>,
+        backoff_ms: u64,
+        reconnect_at_ms: Option<u64>,
+    }
+
+    impl WasmActor {
+        //#region 🔖️Status
+        fn status(&self) -> ArtifactSyncStatus {
+            ArtifactSyncStatus { persisted: self.server_frontier.is_some(), pending_mutations: self.pending_batches.values().map(Vec::len).sum(), remote: self.remote_state.clone() }
+        }
+
+        fn set_remote_state(&mut self, state: RemoteState) {
+            self.remote_state = state;
+            self.emit_status_if_changed();
+        }
+
+        fn emit_status_if_changed(&mut self) {
+            let status = self.status();
+            if self.last_status.as_ref() != Some(&status) {
+                self.last_status = Some(status.clone());
+                let _ = self.events.send(ArtifactEvent::Status(status));
+            }
+        }
+        //#endregion 🔖️Status
+
+        //#region 🔖️Connect
+        /// 🌐️ One hub admission and dial, the native actor's `start_connect_hub`/`finish_connect_hub`
+        /// sequence on this isolate: every refusal backs off with the same doubling law and nothing
+        /// is dialed until credential, grant source, dialer, replica seed and kind identity all exist.
+        async fn connect(&mut self) {
+            let Some(base_url) = self.hub_base_url.clone() else { return };
+            if self.socket.is_some() || self.operation_cancel.is_cancelled_now() || self.reconnect_at_ms.is_some_and(|at| at > wall_ms()) {
+                return;
+            }
+            self.reconnect_at_ms = None;
+            let credential = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+            let source = self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+            let dialer = self.dialer.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+            let (Some(credential), Some(source), Some(dialer), Some(hlc_seed)) = (credential, source, dialer, self.hlc_seed) else {
+                self.schedule_reconnect();
+                return;
+            };
+            let Some(pack_schema_hash) = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await else {
+                self.schedule_reconnect();
+                return;
+            };
+            let space_id = self.hub_space_id.clone().unwrap_or_default();
+            let expectation = document_socket_expectation(&self.schema, pack_schema_hash, self.hub_surface.as_deref(), self.document_execution_target_lease.as_ref());
+            let client_instance_id = format!("browser-document-{hlc_seed:016x}");
+            self.set_remote_state(RemoteState::Connecting);
+            let ctx = semio_framework_async::OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 1, deadline_ms: None, cancel: self.operation_cancel.child_now(), capability: None };
+            let admission = source.admit_document_socket(&ctx, &space_id, &self.document_id, &expectation, &client_instance_id, DOCUMENT_ADMISSION_TIMEOUT_MS).await;
+            let Ok(crate::os_directory::client::DocumentSocketAdmissionV1 { mut socket, authority }) = admission else {
+                self.schedule_reconnect();
+                return;
+            };
+            let binding = DocumentSocketBinding {
+                hub_base_url: &base_url,
+                space_id: &space_id,
+                document_id: &self.document_id,
+                schema: &self.schema,
+                pack_schema_hash,
+                surface: self.hub_surface.as_deref(),
+                lease: self.document_execution_target_lease.as_ref(),
+            };
+            if ctx.cancel.is_cancelled_now() || !document_socket_authority_admits(&authority, &binding, wall_ms()) {
+                self.schedule_reconnect();
+                return;
+            }
+            let url = hub_ws_url(&authority.hub_origin, &authority.scope.space_id, &authority.scope.document_id, Some(&authority.surface.surface_id)).await;
+            let Ok(capability) = credential.capability() else {
+                self.schedule_reconnect();
+                return;
+            };
+            let mut protocols = document_socket_protocols(&socket.protocol, capability);
+            let dialed = dialer.dial(&url, &protocols);
+            wipe(&mut protocols[1]);
+            let Ok(dialed) = dialed else {
+                self.schedule_reconnect();
+                return;
+            };
+            self.socket = Some(dialed);
+            self.socket_actor = Some(std::mem::take(&mut socket.actor_id));
+            self.socket_actor_confirmed = false;
+            self.hub_surface = Some(authority.surface.surface_id.clone());
+            self.hello = Some(document_socket_hello(&self.schema, pack_schema_hash, self.resume_token.clone(), self.server_frontier.clone()));
+            self.socket_authority = Some(authority);
+            self.session_color = None;
+        }
+
+        fn schedule_reconnect(&mut self) {
+            let retry = self.backoff_ms;
+            self.set_remote_state(RemoteState::Backoff { retry_in_ms: retry });
+            self.reconnect_at_ms = Some(wall_ms().saturating_add(retry));
+            self.backoff_ms = crate::os_directory::client::next_backoff_ms(self.backoff_ms);
+        }
+
+        fn clear_socket_epoch(&mut self) {
+            self.socket_actor = None;
+            self.socket_actor_confirmed = false;
+            self.socket_authority = None;
+            self.session_color = None;
+            self.hello = None;
+        }
+
+        fn close_socket(&mut self) {
+            if let Some(mut socket) = self.socket.take() {
+                socket.close();
+            }
+            self.clear_socket_epoch();
+        }
+
+        /// 🔁️ A socket that closed, lost frames or broke the protocol: keep unacknowledged work, drop the
+        /// epoch, and back off before a fresh admission (a catch-up resumes from the last frontier).
+        fn disconnect(&mut self) {
+            self.abort_artifact_bootstrap();
+            self.requeue_pending_batches();
+            self.close_socket();
+            self.schedule_reconnect();
+        }
+
+        /// ⏳️ How long the loop may sleep before this actor has work of its own.
+        fn next_wake_ms(&self) -> u64 {
+            if self.socket.is_some() {
+                return DOCUMENT_SOCKET_POLL_MS;
+            }
+            match (self.hub_base_url.as_ref(), self.reconnect_at_ms) {
+                (Some(_), Some(at)) => at.saturating_sub(wall_ms()).clamp(1, DOCUMENT_ACTOR_IDLE_MS),
+                _ => DOCUMENT_ACTOR_IDLE_MS,
+            }
+        }
+
+        /// 📥️ One socket turn: greet the hub once the page reports the socket open, then hand at most one
+        /// page of frames to the protocol. An expired authority, a close or any lost frame reconnects.
+        async fn pump_socket(&mut self) {
+            if self.socket_authority.as_ref().is_some_and(|authority| authority.expires_at_unix_ms <= wall_ms()) {
+                self.disconnect();
+                return;
+            }
+            let Some(socket) = self.socket.as_mut() else { return };
+            if self.hello.is_some() && socket.is_open() {
+                let hello = self.hello.take().expect("hello was just observed");
+                let bytes = encode_client_frame(&hello, Lane::Command).await;
+                let Some(socket) = self.socket.as_mut() else { return };
+                if socket.send_binary(bytes).is_err() {
+                    self.disconnect();
+                    return;
+                }
+                self.backoff_ms = crate::os_directory::client::HUB_RECONNECT_MIN_MS;
+            }
+            for _ in 0..DOCUMENT_SOCKET_FRAMES_PER_TURN {
+                let Some(socket) = self.socket.as_mut() else { return };
+                match socket.poll() {
+                    DocumentSocketPoll::Frame(bytes) => self.on_binary(&bytes).await,
+                    DocumentSocketPoll::Pending => return,
+                    DocumentSocketPoll::Closed(_) | DocumentSocketPoll::Lost(_) => {
+                        self.disconnect();
+                        return;
+                    }
+                }
+            }
+        }
+
+        async fn send_frame(&mut self, frame: &ClientFrame, lane: Lane) {
+            if self.hello.is_some() || !self.socket.as_ref().is_some_and(|socket| socket.is_open()) {
+                return;
+            }
+            let bytes = encode_client_frame(frame, lane).await;
+            let Some(socket) = self.socket.as_mut() else { return };
+            if socket.send_binary(bytes).is_err() {
+                self.disconnect();
+            }
+        }
+        //#endregion 🔖️Connect
+
+        //#region 🔖️Relay
+        /// @emoji 🧺️ Builds + sends one `Commands` batch under the hub-issued socket actor, tracking it in
+        /// `pending_batches` for {@link WasmActor::handle_ack}. Mirrors the native `relay_operations_to_hub`:
+        /// nothing leaves before the hub confirmed the socket actor and every catch-up completed.
+        async fn relay_operations(&mut self, envelopes: &[MutationEnvelope]) {
+            if envelopes.is_empty() {
+                return;
+            }
+            let (Some(socket_actor), Some(hlc_seed)) = (self.socket_actor.clone(), self.hlc_seed) else {
+                self.queue_outbox(envelopes.iter().cloned());
+                return;
+            };
+            if !self.socket_actor_confirmed || self.socket.is_none() || self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
+                self.queue_outbox(envelopes.iter().cloned());
+                return;
+            }
+            let batch_id = self.next_batch_id;
+            self.next_batch_id = self.next_batch_id.wrapping_add(1);
+            let mut wire_envelopes: Vec<MutationEnvelope> = Vec::with_capacity(envelopes.len());
+            for envelope in envelopes {
+                let timestamp = next_timestamp(hlc_seed, &mut self.hlc_counter).await;
+                wire_envelopes.push(MutationEnvelope { actor: ActorId(socket_actor.clone()), timestamp, ..envelope.clone() });
+            }
+            self.pending_batches.insert(batch_id, envelopes.to_vec());
+            self.send_frame(&ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
+            self.emit_status_if_changed();
+        }
+
+        async fn relay_one_backbone(&mut self) -> Result<bool, vcs::VcsError> {
+            let Some(message) = self.remote.try_pop_front()? else { return Ok(false) };
+            match message {
+                BackboneMessage::Mutations { envelopes } => {
+                    let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
+                    self.relay_operations(&envelopes).await;
+                }
+                BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } => {}
+                BackboneMessage::Member { .. } => return Err(vcs::VcsError::Backbone("a composed member requires its exact member transport lane".into())),
+            }
+            Ok(true)
+        }
+
+        async fn handle_cmd(&mut self, message: ArtifactActorMsg) {
+            match message {
+                ArtifactActorMsg::LocalMutations { envelopes } => {
+                    let drained = self.relay_one_backbone().await.unwrap_or(false);
+                    if !drained && !envelopes.is_empty() {
+                        self.relay_operations(&envelopes).await;
+                    }
+                }
+                ArtifactActorMsg::DocumentBackbone { message } => {
+                    let envelopes = match decode_document_backbone_message_exact(&message) {
+                        Ok(envelopes) if envelopes.iter().all(|envelope| envelope.document_id.0 == self.document_id) => envelopes,
+                        Ok(envelopes) => {
+                            self.reject_document_backbone("document backbone scope mismatch", vec![envelopes.len().min(u8::MAX as usize) as u8]);
+                            return;
+                        }
+                        Err(_) => {
+                            self.reject_document_backbone("document backbone malformed", Vec::new());
+                            return;
+                        }
+                    };
+                    if let Err(reason) = self.document_backbone_retention.retain(message.len(), &envelopes) {
+                        self.reject_document_backbone(reason, vec![envelopes.len().min(u8::MAX as usize) as u8]);
+                        return;
+                    }
+                    if self.hub_space_id.is_some() {
+                        self.relay_operations(&envelopes).await;
+                    } else {
+                        self.document_backbone_retention.release(&envelopes);
+                    }
+                }
+                ArtifactActorMsg::LocalDocumentArchive { archive } => {
+                    let _ = crate::os_spr::decode_document_archive_bytes(&archive).await;
+                }
+                ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
+                    stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref()).await;
+                    self.send_frame(&ClientFrame::Presence { peer: presence_to_bytes(&peer).await }, Lane::Preview).await;
+                }
+                ArtifactActorMsg::PublishPreview { key, seq, payload } => {
+                    self.send_frame(&ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview).await;
+                }
+                ArtifactActorMsg::ExternalChanged | ArtifactActorMsg::Detach => {}
+            }
+        }
+
+        fn reject_document_backbone(&mut self, reason: impl Into<String>, messages: Vec<u8>) {
+            let batch_id = self.next_local_rejection_batch_id;
+            self.next_local_rejection_batch_id = self.next_local_rejection_batch_id.wrapping_sub(1);
+            let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason: reason.into(), messages } });
+        }
+
+        fn requeue_pending_batches(&mut self) {
+            let mut batches: Vec<(u64, Vec<MutationEnvelope>)> = self.pending_batches.drain().collect();
+            batches.sort_by_key(|(batch_id, _)| *batch_id);
+            for (_, envelopes) in batches {
+                self.queue_outbox(envelopes);
+            }
+        }
+
+        fn queue_outbox(&mut self, envelopes: impl IntoIterator<Item = MutationEnvelope>) {
+            let mut queued: std::collections::HashSet<String> = self.outbox.iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
+            for envelope in envelopes {
+                if queued.insert(envelope.mutation_id.0.clone()) {
+                    self.outbox.push(envelope);
+                }
+            }
+        }
+
+        async fn flush_outbox(&mut self) {
+            if self.outbox.is_empty() || self.socket.is_none() {
+                return;
+            }
+            let envelopes = std::mem::take(&mut self.outbox);
+            self.relay_operations(&envelopes).await;
+        }
+        //#endregion 🔖️Relay
+
+        //#region 🔖️Bootstrap
+        fn bootstrap_control(&self, cancelled: bool) -> WasmBootstrapControl {
+            WasmBootstrapControl { cancelled, now_ms: wall_ms(), events: self.events.clone() }
+        }
+
+        fn abort_artifact_bootstrap(&mut self) {
+            if let Some(mut pending) = self.artifact_bootstrap.take() {
+                pending.assembler.abort();
+            }
+            self.pending_resume_token = None;
+            self.required_tail_frontier = None;
+        }
+
+        /// ⚠️ A bootstrap or protocol fault is reported as the native actor reports it — one `Conflict` —
+        /// and the socket reconnects for a fresh catch-up.
+        fn fail_artifact_bootstrap(&mut self, detail: impl Into<String>) {
+            let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new("artifactBootstrap"), message: detail.into(), target: vec![self.document_id.clone()], op_index: None }));
+            self.disconnect();
+        }
+
+        /// ♻️ Hub lag forces a canonical pair refresh: keep unacked work queued, clear the projection
+        /// tokens and reconnect — the native `require_artifact_rebootstrap`.
+        fn require_artifact_rebootstrap(&mut self) {
+            self.requeue_pending_batches();
+            self.abort_artifact_bootstrap();
+            self.server_frontier = None;
+            self.resume_token = None;
+            self.artifact_rebootstrap_required = true;
+            self.close_socket();
+            self.schedule_reconnect();
+        }
+
+        async fn finish_catchup_if_ready(&mut self) {
+            let Some(required) = self.required_tail_frontier.clone() else { return };
+            let Some(actual) = self.server_frontier.as_ref() else { return };
+            if !frontier_reaches(actual, &required) {
+                return;
+            }
+            self.required_tail_frontier = None;
+            if let Some(resume_token) = self.pending_resume_token.take() {
+                self.resume_token = Some(resume_token);
+            }
+            self.set_remote_state(RemoteState::Live { peer_count: 0 });
+            self.flush_outbox().await;
+        }
+
+        async fn start_artifact_bootstrap(&mut self, bootstrap: ArtifactBootstrap, resume_token: String, server_frontier: RuntimeFrontierSummary) {
+            self.abort_artifact_bootstrap();
+            let Some(pack_schema_hash) = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await else {
+                self.fail_artifact_bootstrap(format!("no pack schema identity for schema {:?}", self.schema));
+                return;
+            };
+            if let Err(error) = validate_artifact_bootstrap_identity(&bootstrap, &self.document_id, &self.schema, pack_schema_hash, &server_frontier) {
+                self.fail_artifact_bootstrap(error);
+                return;
+            }
+            let inline = bootstrap.inline.is_some();
+            let started_ms = wall_ms();
+            let baseline_frontier = bootstrap.baseline_frontier.clone();
+            let required_tail_frontier = bootstrap.required_tail_frontier.clone();
+            let mut control = self.bootstrap_control(false);
+            let assembler = match ArtifactBootstrapAssembler::new(bootstrap.clone(), bootstrap.descriptor_hash, ArtifactBootstrapLimits::default(), Some(started_ms.saturating_add(ARTIFACT_BOOTSTRAP_DEADLINE_MS)), &mut control) {
+                Ok(assembler) => assembler,
+                Err(error) => {
+                    self.fail_artifact_bootstrap(error.to_string());
+                    return;
+                }
+            };
+            let mut pending = PendingWasmArtifactBootstrap { assembler, started_ms, resume_token, baseline_frontier, required_tail_frontier, pack_schema_hash };
+            if !inline {
+                self.artifact_bootstrap = Some(pending);
+                return;
+            }
+            let mut control = self.bootstrap_control(false);
+            match pending.assembler.finish(None, &mut control) {
+                Ok(pair) => {
+                    if let Err(error) = self.install_artifact_bootstrap(pending, pair).await {
+                        self.fail_artifact_bootstrap(error);
+                    }
+                }
+                Err(error) => self.fail_artifact_bootstrap(error.to_string()),
+            }
+        }
+
+        /// 🗃️ Installs one assembled canonical pair. With a linked codec the pair is decoded here first;
+        /// without one the pair's identity was already bound to the verified lease's pack schema hash,
+        /// and the mounted guest that owns the kind validates the archive when the shell loads it.
+        async fn install_artifact_bootstrap(&mut self, pending: PendingWasmArtifactBootstrap, pair: ArtifactBootstrapPair) -> Result<(), String> {
+            if let Some(codec) = crate::os_store::document_codec(&self.schema).await.map_err(|error| error.to_string())? {
+                if codec.pack_schema_hash != pending.pack_schema_hash {
+                    return Err("artifact bootstrap codec changed during transfer".into());
+                }
+                (codec.print_mirror)(&pair.pack, &pair.spr).await.map_err(|error| format!("artifact bootstrap decode failed: {error}"))?;
+            }
+            let events = spr_events(&pair.spr, &self.document_id, &self.schema).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
+            self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
+            if !events.is_empty() {
+                self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&events) }).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
+            }
+            let archive = crate::os_spr::DocumentArchivePack { parent_pack: pair.pack, parent_spr: pair.spr, members: Vec::new() };
+            let archive = crate::os_spr::encode_document_archive_bytes(&archive).map_err(|error| format!("artifact bootstrap archive failed: {error}"))?;
+            let _ = self.events.send(ArtifactEvent::DocumentArchiveReplaced { archive });
+            self.server_frontier = Some(pending.baseline_frontier);
+            self.pending_resume_token = Some(pending.resume_token);
+            self.required_tail_frontier = Some(pending.required_tail_frontier);
+            if !self.outbox.is_empty() && self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&self.outbox) }).await.is_err() {
+                let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage {
+                    level: crate::os_dsl::Severity::Error,
+                    code: crate::os_dsl::FaultCode::new("artifactBootstrapLocalReplay"),
+                    message: "artifact baseline committed; pending local replay will retry after reconnect".into(),
+                    target: vec![self.document_id.clone()],
+                    op_index: None,
+                }));
+                self.close_socket();
+                self.schedule_reconnect();
+                return Ok(());
+            }
+            self.finish_catchup_if_ready().await;
+            Ok(())
+        }
+        //#endregion 🔖️Bootstrap
+
+        //#region 🔖️Protocol
+        /// 📡️ The native actor's `on_hub_frame`, frame for frame: the socket actor the grant named is the
+        /// only origin this replica filters as its own, `Session` must confirm it, and `Live` is reached
+        /// only after every catch-up.
+        async fn on_binary(&mut self, bytes: &[u8]) {
+            let frame = match decode_server_frame(bytes).await {
+                Ok((_lane, frame)) => frame,
+                Err(error) => {
+                    self.fail_artifact_bootstrap(format!("malformed hub frame: {error}"));
+                    return;
+                }
+            };
+            match frame {
+                ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
+                    self.requeue_pending_batches();
+                    match bootstrap {
+                        Bootstrap::None => {
+                            if self.artifact_rebootstrap_required {
+                                self.fail_artifact_bootstrap("artifact rebootstrap returned no canonical pair");
+                                return;
+                            }
+                            self.abort_artifact_bootstrap();
+                            self.resume_token = Some(resume_token);
+                            self.server_frontier = Some(server_frontier);
+                            self.set_remote_state(RemoteState::Live { peer_count: 0 });
+                            self.flush_outbox().await;
+                        }
+                        Bootstrap::Tail => {
+                            if self.artifact_rebootstrap_required {
+                                self.fail_artifact_bootstrap("artifact rebootstrap returned tail without a canonical pair");
+                                return;
+                            }
+                            self.abort_artifact_bootstrap();
+                            self.pending_resume_token = Some(resume_token);
+                            self.required_tail_frontier = Some(server_frontier);
+                            self.finish_catchup_if_ready().await;
+                        }
+                        Bootstrap::Snapshot { .. } => self.fail_artifact_bootstrap("database-private snapshot cannot seed an artifact client"),
+                        Bootstrap::ArtifactBootstrap(bootstrap) => {
+                            self.artifact_rebootstrap_required = false;
+                            self.start_artifact_bootstrap(*bootstrap, resume_token, server_frontier).await;
+                        }
+                    }
+                }
+                ServerFrame::SnapshotChunk { .. } | ServerFrame::SnapshotDone { .. } => self.fail_artifact_bootstrap("database-private snapshot frame cannot seed an artifact client"),
+                ServerFrame::RebootstrapRequired { control } => {
+                    if control.document_id != self.document_id || self.hub_space_id.as_deref() != Some(control.space_id.as_str()) || control.baseline_frontier.document_id.0 != self.document_id {
+                        self.fail_artifact_bootstrap("rebootstrap control scope mismatch");
+                    } else {
+                        self.require_artifact_rebootstrap();
+                    }
+                }
+                ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index, bytes } => {
+                    let Some(mut pending) = self.artifact_bootstrap.take() else {
+                        self.fail_artifact_bootstrap("artifact bootstrap chunk arrived without an active transfer");
+                        return;
+                    };
+                    let mut control = self.bootstrap_control(false);
+                    match pending.assembler.push(descriptor_hash, index, bytes.as_slice(), &mut control) {
+                        Ok(_) => self.artifact_bootstrap = Some(pending),
+                        Err(error) => self.fail_artifact_bootstrap(error.to_string()),
+                    }
+                }
+                ServerFrame::ArtifactBootstrapDone { descriptor_hash, chunk_count } => {
+                    let Some(mut pending) = self.artifact_bootstrap.take() else {
+                        self.fail_artifact_bootstrap("artifact bootstrap completion arrived without an active transfer");
+                        return;
+                    };
+                    let mut control = self.bootstrap_control(false);
+                    match pending.assembler.finish(Some((descriptor_hash, chunk_count)), &mut control) {
+                        Ok(pair) => {
+                            if let Err(error) = self.install_artifact_bootstrap(pending, pair).await {
+                                self.fail_artifact_bootstrap(error);
+                            }
+                        }
+                        Err(error) => self.fail_artifact_bootstrap(error.to_string()),
+                    }
+                }
+                ServerFrame::Commands { envelopes, origin, frontier } => {
+                    if self.artifact_bootstrap.is_some() {
+                        self.fail_artifact_bootstrap("tail arrived before artifact bootstrap completion");
+                        return;
+                    }
+                    if self.socket_actor.as_deref() != Some(origin.0.as_str()) && !self.deliver_remote_operations(envelopes).await {
+                        self.fail_artifact_bootstrap("artifact tail could not be installed");
+                        return;
+                    }
+                    self.server_frontier = Some(frontier);
+                    self.finish_catchup_if_ready().await;
+                }
+                ServerFrame::Ack { batch_id, stages, frontier } => {
+                    if self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
+                        self.fail_artifact_bootstrap("ack arrived before artifact catch-up completion");
+                        return;
+                    }
+                    self.server_frontier = Some(frontier);
+                    self.handle_ack(batch_id, stages).await;
+                }
+                ServerFrame::Preview { actor, key, seq, payload } => {
+                    if self.socket_actor.as_deref() != Some(actor.0.as_str()) {
+                        let _ = self.events.send(ArtifactEvent::Preview { actor: actor.0, key, seq, payload });
+                    }
+                }
+                ServerFrame::Presence { peers } => {
+                    let mut decoded: Vec<PresencePeer> = Vec::with_capacity(peers.len());
+                    for peer in &peers {
+                        if let Some(peer) = presence_from_bytes(peer).await {
+                            decoded.push(peer);
+                        }
+                    }
+                    if matches!(self.remote_state, RemoteState::Live { .. }) && self.artifact_bootstrap.is_none() && self.required_tail_frontier.is_none() {
+                        self.set_remote_state(RemoteState::Live { peer_count: decoded.len() });
+                    }
+                    let _ = self.events.send(ArtifactEvent::Presence { peers: decoded });
+                }
+                ServerFrame::Session { actor, color } => {
+                    if self.socket_actor.as_deref() != Some(actor.as_str()) {
+                        self.fail_artifact_bootstrap("socket receipt actor mismatch");
+                        return;
+                    }
+                    self.socket_actor_confirmed = true;
+                    self.session_color = Some(color);
+                    let _ = self.events.send(ArtifactEvent::Session { actor, color });
+                    self.flush_outbox().await;
+                }
+                ServerFrame::CreditGrant { .. } => {}
+                ServerFrame::Error { code, message } => {
+                    let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage {
+                        level: crate::os_dsl::Severity::Error,
+                        code: crate::os_dsl::FaultCode::new(code),
+                        message,
+                        target: vec![self.hub_base_url.clone().unwrap_or_default()],
+                        op_index: None,
+                    }));
+                }
+            }
+        }
+
+        /// @emoji 📮️ Mirrors the native actor's `handle_ack` — see its doc comment.
+        async fn handle_ack(&mut self, batch_id: u64, stages: Vec<AckStage>) {
+            for stage in stages {
+                let AckStage::Applied { outcome } = stage else { continue };
+                let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
+                self.document_backbone_retention.release(&sent);
+                match *outcome {
+                    ApplyOutcome::Accepted => {
+                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
+                    }
+                    ApplyOutcome::Transformed { envelope } => {
+                        let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
+                        for envelope in sent.iter().rev() {
+                            rollbacks.push(rollback_envelope(envelope).await);
+                        }
+                        let _ = self.deliver_remote_operations(rollbacks).await;
+                        let _ = self.deliver_remote_operations(vec![*envelope]).await;
+                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
+                    }
+                    ApplyOutcome::Rejected { reason, messages } => {
+                        let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
+                        for envelope in sent.iter().rev() {
+                            rollbacks.push(rollback_envelope(envelope).await);
+                        }
+                        let _ = self.deliver_remote_operations(rollbacks).await;
+                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } });
+                    }
+                }
+            }
+            self.emit_status_if_changed();
+        }
+
+        async fn deliver_remote_operations(&self, envelopes: Vec<MutationEnvelope>) -> bool {
+            if envelopes.is_empty() {
+                return true;
+            }
+            if self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).await.is_err() {
+                return false;
+            }
+            if self.hub_space_id.is_some() {
+                let message = match (BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).encode_op() {
+                    Ok(message) => message,
+                    Err(_) => return false,
+                };
+                let _ = self.events.send(ArtifactEvent::DocumentBackbone { message });
+            } else {
+                let _ = self.events.send(ArtifactEvent::RemoteMutations { envelopes });
+            }
+            true
+        }
+        //#endregion 🔖️Protocol
+    }
+
+    /// 🚀️ Spawns one browser document actor on the isolate's executor. Its loop owns one cadence: the
+    /// mailbox, or — when the mailbox is quiet — the next socket poll or scheduled redial, whichever
+    /// comes first. A cancelled document (closed by the host) ends the loop and closes its socket.
+    pub(super) async fn spawn_actor(config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: ArtifactMailboxReceiver, events: broadcast::Sender<ArtifactEvent>, hub: WasmActorHub) {
+        let mut hub_base_url = None;
+        let mut hub_space_id = None;
+        let mut hub_surface = None;
+        for binding in &config.bindings {
+            if let PersistenceBinding::Hub { base_url, space_id, surface } = binding {
+                if hub_base_url.is_none() {
+                    hub_base_url = Some(base_url.clone());
+                    hub_space_id = Some(space_id.clone());
+                    hub_surface = surface.clone();
+                }
+            }
+        }
+        let mut actor = WasmActor {
+            document_id: config.document_id,
+            schema: config.schema,
+            remote,
+            events,
+            hub_base_url,
+            hub_space_id,
+            hub_surface,
+            credential: hub.credential,
+            socket_grant_source: hub.socket_grant_source,
+            dialer: hub.dialer,
+            document_execution_target_lease: hub.lease,
+            operation_cancel: hub.cancel,
+            socket: None,
+            hello: None,
+            socket_actor: None,
+            socket_actor_confirmed: false,
+            socket_authority: None,
+            session_color: None,
+            server_frontier: None,
+            resume_token: None,
+            pending_resume_token: None,
+            required_tail_frontier: None,
+            artifact_rebootstrap_required: false,
+            artifact_bootstrap: None,
+            pending_batches: std::collections::HashMap::new(),
+            outbox: Vec::new(),
+            document_backbone_retention: DocumentBackboneRetentionV1::default(),
+            next_batch_id: 0,
+            next_local_rejection_batch_id: u64::MAX,
+            hlc_seed: replica_hlc_seed().ok(),
+            hlc_counter: 0,
+            remote_state: RemoteState::Detached,
+            last_status: None,
+            backoff_ms: crate::os_directory::client::HUB_RECONNECT_MIN_MS,
+            reconnect_at_ms: None,
+        };
+        semio_framework_async::browser::spawn_local(async move {
+            loop {
+                actor.connect().await;
+                let wake_ms = actor.next_wake_ms();
+                tokio::select! {
+                    biased;
+                    cmd = cmd_rx.recv() => match cmd {
+                        None => {
+                            actor.document_backbone_retention.clear();
+                            actor.close_socket();
+                            break;
+                        }
+                        Some(ArtifactActorMsg::Detach) => {
+                            actor.document_backbone_retention.clear();
+                            let _ = actor.relay_one_backbone().await;
+                            actor.close_socket();
+                            break;
+                        }
+                        Some(message) => actor.handle_cmd(message).await,
+                    },
+                    _ = sleep_ms(wake_ms) => actor.pump_socket().await,
+                }
+                if actor.operation_cancel.is_cancelled_now() {
+                    actor.close_socket();
+                    break;
+                }
+            }
+        });
+    }
+}
+
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+use wasm_actor::spawn_actor;
+//#endregion 🔖️WasmActor

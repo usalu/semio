@@ -34,7 +34,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for UpdateIn
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update ingest params", "Einlesenparameter aktualisieren")
+        protocol::LocalizedLabel::native("Update ingest params", "Importparameter aktualisieren")
     }
 }
 //#endregion 🔖️Mutation

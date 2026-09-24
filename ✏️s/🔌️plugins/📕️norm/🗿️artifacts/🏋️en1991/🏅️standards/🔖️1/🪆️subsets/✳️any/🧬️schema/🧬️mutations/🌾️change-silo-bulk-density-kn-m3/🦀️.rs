@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeSiloBulkDe
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change silo bulk density to {:?}", self.new_silo_bulk_density_kn_m3), &format!("schütte Silodichte auf {:?} ändern", self.new_silo_bulk_density_kn_m3))
+        protocol::LocalizedLabel::native(&format!("Change silo bulk density to {:?}", self.new_silo_bulk_density_kn_m3), &format!("Schüttdichte im Silo auf {:?} ändern", self.new_silo_bulk_density_kn_m3))
     }
 }
 //#endregion 🔖️Payload

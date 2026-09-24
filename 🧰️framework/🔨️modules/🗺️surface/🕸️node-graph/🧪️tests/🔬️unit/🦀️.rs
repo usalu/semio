@@ -385,7 +385,7 @@ fn graph_host_keeps_live_viewport_when_the_scene_echo_lags() {
     payload.viewport = Some(Viewport2d { x: 11.0, y: 22.0, zoom: 3.0 });
     host.sync_from_payload(&payload).expect("initial sync");
     host.set_viewport(400, 400, 1.0);
-    host.wheel_screen(200.0, 200.0, -10.0, true);
+    host.wheel_screen(200.0, 200.0, 0.0, -10.0, true);
     let live = host.viewport();
     host.sync_from_payload(&payload).expect("echo sync");
     assert_eq!(host.viewport(), live);
@@ -409,16 +409,33 @@ fn graph_host_wheel_screen_pan_without_zoom_gesture() {
     let mut host = GraphHost::default();
     host.set_viewport(400, 400, 1.0);
     let before = host.dag.host_snapshot.camera.y;
-    host.wheel_screen(200.0, 200.0, 10.0, false);
+    host.wheel_screen(200.0, 200.0, 0.0, 10.0, false);
     assert!(host.dag.host_snapshot.camera.y < before);
     assert_eq!(host.dag.host_snapshot.camera.zoom, 1.0);
+}
+
+/// 🖱️ A sideways wheel (trackpad horizontal scroll, a two-finger pinch's sideways drift) pans the camera
+/// horizontally by the same law the vertical axis follows — the delta divided by zoom — and leaves the
+/// other axis and the zoom untouched. U4 measured the vertical half live (Δy = −80/2.8531); this is the
+/// horizontal half that the dropped `delta_x` used to lose.
+#[test]
+fn graph_host_wheel_screen_pans_horizontally_by_delta_x_over_zoom() {
+    let mut host = GraphHost::default();
+    host.set_viewport(400, 400, 1.0);
+    host.wheel_screen(200.0, 200.0, 0.0, -10.0, true);
+    let before = host.viewport();
+    host.wheel_screen(200.0, 200.0, 40.0, 0.0, false);
+    let after = host.viewport();
+    assert_eq!(after.x, before.x - 40.0 / before.zoom);
+    assert_eq!(after.y, before.y);
+    assert_eq!(after.zoom, before.zoom);
 }
 
 #[test]
 fn graph_host_wheel_screen_zoom_gesture_changes_zoom() {
     let mut host = GraphHost::default();
     host.set_viewport(400, 400, 1.0);
-    host.wheel_screen(200.0, 200.0, -10.0, true);
+    host.wheel_screen(200.0, 200.0, 0.0, -10.0, true);
     assert!(host.dag.host_snapshot.camera.zoom > 1.0);
 }
 
@@ -437,7 +454,7 @@ fn graph_host_wheel_ticks_accumulate_on_the_board_without_a_publication() {
     host.set_viewport(400, 400, 1.0);
     let mut zooms = Vec::new();
     for _ in 0..30 {
-        host.wheel_screen(200.0, 200.0, -10.0, true);
+        host.wheel_screen(200.0, 200.0, 0.0, -10.0, true);
         zooms.push(host.viewport().zoom);
     }
     assert!(zooms.windows(2).all(|pair| pair[1] >= pair[0]), "a zoom-in scroll never zooms out");
@@ -446,7 +463,7 @@ fn graph_host_wheel_ticks_accumulate_on_the_board_without_a_publication() {
     let mut settled = GraphHost::default();
     settled.set_viewport(400, 400, 1.0);
     for _ in 0..30 {
-        settled.wheel_screen(200.0, 200.0, -10.0, true);
+        settled.wheel_screen(200.0, 200.0, 0.0, -10.0, true);
     }
     assert_eq!(settled.viewport(), host.viewport(), "one read at settle equals the last of thirty reads");
 }
@@ -458,7 +475,7 @@ fn graph_host_pan_ticks_accumulate_on_the_board_without_a_publication() {
     host.set_viewport(400, 400, 1.0);
     let before = host.viewport().y;
     for _ in 0..60 {
-        host.wheel_screen(200.0, 200.0, 10.0, false);
+        host.wheel_screen(200.0, 200.0, 0.0, 10.0, false);
     }
     assert!(host.viewport().y < before);
     assert_eq!(host.viewport().zoom, 1.0, "a pan never changes zoom");
@@ -470,12 +487,12 @@ fn graph_wheel_plan_matches_direct_and_rejects_stale_revision() {
     let mut planned = GraphHost::default();
     direct.set_viewport(400, 400, 1.0);
     planned.set_viewport(400, 400, 1.0);
-    direct.wheel_screen(160.0, 190.0, -10.0, true);
-    let plan = planned.plan_wheel(160.0, 190.0, -10.0, true);
+    direct.wheel_screen(160.0, 190.0, 0.0, -10.0, true);
+    let plan = planned.plan_wheel(160.0, 190.0, 0.0, -10.0, true);
     assert!(planned.commit_wheel(plan));
     assert_eq!(direct.viewport(), planned.viewport());
 
-    let stale = planned.plan_wheel(160.0, 190.0, -10.0, true);
+    let stale = planned.plan_wheel(160.0, 190.0, 0.0, -10.0, true);
     planned.set_viewport(401, 400, 1.0);
     let replacement = planned.viewport();
     assert!(!planned.commit_wheel(stale));

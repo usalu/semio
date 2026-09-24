@@ -174,8 +174,8 @@ fn stale_command_driver_resume_cannot_reanimate_a_reused_direct_slot() {
 }
 
 #[test]
-fn retained_batch_arena_has_no_nested_page_or_descriptor_destructor() {
-    assert!(!std::mem::needs_drop::<FixedCommandPage>());
+fn retained_batch_arena_spine_holds_page_pointers_and_releases_one_block_per_close_step() {
+    assert!(std::mem::size_of::<FixedCommandPage>() <= 2 * std::mem::size_of::<usize>());
     let mut commands = CommandEnvelopeSet::try_new().unwrap();
     for seq in 0..COMMAND_BATCH_MAXIMUM_ITEMS as u64 {
         let mut pages = CommandPageSet::try_new(1).unwrap();

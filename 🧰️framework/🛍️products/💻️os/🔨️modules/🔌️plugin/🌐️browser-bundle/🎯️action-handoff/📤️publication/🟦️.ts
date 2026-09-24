@@ -211,7 +211,7 @@ export function encodeBrowserActorHostEffectV1(value: unknown): readonly number[
   const effect = exact(value, ["tag", "val"]);
   const projected = effect.tag === "request-inference-proposal" ? projection({ requestInferenceProposal: effect.val })
     : effect.tag === "open-external-url" ? projection({ openExternalUrl: effect.val }) : null;
-  if (projected === null) throw new Error("browser-actor-publication: unsupported host effect");
+  if (projected === null) throw new Error(`browser-actor-publication: unsupported host effect ${String(effect.tag).slice(0, 64)}`);
   return Array.from(encodePackValue(projected));
 }
 

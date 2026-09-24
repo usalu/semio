@@ -13,3 +13,13 @@ pub fn set_custom_driver(driver_id: impl Into<String>, driver: Option<UiDriver>)
     UiPreferencesConfigMutation::SetCustomDriver(SetCustomDriver { driver_id: driver_id.into(), driver })
 }
 keyed_setting_impl!(SetCustomDriver, SetCustomDriver, custom_drivers, driver_id, driver, "set-custom-driver", "custom-driver", "custom driver", "custom-drivers");
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/✏️sets-custom-driver/🦀️.rs"]
+mod tests_sets_custom_driver;
+
+#[cfg(test)]
+#[path = "🧪️tests/🟰️keeps-custom-driver/🦀️.rs"]
+mod tests_keeps_custom_driver;
+//#endregion 🧪️Tests

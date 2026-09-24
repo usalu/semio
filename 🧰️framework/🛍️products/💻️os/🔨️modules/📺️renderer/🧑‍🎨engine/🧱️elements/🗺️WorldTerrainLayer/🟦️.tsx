@@ -4,6 +4,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { publishedPageUrl } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BufferAttribute, BufferGeometry, CanvasTexture, ClampToEdgeWrapping, DoubleSide, MeshStandardMaterial } from "three";
 import { createTerrainSession, type TerrainWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
@@ -163,7 +164,7 @@ class TerrainTileRenderer {
     }
     const missing = rows.filter((row) => !this.geometries.has(row.key) && !this.tileMiss.has(row.key));
     const uploadOne = async (row: TerrainTileRow): Promise<void> => {
-      const url = this.style.tileUrlTemplate.replace("{z}", String(row.z)).replace("{x}", String(row.x)).replace("{y}", String(row.y));
+      const url = publishedPageUrl(this.style.tileUrlTemplate).replace("{z}", String(row.z)).replace("{x}", String(row.x)).replace("{y}", String(row.y));
       let response: Response;
       try {
         response = await fetch(url);

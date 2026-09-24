@@ -23,7 +23,7 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Se
         agg_inverse(&SemioDocumentMutation::SetImageBytes(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-image-bytes", "Bildbytes setzen")
+        protocol::LocalizedLabel::native("Set image bytes", "Bildbytes setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

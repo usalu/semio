@@ -31,7 +31,7 @@ impl protocol::MutationKind<WiresSnapshot, WiresMutation> for EditNodeText {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Edit node \"{}\" text to \"{}\"", self.node_id, self.new_text), &format!("Knoten \"{}\" Text zu \"{}\" bearbeiten", self.node_id, self.new_text))
+        protocol::LocalizedLabel::native(&format!("Edit node \"{}\" text to \"{}\"", self.node_id, self.new_text), &format!("Text von Knoten \"{}\" in \"{}\" ändern", self.node_id, self.new_text))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]

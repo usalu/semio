@@ -19,6 +19,7 @@ import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, 
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
 import type { DirectoryCommand, DirectoryEvent, DirectoryStreamMessage } from "./🔨️modules/📇️directory/🟦️.ts";
 import { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
+import { documentCheckInStatusFromValueV1, type DocumentCheckInStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
 export { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
 import { parseInferencePortClosedV1, parseInferencePortOpeningRequestV1, parseInferencePortOpeningResultV1, type InferencePortClosedV1, type InferencePortOpeningResultV1 } from "./🔨️modules/💡️inference/🚪️opening/🟦️.ts";
 import type { ArtifactFrontier, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, GisMapInferencePortCodeV1, GisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
@@ -782,6 +783,18 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
   if (parsed.kind === "space-artifact-create" || parsed.kind === "space-artifact-create-cancel") {
     return parseSpaceArtifactCreationWorkerRequestV1(parsed);
   }
+  if (parsed.kind === "document-check-in" || parsed.kind === "document-check-in-cancel") {
+    const start = parsed.kind === "document-check-in";
+    if (Object.keys(parsed).sort().join(",") !== (start ? "clientInstanceId,kind,requestId,scope" : "kind,requestId,scope")) throw new Error("backbone worker request: invalid check-in fields");
+    const requestId = workerWireCreationRequestIdV1(parsed.requestId);
+    const documentId = typeof parsed.scope === "object" && parsed.scope !== null ? workerWireIdV1((parsed.scope as Record<string, unknown>).documentId) : null;
+    const scope = documentId === null ? null : workerWireScopeV1(parsed.scope, documentId);
+    if (requestId === null || scope === null) throw new Error("backbone worker request: invalid check-in owner");
+    if (!start) return { kind: "document-check-in-cancel", requestId, scope };
+    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (clientInstanceId === null) throw new Error("backbone worker request: invalid check-in client instance id");
+    return { kind: "document-check-in", requestId, clientInstanceId, scope };
+  }
   if (parsed.kind === "space-artifact-creation-catalog-open") {
     if (Object.keys(parsed).sort().join(",") !== "clientInstanceId,kind,spaceId") throw new Error("backbone worker request: invalid creation catalog fields");
     const spaceId = workerWireCreationIdentityV1(parsed.spaceId),
@@ -848,6 +861,15 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
     return { ...parseBrowserActorActionResultV1(response), clientInstanceId };
   }
   if (parsed.kind === "space-artifact-creation-status") return parseSpaceArtifactCreationStatusV1(parsed);
+  if (parsed.kind === "document-check-in-status") {
+    if (Object.keys(parsed).sort().join(",") !== "clientInstanceId,kind,scope,status") throw new Error("backbone worker response: invalid check-in status fields");
+    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    const documentId = typeof parsed.scope === "object" && parsed.scope !== null ? workerWireIdV1((parsed.scope as Record<string, unknown>).documentId) : null;
+    const scope = documentId === null ? null : workerWireScopeV1(parsed.scope, documentId);
+    const status = documentCheckInStatusFromValueV1(parsed.status);
+    if (clientInstanceId === null || scope === null || status === null) throw new Error("backbone worker response: invalid check-in status");
+    return { kind: "document-check-in-status", clientInstanceId, scope, status };
+  }
   if (parsed.kind === "space-artifact-creation-catalog-refresh-required") return parseSpaceArtifactCreationCatalogRefreshRequiredV1(parsed);
   if (parsed.kind === "space-artifact-creation-catalog") return parseSpaceArtifactCreationCatalogV1(parsed);
   if (parsed.kind === "space-artifact-creation-catalog-status") return parseSpaceArtifactCreationCatalogStatusV1(parsed);
@@ -1240,6 +1262,10 @@ export type BackboneWorkerRequest =
   | { readonly kind: "space-artifact-creation-catalog-open"; readonly clientInstanceId: string; readonly spaceId: string }
   | { readonly kind: "space-artifact-create"; readonly requestId: string; readonly spaceId: string; readonly expectedCatalogGenerationId: string; readonly kindId: string; readonly name: string }
   | { readonly kind: "space-artifact-create-cancel"; readonly requestId: string; readonly spaceId: string }
+  /** 📌️ Hub Check In of one mounted hub document at the head its socket had acknowledged once every
+   * local edit is acknowledged; the worker names the head, the host never does. */
+  | { readonly kind: "document-check-in"; readonly requestId: string; readonly clientInstanceId: string; readonly scope: DocumentScope }
+  | { readonly kind: "document-check-in-cancel"; readonly requestId: string; readonly scope: DocumentScope }
   | { readonly kind: "directory-administration-open"; readonly operationEpoch: number; readonly spaceId: string }
   | { readonly kind: "directory-administration-refresh"; readonly operationEpoch: number; readonly cursor?: string }
   | { readonly kind: "directory-administration-submit"; readonly operationEpoch: number; readonly requestId: string; readonly command: DirectoryCommand }
@@ -1312,6 +1338,9 @@ export type BackboneWorkerResponse =
   | SpaceArtifactCreationStatusV1
   | SpaceArtifactCreationCatalogRefreshRequiredV1
   | { readonly kind: "socket-actor"; readonly documentId: string; readonly clientInstanceId: string; readonly scope?: DocumentScope; readonly actorId: string }
+  /** 📌️ One hub Check In status, exactly as the hub answered it (or a local `failed` when the
+   * document had no acknowledged head to name). */
+  | { readonly kind: "document-check-in-status"; readonly clientInstanceId: string; readonly scope: DocumentScope; readonly status: DocumentCheckInStatusV1 }
   | { readonly kind: "socket-actor-failed"; readonly documentId: string; readonly clientInstanceId: string; readonly scope?: DocumentScope; readonly code: "installed-target-unavailable" | "session-mismatch" }
   /** 🪪️ Bounded execution-target install status for the React host's localized live region. It
    * carries a status code and byte counters only — never bytes, an origin, a path, a module URL, a
@@ -3570,8 +3599,12 @@ function appChannelFrameBelongsTo(frame: AppFrameValue, sequence: number, transa
 }
 /** 🪪️ One checked handle-lifetime owner spans every client recreation; query admission reserves its cancellation receipt identity. */
 export class AppChannelRequestSequence {
-  constructor(private sequence = 0, private request = 0n) {
+  private sequence: number;
+  private request: bigint;
+  constructor(sequence = 0, request = 0n) {
     if (!Number.isSafeInteger(sequence) || sequence < 0 || request < 0n || request > 0xffffffffffffffffn) throw new Error("app-channel.invalid-sequence-owner");
+    this.sequence = sequence;
+    this.request = request;
   }
 
   nextSequence(): number {
@@ -3627,6 +3660,7 @@ export class AppChannelClient {
   private readonly instanceId: number;
   private readonly appId: string;
   private readonly actor: string;
+  private readonly sequenceOwner: AppChannelRequestSequence;
   private readonly outcomeIterator: AsyncIterator<TurnOutcome>;
   private readonly pending: { readonly seq: number; readonly queryReceipt: boolean; readonly transaction: AppChannelTransactionReply | null; readonly document: { readonly pack: Uint8Array; readonly spr: Uint8Array } | null; readonly resolve: (frames: AppFrameValue[]) => void; readonly reject: (error: unknown) => void }[] = [];
   /** 📦️ Per-instance document-pack cache (ticket
@@ -3639,8 +3673,9 @@ export class AppChannelClient {
   private cachedPack: Uint8Array | null = null;
   private cachedSpr: Uint8Array | null = null;
 
-  constructor(handle: AppChannelHandle, private readonly sequenceOwner: AppChannelRequestSequence, instanceId: number, appId: string, actor: string = "local") {
+  constructor(handle: AppChannelHandle, sequenceOwner: AppChannelRequestSequence, instanceId: number, appId: string, actor: string = "local") {
     this.handle = handle;
+    this.sequenceOwner = sequenceOwner;
     this.instanceId = instanceId;
     this.appId = appId;
     this.actor = actor;

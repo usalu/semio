@@ -28,8 +28,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for SetActiveAsset {
         }
         }, &{
         match &self.asset_id {
-            Some(id) => format!("aktive Asset auf \"{id}\" setzen"),
-            None => "aktive Asset leeren".into(),
+            Some(id) => format!("Aktives Asset auf \"{id}\" setzen"),
+            None => "Aktives Asset entfernen".into(),
         }
         })
     }

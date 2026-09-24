@@ -133,7 +133,43 @@ const COLLAB_E2E_STEP_NAMES = [
   "writer/draw/puzzle3d surfaces show peer-cursor overlay markers that move when the peer pointer moves",
 ] as const;
 
-type CollabStepOutcome = { readonly step: number; readonly name: string; readonly pass: boolean; readonly detail: string };
+/** 🧾️ One step's verdict: `true` PASS, `false` FAIL, `null` SKIP (the run does not own what the step needs). */
+type CollabStepOutcome = { readonly step: number; readonly name: string; readonly pass: boolean | null; readonly detail: string };
+
+type CollabRecord = (step: number, pass: boolean | null, detail: string) => void;
+
+/** 🧾️ Appends every verdict to `results` and prints it as its `STEP n: PASS|FAIL|SKIP` line. */
+function collabRecorder(results: CollabStepOutcome[]): CollabRecord {
+  return (step, pass, detail) => {
+    results.push({ step, name: COLLAB_E2E_STEP_NAMES[step - 1]!, pass, detail });
+    console.log(`STEP ${step}: ${collabVerdict(pass)}: ${COLLAB_E2E_STEP_NAMES[step - 1]} — ${detail}`);
+  };
+}
+
+function collabVerdict(pass: boolean | null): "PASS" | "FAIL" | "SKIP" {
+  return pass === null ? "SKIP" : pass ? "PASS" : "FAIL";
+}
+
+/** 🌐️ An already-running hub this run joins instead of booting one (`S_COLLAB_HUB_URL`, e.g. the canonical hub): its
+ * two humans are provisioned by the hub's operator, so their passwords come from `S_COLLAB_USER1_PASSWORD` /
+ * `S_COLLAB_USER2_PASSWORD`. STEP 7 reads the operator's rotating admin-relay capability from the JSON file
+ * `S_COLLAB_HUB_ADMIN_CAPABILITY_FILE` (`{capability}`) at the moment it runs, since those sessions are short-lived. */
+type CollabExternalHub = { readonly baseUrl: string; readonly adminCapabilityFile: string; readonly passwords: Readonly<Record<string, string>> };
+
+function collabExternalAdminCapability(hub: CollabExternalHub): string {
+  if (hub.adminCapabilityFile === "") return "";
+  const parsed = JSON.parse(readFileSync(hub.adminCapabilityFile, "utf8")) as { readonly capability?: unknown };
+  return typeof parsed.capability === "string" ? parsed.capability : "";
+}
+
+function collabExternalHub(): CollabExternalHub | null {
+  const baseUrl = process.env.S_COLLAB_HUB_URL;
+  if (!baseUrl) return null;
+  const user1 = process.env.S_COLLAB_USER1_PASSWORD;
+  const user2 = process.env.S_COLLAB_USER2_PASSWORD;
+  if (!user1 || !user2) throw new Error("collab e2e: S_COLLAB_HUB_URL needs S_COLLAB_USER1_PASSWORD and S_COLLAB_USER2_PASSWORD");
+  return { baseUrl: baseUrl.replace(/\/+$/u, ""), adminCapabilityFile: process.env.S_COLLAB_HUB_ADMIN_CAPABILITY_FILE ?? "", passwords: { [COLLAB_E2E_USER1_EMAIL]: user1, [COLLAB_E2E_USER2_EMAIL]: user2 } };
+}
 
 /** 📡️ A live tally of the `ServerFrame::Commands` frames one page's DOCUMENT sockets have received.
  * Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice C1 — the audit's §7 step 3 asks for a
@@ -316,7 +352,7 @@ async function collabSignIn(page: import("playwright").Page, email: string, pass
   await form.waitFor({ state: "visible", timeout: 30_000 });
   await form.locator('input[type="email"]').fill(email);
   await form.locator('input[type="password"]').fill(password);
-  await form.locator('button[type="submit"][aria-label="Sign in"]').click();
+  await form.locator('[id="os.hub.signIn.submit"]').click();
   // 🪪️ The badge stops offering sign-in exactly when the SHELL holds a verified session authority
   // (`hubSessionPresence` is derived from `verifiedSessionAuthority`), which is the predicate every
   // hub-authenticated step below is admitted against — not merely "the form submitted".
@@ -401,6 +437,12 @@ function collabActivateShellRuntime(): void {
   });
 }
 
+/** 🛤️ The staged lane both shells serve: `S_COLLAB_LANE=release` serves the release components a trusted catalog was
+ * published from (the same bytes the hub's closed actors carry), anything else the dev lane. */
+function collabServeLane(): "dev" | "release" {
+  return process.env.S_COLLAB_LANE === "release" ? "release" : "dev";
+}
+
 /** ▶️ Spawns one user's `s` react dev server and waits for its port to accept connections. `serve`, not
  * `dev`: the bundle script has no `dev` command at all (`prepare|activate|serve|…`), so the harness's
  * previous `script.ts dev` spawn exited 1 with `unknown command "dev"` before a single byte was served,
@@ -409,7 +451,7 @@ function collabActivateShellRuntime(): void {
 async function collabStartUserDevServer(opts: { readonly port: number; readonly hubUrl: string; readonly user: string; readonly dataDir: string; readonly logPath: string }): Promise<SpawnDaemonHandle> {
   const devScript = join(repoRoot, COLLAB_E2E_DEV_SCRIPT);
   const logStream = createWriteStream(opts.logPath);
-  const daemon = spawnDaemon("bun", [devScript, "serve", "s", "react", "dev"], {
+  const daemon = spawnDaemon("bun", [devScript, "serve", "s", "react", collabServeLane()], {
     cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
     env: { ...process.env, SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", SEMIO_VITE_HMR: "0", S_OS_PORT: String(opts.port), S_HUB_URL: opts.hubUrl, S_DATA_DIR: opts.dataDir, S_LOCAL_ONLY: "1" },
     stdio: "pipe",
@@ -429,40 +471,63 @@ async function collabStartUserDevServer(opts: { readonly port: number; readonly 
 }
 
 //#region 🔖️CollabE2eDom
-/** 🕹️ Clicks a shell-frozen toolbar-button id (contract §C0: `#s-home-create-space`,
- * `#s-space-create-artifact`) directly — lane 4-F wired these as real, always-present `UiNode::Button`
- * elements above their respective tables (dispatching with no args, which each command's own handler
- * treats as "open the dialog"), replacing the earlier command-palette hunt this harness used before
- * that landed: the palette's arg-carrying-command path opens the bottom-middle command PANEL form, not
- * a `[data-slot="dialog-box"]` modal, so it could never have satisfied `collabWaitForDialog` anyway. */
+/** 🕹️ Activates a shell-frozen toolbar button (contract §C0: `s-home-create-space`, `s-space-create-artifact`) by its
+ * `data-ui-node-key` — the DOM id is window-scoped (`window:<window>/<key>`) — from the keyboard: focus + Enter, the
+ * accessible path a keyboard user takes. A pointer cannot reach the button while the window's folded `Actions` chip
+ * floats over the body's first line (measured `elementFromPoint`, ticket 26/09/23 C10); that layout defect is the
+ * chrome owner's, and the keyboard path exercises the same `onAction` → dialog route. */
 async function collabClickToolbarButton(page: import("playwright").Page, elementId: string): Promise<void> {
-  const button = page.locator(`[id="${elementId}"]`);
+  const button = page.locator(`[data-ui-node-key="${elementId}"]`).first();
   spaceE2eAssert((await button.count()) > 0, `toolbar button #${elementId} does not exist`);
-  await button.click();
+  await button.focus();
+  await button.press("Enter");
 }
 
 async function collabWaitForDialog(page: import("playwright").Page): Promise<void> {
-  await page.locator('[data-slot="dialog-box"]').waitFor({ state: "visible", timeout: 15_000 });
+  await page.locator('[role="dialog"][data-slot="dialog-content"]').waitFor({ state: "visible", timeout: 15_000 });
 }
 
 async function collabSubmitDialog(page: import("playwright").Page): Promise<void> {
   await page.locator('[id="ui.dialog.submit"]').click();
-  await page.locator('[data-slot="dialog-box"]').waitFor({ state: "hidden", timeout: 15_000 });
+  await page.locator('[role="dialog"][data-slot="dialog-content"]').waitFor({ state: "hidden", timeout: 15_000 });
 }
 
-/** 🕹️ Opens a `<Select id={triggerId}>` (Radix, portal-rendered) and clicks the option with `optionText`. */
-async function collabSelectOption(page: import("playwright").Page, triggerId: string, optionText: string): Promise<void> {
+/** 🕹️ Opens a `<Select id={triggerId}>` (Radix, portal-rendered) and clicks the option named `option` — exact text,
+ * or a pattern for catalog-derived labels the hub's artifact-creation catalog words. */
+async function collabSelectOption(page: import("playwright").Page, triggerId: string, option: string | RegExp): Promise<void> {
   await page.locator(`#${triggerId}`).click();
-  await page.getByRole("option", { name: optionText, exact: true }).click();
+  await page.getByRole("option", typeof option === "string" ? { name: option, exact: true } : { name: option }).first().click();
   await page.waitForTimeout(150);
 }
 
+/** 🏷️ The artifact-creation catalog labels of the three collaboration editors STEP 3 and STEP 14 create. */
+const COLLAB_E2E_KIND_LABELS = { writer: /writer/i, draw: /draw/i, puzzle3d: /puzzle.*3\s*d/i } as const;
+
+/** 🌱️ Creates one artifact of `kindLabel` in the open Space through `#s-space-create-artifact` and its
+ * `createArtifact` dialog (`name` + the `kindChoice` catalog picker), returning the new row's bare id.
+ * @see ../../../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs */
+async function collabCreateArtifact(page: import("playwright").Page, name: string, kindLabel: string | RegExp): Promise<string> {
+  const before = await collabRowIds(page, "artifact");
+  await collabClickToolbarButton(page, "s-space-create-artifact");
+  await collabWaitForDialog(page);
+  await page.locator("#name").fill(name);
+  await collabSelectOption(page, "kindChoice", kindLabel);
+  await collabSubmitDialog(page);
+  return collabWaitForNewRow(page, "artifact", before, 60_000);
+}
+
+/** 🧭️ Waits until the Home (`s-home-create-space`) or Space (`s-space-create-artifact`) app is mounted, by the toolbar
+ * button every later step clicks — an empty directory or space renders its empty state, never a table host. */
+async function collabWaitForApp(page: import("playwright").Page, toolbarId: "s-home-create-space" | "s-space-create-artifact", timeout: number): Promise<void> {
+  await page.locator(`[data-ui-node-key="${toolbarId}"]`).first().waitFor({ state: "visible", timeout });
+}
+
 async function collabRowIds(page: import("playwright").Page, prefix: "space" | "artifact"): Promise<Set<string>> {
-  const ids = await page.locator(`[data-row-id^="${prefix}:"]`).evaluateAll((elements) => elements.map((element) => element.getAttribute("data-row-id") ?? ""));
+  const ids = await page.locator(`[data-ui-node-key^="${prefix}:"]`).evaluateAll((elements) => elements.map((element) => element.getAttribute("data-ui-node-key") ?? ""));
   return new Set(ids);
 }
 
-/** ⏳️ Polls `page` until a `data-row-id` with `prefix` appears that was not in `before`, returning the
+/** ⏳️ Polls `page` until a row `data-ui-node-key` with `prefix` appears that was not in `before`, returning the
  * bare id (prefix stripped). Used for both same-page ("the row appears") and cross-page ("user2 sees the
  * same row") assertions — the caller decides which page to poll. */
 async function collabWaitForNewRow(page: import("playwright").Page, prefix: "space" | "artifact", before: ReadonlySet<string>, deadlineMs: number): Promise<string> {
@@ -480,10 +545,10 @@ async function collabWaitForNewRow(page: import("playwright").Page, prefix: "spa
 async function collabWaitForRow(page: import("playwright").Page, prefix: "space" | "artifact", id: string, deadlineMs: number): Promise<void> {
   const deadline = Date.now() + deadlineMs;
   while (Date.now() < deadline) {
-    if ((await page.locator(`[data-row-id="${prefix}:${id}"]`).count()) > 0) return;
+    if ((await page.locator(`[data-ui-node-key="${prefix}:${id}"]`).count()) > 0) return;
     await page.waitForTimeout(500);
   }
-  throw new Error(`timeout waiting for [data-row-id="${prefix}:${id}"]`);
+  throw new Error(`timeout waiting for [data-ui-node-key="${prefix}:${id}"]`);
 }
 
 async function collabScreenshot(page: import("playwright").Page, label: string): Promise<void> {
@@ -627,18 +692,13 @@ async function collabWaitForEditorText(
  * Each step is wrapped so a failure is recorded and the run continues to the next step wherever the
  * remaining steps can still be meaningfully attempted. */
 async function collabRunScenario(
+  record: CollabRecord,
   user1: import("playwright").Page,
   user2: import("playwright").Page,
   hubBaseUrl: string,
   user2Commands: CollabCommandFrameCounter,
-  adminCapability: string,
-): Promise<{ readonly results: CollabStepOutcome[]; readonly spaceId: string | undefined; readonly artifactId: string | undefined }> {
-  const results: CollabStepOutcome[] = [];
-  const record = (step: number, pass: boolean, detail: string): void => {
-    results.push({ step, name: COLLAB_E2E_STEP_NAMES[step - 1]!, pass, detail });
-    console.log(`STEP ${step}: ${pass ? "PASS" : "FAIL"}: ${COLLAB_E2E_STEP_NAMES[step - 1]} — ${detail}`);
-  };
-
+  adminCapability: () => string,
+): Promise<{ readonly spaceId: string | undefined; readonly artifactId: string | undefined }> {
   let spaceId: string | undefined;
   let artifactId: string | undefined;
 
@@ -664,15 +724,15 @@ async function collabRunScenario(
   // STEP 2
   if (spaceId) {
     try {
-      const row = user1.locator(`[data-row-id="space:${spaceId}"]`);
-      await row.getByTitle(/share/i).click();
+      const row = user1.locator(`[data-ui-node-key="space:${spaceId}"]`);
+      await row.locator('button[aria-label="share"]').click();
       await collabWaitForDialog(user1);
       await user1.locator("#email").fill(COLLAB_E2E_USER2_EMAIL);
       await collabSelectOption(user1, "role", "Author");
       await collabSubmitDialog(user1);
       await user2.goto(`${new URL(user2.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
-      await user2.locator(".semio-table-host").first().waitFor({ state: "visible", timeout: 30_000 });
-      record(2, true, `user2 opened /spaces/${spaceId} and the Space app's artifact table rendered`);
+      await collabWaitForApp(user2, "s-space-create-artifact", 30_000);
+      record(2, true, `user2 opened /spaces/${spaceId} and the Space app mounted with its create-artifact affordance`);
     } catch (error) {
       await collabScreenshot(user1, "step2-user1");
       await collabScreenshot(user2, "step2-user2");
@@ -686,14 +746,8 @@ async function collabRunScenario(
   if (spaceId) {
     try {
       await user1.goto(`${new URL(user1.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
-      await user1.locator(".semio-table-host").first().waitFor({ state: "visible", timeout: 30_000 });
-      const beforeUser1 = await collabRowIds(user1, "artifact");
-      await collabClickToolbarButton(user1, "s-space-create-artifact");
-      await collabWaitForDialog(user1);
-      await user1.locator("#name").fill("Collab Writer");
-      await collabSelectOption(user1, "kindId", "Writer");
-      await collabSubmitDialog(user1);
-      artifactId = await collabWaitForNewRow(user1, "artifact", beforeUser1, 30_000);
+      await collabWaitForApp(user1, "s-space-create-artifact", 30_000);
+      artifactId = await collabCreateArtifact(user1, "Collab Writer", COLLAB_E2E_KIND_LABELS.writer);
       await collabWaitForRow(user2, "artifact", artifactId, 30_000);
       const editorOpened = (await user1.locator('textarea, [contenteditable="true"]').count()) > 0;
       spaceE2eAssert(
@@ -713,8 +767,8 @@ async function collabRunScenario(
   // STEP 4
   if (spaceId && artifactId) {
     try {
-      const row2 = user2.locator(`[data-row-id="artifact:${artifactId}"]`);
-      await row2.getByTitle(/open/i).click();
+      const row2 = user2.locator(`[data-ui-node-key="artifact:${artifactId}"]`);
+      await row2.locator('button[aria-label="open"]').click();
       await user2.waitForTimeout(1_000);
       const editor1 = user1.locator('textarea, [contenteditable="true"]').first();
       const editor2 = user2.locator('textarea, [contenteditable="true"]').first();
@@ -783,15 +837,15 @@ async function collabRunScenario(
       await collabWaitForRow(user1, "artifact", artifactId, 30_000);
       const rowBefore1 =
         (await user1
-          .locator(`[data-row-id="artifact:${artifactId}"]`)
+          .locator(`[data-ui-node-key="artifact:${artifactId}"]`)
           .innerText()
           .catch(() => "")) ?? "";
       const rowBefore2 =
         (await user2
-          .locator(`[data-row-id="artifact:${artifactId}"]`)
+          .locator(`[data-ui-node-key="artifact:${artifactId}"]`)
           .innerText()
           .catch(() => "")) ?? "";
-      const historyTab = user1.locator('[data-tab-id="framework.panel.history"]');
+      const historyTab = user1.locator('[data-slot="panel-tab-button"][id="framework.panel.history"]');
       spaceE2eAssert((await historyTab.count()) > 0, "no framework.panel.history tab found — cannot reach #s-checkin");
       await historyTab.click();
       const checkinButton = user1.locator('[id="s-checkin"]');
@@ -809,7 +863,7 @@ async function collabRunScenario(
       while (Date.now() < rowAfter1Deadline) {
         rowAfter1 =
           (await user1
-            .locator(`[data-row-id="artifact:${artifactId}"]`)
+            .locator(`[data-ui-node-key="artifact:${artifactId}"]`)
             .innerText()
             .catch(() => "")) ?? "";
         if (rowAfter1 !== rowBefore1) break;
@@ -823,7 +877,7 @@ async function collabRunScenario(
       while (Date.now() < rowAfter2Deadline) {
         rowAfter2 =
           (await user2
-            .locator(`[data-row-id="artifact:${artifactId}"]`)
+            .locator(`[data-ui-node-key="artifact:${artifactId}"]`)
             .innerText()
             .catch(() => "")) ?? "";
         if (rowAfter2 !== rowBefore2) break;
@@ -841,14 +895,16 @@ async function collabRunScenario(
   }
 
   // STEP 7
-  try {
-    const connectionsRes = await fetch(`${hubBaseUrl}/admin/api/connections`, { headers: { authorization: `Bearer ${adminCapability}` } });
+  const capability = adminCapability();
+  if (capability === "") record(7, null, "skipped — this run joined an external hub without an admin-relay capability");
+  else try {
+    const connectionsRes = await fetch(`${hubBaseUrl}/admin/api/connections`, { headers: { authorization: `Bearer ${capability}` } });
     spaceE2eAssert(connectionsRes.ok, `GET /admin/api/connections returned ${connectionsRes.status}`);
     const connections = (await connectionsRes.json()) as readonly Record<string, unknown>[];
     const text = JSON.stringify(connections);
     spaceE2eAssert(text.includes(COLLAB_E2E_USER1_EMAIL) || text.includes("user1"), `/admin/api/connections does not mention user1: ${text.slice(0, 500)}`);
     spaceE2eAssert(text.includes(COLLAB_E2E_USER2_EMAIL) || text.includes("user2"), `/admin/api/connections does not mention user2: ${text.slice(0, 500)}`);
-    const adminRes = await fetch(`${hubBaseUrl}/admin`, { headers: { authorization: `Bearer ${adminCapability}` } });
+    const adminRes = await fetch(`${hubBaseUrl}/admin`, { headers: { authorization: `Bearer ${capability}` } });
     spaceE2eAssert(adminRes.ok, `GET /admin returned ${adminRes.status}`);
     const contentType = adminRes.headers.get("content-type") ?? "";
     spaceE2eAssert(contentType.includes("html"), `GET /admin content-type is ${contentType}, expected html`);
@@ -865,9 +921,9 @@ async function collabRunScenario(
   if (spaceId && artifactId) {
     try {
       await user1.goto(`${new URL(user1.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
-      const row1 = user1.locator(`[data-row-id="artifact:${artifactId}"]`);
+      const row1 = user1.locator(`[data-ui-node-key="artifact:${artifactId}"]`);
       await collabWaitForRow(user1, "artifact", artifactId, 30_000);
-      await row1.getByTitle(/open/i).click();
+      await row1.locator('button[aria-label="open"]').click();
       const editor1 = user1.locator('textarea, [contenteditable="true"]').first();
       const editor2 = user2.locator('textarea, [contenteditable="true"]').first();
       await editor1.waitFor({ state: "visible", timeout: 30_000 });
@@ -894,7 +950,7 @@ async function collabRunScenario(
     record(8, false, "skipped — no space/artifact id from earlier steps");
   }
 
-  return { results, spaceId, artifactId };
+  return { spaceId, artifactId };
 }
 
 /** 🔁️ STEP 8 — restarts the hub against the SAME `dataDir` and the SAME port, then reloads `user2` and
@@ -905,7 +961,7 @@ async function collabRunScenario(
  * "restart the hub against the same `OS_HUB_DATA`" wording literally. Runs at the orchestration level
  * (not inside `collabRunScenario`) since it needs the hub daemon handle, not just a base URL. */
 async function collabRunRestartStep(opts: {
-  readonly record: (step: number, pass: boolean, detail: string) => void;
+  readonly record: CollabRecord;
   readonly hubDaemon: CollabHubHandle;
   readonly hubPort: number;
   readonly hubDataDir: string;
@@ -957,8 +1013,8 @@ async function collabRunRestartStep(opts: {
       inFlightMarker !== undefined,
       "user1 had no open editor at restart time, so nothing was ever in flight — STEP 10 needs STEP 3/4's editor surface to exist before it can prove a resume",
     );
-    const row2 = opts.user2.locator(`[data-row-id="artifact:${opts.artifactId}"]`);
-    await row2.getByTitle(/open/i).click();
+    const row2 = opts.user2.locator(`[data-ui-node-key="artifact:${opts.artifactId}"]`);
+    await row2.locator('button[aria-label="open"]').click();
     const editor2 = opts.user2.locator('textarea, [contenteditable="true"]').first();
     await editor2.waitFor({ state: "visible", timeout: 30_000 });
     const frames = await collabWaitForEditorText(opts.user2, editor2, opts.user2Commands, inFlightMarker!, 120_000);
@@ -1004,7 +1060,7 @@ async function collabAwaitConvergence(
 /** 🕰️ The shell's ONLY undo affordance is the History panel's `framework.history.undo` control; the
  * chord is owned by the focused window and would be routed to whatever pane has focus. */
 async function collabUndo(page: import("playwright").Page): Promise<void> {
-  const historyTab = page.locator('[data-tab-id="framework.panel.history"]');
+  const historyTab = page.locator('[data-slot="panel-tab-button"][id="framework.panel.history"]');
   spaceE2eAssert((await historyTab.count()) > 0, "no framework.panel.history tab found — the shell offers no undo affordance to press");
   await historyTab.click();
   const undo = page.locator('[id="framework.history.undo"]').locator("button").first();
@@ -1022,7 +1078,7 @@ async function collabUndo(page: import("playwright").Page): Promise<void> {
  * keeps running, its socket drops, and nothing about the hub or the other human changes — which is
  * exactly the fault the product promises to survive without freezing. */
 async function collabRunCollaborationBehaviours(opts: {
-  readonly record: (step: number, pass: boolean, detail: string) => void;
+  readonly record: CollabRecord;
   readonly user1: import("playwright").Page;
   readonly user2: import("playwright").Page;
   readonly spaceId: string | undefined;
@@ -1124,49 +1180,34 @@ async function collabRunCollaborationBehaviours(opts: {
         await opts.user2.goto(`${new URL(opts.user2.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
         await collabWaitForRow(opts.user1, "artifact", opts.artifactId, 30_000);
         await collabWaitForRow(opts.user2, "artifact", opts.artifactId, 30_000);
-        await opts.user1.locator(`[data-row-id="artifact:${opts.artifactId}"]`).getByTitle(/open/i).click().catch(() => undefined);
-        await opts.user2.locator(`[data-row-id="artifact:${opts.artifactId}"]`).getByTitle(/open/i).click().catch(() => undefined);
+        await opts.user1.locator(`[data-ui-node-key="artifact:${opts.artifactId}"]`).locator('button[aria-label="open"]').click().catch(() => undefined);
+        await opts.user2.locator(`[data-ui-node-key="artifact:${opts.artifactId}"]`).locator('button[aria-label="open"]').click().catch(() => undefined);
         await opts.user1.waitForTimeout(1_000);
         details.push(await collabAssertPeerCursorMoves({ mover: opts.user1, observer: opts.user2, host: writerHost, label: "writer" }));
       } else {
         throw error;
       }
     }
-    // Draw + puzzle3d: create when the kind selector offers them.
-    for (const [label, kindLabel, host] of [
-      ["draw", "Drawing", '[data-slot="canvas-presence-overlay"], canvas'],
-      ["puzzle3d", "Puzzle 3D", '[data-peer-cursor-world], [data-slot="canvas-presence-overlay"]'],
+    for (const [label, kind, host] of [
+      ["draw", COLLAB_E2E_KIND_LABELS.draw, '[data-slot="canvas-presence-overlay"], canvas'],
+      ["puzzle3d", COLLAB_E2E_KIND_LABELS.puzzle3d, '[data-peer-cursor-world], [data-slot="canvas-presence-overlay"], canvas'],
     ] as const) {
       try {
         await opts.user1.goto(`${new URL(opts.user1.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
-        const create = opts.user1.locator('[id="s-create-artifact"], [data-action-id*="createArtifact"], button:has-text("Create")').first();
-        if ((await create.count()) === 0) continue;
-        await create.click();
-        await opts.user1.locator("#name").fill(`Collab ${label}`);
-        try {
-          await collabSelectOption(opts.user1, "kindId", kindLabel);
-        } catch {
-          continue;
-        }
-        await opts.user1.locator('button[type="submit"], [id="s-create-artifact-submit"]').first().click().catch(() => undefined);
-        await opts.user1.waitForTimeout(1_500);
-        // Best-effort open newest artifact row for both users.
-        const rows = opts.user1.locator('[data-row-id^="artifact:"]');
-        const n = await rows.count();
-        if (n === 0) continue;
-        const rowId = await rows.nth(n - 1).getAttribute("data-row-id");
-        if (!rowId) continue;
-        const id = rowId.replace("artifact:", "");
-        await collabWaitForRow(opts.user2, "artifact", id, 20_000).catch(() => undefined);
-        await opts.user1.locator(`[data-row-id="${rowId}"]`).getByTitle(/open/i).click().catch(() => undefined);
-        await opts.user2.locator(`[data-row-id="${rowId}"]`).getByTitle(/open/i).click().catch(() => undefined);
+        await collabWaitForApp(opts.user1, "s-space-create-artifact", 30_000);
+        const id = await collabCreateArtifact(opts.user1, `Collab ${label}`, kind);
+        await opts.user2.goto(`${new URL(opts.user2.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
+        await collabWaitForRow(opts.user2, "artifact", id, 30_000);
+        await opts.user1.locator(`[data-ui-node-key="artifact:${id}"]`).locator('button[aria-label="open"]').click();
+        await opts.user2.locator(`[data-ui-node-key="artifact:${id}"]`).locator('button[aria-label="open"]').click();
         await opts.user1.waitForTimeout(1_000);
         details.push(await collabAssertPeerCursorMoves({ mover: opts.user1, observer: opts.user2, host, label }));
       } catch (error) {
-        details.push(`${label}: skipped (${error instanceof Error ? error.message : String(error)})`);
+        details.push(`${label}: FAILED (${error instanceof Error ? error.message : String(error)})`);
       }
     }
-    spaceE2eAssert(details.some((line) => line.startsWith("writer:")), `step 14 missing writer cursor proof: ${JSON.stringify(details)}`);
+    spaceE2eAssert(details.every((line) => !line.includes(": FAILED (")), `step 14 peer cursors: ${JSON.stringify(details)}`);
+    spaceE2eAssert(details.length === 3, `step 14 needs writer, draw and puzzle3d cursor proofs: ${JSON.stringify(details)}`);
     opts.record(14, true, details.join("; "));
   } catch (error) {
     await collabScreenshot(opts.user1, "step14-user1");
@@ -1181,27 +1222,27 @@ async function collabRunCollaborationBehaviours(opts: {
  * lines plus a final summary, and sets a non-zero exit code if any step failed. */
 async function runCollabE2eVerify(): Promise<void> {
   const outDir = collabOutDir();
+  const external = collabExternalHub();
   const taken = new Set<number>();
-  const hubPort = collabScanPort("S_COLLAB_HUB_PORT", taken);
+  const hubPort = external ? Number(new URL(external.baseUrl).port) : collabScanPort("S_COLLAB_HUB_PORT", taken);
   const user1Port = collabScanPort("S_COLLAB_USER1_PORT", taken);
   const user2Port = collabScanPort("S_COLLAB_USER2_PORT", taken);
-  console.log(`[collab-e2e] ports: hub=${hubPort} user1=${user1Port} user2=${user2Port}`);
+  console.log(`[collab-e2e] ports: hub=${hubPort}${external ? " (external)" : ""} user1=${user1Port} user2=${user2Port}`);
 
-  const hubDataDir = collabHubDataDir();
+  const hubDataDir = external ? "" : collabHubDataDir();
   const user1DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u1-"));
   const user2DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u2-"));
 
-  const provisioned = collabProvisionCredentials(hubDataDir);
+  const passwords: Readonly<Record<string, string>> = external
+    ? external.passwords
+    : (collabProvisionCredentials(hubDataDir), { [COLLAB_E2E_USER1_EMAIL]: COLLAB_E2E_USER1_PASSWORD, [COLLAB_E2E_USER2_EMAIL]: COLLAB_E2E_USER2_PASSWORD });
 
   let hubDaemon: CollabHubHandle | undefined;
   let user1Daemon: SpawnDaemonHandle | undefined;
   let user2Daemon: SpawnDaemonHandle | undefined;
   let browser: import("playwright").Browser | undefined;
   const results: CollabStepOutcome[] = [];
-  const record = (step: number, pass: boolean, detail: string): void => {
-    results.push({ step, name: COLLAB_E2E_STEP_NAMES[step - 1]!, pass, detail });
-    console.log(`STEP ${step}: ${pass ? "PASS" : "FAIL"}: ${COLLAB_E2E_STEP_NAMES[step - 1]} — ${detail}`);
-  };
+  const record = collabRecorder(results);
 
   const teardown = async (): Promise<void> => {
     try {
@@ -1219,12 +1260,12 @@ async function runCollabE2eVerify(): Promise<void> {
   };
 
   try {
-    try {
+    if (!external) try {
       hubDaemon = await collabStartHub(hubPort, hubDataDir, join(outDir, "🧪️3-c-hub-boot.txt"));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[collab-e2e] hub failed to boot — every scenario step is reported FAIL: ${message}`);
-      for (let step = 1; step <= 10; step++) record(step, false, `blocked — hub never became ready: ${message}`);
+      for (let step = 1; step <= COLLAB_E2E_STEP_NAMES.length; step++) record(step, false, `blocked — hub never became ready: ${message}`);
       throw error;
     }
 
@@ -1237,11 +1278,11 @@ async function runCollabE2eVerify(): Promise<void> {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[collab-e2e] plugin prebuild failed — every scenario step is reported FAIL: ${message}`);
-      for (let step = 1; step <= 10; step++) record(step, false, `blocked — plugin prebuild failed: ${message}`);
+      for (let step = 1; step <= COLLAB_E2E_STEP_NAMES.length; step++) record(step, false, `blocked — plugin prebuild failed: ${message}`);
       throw error;
     }
 
-    const hubBaseUrl = `http://127.0.0.1:${hubPort}`;
+    const hubBaseUrl = external?.baseUrl ?? `http://127.0.0.1:${hubPort}`;
     try {
       if (process.env.S_COLLAB_SKIP_ACTIVATE === "1") {
         console.log("[collab-e2e] S_COLLAB_SKIP_ACTIVATE=1 — skipping activate-s-react-dev");
@@ -1251,7 +1292,7 @@ async function runCollabE2eVerify(): Promise<void> {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[collab-e2e] shell activation failed — every scenario step is reported FAIL: ${message}`);
-      for (let step = 1; step <= 10; step++) record(step, false, `blocked — shell activation failed: ${message}`);
+      for (let step = 1; step <= COLLAB_E2E_STEP_NAMES.length; step++) record(step, false, `blocked — shell activation failed: ${message}`);
       throw error;
     }
 
@@ -1263,7 +1304,7 @@ async function runCollabE2eVerify(): Promise<void> {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[collab-e2e] a shell dev server never booted — every scenario step is reported FAIL: ${message}`);
-      for (let step = 1; step <= 10; step++) record(step, false, `blocked — shells did not boot: ${message}`);
+      for (let step = 1; step <= COLLAB_E2E_STEP_NAMES.length; step++) record(step, false, `blocked — shells did not boot: ${message}`);
       throw error;
     }
 
@@ -1316,21 +1357,21 @@ async function runCollabE2eVerify(): Promise<void> {
 
     await user1Page.goto(`http://127.0.0.1:${user1Port}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
     await user2Page.goto(`http://127.0.0.1:${user2Port}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
-    await user1Page.locator(".semio-table-host").first().waitFor({ state: "visible", timeout: 120_000 });
-    await user2Page.locator(".semio-table-host").first().waitFor({ state: "visible", timeout: 120_000 });
+    await collabWaitForApp(user1Page, "s-home-create-space", 120_000);
+    await collabWaitForApp(user2Page, "s-home-create-space", 120_000);
     // 🔐️ Two DIFFERENT humans, each signing in from their own browser context against the same hub.
     // Serially, because the hub's sign-in bucket is keyed per address and both contexts share
     // 127.0.0.1 (AU3 gap 12): two simultaneous mints spend the bucket and the second gets a 429.
-    await collabSignIn(user1Page, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER1_PASSWORD);
-    await collabSignIn(user2Page, COLLAB_E2E_USER2_EMAIL, COLLAB_E2E_USER2_PASSWORD);
-    console.log(`[collab-e2e] both humans hold a verified session authority (${provisioned[COLLAB_E2E_USER1_EMAIL]}, ${provisioned[COLLAB_E2E_USER2_EMAIL]})`);
+    await collabSignIn(user1Page, COLLAB_E2E_USER1_EMAIL, passwords[COLLAB_E2E_USER1_EMAIL]!);
+    await collabSignIn(user2Page, COLLAB_E2E_USER2_EMAIL, passwords[COLLAB_E2E_USER2_EMAIL]!);
+    console.log(`[collab-e2e] both humans hold a verified session authority on ${hubBaseUrl}`);
     await user1Page.waitForTimeout(2_000);
     await user2Page.waitForTimeout(2_000);
 
-    const scenario = await collabRunScenario(user1Page, user2Page, hubBaseUrl, user2Commands, hubDaemon.adminCapability);
-    for (const outcome of scenario.results) results.push(outcome);
+    const scenario = await collabRunScenario(record, user1Page, user2Page, hubBaseUrl, user2Commands, () => (external ? collabExternalAdminCapability(external) : hubDaemon!.adminCapability));
 
-    hubDaemon = await collabRunRestartStep({ record, hubDaemon: hubDaemon!, hubPort, hubDataDir, user1: user1Page, user2: user2Page, user2Commands, spaceId: scenario.spaceId, artifactId: scenario.artifactId });
+    if (hubDaemon) hubDaemon = await collabRunRestartStep({ record, hubDaemon, hubPort, hubDataDir, user1: user1Page, user2: user2Page, user2Commands, spaceId: scenario.spaceId, artifactId: scenario.artifactId });
+    else for (const step of [9, 10]) record(step, null, `skipped — the external hub ${hubBaseUrl} is not owned by this run, so it is not restarted`);
 
     await collabRunCollaborationBehaviours({ record, user1: user1Page, user2: user2Page, spaceId: scenario.spaceId, artifactId: scenario.artifactId });
 
@@ -1341,9 +1382,10 @@ async function runCollabE2eVerify(): Promise<void> {
     await teardown();
   }
 
-  const passed = results.filter((outcome) => outcome.pass).length;
-  console.log(`[collab-e2e] summary: ${passed}/${results.length} steps passed`);
-  for (const outcome of results) console.log(`  STEP ${outcome.step}: ${outcome.pass ? "PASS" : "FAIL"}: ${outcome.name}`);
+  const passed = results.filter((outcome) => outcome.pass === true).length;
+  const skipped = results.filter((outcome) => outcome.pass === null).length;
+  console.log(`[collab-e2e] summary: ${passed}/${results.length} steps passed, ${skipped} skipped, ${results.length - passed - skipped} failed`);
+  for (const outcome of [...results].sort((left, right) => left.step - right.step)) console.log(`  STEP ${outcome.step}: ${collabVerdict(outcome.pass)}: ${outcome.name}`);
   if (passed !== results.length) process.exitCode = 1;
 }
 

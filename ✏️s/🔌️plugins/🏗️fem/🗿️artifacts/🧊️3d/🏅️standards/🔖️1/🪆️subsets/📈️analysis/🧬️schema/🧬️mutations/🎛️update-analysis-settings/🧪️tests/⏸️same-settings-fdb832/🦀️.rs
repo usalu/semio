@@ -73,7 +73,7 @@ fn inverse_restores_before() {
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("applied"), "update-analysis-settings/same-settings-fdb832: a no-op declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("no-op"), "update-analysis-settings/same-settings-fdb832: a no-op declares a no-op outcome");
     let declared = outcome.get("messages").and_then(dsl::DslValue::as_array).expect("the declared outcome carries messages");
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(declared.len(), produced.messages().len(), "update-analysis-settings/same-settings-fdb832: the declared diagnostic count must match the emitted one");

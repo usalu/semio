@@ -322,6 +322,16 @@ export class NativeOsScript extends Script {
  * @see AGENTS.md */
 export const AGENT_INSTRUCTION_ALIASES = ["CLAUDE.md", "GEMINI.md", ".github/copilot-instructions.md"] as const;
 
+/** @emoji 🧷️ The repo-local git settings `setup git` writes into `.git/config`; the user's global git config is never
+ * touched. `core.longpaths` lets Git for Windows check out, track and clean paths past `MAX_PATH` (tracked fixture paths
+ * reach 239 UTF-16 units below the clone root; git ignores the key elsewhere) and `core.symlinks` materializes the
+ * committed symlinks. A first clone on Windows needs `git clone -c core.longpaths=true`, which writes the same key.
+ * @see README.md */
+export const REPO_LOCAL_GIT_CONFIG = [
+  ["core.symlinks", "true"],
+  ["core.longpaths", "true"],
+] as const;
+
 export class SetupScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (!segments[0]) {
@@ -365,7 +375,7 @@ export class SetupScript extends Script {
   }
 
   private runGit(): void {
-    runCmd("git", ["config", "--local", "core.symlinks", "true"], { cwd: this.root });
+    for (const [key, value] of REPO_LOCAL_GIT_CONFIG) runCmd("git", ["config", "--local", key, value], { cwd: this.root });
     installMicroCommitGitHooks(this.root);
     const source = "AGENTS.md";
     for (const alias of AGENT_INSTRUCTION_ALIASES) {
@@ -413,14 +423,13 @@ export class StartScript extends Script {
 
     if (process.env.S_LOCAL_ONLY !== "1" && process.env.S_LOCAL_ONLY !== "true") {
       process.env.S_HUB_URL = process.env.S_HUB_URL || "http://127.0.0.1:8787";
-      process.env.OS_HUB_PORT = process.env.OS_HUB_PORT || "8787";
       process.env.OS_HUB_DATA = process.env.OS_HUB_DATA || join(this.root, ".🧬semio", "🌐hub", "hub-dev");
-      spawnDaemon("bun", ["nx", "run", "os-hub:dev"], {
+      spawnDaemon("bun", ["nx", "run", "@semio-tech/framework-os-dev:local-hub"], {
         cwd: this.root,
         env: process.env,
         stdio: "ignore",
       });
-      console.log(`[start] local os-hub launching at ${process.env.S_HUB_URL} (data ${process.env.OS_HUB_DATA})`);
+      console.log(`[start] local development hub owner launching at ${process.env.S_HUB_URL} (data ${process.env.OS_HUB_DATA}, log local-hub.log there); every \`dev s\` row signs in through its session broker`);
     }
     if (process.platform === "win32" || process.platform === "darwin" || process.platform === "linux") {
       new NativeOsScript(this.root, this.repoRoot).run(["start"]);
@@ -7672,9 +7681,10 @@ export class VerifyScript extends Script {
       if (setClientActionCount !== 0) throw new Error("generated Space manifest still declares the retired setClient action");
       const homeEditor = spaceManifest.manifest.apps.find((app) => app.id === "s.space.home@1/*#editor");
       const generatedHomeActions = new Map(homeEditor?.windowKinds.flatMap((window) => window.actions).map((action) => [action.id, action]) ?? []);
-      for (const actionId of ["applyDirectoryEventPage", "createStudio", "bindSpaceFile", "importSpace", "deleteVirtualFileSystemNode", "renameSpace", "foldDirectoryEvents"]) {
+      for (const actionId of ["bindSpaceFile", "importSpace", "deleteVirtualFileSystemNode", "renameSpace"]) {
         if ((generatedHomeActions.get(actionId) as { semantics?: { execution?: { interactiveJob?: string } } } | undefined)?.semantics?.execution?.interactiveJob !== "batchOnlyPendingRewrite") throw new Error(`generated Home action ${actionId} overclaims retained execution`);
       }
+      if (generatedHomeActions.has("foldDirectoryEvents")) throw new Error("generated Home still declares the retired foldDirectoryEvents writer");
       runCmd(
         "bun",
         [

@@ -31,7 +31,7 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for ChangeRu
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change rule layout point \"{}\"", self.key), &format!("Regellayoutpunkt \"{}\" ändern", self.key))
+        protocol::LocalizedLabel::native(&format!("Change rule layout point \"{}\"", self.key), &format!("Layoutpunkt der Regel \"{}\" ändern", self.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]

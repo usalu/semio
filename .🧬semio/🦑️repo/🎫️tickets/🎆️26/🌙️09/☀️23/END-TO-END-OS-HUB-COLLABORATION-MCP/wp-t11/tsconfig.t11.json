@@ -1,0 +1,15 @@
+{
+  "extends": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.d.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️parity/📋️orchestration/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🖥️host-protocol-parity/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/📋️orchestration/🟦️.ts"
+  ],
+  "include": []
+}

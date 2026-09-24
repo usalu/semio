@@ -1,0 +1,5 @@
+{
+  "operation": "setLayerVisibility",
+  "layerId": "parcels",
+  "visible": false
+}

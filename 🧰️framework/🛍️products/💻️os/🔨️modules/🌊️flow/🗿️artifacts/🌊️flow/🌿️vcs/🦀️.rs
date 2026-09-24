@@ -559,6 +559,10 @@ impl crate::os_store::ArtifactPack for FlowHostSnapshotDsl {
 impl crate::os_store::ArtifactDsl for FlowHostSnapshot {
     const EXTENSION: &'static str = "flow";
 
+    fn envelope_id() -> &'static str {
+        <FlowHostSnapshotDsl as crate::os_store::ArtifactDsl>::envelope_id()
+    }
+
     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
         let dsl_fixture = <FlowHostSnapshotDsl as crate::os_store::ArtifactDsl>::parse_dsl(text)?;
         flow_host_snapshot_dsl_to_host_snapshot(dsl_fixture).map_err(|message| crate::os_store::TextError::new(message, crate::os_store::TextSpan::at(1, 1)))

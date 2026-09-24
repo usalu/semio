@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for UnbindRepres
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Unbind representation at #{}", self.index), &format!("Repräsentation an #{} lösen", self.index))
+        protocol::LocalizedLabel::native(&format!("Unbind representation at #{}", self.index), &format!("Bindung der Repräsentation an #{} aufheben", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

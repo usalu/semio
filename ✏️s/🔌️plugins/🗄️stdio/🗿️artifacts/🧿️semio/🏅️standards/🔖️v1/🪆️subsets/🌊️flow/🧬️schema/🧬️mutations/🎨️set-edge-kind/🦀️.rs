@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for SetEdgeKin
         agg_inverse(&SemioFlowMutation::SetEdgeKind(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-edge-kind", "Kantenart setzen")
+        protocol::LocalizedLabel::native("Set edge kind", "Kantenart setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

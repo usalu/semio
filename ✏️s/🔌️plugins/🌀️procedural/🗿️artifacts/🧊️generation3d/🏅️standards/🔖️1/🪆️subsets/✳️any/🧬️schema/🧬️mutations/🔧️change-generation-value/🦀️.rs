@@ -29,7 +29,7 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Chan
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change generation \"{}\" value \"{}\"", self.id, self.question_id), &format!("Erzeugung \"{}\" Wert \"{}\" ändern", self.id, self.question_id))
+        protocol::LocalizedLabel::native(&format!("Change generation \"{}\" value \"{}\"", self.id, self.question_id), &format!("Erzeugung \"{}\": Wert \"{}\" ändern", self.id, self.question_id))
     }
 
     fn target(&self) -> Vec<String> {

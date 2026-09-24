@@ -25,7 +25,7 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Se
         agg_inverse(&SemioDocumentMutation::SetImageBlock(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-image-block", "Bildblock setzen")
+        protocol::LocalizedLabel::native("Set image block", "Bildblock setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

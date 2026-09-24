@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameReportRecord {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename report record to \"{}\"", self.new_name), &format!("Berichtdatensatz in \"{}\" umbenennen", self.new_name))
+        protocol::LocalizedLabel::native(&format!("Rename report record to \"{}\"", self.new_name), &format!("Berichtsdatensatz in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

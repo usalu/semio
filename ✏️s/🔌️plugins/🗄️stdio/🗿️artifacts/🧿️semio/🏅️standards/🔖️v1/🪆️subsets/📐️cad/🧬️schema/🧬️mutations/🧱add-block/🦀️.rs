@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for AddBlock {
         agg_inverse(&SemioCadMutation::AddBlock(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("add-block", "Block hinzufügen")
+        protocol::LocalizedLabel::native("Add block", "Block hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

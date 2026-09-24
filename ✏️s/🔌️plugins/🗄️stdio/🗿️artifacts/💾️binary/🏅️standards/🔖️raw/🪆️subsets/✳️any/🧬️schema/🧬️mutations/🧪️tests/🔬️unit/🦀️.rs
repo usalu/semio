@@ -60,7 +60,7 @@ async fn absorb_law_cartesian() {
         }
     }
     assert_eq!(valid_compositions, 15, "the representative matrix must exercise every valid sequential composition");
-    assert_eq!(rejected_compositions, 1, "only the deliberate short-snapshot/out-of-range splice pair is outside the algebra domain");
+    assert_eq!(rejected_compositions, 1, "only the deliberate short-snapshot/out-of-range replace-byte-range pair is outside the algebra domain");
 }
 
 /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws (handcrafted impls over the
@@ -77,8 +77,8 @@ async fn op_text_binary_roundtrip_law() {
         let decoded = BinaryMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
         assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
     }
-    assert!(BinaryMutation::parse_op("replace-byte-range offset=1 remove-len=2 insert=\"qrvM\"").is_err());
-    assert!(BinaryMutation::parse_op("splice-extra offset=1 remove-len=2 insert=\"qrvM\"").is_err());
+    assert!(BinaryMutation::parse_op("splice offset=1 remove-len=2 insert=\"qrvM\"").is_err());
+    assert!(BinaryMutation::parse_op("replace-byte-range-extra offset=1 remove-len=2 insert=\"qrvM\"").is_err());
 }
 
 //#region 🔖️KindsCoverageLaw
@@ -92,7 +92,7 @@ async fn kinds_cover_every_variant() {
     fn kind_of(mutation: &BinaryMutation) -> &'static str {
         match mutation {
             BinaryMutation::SetSnapshot(_) => "set-snapshot",
-            BinaryMutation::ReplaceByteRange(_) => "splice",
+            BinaryMutation::ReplaceByteRange(_) => "replace-byte-range",
             BinaryMutation::AppendBytes(_) => "append-bytes",
             BinaryMutation::TruncateAt(_) => "truncate-at",
         }

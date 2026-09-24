@@ -28,7 +28,7 @@ impl MutationKind<Fem2dSnapshot, Fem2dMutation> for ReplaceRegion {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace region \"{}\"", self.id), &format!("Region \"{}\" ersetzen", self.id))
+        protocol::LocalizedLabel::native(&format!("Replace region \"{}\"", self.id), &format!("Bereich \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

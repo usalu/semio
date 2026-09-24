@@ -22,6 +22,8 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { publishedPageUrl } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { nodeIdList } from "../../../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
 import {
   type ArtifactInstanceRef,
   ArtifactMutationRouter,
@@ -73,6 +75,7 @@ import {
   activationReasonForAppId,
   createTurnOutcomeBroadcast,
   fetchDescriptorManifest,
+  FRAMEWORK_RESERVED_JOB_KIND,
   type PluginDispatchHintV1,
   type PluginWasmHandle as KernelPluginWasmHandle,
   type TurnOutcome,
@@ -522,6 +525,9 @@ export class PluginBootShardLostError extends Error {
  * (`🛠️ShellHelpers`, the engine test surface) already addresses this module for it. */
 import { beginPluginLoadV1, endPluginLoadV1, notePluginLoadProgress, notePluginLoadProgressForInFlightV1, pluginLoadProgressAt, pluginLoadRemainingMs, pluginLoadsInFlightV1, resetPluginLoadProgressForTestsV1, sharedDescriptorManifestV1, withPluginLoadInFlightV1, PLUGIN_LOAD_CEILING_MS, PLUGIN_LOAD_IDLE_TIMEOUT_MS } from "./🫀️load-progress/🟦️.ts";
 export { beginPluginLoadV1, endPluginLoadV1, notePluginLoadProgress, notePluginLoadProgressForInFlightV1, pluginLoadProgressAt, pluginLoadRemainingMs, pluginLoadsInFlightV1, resetPluginLoadProgressForTestsV1, sharedDescriptorManifestV1, withPluginLoadInFlightV1, PLUGIN_LOAD_CEILING_MS, PLUGIN_LOAD_IDLE_TIMEOUT_MS };
+/** 💼️ The live spawned-job ledger `driveSpawnedJob` keeps — see `💼️job-ledger/🟦️.ts`. */
+import { beginSpawnedJobV1, cancelSpawnedJobV1, spawnedJobsSnapshotV1, subscribeSpawnedJobsV1, type SpawnedJobRowV1 } from "./💼️job-ledger/🟦️.ts";
+export { cancelSpawnedJobV1, spawnedJobsSnapshotV1, subscribeSpawnedJobsV1, type SpawnedJobRowV1 };
 
 let sharedShardClient: ShardClient | null = null;
 function getShardClient(): ShardClient {
@@ -558,6 +564,19 @@ let sharedActivationRegistry: ActivationRegistry | null = null;
 function getActivationRegistry(): ActivationRegistry {
   sharedActivationRegistry ??= new ActivationRegistry({ shardClient: getShardClient(), defaultBudget: DEFAULT_SHARD_BUDGET });
   return sharedActivationRegistry;
+}
+
+/** 🧵️ The actor runtime this tab's plugins run on, for `🧵️TaskManager` — `null` until the first plugin load
+ * has created it. Never creates one itself: a task manager watching an empty runtime must not start the
+ * shard worker pool just by being opened. */
+export function pluginRuntimeActivationRegistryV1(): ActivationRegistry | null {
+  return sharedActivationRegistry;
+}
+
+/** 🧩️ Indexes a loaded extension program under its loaded parent program, so activating the parent activates the
+ * extension — for programs outside the build-time catalog (a hub document's catalog-resolved programs). */
+export function registerProgramExtensionV1(parentPluginId: string, extensionPluginId: string): void {
+  getActivationRegistry().registerExtension(parentPluginId, extensionPluginId);
 }
 
 /** 🚧️ Best-effort JS representation of one raw WIT `effect`/`patch-op` variant crossing the wasm
@@ -848,7 +867,7 @@ export function decodeWirePatchOps(ops: readonly WireVariant[]): readonly UiPatc
         break;
       }
       case "set-children":
-        decoded.push({ type: "setChildren", id: wireNatural(val.node, "op.node"), children: Array.isArray(val.children) ? val.children.map((child) => wireNatural(child, "set-children.children[]")) : [] });
+        decoded.push({ type: "setChildren", id: wireNatural(val.node, "op.node"), children: nodeIdList(val.children, "set-children.children").map((child) => wireNatural(child, "set-children.children[]")) });
         break;
       case "set-style":
         decoded.push({ type: "setStyle", id: wireNatural(val.node, "op.node"), style: decodeWirePack(val.style, "set-style.style") as Extract<UiPatchOp, { type: "setStyle" }>["style"] });
@@ -1132,12 +1151,27 @@ const completionFanouts = new Map<number, { readonly listeners: Set<(completion:
  * completion leftover. `consumeTypedOperationEffects` tags that value `terminal-output` when the
  * TERMINAL page rode the same turn and `pending-output` when it did not — across a multi-turn drain
  * both spellings reach here, and the completion frame itself is the terminal witness, so either is the
- * operation's terminal result. More than one is a contract violation, exactly as in
- * {@link invocationFromFrames}. */
+ * operation's terminal result.
+ *
+ * One publication seen on BOTH carriers is still one output: a fast operation's admitting command turn
+ * parks the receipt as `pending-output` and its completion carries the same receipt as `terminal-output`
+ * (measured on the signed-in `s` Home, hub 7800, ticket 26/09/23 C10 — every directory page stalled at
+ * "Updating directory" because the identical receipt was counted twice). Two DIFFERENT values remain a
+ * contract violation, exactly as in {@link invocationFromFrames}. */
 function typedOperationTerminalOutputV1(leftover: readonly WireVariant[]): unknown {
-  const outputs = leftover.filter((effect) => effect.tag === TYPED_OPERATION_TERMINAL_OUTPUT || effect.tag === TYPED_OPERATION_PENDING_OUTPUT);
-  if (outputs.length > 1) throw new Error("typed-operation returned more than one terminal output");
-  return outputs[0]?.val;
+  const [first, ...rest] = leftover.filter((effect) => effect.tag === TYPED_OPERATION_TERMINAL_OUTPUT || effect.tag === TYPED_OPERATION_PENDING_OUTPUT);
+  if (first !== undefined && rest.some((effect) => !sameTerminalValueV1(effect.val, first.val))) throw new Error("typed-operation returned more than one terminal output");
+  return first?.val;
+}
+
+/** ⚖️ Structural equality of two decoded pack values (primitives, byte arrays, arrays, records) — key order never matters. */
+function sameTerminalValueV1(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (left instanceof Uint8Array || right instanceof Uint8Array) return left instanceof Uint8Array && right instanceof Uint8Array && left.length === right.length && left.every((byte, index) => byte === right[index]);
+  if (Array.isArray(left) || Array.isArray(right)) return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => sameTerminalValueV1(value, right[index]));
+  if (left === null || right === null || typeof left !== "object" || typeof right !== "object") return false;
+  const leftKeys = Object.keys(left);
+  return leftKeys.length === Object.keys(right).length && leftKeys.every((key) => Object.hasOwn(right, key) && sameTerminalValueV1((left as Record<string, unknown>)[key], (right as Record<string, unknown>)[key]));
 }
 
 /** 🧾️ The settled operation's terminal value, taken from WHICHEVER carrier the turn it settled on
@@ -2310,15 +2344,20 @@ export async function resolveDescriptorBeforeRuntime<TManifest, TRuntime>(loadDe
  * `acquirePluginModule`/`PluginModuleLease` per-plugin Worker lease — design-runtime.md §3) and
  * adapts it exactly like the old wasm-Worker handle: `dispose()` disposes this instance's worker-side
  * actor entry via `ShardClient.dispose` (not a `LeasePool` release — there is no shared module lease
- * to refcount anymore, one actor belongs to exactly one instance). */
-export async function loadPluginModule(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginWasmHandle> {
+ * to refcount anymore, one actor belongs to exactly one instance).
+ *
+ * 🪪️ `pluginId` is the PROGRAM id every host structure keys this module by; `manifestPluginId` is the plugin id its own
+ * descriptor must name. They differ only for a hub document's catalog-resolved program (`🌎️hub-source/🔍️resolution`),
+ * which runs beside the device's own program of the same plugin. */
+export async function loadPluginModule(pluginId: string, moduleUrl: string, signal?: AbortSignal, manifestPluginId: string = pluginId): Promise<PluginWasmHandle> {
+  moduleUrl = publishedPageUrl(moduleUrl);
   const { manifest, runtime: registry } = await withPluginLoadInFlightV1(pluginId, async () => {
     const resolved = await resolveDescriptorBeforeRuntime(
-      () => sharedDescriptorManifestV1(pluginId, moduleUrl, () => fetchDescriptorManifest(pluginId, moduleUrl, signal, () => notePluginLoadProgressForInFlightV1())),
+      () => sharedDescriptorManifestV1(pluginId, moduleUrl, () => fetchDescriptorManifest(manifestPluginId, moduleUrl, signal, () => notePluginLoadProgressForInFlightV1())),
       getActivationRegistry,
     );
     notePluginLoadProgress(pluginId);
-    resolved.runtime.registerManifest({ pluginId, moduleUrl, caps: [] });
+    resolved.runtime.registerManifest({ pluginId, moduleUrl, caps: [], ...(manifestPluginId === pluginId ? {} : { manifestPluginId }) });
     notePluginLoadProgress(pluginId);
     return resolved;
   });
@@ -2816,6 +2855,16 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     if (drivingJobs.has(key)) return;
     drivingJobs.add(key);
     const live = (): boolean => !disposing && !closingInstances.has(instanceId) && actorIdByInstance.get(instanceId) === actorId;
+    const ledgerEntry = beginSpawnedJobV1({
+      key,
+      pluginId,
+      actorId,
+      instanceId,
+      job,
+      kind,
+      startedAtMs: Date.now(),
+      cancel: () => void serializeCommandIngressForActor(actorId, () => shardClient.cancelJob(actorId, job)).catch((error) => turnOutcomes.push({ instanceId, error })),
+    });
     try {
       beginIsolatedJobDrive();
       await serializeCommandIngressForActor(actorId, () => shardClient.startJob(actorId, job, kind, input));
@@ -2837,6 +2886,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           if (live()) await deliverJobCompletion(instanceId, actorId, job, outcome);
           return;
         }
+        ledgerEntry.step(step, progressed.value);
         if (progressed.value || isolatedJobUiPollEverySteps(step)) requestIsolatedJobUiPoll();
         if (progressed.value && live()) publishSpawnedJobProgress(instanceId, key);
         await yieldPluginUiContinuation();
@@ -2844,6 +2894,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
     } finally {
+      ledgerEntry.end();
       endIsolatedJobDrive();
       drivingJobs.delete(key);
       lastJobProgressRefreshMs.delete(key);
@@ -2882,7 +2933,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     for (const effect of effects) {
       if (effect.tag !== "spawn-job") continue;
       const value = effect.val as { job?: unknown; kind?: unknown; input?: unknown } | undefined;
-      if (typeof value?.job !== "bigint" || value.kind !== "framework.reserved.tool") continue;
+      if (typeof value?.job !== "bigint" || value.kind !== FRAMEWORK_RESERVED_JOB_KIND) continue;
       await commitReservedToolJobWhileSerialized(instanceId, actorId, value.job, value.kind, coerceWireBytes(value.input));
     }
   };
@@ -2927,10 +2978,10 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const actorId = requireActorId(instanceId);
       if (drivingJobs.has(`${actorId}#${value.job}`) || finishedReservedJobs.has(`${actorId}#${value.job}`)) return false;
       const input = coerceWireBytes(value.input);
-      const drive = value.kind === "framework.reserved.tool"
+      const drive = value.kind === FRAMEWORK_RESERVED_JOB_KIND
         ? driveReservedToolJob(instanceId, actorId, value.job, value.kind, input)
         : driveSpawnedJob(instanceId, actorId, value.job, value.kind, input);
-      if (value.kind === "framework.reserved.tool") pendingReservedJobDrives.push(drive);
+      if (value.kind === FRAMEWORK_RESERVED_JOB_KIND) pendingReservedJobDrives.push(drive);
       else void drive;
       return false;
     }

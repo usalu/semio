@@ -23,7 +23,7 @@ impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for 
         agg_inverse(&SemioAnimationMutation::RemoveTimeline(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-timeline", "Zeitleiste entfernen")
+        protocol::LocalizedLabel::native("Remove timeline", "Zeitleiste entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

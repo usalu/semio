@@ -10,7 +10,7 @@
 //! SECOND real-world fem2d model — the first is the timber portal frame the subset-level
 //! differential cases share. Every value is in SI base units.
 //!
-//! 🔁️ The dead case is already named "Dead", so this is `change-load-case-name`'s no-op branch: APPLIED with a Warning, an empty diff, and a document that does not move. `change-load-case-name` has no Fatal branch at all.
+//! 🔁️ The dead case is already named "Dead", so this is `change-load-case-name`'s no-op branch: a NO-OP with a Warning, an empty diff, and a document that does not move. `change-load-case-name` has no Fatal branch at all.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
@@ -32,7 +32,7 @@ fn mutation() -> Fem2dMutation {
     dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
-/// ▶️ A no-op `change-load-case-name` is APPLIED, not rejected — it simply changes nothing, so the document comes
+/// ▶️ A no-op `change-load-case-name` is a NO-OP, not rejected — it simply changes nothing, so the document comes
 /// out byte-identical to the committed `after`, which is the committed `before`.
 #[test]
 fn no_op_leaves_the_document_untouched() {
@@ -40,7 +40,7 @@ fn no_op_leaves_the_document_untouched() {
     let mut snapshot = base.clone();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("change-load-case-name's no-op diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "change-load-case-name/🔁️keeps-the-name-4fa89f: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot, base, "change-load-case-name/🔁️keeps-the-name-4fa89f: an APPLIED no-op still leaves the document exactly where it was");
+    assert_eq!(snapshot, base, "change-load-case-name/🔁️keeps-the-name-4fa89f: an accepted no-op still leaves the document exactly where it was");
 }
 
 /// ⚠️ A value that is already what the payload asks for is a Warning-level `mutation.no-op`, never
@@ -71,12 +71,12 @@ fn inverse_restores_before() {
     assert_eq!(snapshot, base, "change-load-case-name/🔁️keeps-the-name-4fa89f: inverse did not restore the before-snapshot");
 }
 
-/// 🎯️ The declared outcome — applied, with exactly one `warn`-level `mutation.no-op` — is what this
+/// 🎯️ The declared outcome — `no-op`, with exactly one `warn`-level `mutation.no-op` — is what this
 /// kind really emits here.
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("applied"), "change-load-case-name/🔁️keeps-the-name-4fa89f declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("no-op"), "change-load-case-name/🔁️keeps-the-name-4fa89f declares a no-op outcome");
     let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
     let declared = outcome.get("messages").and_then(dsl::DslValue::as_array).expect("a no-op outcome declares its diagnostics");
     assert_eq!(declared.len(), produced.messages().len(), "the declared diagnostic count must match the emitted one");

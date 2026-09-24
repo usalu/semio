@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for RemoveVariableAc
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove variable action #{}", self.index), &format!("Variablenaktion #{} entfernen", self.index))
+        protocol::LocalizedLabel::native(&format!("Remove variable action #{}", self.index), &format!("Veränderliche Einwirkung #{} entfernen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

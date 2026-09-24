@@ -20,7 +20,7 @@
 //! outside the conformance-class projection entirely.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::strict::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, project_package, KINDS};
+use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::strict::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, project_package};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
@@ -93,7 +93,7 @@ mod subject {
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_docx;
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_docx;
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::strict::schema::mutations::{apply_docx_strict_mutation, stamp_conformance_class, vml_markup, DocxStrictMutation};
-    use crate::DocxSnapshot;
+    use semio_s_artifact_stdio_docx::DocxSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::strict::{oracle_inverse_spec, project_package};
 
     fn decode(bytes: &[u8]) -> Result<DocxSnapshot, String> {
@@ -169,12 +169,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

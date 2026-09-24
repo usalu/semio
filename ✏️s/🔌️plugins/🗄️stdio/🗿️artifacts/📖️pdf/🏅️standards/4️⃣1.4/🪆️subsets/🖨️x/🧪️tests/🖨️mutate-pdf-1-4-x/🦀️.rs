@@ -16,12 +16,6 @@
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::x::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_conformance};
 
-//#region 🔖️Kinds
-/// 🧾️ Test-case-local mirror of the `pdf-1-4-x` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that module
-/// lives in the SUBJECT crate, and the oracle role must not link the subject crate at all.
-const KINDS: &[&str] = &["set-page-size", "collapse-page-size"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "asset://🧬️conformance-seed/🧬️conformance-seed.pdf";
@@ -189,12 +183,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

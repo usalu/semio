@@ -8,7 +8,7 @@
 
 // #region 🔌️Adapters
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { type ComponentSceneHostProps, inkCanvasActions, windowElementId } from "@semio-tech/framework";
+import { GestureRecognizer, applyPinchToOffsetCamera, type ComponentSceneHostProps, inkCanvasActions, windowElementId } from "@semio-tech/framework";
 import {
   cn,
   ContextMenuController,
@@ -953,6 +953,14 @@ const INK_MARQUEE_THRESHOLD_PX = 4;
 //#endregion DragState
 
 //#region InkCanvasHost
+/** 🔍️ The ink camera's zoom limits — the wheel and the shared-recognizer pinch clamp to ONE range. */
+export const INK_CAMERA_ZOOM_BOUNDS = { min: 0.1, max: 8 } as const;
+
+/** 🪜️ The ink surface's root class. `isolate` keeps its selection frame (`z-20`), resize handles, block editors
+ * and inline text editor (`z-30`) inside its own stacking context, so a selected block under a window chip can never
+ * paint over the window chrome (ticket 26/09/23 S15; same law as `NODE_GRAPH_HOST_CLASS`). */
+export const INK_CANVAS_HOST_CLASS = "isolate relative h-full w-full touch-none overflow-hidden outline-none";
+
 export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.inkCanvas;
   const windowInstanceId = useContext(WindowInstanceIdContext);
@@ -961,6 +969,8 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
   const rafRef = useRef<number | null>(null);
   const pendingLiveEventsRef = useRef<readonly InkCanvasEvent[] | null>(null);
   const [draftDoc, setDraftDoc] = useState<InkDocument | null>(null);
+  const [gestureRecognizer] = useState(() => new GestureRecognizer());
+  const pinchCameraRef = useRef<InkCamera | null>(null);
   const [dragState, setDragState] = useState<InkDragState | null>(null);
   const [marqueePoints, setMarqueePoints] = useState<readonly SelectionMarqueePoint[]>([]);
   const [textEdit, setTextEdit] = useState<InkTextEditState | null>(null);
@@ -1138,6 +1148,29 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
     [doc, selectedIds, selectedSet],
   );
 
+  /** @emoji 🤏️ Every contact reaches the shared recognizer in the CAPTURE phase — before a block's own
+   * `pointerdown` can stop it — so a second finger landing on a block still starts the pinch. The pinch
+   * cancels whatever the first finger began (its live stroke/move preview is dropped, never committed). */
+  const handlePointerDownCapture = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!rootRef.current || !doc) return;
+      const rect = rootRef.current.getBoundingClientRect();
+      const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top });
+      if (verdict.kind === "single") return;
+      event.stopPropagation();
+      if (verdict.kind !== "pinchBegin") return;
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      pendingLiveEventsRef.current = null;
+      gestureActiveRef.current = false;
+      setDragState(null);
+      setMarqueePoints([]);
+      pinchCameraRef.current = sceneDoc?.camera ?? doc.camera;
+      setDraftDoc(sceneDoc ? { ...sceneDoc, camera: pinchCameraRef.current } : null);
+    },
+    [doc, gestureRecognizer, sceneDoc],
+  );
+
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (!rootRef.current || !doc || isNavigator || !interactive) return;
@@ -1218,6 +1251,14 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       const rect = rootRef.current.getBoundingClientRect();
       const screenX = event.clientX - rect.left;
       const screenY = event.clientY - rect.top;
+      const verdict = gestureRecognizer.move({ pointerId: event.pointerId, x: screenX, y: screenY });
+      if (verdict.kind === "pinch") {
+        const nextCamera = applyPinchToOffsetCamera(pinchCameraRef.current ?? camera, verdict.step, INK_CAMERA_ZOOM_BOUNDS);
+        pinchCameraRef.current = nextCamera;
+        setDraftDoc((current) => ({ ...(current ?? doc), camera: nextCamera }));
+        return;
+      }
+      if (verdict.kind !== "single") return;
       const [worldX, worldY] = screenToWorld(camera, screenX, screenY);
       if (!dragState) {
         if (!interactive) return;
@@ -1274,7 +1315,22 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
         if (events.length) liveGesture(events);
       }
     },
-    [dispatch, doc, dragState, interactive, liveGesture, publishInteractionHover],
+    [dispatch, doc, dragState, gestureRecognizer, interactive, liveGesture, publishInteractionHover],
+  );
+
+  /** @emoji 🤏️ Routes a lifted/cancelled contact through the shared recognizer: the LAST finger of a pinch
+   * commits its camera exactly once; any other contact of a latched gesture is swallowed. Answers whether
+   * the single-pointer lane may handle the release. */
+  const releaseContact = useCallback(
+    (pointerId: number): boolean => {
+      const verdict = gestureRecognizer.up(pointerId);
+      if (verdict.kind === "pinchEnd" && pinchCameraRef.current) {
+        dispatch(inkCanvasActions.setCamera, { camera: pinchCameraRef.current });
+        pinchCameraRef.current = null;
+      }
+      return verdict.kind === "single";
+    },
+    [dispatch, gestureRecognizer],
   );
 
   const handlePointerUp = useCallback(() => {
@@ -1346,7 +1402,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       const screenX = event.clientX - rect.left;
       const screenY = event.clientY - rect.top;
       const zoomFactor = event.deltaY < 0 ? 1.08 : 0.92;
-      const nextZoom = Math.min(8, Math.max(0.1, camera.zoom * zoomFactor));
+      const nextZoom = Math.min(INK_CAMERA_ZOOM_BOUNDS.max, Math.max(INK_CAMERA_ZOOM_BOUNDS.min, camera.zoom * zoomFactor));
       const worldX = (screenX - camera.x) / camera.zoom;
       const worldY = (screenY - camera.y) / camera.zoom;
       const nextCamera = { x: screenX - worldX * nextZoom, y: screenY - worldY * nextZoom, zoom: nextZoom };
@@ -1572,11 +1628,16 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       tabIndex={0}
       data-surface-id={node.surfaceId}
       data-level="base"
-      className={cn("relative h-full w-full touch-none overflow-hidden outline-none", surfaceClass)}
+      className={cn(INK_CANVAS_HOST_CLASS, surfaceClass)}
+      onPointerDownCapture={handlePointerDownCapture}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
+      onPointerUp={(event) => {
+        if (releaseContact(event.pointerId)) handlePointerUp();
+      }}
+      onPointerCancel={(event) => {
+        if (releaseContact(event.pointerId)) handlePointerCancel();
+      }}
       onWheel={handleWheel}
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}

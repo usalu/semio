@@ -34,7 +34,7 @@ impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeImportedFeat
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change imported terrain features", "importierte Geländenmerkmale ändern")
+        protocol::LocalizedLabel::native("Change imported terrain features", "Importierte Geländemerkmale ändern")
     }
 }
 //#endregion 🔹Payload

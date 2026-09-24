@@ -56,11 +56,12 @@
       "artifact": "s.gis.gisterrain",
       "standard": "1",
       "subset": "any",
+      "surface": "✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config",
       "mutations": [
         {
           "id": "set-camera",
           "capability": "gis-gisterrain-1-config-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🎥️set-camera/🔣️.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op"
@@ -88,7 +89,8 @@
       "target": {
         "artifact": "s.gis.gisterrain",
         "standard": "1",
-        "subset": "any"
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config"
       },
       "mutation": "set-camera",
       "outcome": "applied",

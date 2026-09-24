@@ -33,8 +33,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const CONFIG_MUTATIONS = join(HERE, "../../../../../🎚️config/🧬️schema/🧬️mutations");
 
 const FIXTURE_DIR: Record<string, string> = {
-  "sign-in": join(CONFIG_MUTATIONS, "🪪️sign-in/🧪️tests/replaces-the-active-session-with-a-second-account"),
-  "sign-out": join(CONFIG_MUTATIONS, "🚪️sign-out/🧪️tests/clears-the-active-session"),
+  "sign-in": join(CONFIG_MUTATIONS, "🪪️sign-in/🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account"),
+  "sign-out": join(CONFIG_MUTATIONS, "🚪️sign-out/🧫️fixtures/🪪️clears-the-active-session"),
 };
 
 type Vectors = { before: Identity | null; mutation: IdentityConfigMutation; after: Identity | null; outcome: { status: string } };
@@ -116,7 +116,7 @@ function signedOutGuard(_ctx: AdapterContext): AdapterOutcome {
  * TypeScript decode/re-encode round trip. Mirrors `../🦀️.rs::subject::round_trip`. */
 function identityRoundTrip(_ctx: AdapterContext): AdapterOutcome {
   const { before } = fixtures("sign-in");
-  if (account(before) !== "ada" || before?.userId !== "user-ada") throw new Error(`identity-round-trip: the committed record holds Ada's identity, but the decoded value holds ${JSON.stringify(before)}`);
+  if (account(before) !== "ada" || before?.email !== "ada@studio.example") throw new Error(`identity-round-trip: the committed record holds Ada's identity, but the decoded value holds ${JSON.stringify(before)}`);
   const reencoded = JSON.parse(JSON.stringify(before)) as Identity;
   if (JSON.stringify(reencoded) !== JSON.stringify(before)) throw new Error("identity-round-trip: decoding the re-encoded record did not reproduce the typed value");
   return projectionOf(reencoded);

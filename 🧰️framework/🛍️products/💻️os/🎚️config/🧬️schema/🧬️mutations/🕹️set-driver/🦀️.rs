@@ -12,3 +12,13 @@ pub fn set_driver(driver_id: Option<String>) -> UiPreferencesConfigMutation {
     UiPreferencesConfigMutation::SetDriver(SetDriver { driver_id })
 }
 optional_setting_impl!(SetDriver, SetDriver, driver_id, "set-driver", "driver", "driver", "driver-id");
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/✏️sets-driver/🦀️.rs"]
+mod tests_sets_driver;
+
+#[cfg(test)]
+#[path = "🧪️tests/🟰️keeps-driver/🦀️.rs"]
+mod tests_keeps_driver;
+//#endregion 🧪️Tests

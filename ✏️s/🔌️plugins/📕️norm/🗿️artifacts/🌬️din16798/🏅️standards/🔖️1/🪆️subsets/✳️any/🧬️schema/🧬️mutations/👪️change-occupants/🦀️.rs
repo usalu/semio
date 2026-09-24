@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeOccupa
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change number of occupants to {}", self.new_occupants), &format!("Nummer von Nutzer auf {} ändern", self.new_occupants))
+        protocol::LocalizedLabel::native(&format!("Change number of occupants to {}", self.new_occupants), &format!("Anzahl der Nutzer auf {} ändern", self.new_occupants))
     }
 }
 //#endregion 🔖️ChangeOccupants

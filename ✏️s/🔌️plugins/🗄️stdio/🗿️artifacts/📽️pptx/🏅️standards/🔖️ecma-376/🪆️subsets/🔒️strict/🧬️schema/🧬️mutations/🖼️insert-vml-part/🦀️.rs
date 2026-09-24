@@ -22,7 +22,7 @@ impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for InsertVmlPart 
         agg_inverse(&PptxStrictMutation::InsertVmlPart(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-vml-part", "Vmlbauteil einfügen")
+        protocol::LocalizedLabel::native("Insert VML part", "VML-Paketteil einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -40,7 +40,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeJfifHeaderMutati
         }
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change jfif header", "Jfifkopf ändern")
+        protocol::LocalizedLabel::native("Change JFIF header", "JFIF-Header ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-jfif-header".into()]

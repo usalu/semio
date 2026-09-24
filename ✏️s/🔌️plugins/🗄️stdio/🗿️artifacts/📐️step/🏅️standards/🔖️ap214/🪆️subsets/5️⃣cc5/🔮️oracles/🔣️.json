@@ -85,7 +85,8 @@
           "capability": "step-ap214-cc5-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "demote-shape-representation",
@@ -104,7 +105,8 @@
           "capability": "step-ap214-cc5-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-file-schema",
@@ -123,7 +125,8 @@
           "capability": "step-ap214-cc5-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-product-identity",
@@ -142,7 +145,8 @@
           "capability": "step-ap214-cc5-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-shape-representation",

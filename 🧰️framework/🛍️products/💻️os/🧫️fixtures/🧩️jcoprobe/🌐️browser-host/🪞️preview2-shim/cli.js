@@ -29,41 +29,46 @@ export function _setStdout(handler) {
     stdoutStream.handler = handler;
 }
 const stdinStream = inputStreamCreate({
-    blockingRead(_len) {
-        // TODO
-        return new Uint8Array(0);
+    blockingRead() {
+        throw { tag: "closed" };
     },
     subscribe() {
-        // TODO
         return pollableCreate();
     },
-    [symbolDispose]() {
-        // TODO
-    },
-});
-const textDecoder = new TextDecoder();
-const stdoutStream = outputStreamCreate({
-    write(contents) {
-        if (contents.at(-1) == 10) {
-            // console.log already appends a new line
-            contents = contents.subarray(0, -1);
-        }
-        console.log(textDecoder.decode(contents));
-    },
-    blockingFlush() { },
     [symbolDispose]() { },
 });
-const stderrStream = outputStreamCreate({
-    write(contents) {
-        if (contents.at(-1) == 10) {
-            // console.error already appends a new line
-            contents = contents.subarray(0, -1);
+function consoleStream(writeLine) {
+    const decoder = new TextDecoder();
+    let pending = "";
+    const emitCompleteLines = () => {
+        const lines = pending.split("\n");
+        pending = lines.pop();
+        for (const line of lines) {
+            writeLine(line.endsWith("\r") ? line.slice(0, -1) : line);
         }
-        console.error(textDecoder.decode(contents));
-    },
-    blockingFlush() { },
-    [symbolDispose]() { },
-});
+    };
+    return {
+        write(contents) {
+            pending += decoder.decode(contents, { stream: true });
+            emitCompleteLines();
+        },
+        flush() {
+            pending += decoder.decode();
+            if (pending) {
+                writeLine(pending);
+            }
+            pending = "";
+        },
+        blockingFlush() {
+            this.flush?.();
+        },
+        drop() {
+            this.flush?.();
+        },
+    };
+}
+const stdoutStream = outputStreamCreate(consoleStream((line) => console.log(line)));
+const stderrStream = outputStreamCreate(consoleStream((line) => console.error(line)));
 export const stdin = {
     getStdin() {
         return stdinStream;
@@ -83,9 +88,6 @@ class TerminalInput {
 }
 class TerminalOutput {
 }
-const terminalStdoutInstance = new TerminalOutput();
-const terminalStderrInstance = new TerminalOutput();
-const terminalStdinInstance = new TerminalInput();
 export const terminalInput = {
     TerminalInput,
 };
@@ -94,16 +96,46 @@ export const terminalOutput = {
 };
 export const terminalStderr = {
     getTerminalStderr() {
-        return terminalStderrInstance;
+        return undefined;
     },
 };
 export const terminalStdin = {
     getTerminalStdin() {
-        return terminalStdinInstance;
+        return undefined;
     },
 };
 export const terminalStdout = {
     getTerminalStdout() {
-        return terminalStdoutInstance;
+        return undefined;
     },
 };
+/** Create isolated browser CLI interfaces without changing compatibility globals. */
+export function createCli(config = {}) {
+    const stdinInstance = inputStreamCreate(config.stdin ?? {
+        blockingRead() {
+            throw { tag: "closed" };
+        },
+        subscribe: () => pollableCreate(),
+    });
+    const stdoutInstance = outputStreamCreate(config.stdout ?? consoleStream((line) => console.log(line)));
+    const stderrInstance = outputStreamCreate(config.stderr ?? consoleStream((line) => console.error(line)));
+    const env = Object.entries(config.environment ?? {});
+    const args = [...(config.arguments ?? [])];
+    const cwd = config.initialCwd ?? "/";
+    return {
+        environment: {
+            getEnvironment: () => env.map(([key, value]) => [key, value]),
+            getArguments: () => [...args],
+            initialCwd: () => cwd,
+        },
+        exit,
+        stdin: { getStdin: () => stdinInstance },
+        stdout: { getStdout: () => stdoutInstance },
+        stderr: { getStderr: () => stderrInstance },
+        terminalInput,
+        terminalOutput,
+        terminalStdin,
+        terminalStdout,
+        terminalStderr,
+    };
+}

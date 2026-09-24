@@ -16,5 +16,5 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-semio-s-artifact-procedural-generation2d = { path = "../🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust" }
-semio-s-artifact-procedural-generation3d = { path = "../🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-generation2d = { path = "../🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-procedural-generation3d = { path = "../🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }

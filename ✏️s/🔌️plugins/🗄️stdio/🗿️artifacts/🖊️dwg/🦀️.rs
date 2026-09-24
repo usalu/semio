@@ -305,15 +305,6 @@ pub mod standards {
                         pub mod binary;
                         #[path = "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
-                        #[path = "."]
-                        pub mod set_snapshot {
-                            #[path = "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                        }
                     }
                 }
                 #[path = "."]

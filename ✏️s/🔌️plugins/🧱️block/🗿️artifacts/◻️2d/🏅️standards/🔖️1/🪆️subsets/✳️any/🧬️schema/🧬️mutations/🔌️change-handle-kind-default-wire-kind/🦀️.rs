@@ -32,7 +32,7 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeHandleKi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change handle kind \"{}\" default wire kind to \"{}\"", self.id, self.new_default_wire_kind), &format!("Griffart \"{}\" Standarddrahtart auf \"{}\" ändern", self.id, self.new_default_wire_kind))
+        protocol::LocalizedLabel::native(&format!("Change handle kind \"{}\" default wire kind to \"{}\"", self.id, self.new_default_wire_kind), &format!("Standarddrahtart von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_default_wire_kind))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

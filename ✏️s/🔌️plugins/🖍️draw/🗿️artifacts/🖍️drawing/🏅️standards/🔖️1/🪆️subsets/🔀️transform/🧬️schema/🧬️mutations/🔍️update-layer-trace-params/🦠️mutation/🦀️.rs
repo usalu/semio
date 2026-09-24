@@ -33,7 +33,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for UpdateLayerTra
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Update layer \"{}\" trace params", self.layer_id), &format!("Ebene \"{}\" Spurparameter aktualisieren", self.layer_id))
+        protocol::LocalizedLabel::native(&format!("Update layer \"{}\" trace params", self.layer_id), &format!("Nachzeichnungsparameter von Ebene \"{}\" aktualisieren", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

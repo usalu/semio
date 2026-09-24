@@ -1,5 +1,5 @@
 use super::*;
-use directory::os_directory::{same_lease_fields_v1, CheckpointPublicationBlobV1, CheckpointPublicationFrontierV1, DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
+use directory::os_directory::{same_lease_fields_v1, EditedArtifactFrontierV1, DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
 use protocol::{ArtifactId as WireArtifactId, Bootstrap};
 use semio_framework_hash::Sha256;
 use semio_framework_trace::record::{CapturingSink, TraceLevel};
@@ -54,6 +54,10 @@ impl LocalBootstrapTransport for TestLocalBootstrap {
     fn shutdown<'a>(&'a self) -> semio_hub::directory::LocalBootstrapTerminalFuture<'a> {
         Box::pin(async { Ok(()) })
     }
+
+    fn closed<'a>(&'a self) -> semio_hub::directory::LocalBootstrapTerminalFuture<'a> {
+        Box::pin(std::future::pending())
+    }
 }
 
 #[test]
@@ -95,6 +99,19 @@ fn readiness_v1_is_redacted_and_never_claims_public_session_issuance() {
     assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), false, false, false, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
     assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, true, false, true, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
     assert_eq!(hub_readiness(HubMode::Development, "network", ready.run_id, true, true, false, true, true, false, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
+}
+
+/// 💡️ A hub with a frozen inference binding publishes the service it executes AND the route family
+/// that serves it — the route a client builds its job paths from must be one this router registers.
+#[test]
+fn readiness_publishes_each_hub_executed_inference_service_with_its_served_route() {
+    let bound = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, true, false, true, "trusted-catalog-never-published-in-this-data-root");
+    let encoded: serde_json::Value = serde_json::to_value(&bound).expect("readiness json");
+    assert_eq!(encoded["features"]["inferenceServices"], serde_json::json!([{ "serviceId": "s.gis.gismap.inference", "route": "inference/gis-map" }]));
+    let router = include_str!("../../🏗️bootstrap/🦀️.rs");
+    assert!(router.contains(&format!("\"/spaces/{{space_id}}/documents/{{document_id}}/{}/jobs\"", semio_hub::inference::schema::GIS_SERVICE_ROUTE)), "the published route family is the one the router serves");
+    let unbound = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
+    assert_eq!(serde_json::to_value(&unbound).expect("readiness json")["features"]["inferenceServices"], serde_json::json!([]));
 }
 
 /// ⏳️ A trusted-catalog load that STALLS is a CLOSED READINESS GATE with a reason of its own, never
@@ -268,115 +285,39 @@ async fn artifact_creation_recovery_never_closes_a_key_a_live_execution_owns() {
     owner.shutdown().await;
 }
 
-#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
-#[tokio::test]
-async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_backed() {
-    use semio_hub::artifact_authority::creation::ArtifactCreationOperationV1;
-    use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
-    use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationCatalogV1;
-
-    let profile = trusted_catalog_fixture::verified_gis_map_integration_profile(&trusted_catalog_fixture::unique_profile_root("artifact-creation-http")).await.expect("verified GIS Map creation profile");
-    let mut state = test_state().await;
-    state.verified_catalog = Some(profile.catalog().clone());
-    state.artifact_creation = Some(Arc::new(ArtifactCreationServiceV1::new(state.directory_service.clone(), profile.catalog().clone(), state.artifact_cas.clone())));
-    let author = issue_test_session(&state, "creation-author@example.test").await;
-    let peer = issue_test_session(&state, "creation-peer@example.test").await;
-    let spectator = issue_test_session(&state, "creation-spectator@example.test").await;
-    let space_id = create_space_for_test(&state, &author.user_id, "Artifact Creation", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-    upsert_member_for_test(&state, &space_id, "creation-author@example.test", DirectorySpaceRole::Author).await;
-    upsert_member_for_test(&state, &space_id, "creation-peer@example.test", DirectorySpaceRole::Author).await;
-    upsert_member_for_test(&state, &space_id, "creation-spectator@example.test", DirectorySpaceRole::Spectator).await;
-    let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
-    let route = format!("/spaces/{space_id}/artifact-creations");
-    let author_bearer = format!("Bearer {}", author.token);
-    let peer_bearer = format!("Bearer {}", peer.token);
-    let spectator_bearer = format!("Bearer {}", spectator.token);
-    let catalog = raw_http_request(addr, "GET", &route, &[("Authorization", author_bearer.as_str())], &[]).await;
-    assert_eq!(catalog.status, 200);
-    let catalog_source = std::str::from_utf8(&catalog.body).expect("creation catalog UTF-8");
-    let catalog = SpaceArtifactCreationCatalogV1::parse_canonical_json(catalog_source).expect("canonical selected creation catalog");
-    assert_eq!(catalog.space_id, space_id);
-    assert_eq!(catalog.kinds.iter().map(|kind| kind.kind_id.as_str()).collect::<Vec<_>>(), vec!["s.gis.gismap"]);
-    assert_eq!(raw_http_request(addr, "GET", &route, &[], &[]).await.status, 401);
-    assert_eq!(raw_http_request(addr, "GET", &route, &[("Authorization", spectator_bearer.as_str())], &[]).await.status, 403);
-
-    let request = SpaceArtifactCreateV1 {
-        schema: "semio.hub.space-artifact-create/v1".into(),
-        request_id: "1234567890abcdef1234567890abcdef".into(),
-        expected_catalog_generation_id: catalog.catalog_generation_id.clone(),
-        kind_id: "s.gis.gismap".into(),
-        name: "Shared Map".into(),
-    };
-    let body = directory::os_pack::json::to_json_string(&request);
-    let malformed = body.replacen("{", "{\"documentId\":\"caller-owned\",", 1);
-    assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], malformed.as_bytes()).await.status, 400);
-    let unknown = SpaceArtifactCreateV1 { request_id: "2234567890abcdef1234567890abcdef".into(), kind_id: "s.gis.unknown".into(), ..request.clone() };
-    assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], directory::os_pack::json::to_json_string(&unknown).as_bytes()).await.status, 409);
-    let stale_generation = SpaceArtifactCreateV1 { request_id: "3234567890abcdef1234567890abcdef".into(), expected_catalog_generation_id: "9".repeat(64), ..request.clone() };
-    assert_ne!(stale_generation.expected_catalog_generation_id, catalog.catalog_generation_id);
-    let directory_head = state.directory.head_seq().await.expect("directory head before stale catalog creation");
-    assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], directory::os_pack::json::to_json_string(&stale_generation).as_bytes()).await.status, 409);
-    assert!(state.directory.read_artifact_creation(&author.user_id, &stale_generation.request_id).await.expect("stale catalog creation facts").is_empty());
-    assert_eq!(state.directory.head_seq().await.expect("directory head after stale catalog creation"), directory_head, "a stale catalog generation cannot claim an operation or append directory events");
-    let creation_headers = [("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")];
-    let first = raw_http_request(addr, "POST", &route, &creation_headers, body.as_bytes());
-    let duplicate = raw_http_request(addr, "POST", &route, &creation_headers, body.as_bytes());
-    let (first, duplicate) = tokio::join!(first, duplicate);
-    assert!([200, 202].contains(&first.status) && [200, 202].contains(&duplicate.status), "exact concurrent duplicate never reports capacity or owns a second factory");
-    for response in [&first, &duplicate] {
-        let source = std::str::from_utf8(&response.body).expect("creation acceptance UTF-8");
-        let status = SpaceArtifactCreationStatusV1::parse_canonical_json(source).expect("creation acceptance is canonical");
-        assert_eq!(status.catalog_generation_id, request.expected_catalog_generation_id);
-    }
-    let facts = state.directory.read_artifact_creation(&author.user_id, &request.request_id).await.expect("durable creation facts");
-    let operation = ArtifactCreationOperationV1::fold(&facts).expect("one durable creation operation");
-    assert!(operation.intent.scope.document_id.strip_prefix("artifact-").is_some_and(artifact_creation_request_id_v1));
-    let created_document_id = operation.intent.scope.document_id;
-
-    let status_route = format!("{route}/{}", request.request_id);
-    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(30);
-    let ready = loop {
-        let response = raw_http_request(addr, "GET", &status_route, &[("Authorization", author_bearer.as_str())], &[]).await;
-        assert_eq!(response.status, 200);
-        let status = SpaceArtifactCreationStatusV1::parse_canonical_json(std::str::from_utf8(&response.body).expect("creation status UTF-8")).expect("canonical creation status");
-        assert_eq!(status.catalog_generation_id, request.expected_catalog_generation_id);
-        if status.phase == SpaceArtifactCreationPhaseV1::Ready {
-            break status;
-        }
-        assert!(matches!(status.phase, SpaceArtifactCreationPhaseV1::Accepted | SpaceArtifactCreationPhaseV1::Preparing | SpaceArtifactCreationPhaseV1::Indeterminate), "creation reached an unexpected terminal phase");
-        assert!(tokio::time::Instant::now() < deadline, "actual native genesis did not become Ready");
-        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-    };
-    let ready_scope = DocumentScope::new(&space_id, &ready.ready.as_ref().expect("Ready coordinates").artifact_id);
-    assert_eq!(ready.catalog_generation_id, request.expected_catalog_generation_id);
-    assert_eq!(ready_scope.document_id, created_document_id, "both concurrent requests retain one server-minted document");
-    assert!(state.directory.get_document_descriptor(&ready_scope).await.expect("created descriptor read").is_some());
-    assert!(state.directory.get_active_artifact_checkpoint(&ready_scope).await.expect("created checkpoint read").is_some_and(|checkpoint| checkpoint.baseline_frontier.is_genesis_for(&ready_scope)));
-    assert_eq!(raw_http_request(addr, "GET", &status_route, &[("Authorization", peer_bearer.as_str())], &[]).await.status, 404, "another Author cannot read the private request key");
-    let cancelled = raw_http_request(addr, "POST", &format!("{status_route}/cancel"), &[("Authorization", author_bearer.as_str())], &[]).await;
-    assert_eq!(cancelled.status, 200);
-    assert_eq!(SpaceArtifactCreationStatusV1::parse_canonical_json(std::str::from_utf8(&cancelled.body).expect("cancel status UTF-8")).expect("canonical cancel status").phase, SpaceArtifactCreationPhaseV1::Ready, "cancel cannot overwrite Ready");
-    assert_eq!(state.artifact_creation_tasks.task_count(), 0);
-    let _ = shutdown.send(());
-    server.await.expect("creation HTTP server stop");
-    state.artifact_creation_tasks.shutdown().await;
-}
 
 #[cfg(feature = "native-artifact-execution")]
 #[tokio::test]
 async fn trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root() {
     let data_root = std::fs::canonicalize(tempdir("unconfigured-trusted-catalog")).expect("canonical fixture-owned data root");
-    assert!(configured_artifact_authority(&data_root, Some(&NativeCodecProviderSetV1::linked()), &Tracer::disabled()).await.expect("unconfigured authority").is_none());
+    assert!(configured_artifact_authority(&data_root, Some(&NativeCodecProviderSetV1::linked()), &Tracer::disabled(), &StartupCancellationV1::default()).await.expect("unconfigured authority").is_none());
     std::fs::remove_dir_all(data_root).expect("remove unconfigured trusted catalog fixture");
+}
+
+/// 🚪️ A launcher that leaves while the hub is still loading its trusted catalog cancels that load:
+/// it answers `Cancelled` at once instead of being retried as a stall, and the same catalog still
+/// loads when nobody cancelled.
+#[cfg(feature = "native-artifact-execution")]
+#[tokio::test]
+async fn launcher_close_cancels_the_startup_catalog_load_instead_of_retrying_it() {
+    let catalog_root = native_openable_stdio_bundle();
+    let providers = NativeCodecProviderSetV1::linked();
+    let cancellation = StartupCancellationV1::default();
+    cancellation.cancel();
+    let started = std::time::Instant::now();
+    assert!(matches!(configured_artifact_authority(&catalog_root, Some(&providers), &Tracer::disabled(), &cancellation).await, Err(AuthorityError::Cancelled)));
+    assert!(started.elapsed() < std::time::Duration::from_secs(5), "a cancelled load is not retried");
+    assert!(configured_artifact_authority(&catalog_root, Some(&providers), &Tracer::disabled(), &StartupCancellationV1::default()).await.expect("uncancelled load").configured().is_some());
+    std::fs::remove_dir_all(catalog_root).expect("remove cancelled-load catalog fixture");
 }
 
 #[tokio::test]
 async fn configured_catalog_without_a_native_provider_fails_closed() {
     let unconfigured = tempdir("unconfigured-headless-catalog");
-    assert!(configured_artifact_authority(&unconfigured, None, &Tracer::disabled()).await.expect("unconfigured headless authority").is_none());
+    assert!(configured_artifact_authority(&unconfigured, None, &Tracer::disabled(), &StartupCancellationV1::default()).await.expect("unconfigured headless authority").is_none());
     std::fs::create_dir_all(unconfigured.join("trusted-catalog")).expect("trusted catalog directory");
     std::fs::write(unconfigured.join("trusted-catalog/current.json"), b"{}\n").expect("configured current pointer");
-    let error = match configured_artifact_authority(&unconfigured, None, &Tracer::disabled()).await {
+    let error = match configured_artifact_authority(&unconfigured, None, &Tracer::disabled(), &StartupCancellationV1::default()).await {
         Ok(_) => panic!("configured trusted catalog unexpectedly admitted without its native provider"),
         Err(error) => error,
     };
@@ -394,18 +335,20 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
     let component_sha256 = os_directory::hex_lower(&Sha256::digest(component));
     let component_blake3 = blake3::hash(component).to_hex().to_string();
     let receipts = semio_s_plugin_stdio::registry::native_codec_factory_receipts().expect("artifact-owned stdio receipts");
-    let viewer = semio_framework_plugin::Viewer::builder(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.json", standard: semio_framework_plugin::StandardId("rfc8259"), subset: semio_framework_plugin::SubsetId::ANY })
+    let viewer = semio_framework_plugin::Viewer::builder(semio_framework_plugin::Dialect { artifact_kind: "stdio.json", standard: semio_framework_plugin::StandardId("rfc8259"), subset: semio_framework_plugin::SubsetId::ANY })
         .document(["semio", "stdio", "json"])
         .mode("view", semio_framework_plugin::LocalizedLabel::native("View", "Ansicht"), "eye")
         .default_mode_id("view")
         .window_kind_def(<semio_framework_plugin::app::TreeWindowKit as semio_framework_plugin::app::WindowKit>::window_kind())
         .build_definition();
+    let mut viewer = viewer;
+    viewer.artifact_kinds = semio_s_plugin_stdio::registry::native_codec_artifact_kinds().into_iter().filter(|kind| kind.id == "stdio.json").collect();
     let mut manifest = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::new("stdio", "Stdio Fixture", receipts[0].package_version).manifest;
     manifest.artifact_kinds = semio_s_plugin_stdio::registry::native_codec_artifact_kinds();
     manifest.apps.push(viewer.clone());
     manifest.topic_contributions.push(semio_s_plugin_stdio::registry::native_artifact_catalog_contribution().expect("synthetic fixture retains full catalog semantics"));
     assert_eq!(manifest.artifact_kinds.len(), receipts.len(), "every descriptor artifact kind has one executable owner receipt");
-    assert_eq!(viewer.id, "s.stdio.json@rfc8259/*#viewer", "synthetic JSON fixture keeps the canonical surface coordinate");
+    assert_eq!(viewer.id, "stdio.json@rfc8259/*#viewer", "the synthetic viewer opens the manifest-declared kind its own dialect names");
     let viewer_id = viewer.id.clone();
     let window_id = viewer.window_kinds.iter().find(|window| window.id == "framework.window.tree").expect("descriptor-owned JSON viewer window").id.clone();
     let descriptor = semio_framework::PackageDescriptor {
@@ -454,7 +397,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
         "grant": { "read": true, "write": false, "observe": true }
     });
     let mut bundle = serde_json::json!({
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "profiles": [{
             "id": "stdio-native-openable-v1",
             "selectedClosure": [{ "pluginId": "stdio", "packageId": "semio:stdio", "version": version }],
@@ -493,6 +436,10 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
         "sourceComponentSha256":component_sha256, "sourceDescriptorByteSha256":descriptor_sha256, "policySha256":"41".repeat(32), "importInterfaces":[]
     });
     std::fs::write(stage.join("closed-actor.mjs"), component).expect("synthetic actor, never executed");
+    let plugin_module_files = vec![("stdio/🌉️bridge.js".to_owned(), b"export {};\n".to_vec()), ("stdio/🔣️.json".to_owned(), b"{}\n".to_vec()), ("stdio/🛂️.descriptor.semio".to_owned(), descriptor_bytes.clone())];
+    let plugin_module_source = semio_hub::artifact_authority::trusted_catalog::plugin_module::TrustedPluginModuleSourceV1 { plugin_id: "stdio", package_id: "semio:stdio", version: &*version, component_sha256: &component_sha256, descriptor_byte_sha256: &descriptor_sha256 };
+    let plugin_module = semio_hub::artifact_authority::trusted_catalog::plugin_module::write_plugin_module_bundle(&stage, "plugin-module-stdio.json", plugin_module_source, "stdio", &plugin_module_files).expect("stdio plugin module");
+    bundle["packages"][0]["pluginModule"] = serde_json::to_value(plugin_module).expect("stdio plugin module record");
     let carried = serde_json::to_vec(&bundle).expect("provisional stdio bundle");
     let (selected_closure_sha256, generation_id) = semio_hub::artifact_authority::trusted_catalog::trusted_profile_digests_json(&carried, "stdio-native-openable-v1").expect("stdio profile digests");
     bundle["profiles"][0]["selectedClosureSha256"] = selected_closure_sha256.into();
@@ -731,6 +678,7 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
         openable_catalog: None,
         artifact_publication,
         artifact_maintenance: ArtifactCasMaintenanceSupervisor::disabled(),
+        check_ins: Arc::new(DocumentCheckInJobs::default()),
         directory_service,
         credential_sign_in: CredentialSignInPolicyV1::default(),
         rate_limits: Arc::new(HubRateLimiterV1::system()),
@@ -818,6 +766,7 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
         openable_catalog: None,
         artifact_publication,
         artifact_maintenance: ArtifactCasMaintenanceSupervisor::disabled(),
+        check_ins: Arc::new(DocumentCheckInJobs::default()),
         directory_service,
         credential_sign_in: CredentialSignInPolicyV1::default(),
         rate_limits: Arc::new(HubRateLimiterV1::system()),
@@ -1118,94 +1067,159 @@ async fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelop
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
-struct CheckpointPublicationFixture {
+/// 📌️ One stdio JSON document on a hub with the linked native codec: a genesis checkpoint, an
+/// author, a spectator, and the document's live actor.
+#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+struct CheckInFixture {
     state: HubState,
     author: TestIssuedSession,
     spectator: TestIssuedSession,
     scope: DocumentScope,
     handle: db::ArtifactHandle,
-    command: CheckpointPublicationCommandV1,
+    genesis: os_directory::ArtifactCheckpoint,
     pack: Vec<u8>,
     spr: Vec<u8>,
-    catalog_root: std::path::PathBuf,
+    _profile: semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture::VerifiedGisMapIntegrationProfileV1,
 }
 
-#[cfg(feature = "native-artifact-execution")]
-fn checkpoint_publication_command(correlation_id: &str, descriptor: &DocumentDescriptor, snapshot: &db::CheckpointPublicationSnapshot, expected_current: CheckpointPublicationCurrentV1, pack: &[u8], spr: &[u8]) -> CheckpointPublicationCommandV1 {
-    let head_edit_id = snapshot.head_edit_id.as_ref().expect("committed checkpoint tip").0.clone();
-    CheckpointPublicationCommandV1 {
-        schema: "semio.hub.checkpoint-publication-command/v1".into(),
-        correlation_id: correlation_id.into(),
-        descriptor_digest_v1: descriptor_digest_v1(descriptor).expect("descriptor digest").hex(),
-        expected_document_frontier: os_directory::DocumentFrontier { head_seq: snapshot.frontier.head_seq, commit_seq: snapshot.frontier.commit_seq, epoch: snapshot.frontier.epoch },
-        expected_current,
-        baseline_frontier: CheckpointPublicationFrontierV1 {
-            document_id: descriptor.document_id.clone(),
-            head_edit_ordinal: snapshot.frontier.head_seq,
-            head_edit_id,
-            last_commit_seq: snapshot.frontier.commit_seq,
-            chain_sha256: os_directory::hex_lower(&snapshot.frontier.chain_hash),
-        },
-        pack: CheckpointPublicationBlobV1 { sha256: os_directory::hex_lower(&Sha256::digest(pack)), blake3: blake3::hash(pack).to_hex().to_string(), byte_length: pack.len() as u64 },
-        spr: CheckpointPublicationBlobV1 { sha256: os_directory::hex_lower(&Sha256::digest(spr)), blake3: blake3::hash(spr).to_hex().to_string(), byte_length: spr.len() as u64 },
-    }
-}
-
-#[cfg(feature = "native-artifact-execution")]
-async fn checkpoint_publication_fixture(label: &str) -> CheckpointPublicationFixture {
-    let catalog_root = native_openable_stdio_bundle();
-    let providers = NativeCodecProviderSetV1::linked();
-    let configured = configured_artifact_authority(&catalog_root, Some(&providers), &Tracer::disabled()).await.expect("load stdio publication catalog").configured().expect("configured publication catalog");
-    let selection = configured.catalog.selected_document_open().expect("selected stdio JSON target").clone();
+/// 🗺️ One GIS Map document on the verified GIS profile (the kind a hub opens and checks in), its
+/// genesis checkpoint published, one Author, one Spectator and a separate owner.
+#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+async fn check_in_fixture(label: &str) -> CheckInFixture {
+    use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
+    let profile = trusted_catalog_fixture::verified_gis_map_integration_profile(&trusted_catalog_fixture::unique_profile_root(&format!("check-in-{label}"))).await.expect("verified GIS Map check-in profile");
+    let selection = profile.binding().selection().clone();
     let mut state = test_state().await;
-    let author = issue_test_session(&state, &format!("checkpoint-{label}-author@example.test")).await;
-    let spectator = issue_test_session(&state, &format!("checkpoint-{label}-spectator@example.test")).await;
-    let space_id = create_space_for_test(&state, &author.user_id, &format!("Checkpoint {label}"), os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-    upsert_member_for_test(&state, &space_id, &format!("checkpoint-{label}-author@example.test"), DirectorySpaceRole::Author).await;
-    upsert_member_for_test(&state, &space_id, &format!("checkpoint-{label}-spectator@example.test"), DirectorySpaceRole::Spectator).await;
-    let request_id = os_directory::hex_lower(&Sha256::digest(format!("checkpoint-{label}").as_bytes()))[..32].to_string();
+    let author_email = format!("check-in-{label}-author@example.test");
+    let author = issue_test_session(&state, &author_email).await;
+    let spectator = issue_test_session(&state, &format!("check-in-{label}-spectator@example.test")).await;
+    let owner = issue_test_session(&state, &format!("check-in-{label}-owner@example.test")).await;
+    let space_id = create_space_for_test(&state, &owner.user_id, &format!("Check In {label}"), os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+    upsert_member_for_test(&state, &space_id, &author_email, DirectorySpaceRole::Author).await;
+    upsert_member_for_test(&state, &space_id, &format!("check-in-{label}-spectator@example.test"), DirectorySpaceRole::Spectator).await;
+    let request_id = os_directory::hex_lower(&Sha256::digest(format!("check-in-{label}").as_bytes()))[..32].to_string();
     let scope = DocumentScope::new(space_id, format!("artifact-{request_id}"));
-    let descriptor = DocumentDescriptor {
+    let mut descriptor = DocumentDescriptor {
         space_id: scope.space_id.clone(),
         document_id: scope.document_id.clone(),
-        artifact_kind: selection.artifact.kind,
-        artifact_schema: selection.artifact.schema,
-        owner: os_directory::DocumentOwner { plugin_id: selection.package.plugin_id, package_id: selection.package.package_id, version: selection.package.version, package_hash: selection.package.component_sha256 },
-        pack_schema_hash: selection.artifact.pack_schema_hash,
+        artifact_kind: selection.artifact.kind.clone(),
+        artifact_schema: selection.artifact.schema.clone(),
+        owner: os_directory::DocumentOwner { plugin_id: selection.package.plugin_id.clone(), package_id: selection.package.package_id.clone(), version: selection.package.version.clone(), package_hash: selection.package.component_sha256.clone() },
+        pack_schema_hash: selection.artifact.pack_schema_hash.clone(),
         bootstrap_version: 1,
         bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
         bootstrap_snapshot_hash: String::new(),
     };
-    state.artifact_authority = Some(configured.authority);
-    let catalog_generation = configured.catalog.generation_id().to_string();
-    let parent_dialect = directory::os_io::ArtifactDialect { artifact_kind: selection.parent_dialect.artifact_kind, standard: selection.parent_dialect.standard, subset: selection.parent_dialect.subset };
-    state.openable_catalog = Some(configured.catalog);
+    state.artifact_authority = Some(Arc::new(ValidatingCanonicalArtifactAuthority::new(profile.catalog().clone())));
+    state.verified_catalog = Some(profile.catalog().clone());
+    state.openable_catalog = Some(profile.catalog().clone());
     let document = db_artifact_id(&scope);
-    let snapshot_value = semio_s_artifact_stdio_json::schema::snapshot::demo_json_snapshot();
-    let pack = <semio_s_artifact_stdio_json::JsonSnapshot as directory::os_store::ArtifactPack>::encode_pack(&snapshot_value);
+    let pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::ArtifactPack>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
     let spr = directory::os_store::empty_document_spr(&document.0, &descriptor.artifact_schema).await;
-    let mut descriptor = descriptor;
     descriptor.bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(&pack));
-    let session = state.directory.authenticate_session(&SessionCapability::parse(&author.token).expect("publication author capability")).await.expect("publication author session read").expect("publication author session");
+    let session = state.directory.authenticate_session(&SessionCapability::parse(&author.token).expect("check-in author capability")).await.expect("check-in author session read").expect("check-in author session");
     let actor = ArtifactCreationActorV1 { user_id: author.user_id.clone(), session_id: session.id, authorization_generation: session.authorization_generation };
-    let genesis = publish_genesis_checkpoint_for_test(&state, actor, catalog_generation, parent_dialect, descriptor.clone(), &pack, &spr).await;
-    let handle = state.ensure_document(&document).await.expect("publication document actor");
-    let batch = db::document::CommandBatch::new(vec![sample_envelope(&format!("checkpoint-{label}-edit-1"), &WireArtifactId(document.0.clone())).await]).await.expect("publication command batch");
-    handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.expect("publication actor response").expect("publication edit accepted");
-    let snapshot = handle.checkpoint_publication_snapshot().await.expect("publication actor snapshot");
-    let command = checkpoint_publication_command("1234567890abcdef1234567890abcdef", &descriptor, &snapshot, CheckpointPublicationCurrentV1::Genesis { checkpoint_id: genesis.checkpoint_id.hex() }, &pack, &spr);
-    CheckpointPublicationFixture { state, author, spectator, scope, handle, command, pack, spr, catalog_root }
+    let genesis = publish_genesis_checkpoint_for_test(&state, actor, profile.catalog().generation_id().to_string(), selection.parent_dialect.clone(), descriptor, &pack, &spr).await;
+    let handle = state.ensure_document(&document).await.expect("check-in document actor");
+    CheckInFixture { state, author, spectator, scope, handle, genesis, pack, spr, _profile: profile }
+}
+
+/// ✍️ The ledger a real GIS Map editor emits for `ids.len()` one-operation edits made on the genesis
+/// pair — each places one position — as one envelope per edit, exactly its store's own event log,
+/// addressed to the hub's document key.
+#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+async fn check_in_map_edits(fixture: &CheckInFixture, ids: &[&str]) -> Vec<MutationEnvelope> {
+    use directory::os_store::{ArtifactCommand, ArtifactStore, SnapshotRetirementStep};
+    use semio_s_artifact_gis_gismap::mutations::create_position::CreatePosition;
+    use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot, MapFeature};
+    let parsed = directory::os_store::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&fixture.pack, &fixture.spr).await.expect("genesis pair parses");
+    let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(parsed.into_envelope()).await.expect("editor store");
+    store.install_document_store_owners_exact(directory::os_store::bounded_artifact_store_owners());
+    let mut applied = Ok(());
+    for (index, id) in ids.iter().enumerate() {
+        let point = directory::DslValue::object([("lon".into(), directory::DslValue::float(7.0 + index as f64)), ("lat".into(), directory::DslValue::float(47.0))]);
+        let mutation = GisMapMutation::CreatePosition(CreatePosition { index, item: MapFeature { id: format!("check-in-{id}"), data: point } });
+        if let Err(error) = store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation], description: None }).await {
+            applied = Err(error);
+            break;
+        }
+    }
+    let events = store.event_log();
+    loop {
+        match store.close_owned_step(1, directory::os_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("editor store closes") {
+            SnapshotRetirementStep::Complete => break,
+            SnapshotRetirementStep::Pending { .. } => {}
+            SnapshotRetirementStep::Blocked => panic!("editor store close blocked"),
+        }
+    }
+    drop(store);
+    applied.expect("editor edits apply");
+    let document = WireArtifactId(db_artifact_id(&fixture.scope).0);
+    events.expect("editor ledger").into_iter().map(|mut envelope| {
+        envelope.document_id = document.clone();
+        envelope
+    }).collect()
+}
+
+/// 📥️ Commits one envelope as its own ledger transaction and names the head it produced.
+#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+async fn check_in_commit(fixture: &CheckInFixture, envelope: MutationEnvelope) -> EditedArtifactFrontierV1 {
+    let batch = db::document::CommandBatch::new(vec![envelope]).await.expect("check-in command batch");
+    fixture.handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.expect("check-in actor response").expect("check-in edit accepted");
+    let snapshot = fixture.handle.checkpoint_publication_snapshot().await.expect("check-in actor snapshot");
+    EditedArtifactFrontierV1::of_artifact_frontier(&ledger_artifact_frontier(&fixture.scope, &snapshot).expect("an edited ledger point")).expect("edited wire frontier")
+}
+
+/// 🧮️ The pair a remote replica holds after folding `envelopes` onto the genesis pair — the oracle a
+/// hub-materialized checkpoint must equal byte for byte.
+#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+async fn check_in_replica_pair(fixture: &CheckInFixture, envelopes: &[MutationEnvelope]) -> (Vec<u8>, Vec<u8>) {
+    use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot};
+    let files = directory::os_store::replay_envelopes_onto_pair::<GisMapSnapshot, GisMapMutation>(&fixture.pack, &fixture.spr, &directory::os_spr::encode_envelopes(envelopes), directory::os_store::bounded_artifact_store_owners).await.expect("replica fold");
+    (files.pack, files.spr)
+}
+
+/// 📮️ Posts one Check In and follows it to a terminal status.
+#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+async fn check_in_until_terminal(addr: SocketAddr, fixture: &CheckInFixture, token: &str, request_id: &str, head: &EditedArtifactFrontierV1) -> (u16, Option<DocumentCheckInStatusV1>) {
+    let route = format!("/spaces/{}/documents/{}/check-ins", fixture.scope.space_id, fixture.scope.document_id);
+    let request = DocumentCheckInV1 { schema: "semio.hub.document-check-in/v1".into(), request_id: request_id.into(), head: head.clone() }.canonical_json().expect("canonical check-in");
+    let authorization = format!("Bearer {token}");
+    let posted = raw_http_request(addr, "POST", &route, &[("Authorization", authorization.as_str()), ("Content-Type", "application/json")], request.as_bytes()).await;
+    if posted.status != 200 && posted.status != 202 {
+        return (posted.status, None);
+    }
+    let mut status = DocumentCheckInStatusV1::parse_canonical_json(std::str::from_utf8(&posted.body).expect("status UTF-8")).expect("canonical status");
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    while !status.phase.is_terminal() {
+        assert!(std::time::Instant::now() < deadline, "check-in {request_id} never reached a terminal status: {status:?}");
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        let polled = raw_http_request(addr, "GET", &format!("{route}/{request_id}"), &[("Authorization", authorization.as_str())], &[]).await;
+        assert!(polled.status == 200 || polled.status == 202, "check-in poll answered {}", polled.status);
+        let next = DocumentCheckInStatusV1::parse_canonical_json(std::str::from_utf8(&polled.body).expect("status UTF-8")).expect("canonical status");
+        assert!(next.progress.completed_units >= status.progress.completed_units, "check-in progress went back: {status:?} -> {next:?}");
+        status = next;
+    }
+    (posted.status, Some(status))
+}
+
+/// 🧾️ The hub's active checkpoint pair as a cold opener reads it.
+#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+async fn check_in_cold_pair(addr: SocketAddr, fixture: &CheckInFixture) -> semio_hub::lag_rebootstrap::VerifiedActiveCheckpointPair {
+    let authorization = format!("Bearer {}", fixture.author.token);
+    let response = raw_http_request(addr, "GET", &format!("/spaces/{}/documents/{}/active-checkpoint/pair", fixture.scope.space_id, fixture.scope.document_id), &[("Authorization", authorization.as_str()), ("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE)], &[]).await;
+    assert_eq!(response.status, 200, "cold open answered {}", String::from_utf8_lossy(&response.body));
+    decode_canonical_checkpoint_pair(&response.body).expect("canonical cold pair")
 }
 
 #[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 #[tokio::test]
-async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog() {
+async fn check_in_process_fixture_emits_verified_gis_ledger_and_catalog() {
     use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
 
     let artifact_root = crate::test_artifact_root::test_artifact_root();
-    let destination = artifact_root.join("checkpoint-publication-process-fixture");
-    let stage = artifact_root.join(format!(".checkpoint-publication-process-fixture-{}", std::process::id()));
+    let destination = artifact_root.join("check-in-process-fixture");
+    let stage = artifact_root.join(format!(".check-in-process-fixture-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&stage);
     let _ = std::fs::remove_dir_all(&destination);
     std::fs::create_dir_all(&stage).expect("create process fixture stage");
@@ -1219,8 +1233,15 @@ async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_cata
     let generation_id = bundle["profiles"][0]["generationId"].as_str().expect("verified generation id");
     let generation = stage.join("data/trusted-catalog/generations").join(generation_id);
     std::fs::create_dir_all(&generation).expect("create trusted generation");
-    for name in ["component.wasm", "descriptor.semio", "closed-actor.mjs", "stdio-component.wasm", "stdio-descriptor.semio", "trusted-catalog.json"] {
+    for name in ["component.wasm", "descriptor.semio", "closed-actor.mjs", "plugin-module-gis.json", "stdio-component.wasm", "stdio-descriptor.semio", "plugin-module-stdio.json", "trusted-catalog.json"] {
         std::fs::copy(source.join(name), generation.join(name)).unwrap_or_else(|error| panic!("copy verified {name}: {error}"));
+    }
+    for directory in ["plugin-modules"] {
+        std::fs::create_dir_all(generation.join(directory)).expect("create verified plugin module store");
+        for entry in std::fs::read_dir(source.join(directory)).expect("verified plugin module store") {
+            let entry = entry.expect("verified plugin module file");
+            std::fs::copy(entry.path(), generation.join(directory).join(entry.file_name())).expect("copy verified plugin module file");
+        }
     }
     let bundle_sha256 = os_directory::hex_lower(&Sha256::digest(&bundle_bytes));
     std::fs::create_dir_all(stage.join("data/trusted-catalog")).expect("create trusted current owner");
@@ -1234,21 +1255,30 @@ async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_cata
     )
     .expect("write trusted current pointer");
 
-    let pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
-    let spr = directory::os_store::empty_document_spr("", &selection.artifact.schema).await;
-    let diff = db::document::encode_pathmap_json(&serde_json::json!({ "checkpoint-process": "committed" })).await.expect("encode process mutation diff");
-    let inverse = db::document::encode_pathmap_json(&serde_json::json!({ "checkpoint-process": null })).await.expect("encode process mutation inverse");
+    let envelopes = check_in_fixture_gis_ledger_edit(&selection.artifact.schema).await;
+    let hex = |bytes: &[u8]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let ledger: Vec<serde_json::Value> = envelopes
+        .iter()
+        .map(|envelope| {
+            serde_json::json!({
+                "mutationId": envelope.mutation_id.0,
+                "dependencies": envelope.dependencies.iter().map(|dependency| dependency.0.clone()).collect::<Vec<_>>(),
+                "diffSchema": envelope.diff.schema.0,
+                "diff": hex(&envelope.diff.payload),
+                "inverseSchema": envelope.inverse.schema.0,
+                "inverse": hex(&envelope.inverse.payload),
+            })
+        })
+        .collect();
+    let ledger_bytes = serde_json::to_vec_pretty(&ledger).expect("encode process ledger");
     let payload = stage.join("payload");
     std::fs::create_dir_all(&payload).expect("create process payload owner");
-    for (name, bytes) in [("pack.bin", pack.as_slice()), ("spr.bin", spr.as_slice()), ("diff.bin", diff.as_slice()), ("inverse.bin", inverse.as_slice())] {
-        std::fs::write(payload.join(name), bytes).unwrap_or_else(|error| panic!("write process {name}: {error}"));
-    }
+    std::fs::write(payload.join("envelopes.json"), &ledger_bytes).expect("write process ledger");
     let fixture = serde_json::json!({
-        "schema": "semio.hub.checkpoint-publication-process-fixture/v1",
+        "schema": "semio.hub.check-in-process-fixture/v1",
         "profileId": trusted_catalog_fixture::GIS_MAP_INTEGRATION_PROFILE_ID,
         "generationId": generation_id,
         "documentId": "mcp-cold-gis-map",
-        "mutationId": "mcp-cold-gis-map-edit-1",
         "package": {
             "pluginId": selection.package.plugin_id.as_str(),
             "packageId": selection.package.package_id.as_str(),
@@ -1261,17 +1291,12 @@ async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_cata
             "packSchemaHash": selection.artifact.pack_schema_hash.as_str()
         },
         "surfaceId": selection.surface.surface_id.as_str(),
-        "payload": {
-            "pack": { "path": "payload/pack.bin", "byteLength": pack.len(), "sha256": os_directory::hex_lower(&Sha256::digest(&pack)) },
-            "spr": { "path": "payload/spr.bin", "byteLength": spr.len(), "sha256": os_directory::hex_lower(&Sha256::digest(&spr)) },
-            "diff": { "path": "payload/diff.bin", "schema": db::document::DB_PATHMAP_SCHEMA },
-            "inverse": { "path": "payload/inverse.bin", "schema": db::document::DB_PATHMAP_SCHEMA }
-        }
+        "payload": { "envelopes": { "path": "payload/envelopes.json", "count": envelopes.len(), "sha256": os_directory::hex_lower(&Sha256::digest(&ledger_bytes)) } }
     });
     std::fs::write(stage.join("fixture.json"), serde_json::to_vec_pretty(&fixture).expect("encode process fixture")).expect("write process fixture receipt");
     std::fs::rename(&stage, &destination).expect("publish process fixture atomically");
     let dependency_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).expect("compiled dependency fixture");
-    let expected_files: std::collections::BTreeSet<_> = dependency_fixture["publicationFiles"].as_array().unwrap().iter().map(|name| name.as_str().unwrap().to_owned()).collect();
+    let expected_files: std::collections::BTreeSet<_> = ["publicationFiles", "publicationDirectories"].iter().flat_map(|key| dependency_fixture[*key].as_array().unwrap().iter()).map(|name| name.as_str().unwrap().to_owned()).collect();
     let retained_generation = destination.join("data/trusted-catalog/generations").join(generation_id);
     let actual_files: std::collections::BTreeSet<_> = std::fs::read_dir(&retained_generation).unwrap().map(|entry| entry.unwrap().file_name().into_string().unwrap()).collect();
     assert_eq!(actual_files, expected_files);
@@ -1281,18 +1306,38 @@ async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_cata
     assert_eq!(relocated.codec_count(), 28);
     assert_eq!(relocated.packages().len(), 2);
     assert_eq!(relocated.generation_id(), generation_id);
-    eprintln!("[DEBUG] checkpoint process fixture relocated files=6 packages=2 codecs=28");
     assert!(destination.join("data/trusted-catalog/current.json").is_file());
-    assert_eq!(std::fs::read(destination.join("payload/pack.bin")).expect("read retained GIS pack"), pack);
-    assert_eq!(std::fs::read(destination.join("payload/spr.bin")).expect("read retained GIS SPR"), spr);
+    assert_eq!(std::fs::read(destination.join("payload/envelopes.json")).expect("read retained GIS ledger"), ledger_bytes);
 }
 
-#[cfg(feature = "native-artifact-execution")]
-async fn put_checkpoint_publication_blob(addr: SocketAddr, scope: &DocumentScope, token: &str, bytes: &[u8]) {
-    let hash = blake3::hash(bytes).to_hex().to_string();
-    let authorization = format!("Bearer {token}");
-    let response = raw_http_request(addr, "PUT", &format!("/spaces/{}/blobs/{hash}", scope.space_id), &[("Authorization", authorization.as_str()), ("Content-Type", "application/octet-stream")], bytes).await;
-    assert_eq!(response.status, 200, "checkpoint input blob lands before publication: {}", String::from_utf8_lossy(&response.body));
+/// 🗺️ The ledger a real GIS Map editor emits for one edit that places `gis_map_test_snapshot()`'s
+/// position and route onto an empty map: its store's own event log, exactly what a client sends.
+#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+async fn check_in_fixture_gis_ledger_edit(schema: &str) -> Vec<MutationEnvelope> {
+    use directory::os_store::{ArtifactCommand, ArtifactStore, SnapshotRetirementStep};
+    use semio_s_artifact_gis_gismap::mutations::{create_position::CreatePosition, create_route::CreateRoute};
+    use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot};
+    let target = gis_map_test_snapshot();
+    let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(directory::os_store::create_document_envelope(schema, "check-in-fixture", GisMapSnapshot::default(), None)).await.expect("fixture GIS store");
+    store.install_document_store_owners_exact(directory::os_store::bounded_artifact_store_owners());
+    let applied = store
+        .dispatch(ArtifactCommand::Apply {
+            mutations: vec![GisMapMutation::CreatePosition(CreatePosition { index: 0, item: target.positions[0].clone() }), GisMapMutation::CreateRoute(CreateRoute { index: 0, item: target.routes[0].clone() })],
+            description: None,
+        })
+        .await;
+    let events = store.event_log();
+    loop {
+        match store.close_owned_step(1, directory::os_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("fixture GIS store closes") {
+            SnapshotRetirementStep::Complete => break,
+            SnapshotRetirementStep::Pending { .. } => {}
+            SnapshotRetirementStep::Blocked => panic!("fixture GIS store close blocked"),
+        }
+    }
+    assert!(store.close_owned_terminal_is_empty());
+    drop(store);
+    applied.expect("fixture GIS edit applies");
+    events.expect("fixture GIS ledger")
 }
 
 #[test]
@@ -1527,7 +1572,7 @@ async fn gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding() {
     let session = issue_test_session(&state, "inference-owner@example.test").await;
     let addr = spawn_server(state).await;
     let readiness: serde_json::Value = serde_json::from_slice(&raw_http_get(addr, "/readyz", &[]).await.body).expect("readiness body");
-    assert_eq!(readiness["features"]["inference"], false, "readiness publishes inference only with a frozen binding");
+    assert_eq!(readiness["features"]["inferenceServices"], serde_json::json!([]), "readiness publishes a hub-executed inference service only with a frozen binding");
     let bearer = format!("Bearer {}", session.token);
     let base = "/spaces/space-a/documents/document-a/inference/gis-map/jobs";
     let intent = serde_json::json!({ "schema": "semio.hub.inference-request/v1", "version": 1, "requestId": "11111111111111111111111111111111", "serviceId": "s.gis.gismap.inference", "policyVersion": 1, "lifetimeMs": 60_000 }).to_string();
@@ -2064,8 +2109,8 @@ fn canonical_pair_route_rejects_non_path_and_ambiguous_headers_before_work() {
     headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {session}").parse().expect("authorization"));
     headers.append(axum::http::header::AUTHORIZATION, "Bearer duplicate".parse().expect("duplicate"));
     assert_eq!(canonical_pair_request_admission(&"/spaces/s/documents/d/active-checkpoint/pair".parse().expect("URI"), &headers), Err(StatusCode::UNAUTHORIZED));
-    assert!(!canonical_pair_auth_outcome_allowed(&AuthOutcome::Denied));
-    assert!(canonical_pair_auth_outcome_allowed(&AuthOutcome::ShareToken));
+    assert!(!hub_access_permits(&AuthOutcome::Denied.access_roles(), HubAccessActionV1::DocumentRead, Some("studio")));
+    assert!(hub_access_permits(&AuthOutcome::ShareToken.access_roles(), HubAccessActionV1::DocumentRead, Some("studio")));
 }
 
 #[tokio::test]
@@ -2950,7 +2995,7 @@ async fn execution_target_selection_final_fence_matches_neutral_races() {
         let outcome = match task.await {
             Ok(Ok((fields, assets))) => {
                 assert_eq!(fields.scope, scope);
-                assert_eq!(&*assets.component, TEST_EXECUTION_TARGET_COMPONENT_BYTES);
+                assert_eq!(&*document_execution_target_asset_bytes(&assets.component).await.ok().expect("selected component asset reads"), TEST_EXECUTION_TARGET_COMPONENT_BYTES);
                 "selected"
             }
             Ok(Err((_, error))) if error.0.code == DocumentOpenPlanErrorCodeV1::Stale => "stale",
@@ -3030,6 +3075,7 @@ async fn document_open_and_execution_target_refuse_descriptor_or_index_without_g
 
 #[tokio::test]
 async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_cancel_safe_and_exchangeable() {
+    let _watchdog = LawHangWatchdogV1::arm("document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_cancel_safe_and_exchangeable");
     let mut state = test_state().await;
     let document_id = artifact_document_id_for_test("open-plan-issue");
     let token = seed_author_token(&state).await;
@@ -3170,6 +3216,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
 
 #[tokio::test]
 async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalog_revision_and_checkpoint() {
+    let _watchdog = LawHangWatchdogV1::arm("document_open_plan_socket_consume_revalidates_surface_descriptor_catalog_revision_and_checkpoint");
     let mut state = test_state().await;
     let document_id = artifact_document_id_for_test("open-plan-consume");
     let token = seed_author_token(&state).await;
@@ -3226,6 +3273,7 @@ async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalo
 
 #[tokio::test]
 async fn document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use() {
+    let _watchdog = LawHangWatchdogV1::arm("document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use");
     let mut state = test_state().await;
     let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
     let token = seed_author_token(&state).await;
@@ -3363,6 +3411,8 @@ fn document_open_plan_late_invalid_receipt_wipes_exact_candidate_bytes() {
 
 #[tokio::test]
 async fn document_open_plan_admin_revocation_invalidates_session_and_share_bindings() {
+    let watchdog = LawHangWatchdogV1::arm("document_open_plan_admin_revocation_invalidates_session_and_share_bindings");
+    watchdog.at("hub state open");
     let mut state = test_state().await;
     let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
     let admin_headers = authorize_test_admin(&mut state, "open-plan-admin@example.com").await;
@@ -3388,11 +3438,13 @@ async fn document_open_plan_admin_revocation_invalidates_session_and_share_bindi
     let session_intent = AdminIntentV1::RevokeUserSessions { request_id: "request:open-plan-session-revoke".into(), user_id: session_record.user_id, reason_code: "test-revoke".into() };
     let session_digest = admin_intent_digest(&session_intent);
     let mut session_revoke_authority = None;
+    watchdog.at("session revocation");
     let session_revoke = execute_admin_intent(&state, &principal, "operation:open-plan-session-revoke", &session_digest, session_intent, None, &mut session_revoke_authority).await;
     drop(session_revoke_authority);
     assert_eq!(session_revoke.phase, "succeeded");
     assert_eq!(state.document_open_plans.exchange(&session_plan.receipt, &session_authority, session_now + 1, "socket-after-session-revoke"), Err(DocumentOpenPlanErrorCodeV1::Stale));
 
+    watchdog.at("share space and document announce");
     let space_effect = admin_effect_receipt_claim("operation:open-plan-share-space", &"0".repeat(64), "directory-events-appended");
     assert!(
         matches!(
@@ -3428,10 +3480,13 @@ async fn document_open_plan_admin_revocation_invalidates_session_and_share_bindi
     let share_intent = AdminIntentV1::RevokeDocumentShare { request_id: "request:open-plan-share-revoke".into(), scope: issued_share.record.scope, share_id: issued_share.record.id, reason_code: "test-revoke".into() };
     let share_digest = admin_intent_digest(&share_intent);
     let mut share_revoke_authority = None;
+    watchdog.at("share revocation");
     let share_revoke = execute_admin_intent(&state, &principal, "operation:open-plan-share-revoke", &share_digest, share_intent, None, &mut share_revoke_authority).await;
     drop(share_revoke_authority);
     assert_eq!(share_revoke.phase, "succeeded");
     assert_eq!(state.document_open_plans.exchange(&share_plan.receipt, &share_authority, share_now + 1, "socket-after-share-revoke"), Err(DocumentOpenPlanErrorCodeV1::Stale));
+    watchdog.at("hub state teardown");
+    drop(state);
 }
 
 #[test]
@@ -5394,6 +5449,34 @@ async fn presence_lease_restart_is_empty_and_directory_presence_is_member_only()
     assert!(restarted.presence_snapshot(&key).peers.is_empty());
 }
 
+/// 👥️ Every presence transition an operator can see in a roster is one structured record: a peer
+/// becoming visible (`server.presence.join`), its lapsed lease stripping it to identity
+/// (`server.presence.expiry`) and its socket leaving (`server.presence.leave`) — and a heartbeat that
+/// changes nothing says nothing.
+#[tokio::test]
+async fn presence_join_expiry_and_leave_each_emit_one_record() {
+    let (state, sink) = observed_test_state().await;
+    let key = document_scope_key_v1(&DocumentScope::new(STUDIO, "presence-trace"));
+    let now = tokio::time::Instant::now();
+    assert_eq!(state.install_presence_slot(&key, STUDIO, "presence-trace", "actor-a", test_presence_slot("live-a", Some("seed"), now)).await, PresenceLeaseTransition::NoChange);
+    assert_eq!(state.refresh_presence(&key, STUDIO, "presence-trace", "actor-a", "live-a", b"opaque".to_vec(), now).await, PresenceLeaseTransition::Published);
+    assert_eq!(state.refresh_presence(&key, STUDIO, "presence-trace", "actor-a", "live-a", b"opaque".to_vec(), now).await, PresenceLeaseTransition::NoChange);
+    let lapsed = now + std::time::Duration::from_millis(PRESENCE_LEASE_TTL_MS + 1);
+    assert_eq!(state.expire_presence_for_live(&key, STUDIO, "presence-trace", "actor-a", "live-a", lapsed).await, PresenceLeaseTransition::Published);
+    assert_eq!(state.close_presence_for_live(&key, STUDIO, "presence-trace", "actor-a", "live-a").await, PresenceLeaseTransition::Published);
+    let presence: Vec<(String, String, String, String)> = sink
+        .records()
+        .into_iter()
+        .filter(|record| record.event.starts_with("server.presence."))
+        .map(|record| (record.event, record.principal.unwrap_or_default(), record.space.unwrap_or_default(), record.artifact.unwrap_or_default()))
+        .collect();
+    let expected = |event: &str| (event.to_string(), "actor-a".to_string(), STUDIO.to_string(), "presence-trace".to_string());
+    assert_eq!(presence, vec![expected("server.presence.join"), expected("server.presence.expiry"), expected("server.presence.leave")]);
+    for event in ["server.presence.join", "server.presence.expiry", "server.presence.leave"] {
+        assert!(SERVER_SPAN_EVENTS.contains(&event), "{event} is declared vocabulary");
+    }
+}
+
 async fn append_directory_page_test_events(state: &HubState, rows: &[(String, String)]) -> Vec<DirectoryEvent> {
     let events = rows
         .iter()
@@ -6307,6 +6390,29 @@ fn json_body(response: &RawHttpResponse) -> serde_json::Value {
     serde_json::from_slice(&response.body).expect("JSON body")
 }
 
+/// 🧨️ A sign-in whose instance session store refuses the write is refused `directory-unavailable`,
+/// records no instance session, and withdraws the directory issuance in the same request — the
+/// failing store write reaches the caller instead of leaving two halves of one session fact apart.
+#[cfg(unix)]
+#[tokio::test]
+async fn credential_sign_in_reports_a_failing_instance_session_store() {
+    use std::os::unix::fs::PermissionsExt;
+    let (mut state, _clock) = credential_sign_in_state().await;
+    let dir = tempdir("instance-session-fault");
+    state.instance = test_instance_state(&dir).await;
+    let user_id = seed_credential_user(&state, "store-fault@example.com", Some(SIGN_IN_PASSWORD)).await;
+    let sessions = dir.join("instance/sessions");
+    assert!(sessions.is_dir(), "the durable profile keeps sessions under {}", sessions.display());
+    std::fs::set_permissions(&sessions, std::fs::Permissions::from_mode(0o500)).expect("refuse session writes");
+    let addr = spawn_server(state.clone()).await;
+    let response = post_sign_in(addr, &sign_in_body("store-fault@example.com", SIGN_IN_PASSWORD)).await;
+    std::fs::set_permissions(&sessions, std::fs::Permissions::from_mode(0o700)).expect("restore session writes");
+    assert_eq!(response.status, 503, "{}", String::from_utf8_lossy(&response.body));
+    assert_eq!(json_body(&response)["error"].as_str(), Some("directory-unavailable"));
+    assert!(std::fs::read_dir(&sessions).expect("sessions dir").all(|entry| entry.expect("session entry").file_name() == "format.json"), "no instance session was recorded beside the store's own format stamp");
+    assert!(state.instance.sessions.lock().await.revoke_principal(&Principal::User { id: user_id }).await.expect("instance store readable") == 0, "the instance store holds nothing for the refused principal");
+}
+
 /// 🔬️ `POST /auth/sessions` mints a real session from a password credential: the email is matched
 /// case-insensitively, the response is exactly `{token, user_id}`, the token then authenticates
 /// `GET /auth/sessions/me` as an `external` session, and both the attempt and the issuance are in
@@ -7189,7 +7295,7 @@ mod quick {
 
         let providers = NativeCodecProviderSetV1::linked();
         let root = native_openable_stdio_bundle();
-        let configured = configured_artifact_authority(&root, Some(&providers), &Tracer::disabled()).await.expect("verified stdio authority").configured().expect("configured stdio authority");
+        let configured = configured_artifact_authority(&root, Some(&providers), &Tracer::disabled(), &StartupCancellationV1::default()).await.expect("verified stdio authority").configured().expect("configured stdio authority");
         assert_eq!(configured.catalog.codec_count(), 26);
         assert_eq!(configured.catalog.open_target_count(), 1);
         let mut ready = test_state().await;
@@ -7209,58 +7315,143 @@ mod quick {
         std::fs::remove_dir_all(root).expect("remove stdio bundle fixture");
     }
 
-    #[cfg(feature = "native-artifact-execution")]
+    /// 📌️ Check In folds the hub's own ledger onto the active checkpoint and publishes it: after two
+    /// edits the active checkpoint's baseline is exactly the named head, its parent is genesis, and a
+    /// cold open reads the pair a remote replica holds after the same ledger, byte for byte. A third
+    /// edit and a second Check In advance it again from the first checkpoint.
+    #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
     #[tokio::test]
-    async fn checkpoint_publication_route_is_author_owned_actor_fenced_idempotent_and_cancellation_safe() {
-        let fixture = checkpoint_publication_fixture("idempotency").await;
+    async fn check_in_advances_the_active_checkpoint_to_the_named_head_and_cold_opens_from_it() {
+        let fixture = check_in_fixture("advances").await;
         let addr = spawn_server(fixture.state.clone()).await;
-        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.pack).await;
-        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.spr).await;
-        let route = format!("/spaces/{}/documents/{}/checkpoint-publications", fixture.scope.space_id, fixture.scope.document_id);
-        let body = directory::os_pack::json::to_json_string(&fixture.command);
-        let author = format!("Bearer {}", fixture.author.token);
+        let ledger = check_in_map_edits(&fixture, &["43", "44", "45"]).await;
+        assert_eq!(ledger.len(), 3, "one envelope per one-operation edit");
+        check_in_commit(&fixture, ledger[0].clone()).await;
+        let second = check_in_commit(&fixture, ledger[1].clone()).await;
+
+        let (code, status) = check_in_until_terminal(addr, &fixture, &fixture.author.token, "11111111111111111111111111111111", &second).await;
+        let status = status.unwrap_or_else(|| panic!("check-in refused with {code}"));
+        assert_eq!(code, 202, "a fresh check-in answers accepted");
+        assert_eq!(status.phase, DocumentCheckInPhaseV1::Ready, "check-in ended {status:?}");
+        let ready = status.ready.clone().expect("ready names its checkpoint");
+        assert_eq!(ready.baseline, second);
+        assert_eq!(ready.parent_checkpoint_id, fixture.genesis.checkpoint_id.hex());
+        let active = fixture.state.directory.get_active_artifact_checkpoint(&fixture.scope).await.expect("active read").expect("active checkpoint");
+        assert_eq!(active.checkpoint_id.hex(), ready.checkpoint_id);
+        assert_eq!(EditedArtifactFrontierV1::of_artifact_frontier(&active.baseline_frontier), Some(second.clone()), "the head advanced to the named head");
+        let cold = check_in_cold_pair(addr, &fixture).await;
+        assert_eq!(cold.selection.active_checkpoint_id.hex(), ready.checkpoint_id, "a cold open starts from the new checkpoint");
+        let expected = check_in_replica_pair(&fixture, &ledger[..2]).await;
+        assert_eq!((cold.pair().pack.clone(), cold.pair().spr.clone()), expected, "the checkpoint is the replica fold of the ledger, byte for byte");
+
+        let third = check_in_commit(&fixture, ledger[2].clone()).await;
+        let (_, next) = check_in_until_terminal(addr, &fixture, &fixture.author.token, "22222222222222222222222222222222", &third).await;
+        let next = next.expect("second check-in status");
+        let next_ready = next.ready.clone().unwrap_or_else(|| panic!("second check-in ended {next:?}"));
+        assert_eq!(next_ready.parent_checkpoint_id, ready.checkpoint_id, "the second checkpoint extends the first");
+        let cold = check_in_cold_pair(addr, &fixture).await;
+        assert_eq!(cold.selection.active_checkpoint_id.hex(), next_ready.checkpoint_id);
+        assert_eq!((cold.pair().pack.clone(), cold.pair().spr.clone()), check_in_replica_pair(&fixture, &ledger).await);
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("checkpoint count"), 3, "genesis plus exactly two check-ins");
+    }
+
+    /// ⛔️ Only an author checks in, only a committed head of this document is materialized, a head the
+    /// active checkpoint already passed is stale, and checking in the active baseline again is the
+    /// same checkpoint rather than a second one.
+    #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+    #[tokio::test]
+    async fn check_in_refuses_stale_unknown_and_foreign_heads_and_is_author_owned() {
+        let fixture = check_in_fixture("refusals").await;
+        let addr = spawn_server(fixture.state.clone()).await;
+        let ledger = check_in_map_edits(&fixture, &["43", "44"]).await;
+        let first = check_in_commit(&fixture, ledger[0].clone()).await;
+        let second = check_in_commit(&fixture, ledger[1].clone()).await;
+        let route = format!("/spaces/{}/documents/{}/check-ins", fixture.scope.space_id, fixture.scope.document_id);
+        let request = |request_id: &str, head: &EditedArtifactFrontierV1| DocumentCheckInV1 { schema: "semio.hub.document-check-in/v1".into(), request_id: request_id.into(), head: head.clone() }.canonical_json().expect("canonical check-in");
+        let body = request("33333333333333333333333333333333", &second);
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Content-Type", "application/json")], body.as_bytes()).await.status, 401, "no credential");
         let spectator = format!("Bearer {}", fixture.spectator.token);
-        assert_eq!(raw_http_request(addr, "POST", &route, &[("Content-Type", "application/json")], body.as_bytes()).await.status, 401);
-        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", spectator.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await.status, 403);
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", spectator.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await.status, 403, "a spectator never writes a checkpoint");
+        let author = format!("Bearer {}", fixture.author.token);
+        let mut foreign = second.clone();
+        foreign.document_id = "artifact-other".into();
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], request("33333333333333333333333333333333", &foreign).as_bytes()).await.status, 400, "a head of another document");
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], format!(" {body}").as_bytes()).await.status, 400, "a noncanonical body");
 
-        let accepted = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await;
-        assert_eq!(
-            accepted.status,
-            200,
-            "author checkpoint publication: {} refused as {:?}",
-            String::from_utf8_lossy(&accepted.body),
-            last_checkpoint_publication_refusal()
-        );
-        assert!(accepted.headers.to_ascii_lowercase().contains("cache-control: private, no-store"));
-        let receipt: CheckpointPublicationReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&accepted.body).expect("publication receipt UTF-8")).expect("canonical publication receipt");
-        assert_eq!(receipt.correlation_id, fixture.command.correlation_id);
-        assert_eq!(receipt.checkpoint.scope, fixture.scope);
-        assert_eq!(receipt.checkpoint.pack.sha256.hex(), fixture.command.pack.sha256);
-        assert_eq!(receipt.checkpoint.spr.sha256.hex(), fixture.command.spr.sha256);
-        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("checkpoint count"), 2, "the seeded creation genesis plus exactly one ordinary publication");
+        let mut forged = second.clone();
+        forged.chain_sha256 = format!("{}{}", if forged.chain_sha256.starts_with('a') { "b" } else { "a" }, &forged.chain_sha256[1..]);
+        let (_, unknown) = check_in_until_terminal(addr, &fixture, &fixture.author.token, "44444444444444444444444444444444", &forged).await;
+        assert_eq!(unknown.map(|status| (status.phase, status.refusal)), Some((DocumentCheckInPhaseV1::Failed, Some(DocumentCheckInRefusalV1::UnknownHead))), "a forged chain is not a ledger point");
+        let mut beyond = second.clone();
+        beyond.head_edit_ordinal += 1;
+        beyond.last_commit_seq += 1;
+        let (_, unknown) = check_in_until_terminal(addr, &fixture, &fixture.author.token, "55555555555555555555555555555555", &beyond).await;
+        assert_eq!(unknown.map(|status| (status.phase, status.refusal)), Some((DocumentCheckInPhaseV1::Failed, Some(DocumentCheckInRefusalV1::UnknownHead))), "a head the ledger never reached");
 
-        let replay = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await;
-        assert_eq!(replay.status, 200);
-        assert_eq!(replay.body, accepted.body, "a lost-response retry returns the identical durable receipt");
-        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("replay checkpoint count"), 2, "retry emits no second checkpoint event");
-        let command_sha256 = os_directory::hex_lower(&Sha256::digest(body.as_bytes()));
-        let durable = fixture
-            .state
-            .directory
-            .claim_or_read_checkpoint_publication(&NewCheckpointPublicationClaimV1 { actor_user_id: fixture.author.user_id.clone(), correlation_id: fixture.command.correlation_id.clone(), command_sha256: command_sha256.clone(), claimed_at: now_ms() })
-            .await
-            .expect("durable publication receipt");
-        let CheckpointPublicationClaimV1::Existing(durable) = durable else { panic!("completed publication must be durable") };
-        assert_eq!(durable.disposition, CheckpointPublicationDispositionV1::Completed);
-        assert_eq!(durable.checkpoint_id, Some(receipt.checkpoint.checkpoint_id));
+        let (_, ready) = check_in_until_terminal(addr, &fixture, &fixture.author.token, "66666666666666666666666666666666", &second).await;
+        let ready = ready.and_then(|status| status.ready).expect("the head checks in");
+        let (_, stale) = check_in_until_terminal(addr, &fixture, &fixture.author.token, "77777777777777777777777777777777", &first).await;
+        assert_eq!(stale.map(|status| (status.phase, status.refusal)), Some((DocumentCheckInPhaseV1::Failed, Some(DocumentCheckInRefusalV1::StaleHead))), "a head the active checkpoint passed is stale");
+        let (_, again) = check_in_until_terminal(addr, &fixture, &fixture.author.token, "88888888888888888888888888888888", &second).await;
+        assert_eq!(again.and_then(|status| status.ready), Some(ready), "checking in the active baseline answers the same checkpoint");
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("checkpoint count"), 2, "refusals and the repeat publish nothing");
+    }
 
-        let mut substituted = fixture.command.clone();
-        substituted.spr.byte_length += 1;
-        let substituted = directory::os_pack::json::to_json_string(&substituted);
-        let conflict = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], substituted.as_bytes()).await;
-        assert_eq!(conflict.status, 409, "same author/correlation with a different exact command conflicts");
-        assert!(conflict.body.is_empty());
-        std::fs::remove_dir_all(fixture.catalog_root).expect("remove publication catalog fixture");
+    /// 🔁️ A retried request answers its own job, the same request id naming another head conflicts,
+    /// a Check In the author cancels before publication publishes nothing, and an author removed
+    /// from the space mid-flight ends it `authority-changed` with nothing published.
+    #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+    #[tokio::test]
+    async fn check_in_is_idempotent_per_request_cancellable_and_revoked_with_the_author() {
+        let mut fixture = check_in_fixture("lifecycle").await;
+        let gate = Arc::new(TestLiveGate::default());
+        fixture.state.live_gate = Some(gate.clone());
+        let addr = spawn_server(fixture.state.clone()).await;
+        let ledger = check_in_map_edits(&fixture, &["43", "44"]).await;
+        let first = check_in_commit(&fixture, ledger[0].clone()).await;
+        let second = check_in_commit(&fixture, ledger[1].clone()).await;
+        let route = format!("/spaces/{}/documents/{}/check-ins", fixture.scope.space_id, fixture.scope.document_id);
+        let author = format!("Bearer {}", fixture.author.token);
+        let post = |request_id: &'static str, head: EditedArtifactFrontierV1| {
+            let route = route.clone();
+            let author = author.clone();
+            async move {
+                let body = DocumentCheckInV1 { schema: "semio.hub.document-check-in/v1".into(), request_id: request_id.into(), head }.canonical_json().expect("canonical check-in");
+                raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await
+            }
+        };
+
+        gate.check_in_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
+        let accepted = post("99999999999999999999999999999999", second.clone()).await;
+        assert_eq!(accepted.status, 202);
+        tokio::time::timeout(std::time::Duration::from_secs(10), gate.check_in_admitted.acquire()).await.expect("check-in reaches its publication gate").expect("gate admission").forget();
+        let joined = post("99999999999999999999999999999999", second.clone()).await;
+        assert_eq!(joined.status, 202, "a retry joins the running job");
+        let joined = DocumentCheckInStatusV1::parse_canonical_json(std::str::from_utf8(&joined.body).unwrap()).expect("joined status");
+        assert_eq!(joined.phase, DocumentCheckInPhaseV1::Materializing);
+        assert_eq!(joined.progress.completed_units, 5, "materialized, not yet published");
+        assert_eq!(post("99999999999999999999999999999999", first.clone()).await.status, 409, "one request id names one request");
+        let cancelled = raw_http_request(addr, "POST", &format!("{route}/99999999999999999999999999999999/cancel"), &[("Authorization", author.as_str())], &[]).await;
+        assert!(cancelled.status == 200 || cancelled.status == 202);
+        gate.check_in_release.add_permits(1);
+        let (_, status) = check_in_until_terminal(addr, &fixture, &fixture.author.token, "99999999999999999999999999999999", &second).await;
+        assert_eq!(status.map(|status| (status.phase, status.refusal)), Some((DocumentCheckInPhaseV1::Cancelled, None)));
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("checkpoint count"), 1, "a cancelled check-in publishes nothing");
+
+        assert_eq!(post("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", second.clone()).await.status, 202);
+        tokio::time::timeout(std::time::Duration::from_secs(10), gate.check_in_admitted.acquire()).await.expect("second check-in reaches its gate").expect("gate admission").forget();
+        execute_directory_command_fenced(&fixture.state, DirectoryActor { kind: DirectoryActorKind::System, id: "system:check-in-removal".into() }, DirectoryCommand::RemoveMember { space_id: fixture.scope.space_id.clone(), user_id: fixture.author.user_id.clone() }).await.expect("remove the author");
+        gate.check_in_release.add_permits(1);
+        let key = DocumentCheckInKey { user_id: fixture.author.user_id.clone(), space_id: fixture.scope.space_id.clone(), document_id: fixture.scope.document_id.clone(), request_id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".into() };
+        let job = fixture.state.check_ins.get(&key).expect("the revoked job is retained");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        while !job.is_terminal() {
+            assert!(std::time::Instant::now() < deadline, "the revoked check-in never ended");
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        assert_eq!((job.status().phase, job.status().refusal), (DocumentCheckInPhaseV1::Failed, Some(DocumentCheckInRefusalV1::AuthorityChanged)));
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("checkpoint count"), 1, "a revoked author publishes nothing");
+        assert_eq!(raw_http_request(addr, "GET", &format!("{route}/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), &[("Authorization", author.as_str())], &[]).await.status, 403, "the removed member lost read access to the job too");
     }
 
     #[test]
@@ -7346,99 +7537,6 @@ mod quick {
         });
     }
 
-    #[cfg(feature = "native-artifact-execution")]
-    #[tokio::test]
-    async fn checkpoint_publication_route_rejects_stale_or_cross_scope_inputs_before_publication() {
-        let mut fixture = checkpoint_publication_fixture("fence").await;
-        let gate = Arc::new(TestLiveGate::default());
-        gate.checkpoint_publication_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
-        fixture.state.live_gate = Some(gate.clone());
-        let other_space = create_space_for_test(&fixture.state, &fixture.author.user_id, "Checkpoint other scope", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-        upsert_member_for_test(&fixture.state, &other_space, "checkpoint-fence-author@example.test", DirectorySpaceRole::Author).await;
-        let descriptor = fixture.state.directory.get_document_descriptor(&fixture.scope).await.expect("publication descriptor read").expect("publication descriptor");
-        let mut other_descriptor = descriptor.clone();
-        other_descriptor.space_id = other_space.clone();
-        fixture
-            .state
-            .directory_service
-            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: Box::new(other_descriptor.clone()) })
-            .await
-            .expect("announce same-id other-space document");
-        let addr = spawn_server(fixture.state.clone()).await;
-        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.pack).await;
-        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.spr).await;
-        let authorization = format!("Bearer {}", fixture.author.token);
-        let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
-
-        let mut cross_scope = fixture.command.clone();
-        cross_scope.correlation_id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".into();
-        let cross_scope = directory::os_pack::json::to_json_string(&cross_scope);
-        let cross = raw_http_request(addr, "POST", &format!("/spaces/{other_space}/documents/{}/checkpoint-publications", fixture.scope.document_id), &headers, cross_scope.as_bytes()).await;
-        assert_eq!(cross.status, 409, "route scope cannot borrow another space's selected descriptor/frontier");
-        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("source scope checkpoint count"), 1, "the seeded creation genesis alone, no publication");
-        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&DocumentScope::new(&other_space, &fixture.scope.document_id)).await.expect("other scope checkpoint count"), 0);
-
-        let route = format!("/spaces/{}/documents/{}/checkpoint-publications", fixture.scope.space_id, fixture.scope.document_id);
-        let body = directory::os_pack::json::to_json_string(&fixture.command);
-        let queued = tokio::spawn({
-            let route = route.clone();
-            let body = body.clone();
-            let authorization = authorization.clone();
-            async move { raw_http_request(addr, "POST", &route, &[("Authorization", authorization.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await }
-        });
-        tokio::time::timeout(std::time::Duration::from_secs(5), gate.checkpoint_publication_admitted.acquire()).await.unwrap_or_else(|_| panic!("publication fence admission deadline: refused as {:?}", last_checkpoint_publication_refusal())).expect("publication fence admission").forget();
-        let write = fixture.state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(fixture.scope.clone())).lock_owned().await;
-        let document = db_artifact_id(&fixture.scope);
-        let batch = db::document::CommandBatch::new(vec![sample_envelope("checkpoint-fence-edit-2", &WireArtifactId(document.0)).await]).await.expect("queued write batch");
-        fixture.handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.expect("queued write actor response").expect("queued write accepted");
-        drop(write);
-        gate.checkpoint_publication_release.add_permits(1);
-        let queued = queued.await.expect("queued publication response");
-        assert_eq!(queued.status, 409, "the final actor snapshot fence rejects a write committed during materialization");
-        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("stale publication count"), 1, "the seeded creation genesis alone, no publication");
-        let failed_digest = os_directory::hex_lower(&Sha256::digest(body.as_bytes()));
-        let failed_claim = NewCheckpointPublicationClaimV1 { actor_user_id: fixture.author.user_id.clone(), correlation_id: fixture.command.correlation_id.clone(), command_sha256: failed_digest.clone(), claimed_at: now_ms() };
-        assert!(
-            matches!(fixture.state.directory.claim_or_read_checkpoint_publication(&failed_claim).await.expect("reclaim failed publication"), CheckpointPublicationClaimV1::Claimed(_)),
-            "a returned failure synchronously releases its durable claim for a corrected retry"
-        );
-        fixture.state.directory.release_checkpoint_publication(&failed_claim.actor_user_id, &failed_claim.correlation_id, &failed_digest).await.expect("release test reclaim");
-
-        let current = fixture.handle.checkpoint_publication_snapshot().await.expect("current publication snapshot");
-        let descriptor_command = checkpoint_publication_command("cccccccccccccccccccccccccccccccc", &other_descriptor, &current, fixture.command.expected_current.clone(), &fixture.pack, &fixture.spr);
-        let descriptor_body = directory::os_pack::json::to_json_string(&descriptor_command);
-        let cross_descriptor = raw_http_request(addr, "POST", &route, &headers, descriptor_body.as_bytes()).await;
-        assert_eq!(cross_descriptor.status, 409, "the selected-descriptor fence rejects another scope's descriptor before publication");
-        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("cross-descriptor publication count"), 1, "the seeded creation genesis alone, no publication");
-
-        let mut stale_checkpoint = fixture.command.clone();
-        stale_checkpoint.correlation_id = "dddddddddddddddddddddddddddddddd".into();
-        let stale_body = directory::os_pack::json::to_json_string(&stale_checkpoint);
-        let stale = raw_http_request(addr, "POST", &route, &headers, stale_body.as_bytes()).await;
-        assert_eq!(stale.status, 409, "the selected-frontier fence rejects an older checkpoint of this document before publication");
-        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("stale-checkpoint publication count"), 1, "the seeded creation genesis alone, no publication");
-
-        let mut cancellation = checkpoint_publication_command("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", &descriptor, &current, fixture.command.expected_current.clone(), &fixture.pack, &fixture.spr);
-        cancellation.schema = "semio.hub.checkpoint-publication-command/v1".into();
-        let cancellation = directory::os_pack::json::to_json_string(&cancellation);
-        let capability = SessionCapability::parse(&fixture.author.token).expect("publication session capability");
-        let session = fixture.state.directory.authenticate_session(&capability).await.expect("publication session lookup").expect("publication session");
-        let revoked = tokio::spawn({
-            let route = route.clone();
-            let authorization = authorization.clone();
-            async move { raw_http_request(addr, "POST", &route, &[("Authorization", authorization.as_str()), ("Content-Type", "application/json")], cancellation.as_bytes()).await }
-        });
-        tokio::time::timeout(std::time::Duration::from_secs(5), gate.checkpoint_publication_admitted.acquire()).await.expect("revocation fence admission deadline").expect("revocation fence admission").forget();
-        fixture.state.directory.revoke_auth_session(&session.id, "checkpoint-publication-test", None, "checkpoint-publication-test").await.expect("revoke publication session").expect("revoked publication session");
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-        gate.checkpoint_publication_release.add_permits(1);
-        let revoked = revoked.await.expect("revoked publication response");
-        assert_eq!(revoked.status, 503, "revocation cancels the request-local authority operation");
-        assert!(revoked.body.is_empty());
-        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("cancelled publication count"), 1, "the seeded creation genesis alone, no publication");
-        std::fs::remove_dir_all(fixture.catalog_root).expect("remove publication fence catalog fixture");
-    }
-
     #[tokio::test]
     async fn socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke() {
         let mut state = test_state().await;
@@ -7477,6 +7575,104 @@ mod quick {
 
 mod long {
     use super::*;
+
+    /// 🌱️ Server-owned creation on the GIS plugin's real release component: the catalog is author-only,
+    /// a stale generation or unknown kind claims nothing, two concurrent duplicates own one factory, and
+    /// the guest's own genesis reaches `ready` with a descriptor and a genesis-backed active checkpoint.
+    #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+    #[tokio::test]
+    async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_backed() {
+        use semio_hub::artifact_authority::creation::ArtifactCreationOperationV1;
+        use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
+        use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationCatalogV1;
+
+        let profile = trusted_catalog_fixture::verified_gis_map_release_profile(&trusted_catalog_fixture::unique_profile_root("artifact-creation-http")).await.expect("verified GIS Map creation profile on the real release component");
+        let mut state = test_state().await;
+        state.verified_catalog = Some(profile.catalog().clone());
+        state.artifact_creation = Some(Arc::new(ArtifactCreationServiceV1::new(state.directory_service.clone(), profile.catalog().clone(), state.artifact_cas.clone())));
+        let author = issue_test_session(&state, "creation-author@example.test").await;
+        let peer = issue_test_session(&state, "creation-peer@example.test").await;
+        let spectator = issue_test_session(&state, "creation-spectator@example.test").await;
+        let space_id = create_space_for_test(&state, &author.user_id, "Artifact Creation", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space_id, "creation-author@example.test", DirectorySpaceRole::Author).await;
+        upsert_member_for_test(&state, &space_id, "creation-peer@example.test", DirectorySpaceRole::Author).await;
+        upsert_member_for_test(&state, &space_id, "creation-spectator@example.test", DirectorySpaceRole::Spectator).await;
+        let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+        let route = format!("/spaces/{space_id}/artifact-creations");
+        let author_bearer = format!("Bearer {}", author.token);
+        let peer_bearer = format!("Bearer {}", peer.token);
+        let spectator_bearer = format!("Bearer {}", spectator.token);
+        let catalog = raw_http_request(addr, "GET", &route, &[("Authorization", author_bearer.as_str())], &[]).await;
+        assert_eq!(catalog.status, 200);
+        let catalog_source = std::str::from_utf8(&catalog.body).expect("creation catalog UTF-8");
+        let catalog = SpaceArtifactCreationCatalogV1::parse_canonical_json(catalog_source).expect("canonical selected creation catalog");
+        assert_eq!(catalog.space_id, space_id);
+        assert_eq!(catalog.kinds.iter().map(|kind| kind.kind_id.as_str()).collect::<Vec<_>>(), vec!["s.gis.gismap"]);
+        assert_eq!(raw_http_request(addr, "GET", &route, &[], &[]).await.status, 401);
+        assert_eq!(raw_http_request(addr, "GET", &route, &[("Authorization", spectator_bearer.as_str())], &[]).await.status, 403);
+
+        let request = SpaceArtifactCreateV1 {
+            schema: "semio.hub.space-artifact-create/v1".into(),
+            request_id: "1234567890abcdef1234567890abcdef".into(),
+            expected_catalog_generation_id: catalog.catalog_generation_id.clone(),
+            kind_id: "s.gis.gismap".into(),
+            name: "Shared Map".into(),
+        };
+        let body = directory::os_pack::json::to_json_string(&request);
+        let malformed = body.replacen("{", "{\"documentId\":\"caller-owned\",", 1);
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], malformed.as_bytes()).await.status, 400);
+        let unknown = SpaceArtifactCreateV1 { request_id: "2234567890abcdef1234567890abcdef".into(), kind_id: "s.gis.unknown".into(), ..request.clone() };
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], directory::os_pack::json::to_json_string(&unknown).as_bytes()).await.status, 409);
+        let stale_generation = SpaceArtifactCreateV1 { request_id: "3234567890abcdef1234567890abcdef".into(), expected_catalog_generation_id: "9".repeat(64), ..request.clone() };
+        assert_ne!(stale_generation.expected_catalog_generation_id, catalog.catalog_generation_id);
+        let directory_head = state.directory.head_seq().await.expect("directory head before stale catalog creation");
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], directory::os_pack::json::to_json_string(&stale_generation).as_bytes()).await.status, 409);
+        assert!(state.directory.read_artifact_creation(&author.user_id, &stale_generation.request_id).await.expect("stale catalog creation facts").is_empty());
+        assert_eq!(state.directory.head_seq().await.expect("directory head after stale catalog creation"), directory_head, "a stale catalog generation cannot claim an operation or append directory events");
+        let creation_headers = [("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")];
+        let first = raw_http_request(addr, "POST", &route, &creation_headers, body.as_bytes());
+        let duplicate = raw_http_request(addr, "POST", &route, &creation_headers, body.as_bytes());
+        let (first, duplicate) = tokio::join!(first, duplicate);
+        assert!([200, 202].contains(&first.status) && [200, 202].contains(&duplicate.status), "exact concurrent duplicate never reports capacity or owns a second factory");
+        for response in [&first, &duplicate] {
+            let source = std::str::from_utf8(&response.body).expect("creation acceptance UTF-8");
+            let status = SpaceArtifactCreationStatusV1::parse_canonical_json(source).expect("creation acceptance is canonical");
+            assert_eq!(status.catalog_generation_id, request.expected_catalog_generation_id);
+        }
+        let facts = state.directory.read_artifact_creation(&author.user_id, &request.request_id).await.expect("durable creation facts");
+        let operation = ArtifactCreationOperationV1::fold(&facts).expect("one durable creation operation");
+        assert!(operation.intent.scope.document_id.strip_prefix("artifact-").is_some_and(artifact_creation_request_id_v1));
+        let created_document_id = operation.intent.scope.document_id;
+
+        let status_route = format!("{route}/{}", request.request_id);
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(600);
+        let ready = loop {
+            let response = raw_http_request(addr, "GET", &status_route, &[("Authorization", author_bearer.as_str())], &[]).await;
+            let status = SpaceArtifactCreationStatusV1::parse_canonical_json(std::str::from_utf8(&response.body).expect("creation status UTF-8")).expect("canonical creation status");
+            let running = matches!(status.phase, SpaceArtifactCreationPhaseV1::Accepted | SpaceArtifactCreationPhaseV1::Preparing);
+            assert_eq!(response.status, if running { 202 } else { 200 }, "a running creation answers 202, a terminal one 200");
+            assert_eq!(status.catalog_generation_id, request.expected_catalog_generation_id);
+            if status.phase == SpaceArtifactCreationPhaseV1::Ready {
+                break status;
+            }
+            assert!(matches!(status.phase, SpaceArtifactCreationPhaseV1::Accepted | SpaceArtifactCreationPhaseV1::Preparing | SpaceArtifactCreationPhaseV1::Indeterminate), "creation reached an unexpected terminal phase");
+            assert!(tokio::time::Instant::now() < deadline, "genesis on the real GIS guest did not become Ready");
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        };
+        let ready_scope = DocumentScope::new(&space_id, &ready.ready.as_ref().expect("Ready coordinates").artifact_id);
+        assert_eq!(ready.catalog_generation_id, request.expected_catalog_generation_id);
+        assert_eq!(ready_scope.document_id, created_document_id, "both concurrent requests retain one server-minted document");
+        assert!(state.directory.get_document_descriptor(&ready_scope).await.expect("created descriptor read").is_some());
+        assert!(state.directory.get_active_artifact_checkpoint(&ready_scope).await.expect("created checkpoint read").is_some_and(|checkpoint| checkpoint.baseline_frontier.is_genesis_for(&ready_scope)));
+        assert_eq!(raw_http_request(addr, "GET", &status_route, &[("Authorization", peer_bearer.as_str())], &[]).await.status, 404, "another Author cannot read the private request key");
+        let cancelled = raw_http_request(addr, "POST", &format!("{status_route}/cancel"), &[("Authorization", author_bearer.as_str())], &[]).await;
+        assert_eq!(cancelled.status, 200);
+        assert_eq!(SpaceArtifactCreationStatusV1::parse_canonical_json(std::str::from_utf8(&cancelled.body).expect("cancel status UTF-8")).expect("canonical cancel status").phase, SpaceArtifactCreationPhaseV1::Ready, "cancel cannot overwrite Ready");
+        assert_eq!(state.artifact_creation_tasks.task_count(), 0);
+        let _ = shutdown.send(());
+        server.await.expect("creation HTTP server stop");
+        state.artifact_creation_tasks.shutdown().await;
+    }
 
     #[test]
     fn admin_response_pages_stop_before_exact_byte_max_and_reject_one_oversized_row() {

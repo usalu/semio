@@ -41,7 +41,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemovePage {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove page", "Seite entfernen")
+        protocol::LocalizedLabel::native("Remove page", "Seite entfernen")
     }
 
     fn target(&self) -> Vec<String> {

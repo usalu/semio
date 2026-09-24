@@ -24,7 +24,7 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleVertices {
         agg_inverse(&StlMutation::SetTriangleVertices(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-triangle-vertices", "Dreieckvertices setzen")
+        protocol::LocalizedLabel::native("Set triangle vertices", "Eckpunkte des Dreiecks setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

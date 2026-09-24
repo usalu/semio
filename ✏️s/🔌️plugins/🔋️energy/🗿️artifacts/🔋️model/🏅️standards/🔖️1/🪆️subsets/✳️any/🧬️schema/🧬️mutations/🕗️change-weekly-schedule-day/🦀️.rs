@@ -34,7 +34,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change weekly schedule {} day {}", self.id.0, self.day_index), &format!("Wochenzeitplan {} Tag {} ändern", self.id.0, self.day_index))
+        protocol::LocalizedLabel::native(&format!("Change weekly schedule {} day {}", self.id.0, self.day_index), &format!("Wochenzeitplan {}: Tag {} ändern", self.id.0, self.day_index))
     }
 
     fn target(&self) -> Vec<String> {

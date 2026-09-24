@@ -42,6 +42,14 @@ func workDirectoryIsCacheLocal(ctx *host.Context) (host.Outcome, error) {
 	}}, nil
 }
 
+func outlineRegistration(ctx *host.Context) (host.Outcome, error) {
+	row, err := ctx.Row()
+	if err != nil {
+		return host.Outcome{}, err
+	}
+	return host.Outcome{Projection: map[string]any{"scenario": ctx.Scenario.ID, "row": row}}, nil
+}
+
 // endregion 🔖️Scenarios
 
 // region 🔖️Registration
@@ -51,7 +59,8 @@ func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("digest-and-fixture-resolution", digestAndFixtureResolution).
 		Subject("fixture-not-in-plan-is-an-error", fixtureNotInPlanIsAnError).
-		Subject("work-directory-is-cache-local", workDirectoryIsCacheLocal)
+		Subject("work-directory-is-cache-local", workDirectoryIsCacheLocal).
+		Subject("outline-registration", outlineRegistration)
 }
 
 // endregion 🔖️Registration

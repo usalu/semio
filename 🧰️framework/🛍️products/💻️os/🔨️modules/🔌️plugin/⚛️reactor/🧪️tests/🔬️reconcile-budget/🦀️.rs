@@ -148,26 +148,6 @@ fn a_nakagin_scale_world_publication_reconciles_and_retires_within_a_handful_of_
     eprintln!("[DEBUG] nakagin publication reconciled in {reconcile_turns} turns ({reconcile_steps} steps) and retires in {granted_turns} turns / {granted_units} units, against {dripped_turns} turns / {dripped_units} units at the pre-W-S2 pacing");
 }
 
-/// 📊️ An outliner-scale retained TABLE surface — the second surface the same Nakagin
-/// `interactionSelect` turn republishes beside the world — queued for retirement exactly the way its
-/// window queues it: the view is dropped, which hands its rows to the process-wide table-rows retire
-/// arena. Answers the retirement units it queued, so the bound below can prove it is document-scaled.
-fn queue_outliner_scale_table_surface() -> usize {
-    let mut view = crate::app::TableRowsView::new(ui_contract::UiText::try_from_str("").expect("bounded actions header"));
-    for column in ["Object", "Kind", "Mesh"] {
-        view.try_push_column(ui_contract::UiText::try_from_str(column).expect("bounded column")).expect("outliner column capacity");
-    }
-    for index in 0..crate::app::TABLE_WINDOW_ROWS {
-        let mut row = crate::app::TableRow::new(ui_contract::UiText::try_from_string(format!("0189{index:04}-66f2-4544-98f0-b6f0c0615492")).expect("bounded row id"));
-        for cell in 0..crate::app::TABLE_WINDOW_CELLS {
-            row.try_push_cell(ui_contract::UiText::try_from_string(format!("Capsule With Balcony J · cs_sl{index}_d0_t_f{cell}")).expect("bounded cell")).expect("outliner cell capacity");
-        }
-        view.try_push_row(row).expect("outliner row capacity");
-    }
-    drop(view);
-    crate::app::TABLE_WINDOW_ROWS * (crate::app::TABLE_WINDOW_CELLS + 1) + 3 + 1
-}
-
 /// 🌍️ Mounts one Nakagin-scale world surface on its OWN tracker and publishes it, leaving the
 /// tracker mounted so the caller can retire the surface owner through the terminal ladder — the
 /// retained half W-S2 measured only through the emitted patch.
@@ -199,32 +179,24 @@ fn mount_and_publish_nakagin_world(surface: &str) -> (patches::PatchTracker, ui_
     (tracker, patch)
 }
 
-/// ⏱️ Wave W-B2 (ticket 26/09/02): a MIXED-surface turn — the world-3d surface AND a retained table
-/// surface (the outliner), which is what one Nakagin `interactionSelect` actually touches — must
-/// retire every one of its ladders inside a SINGLE-DIGIT number of reactor turns.
-///
-/// W-S2 priced only the world-3d patch ladder per page and recorded in its own §7 that the terminal
-/// ladders (`SurfaceReconcileTerminal`/`MountedTreeTerminal`) and the `…_one()` ladders
-/// (`close_table_rows_view_one`, `close_ui_turn_patch_transport_one`) still retire ONE owner per
-/// unit. A turn holding ANY of them answers `MoreWork`, the host counts that as one continuation
-/// toward the SAME `PLUGIN_UI_CONTINUATION_LIMIT` regardless of which surface is stalling it, and
-/// `interactionSelect` on Nakagin still throws `did not publish its requested UI surfaces within
-/// 4096 continuations` (ticket evidence `🗑generated/w-ab-41-nakagin-brush4.txt`, 2026-09-10).
+/// ⏱️ Wave W-B2 (ticket 26/09/02): a Nakagin `interactionSelect` turn's world-3d surface must retire
+/// every one of its ladders — the published patch AND the mounted tracker's close — inside a
+/// SINGLE-DIGIT number of reactor turns. A retained table rides the same ladders since ticket 26/09/18
+/// U5 §6b: its rows are ordinary `TableRow` built nodes, never a second retire arena of their own.
 #[test]
-fn a_nakagin_scale_mixed_surface_turn_retires_every_ladder_within_a_handful_of_reactor_turns() {
+fn a_nakagin_scale_world_turn_retires_every_ladder_within_a_handful_of_reactor_turns() {
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 3u32;
     let (tracker, patch) = mount_and_publish_nakagin_world(&format!("{instance}:puzzle3d-main-perspective"));
     let mut world = ui_contract::UiPendingPatch::default();
     *world.source_mut().expect("writable payload") = Some(patch);
-    let table_units = queue_outliner_scale_table_surface();
     let key = instance_lifetime::NativeCloseKey::fixture(instance, 1);
     tracker.reserve_close_instance(key).expect("exact close reservation");
     tracker.activate_close_instance(key).expect("activate retained close");
-    let (mut turns, mut world_done, mut table_done, mut surface_done) = (0usize, false, false, false);
-    while !world_done || !table_done || !surface_done {
+    let (mut turns, mut world_done, mut surface_done) = (0usize, false, false);
+    while !world_done || !surface_done {
         turns += 1;
-        assert!(turns < 100_000, "mixed-surface retirement never completed after {turns} turns");
+        assert!(turns < 100_000, "world retirement never completed after {turns} turns");
         for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
             if world_done {
                 break;
@@ -242,27 +214,9 @@ fn a_nakagin_scale_mixed_surface_turn_retires_every_ladder_within_a_handful_of_r
             }
         }
         surface_done = tracker.close_instance_complete(key).expect("exact close receipt");
-        table_done = false;
-        for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
-            if !crate::app::close_table_rows_view_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT) {
-                table_done = true;
-                break;
-            }
-        }
     }
     tracker.release_close_instance(key).expect("final ACK releases close slot");
-    let dripped_units = {
-        queue_outliner_scale_table_surface();
-        let mut units = 0usize;
-        while crate::app::close_table_rows_view_one() {
-            units += 1;
-            assert!(units < 1_000_000, "the pre-W-B2 table ladder never terminated");
-        }
-        units
-    };
-    assert!(dripped_units > 512, "the retained table must be document-scaled for the bound below to mean anything; observed {dripped_units} retirement units against {table_units} queued");
-    assert!(turns < 10, "a mixed world-3d + retained-table turn must retire every ladder inside a single-digit number of reactor turns; observed {turns} turns against the {dripped_units} turns the same table costs at one owner per turn");
-    eprintln!("[DEBUG] mixed-surface retirement completed in {turns} turns, against {dripped_units} turns for the retained table alone at the pre-W-B2 one-owner-per-turn pacing ({table_units} units queued)");
+    assert!(turns < 10, "a world-3d turn must retire every ladder inside a single-digit number of reactor turns; observed {turns} turns");
 }
 
 /// 🕹️ Wave B48 LAW: a surface whose publication the host has retired must become RE-RESERVABLE, so the

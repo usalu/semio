@@ -56,6 +56,13 @@ impl ArtifactViewer for Generation2dViewer {
     const DIALECT: Dialect = GENERATION2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
 
+    /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: the snapshot holds
+    /// retained `OrderedMap` roots that only this catalogue retires explicitly, and the framework's generic bounded
+    /// owners dropped them plainly (`ordered-map root must be explicitly retired before drop`, S15 viewer matrix).
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_document_store_owners())
+    }
+
     fn initial_snapshot() -> Generation2dSnapshot {
         crate::standards::v1::subsets::any::schema::default_snapshot()
     }

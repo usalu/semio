@@ -33,7 +33,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for EditBlockText {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Edit block \"{}\" text", self.id), &format!("Block \"{}\" Text bearbeiten", self.id))
+        protocol::LocalizedLabel::native(&format!("Edit block \"{}\" text", self.id), &format!("Text von Block \"{}\" bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

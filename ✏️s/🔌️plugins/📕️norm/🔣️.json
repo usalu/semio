@@ -256,6 +256,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -1312,7 +1374,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -1323,7 +1385,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -2764,6 +2826,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -3820,7 +3944,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -3831,7 +3955,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -5272,6 +5396,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -6328,7 +6514,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -6339,7 +6525,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -7780,6 +7966,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -8836,7 +9084,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -8847,7 +9095,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -10288,6 +10536,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -11344,7 +11654,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -11355,7 +11665,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -12796,6 +13106,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -13852,7 +14224,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -13863,7 +14235,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -15304,6 +15676,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -16360,7 +16794,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -16371,7 +16805,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -17812,6 +18246,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -18868,7 +19364,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -18879,7 +19375,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -20320,6 +20816,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -21376,7 +21934,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -21387,7 +21945,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -22828,6 +23386,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -23884,7 +24504,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -23895,7 +24515,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -25336,6 +25956,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -26392,7 +27074,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -26403,7 +27085,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -27844,6 +28526,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -28900,7 +29644,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -28911,7 +29655,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -30352,6 +31096,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -31408,7 +32214,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -31419,7 +32225,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -32860,6 +33666,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -33916,7 +34784,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -33927,7 +34795,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -35368,6 +36236,68 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -36424,7 +37354,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42,
+                "size": 42.0,
                 "children": [
                   {
                     "kind": "window",
@@ -36435,7 +37365,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58,
+                "size": 58.0,
                 "children": [
                   {
                     "kind": "window",
@@ -37642,6 +38572,26 @@
           }
         },
         "iconId": "file",
+        "artifactJson": "semio norm.din4108.dsl v1\ncategory=residential climate=zone2 airtightness-n50=2.5 psi-times-l-sum=0.02 rh-int=0.5 catalog-id=AW-01 material-id=mineral_wool airtightness-class=class2 t-int-c=20 solar-absorptance=0.6 irradiance-w-m2=600 moisture-mu-exterior=15 moisture-mu-interior=1.3 envelope-area-m2=100m2 bb2-details-conform=true application-type=DEO declared-application-class=dk\nlayers [thickness-m:QTY lambda-w-mk:NUM] {\n  0.24m 0.81\n  0.14m 0.035\n}\n",
+        "dialect": {
+          "artifactKind": "s.norm.din4108",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
         "artifactJson": "semio norm.din16798.dsl v1\nannex=de occupancy=residential comfort-category=II t-op-c=22 rh-percent=50pct air-speed-m-s=0.1m/s theta-rm-c=15 co2-ppm=800 df-percent=2.5pct l-aeq-db=24 persons=10 ida-class=\"2\" ventilation-m3-h=280 floor-area-m2=90m2 bedrooms=3 dwelling-ventilation-m3-h=63 occupants=3 residential-ventilation-m3-h=80 sfp-w-m3-s=1500 sfp-required-class=4 heat-recovery-eta=0.75 heat-recovery-eta-min=0.7 system-type=central_mech years-since-inspection=1 humidification-required-kg-h=2 humidification-provided-kg-h=2 fan-q-v-m3-s=1 fan-t-run-h=8h fan-energy-reference-kwh=15 night-setback-k=3.5K hr-m-dot-kg-s=0.5 hr-cp-j-kgk=1005 hr-delta-t-c=15 hr-t-h=10h hr-savings-reference-kwh=50 n50-h-inv=1.5 volume-m3=500m3 infiltration-allowance-m3-h=45 cellar-area-m2=50m2 cellar-ventilation-m3-h=15 h-tr-w-k=200 h-ve-w-k=100 theta-e-c=32 theta-set-c=26 cooling-delta-t-h=10 cooling-gains-kwh=5 cooling-utilization-factor=0.8 cooling-reference-kwh=20 chiller-type=air_cooled eer-actual=3 q-c-kwh=1000 generation-reference-kwh=400 data-center-supply-c=22 h-st-w-k=5 theta-st-c=60 theta-amb-c=20 storage-t-h=24h storage-allowance-kwh=6 dhw-delivery-c=58 duct-class=C duct-test-pressure-pa=400Pa duct-leakage-m3-s-m2=0.1\n",
         "dialect": {
           "artifactKind": "s.norm.din16798",
@@ -37662,29 +38612,9 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.din18599.dsl v1\nuseClass=residential\nheatedAreaM2=100\noccupants=4\nhT=92.12124613902822\nhV=40.800000000000004\nclimate=[64696e31383539392d636c696d6174652d39643538303136343463666132653435,64696e31383539392d636c696d6174652d3964353830313634346366613265343521732e737464696f2e73656d696f4076312f7461626c65]\ninternalGainsWM2=3.5\nsolarGainsKwh=84\nsystemLossesKwh=800\nrenewableKwh=1500\nannualLimitKwh=7500\nenergyCarrier=6e61747572616c5f676173\nreferenceQPKwh=10000\n",
+        "artifactJson": "semio norm.din18599.dsl v1\nuse-class=residential heated-area-m2=100 occupants=4 h-t=92.12124613902822 h-v=40.800000000000004 internal-gains-w-m2=3.5 solar-gains-kwh=84 system-losses-kwh=800 renewable-kwh=1500 annual-limit-kwh=7500 energy-carrier=natural_gas reference-q-p-kwh=10000 climate=child_id=din18599-climate-9d5801644cfa2e45 target=\"din18599-climate-9d5801644cfa2e45!s.stdio.semio@v1/table\"\n",
         "dialect": {
           "artifactKind": "s.norm.din18599",
-          "standard": "1",
-          "subset": "*"
-        }
-      },
-      {
-        "id": "demo",
-        "label": {
-          "native": {
-            "en": "Demo",
-            "de": "Demo"
-          },
-          "reuse": {
-            "en": "Demo",
-            "de": "Demo"
-          }
-        },
-        "iconId": "file",
-        "artifactJson": "semio norm.din4108.dsl v1\ncategory=residential climate=zone2 airtightness-n50=2.5 psi-times-l-sum=0.02 rh-int=0.5 catalog-id=AW-01 material-id=mineral_wool airtightness-class=class2 t-int-c=20 solar-absorptance=0.6 irradiance-w-m2=600 moisture-mu-exterior=15 moisture-mu-interior=1.3 envelope-area-m2=100m2 bb2-details-conform=true application-type=DEO declared-application-class=dk\nlayers [thickness-m:QTY lambda-w-mk:NUM] {\n  0.24m 0.81\n  0.14m 0.035\n}\n",
-        "dialect": {
-          "artifactKind": "s.norm.din4108",
           "standard": "1",
           "subset": "*"
         }
@@ -37702,7 +38632,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.en1990.dsl v1\ngK=250\nqK=[656e313939302d716b2d65316535333637653130343739316435,656e313939302d716b2d6531653533363765313034373931643521732e737464696f2e73656d696f4076312f7461626c65]\nresistanceKn=420\nconsequenceClass=3\nannex=en\nseismicAEdKn=0\n",
+        "artifactJson": "semio norm.en1990.dsl v1\ng-k=250 resistance-kn=420 consequence-class=3 annex=en seismic-a-ed-kn=0 q-k=child_id=en1990-qk-e1e5367e104791d5 target=\"en1990-qk-e1e5367e104791d5!s.stdio.semio@v1/table\"\n",
         "dialect": {
           "artifactKind": "s.norm.en1990",
           "standard": "1",
@@ -39875,8 +40805,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "d6f5e31e2c1e4d1befc57db422279c0cdf38665271e6bab2454a52a9b857c30b",
-    "coreWasmSha256": "446496bcd81b40700be8bb7a707cacdf7280912899b509041c818978f0a4d8b3",
-    "descriptorSha256": "ef9fef22be17d5f23424297f07caf1bbfd6ac0072006e7629ba2a6d542f80c91"
+    "wasmSha256": "ce5bc7309e86db6c51111371d44fb75c34e231a49adf7a46f032cc256d055285",
+    "coreWasmSha256": "596ff0c79ddf8ae66ad86f79ceeb30c4eb6b29c0ab95d4f1daff07cf160d6f08",
+    "descriptorSha256": "7a1f4f8048fc7bc373f4b228d4540ba3954619bf58c5e94dc802dec3bca4c4cf"
   }
 }

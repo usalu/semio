@@ -7697,6 +7697,7 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
   const contracts = Object.entries(taxonomy.schema.generatorContracts).sort(([left], [right]) => left.localeCompare(right));
   for (let index = 0; index < contracts.length; index++) {
     const [id, contract] = contracts[index];
+    if (contract.ownerPath && catalogView.kind(contract.ownerPath) !== "directory") continue;
     const roots = contract.outputRoots.map((root) => root.path).sort(generatorPathCompare);
     const outputEntries = inventory.entries.filter((entry) => roots.some((root) => entry.sourcePath === root || entry.sourcePath.startsWith(`${root}/`)));
     const outputProblem = outputEntries.some((entry) => !roots.includes(entry.sourcePath) && (entry.sourcePath !== entry.normalizedPath || entry.violations.some((entry) => entry.severity === "error")));

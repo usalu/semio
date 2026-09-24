@@ -331,11 +331,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -956,11 +956,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -1583,11 +1583,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -2208,11 +2208,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -2833,11 +2833,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -8433,14 +8433,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -8474,14 +8474,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -9717,7 +9717,33 @@
         "dialogs": [],
         "mediaInputs": [],
         "mediaOutputs": [],
-        "artifactKinds": [],
+        "artifactKinds": [
+          {
+            "id": "data.program",
+            "name": "Architect Program",
+            "sourceFormat": "architect.program",
+            "componentKind": "architect",
+            "dimension": "data",
+            "mediaCapability": "meshOnly",
+            "mediaType": {
+              "class": "data",
+              "form": "value"
+            },
+            "schema": "architect.program",
+            "exportFormats": [],
+            "importFormats": [],
+            "exportStdioKinds": [
+              "stdio.csv",
+              "stdio.json",
+              "stdio.xlsx",
+              "stdio.zip"
+            ],
+            "importStdioKinds": [
+              "stdio.csv",
+              "stdio.json"
+            ]
+          }
+        ],
         "config": {
           "fields": []
         },
@@ -11057,32 +11083,6 @@
           "subset": "*"
         },
         "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.architect.program",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xlsx",
-          "standard": "ecma-376",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.architect.program",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.zip",
-          "standard": "2.0",
-          "subset": "*"
-        },
-        "direction": "import"
       }
     ],
     "composerEntries": [
@@ -11112,24 +11112,14 @@
             "artifactKind": "s.stdio.txt",
             "standard": "utf-8",
             "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xlsx",
-            "standard": "ecma-376",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.zip",
-            "standard": "2.0",
-            "subset": "*"
           }
         ]
       }
     ]
   },
   "hashes": {
-    "wasmSha256": "c5fc2616c551ef8aad74a2c7cf108167b8835ba404dd1590292cb1d3a33b117e",
-    "coreWasmSha256": "8b834541b13e8c9d2353e6bb9d9b02d2b66b56174720f24ae55a4c346f7a97d8",
-    "descriptorSha256": "827479c4465c0a1e2d2843e250cc165eec940fdff71c22e8e56576f975e6f788"
+    "wasmSha256": "7ba7b775ee4821c6639c7b6a0cf20083716ad4693aeeb5155a5db5fedf41e7bf",
+    "coreWasmSha256": "03c30bcf58083ea3540ee378dc97bff88536376f4a07d5eb1cf302685ade2c7b",
+    "descriptorSha256": "866b5f8aa4270802465b575cfed4e511ce992d134fd199483cdb73c9730b2db7"
   }
 }

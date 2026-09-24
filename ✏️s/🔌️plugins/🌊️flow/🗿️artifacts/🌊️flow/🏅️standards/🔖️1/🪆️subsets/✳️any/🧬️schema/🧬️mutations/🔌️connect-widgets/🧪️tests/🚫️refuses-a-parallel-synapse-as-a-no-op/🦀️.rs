@@ -4,7 +4,7 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`.
 //!
-//! ✅️ This is an APPLIED case with an EMPTY diff. `connect-widgets`' own `🔺️diff` leaf guards
+//! ✅️ This is an NO-OP case with an EMPTY diff. `connect-widgets`' own `🔺️diff` leaf guards
 //! parallel edges: when an identical `(from, from_port, to, to_port)` synapse already exists it
 //! returns `MutationOutcome::empty().warn("mutation.no-op", …)` and never reaches
 //! `diff_replace_content`. Because no new content handle is minted, `➡️after` equals `⬅️before` and
@@ -86,15 +86,15 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "connect-widgets/refuses-a-parallel-synapse-as-a-no-op: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared outcome is `applied` WITH a `warn`-level `mutation.no-op` — a refused parallel
+/// 🎯️ The declared outcome is `no-op` WITH a `warn`-level `mutation.no-op` — a refused parallel
 /// edge is a warning on an empty diff, never a rejection. (`🎯️outcome` spells the level `warn`;
 /// `Severity` itself names that level `Warning`.)
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "connect-widgets/refuses-a-parallel-synapse-as-a-no-op declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "connect-widgets/refuses-a-parallel-synapse-as-a-no-op declares a no-op outcome");
     let mut snapshot = before();
-    apply_flow_mutation(&mut snapshot, &mutation()).expect("connect-widgets/refuses-a-parallel-synapse-as-a-no-op: declared applied but the mutation was rejected");
+    apply_flow_mutation(&mut snapshot, &mutation()).expect("connect-widgets/refuses-a-parallel-synapse-as-a-no-op: declared no-op but the mutation was rejected");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its messages");
     let produced = <FlowMutation as protocol::Mutation<FlowSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

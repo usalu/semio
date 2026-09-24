@@ -267,7 +267,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-seed",
@@ -327,6 +327,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -347,6 +348,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -407,6 +409,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -427,6 +430,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -487,6 +491,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -507,6 +512,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -562,6 +568,13 @@
           ]
         }
       ]
+    }
+  ],
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
     }
   ]
 }

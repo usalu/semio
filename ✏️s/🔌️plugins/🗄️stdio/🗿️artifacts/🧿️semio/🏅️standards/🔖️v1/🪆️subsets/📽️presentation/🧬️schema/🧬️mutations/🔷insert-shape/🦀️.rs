@@ -23,7 +23,7 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
         agg_inverse(&SemioPresentationMutation::InsertShape(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-shape", "Form einfügen")
+        protocol::LocalizedLabel::native("Insert shape", "Form einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

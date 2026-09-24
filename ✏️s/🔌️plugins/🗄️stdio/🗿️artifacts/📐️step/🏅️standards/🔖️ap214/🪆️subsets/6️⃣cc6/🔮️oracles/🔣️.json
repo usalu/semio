@@ -672,10 +672,10 @@
             "actual-step"
           ],
           "assertions": {
-            "relativeVolumeErrorMax": 1e-8,
-            "relativeAreaErrorMax": 1e-7,
-            "normalizedCentroidDistanceMax": 1e-8,
-            "normalizedBoundingBoxDiagonalErrorMax": 1e-8,
+            "relativeVolumeErrorMax": 1e-08,
+            "relativeAreaErrorMax": 1e-07,
+            "normalizedCentroidDistanceMax": 1e-08,
+            "normalizedBoundingBoxDiagonalErrorMax": 1e-08,
             "connectedComponentsEqual": true
           }
         },
@@ -730,8 +730,7 @@
           "capability": "step-ap214-cc6-mutate",
           "payloadSchema": "../🧬️schema/🦀️component.rs#StepSnapshot",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -782,7 +781,6 @@
           "capability": "step-ap214-cc6-mutate",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -810,9 +808,6 @@
           "capability": "step-ap214-cc6-mutate",
           "outcomes": [
             "applied",
-            "no-op",
-            "empty",
-            "disjoint",
             "rejected"
           ],
           "productionDispatch": {

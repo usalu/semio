@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { CARGO_COMPOSITION_NAME, CARGO_CONTRACT_NAME, COMPOSITION_RUST_NAME, COMPOSITION_TYPESCRIPT_NAME, JsonMap, NX_CONTRACT_NAME, StdioArtifactPackageRecord, canonicalStdioArtifactNames, slashStdioPath } from "../../📇️inventory/🟦️.ts";
+import { CARGO_COMPOSITION_NAME, CARGO_CONTRACT_NAME, COMPOSITION_RUST_NAME, COMPOSITION_TYPESCRIPT_NAME, JsonMap, NX_CONTRACT_NAME, StdioArtifactPackageRecord, canonicalStdioArtifactNames, slashStdioPath } from "../📇️inventory/🟦️.ts";
 
 async function runCaptured(command: string, args: string[], cwd: string, timeoutMs: number): Promise<string> {
   console.log(`[stdio-package-contract] running ${command} ${args.join(" ")}`);
@@ -104,10 +106,15 @@ export function assertStdioArtifactCargoMetadata(repoRoot: string, contract: { p
 /** 🔬️ Compares the admitted artifact dependency projection with Nx's current project graph. */
 export async function assertStdioArtifactNxGraph(repoRoot: string, contract: { packages: StdioArtifactPackageRecord[] }, metadata: JsonMap): Promise<void> {
   assertActualCargoDag(metadata, new Set(contract.packages.map((entry) => entry.rust.cargoName)));
-  const output = await runCaptured(process.execPath, ["run", "nx", "graph", "--print"], repoRoot, 180_000);
-  const start = output.indexOf("{");
-  assert(start >= 0, "Nx graph emitted no JSON");
-  const graph = JSON.parse(output.slice(start)) as JsonMap;
+  const scratch = mkdtempSync(join(tmpdir(), "stdio-nx-graph-"));
+  const graphPath = join(scratch, "graph.json");
+  let graph: JsonMap;
+  try {
+    await runCaptured(process.execPath, ["run", "nx", "graph", `--file=${graphPath}`], repoRoot, 180_000);
+    graph = JSON.parse(readFileSync(graphPath, "utf8")) as JsonMap;
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
   const dependencies = graph.graph?.dependencies ?? graph.dependencies;
   const nodes = graph.graph?.nodes ?? graph.nodes;
   const cargoPackages = new Map((metadata.packages as JsonMap[]).map((entry) => [String(entry.name), entry]));

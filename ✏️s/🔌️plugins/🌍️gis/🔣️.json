@@ -300,11 +300,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -3764,15 +3764,14 @@
               "stdio.json",
               "stdio.pdf",
               "stdio.png",
-              "stdio.svg"
+              "stdio.svg",
+              "stdio.txt"
             ],
             "importStdioKinds": [
               "stdio.dwg",
               "stdio.dxf",
               "stdio.json",
-              "stdio.pdf",
-              "stdio.png",
-              "stdio.svg"
+              "stdio.txt"
             ]
           }
         ],
@@ -3888,7 +3887,71 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "setCamera",
+                "label": {
+                  "native": {
+                    "en": "Set camera",
+                    "de": "Kamera setzen"
+                  },
+                  "reuse": {
+                    "en": "Set camera",
+                    "de": "Kamera setzen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "camera",
+                    "label": {
+                      "native": {
+                        "en": "Map camera",
+                        "de": "Kartenkamera"
+                      },
+                      "reuse": {
+                        "en": "Map camera",
+                        "de": "Kartenkamera"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -5224,11 +5287,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -6935,15 +6998,14 @@
               "stdio.json",
               "stdio.pdf",
               "stdio.png",
-              "stdio.svg"
+              "stdio.svg",
+              "stdio.txt"
             ],
             "importStdioKinds": [
               "stdio.dwg",
               "stdio.dxf",
               "stdio.json",
-              "stdio.pdf",
-              "stdio.png",
-              "stdio.svg"
+              "stdio.txt"
             ]
           }
         ],
@@ -12007,6 +12069,19 @@
                   "claims": [
                     {
                       "namespace": "dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "dbbdaed7fe71844174fe745f130e32f3704848d9513c2ba26345429442bc7609",
+                  "executable": false,
+                  "identity": "s.stdio.json.composer.dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
                       "value": "s.stdio.json@rfc8259/i-json"
                     }
                   ],
@@ -12234,6 +12309,19 @@
                   "executable": false,
                   "identity": "s.stdio.json.standard.rfc8259.representation.mime-application-json-extension-json",
                   "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "5086cf3e6128d39e038f0724bd1d62f5235aa8bcf709c6f829c50c464cccf7d2",
+                  "executable": false,
+                  "identity": "s.stdio.json.subset-validator.validated-dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "subset-validator",
                   "localizations": []
                 },
                 {
@@ -16836,15 +16924,14 @@
           "stdio.json",
           "stdio.pdf",
           "stdio.png",
-          "stdio.svg"
+          "stdio.svg",
+          "stdio.txt"
         ],
         "importStdioKinds": [
           "stdio.dwg",
           "stdio.dxf",
           "stdio.json",
-          "stdio.pdf",
-          "stdio.png",
-          "stdio.svg"
+          "stdio.txt"
         ]
       }
     ],
@@ -20866,6 +20953,19 @@
                   "claims": [
                     {
                       "namespace": "dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "dbbdaed7fe71844174fe745f130e32f3704848d9513c2ba26345429442bc7609",
+                  "executable": false,
+                  "identity": "s.stdio.json.composer.dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
                       "value": "s.stdio.json@rfc8259/i-json"
                     }
                   ],
@@ -21093,6 +21193,19 @@
                   "executable": false,
                   "identity": "s.stdio.json.standard.rfc8259.representation.mime-application-json-extension-json",
                   "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "5086cf3e6128d39e038f0724bd1d62f5235aa8bcf709c6f829c50c464cccf7d2",
+                  "executable": false,
+                  "identity": "s.stdio.json.subset-validator.validated-dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "subset-validator",
                   "localizations": []
                 },
                 {
@@ -25735,6 +25848,19 @@
         "counterpart": {
           "artifactKind": "s.stdio.json",
           "standard": "rfc8259",
+          "subset": "geojson"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
           "subset": "*"
         },
         "direction": "import"
@@ -25818,6 +25944,11 @@
           {
             "artifactKind": "s.stdio.json",
             "standard": "rfc8259",
+            "subset": "geojson"
+          },
+          {
+            "artifactKind": "s.stdio.json",
+            "standard": "rfc8259",
             "subset": "*"
           },
           {
@@ -25854,8 +25985,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "04844275baacc67f39742009d5ebbe17e00405e3fed19af3bd2889ad85710120",
-    "coreWasmSha256": "929aca807ea5091015f5617f8fd8c1b683d639a5741c4da845d1bdee45790dde",
-    "descriptorSha256": "d108087fd46cac6120e6cb555ca147a76ec035288dcff1c6c45f424185bfd933"
+    "wasmSha256": "3343a57f3bb247f5fced4e0eeae5765ca5d847a4d1cb29e466816df598898ac9",
+    "coreWasmSha256": "0e294640eab5188b1bb8b1100ab719526469e37bb0448488b32f5a64f56422b6",
+    "descriptorSha256": "2e49a41f1b53aeba3d9a17249bfc70308a7cdc65283e7264c1cc952aeaa6412a"
   }
 }

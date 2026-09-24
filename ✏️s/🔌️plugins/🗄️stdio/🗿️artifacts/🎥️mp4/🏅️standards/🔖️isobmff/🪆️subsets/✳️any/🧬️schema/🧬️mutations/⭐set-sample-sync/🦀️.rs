@@ -23,7 +23,7 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetSampleSync {
         agg_inverse(&Mp4Mutation::SetSampleSync(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-sample-sync", "Probenabgleich setzen")
+        protocol::LocalizedLabel::native("Set sample sync", "Sync-Kennung des Samples setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

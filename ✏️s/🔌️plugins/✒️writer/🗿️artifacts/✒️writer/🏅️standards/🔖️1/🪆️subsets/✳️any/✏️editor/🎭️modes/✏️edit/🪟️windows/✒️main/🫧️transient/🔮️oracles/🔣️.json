@@ -1,0 +1,320 @@
+{
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The transient state lane of `s.writer.writer`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient): its mutation vocabulary `WriterMainWindowTransientMutation` over `WriterMainWindowTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-writer-writer-1-any-editor-edit-main-transient` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "writer-writer-1-any-editor-edit-main-transient-state-lane-semantics",
+      "capabilities": [
+        "writer-writer-1-any-editor-edit-main-transient-mutate"
+      ],
+      "rationale": "`WriterMainWindowTransientMutation` is the transient state lane of `s.writer.writer`'s ✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient surface: it holds the editor selection, the lint generation counter and the engagement input of the main window. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-engagement-input`, `set-editor-selection`, `set-lint-generation`) changes exactly its own part of `WriterMainWindowTransient`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "zustand",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "An in-memory state container with arbitrary setter functions; it has no typed transient record, no per-kind mutation vocabulary and no computed inverse."
+          },
+          {
+            "package": "im",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Persistent immutable collections; they version values structurally but define no mutation kinds, no-op guards or inverses over this surface's record."
+          }
+        ],
+        "whyNoneQualifies": "`WriterMainWindowTransient` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "writer-writer-1-any-editor-edit-main-transient",
+      "capability": "writer-writer-1-any-editor-edit-main-transient-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-engagement-input",
+        "set-editor-selection",
+        "set-lint-generation"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.writer.writer",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient",
+      "mutations": [
+        {
+          "id": "set-engagement-input",
+          "capability": "writer-writer-1-any-editor-edit-main-transient-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-engagement-input",
+            "bridgeVersion": 1,
+            "variant": "SetEngagementInput"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "writer-writer-1-any-editor-edit-main-transient-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-editor-selection",
+          "capability": "writer-writer-1-any-editor-edit-main-transient-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-editor-selection",
+            "bridgeVersion": 1,
+            "variant": "SetEditorSelection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "writer-writer-1-any-editor-edit-main-transient-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-lint-generation",
+          "capability": "writer-writer-1-any-editor-edit-main-transient-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-lint-generation",
+            "bridgeVersion": 1,
+            "variant": "SetLintGeneration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "writer-writer-1-any-editor-edit-main-transient-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-engagement-input-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.writer.writer",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient"
+      },
+      "mutation": "set-engagement-input",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/💬️set-engagement-input/✅️set-engagement-input-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ed5ed80a87418a2048fa788aa7d432b7e1731e39713df99ef7a5a5b0a4e58650",
+          "bytes": 78
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/💬️set-engagement-input/✅️set-engagement-input-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:9f8eb2d61cb7ef9cae75e82781ba6b53cf8e36fdcb0fdf1a8c2db41d2497bb94",
+          "bytes": 80
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/💬️set-engagement-input/✅️set-engagement-input-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3ba99a46578302437699b9b67522c496b62baf3e5f32dd44c8db7d3b257e7744",
+          "bytes": 106
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/💬️set-engagement-input/✅️set-engagement-input-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3ba99a46578302437699b9b67522c496b62baf3e5f32dd44c8db7d3b257e7744",
+          "bytes": 106
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/💬️set-engagement-input/✅️set-engagement-input-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "Typing an engagement prompt replaces the engagement input."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-editor-selection-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.writer.writer",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient"
+      },
+      "mutation": "set-editor-selection",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📐️set-editor-selection/✅️set-editor-selection-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ed5ed80a87418a2048fa788aa7d432b7e1731e39713df99ef7a5a5b0a4e58650",
+          "bytes": 78
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📐️set-editor-selection/✅️set-editor-selection-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3957454d1dfcfb2aec2633b93be1bd5a5df2a967351975eb86164a81bb6969d7",
+          "bytes": 89
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📐️set-editor-selection/✅️set-editor-selection-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:50e7d3c86cbba11beee66b75a58ced781b9226b24f7b479d364a370594bc0c0e",
+          "bytes": 109
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📐️set-editor-selection/✅️set-editor-selection-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:50e7d3c86cbba11beee66b75a58ced781b9226b24f7b479d364a370594bc0c0e",
+          "bytes": 109
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📐️set-editor-selection/✅️set-editor-selection-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "Selecting characters 4 to 17 records the editor selection."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-lint-generation-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.writer.writer",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient"
+      },
+      "mutation": "set-lint-generation",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔍️set-lint-generation/✅️set-lint-generation-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ed5ed80a87418a2048fa788aa7d432b7e1731e39713df99ef7a5a5b0a4e58650",
+          "bytes": 78
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🔍️set-lint-generation/✅️set-lint-generation-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4adc350fd4f6b4be14cbd2c2f4c55600c18c0bfa66f6109c6df14227ad67688c",
+          "bytes": 50
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔍️set-lint-generation/✅️set-lint-generation-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:559727bb2ce29c7ca5178a312a658d8a33a7163e1ca8c9cc3f37d7344982f1e6",
+          "bytes": 78
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🔍️set-lint-generation/✅️set-lint-generation-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:559727bb2ce29c7ca5178a312a658d8a33a7163e1ca8c9cc3f37d7344982f1e6",
+          "bytes": 78
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🔍️set-lint-generation/✅️set-lint-generation-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "A third lint pass bumps the lint generation to 3."
+    }
+  ]
+}

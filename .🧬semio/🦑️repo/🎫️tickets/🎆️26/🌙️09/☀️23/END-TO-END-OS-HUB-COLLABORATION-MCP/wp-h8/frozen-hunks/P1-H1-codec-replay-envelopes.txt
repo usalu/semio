@@ -1,0 +1,27 @@
+H8 frozen hunks P1 (semio-framework-plugin + WIT) and H1 (semio-framework-plugin-host) — the `codec.replay-envelopes` export.
+Mirror every `apply-ops` site one-for-one (grep `apply-ops|ApplyOps|apply_ops` in 🔌️plugin):
+
+K1 note: in replay_envelopes_onto_pair set the cursor exactly like apply_ops_binary_impl before ArtifactStore::new
+(cursor None => applied = every edit id, redo empty, checkpoint id carried).
+
+P1  🔌️plugin/🧬️schema/📜️.wit  interface codec, after apply-ops:
+      /// 📜️ Folds one `encode_envelopes` ledger stream onto a pair through the replica merge gate and returns the next pair.
+      /// The hub materializes a Check In with it; edit identity and history transitions are the replicas'.
+      replay-envelopes: async func(artifact-kind: string, pair: document-pair, envelopes: list<u8>) -> result<document-pair, plugin-error>;
+P1  🔌️plugin/🦀️.rs
+      - trait PluginApp (≈13109): `async fn artifact_replay_envelopes(&self, pack, spr, envelopes) -> Result<store::ArtifactPackFiles, Fault>;`
+      - impl for artifact apps (≈32202): `artifact_app_replay_envelopes::<A>(pack, spr, envelopes).await.map_err(into_fault)`
+      - plugin_runtime (≈34015): `pub async fn artifact_app_replay_envelopes<A: ArtifactApp>(pack, spr, envelopes)` =
+        `store::replay_envelopes_onto_pair::<A::Snapshot, A::Mutation>(pack, spr, envelopes, A::build_document_store_owners().unwrap_or_else(store::bounded_artifact_store_owners)).await`
+      - (≈38357) `plugin_artifact_replay_envelopes<PA>(runtime, artifact_schema, pack, spr, envelopes)` twin of plugin_artifact_apply_ops
+      - component export macro (≈40805) `async fn replay_envelopes(...)` twin; owned export macro (≈41005) arm for the new core export
+      - re-export list (≈42295) add `artifact_app_replay_envelopes`
+      - owned codec input doc (≈191/206): `ops` carries envelopes for replay-envelopes
+P1  🔌️plugin/🧠️interpreter/🦀️.rs: `SEMIO_OWNED_REPLAY_ENVELOPES_EXPORT = "semio_owned_replay_envelopes_v1"`, OwnedSemioExport::ReplayEnvelopes,
+      ALL: [Self; 14], core_name, core_type (I32,I32 -> I64 arm)
+H1  🔌️plugin/🖥️host/🦀️.rs: OwnedOperation::ReplayEnvelopes + export(); `codec_replay_envelopes` on the owned runtime (≈1533),
+      the wasmtime runtime (≈2484, `call_replay_envelopes`) and the enum dispatcher (≈2561); Mock/Recording -> Trapped.
+P1  🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts (≈292): list replay-envelopes with the codec exports.
+Hub adapters (🌎️hub/🗿️artifact-authority): 🔌️adapters `(self.codec.replay_envelopes)(pack, spr, envelopes)`;
+      🔏️trusted-catalog GuestArtifactCodecBinding::replay_envelopes -> runtime.codec_replay_envelopes; native arm uses codec.replay_envelopes.
+Then: W1 final all-guest rebuild + catalog (requests/h8.txt).

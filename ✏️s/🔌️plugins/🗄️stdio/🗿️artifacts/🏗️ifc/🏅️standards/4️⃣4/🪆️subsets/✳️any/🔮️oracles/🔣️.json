@@ -115,7 +115,7 @@
     {
       "id": "semantic-ifc-v1",
       "description": "IFC4 (ISO 10303-21 exchange structures carrying IFC4's own EXPRESS schema) compared by declared FILE_SCHEMA and the full id-keyed entity graph (name plus positional argument values, reals tolerant). Header timestamp, preprocessor/originating-system strings, comment placement and line-wrapping are writer freedom -- the same normative surface IfcDiff/IfcMutation themselves operate over.",
-      "tolerance": 0.000001,
+      "tolerance": 1e-06,
       "ignoreKeys": [
         "timestamp",
         "preprocessorVersion",
@@ -140,7 +140,9 @@
           "capability": "ifc-4-any-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-entity",
@@ -159,7 +161,9 @@
           "capability": "ifc-4-any-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-entity-arg",
@@ -178,7 +182,9 @@
           "capability": "ifc-4-any-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-entity",
@@ -197,7 +203,9 @@
           "capability": "ifc-4-any-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-entity-arg",
@@ -216,7 +224,9 @@
           "capability": "ifc-4-any-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-entity-arg",
@@ -235,7 +245,9 @@
           "capability": "ifc-4-any-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-entity-name",
@@ -254,7 +266,9 @@
           "capability": "ifc-4-any-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-file-description",
@@ -273,7 +287,9 @@
           "capability": "ifc-4-any-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-file-name",
@@ -292,7 +308,9 @@
           "capability": "ifc-4-any-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-file-schema",
@@ -311,7 +329,9 @@
           "capability": "ifc-4-any-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeChi {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change buckling reduction factor chi to {}", self.new_chi), &format!("Knickenabminderungsfaktorchi auf {} ändern", self.new_chi))
+        protocol::LocalizedLabel::native(&format!("Change buckling reduction factor chi to {}", self.new_chi), &format!("Abminderungsbeiwert χ auf {} ändern", self.new_chi))
     }
 }
 //#endregion 🔖️ChangeChi

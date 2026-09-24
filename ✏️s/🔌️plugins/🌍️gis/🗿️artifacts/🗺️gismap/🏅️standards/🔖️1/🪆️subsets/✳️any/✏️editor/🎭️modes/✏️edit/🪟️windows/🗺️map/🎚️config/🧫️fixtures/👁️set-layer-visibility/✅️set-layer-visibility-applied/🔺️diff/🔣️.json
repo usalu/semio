@@ -1,0 +1,14 @@
+{
+  "steps": [
+    {
+      "layerVisibility": {
+        "parcels": false
+      },
+      "cameraJson": null,
+      "renderMode": null,
+      "vectorStyle": null,
+      "lodMode": null,
+      "layerStrokeScale": {}
+    }
+  ]
+}

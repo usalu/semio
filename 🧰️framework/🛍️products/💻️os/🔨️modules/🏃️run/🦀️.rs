@@ -1575,7 +1575,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
             }
             for outcome in &outcomes {
                 match outcome {
-                    semio_framework_plugin_host::shard::ShardOutcome::Turn { actor: reported, result } => {
+                    semio_framework_plugin_host::shard::ShardOutcome::Turn { actor: reported, result, .. } => {
                         self.kernel.kernel_mut().complete(RuntimeActorId(*reported), result, self.now_ms).await.map_err(|error| RunError::Host(format!("kernel completion failed: {error:?}")))?;
                         if *reported == actor.0 {
                             let status = match &result.status {
@@ -1621,6 +1621,13 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                         self.kernel.complete(RuntimeActorId(*reported), faulted, 0, 0, self.now_ms).await.map_err(|error| RunError::Host(format!("kernel fault completion failed: {error:?}")))?;
                         if *reported == actor.0 {
                             fault = Some(message.clone());
+                        }
+                    }
+                    semio_framework_plugin_host::shard::ShardOutcome::Preempted { actor: reported } if *reported == actor.0 => {
+                        let seq = self.take_turn_seq();
+                        let resume = Envelope { to: actor, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).map_err(RunError::Serde)? } };
+                        if !matches!(self.kernel.submit(&resume).await, Backpressure::Accept) {
+                            return Err(RunError::Host(format!("kernel: actor {} was preempted and its resume was not Accept-ed", actor.0)));
                         }
                     }
                     // 🚧️ `run`'s own turns never send `Suspend`/`Resume`/`Cancel` payloads — any

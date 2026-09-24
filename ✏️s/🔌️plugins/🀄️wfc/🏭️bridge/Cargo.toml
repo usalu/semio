@@ -16,8 +16,8 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-semio-s-artifact-wfc-2d = { path = "../🗿️artifacts/◻️2d/📦️packages/🦀️rust" }
-semio-s-artifact-wfc-3d = { path = "../🗿️artifacts/🧊️3d/📦️packages/🦀️rust" }
-semio-s-artifact-wfc-bitmap = { path = "../🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-2d = { path = "../🗿️artifacts/◻️2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-wfc-3d = { path = "../🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-wfc-bitmap = { path = "../🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust", features = ["component-app-assembly"] }
 semio-s-artifact-wfc-grid2d = { path = "../🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-grid3d = { path = "../🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust" }

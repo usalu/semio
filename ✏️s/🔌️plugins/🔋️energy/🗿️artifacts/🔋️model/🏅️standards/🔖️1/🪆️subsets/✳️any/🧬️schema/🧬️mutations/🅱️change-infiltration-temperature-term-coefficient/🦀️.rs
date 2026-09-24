@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Infiltration Temperature Term Coefficient of infiltration {}", self.id.0), &format!("Infiltrationstemperaturtermkoeffizient von Infiltration {} ändern", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Change Infiltration Temperature Term Coefficient of infiltration {}", self.id.0), &format!("Temperaturkoeffizienten von Infiltration {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

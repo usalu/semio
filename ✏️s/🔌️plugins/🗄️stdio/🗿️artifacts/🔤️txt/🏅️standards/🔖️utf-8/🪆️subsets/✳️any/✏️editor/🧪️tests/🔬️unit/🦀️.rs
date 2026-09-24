@@ -88,3 +88,42 @@ async fn the_shell_action_pair_resolves_into_the_typed_command() {
     assert!(txt_command_from_action("noSuchVerb", None).is_err());
 }
 //#endregion 🎬️ExampleSwitchLaws
+
+//#region 🪟️KitVerbLaws
+type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<TxtEditor>>;
+
+/// 🧪️ One registered fixture app holding `document`, loaded exactly as a host applies the example
+/// switch's `Effect::LoadDocument`.
+async fn kit_fixture_holding(document: &TxtSnapshot) -> KitFixtureApp {
+    use semio_framework_plugin::PluginApp;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<TxtEditor>, _>(async { semio_framework_plugin::App { definition: create_txt_editor(), examples: Vec::new() } }).await;
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_TXT_DOCUMENT_SCHEMA) else {
+        panic!("the example switch hands the host one whole document")
+    };
+    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
+    app
+}
+
+/// 🕹️ Dispatches `action` with text-staged `args`, exactly as a rail sends it, and settles it through
+/// the host's bounded publication loop.
+async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)]) -> Result<(), Fault> {
+    use semio_framework_plugin::PluginApp;
+    let meta = semio_framework_plugin::artifact_app_laws::meta("local");
+    let args = dsl::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), dsl::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
+    app.handle_action(action, Some(&args), &meta).await?;
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map(|_| ())
+}
+
+/// ⚖️ LAW: `replace-text` — the verb the `TextWindowKit` mints for `🪟️main` — reaches the document through this
+/// editor's exact retained factory. Unregistered, the reactor refused it inside `s` with
+/// `interactive-job.missing-factory` (S15, session 11).
+#[semio_framework_async_macros::async_test]
+async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
+    let mut app = kit_fixture_holding(&txt_example_snapshot(crate::examples::demo::ID)).await;
+    dispatch_settled(&mut app, "replace-text", &[("text", "alpha\nbeta\n")]).await.expect("replace-text settles");
+    let after = app.snapshot().expect("txt snapshot");
+    assert_eq!(after.lines, vec!["alpha".to_string(), "beta".to_string()]);
+    assert!(after.trailing_newline);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+//#endregion 🪟️KitVerbLaws

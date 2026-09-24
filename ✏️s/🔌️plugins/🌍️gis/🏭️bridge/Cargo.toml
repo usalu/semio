@@ -16,5 +16,5 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-semio-s-artifact-gis-gismap = { path = "../🗿️artifacts/🗺️gismap/📦️packages/🦀️rust" }
-semio-s-artifact-gis-gisterrain = { path = "../🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust" }
+semio-s-artifact-gis-gismap = { path = "../🗿️artifacts/🗺️gismap/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-gis-gisterrain = { path = "../🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust", features = ["component-app-assembly"] }

@@ -28,7 +28,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveTrailerEntry {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove trailer entry {}", self.key), &format!("Nachspanneintrag {} entfernen", self.key))
+        protocol::LocalizedLabel::native(&format!("Remove trailer entry {}", self.key), &format!("Trailer-Eintrag {} entfernen", self.key))
     }
 
     fn target(&self) -> Vec<String> {

@@ -36,7 +36,7 @@ impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for Ch
         vec![EnergyModelConfigMutation::ChangeResultField(Self::of(base))]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Colour surfaces by {}", self.field), &format!("Farbenoberflächen durch {}", self.field))
+        protocol::LocalizedLabel::native(&format!("Colour surfaces by {}", self.field), &format!("Oberflächen nach {} einfärben", self.field))
     }
     fn target(&self) -> Vec<String> {
         vec!["result-field".into()]

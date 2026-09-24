@@ -37,6 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sqlite3 \
     libsqlite3-dev \
     graphviz \
+    libjpeg-turbo-progs \
     xvfb \
     libnss3 \
     libnspr4 \
@@ -63,7 +64,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg \
     lsb-release \
     libatomic1 \
-    mold \
     openjdk-21-jre-headless \
     netbase \
     && apt-get clean \

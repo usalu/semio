@@ -1,0 +1,28 @@
+{
+  "SetSnapshot": {
+    "config": {
+      "lodMode": "fine",
+      "showMode": "wireframe",
+      "camera": {
+        "x": 40.0,
+        "y": 25.0,
+        "zoom": 0.75
+      },
+      "previewCamera": {
+        "position": [
+          2.0,
+          -8.0,
+          3.0
+        ],
+        "target": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "fov": 35.0
+      },
+      "sunJson": "{\"azimuth\":90,\"elevation\":30}",
+      "selectedGenerationId": "generation-2"
+    }
+  }
+}

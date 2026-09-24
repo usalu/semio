@@ -12,6 +12,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { readPublishedPageOrigins } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { registerUiTranslationBundles } from "@semio-tech/ui-react";
 import { defaultShellState, reduce, type ReduceResult, type ShellCommand, type ShellState } from "../../../../🖥️shell/🟦️.ts";
@@ -20,6 +21,7 @@ import {
   decodeGatewayToShell,
   encodeShellToGateway,
   type ApprovalDecision,
+  type ApprovalWithdrawal,
   type BridgeFlags,
   type BridgeInstanceRef,
   type GatewayToShell,
@@ -73,10 +75,7 @@ export const agentUiLabel = registerUiTranslationBundles({
             replyTo: { label: { normal: "Answering your message", beginner: "Answering your message" } },
           },
           approvals: {
-            trigger: { label: { normal: "Open agent approvals", beginner: "Open agent approvals" } },
             title: { label: { normal: "Agent Approvals", beginner: "Agent Approvals" } },
-            description: { label: { normal: "Review what the agent wants to do before it runs.", beginner: "Review what the agent wants to do before it runs." } },
-            empty: { label: { normal: "No pending approvals", beginner: "No pending approvals" } },
             capability: { label: { normal: "Capability", beginner: "Capability" } },
             diffSummary: { label: { normal: "Change summary", beginner: "Change summary" } },
             requestedBy: { label: { normal: "Requested by", beginner: "Requested by" } },
@@ -87,7 +86,16 @@ export const agentUiLabel = registerUiTranslationBundles({
             decisionDeny: { label: { normal: "Deny", beginner: "Deny" } },
             decisionOnce: { label: { normal: "Approve Once", beginner: "Approve Once" } },
             decisionSession: { label: { normal: "Approve for Session", beginner: "Approve for Session" } },
-            pendingCount: { label: { normal: "{{count}} pending", beginner: "{{count}} pending" } },
+            decidedDeny: { label: { normal: "Denied", beginner: "You said no" } },
+            decidedOnce: { label: { normal: "Approved once", beginner: "You allowed it once" } },
+            decidedSession: { label: { normal: "Approved for this session", beginner: "You allowed it for this session" } },
+            withdrawnCancelled: { label: { normal: "Withdrawn — the agent's request was cancelled", beginner: "No longer needed — the request was stopped" } },
+            withdrawnTimedOut: { label: { normal: "Withdrawn — nobody decided in time", beginner: "No longer needed — the time ran out" } },
+            withdrawnSuperseded: { label: { normal: "Withdrawn — moved to your newer window", beginner: "Moved to your newer window" } },
+            waitingOne: { label: { normal: "1 agent approval is waiting", beginner: "The agent is waiting for your OK" } },
+            waitingMany: { label: { normal: "{{count}} agent approvals are waiting", beginner: "The agent is waiting for {{count}} OKs" } },
+            review: { label: { normal: "Review", beginner: "Look at it" } },
+            requested: { label: { normal: "Approval requested: {{title}}", beginner: "The agent asks for your OK: {{title}}" } },
           },
         },
       },
@@ -135,10 +143,7 @@ export const agentUiLabel = registerUiTranslationBundles({
             replyTo: { label: { normal: "Antwortet auf deine Nachricht", beginner: "Antwortet auf deine Nachricht" } },
           },
           approvals: {
-            trigger: { label: { normal: "Agent-Freigaben öffnen", beginner: "Agent-Freigaben öffnen" } },
             title: { label: { normal: "Agent-Freigaben", beginner: "Agent-Freigaben" } },
-            description: { label: { normal: "Prüfe, was der Agent tun möchte, bevor es ausgeführt wird.", beginner: "Prüfe, was der Agent tun möchte, bevor es ausgeführt wird." } },
-            empty: { label: { normal: "Keine ausstehenden Freigaben", beginner: "Keine ausstehenden Freigaben" } },
             capability: { label: { normal: "Fähigkeit", beginner: "Fähigkeit" } },
             diffSummary: { label: { normal: "Änderungszusammenfassung", beginner: "Änderungszusammenfassung" } },
             requestedBy: { label: { normal: "Angefragt von", beginner: "Angefragt von" } },
@@ -149,7 +154,16 @@ export const agentUiLabel = registerUiTranslationBundles({
             decisionDeny: { label: { normal: "Ablehnen", beginner: "Ablehnen" } },
             decisionOnce: { label: { normal: "Einmal genehmigen", beginner: "Einmal genehmigen" } },
             decisionSession: { label: { normal: "Für Sitzung genehmigen", beginner: "Für Sitzung genehmigen" } },
-            pendingCount: { label: { normal: "{{count}} ausstehend", beginner: "{{count}} ausstehend" } },
+            decidedDeny: { label: { normal: "Abgelehnt", beginner: "Du hast abgelehnt" } },
+            decidedOnce: { label: { normal: "Einmal genehmigt", beginner: "Du hast es einmal erlaubt" } },
+            decidedSession: { label: { normal: "Für diese Sitzung genehmigt", beginner: "Du hast es für diese Sitzung erlaubt" } },
+            withdrawnCancelled: { label: { normal: "Zurückgezogen — die Anfrage des Agenten wurde abgebrochen", beginner: "Nicht mehr nötig — die Anfrage wurde gestoppt" } },
+            withdrawnTimedOut: { label: { normal: "Zurückgezogen — niemand hat rechtzeitig entschieden", beginner: "Nicht mehr nötig — die Zeit ist abgelaufen" } },
+            withdrawnSuperseded: { label: { normal: "Zurückgezogen — in dein neueres Fenster verschoben", beginner: "In dein neueres Fenster verschoben" } },
+            waitingOne: { label: { normal: "1 Agent-Freigabe wartet", beginner: "Der Agent wartet auf dein OK" } },
+            waitingMany: { label: { normal: "{{count}} Agent-Freigaben warten", beginner: "Der Agent wartet auf {{count}} OKs" } },
+            review: { label: { normal: "Prüfen", beginner: "Ansehen" } },
+            requested: { label: { normal: "Freigabe angefragt: {{title}}", beginner: "Der Agent bittet um dein OK: {{title}}" } },
           },
         },
       },
@@ -239,7 +253,7 @@ export function useDiscoveredAgentBridgeConfig(options: UseDiscoveredAgentBridge
   fetchImplRef.current = fetchImpl;
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || Object.keys(readPublishedPageOrigins()).length > 0) {
       setConfig(null);
       return;
     }
@@ -400,7 +414,9 @@ export type AgentConversationEntry =
    * gateway's real `agentToolResult` landing: cancellation is cooperative, so the call may still
    * succeed, fail, or settle as cancelled — the panel says "asked to stop", never "stopped". */
   | { readonly kind: "toolCall"; readonly id: string; readonly toolName: string; readonly args: string; readonly state: "running" | "cancelling" | "ok" | "failed"; readonly summary: string | null; readonly atMs: number }
-  | { readonly kind: "approval"; readonly id: string; readonly summary: string; readonly state: "pending" | "resolved"; readonly decision: ApprovalDecision | null; readonly atMs: number }
+  /** ⛩️ `withdrawn` is the gateway taking the request back before anyone here decided it — the call was
+   * cancelled, the countdown ran out, or a newer shell now carries it (`withdrawal` says which). */
+  | { readonly kind: "approval"; readonly id: string; readonly summary: string; readonly state: "pending" | "resolved" | "withdrawn"; readonly decision: ApprovalDecision | null; readonly withdrawal: ApprovalWithdrawal | null; readonly atMs: number }
   /** 💬️ The agent's own words, from a `GatewayToShell.agentReply` frame. `state` is `"streaming"`
    * until the chunk marked `complete` lands, so the panel can say a turn is still arriving without
    * guessing; `text` is the chunks concatenated in arrival order, never re-ordered or re-flowed. */
@@ -647,12 +663,17 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
         }
         case "approvalRequested": {
           setPendingApprovals((current) => [...current.filter((approval) => approval.approvalId !== frame.approvalId), { approvalId: frame.approvalId, summary: frame.summary, requestedAtMs: Date.now() }]);
-          setConversation((current) => appendConversationEntry(current, { kind: "approval", id: frame.approvalId, summary: frame.summary, state: "pending", decision: null, atMs: Date.now() }));
+          setConversation((current) => appendConversationEntry(current, { kind: "approval", id: frame.approvalId, summary: frame.summary, state: "pending", decision: null, withdrawal: null, atMs: Date.now() }));
           break;
         }
         case "approvalResolved": {
           setPendingApprovals((current) => current.filter((approval) => approval.approvalId !== frame.approvalId));
           setConversation((current) => updateConversationEntry(current, frame.approvalId, (entry) => (entry.kind === "approval" ? { ...entry, state: "resolved", decision: frame.decision } : entry)));
+          break;
+        }
+        case "approvalWithdrawn": {
+          setPendingApprovals((current) => current.filter((approval) => approval.approvalId !== frame.approvalId));
+          setConversation((current) => updateConversationEntry(current, frame.approvalId, (entry) => (entry.kind === "approval" && entry.state === "pending" ? { ...entry, state: "withdrawn", withdrawal: frame.reason } : entry)));
           break;
         }
         case "agentToolCall": {

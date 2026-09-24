@@ -23,7 +23,7 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateCraneInput
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-6 crane runway inputs", "EN 1993-6 Kranlaufbahneingaben aktualisieren")
+        protocol::LocalizedLabel::native("Update EN 1993-6 crane runway inputs", "EN 1993-6 Eingaben für Kranbahnen aktualisieren")
     }
 }
 //#endregion 🔖️Payload

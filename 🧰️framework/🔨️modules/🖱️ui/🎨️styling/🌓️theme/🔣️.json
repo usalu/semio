@@ -666,7 +666,7 @@
           "token": "light-8-9"
         },
         "mutedForeground": {
-          "token": "gray"
+          "token": "dark-dark-gray-2"
         },
         "accent": {
           "token": "primary"
@@ -683,8 +683,8 @@
         "activeHover": {
           "mix": [
             "primary",
-            "black",
-            0.9
+            "light",
+            0.8
           ]
         },
         "hoverInteractiveFill": {
@@ -1043,29 +1043,29 @@
           "token": "dark-8-9"
         },
         "mutedForeground": {
-          "token": "gray"
+          "token": "light-5-9"
         },
         "accent": {
           "token": "primary"
         },
         "accentForeground": {
-          "token": "light"
+          "token": "dark"
         },
         "activeBase": {
           "token": "primary"
         },
         "activeForeground": {
-          "token": "light"
+          "token": "dark"
         },
         "activeHover": {
           "mix": [
             "primary",
-            "black",
-            0.9
+            "light",
+            0.8
           ]
         },
         "hoverInteractiveFill": {
-          "token": "gray"
+          "token": "dark-4-7"
         },
         "borderNormal": {
           "token": "gray"

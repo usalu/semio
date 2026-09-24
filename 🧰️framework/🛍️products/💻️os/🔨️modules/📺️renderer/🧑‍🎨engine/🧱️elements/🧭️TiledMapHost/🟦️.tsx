@@ -7,6 +7,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { publishedPageUrl } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import {
   useLabel,
@@ -26,7 +27,7 @@ import {
   SelectionMarquee,
   type IconName,
 } from "@semio-tech/ui-react";
-import { type ComponentSceneHostProps, type MergeMode } from "@semio-tech/framework";
+import { GestureRecognizer, applyPinchToCamera, type ComponentSceneHostProps, type MergeMode } from "@semio-tech/framework";
 import { type MapWasmSession, createMapSession, createDemandFrameScheduler } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`🟦️Interpreter` already landed in a prior batch.
@@ -413,8 +414,8 @@ export class MapRenderer {
 
   constructor(tileUrlTemplate: string, vectorTileUrlTemplate: string, session: MapWasmSession) {
     this.session = session;
-    this.tileUrlTemplate = tileUrlTemplate;
-    this.vectorTileUrlTemplate = vectorTileUrlTemplate;
+    this.tileUrlTemplate = publishedPageUrl(tileUrlTemplate);
+    this.vectorTileUrlTemplate = publishedPageUrl(vectorTileUrlTemplate);
     this.tileRefreshDebounce = createLeadingTrailingDebounce(() => void this.refreshTiles(), TILE_REFRESH_DEBOUNCE_MS);
   }
 
@@ -1076,12 +1077,30 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
     [dispatch],
   );
 
+  const [gestureRecognizer] = useState(() => new GestureRecognizer());
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !scene) return undefined;
+    /** @emoji 🤏️ The second contact hands the map to the shared recognizer's pinch: the first finger's
+     * marquee/pan is dropped, every capture released, and tiles are polled continuously until the last
+     * finger lifts. */
+    const yieldToPinch = (): void => {
+      resetMarquee();
+      if (pointer.current.middleDown) rendererRef.current?.endContinuousInteraction("pan");
+      pointer.current.leftDown = false;
+      pointer.current.middleDown = false;
+      panningRef.current = false;
+      for (const tracked of gestureRecognizer.pointers) if (canvas.hasPointerCapture?.(tracked.pointerId)) canvas.releasePointerCapture(tracked.pointerId);
+      userAdjustedCameraRef.current = true;
+      rendererRef.current?.beginContinuousInteraction("pinch");
+    };
     const onPointerDown = (event: PointerEvent): void => {
       event.stopPropagation();
       const point = clientToLocal(event.clientX, event.clientY);
+      const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: point.x, y: point.y });
+      if (verdict.kind === "pinchBegin") yieldToPinch();
+      if (verdict.kind !== "single") return;
       if (event.button === 0) {
         pointer.current.leftDown = true;
         pointer.current.marqueeTracking = true;
@@ -1105,6 +1124,18 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
     };
     const onPointerMove = (event: PointerEvent): void => {
       const point = clientToLocal(event.clientX, event.clientY);
+      const verdict = gestureRecognizer.move({ pointerId: event.pointerId, x: point.x, y: point.y });
+      if (verdict.kind === "pinch") {
+        event.stopPropagation();
+        const renderer = rendererRef.current;
+        const camera = renderer?.readCameraFromSession();
+        if (!renderer || !camera) return;
+        const rect = canvas.getBoundingClientRect();
+        renderer.applyCameraToSession(applyPinchToCamera(camera, verdict.step, { w: rect.width, h: rect.height }, getTiledMapCameraLimits(renderer.session)));
+        renderer.scheduleRefreshTiles();
+        return;
+      }
+      if (verdict.kind !== "single") return;
       if (pointer.current.middleDown) {
         event.stopPropagation();
         rendererRef.current?.session.pointerMoveScreen(point.x, point.y);
@@ -1139,8 +1170,16 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       const rect = screenRectFromPoints(points);
       setMarqueeOverlay(method === "lasso" ? { coverage, shape: "polygon", points } : { coverage, shape: "rect", rect: rect ?? { x: 0, y: 0, width: 0, height: 0 } });
     };
+    const endPinch = (): void => {
+      rendererRef.current?.endContinuousInteraction("pinch");
+      mirrorSessionCameraToReact();
+      rendererRef.current?.scheduleRefreshTiles();
+    };
     const onPointerUp = (event: PointerEvent): void => {
       event.stopPropagation();
+      const verdict = gestureRecognizer.up(event.pointerId);
+      if (verdict.kind === "pinchEnd") endPinch();
+      if (verdict.kind !== "single") return;
       const point = clientToLocal(event.clientX, event.clientY);
       if (event.button === 1 && pointer.current.middleDown) {
         pointer.current.middleDown = false;
@@ -1181,6 +1220,9 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       resetMarquee();
     };
     const onPointerCancel = (event: PointerEvent): void => {
+      const verdict = gestureRecognizer.up(event.pointerId);
+      if (verdict.kind === "pinchEnd") endPinch();
+      if (verdict.kind !== "single") return;
       const point = clientToLocal(event.clientX, event.clientY);
       rendererRef.current?.session.pointerUpScreen(point.x, point.y);
       pointer.current.leftDown = false;
@@ -1228,7 +1270,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       window.removeEventListener("pointercancel", onPointerCancel);
       canvas.removeEventListener("contextmenu", onContextMenu);
     };
-  }, [clientToLocal, dispatch, emitFeatureSelection, mapTiledContextMenu, mirrorSessionCameraToReact, queryFeatureHits, queryHitFeature, requestContextMenu, resetMarquee, scene, selectionMethod, shellContextMenuFallback]);
+  }, [clientToLocal, dispatch, emitFeatureSelection, gestureRecognizer, mapTiledContextMenu, mirrorSessionCameraToReact, queryFeatureHits, queryHitFeature, requestContextMenu, resetMarquee, scene, selectionMethod, shellContextMenuFallback]);
 
   if (!scene) return <div className="semio-tiled-map-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 

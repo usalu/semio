@@ -12,3 +12,13 @@ pub fn set_appearance(appearance: Option<UiAppearance>) -> UiPreferencesConfigMu
     UiPreferencesConfigMutation::SetAppearance(SetAppearance { appearance })
 }
 optional_setting_impl!(SetAppearance, SetAppearance, appearance, "set-appearance", "appearance", "appearance", "appearance");
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/✏️sets-appearance/🦀️.rs"]
+mod tests_sets_appearance;
+
+#[cfg(test)]
+#[path = "🧪️tests/🟰️keeps-appearance/🦀️.rs"]
+mod tests_keeps_appearance;
+//#endregion 🧪️Tests

@@ -51,6 +51,7 @@
               },
               "cardinality": "?",
               "operators": [],
+              "valueTypes": [],
               "label": null
             }
           ],

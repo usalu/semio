@@ -23,7 +23,7 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetChunkKeyframe {
         agg_inverse(&AviMutation::SetChunkKeyframe(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-chunk-keyframe", "Chunkschlüsselbild setzen")
+        protocol::LocalizedLabel::native("Set chunk keyframe", "Keyframe-Kennung des Chunks setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

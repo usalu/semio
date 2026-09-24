@@ -16,9 +16,9 @@
 //! (a hub and an embedded relay) without one silently stealing the other's records.
 //!
 //! 🤫 **Silent by default.** [`Tracer::disabled`] holds a [`NullSink`], and that is what a build
-//! that never configures one gets. The only I/O in this module is [`StreamSink`], which the
-//! embedder constructs explicitly — so the crate keeps the "no I/O" character its module doc claims
-//! for every consumer that does not ask for a writing sink.
+//! that never configures one gets. The only I/O in this module is [`StreamSink`] and [`FileSink`],
+//! which the embedder constructs explicitly — so the crate keeps the "no I/O" character its module
+//! doc claims for every consumer that does not ask for a writing sink.
 //!
 //! 🌍️ The event and outcome vocabularies are language-agnostic data
 //! (`🧫️fixtures/🛰️span-vocabulary/🔣️.json`); the Rust constants below are held against that file
@@ -35,9 +35,12 @@ use crate::{PercentileRing, try_now_us};
 /// 🌐️ Environment variable naming the lowest level a [`Tracer::from_environment`] emits.
 pub const TRACE_LEVEL_ENV: &str = "SEMIO_TRACE_LEVEL";
 
-/// 🌐️ Environment variable naming where [`Tracer::from_environment`] writes: `stderr`, `stdout`
-/// or `none`.
+/// 🌐️ Environment variable naming where [`Tracer::from_environment`] writes: `stderr`, `stdout`,
+/// `none` or `file:<path>` (JSON lines appended to that file).
 pub const TRACE_SINK_ENV: &str = "SEMIO_TRACE_SINK";
+
+/// 🚰️ The event a tracer reports its own sink configuration under.
+pub const TRACE_SINK_EVENT: &str = "trace.sink";
 
 /// 🪜️ How much a tracer says. Ordered, so `record.level <= tracer.level` is the whole admission
 /// test and [`TraceLevel::Off`] admits nothing.
@@ -117,20 +120,31 @@ pub const TRACE_OUTCOMES: [TraceOutcome; 5] = [TraceOutcome::Started, TraceOutco
 /// 🛰️ The declared server span/event names, sorted. A server may emit an event outside this list —
 /// the tracer never refuses one — but everything an operator is expected to be able to alert on is
 /// here, and the fixture beside it is what a non-Rust consumer reads.
-pub const SERVER_SPAN_EVENTS: [&str; 13] = [
+pub const SERVER_SPAN_EVENTS: [&str; 24] = [
+    "server.artifact.creation",
     "server.artifact.maintenance",
+    "server.auth.agent.delegate",
+    "server.auth.agent.list",
+    "server.auth.agent.revoke",
+    "server.auth.agent.session",
     "server.auth.credential.change",
     "server.auth.session.mint",
     "server.auth.session.read",
     "server.auth.session.revoke",
     "server.boot",
     "server.catalog.publication",
+    "server.directory.backend",
     "server.directory.command",
     "server.directory.socket",
+    "server.document.check-in",
     "server.document.socket",
+    "server.presence.expiry",
+    "server.presence.join",
+    "server.presence.leave",
     "server.rate-limit",
     "server.readiness",
     "server.saga.drain",
+    "server.shutdown",
 ];
 //#endregion 🔖️Vocabulary
 
@@ -265,6 +279,29 @@ impl TraceSink for StreamSink {
     }
 }
 
+/// 🗃️ Appends one JSON line per record to a file the embedder named, so an operator (or a probe)
+/// reads the structured log without it interleaving with the process's own stderr text.
+pub struct FileSink {
+    file: Mutex<std::fs::File>,
+}
+
+impl FileSink {
+    /// 🗃️ Opens `path` for appending, creating it when absent, so a restarted process continues
+    /// the same log.
+    pub fn append(path: &std::path::Path) -> std::io::Result<FileSink> {
+        Ok(FileSink { file: Mutex::new(std::fs::OpenOptions::new().create(true).append(true).open(path)?) })
+    }
+}
+
+impl TraceSink for FileSink {
+    fn emit(&self, record: &TraceRecord) {
+        use std::io::Write as _;
+        let mut line = record.to_json_line();
+        line.push('\n');
+        let _ = self.file.lock().unwrap_or_else(PoisonError::into_inner).write_all(line.as_bytes());
+    }
+}
+
 /// 🧪️ Keeps every record it is handed, in order. The sink a test injects; never used in a
 /// production configuration, because it grows without bound on purpose — a test that captures
 /// records wants all of them.
@@ -395,15 +432,31 @@ impl Tracer {
     /// `lookup` so the caller owns where variables come from (and a test needs no process
     /// environment). An unset level means [`TraceLevel::Info`]; an unset sink means stderr; an
     /// unparseable value of either falls back to the same default rather than failing a boot over
-    /// a diagnostic setting.
+    /// a diagnostic setting. A `file:<path>` that cannot be opened writes to stderr and says so in
+    /// its first record ([`TRACE_SINK_EVENT`], refused).
     pub fn from_lookup(lookup: impl Fn(&str) -> Option<String>) -> Tracer {
         let level = lookup(TRACE_LEVEL_ENV).and_then(|value| TraceLevel::parse(&value)).unwrap_or(TraceLevel::Info);
-        let sink: Box<dyn TraceSink> = match lookup(TRACE_SINK_ENV).as_deref().map(str::trim).map(str::to_ascii_lowercase).as_deref() {
-            Some("stdout") => Box::new(StreamSink::stdout()),
-            Some("none") | Some("null") | Some("off") => Box::new(NullSink),
+        let requested = lookup(TRACE_SINK_ENV).map(|value| value.trim().to_string());
+        let mut refusal = None;
+        let sink: Box<dyn TraceSink> = match requested.as_deref() {
+            Some(value) if value.eq_ignore_ascii_case("stdout") => Box::new(StreamSink::stdout()),
+            Some(value) if ["none", "null", "off"].iter().any(|name| value.eq_ignore_ascii_case(name)) => Box::new(NullSink),
+            Some(value) if value.starts_with("file:") => match FileSink::append(std::path::Path::new(&value["file:".len()..])) {
+                Ok(sink) => Box::new(sink),
+                Err(error) => {
+                    refusal = Some(format!("file-sink-unavailable {:?}", error.kind()));
+                    Box::new(StreamSink::stderr())
+                }
+            },
             _ => Box::new(StreamSink::stderr()),
         };
-        Tracer::new(level, sink)
+        let tracer = Tracer::new(level, sink);
+        if let Some(detail) = refusal {
+            let mut record = TraceRecord::new(TRACE_SINK_EVENT, TraceOutcome::Refused);
+            record.detail = Some(detail);
+            tracer.emit(record);
+        }
+        tracer
     }
 
     /// 🎛️ [`Tracer::from_lookup`] over this process's own environment.
@@ -525,6 +578,13 @@ impl Span {
     pub fn maybe_principal(mut self, principal: Option<String>) -> Span {
         self.principal = principal;
         self
+    }
+
+    /// 🧬️ A new span on the same event with the same request id and identity, timed from now — the
+    /// lifetime span of something this span just admitted (a socket), so the admission record and
+    /// the record that ends the session correlate by `requestId`.
+    pub fn fork(&self) -> Span {
+        Span { tracer: self.tracer.clone(), event: self.event.clone(), started_us: try_now_us(), request_id: self.request_id.clone(), principal: self.principal.clone(), space: self.space.clone(), artifact: self.artifact.clone() }
     }
 
     /// 🏷️ The event this span will report under.

@@ -1,0 +1,20 @@
+# 🧪️ N2 evidence crate: compiles the wgpu renderer for wasm32-unknown-unknown with the kernel's
+# `sync` feature on, standing in for the frozen kernel-manifest hunk (move `ureq` to the native
+# target table). The two TLS-chain feature lines below are exactly what that hunk would make
+# unnecessary; nothing here ships.
+[package]
+name = "n2-relay-wasm32-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "🦀️.rs"
+
+[workspace]
+
+[dependencies]
+semio-framework-os-renderer-wgpu = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["sync"] }
+getrandom = { version = "0.2", features = ["js"] }
+ring = { version = "0.17", features = ["wasm32_unknown_unknown_js"] }

@@ -133,7 +133,8 @@
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript"
   ],
   "engines": {
-    "bun": ">=1.2.0"
+    "bun": ">=1.2.0",
+    "node": "24.15.0"
   },
   "packageManager": "bun@1.3.14",
   "scripts": {

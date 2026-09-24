@@ -25,7 +25,7 @@ import {
   type AgentDelegationPhaseV1,
   type AgentDelegationRowV1,
 } from "../../../../📇️directory/🤖️delegations/🟦️.ts";
-import { hubUiLabel, type HubAgentCredentialV1 } from "../🔗️HubConnection/🟦️.tsx";
+import { hubUiLabel, type HubAgentCredentialV1, type HubAgentMcpClientV1 } from "../🔗️HubConnection/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Types
@@ -44,6 +44,9 @@ export interface AgentDelegationsProps {
   readonly onCreate: (agentLabel: string, audience: AgentAudienceV1, ttlSecs: number) => void;
   readonly onDownloadCredential: () => void;
   readonly onDismissCredential: () => void;
+  /** 🔌️ Installs the credential for MCP clients and yields the client configuration. */
+  readonly onInstallMcpClient: () => void;
+  readonly onCopyMcpClientConfig: () => void;
   readonly onRevoke: (delegationId: string) => void;
 }
 //#endregion 🔖️Types
@@ -118,10 +121,12 @@ function CreateDelegationForm({ disabled, onCreate }: { readonly disabled: boole
 //#region 🔖️Credential
 /** 🎁️ The one-time disclosure. A live region, because it appears without the human moving focus, and
  * the download control comes first: everything else on the block is explanation. */
-function CredentialBlock({ credential, onDownload, onDismiss }: {
+function CredentialBlock({ credential, onDownload, onDismiss, onInstallMcpClient, onCopyMcpClientConfig }: {
   readonly credential: HubAgentCredentialV1;
   readonly onDownload: AgentDelegationsProps["onDownloadCredential"];
   readonly onDismiss: AgentDelegationsProps["onDismissCredential"];
+  readonly onInstallMcpClient: AgentDelegationsProps["onInstallMcpClient"];
+  readonly onCopyMcpClientConfig: AgentDelegationsProps["onCopyMcpClientConfig"];
 }): ReactElement {
   const readyLabel = useLabel(hubUiLabel("os.hub.agent.ready"));
   const downloadLabel = useLabel(hubUiLabel("os.hub.agent.download"));
@@ -142,6 +147,7 @@ function CredentialBlock({ credential, onDownload, onDismiss }: {
       <p className="text-xs text-muted-foreground">{permissionLabel}</p>
       <p className="text-xs text-muted-foreground">{commandLabel}</p>
       <code data-semio-hub-agent-command className="block break-all rounded-sm bg-muted px-single py-1 text-xs">{credential.command}</code>
+      <McpClientBlock mcpClient={credential.mcpClient} onInstall={onInstallMcpClient} onCopy={onCopyMcpClientConfig} />
       {credential.save === "saved" ? <p className="text-xs">{downloadedLabel}</p> : null}
       {credential.save === "failed" ? (
         <>
@@ -149,6 +155,47 @@ function CredentialBlock({ credential, onDownload, onDismiss }: {
           <code data-semio-hub-agent-credential-file={credential.file.fileName} className="block max-h-48 overflow-auto break-all rounded-sm bg-muted px-single py-1 text-xs">{credential.file.contents}</code>
         </>
       ) : null}
+    </div>
+  );
+}
+
+/** 🔌️ Turns the delegation into a working MCP client: one control installs the credential owner-only
+ * where `semio-os-mcp` reads it, then the exact configuration entry is shown with a copy control.
+ * The configuration names the credential file, never the secret, so copying it is safe. A host that
+ * cannot install files says so and points back at the download and the command above. */
+function McpClientBlock({ mcpClient, onInstall, onCopy }: {
+  readonly mcpClient: HubAgentMcpClientV1;
+  readonly onInstall: AgentDelegationsProps["onInstallMcpClient"];
+  readonly onCopy: AgentDelegationsProps["onCopyMcpClientConfig"];
+}): ReactElement {
+  const id = useId();
+  const titleLabel = useLabel(hubUiLabel("os.hub.agent.mcpTitle"));
+  const installLabel = useLabel(hubUiLabel("os.hub.agent.mcpInstall"));
+  const installingLabel = useLabel(hubUiLabel("os.hub.agent.mcpInstalling"));
+  const readyLabel = useLabel(hubUiLabel("os.hub.agent.mcpReady"));
+  const copyLabel = useLabel(hubUiLabel("os.hub.agent.mcpCopy"));
+  const copiedLabel = useLabel(hubUiLabel("os.hub.agent.mcpCopied"));
+  const unavailableLabel = useLabel(hubUiLabel("os.hub.agent.mcpUnavailable"));
+  const failedLabel = useLabel(hubUiLabel("os.hub.agent.mcpFailed"));
+  const revocableLabel = useLabel(hubUiLabel("os.hub.agent.mcpRevocable"));
+  const statusText = mcpClient.phase === "installing" ? installingLabel : mcpClient.phase === "copied" ? copiedLabel : "";
+  return (
+    <div role="group" aria-labelledby={`${id}-title`} data-semio-hub-agent-mcp={mcpClient.phase} className="flex flex-col gap-2 rounded-sm border px-single py-1">
+      <p id={`${id}-title`} className="text-sm font-medium">{titleLabel}</p>
+      {mcpClient.phase === "idle" || mcpClient.phase === "installing" ? (
+        <Button id="os.hub.agent.mcpInstall" icon="link" type="button" variant="outline" aria-label={installLabel} disabled={mcpClient.phase === "installing"} onClick={onInstall}>{installLabel}</Button>
+      ) : null}
+      <p role="status" aria-live="polite" className="text-xs text-muted-foreground">{statusText}</p>
+      {mcpClient.phase === "unavailable" ? <p className="text-xs text-muted-foreground">{unavailableLabel}</p> : null}
+      {mcpClient.phase === "failed" ? <p role="alert" className="text-xs text-red-400">{failedLabel}</p> : null}
+      {mcpClient.config === null ? null : (
+        <>
+          <p className="text-xs text-muted-foreground">{readyLabel}</p>
+          <pre data-semio-hub-agent-mcp-config className="max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-sm bg-muted px-single py-1 text-xs">{mcpClient.config}</pre>
+          <Button id="os.hub.agent.mcpCopy" icon="copy" type="button" variant="outline" aria-label={copyLabel} onClick={onCopy}>{copyLabel}</Button>
+          <p className="text-xs text-muted-foreground">{revocableLabel}</p>
+        </>
+      )}
     </div>
   );
 }
@@ -239,6 +286,8 @@ export function AgentDelegations({
   onCreate,
   onDownloadCredential,
   onDismissCredential,
+  onInstallMcpClient,
+  onCopyMcpClientConfig,
   onRevoke,
 }: AgentDelegationsProps): ReactElement {
   const id = useId();
@@ -281,7 +330,7 @@ export function AgentDelegations({
 
       {!signedIn ? <p className="text-sm text-muted-foreground">{signedOutLabel}</p> : spaceId === null ? <p className="text-sm text-muted-foreground">{noSpaceLabel}</p> : null}
 
-      {credential === null ? null : <CredentialBlock credential={credential} onDownload={onDownloadCredential} onDismiss={onDismissCredential} />}
+      {credential === null ? null : <CredentialBlock credential={credential} onDownload={onDownloadCredential} onDismiss={onDismissCredential} onInstallMcpClient={onInstallMcpClient} onCopyMcpClientConfig={onCopyMcpClientConfig} />}
 
       {signedIn && spaceId !== null ? (canDelegate ? <CreateDelegationForm disabled={busy} onCreate={onCreate} /> : <p className="text-sm text-muted-foreground">{notAuthorLabel}</p>) : null}
 

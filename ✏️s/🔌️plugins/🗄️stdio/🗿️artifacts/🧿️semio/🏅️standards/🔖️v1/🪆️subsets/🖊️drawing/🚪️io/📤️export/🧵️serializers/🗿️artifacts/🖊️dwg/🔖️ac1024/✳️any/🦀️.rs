@@ -20,7 +20,6 @@ use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
 use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{circle_normal_form, compose_affine, semio_transform_affine, similarity_scale, transformed_segments};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use semio_s_artifact_stdio_dwg::schema::snapshot::DwgLogicalDrawing;
 use semio_s_artifact_stdio_dwg::{paths_to_dwg_drawing, DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgPathSegment, DwgSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
@@ -28,7 +27,6 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: 
 
 /// 📐 The semio-authored codec's own file magic — see the codec's own module doc for why this is
 /// NOT `"AC1024"` despite living under this standard tier.
-const DWG_CODEC_VERSION: &str = "AC1015";
 
 //#region 🔖️SegmentMap
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -98,7 +96,7 @@ impl ArtifactSerializer for SemioDrawingToDwg {
             }
         }
 
-        let snapshot = DwgSnapshot { version: DWG_CODEC_VERSION.into(), drawing: DwgLogicalDrawing::from_native(&drawing).map_err(store::PackError::Schema)?, ..DwgSnapshot::default() };
+        let snapshot = DwgSnapshot::from_drawing(&drawing).map_err(store::PackError::Schema)?;
         Ok(snapshot)
     }
 }

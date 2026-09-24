@@ -22,7 +22,7 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetLineEnding {
         agg_inverse(&TsvMutation::SetLineEnding(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-line-ending", "Linienende setzen")
+        protocol::LocalizedLabel::native("Set line ending", "Zeilenende setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

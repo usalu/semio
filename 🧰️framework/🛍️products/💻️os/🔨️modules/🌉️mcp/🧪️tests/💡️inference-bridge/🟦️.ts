@@ -130,12 +130,12 @@ describe("gis map inference bridge — the real semio-os-mcp binary", () => {
     expect(missingHandle.structuredContent?.["code"]).toBe("INPUT_INVALID");
   });
 
-  it("a folder-bound workspace still has no inference authority and says so instead of inventing one", async () => {
+  it("a folder-bound workspace resolves the document before any job: an unknown one is refused by name and no job is minted", async () => {
     const folder = mkdtempSync(join(tmpdir(), "semio-mcp-inference-folder-"));
     const proc = await spawn(["stdio", "--scopes", "inference.execute", "--folder", folder]);
     const result = (await proc.request("tools/call", { name: "inference_submit", arguments: { documentId: "doc-alpha" } })).result as CallToolResult;
     expect(result.isError).toBe(true);
-    expect(result.structuredContent?.["code"]).toBe("PLUGIN_UNAVAILABLE");
-    expect(String(result.structuredContent?.["message"] ?? "")).toContain("--hub");
+    expect(String(result.structuredContent?.["message"] ?? "")).toContain("doc-alpha");
+    expect(result.structuredContent?.["jobHandle"]).toBeUndefined();
   });
 });

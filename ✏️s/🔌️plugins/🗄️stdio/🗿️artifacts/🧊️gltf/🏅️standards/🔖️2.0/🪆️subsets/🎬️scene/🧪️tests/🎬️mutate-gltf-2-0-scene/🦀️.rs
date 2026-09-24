@@ -13,43 +13,6 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, restore_members};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
 
-//#region 🔖️Kinds
-const KINDS: &[&str] = &[
-    "bind-default-scene",
-    "bind-node-camera",
-    "bind-node-child",
-    "bind-node-mesh",
-    "bind-node-skin",
-    "bind-scene-root-node",
-    "change-node-extension-data",
-    "change-node-extra-data",
-    "change-node-morph-weights",
-    "change-node-name",
-    "change-node-transform",
-    "change-scene-extension-data",
-    "change-scene-extra-data",
-    "change-scene-name",
-    "create-node",
-    "create-scene",
-    "delete-node",
-    "delete-scene",
-    "move-node",
-    "move-node-child",
-    "move-node-parent",
-    "move-scene",
-    "move-scene-root-node",
-    "reorder-node-children",
-    "reorder-nodes",
-    "reorder-scene-root-nodes",
-    "reorder-scenes",
-    "unbind-default-scene",
-    "unbind-node-camera",
-    "unbind-node-child",
-    "unbind-node-mesh",
-    "unbind-node-skin",
-    "unbind-scene-root-node",
-];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Spec
 /// 📏️ The `semantic-gltf-v1` writer freedom every glTF mutation case is measured under.
@@ -331,12 +294,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built
 }

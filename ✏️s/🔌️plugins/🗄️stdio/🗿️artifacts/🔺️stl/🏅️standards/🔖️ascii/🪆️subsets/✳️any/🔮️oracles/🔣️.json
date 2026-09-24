@@ -33,7 +33,7 @@
     {
       "id": "semantic-stl-ascii-v1",
       "description": "ASCII STL documents compared by the resolved corner positions of every facet in order, PLUS the two fields a triangle-soup reading cannot carry: the `solid <name>` header and the EXPLICIT per-facet normal. STL states its normals rather than deriving them from winding, so set-triangle-normal is a real change to the document even when every corner stays put; and set-solid-name's whole payload is the header name. The shared semantic-mesh-v1 profile treats both as writer freedom -- correct for mesh CREATION, where a producer picks its own solid name and recomputes normals, but it would leave 2 of this subset's 7 declared kinds unobservable, so this profile makes them normative. Byte length and decimal precision stay producer freedom: `stl_io` resolves coordinates through f32 while the committed fixture carries f64 decimals.",
-      "tolerance": 0.00001,
+      "tolerance": 1e-05,
       "ignoreKeys": [
         "byteLength",
         "fileSize",
@@ -84,7 +84,8 @@
           "capability": "stl-ascii-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-triangle",
@@ -103,7 +104,8 @@
           "capability": "stl-ascii-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-triangle",
@@ -141,7 +143,8 @@
           "capability": "stl-ascii-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-solid-name",
@@ -160,7 +163,8 @@
           "capability": "stl-ascii-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-triangle-normal",
@@ -179,7 +183,8 @@
           "capability": "stl-ascii-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-triangle-vertices",

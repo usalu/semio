@@ -663,7 +663,7 @@
           "productionDispatch": {
             "operation": "change-background",
             "bridgeVersion": 1,
-            "variant": "ChangeBackgroundMutation"
+            "variant": "ChangeBackground"
           },
           "oracleRequirements": [
             {
@@ -683,7 +683,7 @@
           "productionDispatch": {
             "operation": "change-chromaticities",
             "bridgeVersion": 1,
-            "variant": "ChangeChromaticitiesMutation"
+            "variant": "ChangeChromaticities"
           },
           "oracleRequirements": [
             {
@@ -703,7 +703,7 @@
           "productionDispatch": {
             "operation": "change-gamma",
             "bridgeVersion": 1,
-            "variant": "ChangeGammaMutation"
+            "variant": "ChangeGamma"
           },
           "oracleRequirements": [
             {
@@ -723,7 +723,7 @@
           "productionDispatch": {
             "operation": "change-header",
             "bridgeVersion": 1,
-            "variant": "ChangeHeaderMutation"
+            "variant": "ChangeHeader"
           },
           "oracleRequirements": [
             {
@@ -743,7 +743,7 @@
           "productionDispatch": {
             "operation": "change-physical-dims",
             "bridgeVersion": 1,
-            "variant": "ChangePhysicalDimsMutation"
+            "variant": "ChangePhysicalDims"
           },
           "oracleRequirements": [
             {
@@ -763,7 +763,7 @@
           "productionDispatch": {
             "operation": "change-srgb-intent",
             "bridgeVersion": 1,
-            "variant": "ChangeSrgbIntentMutation"
+            "variant": "ChangeSrgbIntent"
           },
           "oracleRequirements": [
             {
@@ -783,7 +783,7 @@
           "productionDispatch": {
             "operation": "change-timestamp",
             "bridgeVersion": 1,
-            "variant": "ChangeTimestampMutation"
+            "variant": "ChangeTimestamp"
           },
           "oracleRequirements": [
             {
@@ -803,7 +803,7 @@
           "productionDispatch": {
             "operation": "change-transparency",
             "bridgeVersion": 1,
-            "variant": "ChangeTransparencyMutation"
+            "variant": "ChangeTransparency"
           },
           "oracleRequirements": [
             {
@@ -818,12 +818,13 @@
           "capability": "png-1-2-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-text-chunk",
             "bridgeVersion": 1,
-            "variant": "InsertTextChunkMutation"
+            "variant": "InsertTextChunk"
           },
           "oracleRequirements": [
             {
@@ -838,12 +839,13 @@
           "capability": "png-1-2-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-unknown-chunk",
             "bridgeVersion": 1,
-            "variant": "InsertUnknownChunkMutation"
+            "variant": "InsertUnknownChunk"
           },
           "oracleRequirements": [
             {
@@ -858,12 +860,13 @@
           "capability": "png-1-2-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-text-chunk",
             "bridgeVersion": 1,
-            "variant": "RemoveTextChunkMutation"
+            "variant": "RemoveTextChunk"
           },
           "oracleRequirements": [
             {
@@ -878,12 +881,13 @@
           "capability": "png-1-2-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-unknown-chunk",
             "bridgeVersion": 1,
-            "variant": "RemoveUnknownChunkMutation"
+            "variant": "RemoveUnknownChunk"
           },
           "oracleRequirements": [
             {
@@ -903,7 +907,7 @@
           "productionDispatch": {
             "operation": "replace-palette",
             "bridgeVersion": 1,
-            "variant": "ReplacePaletteMutation"
+            "variant": "ReplacePalette"
           },
           "oracleRequirements": [
             {
@@ -923,7 +927,7 @@
           "productionDispatch": {
             "operation": "replace-pixels",
             "bridgeVersion": 1,
-            "variant": "ReplacePixelsMutation"
+            "variant": "ReplacePixels"
           },
           "oracleRequirements": [
             {
@@ -938,12 +942,14 @@
           "capability": "png-1-2-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-text-chunk",
             "bridgeVersion": 1,
-            "variant": "ReplaceTextChunkMutation"
+            "variant": "ReplaceTextChunk"
           },
           "oracleRequirements": [
             {

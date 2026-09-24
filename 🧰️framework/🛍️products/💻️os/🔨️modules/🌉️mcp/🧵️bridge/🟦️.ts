@@ -177,6 +177,17 @@ export type ApprovalDecision = "deny" | "once" | "session";
 const APPROVAL_DECISION_TO_TAG: Record<ApprovalDecision, number> = { deny: 0, once: 1, session: 2 };
 const APPROVAL_DECISION_FROM_TAG: ApprovalDecision[] = ["deny", "once", "session"];
 
+/** 🪦️ Why the gateway took an approval request back before a human decided it (Rust `ApprovalWithdrawal`). */
+export type ApprovalWithdrawal = "cancelled" | "timed_out" | "superseded";
+const APPROVAL_WITHDRAWAL_TO_TAG: Record<ApprovalWithdrawal, number> = { cancelled: 0, timed_out: 1, superseded: 2 };
+const APPROVAL_WITHDRAWAL_FROM_TAG: readonly ApprovalWithdrawal[] = ["cancelled", "timed_out", "superseded"];
+
+function approvalWithdrawalFromTag(tag: number): ApprovalWithdrawal {
+  const reason = APPROVAL_WITHDRAWAL_FROM_TAG[tag];
+  if (reason === undefined) throw new Error(`bridge frame: unknown ApprovalWithdrawal tag ${tag}`);
+  return reason;
+}
+
 export interface BridgeInstanceRef {
   pluginId: string;
   appId: string;
@@ -342,7 +353,10 @@ export type GatewayToShell =
   /** 💬️ One chunk of the agent's own free-text turn — `replyId` identifies the turn (repeated by
    * every chunk of it), `inReplyTo` is the `agentMessage` it answers or `null`, and `complete`
    * marks the last chunk. The text is the agent's own words and carries no locale. */
-  | { variant: "agentReply"; replyId: string; inReplyTo: string | null; text: string; complete: boolean };
+  | { variant: "agentReply"; replyId: string; inReplyTo: string | null; text: string; complete: boolean }
+  /** 🪦️ The approval request is withdrawn — its call was cancelled, it timed out, or a newer shell now
+   * carries it — so the shell retires its affordance and says why. */
+  | { variant: "approvalWithdrawn"; approvalId: string; reason: ApprovalWithdrawal };
 
 export function encodeGatewayToShell(frame: GatewayToShell): Uint8Array {
   const writer = new Writer();
@@ -407,6 +421,11 @@ export function encodeGatewayToShell(frame: GatewayToShell): Uint8Array {
       writer.string(frame.text);
       writer.bool(frame.complete);
       break;
+    case "approvalWithdrawn":
+      writer.u8(11);
+      writer.string(frame.approvalId);
+      writer.u8(APPROVAL_WITHDRAWAL_TO_TAG[frame.reason]);
+      break;
   }
   return writer.finish();
 }
@@ -448,6 +467,9 @@ export function decodeGatewayToShell(bytes: Uint8Array): GatewayToShell {
       break;
     case 10:
       frame = { variant: "agentReply", replyId: reader.string(), inReplyTo: reader.optionString(), text: reader.string(), complete: reader.bool() };
+      break;
+    case 11:
+      frame = { variant: "approvalWithdrawn", approvalId: reader.string(), reason: approvalWithdrawalFromTag(reader.u8()) };
       break;
     default:
       throw new Error(`bridge frame: unknown GatewayToShell tag ${tag}`);

@@ -602,7 +602,6 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             Ok(semio_framework::kernel::UiTurnPatchTransportProgress::Pending { .. })
         )
     });
-    retire_while_progress(retirement_deadline, || crate::app::close_table_rows_view_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT));
     with_pending_patches(|pending| pending.borrow_mut().advance_rejection(|surface, generation| PATCHES.with(|patches| patches.mark_rejected(surface, generation))));
     for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
         if unit > 0 && unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {

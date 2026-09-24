@@ -154,6 +154,12 @@ impl ParallelRuntime {
         self.outcomes.try_recv_all()
     }
 
+    /// 🧯️ Transfers the first failure a shard drive retained with no outcome to carry it (a replay
+    /// seed that failed between turns, a malformed frame), so a host fault names its real cause.
+    pub fn take_shard_failure(&self) -> Option<semio_framework_plugin_host::PluginHostError> {
+        self.shards.iter().find_map(|shard| shard.take_failure())
+    }
+
     /// ⏳️ Blocks the calling thread until EITHER `expected` outcomes have been collected OR
     /// `timeout` elapses. This is the primitive both the interactive host's per-exchange wait and the
     /// scale-bench harness's own round-trip latency measurement (bench budget 5) are built on — the

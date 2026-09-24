@@ -37,7 +37,7 @@ impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ResizeNode {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Resize node \"{}\"", self.node_id), &format!("Knoten \"{}\" skalieren", self.node_id))
+        protocol::LocalizedLabel::native(&format!("Resize node \"{}\"", self.node_id), &format!("Größe von Knoten \"{}\" ändern", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]

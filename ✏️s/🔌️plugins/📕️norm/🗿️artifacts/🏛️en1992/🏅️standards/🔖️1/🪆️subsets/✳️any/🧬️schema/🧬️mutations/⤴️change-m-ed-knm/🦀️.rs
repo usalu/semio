@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeMEdKnm {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change m ed knm to {:?}", self.new_m_ed_knm), &format!("Medknm auf {:?} ändern", self.new_m_ed_knm))
+        protocol::LocalizedLabel::native(&format!("Change design moment M_Ed [kNm] to {:?}", self.new_m_ed_knm), &format!("Bemessungsmoment M_Ed [kNm] auf {:?} ändern", self.new_m_ed_knm))
     }
 }
 //#endregion 🔖️ChangeMEdKnm

@@ -33,7 +33,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockLocked {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change block \"{}\" locked to {}", self.id, self.new_locked), &format!("Block \"{}\" gesperrt auf {} ändern", self.id, self.new_locked))
+        protocol::LocalizedLabel::native(&format!("Change block \"{}\" locked to {}", self.id, self.new_locked), &format!("Sperre von Block \"{}\" auf {} ändern", self.id, self.new_locked))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

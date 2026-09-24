@@ -196,7 +196,59 @@ describe("AgentChatPanel agent reply", () => {
   it("offers no cancel and no approval control on a prose row — there is nothing to stop or decide", () => {
     render(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[agentReply("rep_4", "Done.", "complete")]} onSendMessage={() => true} onCancelToolCall={() => true} onResolveApproval={() => undefined} />);
     expect(document.querySelector("[data-semio-agent-chat-cancel]")).toBeNull();
-    expect(document.querySelector("[data-semio-agent-chat-approval]")).toBeNull();
+    expect(document.querySelector("[data-semio-agent-approval-id]")).toBeNull();
   });
 });
 //#endregion 💬️AgentReply
+
+//#region ⛩️UnifiedApproval
+/** ⛩️ Slice U5: an approval's transcript row IS its one affordance — the same `framework.approvals.<decision>.<id>`
+ * controls the wgpu twin uses, decided in place, no modal copy beside it. */
+describe("AgentChatPanel approval affordance", () => {
+  const approval = (state: "pending" | "resolved" | "withdrawn", decision: "deny" | "once" | "session" | null = null, withdrawal: "cancelled" | "timed_out" | "superseded" | null = null): AgentConversationEntry => ({
+    kind: "approval",
+    id: "appr_9",
+    summary: JSON.stringify({ capabilityId: "note.editor.deleteSelection", capabilityTitle: "Delete selection", diffSummary: "Remove 2 blocks", risk: "high", requestedBy: "agent:claude", timeoutMs: 120_000 }),
+    state,
+    decision,
+    withdrawal,
+    atMs: Date.now(),
+  });
+
+  it("renders the pending approval once, with its countdown, and decides it in place", () => {
+    const onResolveApproval = vi.fn();
+    render(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[approval("pending")]} onSendMessage={() => true} onResolveApproval={onResolveApproval} />);
+    expect(document.querySelectorAll("[data-semio-agent-approval-id='appr_9']")).toHaveLength(1);
+    expect(document.querySelector("[data-semio-agent-approval-countdown]")?.getAttribute("data-semio-agent-approval-countdown")).toBe("120");
+    fireEvent.click(document.getElementById("framework.approvals.deny.appr_9")!);
+    expect(onResolveApproval).toHaveBeenCalledWith("appr_9", "deny");
+  });
+
+  it("keeps a resolved approval as a record without decision controls", () => {
+    render(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[approval("resolved", "session")]} onSendMessage={() => true} onResolveApproval={vi.fn()} />);
+    expect(document.getElementById("framework.approvals.session.appr_9")).toBeNull();
+    expect(document.querySelector("[data-semio-agent-approval-state]")?.getAttribute("data-semio-agent-approval-state")).toBe("session");
+  });
+
+  it("retires a withdrawn approval: no countdown, no decision, and it says why, in en and de", async () => {
+    const words = {
+      en: { cancelled: "the agent's request was cancelled", timed_out: "nobody decided in time", superseded: "moved to your newer window" },
+      de: { cancelled: "die Anfrage des Agenten wurde abgebrochen", timed_out: "niemand hat rechtzeitig entschieden", superseded: "in dein neueres Fenster verschoben" },
+    } as const;
+    for (const locale of ["en", "de"] as const) {
+      await setUiLocale(locale);
+      for (const reason of ["cancelled", "timed_out", "superseded"] as const) {
+        render(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[approval("withdrawn", null, reason)]} onSendMessage={() => true} onResolveApproval={vi.fn()} />);
+        const affordance = document.querySelector("[data-semio-agent-approval-id='appr_9']");
+        expect(affordance?.getAttribute("data-semio-agent-approval-state")).toBe("withdrawn");
+        expect(affordance?.getAttribute("data-semio-agent-approval-withdrawal")).toBe(reason);
+        expect(document.querySelector("[data-semio-agent-approval-countdown]")).toBeNull();
+        for (const decision of ["deny", "once", "session"]) expect(document.getElementById(`framework.approvals.${decision}.appr_9`)).toBeNull();
+        expect(affordance?.querySelector("[role='status']")?.textContent).toContain(words[locale][reason]);
+        cleanup();
+      }
+    }
+    await setUiLocale("en");
+  });
+});
+//#endregion ⛩️UnifiedApproval

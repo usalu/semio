@@ -11,7 +11,8 @@
   "invertibility": "plan",
   "diffParticipation": "none",
   "outcomeClasses": [
-    "error"
+    "applied",
+    "rejected"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

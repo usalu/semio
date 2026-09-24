@@ -51,3 +51,13 @@ impl protocol::MutationDiff<Wfc2dTransient> for Wfc2dTransient {
         *self = other;
     }
 }
+
+//#region 🌉️TestBridge
+/// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
+/// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Wfc2dTransient`.
+///
+/// @see store::os_store::test_support::mutation_report_json
+pub fn wfc2d_transient_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
+    store::os_store::test_support::mutation_report_json::<Wfc2dTransient, Wfc2dTransientMutation>(base_json, mutation_json, after_json)
+}
+//#endregion 🌉️TestBridge

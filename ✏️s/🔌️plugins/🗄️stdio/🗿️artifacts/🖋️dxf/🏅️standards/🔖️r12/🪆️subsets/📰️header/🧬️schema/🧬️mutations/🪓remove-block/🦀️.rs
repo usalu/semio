@@ -21,7 +21,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveBlock {
         agg_inverse(&DxfMutation::RemoveBlock(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-block", "Block entfernen")
+        protocol::LocalizedLabel::native("Remove block", "Block entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

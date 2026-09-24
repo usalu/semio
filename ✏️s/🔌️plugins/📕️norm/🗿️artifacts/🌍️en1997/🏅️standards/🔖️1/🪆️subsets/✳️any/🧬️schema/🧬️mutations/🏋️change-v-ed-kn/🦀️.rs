@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeVEdKn {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change design vertical load V_Ed [kN] to {}", self.new_v_ed_kn), &format!("Bemessungsvertikallastv_Ed [kN] auf {} ändern", self.new_v_ed_kn))
+        protocol::LocalizedLabel::native(&format!("Change design vertical load V_Ed [kN] to {}", self.new_v_ed_kn), &format!("Bemessungsvertikallast V_Ed [kN] auf {} ändern", self.new_v_ed_kn))
     }
 }
 //#endregion 🔖️ChangeVEdKn

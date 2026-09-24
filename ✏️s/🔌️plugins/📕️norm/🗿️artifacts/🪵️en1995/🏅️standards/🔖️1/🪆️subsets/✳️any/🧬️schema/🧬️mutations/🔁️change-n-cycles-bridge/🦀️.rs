@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeNCyclesBri
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change n cycles bridge to {:?}", self.new_n_cycles_bridge), &format!("Nzyklenbrücke auf {:?} ändern", self.new_n_cycles_bridge))
+        protocol::LocalizedLabel::native(&format!("Change bridge load cycles n to {:?}", self.new_n_cycles_bridge), &format!("Anzahl der Lastwechsel n (Brücke) auf {:?} ändern", self.new_n_cycles_bridge))
     }
 }
 //#endregion 🔖️ChangeNCyclesBridge

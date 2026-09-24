@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
         agg_inverse(&SemioPresentationMutation::RemoveShape(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-shape", "Form entfernen")
+        protocol::LocalizedLabel::native("Remove shape", "Form entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

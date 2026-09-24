@@ -27,7 +27,7 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLodMode {
         vec![Self { value: base.lod_mode.clone() }.into()]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set LOD mode", "LODmodus setzen")
+        protocol::LocalizedLabel::native("Set LOD mode", "Detailstufenmodus setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["lodMode".into()]

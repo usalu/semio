@@ -15,7 +15,7 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for Repl
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
     fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfig> {
         if *base == self.config {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "The requested configuration value is already current.");
+            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "The requested configuration value is already current.");
         }
         protocol::MutationOutcome::new(self.config.clone())
     }

@@ -1,0 +1,12 @@
+settings set target.env-vars RUST_MIN_STACK=268435456
+br set -r 'native_pool.*WorkerPool.*11callback_at'
+br set -r 'worker_parking.*WorkerParking.*31signal_timer_from_firing_worker'
+br set -r 'worker_parking.*WorkerParking.*12signal_timer'
+br set -r 'worker_parking.*WorkerParking.*15hand_off_timers'
+br command add -o 'continue' 1
+br command add -o 'continue' 2
+br command add -o 'continue' 3
+br command add -o 'continue' 4
+run
+br list
+quit

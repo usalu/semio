@@ -1,0 +1,9 @@
+{
+  "ReplacePresence": {
+    "presence": {
+      "cameraX": 2.5,
+      "cameraY": -3.25,
+      "cameraZoom": 1.75
+    }
+  }
+}

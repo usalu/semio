@@ -44,7 +44,8 @@
           "capability": "note-1-document-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "rename-note",

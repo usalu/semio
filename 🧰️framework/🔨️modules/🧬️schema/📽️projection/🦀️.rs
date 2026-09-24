@@ -504,7 +504,15 @@ export type ContributedInferenceMetadata = { owner: string, artifactKind: string
  * `inputSchema`/`outputSchema` are JSON Schema 2020-12 documents as TEXT, authored beside the
  * inference and carried verbatim. `progressUnit` names what the bounded job counts.
  */
-export type InferencePayloadContract = { payloadSchemaId: string, inputSchema: string, outputSchema: string, progressUnit?: string, artifactBinding?: InferenceArtifactBinding, };"####,
+export type InferencePayloadContract = { payloadSchemaId: string, inputSchema: string, outputSchema: string, progressUnit?: string, artifactBinding?: InferenceArtifactBinding, commit?: InferenceCommitBinding, };"####,
+        },
+        SchemaMetadata {
+            name: "InferenceCommitBinding",
+            version: 1,
+            typescript: r####"/**
+ * 📌️ How one inference's result becomes a document edit: the artifact action that commits it.
+ */
+export type InferenceCommitBinding = { action: string, };"####,
         },
         SchemaMetadata {
             name: "InferenceArtifactBinding",

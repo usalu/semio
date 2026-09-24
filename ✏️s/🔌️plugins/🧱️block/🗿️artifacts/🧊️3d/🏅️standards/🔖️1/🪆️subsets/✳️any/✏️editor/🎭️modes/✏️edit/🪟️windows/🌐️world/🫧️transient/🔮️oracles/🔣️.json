@@ -1,0 +1,150 @@
+{
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The transient state lane of `s.block.3d`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient): its mutation vocabulary `Block3dWorldWindowTransientMutation` over `Block3dWorldWindowTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-block-3d-1-any-editor-edit-world-transient` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "block-3d-1-any-editor-edit-world-transient-state-lane-semantics",
+      "capabilities": [
+        "block-3d-1-any-editor-edit-world-transient-mutate"
+      ],
+      "rationale": "`Block3dWorldWindowTransientMutation` is the transient state lane of `s.block.3d`'s ✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient surface: it holds the brush preview under the pointer in the 3d world window, or none. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-brush-preview`) changes exactly its own part of `Block3dWorldWindowTransient`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "zustand",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "An in-memory state container with arbitrary setter functions; it has no typed transient record, no per-kind mutation vocabulary and no computed inverse."
+          },
+          {
+            "package": "im",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Persistent immutable collections; they version values structurally but define no mutation kinds, no-op guards or inverses over this surface's record."
+          }
+        ],
+        "whyNoneQualifies": "`Block3dWorldWindowTransient` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "block-3d-1-any-editor-edit-world-transient",
+      "capability": "block-3d-1-any-editor-edit-world-transient-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-brush-preview"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.block.3d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient",
+      "mutations": [
+        {
+          "id": "set-brush-preview",
+          "capability": "block-3d-1-any-editor-edit-world-transient-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-brush-preview",
+            "bridgeVersion": 1,
+            "variant": "SetBrushPreview"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-any-editor-edit-world-transient-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-brush-preview-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.block.3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient"
+      },
+      "mutation": "set-brush-preview",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/👁️set-brush-preview/✅️set-brush-preview-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c8e4ea41bb00d3612bd88bbe1337d5b7e600f5eb96328b7053fa057d98f76bc3",
+          "bytes": 27
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/👁️set-brush-preview/✅️set-brush-preview-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:24c229170c5223ee6389ba89e00383544f797472b68f8445d994b0fe789bc906",
+          "bytes": 189
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/👁️set-brush-preview/✅️set-brush-preview-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0a9bab98f9bb36ab915925818a3f88e85c2c4afa8575265a77b2953e0e9d46bb",
+          "bytes": 143
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/👁️set-brush-preview/✅️set-brush-preview-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0a9bab98f9bb36ab915925818a3f88e85c2c4afa8575265a77b2953e0e9d46bb",
+          "bytes": 143
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/👁️set-brush-preview/✅️set-brush-preview-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "Hovering a block face shows the brush preview at that position, facing up."
+    }
+  ]
+}

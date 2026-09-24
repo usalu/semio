@@ -213,4 +213,8 @@ pub fn search(catalog: &Catalog, query: &str, filters: &SearchFilters) -> Vec<Ra
 #[cfg(test)]
 #[path = "🧪️tests/🔬️quick/🦀️.rs"]
 mod quick;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️long/🦀️.rs"]
+mod long;
 //#endregion 🧪️Tests

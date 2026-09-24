@@ -45,7 +45,7 @@ mod reserved_verb_answer_tests {
     }
 
     fn outcome(frames: Vec<AppFrame>) -> crate::kernel_runtime::ExchangeOutcome {
-        crate::kernel_runtime::ExchangeOutcome { frames, surfaces: Default::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }
+        crate::kernel_runtime::ExchangeOutcome { frames, surfaces: Default::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }
     }
 
     fn selected_ids(result: &InvocationResult) -> Vec<String> {

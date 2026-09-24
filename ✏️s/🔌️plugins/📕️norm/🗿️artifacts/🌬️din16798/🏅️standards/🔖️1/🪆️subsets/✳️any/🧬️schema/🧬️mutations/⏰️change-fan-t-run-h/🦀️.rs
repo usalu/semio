@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeFanTRu
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fan running time to {}", self.new_fan_t_run_h), &format!("laufende Ventilatorzeit auf {} ändern", self.new_fan_t_run_h))
+        protocol::LocalizedLabel::native(&format!("Change fan running time to {}", self.new_fan_t_run_h), &format!("Ventilatorlaufzeit auf {} ändern", self.new_fan_t_run_h))
     }
 }
 //#endregion 🔖️ChangeFanTRunH

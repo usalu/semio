@@ -24,7 +24,7 @@ impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Selected Generation", "ausgewählte Erzeugung setzen")
+        protocol::LocalizedLabel::native("Set Selected Generation", "Ausgewählte Erzeugung setzen")
     }
 
     fn target(&self) -> Vec<String> {

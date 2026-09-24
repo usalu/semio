@@ -39,6 +39,7 @@ mod tests {
                     output_schema: None,
                     capabilities: vec![],
                 }),
+                actions: vec![],
                 panel_tabs: vec![],
                 keybindings: vec![],
                 utilities: Vec::new(),
@@ -100,6 +101,7 @@ mod tests {
                 output_schema: None,
                 capabilities: vec![],
             }),
+            actions: vec![],
             panel_tabs: vec![],
             keybindings: vec![],
             utilities: Vec::new(),
@@ -146,6 +148,7 @@ mod tests {
                 output_schema: None,
                 capabilities: vec![],
             }),
+            actions: vec![],
             panel_tabs: vec![],
             keybindings: vec![],
             utilities: Vec::new(),
@@ -239,6 +242,7 @@ mod tests {
                 output_schema: None,
                 capabilities: vec![],
             }),
+            actions: vec![],
             panel_tabs: vec![],
             keybindings: vec![],
             utilities: Vec::new(),
@@ -397,6 +401,7 @@ mod tests {
                 output_schema: None,
                 capabilities: Vec::new(),
             }),
+            actions: vec![],
             panel_tabs: vec![],
             keybindings: vec![],
             utilities: Vec::new(),
@@ -446,12 +451,22 @@ mod tests {
         OsWorkflowStore::new(create_backbone_document(workflow::S_WORKFLOW_SCHEMA, "workflow", "Workflow", resolve_kernel_future(workflow::empty_workflow_snapshot()))).expect("valid workflow store fixture")
     }
 
+    /// 🧮️ The complete history position (applied, redo, checkpoint, alternative) the event log of `edits` + `transitions` folds to.
+    fn workflow_history<'a>(edits: impl IntoIterator<Item = &'a store::Edit<workflow::WorkflowMutation>>, transitions: &[protocol::MutationEnvelope], conflicts: &[protocol::Conflict]) -> protocol::HistoryFold {
+        store::fold_event_log::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&edits.into_iter().collect::<Vec<_>>(), transitions, conflicts).expect("event log folds")
+    }
+
+    /// 🧮️ [`workflow_history`] of one host backbone document.
+    fn document_history(document: &OsWorkflowArtifactDocument) -> protocol::HistoryFold {
+        workflow_history(document.vcs.edits.iter(), &document.transitions, &document.conflicts)
+    }
+
     #[test]
     fn backbone_and_workflow_store_round_trips_preserve_outcomes_and_conflicts() {
         let mut store = test_workflow_store();
         store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Durable").expect("create one edit");
         let mut document = store.document();
-        let edit_id = document.cursor.applied_edit_ids.last().expect("one applied edit").clone();
+        let edit_id = document_history(&document).applied.last().expect("one applied edit").clone();
         let edit = document.vcs.edits.iter().find(|edit| edit.id == edit_id).expect("applied edit is persisted");
         let messages = vec![protocol::MutationMessage::warn("mutation.clamped", "durable host outcome").at(["parameters", "0"]).at_op(0)];
         document.edit_messages = vec![protocol::EditMessages { edit_id: edit_id.clone(), messages: messages.clone() }];
@@ -464,7 +479,7 @@ mod tests {
 
         let payload = encode_backbone_payload(&document).expect("backbone payload encodes");
         let decoded: OsWorkflowArtifactDocument = decode_backbone_payload(&payload, workflow::S_WORKFLOW_SCHEMA).expect("backbone payload decodes");
-        assert_eq!(decoded.cursor, document.cursor);
+        assert_eq!(document_history(&decoded), document_history(&document));
         assert_eq!(decoded.edit_messages, document.edit_messages);
         assert_eq!(decoded.conflicts, document.conflicts);
 
@@ -477,7 +492,7 @@ mod tests {
         let parsed = resolve_kernel_future(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("backbone text decodes");
         assert!(parsed.envelope.edit_messages.iter().eq(document.edit_messages.iter()));
         assert_eq!(parsed.envelope.conflicts, document.conflicts);
-        assert_eq!(parsed.envelope.cursor.as_ref().expect("text carries explicit cursor"), &document.cursor);
+        assert_eq!(workflow_history(parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), document_history(&document));
 
         let mut invalid = document.clone();
         invalid.conflicts[0].id = protocol::ConflictId("conflict-invalid".into());
@@ -494,17 +509,18 @@ mod tests {
         store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Undone").expect("second edit");
         store.dispatch_text("undo").expect("undo second edit");
         let document = store.document();
-        assert!(!document.cursor.redo_edit_ids.is_empty(), "precondition: redo lane is populated");
-        assert!(document.cursor.checkpoint_id.is_some(), "precondition: checkpoint is populated");
+        let history = document_history(&document);
+        assert!(!history.redo.is_empty(), "precondition: redo lane is populated");
+        assert!(history.checkpoint.is_some(), "precondition: checkpoint is populated");
 
         let payload = encode_backbone_payload(&document).expect("binary encode");
         let decoded: OsWorkflowArtifactDocument = decode_backbone_payload(&payload, workflow::S_WORKFLOW_SCHEMA).expect("binary decode");
-        assert_eq!(decoded.cursor, document.cursor);
-        assert_eq!(OsWorkflowStore::new(decoded).expect("workflow rebuild").document().cursor, document.cursor);
+        assert_eq!(document_history(&decoded), history);
+        assert_eq!(document_history(&OsWorkflowStore::new(decoded).expect("workflow rebuild").document()), history);
 
         let text = export_backbone_dsl(&document).expect("text encode");
         let parsed = resolve_kernel_future(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("text decode");
-        assert_eq!(parsed.envelope.cursor.as_ref().expect("text cursor"), &document.cursor);
+        assert_eq!(workflow_history(parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), history);
     }
 
     #[test]

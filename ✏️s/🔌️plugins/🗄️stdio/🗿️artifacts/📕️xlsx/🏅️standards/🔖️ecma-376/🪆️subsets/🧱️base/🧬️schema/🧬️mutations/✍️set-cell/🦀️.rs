@@ -24,7 +24,7 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetCell {
         agg_inverse(&XlsxMutation::SetCell(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-cell", "Zelle setzen")
+        protocol::LocalizedLabel::native("Set cell", "Zelle setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

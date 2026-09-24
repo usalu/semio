@@ -105,7 +105,7 @@ fn schema_and_fixtures_publish_every_operation_and_fixed_law() {
     assert!(FLOW_ABI_SCHEMA.contains("\"renderDrawingScene\": 2600"));
     assert!(FLOW_ABI_SCHEMA.contains("\"snapshotJson\": 2609"));
     assert!(FLOW_ABI_SCHEMA.contains("\"synchronizeSnapshotJson\": 2610"));
-    for operation in (FLOW_OPERATION_FIRST..=FLOW_OPERATION_LAST).filter(|operation| !matches!(operation, 2_603 | 2_604 | 2_608)) {
+    for operation in (FLOW_OPERATION_FIRST..=FLOW_OPERATION_LAST).filter(|operation| !matches!(operation, 2_603 | 2_604)) {
         assert!(FLOW_ABI_SCHEMA.contains(&format!(": {operation}")));
     }
     assert!(FLOW_ABI_LIMITS.contains("request_bytes\t1048576\t1048577"));

@@ -28,7 +28,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageRotation {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set page {} rotation to {}", self.index, self.rotation), &format!("Seite {} Drehung auf {} setzen", self.index, self.rotation))
+        protocol::LocalizedLabel::native(&format!("Set page {} rotation to {}", self.index, self.rotation), &format!("Drehung von Seite {} auf {} setzen", self.index, self.rotation))
     }
 
     fn target(&self) -> Vec<String> {

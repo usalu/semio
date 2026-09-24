@@ -23,11 +23,9 @@ extern crate infinite_canvas as infinite_world;
 extern crate semio_framework_os_kernel as dsl;
 #[cfg(not(target_arch = "wasm32"))]
 extern crate semio_framework_os_kernel as dsl_core;
-#[cfg(not(target_arch = "wasm32"))]
 extern crate semio_framework_os_kernel as protocol;
 #[cfg(any(test, not(target_arch = "wasm32")))]
 extern crate semio_framework_os_kernel as store;
-#[cfg(not(target_arch = "wasm32"))]
 extern crate semio_framework_os_kernel as store_sync;
 // 🥽️ Target-neutral: the catalog is `include_str!`-embedded, and `scenes::render_icon_render` needs
 // `mesh_asset_transport_url` on the browser build too — the same public-id → transport-path rewrite
@@ -3617,6 +3615,34 @@ pub(crate) mod kernel_runtime {
     use std::time::Duration;
     use ui_contract::{SurfaceId, UiDocumentBuilder, UiDocumentLease, UiDocumentLimits, UiFixedList, UiPatchApplyOutcome, UiPatchApplyProducer, UiPatchApplyRejected, UiPatchApplyStep, UiRevision, UiSnapshotState, UI_DOCUMENT_LEASE_SLOTS};
 
+    /// 🧩️ Reads one completed component into the compiler's contiguous input page by page. The
+    /// mounted native I/O authority answers at most one `JOB_PAYLOAD_PAGE_BYTES` page per request, so a
+    /// whole-file read refused every real guest (block release is 17.6 MB) and no native shell could
+    /// mount one; the bound is the execution-target component bound the hub itself enforces.
+    async fn read_native_component(path: &std::path::Path) -> Result<Vec<u8>, String> {
+        let bound = semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES;
+        let mut component = Vec::new();
+        let mut offset = 0u64;
+        loop {
+            let value = crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadPage { path: path.to_path_buf(), offset, max_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES }).await?;
+            let semio_framework_os_services::NativeIoValue::Page { mut bytes, eof } = value else {
+                return Err("kernel: native I/O returned the wrong value for a component page".into());
+            };
+            let count = bytes.len() as u64;
+            offset = offset.saturating_add(count);
+            if offset <= bound {
+                (0..bytes.page_count()).filter_map(|index| bytes.page(index)).for_each(|page| component.extend_from_slice(page));
+            }
+            while !matches!(bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+            if offset > bound || (count == 0 && !eof) {
+                return Err(format!("kernel: component {} exceeds {bound} bytes or produced an empty nonterminal page", path.display()));
+            }
+            if eof {
+                return Ok(component);
+            }
+        }
+    }
+
     #[derive(Default)]
     struct RendererSequenceAuthority {
         committed: u64,
@@ -3867,6 +3893,10 @@ pub(crate) mod kernel_runtime {
         reserve_seq()?.commit()
     }
 
+    /// 🧾️ Decodes one actor turn back into the kernel's shape. A turn that painted nothing crosses
+    /// with EMPTY `ui_patches` bytes — the plugin-host bridge (`🧵️shard`'s `to_actor_turn_result`)
+    /// publishes a transport token only for a non-empty patch owner — so empty bytes are the empty
+    /// owner, never a malformed token.
     fn decode_actor_turn_result(result: &semio_framework_actor::TurnResult, session: u64) -> Result<TurnResult, String> {
         let status = match &result.status {
             semio_framework_actor::TurnStatus::Idle => semio_framework::kernel::TurnStatus::Idle,
@@ -3876,10 +3906,14 @@ pub(crate) mod kernel_runtime {
             status => return Err(format!("kernel: unexpected job status in reactor turn: {status:?}")),
         };
         Ok(TurnResult {
-            ui_patches: semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&result.ui_patches, session)
-                .map_err(|error| format!("kernel: decode ui patch transport: {error}"))?
-                .take_owner()
-                .map_err(|_| "kernel: turn patch transport lease lost its exact owner".to_string())?,
+            ui_patches: if result.ui_patches.is_empty() {
+                semio_framework::kernel::UiTurnPatches::default()
+            } else {
+                semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&result.ui_patches, session)
+                    .map_err(|error| format!("kernel: decode ui patch transport: {error}"))?
+                    .take_owner()
+                    .map_err(|_| "kernel: turn patch transport lease lost its exact owner".to_string())?
+            },
             effects: serde_json::from_slice(&result.effects).map_err(|error| format!("kernel: decode effects: {error}"))?,
             presence: Vec::new(),
             next_wake: result.next_wake,
@@ -3900,6 +3934,34 @@ pub(crate) mod kernel_runtime {
     /// ⏳️ terra-kernel-loop: same tripwire shape as `scale_bench`'s own `PUMP_OUTCOME_TIMEOUT` —
     /// how long `run_turn`'s tick loop waits for a granted turn's `ShardOutcome` before giving up.
     const RUN_TURN_OUTCOME_TIMEOUT: Duration = Duration::from_secs(5);
+
+    /// ⏳️ How long one [`KernelPoolState::run_turn`] request may keep its actor's turn going —
+    /// preemption resumes and settle continuations together. The same order as
+    /// `RUN_TURN_OUTCOME_TIMEOUT`'s per-grant wait: every grant is itself bounded by the 100 ms
+    /// `TURN_BUDGET` wall. A guest still preempted when it runs out is reported as wedged; a guest
+    /// still answering `MoreWork` is handed back settled-as-far-as-it-got, never mid-call.
+    const RUN_TURN_SETTLE_BUDGET: Duration = Duration::from_secs(30);
+
+    /// 🤫️ Consecutive continuation turns that carried nothing after which [`KernelPoolState::run_turn`]
+    /// stops settling a guest that still answers `MoreWork`: that guest is waiting on a host round trip
+    /// no empty turn delivers. Derived exactly like the React host's `PLUGIN_UI_QUIESCENT_CONTINUATIONS`
+    /// (`🔌️PluginRuntime/🟦️.tsx`) — the patch pages one surface may take
+    /// (`max_patch_bytes / max_text_bytes`, `🖱️ui/🧬️contract/🛡️limits`) times its continuation batch of 8.
+    /// 🧵️ The turns one continuation takes: every owed event (a lifecycle ACK, a typed-operation ACK)
+    /// on a turn of its own — a guest left owning ingress by the first must not receive the second in
+    /// the same grant — or one empty-event turn for a guest that only answered `MoreWork`.
+    fn run_turn_continuation_turns(continuation: Option<Vec<Event>>) -> std::collections::VecDeque<Vec<Event>> {
+        match continuation {
+            None => std::collections::VecDeque::new(),
+            Some(events) if events.is_empty() => std::collections::VecDeque::from([Vec::new()]),
+            Some(events) => events.into_iter().map(|event| vec![event]).collect(),
+        }
+    }
+
+    fn run_turn_quiescent_continuations() -> usize {
+        let limits = UiDocumentLimits::default();
+        limits.max_patch_bytes.div_ceil(limits.max_text_bytes) * 8
+    }
 
     /// 🧵️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): sized from
     /// `semio_framework_async::worker_count_for` — the SAME formula [`crate::renderer_worker_pool`]
@@ -4001,15 +4063,21 @@ pub(crate) mod kernel_runtime {
         wasm_path: Option<PathBuf>,
         plugin_id: Option<String>,
         app_id: Option<String>,
+        artifact_schema: Option<String>,
     }
 
     impl CreateAppRequestOwner {
-        fn new(wasm_path: PathBuf, plugin_id: String, app_id: String) -> Self {
-            Self { wasm_path: Some(wasm_path), plugin_id: Some(plugin_id), app_id: Some(app_id) }
+        fn new(wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Self {
+            Self { wasm_path: Some(wasm_path), plugin_id: Some(plugin_id), app_id: Some(app_id), artifact_schema: Some(artifact_schema) }
         }
 
-        fn into_parts(mut self) -> (PathBuf, String, String) {
-            (self.wasm_path.take().expect("create request path is present"), self.plugin_id.take().expect("create request plugin is present"), self.app_id.take().expect("create request app is present"))
+        fn into_parts(mut self) -> (PathBuf, String, String, String) {
+            (
+                self.wasm_path.take().expect("create request path is present"),
+                self.plugin_id.take().expect("create request plugin is present"),
+                self.app_id.take().expect("create request app is present"),
+                self.artifact_schema.take().expect("create request schema is present"),
+            )
         }
 
         fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
@@ -4021,7 +4089,7 @@ pub(crate) mod kernel_runtime {
                 return (self.terminal_is_empty(), 1, length);
             }
             let mut released = None;
-            for field in [&mut self.plugin_id, &mut self.app_id] {
+            for field in [&mut self.plugin_id, &mut self.app_id, &mut self.artifact_schema] {
                 if let Some(length) = field.as_ref().map(String::len) {
                     if length > maximum_bytes {
                         return (false, 0, 0);
@@ -4038,11 +4106,11 @@ pub(crate) mod kernel_runtime {
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.wasm_path.is_none() && self.plugin_id.is_none() && self.app_id.is_none()
+            self.wasm_path.is_none() && self.plugin_id.is_none() && self.app_id.is_none() && self.artifact_schema.is_none()
         }
 
         fn remaining_bytes(&self) -> usize {
-            self.wasm_path.as_ref().map_or(0, |path| path.as_os_str().len()) + self.plugin_id.as_ref().map_or(0, String::len) + self.app_id.as_ref().map_or(0, String::len)
+            self.wasm_path.as_ref().map_or(0, |path| path.as_os_str().len()) + self.plugin_id.as_ref().map_or(0, String::len) + self.app_id.as_ref().map_or(0, String::len) + self.artifact_schema.as_ref().map_or(0, String::len)
         }
     }
 
@@ -4216,9 +4284,6 @@ pub(crate) mod kernel_runtime {
         AcknowledgeJobProgress {
             token: JobProgressPresentationToken,
         },
-        AcknowledgeTypedOperationResult {
-            token: TypedOperationResultToken,
-        },
     }
 
     impl KernelRequest {
@@ -4236,8 +4301,7 @@ pub(crate) mod kernel_runtime {
                 | Self::DestroyApp { .. }
                 | Self::CloseRealm { .. }
                 | Self::CloseRejectedEvents { .. }
-                | Self::AcknowledgeJobProgress { .. }
-                | Self::AcknowledgeTypedOperationResult { .. } => (0, 0),
+                | Self::AcknowledgeJobProgress { .. } => (0, 0),
             }
         }
     }
@@ -5360,7 +5424,15 @@ pub(crate) mod kernel_runtime {
         (worker_count != 0 && process_slot != u16::MAX).then_some(process_slot % worker_count)
     }
 
-    //#region 📬️TypedOperationResultExchange
+    //#region 📬️TypedOperationResultPage
+    /// 📬️ One typed-operation result page a guest publishes to its shell (`semio.typed-operation-page.v1`),
+    /// and the exact ACK (`semio.typed-operation-ack.v1`) the guest waits for before it retires the page
+    /// and continues the operation. The kernel thread acknowledges every page inside the turn settle
+    /// that received it ([`KernelPoolState::run_turn`]), exactly as the React host acknowledges inside
+    /// `settlePluginTurn` (`typedOperationAcknowledgements`), and hands the pages to the caller on
+    /// [`ExchangeOutcome::typed_results`]. Before this, the page waited in a renderer exchange no
+    /// native consumer ever read, so every reserved tool job (undo, redo, checkpoint, copy, paste…)
+    /// stalled its guest in `MoreWork` (ticket 26/09/23 slice WG8, measured on block2d's undo).
     pub(crate) const TYPED_OPERATION_RESULT_PAGE_BYTES: usize = 4_096;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -5442,91 +5514,7 @@ pub(crate) mod kernel_runtime {
     #[path = "../../../🧪️tests/🗞️typed-result-page/🦀️.rs"]
     mod typed_result_page_tests;
 
-    /// 🎯️ Object-safe renderer boundary for one retained page and its exact ACK token.
-    /// The installed plugin host keeps the original owner until `acknowledge` succeeds.
-    pub(crate) trait TypedOperationResultExchange: Send + Sync {
-        fn take_page(&self, receiver: u32) -> Option<TypedOperationResultPage>;
-        fn acknowledge(&self, token: TypedOperationResultToken) -> bool;
-    }
-
-    struct MountedTypedOperationResultPage {
-        page: TypedOperationResultPage,
-        acknowledge: Arc<dyn Fn(TypedOperationResultToken) -> bool + Send + Sync>,
-    }
-
-    /// 📄️ Exact finite publication credit for the renderer-side typed-operation exchange — one
-    /// named capacity instead of a bare literal, so the `boxed_fixed_slots` budget fixture can pin
-    /// the same constant the slot table is sized with.
-    const MOUNTED_TYPED_OPERATION_RESULT_PAGES: usize = 64;
-
-    struct MountedTypedOperationResultExchange {
-        pages: Mutex<Box<[Option<MountedTypedOperationResultPage>; MOUNTED_TYPED_OPERATION_RESULT_PAGES]>>,
-    }
-
-    impl MountedTypedOperationResultExchange {
-        fn new() -> Self {
-            Self { pages: Mutex::new(semio_framework_async::boxed_fixed_slots(|| None)) }
-        }
-
-        fn publish(&self, page: TypedOperationResultPage, acknowledge: Arc<dyn Fn(TypedOperationResultToken) -> bool + Send + Sync>) -> Result<(), TypedOperationResultPage> {
-            let mut pages = self.pages.lock().expect("typed-operation renderer exchange lock");
-            if let Some(pending) = pages.iter_mut().flatten().find(|pending| {
-                pending.page.token.receiver == page.token.receiver && pending.page.token.operation == page.token.operation && pending.page.token.generation == page.token.generation && pending.page.token.sequence == page.token.sequence
-            }) {
-                if page.token.attempt >= pending.page.token.attempt {
-                    *pending = MountedTypedOperationResultPage { page, acknowledge };
-                }
-                return Ok(());
-            }
-            let Some(slot) = pages.iter_mut().find(|slot| slot.is_none()) else { return Err(page) };
-            *slot = Some(MountedTypedOperationResultPage { page, acknowledge });
-            Ok(())
-        }
-    }
-
-    impl TypedOperationResultExchange for MountedTypedOperationResultExchange {
-        fn take_page(&self, receiver: u32) -> Option<TypedOperationResultPage> {
-            self.pages.lock().expect("typed-operation renderer exchange lock").iter().flatten().find(|pending| pending.page.token.receiver == receiver).map(|pending| pending.page.clone())
-        }
-
-        fn acknowledge(&self, token: TypedOperationResultToken) -> bool {
-            let mut pages = self.pages.lock().expect("typed-operation renderer exchange lock");
-            let Some(index) = pages.iter().position(|pending| pending.as_ref().is_some_and(|pending| pending.page.token == token)) else { return false };
-            let accepted = pages[index].as_ref().is_some_and(|pending| (pending.acknowledge)(token));
-            if accepted {
-                pages[index] = None;
-            }
-            accepted
-        }
-    }
-
-    fn typed_operation_result_exchange() -> &'static OnceLock<Arc<dyn TypedOperationResultExchange>> {
-        static EXCHANGE: OnceLock<Arc<dyn TypedOperationResultExchange>> = OnceLock::new();
-        &EXCHANGE
-    }
-
-    pub(crate) fn install_typed_operation_result_exchange(exchange: Arc<dyn TypedOperationResultExchange>) -> Result<(), Arc<dyn TypedOperationResultExchange>> {
-        typed_operation_result_exchange().set(exchange)
-    }
-
-    fn mounted_typed_operation_result_exchange() -> &'static Arc<MountedTypedOperationResultExchange> {
-        static EXCHANGE: OnceLock<Arc<MountedTypedOperationResultExchange>> = OnceLock::new();
-        EXCHANGE.get_or_init(|| Arc::new(MountedTypedOperationResultExchange::new()))
-    }
-
-    fn install_mounted_typed_operation_result_exchange() {
-        let exchange: Arc<dyn TypedOperationResultExchange> = mounted_typed_operation_result_exchange().clone();
-        let _ = install_typed_operation_result_exchange(exchange);
-    }
-
-    pub(crate) fn publish_typed_operation_result_page(page: TypedOperationResultPage, acknowledge: Arc<dyn Fn(TypedOperationResultToken) -> bool + Send + Sync>) -> Result<(), TypedOperationResultPage> {
-        install_mounted_typed_operation_result_exchange();
-        mounted_typed_operation_result_exchange().publish(page, acknowledge)
-    }
-
-    #[cfg(test)]
-    include!("../../../🧪️tests/🔬️wgpu-renderer-kernel-runtime-typed-operation-result-exchange/🦀️.rs");
-    //#endregion 📬️TypedOperationResultExchange
+    //#endregion 📬️TypedOperationResultPage
 
     pub(crate) struct ExchangeSurfaceDocument {
         pub surface: SurfaceId,
@@ -5545,11 +5533,42 @@ pub(crate) mod kernel_runtime {
         /// `kernel::Effect` values on `TurnResult.effects` directly, not re-encoded as an `AppFrame`.
         pub effects: Vec<Effect>,
         pub command_ingress: semio_framework::kernel::CommandIngressStatus,
+        /// 📬️ Every typed-operation result page this exchange's turns published to the shell, in
+        /// publication order — each already acknowledged to the guest inside the settle.
+        pub typed_results: Vec<TypedOperationResultPage>,
     }
 
     impl ExchangeOutcome {
-        pub(crate) fn acknowledge_typed_operation_result(&self, token: TypedOperationResultToken) -> bool {
-            typed_operation_result_exchange().get().is_some_and(|exchange| exchange.acknowledge(token))
+        /// 🤫️ Whether this turn carried nothing a caller could act on — no frame, effect, typed result
+        /// or surface document and an idle command ingress. The native twin of the browser drive's
+        /// `shardTurnCarriesNothingV1` (`🎭️actor/🖼️wire-turn/🟦️.ts`) at this host's level, where
+        /// patches have already become surface documents and shell messages frames.
+        fn carries_nothing(&self) -> bool {
+            self.frames.is_empty() && self.effects.is_empty() && self.surfaces.is_empty() && self.typed_results.is_empty() && matches!(self.command_ingress, semio_framework::kernel::CommandIngressStatus::Idle)
+        }
+
+        /// ➕️ Folds a continuation turn's outcome into this one: frames, effects and typed results in
+        /// order, the latest command-ingress status a turn actually reported, and each surface's LATER
+        /// document (a continuation repainting a surface supersedes the earlier lease, which is handed
+        /// back by its own `Drop`). An `Idle` ingress reports nothing: the acknowledgement turn after a
+        /// page turn answers `Idle`, and letting it overwrite the page's `CommandComplete` made
+        /// [`KernelPoolState::exchange_commands`] resend the page for ever — measured as one
+        /// `addHandleKind` applied 64 times, then 6 466 resends in 83 min, on native block2d (ticket
+        /// 26/09/23 slice WG8, `wp-wg8/generated/journey-{9,10}`).
+        fn absorb(&mut self, later: ExchangeOutcome) -> Result<(), String> {
+            self.frames.extend(later.frames);
+            self.effects.extend(later.effects);
+            self.typed_results.extend(later.typed_results);
+            if !matches!(later.command_ingress, semio_framework::kernel::CommandIngressStatus::Idle) {
+                self.command_ingress = later.command_ingress;
+            }
+            for entry in later.surfaces {
+                if let Some(index) = self.surfaces.iter().position(|earlier| earlier.surface == entry.surface) {
+                    let _ = self.surfaces.swap_remove(index);
+                }
+                self.surfaces.try_push(entry).map_err(|_| "kernel: continuation surfaces exceed the exchange's fixed surface capacity".to_string())?;
+            }
+            Ok(())
         }
 
         pub(crate) fn take_surface(&mut self, surface: &str) -> Option<UiDocumentLease> {
@@ -5675,7 +5694,6 @@ pub(crate) mod kernel_runtime {
     impl KernelClient {
         /// ▶️ Mounts the kernel request state machine on the process-wide worker pool exactly once.
         pub(crate) fn get() -> KernelClient {
-            install_mounted_typed_operation_result_exchange();
             global_client()
                 .get_or_init(|| {
                     let queue = Arc::new(KernelRequestQueue::default());
@@ -5693,12 +5711,12 @@ pub(crate) mod kernel_runtime {
             self.queue.try_push(KernelRequest::AcknowledgeJobProgress { token }, Arc::new(ResponseSlot::default()), None).is_ok()
         }
 
-        pub(crate) fn acknowledge_typed_operation_result(&self, token: TypedOperationResultToken) -> bool {
-            typed_operation_result_exchange().get().is_some_and(|exchange| exchange.acknowledge(token))
-        }
-
-        pub(crate) async fn create_app(&self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
-            match self.submit(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(wasm_path, plugin_id, app_id) }).await {
+        /// 🐣️ Compiles `wasm_path` (once per content hash), activates `app_id` on it and opens its first
+        /// instance. `artifact_schema` is the document schema the app edits, empty for an app that edits
+        /// none: the mounted component becomes that kind's codec in this process
+        /// ([`semio_framework_os_kernel::os_store::register_component_document_codec`]).
+        pub(crate) async fn create_app(&self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, String> {
+            match self.submit(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(wasm_path, plugin_id, app_id, artifact_schema) }).await {
                 KernelOutcome::Created(result) => result,
                 KernelOutcome::Exchanged(_) => Err("kernel: unexpected Exchanged response for create_app".into()),
                 KernelOutcome::ProductReplayMounted(_) => Err("kernel: unexpected product replay response for create_app".into()),
@@ -6710,6 +6728,19 @@ pub(crate) mod kernel_runtime {
     }
     //#endregion 📦️CommandDocumentRetirement
 
+    /// 🧰️ One framework-reserved tool job (`Effect::SpawnJob` of kind
+    /// `semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND`: undo, redo, copy/paste, selection and
+    /// interaction verbs) this host drives to its end, the native twin of the React host's
+    /// `driveReservedToolJob` (`🧱️elements/🔌️PluginRuntime/🟦️.tsx`). `step` is the exact shard-minted
+    /// [`JobTurn`] of its next `Payload::JobStep`; `None` once the job ended or its spawn was refused, while
+    /// the shard's deferred `Event::JobCompleted` turn (an outcome no grant asked for) is still owed.
+    #[derive(Clone, Copy)]
+    struct ReservedToolJob {
+        actor: ActorId,
+        job: u64,
+        step: Option<JobTurn>,
+    }
+
     struct KernelPoolState {
         request_queue: Arc<KernelRequestQueue>,
         guest_runtime: Arc<GuestRuntimes>,
@@ -6747,6 +6778,7 @@ pub(crate) mod kernel_runtime {
         job_progress: JobProgressOverlayStore,
         replay_routes: [Option<MountedReplayRouteSeed>; JOB_PROGRESS_ACTIVE_CAPACITY],
         job_replays: [Option<MountedJobReplay>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        reserved_jobs: [Option<ReservedToolJob>; JOB_PROGRESS_ACTIVE_CAPACITY],
         product_replay_claims: [Option<MountedProductReplayClaim>; JOB_PROGRESS_ACTIVE_CAPACITY],
         product_replay_authorities: [Option<MountedProductReplayAuthority>; JOB_PROGRESS_ACTIVE_CAPACITY],
         rejected_job_progress: [Option<JobProgressRejected>; 64],
@@ -6788,6 +6820,7 @@ pub(crate) mod kernel_runtime {
                 job_progress: JobProgressOverlayStore::new(),
                 replay_routes: [None; JOB_PROGRESS_ACTIVE_CAPACITY],
                 job_replays: std::array::from_fn(|_| None),
+                reserved_jobs: [None; JOB_PROGRESS_ACTIVE_CAPACITY],
                 product_replay_claims: std::array::from_fn(|_| None),
                 product_replay_authorities: std::array::from_fn(|_| None),
                 rejected_job_progress: std::array::from_fn(|_| None),
@@ -6837,7 +6870,7 @@ pub(crate) mod kernel_runtime {
         }
 
         async fn advance_product_replay(&mut self, instance: u32) -> Result<ExchangeOutcome, String> {
-            let idle = || ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
+            let idle = || ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() };
             if let Some(index) = self.product_replay_authorities.iter().position(|authority| authority.as_ref().is_some_and(|authority| authority.instance() == instance)) {
                 let (actor, job, profile_cursor, profile_started) = {
                     let authority = self.product_replay_authorities[index].as_ref().expect("selected product replay authority");
@@ -7433,13 +7466,10 @@ pub(crate) mod kernel_runtime {
             *self.plugin_ordinals.entry(plugin_id.to_string()).or_insert(next)
         }
 
-        async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
+        async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, String> {
             let replay_route_index = self.replay_routes.iter().position(Option::is_none).ok_or_else(|| "kernel: fixed replay route registry is full".to_string())?;
-            let mut bytes_owner = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(wasm_path.clone())).await? {
-                semio_framework_os_services::NativeIoValue::Bytes(bytes) => bytes,
-                _ => return Err("kernel: native I/O returned the wrong value for wasm read".into()),
-            };
-            let bytes = bytes_owner.single_page().ok_or_else(|| "kernel: populated Wasm exceeds the mounted single-page retained compiler authority".to_string())?;
+            let component = read_native_component(&wasm_path).await?;
+            let bytes = component.as_slice();
             let hash = PackageHash(*semio_framework_hash::hash(bytes).as_bytes());
             let plugin_digest = JobReplayRequest::from_spawn(&plugin_id, &[]).tool;
             let artifact_digest = JobReplayRequest::from_spawn(&app_id, &[]).tool;
@@ -7447,9 +7477,11 @@ pub(crate) mod kernel_runtime {
             let package_ref = PackageRef { package: package_id.clone(), hash };
             // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): compile
             // remains a genuine suspension point on the worker-pool-owned request state machine.
-            let compiled = self.guest_runtime.compile(&package_ref, bytes).await.map_err(|error| error.to_string());
-            let _ = bytes_owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            let compiled = compiled?;
+            let compiled = self.guest_runtime.compile(&package_ref, bytes).await.map_err(|error| error.to_string())?;
+            if !artifact_schema.is_empty() {
+                let codec = semio_framework_plugin_host::OwnedComponentDocumentCodec::try_new(self.guest_runtime.clone(), compiled.clone(), artifact_schema).map_err(|error| error.to_string())?;
+                semio_framework_os_kernel::os_store::register_component_document_codec(Arc::new(codec)).map_err(|error| error.to_string())?;
+            }
             let instance_id = self.next_instance_id;
             self.next_instance_id += 1;
             let plugin_ordinal = self.plugin_ordinal(&plugin_id);
@@ -7618,6 +7650,11 @@ pub(crate) mod kernel_runtime {
                 None => {
                     let Some(actor) = self.instances.remove(&instance) else { return true };
                     let removed = self.runtime.kernel_mut().deactivate(actor).await.unwrap_or_else(|_| vec![actor]);
+                    for slot in &mut self.reserved_jobs {
+                        if slot.as_ref().is_some_and(|job| removed.contains(&job.actor)) {
+                            *slot = None;
+                        }
+                    }
                     if removed.len() > JOB_PROGRESS_ACTIVE_CAPACITY {
                         let _ = self.job_progress.begin_close_all();
                         return false;
@@ -7783,16 +7820,9 @@ pub(crate) mod kernel_runtime {
                     events.insert(0, Event::PatchRejected { receipt, surface: rejection.surface.0.as_str().to_string(), revision: rejection.revision.0, reason: rejection.reason.to_string() });
                 }
             }
-            self.run_turn(actor, instance, events).await
-        }
-
-        async fn deliver_typed_operation_result_ack(&mut self, token: TypedOperationResultToken) -> Result<(), String> {
-            let Some(&actor) = self.instances.get(&token.receiver) else {
-                return Err("kernel: typed-operation ACK receiver is not registered".to_string());
-            };
-            let event = Event::Message { source: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(token.receiver.to_string()) }, payload: TypedOperationResultPage::encode_ack(token) };
-            let _ = self.run_turn(actor, token.receiver, vec![event]).await?;
-            Ok(())
+            let mut outcome = self.run_turn(actor, instance, events).await?;
+            self.settle_reserved_jobs(actor, instance, &mut outcome).await?;
+            Ok(outcome)
         }
 
         async fn exchange_commands(&mut self, instance: u32, driver: semio_framework::kernel::CommandBatchDriver) -> Result<ExchangeOutcome, String> {
@@ -7816,7 +7846,7 @@ pub(crate) mod kernel_runtime {
                 let _ = self.command_maintenance_step();
                 return Err(format!("kernel: instance {instance} is not registered; exact command owner entered bounded close"));
             };
-            let mut combined = ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
+            let mut combined = ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() };
             loop {
                 let mut destinations = match self.command_document_closes.try_reserve_page(key, generation) {
                     Ok(destinations) => destinations,
@@ -7867,7 +7897,7 @@ pub(crate) mod kernel_runtime {
                         return Err(fault);
                     }
                 };
-                let ExchangeOutcome { frames, surfaces, effects, command_ingress } = outcome;
+                let ExchangeOutcome { frames, surfaces, effects, command_ingress, typed_results } = outcome;
                 for surface in surfaces {
                     self.command_document_closes.admit(&mut destinations, surface);
                 }
@@ -7895,6 +7925,7 @@ pub(crate) mod kernel_runtime {
                 };
                 combined.frames.extend(frames);
                 combined.effects.extend(effects);
+                combined.typed_results.extend(typed_results);
                 combined.command_ingress = command_ingress;
                 match progress {
                     semio_framework::kernel::CommandBatchProgress::Complete => {
@@ -7905,6 +7936,7 @@ pub(crate) mod kernel_runtime {
                             return Err(fault.describe());
                         }
                         self.command_document_closes.publish_batch(key, generation, &mut combined.surfaces);
+                        self.settle_reserved_jobs(actor, instance, &mut combined).await?;
                         return Ok(combined);
                     }
                     semio_framework::kernel::CommandBatchProgress::Faulted => {
@@ -7916,6 +7948,100 @@ pub(crate) mod kernel_runtime {
                     semio_framework::kernel::CommandBatchProgress::PageReady | semio_framework::kernel::CommandBatchProgress::Waiting => {}
                 }
             }
+        }
+
+        /// ⏯️ One request's turn for `actor`, settled the way the React host settles one
+        /// (`🔌️PluginRuntime`'s `settlePluginTurn`, ticket 26/09/23 slice WG8, B1):
+        ///
+        /// - a grant the shard ended with the guest mid-call ([`ShardOutcome::Preempted`]) is resumed
+        ///   inside [`Self::run_turn_once`] before anything else reaches the actor, so this method never
+        ///   hands a mid-flight guest back to its caller;
+        /// - a settled turn that published an `ActorInstanceLifecycleReceipt` is acknowledged on the next
+        ///   turn (an open the host never acknowledges is re-offered on every later turn);
+        /// - a completed turn answering `MoreWork` is continued with empty-event turns while its command
+        ///   and cold-pair ingress are idle — a non-idle ingress belongs to the caller's own page driver
+        ///   ([`Self::exchange_commands`] observes every ingress status, so a settle that swallowed one
+        ///   would resend a page the guest already owns: measured as block2d's `addHandleKind` spinning
+        ///   `MoreWork` until the settle budget, ticket 26/09/18 slice G7w run 13);
+        /// - it stops once [`run_turn_quiescent_continuations`] continuations in a row carried nothing,
+        ///   because a guest waiting on a host round trip (a typed-operation ACK, a backbone reply) is
+        ///   answering `MoreWork` for something no empty turn can deliver.
+        ///
+        /// 🧵️ Events cross ONE per granted turn and each settles before the next is submitted: the shard
+        /// executes one event per guest turn anyway, and a batch's later envelopes must not reach a guest
+        /// the first one left owning ingress. [`RUN_TURN_SETTLE_BUDGET`] bounds the whole request.
+        async fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
+            let deadline = std::time::Instant::now() + RUN_TURN_SETTLE_BUDGET;
+            let mut batches = events.into_iter().map(|event| vec![event]).collect::<std::collections::VecDeque<_>>();
+            if batches.is_empty() {
+                batches.push_back(Vec::new());
+            }
+            let mut settled: Option<ExchangeOutcome> = None;
+            while let Some(batch) = batches.pop_front() {
+                let first = self.run_turn_once(actor, instance, batch, deadline).await?;
+                let outcome = self.settle_turn(actor, instance, first, deadline).await?;
+                match settled.as_mut() {
+                    Some(earlier) => earlier.absorb(outcome)?,
+                    None => settled = Some(outcome),
+                }
+            }
+            settled.ok_or_else(|| "kernel: a turn with no batch produced no outcome".to_string())
+        }
+
+        /// 🔁️ Continues one granted turn with what it still owes (see [`Self::run_turn`]) until it settled,
+        /// [`run_turn_quiescent_continuations`] continuations in a row carried nothing, or `deadline` passed.
+        async fn settle_turn(&mut self, actor: ActorId, instance: u32, (mut outcome, continuation): (ExchangeOutcome, Option<Vec<Event>>), deadline: std::time::Instant) -> Result<ExchangeOutcome, String> {
+            let mut owed = run_turn_continuation_turns(continuation);
+            let mut quiet = 0usize;
+            while let Some(events) = owed.pop_front() {
+                if std::time::Instant::now() >= deadline || quiet >= run_turn_quiescent_continuations() {
+                    break;
+                }
+                let (later, next) = self.run_turn_once(actor, instance, events, deadline).await?;
+                quiet = if later.carries_nothing() { quiet + 1 } else { 0 };
+                outcome.absorb(later)?;
+                owed.extend(run_turn_continuation_turns(next));
+            }
+            Ok(outcome)
+        }
+
+        /// 🧰️ Drives every live [`ReservedToolJob`] of `actor` to its end once the request that spawned it
+        /// settled, folding what the drive produced into `outcome`: the native host's half of the one
+        /// reserved-job mechanism (React: `driveReservedToolJob`; guest: `admit_reserved_spawned_job`, ticket
+        /// 26/09/23 slices C8 and WG8 §1.4).
+        ///
+        /// - The shard started the job when it admitted the `Effect::SpawnJob` and reported its exact
+        ///   [`JobTurn`] with that turn ([`ShardOutcome::Turn`]'s `jobs`); one `Payload::JobStep` is granted
+        ///   per turn until a step publication ends the job.
+        /// - The shard then runs the guest's deferred `Event::JobCompleted` turn by itself; this host waits
+        ///   for it and settles it like any turn, so the guest commits the job one unit per `MoreWork`
+        ///   continuation and answers the verb (`Invocation { in_reply_to: 0 }`, `OperationCompleted`).
+        async fn settle_reserved_jobs(&mut self, actor: ActorId, instance: u32, outcome: &mut ExchangeOutcome) -> Result<(), String> {
+            let deadline = std::time::Instant::now() + RUN_TURN_SETTLE_BUDGET;
+            while self.reserved_jobs.iter().flatten().any(|job| job.actor == actor) {
+                if std::time::Instant::now() >= deadline {
+                    return Err(format!("kernel: actor {}'s reserved tool jobs did not end within {RUN_TURN_SETTLE_BUDGET:?}", actor.0));
+                }
+                let first = self.run_reserved_job_once(actor, instance, deadline).await?;
+                let later = self.settle_turn(actor, instance, first, deadline).await?;
+                outcome.absorb(later)?;
+            }
+            Ok(())
+        }
+
+        /// 🧾️ Registers every reserved-kind `Effect::SpawnJob` of `actor`'s settled turn with the
+        /// shard-minted [`JobTurn`] its admission reported; a spawn the shard refused has none and only owes
+        /// its deferred `Event::JobCompleted` refusal.
+        fn admit_reserved_jobs(&mut self, actor: ActorId, effects: &[Effect], jobs: &[JobTurn]) -> Result<(), String> {
+            for effect in effects {
+                let Effect::SpawnJob { job, kind, .. } = effect else { continue };
+                if kind != semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND {
+                    continue;
+                }
+                let slot = self.reserved_jobs.iter_mut().find(|slot| slot.is_none()).ok_or_else(|| format!("kernel: actor {}'s reserved tool job {job} exceeds {JOB_PROGRESS_ACTIVE_CAPACITY} live reserved jobs", actor.0))?;
+                *slot = Some(ReservedToolJob { actor, job: *job, step: jobs.iter().find(|turn| turn.job == *job).copied() });
+            }
+            Ok(())
         }
 
         /// 🎠️ terra-kernel-loop: the real loop the packet brief's item 1 asks for — `Kernel::submit`
@@ -7938,7 +8064,13 @@ pub(crate) mod kernel_runtime {
         /// commit_frame` for real would mean migrating THIS host's whole UI-patch pipeline onto
         /// `Kernel`'s `SceneStore`, a substantially larger, separate refactor out of this packet's
         /// scope (see `📓️terra-kernel-loop-report.md`'s own gaps section).
-        async fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
+        ///
+        /// 🎯️ One granted turn, answering what the guest still owes: `None` once it settled, else the
+        /// events of the continuation turn (see [`Self::run_turn`]). A granted actor the shard reports
+        /// [`ShardOutcome::Preempted`] — ours or one `Kernel::tick` granted beside it — is resumed right
+        /// here with an `Event::Wake` envelope (the shard's "resume with no events"), so the tick loop
+        /// keeps granting it until its turn returns; `deadline` bounds how long that may take.
+        async fn run_turn_once(&mut self, actor: ActorId, instance: u32, events: Vec<Event>, deadline: std::time::Instant) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
             let mut envelopes = Vec::with_capacity(events.len().max(1));
             let mut replay_start_index = None;
             if events.is_empty() {
@@ -7948,7 +8080,7 @@ pub(crate) mod kernel_runtime {
                     let Some(turn) = entry.log.expected_turn() else {
                         entry.replay_requested = false;
                         entry.replay_submit_sequence = None;
-                        return Ok(ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle });
+                        return Ok((ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }, None));
                     };
                     if entry.replay_started {
                         (next_seq()?, Payload::JobStep { turn })
@@ -7975,16 +8107,42 @@ pub(crate) mod kernel_runtime {
                     });
                 }
             }
+            self.dispatch_turn(actor, instance, envelopes, replay_start_index, deadline).await
+        }
+
+        /// 🧰️ One turn of `actor`'s oldest live [`ReservedToolJob`]: its next `Payload::JobStep`, or, once
+        /// the job ended, no envelope at all and only the wait for the deferred `Event::JobCompleted` turn
+        /// [`Self::dispatch_turn`] counts as owed.
+        async fn run_reserved_job_once(&mut self, actor: ActorId, instance: u32, deadline: std::time::Instant) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
+            let Some(oldest) = self.reserved_jobs.iter().flatten().filter(|job| job.actor == actor).min_by_key(|job| job.job).copied() else {
+                return Ok((ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }, None));
+            };
+            let envelopes = match oldest.step {
+                Some(turn) => vec![Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq()?, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } }],
+                None => Vec::new(),
+            };
+            self.dispatch_turn(actor, instance, envelopes, None, deadline).await
+        }
+
+        /// 🚚️ Submits `envelopes` to `actor`, then grants and collects until nothing is left to grant and
+        /// no deferred reserved-job completion of `actor` is owed. An outcome no grant of this call asked
+        /// for is such a completion: the shard runs a job's `Event::JobCompleted` turn by itself.
+        async fn dispatch_turn(&mut self, actor: ActorId, instance: u32, envelopes: Vec<Envelope>, replay_start_index: Option<usize>, deadline: std::time::Instant) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
+            let stepped_reserved_job = envelopes.iter().find_map(|envelope| match &envelope.payload {
+                Payload::JobStep { turn } => self.reserved_jobs.iter().flatten().any(|job| job.actor == actor && job.job == turn.job).then_some(turn.job),
+                _ => None,
+            });
             for envelope in &envelopes {
                 let began_job = match &envelope.payload {
-                    Payload::JobStep { turn } => self.begin_job_progress(actor, turn)?,
+                    Payload::JobStep { turn } if stepped_reserved_job != Some(turn.job) => self.begin_job_progress(actor, turn)?,
                     Payload::Cancel { .. } => {
                         self.job_progress.begin_close_actor(actor).map_err(|fault| fault.to_string())?;
                         false
                     }
                     _ => false,
                 };
-                if matches!(self.runtime.submit(envelope).await, Backpressure::Accept) {
+                let pressure = self.runtime.submit(envelope).await;
+                if matches!(pressure, Backpressure::Accept) {
                     if let Some(index) = replay_start_index {
                         let entry = self.job_replays[index].as_mut().expect("accepted replay start remains mounted");
                         entry.accept_replay_submission(envelope.seq)?;
@@ -7995,38 +8153,82 @@ pub(crate) mod kernel_runtime {
                     }
                     crate::log_debug(&format!("kernel: run_turn submit for actor {} was not Accept-ed (mailbox pressure)", actor.0));
                     if replay_start_index.is_some() {
-                        return Ok(ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle });
+                        return Ok((ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }, None));
                     }
                 }
             }
-            let mut turn_result: Option<TurnResult> = None;
+            let mut turn_results: Vec<TurnResult> = Vec::new();
             let mut fault: Option<String> = None;
             let mut replay_capture_started = false;
+            let mut reserved_step_published = false;
             loop {
                 self.now_ms += 1;
                 let decision = self.runtime.tick_and_dispatch(self.now_ms, |_actor| crate::actor_budget_from_turn_budget(TURN_BUDGET, Lane::Interactive)).await;
-                if decision.run.is_empty() {
+                let mut granted: Vec<u64> = decision.run.iter().map(|grant| grant.actor.0).collect();
+                let expected = granted.len() + self.reserved_jobs.iter().flatten().filter(|job| job.actor == actor && job.step.is_none()).count();
+                if expected == 0 {
                     break;
                 }
-                let outcomes = self.runtime.wait_for_outcomes(decision.run.len(), RUN_TURN_OUTCOME_TIMEOUT);
-                if outcomes.len() < decision.run.len() {
+                let outcomes = self.runtime.wait_for_outcomes(expected, RUN_TURN_OUTCOME_TIMEOUT);
+                if outcomes.len() < granted.len() {
                     return Err("kernel: shard produced no outcome for this turn".to_string());
                 }
+                if outcomes.len() < expected {
+                    return Err(format!("kernel: actor {}'s deferred reserved-job completion turn never arrived", actor.0));
+                }
                 for outcome in outcomes {
+                    let reported = outcome.actor();
+                    if let Some(index) = granted.iter().position(|granted| *granted == reported) {
+                        granted.swap_remove(index);
+                    } else if let Some(slot) = self.reserved_jobs.iter_mut().find(|slot| slot.as_ref().is_some_and(|job| job.actor.0 == reported && job.step.is_none())) {
+                        *slot = None;
+                    }
                     match outcome {
-                        ShardOutcome::Turn { actor: reported, result } => {
+                        ShardOutcome::Turn { actor: reported, result, jobs } => {
                             let _ = self.runtime.complete_actor(ActorId(reported), &result, self.now_ms).await;
                             if reported == actor.0 {
-                                turn_result = Some(decode_actor_turn_result(&result, reported)?);
+                                let decoded = decode_actor_turn_result(&result, reported)?;
+                                self.admit_reserved_jobs(actor, &decoded.effects, &jobs)?;
+                                turn_results.push(decoded);
                             } else {
                                 let _ = semio_framework::kernel::close_ui_turn_patch_transport_session_one(reported);
                                 let _ = semio_framework::kernel::close_ui_turn_patch_transport_one();
+                            }
+                        }
+                        ShardOutcome::Job { actor: reported, authority, publication, .. } if self.reserved_jobs.iter().flatten().any(|job| job.actor.0 == reported && job.job == authority.job) => {
+                            let next = match publication.outcome {
+                                semio_framework_actor::JobStepOutcome::Complete { .. } | semio_framework_actor::JobStepOutcome::Cancelled | semio_framework_actor::JobStepOutcome::Fault { .. } => None,
+                                semio_framework_actor::JobStepOutcome::Yield | semio_framework_actor::JobStepOutcome::PreviewReady { .. } | semio_framework_actor::JobStepOutcome::CheckpointReady { .. } => {
+                                    Some(JobTurn { step_sequence: publication.turn.step_sequence.saturating_add(1), ..publication.turn })
+                                }
+                            };
+                            if let Some(job) = self.reserved_jobs.iter_mut().flatten().find(|job| job.actor.0 == reported && job.job == authority.job) {
+                                job.step = next;
+                                reserved_step_published = true;
                             }
                         }
                         ShardOutcome::Job { actor: reported, authority, request, placement, publication } => {
                             let worker_slot = self.runtime.kernel().actor_record(ActorId(reported)).await.map_or(u16::MAX, |record| record.shard.0);
                             self.begin_job_replay_capture(ActorId(reported), authority, request, placement, self.worker_count, worker_slot, publication);
                             replay_capture_started = true;
+                        }
+                        ShardOutcome::Preempted { actor: reported } => {
+                            if std::time::Instant::now() >= deadline {
+                                return Err(format!("kernel: actor {reported} stayed preempted past its {RUN_TURN_SETTLE_BUDGET:?} turn budget"));
+                            }
+                            let resume = Envelope {
+                                to: ActorId(reported),
+                                from: Origin::Kernel,
+                                lane: Lane::Interactive,
+                                seq: next_seq()?,
+                                deadline_ms: None,
+                                coalesce: None,
+                                cancel_of: None,
+                                payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).map_err(|error| error.to_string())? },
+                            };
+                            if !matches!(self.runtime.submit(&resume).await, Backpressure::Accept) {
+                                return Err(format!("kernel: preempted actor {reported} refused its resume envelope"));
+                            }
                         }
                         ShardOutcome::Resumed { actor: reported, operation } if reported == actor.0 => {
                             let valid = self.job_replays.iter().flatten().any(|entry| {
@@ -8064,7 +8266,13 @@ pub(crate) mod kernel_runtime {
                             };
                             let _ = self.runtime.complete_actor(ActorId(reported), &faulted, self.now_ms).await;
                             if reported == actor.0 {
-                                fault = Some(message);
+                                if let Some(slot) = self.reserved_jobs.iter_mut().find(|slot| slot.as_ref().is_some_and(|job| job.actor == actor && Some(job.job) == stepped_reserved_job)) {
+                                    *slot = None;
+                                }
+                                fault = Some(match self.runtime.take_shard_failure() {
+                                    Some(cause) => format!("{message} (retained shard failure: {cause})"),
+                                    None => message,
+                                });
                             }
                         }
                         // 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (K1, landed mid-session):
@@ -8086,11 +8294,27 @@ pub(crate) mod kernel_runtime {
             if let Some(message) = fault {
                 return Err(message);
             }
-            match turn_result {
-                Some(result) => self.apply_turn_result(actor, instance, result).await,
-                None if replay_capture_started => Ok(ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }),
-                None => Err("kernel: shard produced no outcome for this turn".to_string()),
+            if turn_results.is_empty() {
+                return if replay_capture_started || reserved_step_published { Ok((ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }, None)) } else { Err("kernel: shard produced no outcome for this turn".to_string()) };
             }
+            let mut settled: Option<ExchangeOutcome> = None;
+            let mut owed = Vec::new();
+            let mut more_work = false;
+            for result in turn_results {
+                owed.extend(result.lifecycle_receipt.map(|receipt| Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt })));
+                more_work = matches!(result.status, semio_framework::kernel::TurnStatus::MoreWork)
+                    && matches!(result.command_ingress, semio_framework::kernel::CommandIngressStatus::Idle)
+                    && matches!(result.cold_pair_ingress, semio_framework::kernel::ColdPairIngressStatus::Idle);
+                let outcome = self.apply_turn_result(actor, instance, result).await?;
+                owed.extend(outcome.typed_results.iter().map(|page| Event::Message { source: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: TypedOperationResultPage::encode_ack(page.token) }));
+                match settled.as_mut() {
+                    Some(earlier) => earlier.absorb(outcome)?,
+                    None => settled = Some(outcome),
+                }
+            }
+            let outcome = settled.ok_or_else(|| "kernel: settled turn results produced no outcome".to_string())?;
+            let continuation = if !owed.is_empty() { Some(owed) } else { more_work.then(Vec::new) };
+            Ok((outcome, continuation))
         }
 
         async fn apply_turn_result(&mut self, actor: ActorId, instance: u32, mut result: TurnResult) -> Result<ExchangeOutcome, String> {
@@ -8102,16 +8326,16 @@ pub(crate) mod kernel_runtime {
             let _ = actor;
             let mut frames = Vec::new();
             let mut effects = Vec::new();
+            let mut typed_results = Vec::new();
             for effect in result.effects {
+                if matches!(&effect, Effect::SpawnJob { kind, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND) {
+                    continue;
+                }
                 if let Effect::SendMessage { target: MessageEndpoint::Shell { instance: target_instance }, payload } = &effect {
                     if target_instance.0 == instance.to_string() {
-                        if let Some(page) = TypedOperationResultPage::decode_guest_message(payload) {
-                            if page.token.receiver == instance {
-                                let queue = self.request_queue.clone();
-                                let acknowledge = Arc::new(move |token| queue.try_push(KernelRequest::AcknowledgeTypedOperationResult { token }, Arc::new(ResponseSlot::default()), None).is_ok());
-                                let _ = publish_typed_operation_result_page(page, acknowledge);
-                                continue;
-                            }
+                        if let Some(page) = TypedOperationResultPage::decode_guest_message(payload).filter(|page| page.token.receiver == instance) {
+                            typed_results.push(page);
+                            continue;
                         }
                         if let Ok(frame) = protocol::decode_app_frame(payload).await {
                             frames.push(frame);
@@ -8131,7 +8355,7 @@ pub(crate) mod kernel_runtime {
                 }
             }
             let _ = self.advance_retained_one(instance, None, &mut surfaces);
-            Ok(ExchangeOutcome { frames, surfaces, effects, command_ingress: result.command_ingress })
+            Ok(ExchangeOutcome { frames, surfaces, effects, command_ingress: result.command_ingress, typed_results })
         }
 
         fn apply_ui_patch(&mut self, instance: u32, patch: KernelUiPatch, receipt: Option<semio_framework::kernel::ActorUiPatchReceipt>) -> Result<(), KernelUiPatch> {
@@ -8180,7 +8404,7 @@ pub(crate) mod kernel_runtime {
         fn advance_retained_surface_one(&mut self, instance: u32, surface: SurfaceId) -> Result<ExchangeOutcome, String> {
             let mut surfaces = UiFixedList::default();
             self.advance_retained_one(instance, Some(&surface), &mut surfaces)?;
-            Ok(ExchangeOutcome { frames: Vec::new(), surfaces, effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle })
+            Ok(ExchangeOutcome { frames: Vec::new(), surfaces, effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() })
         }
 
         fn advance_retained_one(&mut self, instance: u32, requested: Option<&SurfaceId>, out: &mut UiFixedList<ExchangeSurfaceDocument, UI_DOCUMENT_LEASE_SLOTS>) -> Result<(), String> {
@@ -8416,15 +8640,11 @@ pub(crate) mod kernel_runtime {
                     let (terminal, processed, released) = event.close_step(maximum_bytes);
                     (terminal, processed, released, 0)
                 }
-                // 🎫️ `AcknowledgeTypedOperationResult` joins this arm for the same reason the others
-                // are here: `command_credits` reports `(0, 0)` for it, so it owns no retained page or
-                // byte claim and a shutdown slice retires it whole in one step.
                 KernelRequest::AdvanceRetained { .. }
                 | KernelRequest::MountProductReplay { .. }
                 | KernelRequest::RetireProductReplay { .. }
                 | KernelRequest::RetireProductReplayRefusal { .. }
-                | KernelRequest::AdvanceProductReplay { .. }
-                | KernelRequest::AcknowledgeTypedOperationResult { .. } => (true, 1, 0, 0),
+                | KernelRequest::AdvanceProductReplay { .. } => (true, 1, 0, 0),
                 KernelRequest::CloseRejectedEvents { owner } => {
                     let (terminal, processed) = owner.close_step();
                     (terminal, processed, 0, 0)
@@ -8538,8 +8758,8 @@ pub(crate) mod kernel_runtime {
             };
             let outcome = match request {
                 KernelRequest::CreateApp { owner } => {
-                    let (wasm_path, plugin_id, app_id) = owner.into_parts();
-                    KernelOutcome::Created(state.create_app(wasm_path, plugin_id, app_id).await)
+                    let (wasm_path, plugin_id, app_id, artifact_schema) = owner.into_parts();
+                    KernelOutcome::Created(state.create_app(wasm_path, plugin_id, app_id, artifact_schema).await)
                 }
                 KernelRequest::DestroyApp { owner } => {
                     if state.destroy_app_step(owner.instance).await {
@@ -8561,10 +8781,6 @@ pub(crate) mod kernel_runtime {
                 }
                 KernelRequest::AcknowledgeJobProgress { token } => {
                     state.acknowledge_job_progress(token);
-                    continue;
-                }
-                KernelRequest::AcknowledgeTypedOperationResult { token } => {
-                    let _ = state.deliver_typed_operation_result_ack(token).await;
                     continue;
                 }
                 KernelRequest::Exchange { instance, event } => KernelOutcome::Exchanged(state.exchange(instance, vec![event.into_event()]).await),
@@ -8886,7 +9102,7 @@ pub mod scale_bench {
                 }
                 for outcome in &outcomes {
                     match outcome {
-                        ShardOutcome::Turn { actor, result } => {
+                        ShardOutcome::Turn { actor, result, .. } => {
                             let _ = self.runtime.complete_actor(ActorId(*actor), result, self.now_ms).await;
                         }
                         // 🎠️ terra-kernel-loop: same reasoning as `kernel_runtime::run_turn`'s own
@@ -8948,7 +9164,7 @@ pub mod scale_bench {
                     remaining = remaining.saturating_sub(outcomes.len());
                     for outcome in &outcomes {
                         let reporting_actor = match outcome {
-                            ShardOutcome::Turn { actor, result } => {
+                            ShardOutcome::Turn { actor, result, .. } => {
                                 let _ = self.runtime.complete_actor(ActorId(*actor), result, self.now_ms).await;
                                 Some(*actor)
                             }
@@ -10605,13 +10821,7 @@ impl RuntimeApply {
             match work {
                 FrameDeferredWork::ShellMaintenance => {}
                 FrameDeferredWork::PumpSync => {
-                    #[cfg(not(target_arch = "wasm32"))]
                     interaction.shell.pump_sync_events().await;
-                    // 📇️ The browser has no native document-sync backbone, but it DOES have the
-                    // directory lane (identity → Space Administration → command FIFO) since ticket
-                    // 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1e — same cadence, same code.
-                    #[cfg(target_arch = "wasm32")]
-                    interaction.shell.pump_directory_events().await;
                 }
                 FrameDeferredWork::Action(action) => {
                     // 🪪️ Every action on this lane came out of an engine surface's bounded input

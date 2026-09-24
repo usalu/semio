@@ -32,6 +32,9 @@ mod ui_patch_component_tests;
 // real `Store<AsyncActorHostState>` under `component-model-async`. See that module's own doc.
 #[path = "⏳️runtime/🦀️.rs"]
 pub mod runtime;
+#[path = "🧬️component-codec/🦀️.rs"]
+mod component_codec;
+pub use component_codec::{OwnedComponentDocumentCodec, GUEST_CODEC_BUDGET};
 
 use semio_framework::{
     DslValue, PluginManifest,
@@ -680,6 +683,14 @@ pub struct GuestInstance {
 }
 
 impl GuestInstance {
+    /// 🔁️ True while an owned `poll` has not completed — the guest yielded on its fuel or deadline
+    /// and owns the host's next call. A host that wants to submit NEW events must first resume with
+    /// none until this is false; `execute_actor_turn` refuses the alternative rather than dropping
+    /// them (ticket 26/09/18 slice A2). A compiled instance is never in flight: its turn is atomic.
+    pub fn turn_in_flight(&self) -> bool {
+        matches!(&self.state, GuestInstanceState::Owned(state) if state.pending.is_some())
+    }
+
     /// 📈️ The guest's linear-memory size in bytes, read off the store's own [`BudgetLimiter`]
     /// witness — `None` for a mock instance, which owns no wasm memory. Wasm memory never shrinks,
     /// so sampling this once per turn IS the growth curve a leak law needs.
@@ -1275,6 +1286,7 @@ enum OwnedOperation {
     Genesis,
     PrintMirror,
     ApplyOps,
+    ReplayEnvelopes,
 }
 
 impl OwnedOperation {
@@ -1291,6 +1303,7 @@ impl OwnedOperation {
             Self::Genesis => OwnedSemioExport::Genesis,
             Self::PrintMirror => OwnedSemioExport::PrintMirror,
             Self::ApplyOps => OwnedSemioExport::ApplyOps,
+            Self::ReplayEnvelopes => OwnedSemioExport::ReplayEnvelopes,
         }
     }
 }
@@ -1433,14 +1446,6 @@ impl OwnedRuntime {
         Ok(GuestInstance { actor, state: GuestInstanceState::Owned(OwnedInstanceState { artifact: Arc::clone(artifact), actor: owned, pending: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id }) })
     }
 
-    /// 🔁️ True while a `poll` this runtime started has not completed — the guest yielded on its fuel
-    /// or deadline and owns the host's next call. A host that wants to submit NEW events must first
-    /// resume with none until this is false; `execute_actor_turn` refuses the alternative rather than
-    /// dropping them (ticket 26/09/18 slice A2).
-    pub fn turn_in_flight(&self, inst: &GuestInstance) -> bool {
-        matches!(&inst.state, GuestInstanceState::Owned(state) if state.pending.is_some())
-    }
-
     pub fn execute_actor_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
         let state = owned_state_mut(inst)?;
         if state.pending.is_some() && !events.is_empty() {
@@ -1532,6 +1537,13 @@ impl OwnedRuntime {
     /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for an unlinked package.
     pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget) -> Result<GuestDocumentPair, TurnFault> {
         self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, |_, _| {})
+    }
+
+    /// 📜️ `codec.replay-envelopes` — the hub's Check In fold, with the same stall-bound fuel
+    /// observations as [`Self::codec_genesis_observed`]: a long ledger tail is the longest guest call
+    /// a Check In makes, so its fuel progress is what its stall bound watches.
+    pub async fn codec_replay_envelopes_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], envelopes: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<GuestDocumentPair, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::ReplayEnvelopes, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: envelopes }, budget, progress)
     }
 
     /// 📈️ Executes owned `describe` with bounded fuel-progress observations for build tooling.
@@ -2499,6 +2511,27 @@ impl WasmtimeRuntime {
             .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
         Ok(GuestDocumentPair { pack: next.pack, spr: next.spr })
     }
+
+    /// 📜️ `codec.replay-envelopes` — the hub's Check In fold for a package whose Rust codec the host
+    /// does not link.
+    pub async fn codec_replay_envelopes(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], envelopes: &[u8], budget: &Budget) -> Result<GuestDocumentPair, TurnFault> {
+        let mut instance = self.codec_instance(compiled, budget).await?;
+        let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
+            return Err(TurnFault::Trapped("codec.replay-envelopes called on a non-wasmtime GuestInstance".to_string()));
+        };
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        let artifact_schema = artifact_schema.to_string();
+        let pair = actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
+        let envelopes = envelopes.to_vec();
+        let next = store
+            .run_concurrent(async |accessor| bindings.semio_framework_codec().call_replay_envelopes(accessor, artifact_schema, pair, envelopes).await)
+            .await
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+        Ok(GuestDocumentPair { pack: next.pack, spr: next.spr })
+    }
 }
 
 //#region 🗂️GuestCodecDispatch
@@ -2564,6 +2597,17 @@ impl GuestRuntimes {
             Self::Wasmtime(runtime) => runtime.codec_apply_ops(compiled, artifact_schema, pack, spr, ops, budget).await,
             #[cfg(test)]
             Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("codec.apply-ops has no scripted runtime — it needs a real component".to_string())),
+        }
+    }
+
+    /// 📜️ `codec.replay-envelopes` — the hub's Check In fold; `progress` sees the owned interpreter's
+    /// fuel observations.
+    pub async fn codec_replay_envelopes(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], envelopes: &[u8], budget: &Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<GuestDocumentPair, TurnFault> {
+        match self {
+            Self::Owned(runtime) => runtime.codec_replay_envelopes_observed(compiled, artifact_schema, pack, spr, envelopes, budget.clone(), progress).await,
+            Self::Wasmtime(runtime) => runtime.codec_replay_envelopes(compiled, artifact_schema, pack, spr, envelopes, budget).await,
+            #[cfg(test)]
+            Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("codec.replay-envelopes has no scripted runtime — it needs a real component".to_string())),
         }
     }
 }

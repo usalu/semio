@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetFrame
         agg_inverse(&SemioImageMutation::SetFrameDelay(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-frame-delay", "Rahmenverzögerung setzen")
+        protocol::LocalizedLabel::native("Set frame delay", "Verzögerung des Einzelbilds setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

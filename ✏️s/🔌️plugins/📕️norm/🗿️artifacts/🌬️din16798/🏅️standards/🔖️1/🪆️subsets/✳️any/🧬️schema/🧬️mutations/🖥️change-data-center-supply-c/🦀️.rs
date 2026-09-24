@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeDataCe
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change data center supply temperature to {}", self.new_data_center_supply_c), &format!("Datenmittelpunktzulufttemperatur auf {} ändern", self.new_data_center_supply_c))
+        protocol::LocalizedLabel::native(&format!("Change data center supply temperature to {}", self.new_data_center_supply_c), &format!("Zulufttemperatur des Rechenzentrums auf {} ändern", self.new_data_center_supply_c))
     }
 }
 //#endregion 🔖️ChangeDataCenterSupplyC

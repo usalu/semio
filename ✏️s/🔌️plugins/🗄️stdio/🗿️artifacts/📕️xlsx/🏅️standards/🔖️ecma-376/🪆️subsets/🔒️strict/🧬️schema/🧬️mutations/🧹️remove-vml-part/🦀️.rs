@@ -21,7 +21,7 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for RemoveVmlPart 
         agg_inverse(&XlsxStrictMutation::RemoveVmlPart(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-vml-part", "Vmlbauteil entfernen")
+        protocol::LocalizedLabel::native("Remove VML part", "VML-Paketteil entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

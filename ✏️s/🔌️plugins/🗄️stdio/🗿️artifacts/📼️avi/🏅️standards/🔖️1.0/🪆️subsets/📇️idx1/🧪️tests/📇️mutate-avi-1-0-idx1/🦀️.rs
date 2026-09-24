@@ -13,29 +13,9 @@
 //! `sut` feature so the oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::avi::standards::v1_0::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_avi_1_0};
+use semio_s_plugin_stdio_test_oracle::artifacts::avi::standards::v1_0::subsets::hdrl::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_avi_1_0};
 use semio_s_plugin_stdio_test_oracle::law;
 
-//#region 🔖️Kinds
-/// 📇️ Kebab-case spelling of every `AviMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS` --
-/// duplicated rather than imported because the ORACLE-only build of this adapter must never link
-/// `semio-s-plugin-stdio`.
-const KINDS: &[&str] = &[
-    "set-snapshot",
-    "set-main-header",
-    "set-idx1-present",
-    "insert-stream",
-    "remove-stream",
-    "set-stream-header",
-    "set-stream-format",
-    "insert-chunk",
-    "remove-chunk",
-    "set-chunk-keyframe",
-    "add-unknown-chunk",
-    "remove-unknown-chunk",
-];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🎬️.avi";
@@ -99,13 +79,13 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{mutable_input, KINDS};
+    use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::io::{decode_avi, encode_avi};
     use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::mutations;
     use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation, AviMutation};
     use semio_s_artifact_stdio_avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk, STDIO_AVI_DOCUMENT_SCHEMA};
-    use semio_s_plugin_stdio_test_oracle::artifacts::avi::standards::v1_0::subsets::any::project_avi_1_0;
+    use semio_s_plugin_stdio_test_oracle::artifacts::avi::standards::v1_0::subsets::hdrl::project_avi_1_0;
 
     //#region 🔖️Hex
     /// 🔤️ The same lowercase-hex binary-in-text convention the oracle side uses -- duplicated
@@ -371,28 +351,19 @@ mod subject {
     }
     //#endregion 🔖️Handlers
 
-    /// 🧭️ Re-exported so `super::adapter()` can register the same 12-kind sweep for the subject role
-    /// without duplicating `KINDS` a third time.
-    pub const SUBJECT_KINDS: &[&str] = KINDS;
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 12 kinds -- the scenario id only selects which fixture row's
-/// `<id>`/`<params>` doc string the shared handler reads, per `Adapter::oracle`/`subject`'s own
-/// per-scenario dispatch table.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-    }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        for kind in subject::SUBJECT_KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

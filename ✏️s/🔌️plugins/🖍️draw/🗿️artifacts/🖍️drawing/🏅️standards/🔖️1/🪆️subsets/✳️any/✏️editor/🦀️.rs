@@ -1965,6 +1965,8 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .action_destructive("setSnapshot")
             .action_destructive("setFixtureJson")
             .action_destructive("setActiveExample")
+            .action_destructive("commitDocument")
+            .action_destructive("exportDocument")
             // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(drawing_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
             .utility(drawing_utility("selectLasso", LocalizedLabel::native("Lasso Select", "Lasso-Auswahl"), "lasso", "Select", UtilityCategory::Selection))

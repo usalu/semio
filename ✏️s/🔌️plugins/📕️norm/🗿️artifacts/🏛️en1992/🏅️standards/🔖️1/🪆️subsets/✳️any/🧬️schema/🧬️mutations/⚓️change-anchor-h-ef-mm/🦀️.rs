@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorHEfM
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change anchor h ef mm to {:?}", self.new_anchor_h_ef_mm), &format!("Ankerhefmm auf {:?} ändern", self.new_anchor_h_ef_mm))
+        protocol::LocalizedLabel::native(&format!("Change anchor embedment depth h_ef [mm] to {:?}", self.new_anchor_h_ef_mm), &format!("Verankerungstiefe h_ef [mm] auf {:?} ändern", self.new_anchor_h_ef_mm))
     }
 }
 //#endregion 🔖️ChangeAnchorHEfMm

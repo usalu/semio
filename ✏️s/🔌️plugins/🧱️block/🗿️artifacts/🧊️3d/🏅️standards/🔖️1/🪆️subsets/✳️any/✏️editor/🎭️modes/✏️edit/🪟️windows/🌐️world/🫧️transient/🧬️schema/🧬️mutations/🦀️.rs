@@ -43,3 +43,13 @@ impl protocol::OpBinary for Block3dWorldWindowTransientMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+
+//#region 🌉️TestBridge
+/// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
+/// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Block3dWorldWindowTransient`.
+///
+/// @see store::os_store::test_support::mutation_report_json
+pub fn block3d_world_window_transient_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
+    store::os_store::test_support::mutation_report_json::<Block3dWorldWindowTransient, Block3dWorldWindowTransientMutation>(base_json, mutation_json, after_json)
+}
+//#endregion 🌉️TestBridge

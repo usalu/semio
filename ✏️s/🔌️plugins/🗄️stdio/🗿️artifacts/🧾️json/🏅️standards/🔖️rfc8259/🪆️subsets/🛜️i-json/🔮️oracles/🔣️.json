@@ -72,7 +72,8 @@
           "capability": "json-rfc8259-i-json-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-array-element",
@@ -91,7 +92,8 @@
           "capability": "json-rfc8259-i-json-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-array-element",
@@ -110,7 +112,8 @@
           "capability": "json-rfc8259-i-json-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-member",
@@ -129,7 +132,8 @@
           "capability": "json-rfc8259-i-json-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-member",
@@ -148,7 +152,8 @@
           "capability": "json-rfc8259-i-json-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-safe-number",
@@ -167,7 +172,8 @@
           "capability": "json-rfc8259-i-json-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -186,7 +192,8 @@
           "capability": "json-rfc8259-i-json-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-string",
@@ -205,7 +212,8 @@
           "capability": "json-rfc8259-i-json-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-top-level",
@@ -224,7 +232,9 @@
           "capability": "json-rfc8259-i-json-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "upsert-member",

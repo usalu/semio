@@ -2518,7 +2518,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -2918,14 +2918,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -3041,14 +3041,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -3082,14 +3082,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -4421,26 +4421,10 @@
             "exportFormats": [],
             "importFormats": [],
             "exportStdioKinds": [
-              "stdio.bmp",
-              "stdio.dwg",
-              "stdio.gif",
-              "stdio.jpg",
-              "stdio.json",
-              "stdio.pdf",
-              "stdio.png",
-              "stdio.svg",
-              "stdio.tiff"
+              "stdio.json"
             ],
             "importStdioKinds": [
-              "stdio.bmp",
-              "stdio.dwg",
-              "stdio.gif",
-              "stdio.jpg",
-              "stdio.json",
-              "stdio.pdf",
-              "stdio.png",
-              "stdio.svg",
-              "stdio.tiff"
+              "stdio.json"
             ]
           },
           {
@@ -5842,112 +5826,8 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.bmp",
-          "standard": "v3",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.shooting.shooting",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.dwg",
-          "standard": "ac1018",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.shooting.shooting",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.gif",
-          "standard": "87a",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.shooting.shooting",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.jpg",
-          "standard": "jfif-1.01",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.shooting.shooting",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
           "artifactKind": "s.stdio.json",
           "standard": "rfc8259",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.shooting.shooting",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.pdf",
-          "standard": "1.4",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.shooting.shooting",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.png",
-          "standard": "1.2",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.shooting.shooting",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.svg",
-          "standard": "1.1",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.shooting.shooting",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.tiff",
-          "standard": "6.0",
           "subset": "*"
         },
         "direction": "import"
@@ -5980,48 +5860,8 @@
             "subset": "*"
           },
           {
-            "artifactKind": "s.stdio.bmp",
-            "standard": "v3",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.dwg",
-            "standard": "ac1018",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.gif",
-            "standard": "87a",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.jpg",
-            "standard": "jfif-1.01",
-            "subset": "*"
-          },
-          {
             "artifactKind": "s.stdio.json",
             "standard": "rfc8259",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.pdf",
-            "standard": "1.4",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.png",
-            "standard": "1.2",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.svg",
-            "standard": "1.1",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.tiff",
-            "standard": "6.0",
             "subset": "*"
           },
           {
@@ -6034,8 +5874,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "72e7cc92e99c9ac281ab3177a3d58c213b4d5eba41814ba4f98b401193a4bbc6",
-    "coreWasmSha256": "d9ffb4f2775aa0f4f25fc40eeb414a278fcef88a73ac12b6242f37c9e62a7c75",
-    "descriptorSha256": "7e2b3941be68ce247849df6dc05e4254d4ac3c34860473b59eba0fc467925255"
+    "wasmSha256": "6d64b0e1693ba1e2e26b8e2999fb03b32c4cc5546529f4b8e99fef4e8cfc9502",
+    "coreWasmSha256": "38da805028633fd8bf1ef037e9a55884810423b8fe5ef9055d32d3e516d45071",
+    "descriptorSha256": "5499f1dc1e04a32db59c2197384b0f71770d24fed93e164776a63f6948508fbb"
   }
 }

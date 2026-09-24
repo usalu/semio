@@ -22,17 +22,23 @@ const ALL_LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), 
 const MODULE_JSON: &str = include_str!("🔣️.json");
 
 /// 🏷️ `$defs` of `🔣️.json`, in declaration order.
-const EXPORTS: [SchemaExport; 17] = [
+const EXPORTS: [SchemaExport; 25] = [
     SchemaExport { id: "TrustedCatalogRelativePathV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleIdentityV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleCodecV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleParentDialectV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleGrantV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleOpenTargetV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedDescriptorOpenTargetV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedCatalogDescriptorOpenTargetsV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleFileV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleComponentV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleExecutionProtocolV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleBrowserActorV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedPluginModulePathV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedPluginModuleFileV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedPluginModuleBundleV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundlePluginModuleV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundlePackageV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleProfileOpenTargetV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleProfileV1", leaves: ALL_LEAVES },
@@ -40,6 +46,8 @@ const EXPORTS: [SchemaExport; 17] = [
     SchemaExport { id: "TrustedCatalogCurrentPointerV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedCatalogPublicationCommandV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedCatalogPublicationReceiptV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedPluginModuleIndexEntryV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedPluginModuleIndexV1", leaves: ALL_LEAVES },
 ];
 
 /// 📌️ Registers `hub.artifact-authority.trusted-catalog`'s named exports into the process-wide export catalog.
@@ -68,6 +76,12 @@ pub const TRUSTED_CATALOG_PUBLICATION_MAX_BYTES: usize = 4096;
 pub const TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE: &str = "durable";
 /// ⚠️ Visible-but-unconfirmed publication outcome token.
 pub const TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED: &str = "replaced-unconfirmed";
+/// 🏷️ Closed `os-hub trusted-catalog open-targets` answer schema identity.
+pub const TRUSTED_CATALOG_DESCRIPTOR_OPEN_TARGETS_SCHEMA: &str = "semio.hub.trusted-catalog-descriptor-open-targets/v1";
+/// 🏷️ Closed trusted plugin module bundle manifest schema identity.
+pub const TRUSTED_PLUGIN_MODULE_SCHEMA: &str = "semio.hub.trusted-plugin-module/v1";
+/// 🏷️ Closed `GET /trusted-catalog/plugin-modules` answer schema identity.
+pub const TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA: &str = "semio.hub.trusted-plugin-module-index/v1";
 
 /// 🔢️ Requires the canonical nonzero unsigned 64-bit spelling every revision token is compared by.
 pub fn publication_revision(value: &str) -> Result<u64, AuthorityError> {
@@ -119,14 +133,14 @@ pub struct TrustedBundleCodecV1 {
     pub pack_schema_hash: String,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum TrustedBundleOpenRole {
     Viewer,
     Editor,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum TrustedBundleRendererTarget {
     React,
@@ -149,12 +163,37 @@ pub struct TrustedBundleOpenTargetV1 {
     pub grant: TrustedBundleGrantV1,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TrustedBundleGrantV1 {
     pub read: bool,
     pub write: bool,
     pub observe: bool,
+}
+
+/// 🎯️ One document-open surface a verified descriptor declares for one of its artifact kinds, before a codec
+/// binds its pack fingerprint: [`TrustedBundleOpenTargetV1`] without `pack_schema_hash`. Produced only by the
+/// hub's own pairing rule (`descriptor_open_targets`), never transcribed by a publisher.
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedDescriptorOpenTargetV1 {
+    pub artifact_kind: String,
+    pub artifact_schema: String,
+    pub surface_id: String,
+    pub app_id: String,
+    pub window_kind_id: String,
+    pub role: TrustedBundleOpenRole,
+    pub renderer_target: TrustedBundleRendererTarget,
+    pub parent_dialect: TrustedBundleParentDialectV1,
+    pub grant: TrustedBundleGrantV1,
+}
+
+/// 📤️ What `os-hub trusted-catalog open-targets` answers for one package descriptor.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedCatalogDescriptorOpenTargetsV1 {
+    pub schema: &'static str,
+    pub targets: Vec<TrustedDescriptorOpenTargetV1>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -174,6 +213,46 @@ pub struct TrustedBundleComponentV1 {
     pub blake3: String,
 }
 
+/// 📛️ One plugin-module-relative path: 1–16 segments, none empty, `.`, `..` or carrying `\`, a control
+/// character, `?`, `#` or `%`, so it names the same file as a filesystem path and as a URL path.
+pub type TrustedPluginModulePathV1 = String;
+
+/// 🧩️ One file of a plugin module bundle, content-addressed by its digests.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedPluginModuleFileV1 {
+    pub path: TrustedPluginModulePathV1,
+    pub byte_length: u64,
+    pub sha256: String,
+    pub blake3: String,
+}
+
+/// 🧩️ The manifest of one package's browser plugin module (host shim, component module, core Wasm,
+/// descriptor and vendored imports), derived from the package's own trusted component and descriptor.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedPluginModuleBundleV1 {
+    pub schema: String,
+    pub plugin_id: String,
+    pub package_id: String,
+    pub version: String,
+    pub source_component_sha256: String,
+    pub source_descriptor_byte_sha256: String,
+    pub module_directory: String,
+    pub entry: TrustedPluginModulePathV1,
+    pub files: Vec<TrustedPluginModuleFileV1>,
+}
+
+/// 🧩️ Where a package record finds its plugin module manifest inside the generation.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedBundlePluginModuleV1 {
+    pub path: String,
+    pub byte_length: u64,
+    pub sha256: String,
+    pub blake3: String,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TrustedBundlePackageV1 {
@@ -186,6 +265,7 @@ pub struct TrustedBundlePackageV1 {
     pub component: TrustedBundleComponentV1,
     pub descriptor: TrustedBundleFileV1,
     pub browser_actor: TrustedBundleBrowserActorV1,
+    pub plugin_module: TrustedBundlePluginModuleV1,
     pub native_codecs: Vec<TrustedBundleCodecV1>,
     pub open_targets: Vec<TrustedBundleOpenTargetV1>,
 }
@@ -274,4 +354,34 @@ pub struct TrustedCatalogPublicationReceiptV1 {
     pub publication_revision: String,
     pub current_sha256: String,
     pub outcome: &'static str,
+}
+
+/// 📇️ One installable plugin module of the current generation, addressed by its manifest digest.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedPluginModuleIndexEntryV1 {
+    pub plugin_id: String,
+    pub package_id: String,
+    pub version: String,
+    pub component_sha256: String,
+    pub descriptor_byte_sha256: String,
+    pub dependencies: Vec<String>,
+    /// 🎭️ Every app dialect artifact kind the package's surfaces open, in ascending byte order: how a shell that never
+    /// built the plugin finds the package that opens a kind.
+    pub dialect_artifact_kinds: Vec<String>,
+    /// 🧩️ The plugin an extension package extends (its first declared dependency), `None` for a plugin: how a shell
+    /// activates a hub-resolved plugin's extensions from the same generation.
+    pub extends_plugin_id: Option<String>,
+    pub bundle_sha256: String,
+    pub bundle_byte_length: u64,
+    pub entry: TrustedPluginModulePathV1,
+}
+
+/// 📇️ What `GET /trusted-catalog/plugin-modules` answers: every plugin module of one generation.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedPluginModuleIndexV1 {
+    pub schema: String,
+    pub generation_id: String,
+    pub modules: Vec<TrustedPluginModuleIndexEntryV1>,
 }

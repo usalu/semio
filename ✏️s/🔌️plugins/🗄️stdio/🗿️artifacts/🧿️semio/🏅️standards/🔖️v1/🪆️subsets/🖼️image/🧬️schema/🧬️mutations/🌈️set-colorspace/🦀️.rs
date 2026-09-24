@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetColor
         agg_inverse(&SemioImageMutation::SetColorspace(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-colorspace", "Farbraum setzen")
+        protocol::LocalizedLabel::native("Set colorspace", "Farbraum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

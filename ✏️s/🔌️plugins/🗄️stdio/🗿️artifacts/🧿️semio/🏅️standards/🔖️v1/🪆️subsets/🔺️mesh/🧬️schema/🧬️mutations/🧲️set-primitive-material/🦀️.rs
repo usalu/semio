@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for SetPrimiti
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set primitive \"{}\" material in mesh \"{}\"", self.primitive_id, self.mesh_id), &format!("Primitiv \"{}\" Material in Netz \"{}\" setzen", self.primitive_id, self.mesh_id))
+        protocol::LocalizedLabel::native(&format!("Set primitive \"{}\" material in mesh \"{}\"", self.primitive_id, self.mesh_id), &format!("Material von Primitiv \"{}\" in Netz \"{}\" setzen", self.primitive_id, self.mesh_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.primitive_id.clone()]

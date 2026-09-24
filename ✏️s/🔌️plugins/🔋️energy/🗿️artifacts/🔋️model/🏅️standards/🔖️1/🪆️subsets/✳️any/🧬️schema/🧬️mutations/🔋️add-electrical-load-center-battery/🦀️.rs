@@ -34,7 +34,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddEle
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add battery {} to electrical load center {}", self.battery_id.0, self.id.0), &format!("Batterie {} zu elektrische Lastmittelpunkt {} hinzufügen", self.battery_id.0, self.id.0))
+        protocol::LocalizedLabel::native(&format!("Add battery {} to electrical load center {}", self.battery_id.0, self.id.0), &format!("Batterie {} zu Stromverteiler {} hinzufügen", self.battery_id.0, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

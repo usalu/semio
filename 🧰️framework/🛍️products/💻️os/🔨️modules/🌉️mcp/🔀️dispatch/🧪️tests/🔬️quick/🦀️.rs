@@ -61,11 +61,11 @@ fn harness(auto_approve: AutoApprovePolicy) -> (ActionAdapter, MockArtifactChann
 
 #[derive(Default)]
 struct RecordingHistoryUndoPort {
-    members: Mutex<Vec<HubGisMapApprovalUndoMemberV1>>,
+    members: Mutex<Vec<HubInferenceApprovalUndoMemberV1>>,
 }
 
 impl HistoryUndoPort for RecordingHistoryUndoPort {
-    fn undo_hub_gis_map_approval(&self, member: &HubGisMapApprovalUndoMemberV1) -> Result<(), GatewayError> {
+    fn undo_hub_inference_approval(&self, member: &HubInferenceApprovalUndoMemberV1) -> Result<(), GatewayError> {
         self.members.lock().expect("history members lock poisoned").push(member.clone());
         Ok(())
     }
@@ -200,13 +200,13 @@ fn hub_gis_approval_history_uses_the_private_port_and_never_stores_inverse_bytes
     adapter.bind_history_undo_port(port.clone());
     let session = SessionHandle::new("sess_owner");
     let scope = semio_framework_os_kernel::os_directory::DocumentScope::new("space-a", "document-a");
-    let expected_current = semio_framework_os_kernel::os_directory::CheckpointPublicationFrontierV1 { document_id: scope.document_id.clone(), head_edit_ordinal: 1, head_edit_id: "edit-a".into(), last_commit_seq: 1, chain_sha256: "11".repeat(32) };
+    let expected_current = semio_framework_os_kernel::os_directory::EditedArtifactFrontierV1 { document_id: scope.document_id.clone(), head_edit_ordinal: 1, head_edit_id: "edit-a".into(), last_commit_seq: 1, chain_sha256: "11".repeat(32) };
     let token = adapter
-        .retain_hub_gis_map_approval_undo(&session, "https://hub.invalid", &scope, &semio_framework_os_kernel::os_directory::GisMapApprovalUndoHandleV1 { target_id: "22".repeat(16), expected_current: expected_current.clone() }, 7)
+        .retain_hub_inference_approval_undo(&session, "https://hub.invalid", &scope, "inference/gis-map", &semio_framework_os_kernel::os_directory::GisMapApprovalUndoHandleV1 { target_id: "22".repeat(16), expected_current: expected_current.clone() }, 7)
         .expect("Hub receipt mints one private undo token");
     let retained = handles.resolve(&token, &session, 8).expect("owner resolves its token");
     let encoded = serde_json::to_string(&retained.payload).expect("payload");
-    assert!(encoded.contains("hub-gis-map-approval") && !encoded.contains("inverse") && !encoded.contains("mutation"), "{encoded}");
+    assert!(encoded.contains("hub-inference-approval") && !encoded.contains("inverse") && !encoded.contains("mutation"), "{encoded}");
     let report = adapter.history_undo(&session, &token, 9).expect("history routes through the Hub port");
     assert_eq!((report.members, report.warnings.len()), (1, 0));
     let observed = port.members.lock().expect("history members lock poisoned");

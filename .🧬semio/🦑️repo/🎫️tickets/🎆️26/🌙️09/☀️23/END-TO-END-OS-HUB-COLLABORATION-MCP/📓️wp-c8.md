@@ -8,8 +8,8 @@ Session 10 slice C8. Ports: hubs 7880–7889, serves 6380–6389. Captures `wp-c
 |---|---|
 | 1. `commitCheckpoint` guest panic → async job across turns + native law | DONE natively (laws green); guest rebuild requested from W1 (gis, draw first) |
 | 2. Peer inspector panel refresh after remote edit | DONE natively (law green); live proof pending guest rebuild |
-| 3. Scenario 10/10 + STEP 14 peer cursors | pending |
-| 4. Zero-touch clean-state run, timed | pending |
+| 3. Scenario 10/10 + STEP 14 peer cursors | BLOCKED on W1 catalog A (hub-bound guests are served from the hub catalog; 7820's is stale). Partial run c8f: 1a–1e, 5, 7, 8 PASS |
+| 4. Zero-touch clean-state run, timed | NOT RUN: needs catalog A publish (cold cache after the 12:43 sweep) |
 | 5. `browser-document-open-check` last stage | DONE: `open-plan-server-check` 8/8 laws (the stage C7 could not finish); a second full-chain run hung once in one law (below) |
 
 ## Log
@@ -93,3 +93,17 @@ green with the item-1 laws (`test-4.txt`, 51/51 of the filtered set).
   So the collab proof needs catalog A (W1) on the hub. c8f's step 2/3 "PASS" came from the old ledger witness counting my own
   panel-tab rows. I replaced it with an inspector-only witness (c8g: A's own inspector also stayed at 152 on the stale guest).
 - 11:45 W1's catalog A publish was killed at 11:45 (rc=137, wall 6649 s, `wp-w1/generated/catalog-a.txt`). My wait loops were killed at the same moment, so it looks like an external sweep. Waiting for W1's retry.
+
+- 13:32 Rule 13: `cargo check -p semio-framework-plugin` on the current tree: EXIT 0 with 85 warnings (`check-plugin-rule13.txt`).
+- 13:32 Catalog A is still not published (W1 holds the wasm mutex since 13:10, cold cache). My hub/serves died in the 11:45 sweep, and I hold
+  no processes or locks now. **Resume recipe** once `.🧬semio/🌐hub/w1-catalog-a/trusted-catalog/current.json` exists:
+  1. hub: `bun wp-c7/hub-hold.ts 7880 <APFS clone of w1-catalog-a> .tmp-ticket/wp-h5/bin/os-hub` (nohup), credentials per `wp-c7`;
+     serve: `zsh wp-c8/serve.sh gis2d 6381 http://127.0.0.1:7880`;
+  2. `C3_TAG=c8h bun wp-c8/c8-collab-scenario.mjs http://127.0.0.1:6381 127.0.0.1:7880 <space> <doc>`. Steps 2/3 now pass only on the
+     peer's INSPECTOR changing (witness fixed), and step 4 (undo) depends on the checkpoint fix;
+  3. `S_COLLAB_OUT=.tmp-ticket/wp-c8/generated S_COLLAB_HUB_BINARY=.tmp-ticket/wp-h5/bin/os-hub zsh 📜️fleet-mutex.sh wasm c8 -- bun nx run
+     @semio-tech/framework-os-dev:collab-e2e` (14 steps incl. STEP 14 writer/draw/puzzle3d cursors);
+  4. zero-touch: `rm -rf` a fresh `OS_HUB_DATA`, then time `dev s` (`ensureTrustedCatalog` → `os-hub:trusted-catalog-bootstrap`) under the wasm mutex.
+
+## Coordinator note (17:5x)
+- Zero-touch hazard: `🌎️hub/📦️packages/🦀️rust/dist/build-dev/os-hub` (mtime 2026-09-23 19:37) is a pre-H2 binary that panics at boot (overlapping `GET /scopes/{scope}/document/ws`). When proving zero-touch `dev s`/▶️start, verify ensureDevLocalHub rebuilds or refuses a stale dist hub by content/source freshness, and never boots it.

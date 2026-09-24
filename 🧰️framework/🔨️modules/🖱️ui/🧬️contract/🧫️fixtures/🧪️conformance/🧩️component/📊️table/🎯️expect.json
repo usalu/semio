@@ -1,0 +1,63 @@
+{
+  "case": "table",
+  "kind": "component",
+  "description": "A windowed Table (rows 12–13 of 40) with two TableRows — header, cells and row actions are props, so the table is three node records.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 3,
+    "shape": [
+      {
+        "id": 0,
+        "key": "spaces",
+        "type": "table",
+        "children": [
+          1,
+          2
+        ]
+      },
+      {
+        "id": 1,
+        "key": "space:sp-1",
+        "type": "tableRow",
+        "children": []
+      },
+      {
+        "id": 2,
+        "key": "space:sp-2",
+        "type": "tableRow",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Spaces",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 2,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "s.space.home@1/*#editor.openSpace@1"
+  ]
+}

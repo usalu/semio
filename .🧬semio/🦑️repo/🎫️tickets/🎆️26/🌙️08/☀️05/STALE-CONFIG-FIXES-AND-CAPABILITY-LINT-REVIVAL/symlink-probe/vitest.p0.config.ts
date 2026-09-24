@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/🧰️framework/⚡️implementations/🟦️typescript/🧪️vitest.config.ts

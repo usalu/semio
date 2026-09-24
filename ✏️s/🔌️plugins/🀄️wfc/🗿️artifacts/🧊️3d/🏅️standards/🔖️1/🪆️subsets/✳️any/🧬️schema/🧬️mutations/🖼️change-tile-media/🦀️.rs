@@ -29,7 +29,7 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for ChangeTileMedia {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change tile \"{}\" media", self.id), &format!("Kachel \"{}\" Medien ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change tile \"{}\" media", self.id), &format!("Medien von Kachel \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

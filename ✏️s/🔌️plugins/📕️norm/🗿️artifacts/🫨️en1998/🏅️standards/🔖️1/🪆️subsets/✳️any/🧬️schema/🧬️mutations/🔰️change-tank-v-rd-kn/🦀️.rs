@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTankVRdKn 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change tank shear resistance V_Rd [kN] to {}", self.new_tank_v_rd_kn), &format!("Tankschubwiderstandv_Rd [kN] auf {} ändern", self.new_tank_v_rd_kn))
+        protocol::LocalizedLabel::native(&format!("Change tank shear resistance V_Rd [kN] to {}", self.new_tank_v_rd_kn), &format!("Querkrafttragfähigkeit des Tanks V_Rd [kN] auf {} ändern", self.new_tank_v_rd_kn))
     }
 }
 //#endregion 🔖️ChangeTankVRdKn

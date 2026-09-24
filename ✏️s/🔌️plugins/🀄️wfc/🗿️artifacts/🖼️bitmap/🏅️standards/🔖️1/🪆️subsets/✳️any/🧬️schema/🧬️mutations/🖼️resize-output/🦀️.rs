@@ -33,7 +33,7 @@ impl MutationKind<BitmapSnapshot, BitmapMutation> for ResizeOutput {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Resize output to {}×{}", self.width, self.height), &format!("Ausgabe auf {}×{} skalieren", self.width, self.height))
+        protocol::LocalizedLabel::native(&format!("Resize output to {}×{}", self.width, self.height), &format!("Größe der Ausgabe auf {}×{} ändern", self.width, self.height))
     }
 }
 //#endregion 🔖️ResizeOutput

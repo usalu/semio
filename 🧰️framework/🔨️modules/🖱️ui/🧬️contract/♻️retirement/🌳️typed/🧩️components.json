@@ -19,6 +19,8 @@
     {"component": {"type": "treeItem", "label": "L", "description": "D", "icon": "I", "dragData": {"x": "🌊"}, "rowActions": [{"icon": "R", "label": "B", "action": {"trigger": "activate", "action": {"scope": "s", "name": "n", "version": 1}, "args": {"x": ["🌊"]}, "capability": "c"}}]}, "bytes": 18},
     {"component": {"type": "image", "src": "S", "alt": "A"}, "bytes": 2},
     {"component": {"type": "extension", "extension": "E", "props": {"x": ["🌊"]}}, "bytes": 6},
-    {"component": {"type": "surface", "kind": "canvas-2d", "docSchema": "wire", "doc": {"bytes": [0, 1, 2]}, "bindings": []}, "bytes": 7}
+    {"component": {"type": "surface", "kind": "canvas-2d", "docSchema": "wire", "doc": {"bytes": [0, 1, 2]}, "bindings": []}, "bytes": 7},
+    {"component": {"type": "table", "label": "L", "columns": ["A", "B"], "actionsLabel": "C", "window": {"total": 9, "offset": 2, "rowExtent": "standard"}}, "bytes": 4},
+    {"component": {"type": "tableRow", "cells": ["A", "🌊"], "rowActions": [{"icon": "R", "label": "B", "action": {"trigger": "activate", "action": {"scope": "s", "name": "n", "version": 1}, "args": {"x": ["🌊"]}, "capability": "c"}}]}, "bytes": 15}
   ]
 }

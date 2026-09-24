@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceAuditEvent {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace audit event \"{}\"", self.audit_event.header.name), &format!("Prüfungsereignis \"{}\" ersetzen", self.audit_event.header.name))
+        protocol::LocalizedLabel::native(&format!("Replace audit event \"{}\"", self.audit_event.header.name), &format!("Audit-Ereignis \"{}\" ersetzen", self.audit_event.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.audit_event.header.id.0.clone()]

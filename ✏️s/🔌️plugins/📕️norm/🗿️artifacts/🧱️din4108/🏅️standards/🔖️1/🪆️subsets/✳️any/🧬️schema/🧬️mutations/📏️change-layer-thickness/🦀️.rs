@@ -22,7 +22,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeLayerThi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change layer #{} thickness to {}", self.index, self.new_thickness_m), &format!("Ebene #{} Dicke auf {} ändern", self.index, self.new_thickness_m))
+        protocol::LocalizedLabel::native(&format!("Change layer #{} thickness to {}", self.index, self.new_thickness_m), &format!("Dicke von Schicht #{} auf {} ändern", self.index, self.new_thickness_m))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

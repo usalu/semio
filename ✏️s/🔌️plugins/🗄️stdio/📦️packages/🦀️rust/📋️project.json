@@ -78,6 +78,17 @@
         "forwardAllArgs": true
       }
     },
+    "native-codec-projection": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-codec-projection",
+        "forwardAllArgs": true
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json"
+      ]
+    },
     "describe": {
       "executor": "nx:run-commands",
       "options": {

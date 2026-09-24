@@ -2,6 +2,7 @@
   "schema": "semio.framework.kernel.spawned-job-drive.v1",
   "owner": "🧰️framework/🔨️modules/🎠️kernel - Effect::SpawnJob → Event::JobCompleted",
   "note": "The law every host on every renderer answers to: a `spawn-job` effect obliges its host to START the job, STEP it until a terminal `job-step`, and answer the guest with `Event::JobCompleted` carrying that step's bytes. A host that admits the effect and never pumps it is silent breakage — on the wgpu target every `interactionSelect`/`interactionHover` published the right wire message and was never applied, because the bridge dropped the effect outright (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md` §7).",
+  "reservedKind": "framework.reserved.tool",
   "budget": {
     "note": "One host admission's static budget. `stepCeiling` is the host's patience, not the job's expected cost: a framework reserved tool job reaches `done` in two steps (`🔌️plugin/🦀️.rs`'s `drive_framework_reserved_spawn_like_host` asserts exactly that).",
     "stepCeiling": 32,

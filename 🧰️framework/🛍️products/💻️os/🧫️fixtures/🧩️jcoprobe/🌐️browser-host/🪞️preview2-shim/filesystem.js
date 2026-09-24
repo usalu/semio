@@ -1,339 +1,189 @@
-import { inputStreamCreate, outputStreamCreate } from "./io.js";
 import { environment } from "./environment.js";
-import { _setCwd, _getCwd } from "./config.js";
+import { InMemoryFilesystemAdapter } from "./in-memory-filesystem.js";
+import { _setCwd } from "./config.js";
 export { _setCwd } from "./config.js";
+export { InMemoryFilesystemAdapter } from "./in-memory-filesystem.js";
+export { OpfsFilesystemAdapter, loadOpfsCapability } from "./opfs-filesystem.js";
+class DirectoryEntryStream {
+    #implementation;
+    static _create(implementation) {
+        const stream = new DirectoryEntryStream();
+        stream.#implementation = implementation;
+        return stream;
+    }
+    readDirectoryEntry() {
+        return this.#implementation.readDirectoryEntry();
+    }
+}
+const directoryEntryStreamCreate = DirectoryEntryStream._create;
+// @ts-expect-error - Deleting static method
+delete DirectoryEntryStream._create;
+class Descriptor {
+    #implementation;
+    _getImplementation(descriptor) {
+        return descriptor.#implementation;
+    }
+    static _create(implementation) {
+        const descriptor = new Descriptor();
+        descriptor.#implementation = implementation;
+        return descriptor;
+    }
+    readViaStream(offset) {
+        return this.#implementation.readViaStream(offset);
+    }
+    writeViaStream(offset) {
+        return this.#implementation.writeViaStream(offset);
+    }
+    appendViaStream() {
+        return this.#implementation.appendViaStream();
+    }
+    advise(offset, length, advice) {
+        return this.#implementation.advise(offset, length, advice);
+    }
+    syncData() {
+        return this.#implementation.syncData();
+    }
+    getFlags() {
+        return this.#implementation.getFlags();
+    }
+    getType() {
+        return this.#implementation.getType();
+    }
+    setSize(size) {
+        return this.#implementation.setSize(size);
+    }
+    setTimes(dataAccessTimestamp, dataModificationTimestamp) {
+        return this.#implementation.setTimes(dataAccessTimestamp, dataModificationTimestamp);
+    }
+    read(length, offset) {
+        return this.#implementation.read(length, offset);
+    }
+    write(buffer, offset) {
+        return this.#implementation.write(buffer, offset);
+    }
+    readDirectory() {
+        return directoryEntryStreamCreate(this.#implementation.readDirectory());
+    }
+    sync() {
+        return this.#implementation.sync();
+    }
+    createDirectoryAt(path) {
+        return this.#implementation.createDirectoryAt(path);
+    }
+    stat() {
+        return this.#implementation.stat();
+    }
+    statAt(pathFlags, path) {
+        return this.#implementation.statAt(pathFlags, path);
+    }
+    setTimesAt(pathFlags, path, dataAccessTimestamp, dataModificationTimestamp) {
+        return this.#implementation.setTimesAt(pathFlags, path, dataAccessTimestamp, dataModificationTimestamp);
+    }
+    linkAt(oldPathFlags, oldPath, newDescriptor, newPath) {
+        return this.#implementation.linkAt(oldPathFlags, oldPath, descriptorGetImplementation(newDescriptor), newPath);
+    }
+    openAt(pathFlags, path, openFlags, flags) {
+        return descriptorCreate(this.#implementation.openAt(pathFlags, path, openFlags, flags));
+    }
+    readlinkAt(path) {
+        return this.#implementation.readlinkAt(path);
+    }
+    removeDirectoryAt(path) {
+        return this.#implementation.removeDirectoryAt(path);
+    }
+    renameAt(oldPath, newDescriptor, newPath) {
+        return this.#implementation.renameAt(oldPath, descriptorGetImplementation(newDescriptor), newPath);
+    }
+    symlinkAt(oldPath, newPath) {
+        return this.#implementation.symlinkAt(oldPath, newPath);
+    }
+    unlinkFileAt(path) {
+        return this.#implementation.unlinkFileAt(path);
+    }
+    isSameObject(other) {
+        return this.#implementation.isSameObject(descriptorGetImplementation(other));
+    }
+    metadataHash() {
+        return this.#implementation.metadataHash();
+    }
+    metadataHashAt(pathFlags, path) {
+        return this.#implementation.metadataHashAt(pathFlags, path);
+    }
+    lockShared() {
+        return this.#implementation.lockShared?.();
+    }
+    lockExclusive() {
+        return this.#implementation.lockExclusive?.();
+    }
+    tryLockShared() {
+        return this.#implementation.tryLockShared?.() ?? false;
+    }
+    tryLockExclusive() {
+        return this.#implementation.tryLockExclusive?.() ?? false;
+    }
+    unlock() {
+        return this.#implementation.unlock?.();
+    }
+}
+const descriptorGetImplementation = Descriptor.prototype._getImplementation;
+// @ts-expect-error - Deleting prototype method
+delete Descriptor.prototype._getImplementation;
+const descriptorCreate = Descriptor._create;
+// @ts-expect-error - Deleting static method
+delete Descriptor._create;
+const defaultAdapter = new InMemoryFilesystemAdapter();
+let _fileData = { dir: {} };
+let _preopens = [];
+let _rootPreopen = null;
+export const preopens = {
+    getDirectories() {
+        return _preopens;
+    },
+};
+/** Create isolated filesystem namespaces backed by an application-selected adapter. */
+export function createFilesystem({ adapter, preopens: configuredPreopens, }) {
+    const entries = Object.entries(configuredPreopens).map(([guestPath, capability]) => [descriptorCreate(adapter.getRoot(capability)), guestPath]);
+    let disposed = false;
+    return {
+        types,
+        preopens: {
+            getDirectories() {
+                if (disposed) {
+                    throw new Error("filesystem adapter has been disposed");
+                }
+                return [...entries];
+            },
+        },
+        dispose() {
+            if (disposed) {
+                return;
+            }
+            disposed = true;
+            adapter.dispose?.();
+        },
+    };
+}
 export function _setFileData(fileData) {
     _fileData = fileData;
-    _rootPreopen[0] = descriptorCreate(fileData);
+    if (_rootPreopen) {
+        _rootPreopen[0] = descriptorCreate(defaultAdapter.getRoot(fileData));
+    }
+    else {
+        _setPreopens({ "/": fileData });
+    }
     const cwd = environment.initialCwd();
     _setCwd(cwd || "/");
 }
 export function _getFileData() {
     return JSON.stringify(_fileData);
 }
-let _fileData = { dir: {} };
-const timeZero = {
-    seconds: 0n,
-    nanoseconds: 0,
-};
-/** Coerce the given object to a safe integer */
-function coerceToSafeIntegerNumber(obj) {
-    let n;
-    if (typeof obj === "number") {
-        n = obj;
-    }
-    else if (typeof obj == "bigint") {
-        n = Number(obj);
-    }
-    else {
-        throw new TypeError(`unexpected non-numeric type: ${obj}`);
-    }
-    if (n > Number.MAX_SAFE_INTEGER) {
-        throw new TypeError(`excessively large number: ${n}`);
-    }
-    return n;
-}
-function getChildEntry(parentEntry, subpath, openFlags) {
-    if (subpath === "." && _rootPreopen && descriptorGetEntry(_rootPreopen[0]) === parentEntry) {
-        subpath = _getCwd();
-        if (subpath.startsWith("/") && subpath !== "/") {
-            subpath = subpath.slice(1);
-        }
-    }
-    let entry = parentEntry;
-    let segmentIdx;
-    do {
-        if (!entry?.dir) {
-            throw "not-directory";
-        }
-        segmentIdx = subpath.indexOf("/");
-        const segment = segmentIdx === -1 ? subpath : subpath.slice(0, segmentIdx);
-        if (segment === "..") {
-            throw "no-entry";
-        }
-        if (segment === "." || segment === "") {
-        }
-        else if (!entry.dir[segment] && openFlags.create) {
-            entry = entry.dir[segment] = openFlags.directory
-                ? { dir: {} }
-                : { source: new Uint8Array([]) };
-        }
-        else {
-            entry = entry.dir[segment];
-        }
-        subpath = subpath.slice(segmentIdx + 1);
-    } while (segmentIdx !== -1);
-    if (!entry) {
-        throw "no-entry";
-    }
-    return entry;
-}
-function getSource(fileEntry) {
-    if (typeof fileEntry.source === "string") {
-        fileEntry.source = new TextEncoder().encode(fileEntry.source);
-    }
-    return fileEntry.source;
-}
-// Keep spare capacity separate so FileDataEntry.source always reflects the logical file size.
-const fileWriteBuffers = new WeakMap();
-function getFileWriteBuffer(entry, source, requiredLength) {
-    let buffer = fileWriteBuffers.get(entry);
-    if (!buffer || buffer.buffer !== source.buffer || buffer.byteOffset !== source.byteOffset) {
-        buffer = source;
-    }
-    if (requiredLength <= buffer.byteLength) {
-        return buffer;
-    }
-    const newBuffer = new Uint8Array(Math.max(requiredLength, source.byteLength * 2));
-    newBuffer.set(source);
-    fileWriteBuffers.set(entry, newBuffer);
-    return newBuffer;
-}
-class DirectoryEntryStream {
-    idx = 0;
-    entries = [];
-    static _create(entries) {
-        const stream = new DirectoryEntryStream();
-        stream.entries = entries;
-        return stream;
-    }
-    readDirectoryEntry() {
-        if (this.idx === this.entries.length) {
-            return undefined;
-        }
-        const [name, entry] = this.entries[this.idx];
-        this.idx += 1;
-        return {
-            name,
-            type: entry.dir ? "directory" : "regular-file",
-        };
-    }
-}
-const descriptorEntryStreamCreate = DirectoryEntryStream._create;
-// @ts-expect-error - Deleting static method
-delete DirectoryEntryStream._create;
-class Descriptor {
-    #stream;
-    #entry;
-    #mtime = 0;
-    _getEntry(descriptor) {
-        return descriptor.#entry;
-    }
-    static _create(entry, isStream) {
-        const descriptor = new Descriptor();
-        if (isStream) {
-            descriptor.#stream = entry;
-        }
-        else {
-            descriptor.#entry = entry;
-        }
-        return descriptor;
-    }
-    readViaStream(_offset) {
-        const source = getSource(this.#entry);
-        let offset = Number(_offset);
-        return inputStreamCreate({
-            blockingRead(len) {
-                if (offset === source.byteLength) {
-                    throw { tag: "closed" };
-                }
-                const bytes = source.slice(offset, offset + Number(len));
-                offset += bytes.byteLength;
-                return bytes;
-            },
-        });
-    }
-    writeViaStream(_offset) {
-        const entry = this.#entry;
-        let offset = coerceToSafeIntegerNumber(_offset);
-        return outputStreamCreate({
-            write(buf) {
-                if (buf.byteLength === 0) {
-                    return;
-                }
-                const source = getSource(entry);
-                const end = offset + buf.byteLength;
-                if (!Number.isSafeInteger(end)) {
-                    throw new TypeError(`excessively large number: ${end}`);
-                }
-                const buffer = getFileWriteBuffer(entry, source, end);
-                if (offset > source.byteLength) {
-                    buffer.fill(0, source.byteLength, offset);
-                }
-                buffer.set(buf, offset);
-                entry.source = buffer.subarray(0, Math.max(source.byteLength, end));
-                offset = end;
-            },
-        });
-    }
-    appendViaStream() {
-        console.log(`[filesystem] APPEND STREAM`);
-        return {};
-    }
-    advise(offset, length, advice) {
-        console.log(`[filesystem] ADVISE`, offset, length, advice);
-    }
-    syncData() {
-        console.log(`[filesystem] SYNC DATA`);
-    }
-    getFlags() {
-        console.log(`[filesystem] FLAGS FOR`);
-        return {};
-    }
-    getType() {
-        if (this.#stream) {
-            return "fifo";
-        }
-        if (this.#entry.dir) {
-            return "directory";
-        }
-        if (this.#entry.source) {
-            return "regular-file";
-        }
-        return "unknown";
-    }
-    setSize(size) {
-        console.log(`[filesystem] SET SIZE`, size);
-    }
-    setTimes(dataAccessTimestamp, dataModificationTimestamp) {
-        console.log(`[filesystem] SET TIMES`, dataAccessTimestamp, dataModificationTimestamp);
-    }
-    read(length, offset) {
-        const source = getSource(this.#entry);
-        const off = coerceToSafeIntegerNumber(offset);
-        const len = coerceToSafeIntegerNumber(length);
-        const result = [
-            source.slice(off, off + len),
-            off + len >= source.byteLength,
-        ];
-        return result;
-    }
-    write(buffer, offset) {
-        if (offset !== 0n) {
-            throw "invalid-seek";
-        }
-        this.#entry.source = buffer;
-        return BigInt(buffer.byteLength);
-    }
-    readDirectory() {
-        if (!this.#entry?.dir) {
-            throw "bad-descriptor";
-        }
-        return descriptorEntryStreamCreate(Object.entries(this.#entry.dir).sort(([a], [b]) => (a > b ? 1 : -1)));
-    }
-    sync() {
-        console.log(`[filesystem] SYNC`);
-    }
-    createDirectoryAt(path) {
-        const entry = getChildEntry(this.#entry, path, {
-            create: true,
-            directory: true,
-        });
-        if (entry.source) {
-            throw "exist";
-        }
-    }
-    stat() {
-        let type = "unknown";
-        let size = 0n;
-        if (this.#entry.source) {
-            type = "regular-file";
-            const source = getSource(this.#entry);
-            size = BigInt(source.byteLength);
-        }
-        else if (this.#entry.dir) {
-            type = "directory";
-        }
-        return {
-            type,
-            linkCount: 0n,
-            size,
-            dataAccessTimestamp: timeZero,
-            dataModificationTimestamp: timeZero,
-            statusChangeTimestamp: timeZero,
-        };
-    }
-    statAt(_pathFlags, path) {
-        const entry = getChildEntry(this.#entry, path, {
-            create: false,
-            directory: false,
-        });
-        let type = "unknown";
-        let size = 0n;
-        if (entry.source) {
-            type = "regular-file";
-            const source = getSource(entry);
-            size = BigInt(source.byteLength);
-        }
-        else if (entry.dir) {
-            type = "directory";
-        }
-        return {
-            type,
-            linkCount: 0n,
-            size,
-            dataAccessTimestamp: timeZero,
-            dataModificationTimestamp: timeZero,
-            statusChangeTimestamp: timeZero,
-        };
-    }
-    setTimesAt() {
-        console.log(`[filesystem] SET TIMES AT`);
-    }
-    linkAt() {
-        console.log(`[filesystem] LINK AT`);
-    }
-    openAt(_pathFlags, path, openFlags, _flags) {
-        const childEntry = getChildEntry(this.#entry, path, openFlags);
-        return descriptorCreate(childEntry);
-    }
-    readlinkAt(_path) {
-        console.log(`[filesystem] READLINK AT`);
-        return "";
-    }
-    removeDirectoryAt() {
-        console.log(`[filesystem] REMOVE DIR AT`);
-    }
-    renameAt() {
-        console.log(`[filesystem] RENAME AT`);
-    }
-    symlinkAt() {
-        console.log(`[filesystem] SYMLINK AT`);
-    }
-    unlinkFileAt() {
-        console.log(`[filesystem] UNLINK FILE AT`);
-    }
-    isSameObject(other) {
-        return other === this;
-    }
-    metadataHash() {
-        let upper = 0n;
-        upper += BigInt(this.#mtime);
-        return { upper, lower: 0n };
-    }
-    metadataHashAt(_pathFlags, _path) {
-        return this.metadataHash();
-    }
-}
-const descriptorGetEntry = Descriptor.prototype._getEntry;
-// @ts-expect-error - Deleting prototype method
-delete Descriptor.prototype._getEntry;
-const descriptorCreate = Descriptor._create;
-// @ts-expect-error - Deleting static method
-delete Descriptor._create;
-let _preopens = [[descriptorCreate(_fileData), "/"]];
-let _rootPreopen = _preopens[0];
-export const preopens = {
-    getDirectories() {
-        return _preopens;
-    },
-};
 /**
  * Replace all preopens with the given set.
  * @param preopensConfig - Map of virtual paths to file data entries
  */
 export function _setPreopens(preopensConfig) {
     _preopens = [];
+    _rootPreopen = null;
     for (const [virtualPath, fileData] of Object.entries(preopensConfig)) {
         _addPreopen(virtualPath, fileData);
     }
@@ -344,40 +194,41 @@ export function _setPreopens(preopensConfig) {
  * @param fileData - The file data object representing the directory
  */
 export function _addPreopen(virtualPath, fileData) {
-    const descriptor = descriptorCreate(fileData);
-    _preopens.push([descriptor, virtualPath]);
+    const descriptor = descriptorCreate(defaultAdapter.getRoot(fileData));
+    const entry = [descriptor, virtualPath];
+    _preopens.push(entry);
     if (virtualPath === "/") {
-        _rootPreopen = [descriptor, virtualPath];
+        _rootPreopen = entry;
     }
 }
 /**
- * Clear all preopens, giving the guest no filesystem access.
- *
- * This functionality exists mostly to maintain backwards compatibility. Prefer setting preopens
- * via `WASIShim` rather than making top level changes to preopens using these functions.
+ * Add a single preopen backed by a custom adapter (e.g. `OpfsFilesystemAdapter`) instead of the
+ * default in-memory one. Lets a host wire an alternative `BrowserFilesystemAdapter` into the
+ * top-level `wasi:filesystem/preopens` singleton that transpiled components import statically.
+ * @param virtualPath - The virtual path visible to the guest
+ * @param adapter - The adapter that will back this preopen
+ * @param capability - The adapter-specific capability to load as the preopen's root
  */
+export function _addPreopenWithAdapter(virtualPath, adapter, capability) {
+    const descriptor = descriptorCreate(adapter.getRoot(capability));
+    const entry = [descriptor, virtualPath];
+    _preopens.push(entry);
+    if (virtualPath === "/") {
+        _rootPreopen = entry;
+    }
+}
+/** Clear all preopens, giving the guest no filesystem access. */
 export function _clearPreopens() {
     _preopens = [];
     _rootPreopen = null;
 }
-/**
- * Get current preopens configuration.
- * @returns Array of [descriptor, virtualPath] pairs
- */
+/** Get current preopens configuration. */
 export function _getPreopens() {
     return [..._preopens];
 }
-/**
- * Create a preopen descriptor for a host path.
- * This is used internally to create isolated preopen instances.
- * @param  hostPreopen - The host filesystem path
- * @returns A preopen descriptor
- */
+/** Reject host paths because browser filesystems require explicit capabilities. */
 export function _createPreopenDescriptor(hostPreopen) {
-    _fileData.dir = {
-        [hostPreopen]: {},
-    };
-    return descriptorCreate(_fileData);
+    throw new TypeError(`browser preopen ${JSON.stringify(hostPreopen)} is a host path; configure browser file data or an adapter instead`);
 }
 export const types = {
     Descriptor,

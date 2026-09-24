@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeSfpReq
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change required SFP class to {}", self.new_sfp_required_class), &format!("erforderliche SFPklasse auf {} ändern", self.new_sfp_required_class))
+        protocol::LocalizedLabel::native(&format!("Change required SFP class to {}", self.new_sfp_required_class), &format!("Erforderliche SFP-Klasse auf {} ändern", self.new_sfp_required_class))
     }
 }
 //#endregion 🔖️ChangeSfpRequiredClass

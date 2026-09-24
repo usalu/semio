@@ -14,7 +14,7 @@
       "@semio-tech/assets/*": ["../../🔨️modules/🖼️assets/*"]
     }
   },
-  "files": ["🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.d.ts"],
+  "files": ["🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.d.ts", "🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts"],
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": [
     "**/node_modules/**",

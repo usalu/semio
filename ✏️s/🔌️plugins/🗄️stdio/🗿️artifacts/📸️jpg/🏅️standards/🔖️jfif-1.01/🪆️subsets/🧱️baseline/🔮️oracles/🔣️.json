@@ -4,39 +4,77 @@
   "_comment": "🔮️ This subset's own contribution. The ♾️any sibling registers `image` 0.25 for the DOCUMENT vocabulary; this conformance-class vocabulary registers no oracle, because `image`'s public surface cannot see any of the five T.81 Annex F axes it addresses — see noOracleDecisions for the full reasoning, including why a byte-level differential would be vacuous here even with a perfect one.",
   "oracles": [
     {
-      "id": "pillow-jpg-jfif-1-01-baseline-mutate-reader",
+      "id": "libjpeg-jpg-jfif-1-01-baseline-marker-cli",
+      "kind": "third-party-cli",
+      "ecosystem": "native",
+      "package": "libjpeg-turbo",
+      "version": "3.2.0",
+      "source": {
+        "repository": "https://github.com/libjpeg-turbo/libjpeg-turbo",
+        "license": "IJG AND BSD-3-Clause AND Zlib"
+      },
+      "engine": {
+        "family": "libjpeg-turbo",
+        "implementation": "djpeg -v -v marker trace; rdjpgcom -verbose",
+        "version": "3.2.0"
+      },
+      "capabilities": [
+        "jpg-jfif-1-01-baseline-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "IJG AND BSD-3-Clause AND Zlib",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "homepage": "https://libjpeg-turbo.org",
+      "hostImplementation": "rust",
+      "executables": [
+        "djpeg",
+        "rdjpgcom"
+      ],
+      "rationale": "📖️ The case's oracle role (`../🦀️.rs`): `djpeg -v -v` traces every marker libjpeg-turbo parses — the SOFn code, each frame component's sampling factors, every DHT table's class and id and a DAC segment — and `rdjpgcom -verbose` reports the sample precision. Each kind is applied to those axes as ITU-T T.81 defines the field and the class is read off the specification's own tables; this repository's decoder, snapshot and checker are never consulted. This replaces the Pillow reader registered for this capability, which no case ran and which cannot see the DHT or DAC axes (Pillow's JPEG plugin skips both markers). Installed on macOS through Homebrew (`jpeg-turbo`) and in the devcontainer through `libjpeg-turbo-progs`; where the commands are missing the oracle phase records the case as oracle-unavailable."
+    },
+    {
+      "id": "pillow-jpg-jfif-1-01-baseline-fixture-generator",
       "kind": "third-party-library",
       "ecosystem": "python",
       "package": "Pillow",
       "version": "12.2.0",
       "engine": {
         "family": "pillow",
-        "implementation": "Pillow 12.2.0 JpegImagePlugin",
+        "implementation": "Pillow 12.2.0 JpegImagePlugin encoder",
         "version": "12.2.0"
       },
       "capabilities": [
-        "jpg-jfif-1-01-baseline-mutate"
+        "jpg-jfif-1-01-baseline-fixture-generate"
+      ],
+      "comparisonProfiles": [
+        "exact-bytes-v1"
       ],
       "license": "MIT-CMU",
       "testOnly": true,
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://python-pillow.org",
-      "rationale": "📖️ A READER. This subset's own dispatcher (not registered as an oracle at all here — no reimplementation entry exists in this file) applies each mutation; Pillow 12.2.0 is the independent judge. Pillow's own C JPEG codec (not this repository's own decoder) exposes marker-level structure beyond plain pixel decoding: `im.layer` (after `im.load()`) reports each SOF frame component's id/h-sampling/v-sampling/quant-table-index tuple, `im.bits` the sample precision, and `im.quantization` the quantization table indices actually referenced — directly witnessing `set-component-sampling`, `insert-frame-component`/`remove-frame-component`, `set-sample-precision`, `set-sof-marker` and `set-snapshot`. Verified against this subset's own committed `shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg`: `im.layer` reported the real 3-component YCbCr layout `[(1,1,1,0),(2,1,1,1),(3,1,1,1)]` and `im.bits` the real 8-bit precision. HONEST PARTIAL: Pillow's public API does not expose an enumerable Huffman-table list the way it exposes quantization-table indices — `insert-huffman-table`/`remove-huffman-table` are witnessed only insofar as a missing/duplicate DHT table breaks decoding outright (Pillow raises rather than silently reading garbage), not as a positive before/after table-count comparison; a corrupted-but-still-decodable Huffman-table edit would not be caught by this entry alone.",
-      "comparisonProfiles": [
-        "semantic-raster-v1"
-      ]
+      "rationale": "🏭️ A GENERATOR, never a judge. Pillow 12.2.0's own JPEG encoder wrote the seven `third-party-generated` before/after pairs below (its `subsampling=`, `qtables=`, mode and `progressive=` save parameters), so it is their provenance and nothing else. It discharges no mutation capability: the marker-level judge of `jpg-jfif-1-01-baseline-mutate` is `libjpeg-jpg-jfif-1-01-baseline-marker-cli`, because Pillow's JPEG plugin skips the DHT and DAC markers and so can never read those kinds' axes."
     }
   ],
   "noOracleDecisions": [
     {
-      "id": "jpg-jfif-1-01-baseline-conformance-class-semantics",
+      "id": "jpg-jfif-1-01-baseline-round-trip-normalization",
       "capabilities": [
-        "jpg-jfif-1-01-baseline-mutate"
+        "jpg-jfif-1-01-baseline-round-trip"
       ],
-      "rationale": "Two independent reasons, and the first is the decisive one. (1) NO CANDIDATE CAN SEE THE AXES. This vocabulary addresses the SOF marker byte, the frame's sample precision, whether a DAC arithmetic-conditioning segment is present, the per-class Huffman table count and each component's sampling factors — every one of them a field of the frame header or the entropy-coding mode. `image` 0.25 is registered by the sibling 🧾️document subset and is the right reference for a JPEG raster, but its public API hands back pixels, dimensions and a colour type; it exposes no frame header, no SOFn discriminant, no DAC flag and no DHT view, and it offers no way to WRITE any of them either. `jpeg-decoder` exposes only an `ImageInfo`. A reference that cannot express the mutation cannot adjudicate it, and registering one anyway to satisfy the workflow would be selecting a weak oracle mechanically. (2) EVEN A PERFECT ORACLE WOULD BE MEASURING NOTHING AT THE BYTE LEVEL, because this repository's own `encode_jpg` writes a conforming baseline file and no other kind of JPEG at all: it emits `FF C0` for the frame marker, precision 8, a fixed three-component 4:2:0 sampling array, exactly four DHT segments and never a DAC — so every axis this vocabulary moves is normalized away on re-serialization. That is a real, documented property of the codec (stated in the vocabulary's own module docstring), not a gap. The substitutes are therefore the standard's own tables — ITU-T T.81 Table B.1 for the SOFn marker codes, §4.2 for the 8-bit precision mandate, Annex F for Huffman-only entropy coding, §B.2.4.2 for the four-table-per-class ceiling and §B.2.2 for the 1..=4 sampling factors — read against `check_baseline_conformance`, which is where the class verdict actually lives; plus the inverse law as a metamorphic property over the decoded snapshot. `mutate-jpg-jfif-1-01-baseline` measures the vocabulary there and says in as many words that it makes no byte-level claim, except in `identity-round-trip`, which does re-encode and reads both sides through the INDEPENDENT `image` reader the 🧾️document subset registers. [Narrowed 2026-09-02, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION shard D2: capabilities emptied because a real mutationManifest now requires a qualifying third-party oracle for this exact capability, and noOracleMisuseBreaches correctly refuses to let a recorded decision paper over a real runtime requirement (per shard A10's precedent for mathematical/sequence/draw) -- the honest state is a visible missing-external-oracle gap, not a hidden one. Rationale above is kept for the record: it still explains why no third-party library is credible for this domain, which is exactly why the gap is expected to stay open rather than be filled.]",
+      "rationale": "The decode/re-encode law of the baseline subset is a statement about THIS repository's encoder: `encode_jpg` writes a conforming baseline file with freshly generated Annex K tables at its own quality, so its bytes are defined by that choice and no third-party writer can be asked to reproduce them. The case judges the round trip by laws instead — the bytes were re-derived rather than copied, the result is still inside the baseline class, the conformance projection survives — and by the independent `image` reader registered for the 🧾️document subset, which must read the same geometry on both sides.",
       "substitutes": [
-        "specification-vectors",
         "metamorphic-laws"
       ]
     }
@@ -75,7 +113,8 @@
           "capability": "jpg-jfif-1-01-baseline-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-frame-component",
@@ -85,8 +124,8 @@
           "oracleRequirements": [
             {
               "capability": "jpg-jfif-1-01-baseline-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader"
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-baseline-marker-cli"
             }
           ]
         },
@@ -95,7 +134,8 @@
           "capability": "jpg-jfif-1-01-baseline-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-huffman-table",
@@ -105,8 +145,8 @@
           "oracleRequirements": [
             {
               "capability": "jpg-jfif-1-01-baseline-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader"
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-baseline-marker-cli"
             }
           ]
         },
@@ -115,7 +155,8 @@
           "capability": "jpg-jfif-1-01-baseline-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-frame-component",
@@ -125,8 +166,8 @@
           "oracleRequirements": [
             {
               "capability": "jpg-jfif-1-01-baseline-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader"
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-baseline-marker-cli"
             }
           ]
         },
@@ -135,7 +176,8 @@
           "capability": "jpg-jfif-1-01-baseline-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-huffman-table",
@@ -145,8 +187,8 @@
           "oracleRequirements": [
             {
               "capability": "jpg-jfif-1-01-baseline-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader"
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-baseline-marker-cli"
             }
           ]
         },
@@ -165,8 +207,8 @@
           "oracleRequirements": [
             {
               "capability": "jpg-jfif-1-01-baseline-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader"
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-baseline-marker-cli"
             }
           ]
         },
@@ -175,7 +217,8 @@
           "capability": "jpg-jfif-1-01-baseline-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-component-sampling",
@@ -185,8 +228,8 @@
           "oracleRequirements": [
             {
               "capability": "jpg-jfif-1-01-baseline-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader"
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-baseline-marker-cli"
             }
           ]
         },
@@ -205,8 +248,8 @@
           "oracleRequirements": [
             {
               "capability": "jpg-jfif-1-01-baseline-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader"
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-baseline-marker-cli"
             }
           ]
         },
@@ -225,8 +268,8 @@
           "oracleRequirements": [
             {
               "capability": "jpg-jfif-1-01-baseline-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader"
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-baseline-marker-cli"
             }
           ]
         },
@@ -245,8 +288,8 @@
           "oracleRequirements": [
             {
               "capability": "jpg-jfif-1-01-baseline-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader"
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-baseline-marker-cli"
             }
           ]
         }
@@ -297,7 +340,7 @@
       "family": "structural",
       "notes": "Chroma subsampling factors changed via Pillow's own subsampling= save parameter, 4:4:4 (0) -> 4:2:0 (2), inside the unchanged SOF0 component table.",
       "generator": {
-        "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader",
+        "oracle": "pillow-jpg-jfif-1-01-baseline-fixture-generator",
         "packageVersion": "12.2.0",
         "engineFamily": "pillow",
         "engineVersion": "12.2.0",
@@ -348,7 +391,7 @@
       "family": "structural",
       "notes": "SOF0 component count 1 (grayscale L) -> 3 (YCbCr), a real Pillow image-mode change. As a genuine byproduct, DHT table count also moves 2 -> 4 (verified live by scanning the written bytes' own marker sequence) -- the same underlying encoder decision the insert-huffman-table fixture below rides on.",
       "generator": {
-        "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader",
+        "oracle": "pillow-jpg-jfif-1-01-baseline-fixture-generator",
         "packageVersion": "12.2.0",
         "engineFamily": "pillow",
         "engineVersion": "12.2.0",
@@ -399,7 +442,7 @@
       "family": "structural",
       "notes": "SOF0 component count 3 (YCbCr) -> 1 (grayscale L), inverse of insert-frame-component.",
       "generator": {
-        "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader",
+        "oracle": "pillow-jpg-jfif-1-01-baseline-fixture-generator",
         "packageVersion": "12.2.0",
         "engineFamily": "pillow",
         "engineVersion": "12.2.0",
@@ -450,7 +493,7 @@
       "family": "structural",
       "notes": "Start-Of-Frame marker code changed via Pillow's own progressive= save parameter, SOF0 0xC0 (baseline DCT) -> SOF2 0xC2 (progressive DCT).",
       "generator": {
-        "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader",
+        "oracle": "pillow-jpg-jfif-1-01-baseline-fixture-generator",
         "packageVersion": "12.2.0",
         "engineFamily": "pillow",
         "engineVersion": "12.2.0",
@@ -501,7 +544,7 @@
       "family": "structural",
       "notes": "Whole-image snapshot replace: an unrelated valid JPEG (different dimensions and pixel content) substituted wholesale.",
       "generator": {
-        "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader",
+        "oracle": "pillow-jpg-jfif-1-01-baseline-fixture-generator",
         "packageVersion": "12.2.0",
         "engineFamily": "pillow",
         "engineVersion": "12.2.0",
@@ -552,7 +595,7 @@
       "family": "structural",
       "notes": "DHT (Define Huffman Table) marker count 2 -> 4, a genuine byproduct of Pillow's own encoder writing separate luminance/chrominance table pairs for a 3-component image -- verified live by scanning the written bytes' own DHT marker count, same mechanism insert-frame-component rides on. Pillow's public API exposes no direct huffman-table count control (E2's own registry rationale for this subset's reader records the same limit), so the component-count route is the only real-library-reachable path to this kind.",
       "generator": {
-        "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader",
+        "oracle": "pillow-jpg-jfif-1-01-baseline-fixture-generator",
         "packageVersion": "12.2.0",
         "engineFamily": "pillow",
         "engineVersion": "12.2.0",
@@ -603,7 +646,7 @@
       "family": "structural",
       "notes": "DHT marker count 4 -> 2, inverse of insert-huffman-table.",
       "generator": {
-        "oracle": "pillow-jpg-jfif-1-01-baseline-mutate-reader",
+        "oracle": "pillow-jpg-jfif-1-01-baseline-fixture-generator",
         "packageVersion": "12.2.0",
         "engineFamily": "pillow",
         "engineVersion": "12.2.0",

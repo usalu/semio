@@ -22,7 +22,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveImage {
         agg_inverse(&GifMutation::RemoveImage(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-image", "Bild entfernen")
+        protocol::LocalizedLabel::native("Remove image", "Bild entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

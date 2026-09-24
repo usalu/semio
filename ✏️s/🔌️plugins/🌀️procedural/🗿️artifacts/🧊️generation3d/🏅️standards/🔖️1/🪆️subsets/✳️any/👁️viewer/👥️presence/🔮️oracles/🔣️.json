@@ -1,0 +1,235 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The presence state lane of `s.procedural.generation3d`'s viewer (👁️viewer/👥️presence): its mutation vocabulary `Generation3dViewPresenceMutation` over `Generation3dViewPresence`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/👥️mutate-procedural-generation3d-1-any-viewer-presence` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "procedural-generation3d-1-any-viewer-presence-state-lane-semantics",
+      "capabilities": [
+        "procedural-generation3d-1-any-viewer-presence-mutate"
+      ],
+      "rationale": "`Generation3dViewPresenceMutation` is the presence state lane of `s.procedural.generation3d`'s 👁️viewer/👥️presence surface: it holds the 3d preview camera and shading mode this viewer broadcasts to peers. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-show-mode`, `set-preview-camera`) changes exactly its own part of `Generation3dViewPresence`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "y-protocols (awareness)",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Broadcasts an opaque per-client awareness object; it has no typed presence record, no replace-presence mutation and no inverse to compare against."
+          },
+          {
+            "package": "liveblocks (presence)",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Hosted per-user presence objects merged by key; it neither models this surface's presence record nor defines a mutation vocabulary with inverses, and it is a cloud service this local-first repository does not depend on."
+          }
+        ],
+        "whyNoneQualifies": "`Generation3dViewPresence` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "procedural-generation3d-1-any-viewer-presence",
+      "capability": "procedural-generation3d-1-any-viewer-presence-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-show-mode",
+        "set-preview-camera"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.procedural.generation3d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "👁️viewer/👥️presence",
+      "mutations": [
+        {
+          "id": "set-show-mode",
+          "capability": "procedural-generation3d-1-any-viewer-presence-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-show-mode",
+            "bridgeVersion": 1,
+            "variant": "SetShowMode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-generation3d-1-any-viewer-presence-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-preview-camera",
+          "capability": "procedural-generation3d-1-any-viewer-presence-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-preview-camera",
+            "bridgeVersion": 1,
+            "variant": "SetPreviewCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-generation3d-1-any-viewer-presence-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-show-mode-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "👁️viewer/👥️presence"
+      },
+      "mutation": "set-show-mode",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/👁️set-show-mode/✅️set-show-mode-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7b311306430090d8122617971a58a5f727a160c670e3930fb62933aa21104b25",
+          "bytes": 181
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/👁️set-show-mode/✅️set-show-mode-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:21ad0ca788d06709c988ab0721fd64f7153b1904fcb6b5a0ed84773a2d5c6dc1",
+          "bytes": 49
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/👁️set-show-mode/✅️set-show-mode-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e6abd39e9991b6fa0de3007e1f6fcd45f1326bbd141d77f86fbe5a8acfeb2166",
+          "bytes": 181
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/👁️set-show-mode/✅️set-show-mode-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e6abd39e9991b6fa0de3007e1f6fcd45f1326bbd141d77f86fbe5a8acfeb2166",
+          "bytes": 181
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/👁️set-show-mode/✅️set-show-mode-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "presence-state-lane",
+      "notes": "Switching this viewer to points replaces the shading mode it broadcasts."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-preview-camera-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "👁️viewer/👥️presence"
+      },
+      "mutation": "set-preview-camera",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set-preview-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7b311306430090d8122617971a58a5f727a160c670e3930fb62933aa21104b25",
+          "bytes": 181
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set-preview-camera-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e8d62c20abf6cb20cc3b0f5301a4e1105c07f58c8b32450269505f6708878cf4",
+          "bytes": 205
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set-preview-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5fc6174ed2a2922e5b91974d08c87c57120cf2e8f18403ac364fd10171cecafb",
+          "bytes": 182
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set-preview-camera-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5fc6174ed2a2922e5b91974d08c87c57120cf2e8f18403ac364fd10171cecafb",
+          "bytes": 182
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set-preview-camera-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "presence-state-lane",
+      "notes": "Orbiting this viewer's preview replaces the camera it broadcasts."
+    }
+  ]
+}

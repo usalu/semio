@@ -1,0 +1,21 @@
+{
+  "extends": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "files": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+    "/Users/ueli/Documents/semio/🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥾️cross-platform-bootstrap/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪓️process-tree-termination/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🏛️model/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📽️projection/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎚️axes/🌱️bootstrap/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts"
+  ],
+  "include": []
+}

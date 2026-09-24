@@ -118,9 +118,9 @@ mod subject {
         record.0.as_ref().map_or_else(|| "none".to_string(), |identity| identity.user_id.clone())
     }
 
-    /// 🔎️ The session token, read off the typed value — the field an undo is most likely to
+    /// 🔎️ The session's email, read off the typed value — the field an undo is most likely to
     /// fabricate rather than restore.
-    fn token(record: &IdentitySetting) -> Option<String> {
+    fn email(record: &IdentitySetting) -> Option<String> {
         record.0.as_ref().map(|identity| identity.email.clone())
     }
     //#endregion 🔖️FixtureDecode
@@ -140,8 +140,8 @@ mod subject {
         if account(after) != declared {
             return Err(format!("mutate-{kind}: the feature declares the record holds {declared:?} afterwards, but it holds {:?}", account(after)));
         }
-        if declared != "none" && token(after) == token(base) {
-            return Err(format!("mutate-{kind}: a replaced session must carry its own token, but the prior session's token survived"));
+        if declared != "none" && email(after) == email(base) {
+            return Err(format!("mutate-{kind}: a replaced session must carry its own email, but the prior session's email survived"));
         }
         Ok(())
     }
@@ -183,7 +183,7 @@ mod subject {
     }
 
     /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must
-    /// restore the committed before-record exactly — token and issue time included. Both kinds read
+    /// restore the committed before-record exactly — email and issue time included. Both kinds read
     /// their undo off BASE, so the account they put back is one the mutation never travelled with.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
@@ -211,8 +211,8 @@ mod subject {
             if account(&current) != row.str("wasAccount") {
                 return Err(format!("inverse-{kind}: the restored record must hold {:?} once more, but it holds {:?}", row.str("wasAccount"), account(&current)));
             }
-            if token(&current) != token(&base) {
-                return Err(format!("inverse-{kind}: the undo restored the account but fabricated a session token"));
+            if email(&current) != email(&base) {
+                return Err(format!("inverse-{kind}: the undo restored the account but fabricated a session email"));
             }
             let projection = projection(&current)?;
             Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
@@ -249,12 +249,12 @@ mod subject {
     /// 🔁️ The identity law for a record whose only carrier is its own JSON projection. `os.config`
     /// has no `.dsl.semio` or `.pack.semio` form, so the honest statement is a decode/re-encode that
     /// must reproduce the committed projection exactly. The decode is proven real by reading the
-    /// account AND its token back off the TYPED value: a shortcut that handed the input text back
+    /// account AND its email back off the TYPED value: a shortcut that handed the input text back
     /// would satisfy the projection comparison and fail the moment `account()` asks the typed value.
     pub fn round_trip(_ctx: &Context) -> Result<Outcome, String> {
         let (before, _mutation, _after, _outcome) = super::fixture_text("sign-in");
         let record = record_of(before, "before", "sign-in")?;
-        if account(&record) != "ada" || token(&record).as_deref() != Some("session-ada-0001") {
+        if account(&record) != "ada" || email(&record).as_deref() != Some("ada@studio.example") {
             return Err(format!("identity-round-trip: the committed record holds Ada's session, but the decoded value holds {}", encode_identity_setting_json(&record)));
         }
         let reencoded = encode_identity_setting_json(&record);

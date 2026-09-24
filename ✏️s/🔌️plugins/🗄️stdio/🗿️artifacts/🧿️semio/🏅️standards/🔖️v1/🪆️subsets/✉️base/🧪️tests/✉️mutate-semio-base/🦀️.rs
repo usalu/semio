@@ -149,12 +149,20 @@ mod oracle {
         Ok(reported(&restore(&before), &before))
     }
 
-    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| forward(ctx, kind_vector(kind))
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        forward(ctx, kind_vector(ctx.row()?))
     }
 
-    pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| backward(ctx, kind_vector(kind))
+    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
+        backward(ctx, kind_vector(ctx.row()?))
+    }
+
+    pub fn mutate_set_snapshot(ctx: &Context) -> Result<Outcome, String> {
+        forward(ctx, kind_vector("set-snapshot"))
+    }
+
+    pub fn inverse_set_snapshot(ctx: &Context) -> Result<Outcome, String> {
+        backward(ctx, kind_vector("set-snapshot"))
     }
 
     pub fn reasserting(ctx: &Context) -> Result<Outcome, String> {
@@ -233,12 +241,20 @@ mod subject {
         reported(&current, &raised, &base)
     }
 
-    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| forward(ctx, kind_vector(kind))
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        forward(ctx, kind_vector(ctx.row()?))
     }
 
-    pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| backward(ctx, kind_vector(kind))
+    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
+        backward(ctx, kind_vector(ctx.row()?))
+    }
+
+    pub fn mutate_set_snapshot(ctx: &Context) -> Result<Outcome, String> {
+        forward(ctx, kind_vector("set-snapshot"))
+    }
+
+    pub fn inverse_set_snapshot(ctx: &Context) -> Result<Outcome, String> {
+        backward(ctx, kind_vector("set-snapshot"))
     }
 
     pub fn reasserting(ctx: &Context) -> Result<Outcome, String> {
@@ -276,18 +292,15 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls, by FULL expanded scenario id.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
-    use semio_s_plugin_stdio_test_oracle::law::scenario_id;
     let mut built = Adapter::new("rust");
-    for kind in std::iter::once("set-snapshot").chain(ARM_VECTORS.iter().map(|(arm, _)| *arm)) {
-        built = built.oracle(&scenario_id(kind, "mutate"), oracle::mutate(kind)).oracle(&scenario_id(kind, "inverse"), oracle::inverse(kind));
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&scenario_id(kind, "mutate"), subject::mutate(kind)).subject(&scenario_id(kind, "inverse"), subject::inverse(kind));
-        }
-    }
     built = built
+        .oracle("mutate", oracle::mutate)
+        .oracle("inverse", oracle::inverse)
+        .oracle("mutate-set-snapshot", oracle::mutate_set_snapshot)
+        .oracle("inverse-set-snapshot", oracle::inverse_set_snapshot)
         .oracle("reasserts-the-envelope-unchanged", oracle::reasserting)
         .oracle("undoes-reasserting-the-envelope", oracle::undoes_reasserting)
         .oracle("rejects-a-mismatched-arm", oracle::mismatch)
@@ -296,6 +309,10 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         built = built
+            .subject("mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
+            .subject("mutate-set-snapshot", subject::mutate_set_snapshot)
+            .subject("inverse-set-snapshot", subject::inverse_set_snapshot)
             .subject("reasserts-the-envelope-unchanged", subject::reasserting)
             .subject("undoes-reasserting-the-envelope", subject::undoes_reasserting)
             .subject("rejects-a-mismatched-arm", subject::mismatch)

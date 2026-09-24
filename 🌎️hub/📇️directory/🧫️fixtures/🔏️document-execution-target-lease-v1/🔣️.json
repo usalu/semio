@@ -306,6 +306,14 @@
       "renderer-unavailable": {
         "en": "The verified document component is ready, but this renderer is unavailable.",
         "de": "Die überprüfte Dokumentkomponente ist bereit, aber dieser Renderer ist nicht verfügbar."
+      },
+      "link-expired": {
+        "en": "The connection was lost for too long. Reconnect to keep editing this document.",
+        "de": "Die Verbindung war zu lange unterbrochen. Verbinden Sie sich erneut, um dieses Dokument weiter zu bearbeiten."
+      },
+      "access-revoked": {
+        "en": "Your access to this document was removed.",
+        "de": "Ihr Zugriff auf dieses Dokument wurde entfernt."
       }
     },
     "statusRoles": {
@@ -313,7 +321,9 @@
       "integrity-failed": "alert",
       "stale": "alert",
       "cancelled": "alert",
-      "renderer-unavailable": "alert"
+      "renderer-unavailable": "alert",
+      "link-expired": "alert",
+      "access-revoked": "alert"
     },
     "rotation": {
       "generationA": "7cf0515d5cb12f9404020fef548b46f6b0b3dca140d4e1f2b58329174a40ebef",

@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeIntern
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change internal heat gains [W/m2] to {}", self.new_internal_gains_w_m2), &format!("Innenwärmengewinne [W/m2] auf {} ändern", self.new_internal_gains_w_m2))
+        protocol::LocalizedLabel::native(&format!("Change internal heat gains [W/m2] to {}", self.new_internal_gains_w_m2), &format!("Interne Wärmegewinne [W/m2] auf {} ändern", self.new_internal_gains_w_m2))
     }
 }
 //#endregion 🔖️ChangeInternalGainsWM2

@@ -260,11 +260,20 @@ where
         while !wake.ready.swap(false, Ordering::AcqRel) {
             tokio::task::yield_now().await;
         }
-        let pending = {
+        let outcome = {
             let mut context = std::task::Context::from_waker(&waker);
-            matches!(future.as_mut().poll(&mut context), std::task::Poll::Pending)
+            future.as_mut().poll(&mut context).map(|result| result.map(|receipt| receipt.applied))
         };
-        assert!(pending, "approval must remain retained before its cancellation phase");
+        if let std::task::Poll::Ready(result) = outcome {
+            panic!(
+                "approval must remain retained before its cancellation phase {phase:?}: it completed with {result:?}; last prepare conflict {:?}, last conflict arm {:?}, last identity mismatch {:?}, last abandoned turn {:?}, last storage refusal {:?}",
+                last_gis_map_prepare_conflict(),
+                last_gis_map_commit_conflict_arm(),
+                last_gis_map_identity_mismatch(),
+                last_abandoned_assembly_turn(),
+                last_gis_map_storage_refusal(),
+            );
+        }
         let reached = {
             let documents = committer.documents.try_lock().expect("a retained approval never parks holding the committer document map");
             match (documents.get(key), &phase) {
@@ -1006,6 +1015,11 @@ fn gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vo
     let limits = &fixture["limits"];
     assert_eq!(limits["requestMaxBytes"], super::super::schema::REQUEST_MAX_BYTES as u64);
     assert_eq!(limits["inputMaxBytes"], INPUT_MAX_BYTES as u64);
+    let default_map = {
+        use directory::ArtifactPack as _;
+        semio_s_artifact_gis_gismap::schema::default_document().encode_pack()
+    };
+    assert!(InferencePrivateBytesV1::new(default_map.clone(), INPUT_MAX_BYTES).is_ok(), "the map the hub creates by default ({} B) must be inferable within inputMaxBytes", default_map.len());
     assert_eq!(limits["resultMaxBytes"], RESULT_MAX_BYTES as u64);
     assert_eq!(limits["proposalMaxBytes"], PROPOSAL_MAX_BYTES as u64);
     assert_eq!(limits["commandMaxBytes"], super::super::command::COMMAND_MAX_BYTES as u64);

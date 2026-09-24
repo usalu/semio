@@ -30,7 +30,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Unbind
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Unbind the weather file", "Wetterdatei lösen")
+        protocol::LocalizedLabel::native("Unbind the weather file", "Bindung der Wetterdatei aufheben")
     }
 }
 //#endregion 🔖️Mutation

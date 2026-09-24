@@ -1567,10 +1567,9 @@ function generateCargoVariants(name: string): string[] {
   return Array.from(variants);
 }
 
-/** 🦀️ Indexes admitted Cargo manifests without probing opaque nodes or following links. */
+/** 🦀️ Indexes the root Cargo workspace members — the only packages a root `cargo -p` can name — from their manifests. */
 function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
   if (cachedCrateIndex.current) return cachedCrateIndex.current;
-  const taxonomy = loadTaxonomy();
   const exactPkgNames = new Set<string>();
   const libNameToCrates = new Map<string, CrateIndexRecord[]>();
   const aliasToCrates = new Map<string, CrateIndexRecord[]>();
@@ -1583,46 +1582,22 @@ function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
     aliasToCrates.set(normalized, list);
   };
 
-  const walk = (dir: string): void => {
-    const relativePath = relative(repoRoot, dir);
-    if (relativePath && taxonomyRelativePathIsExcluded(relativePath, taxonomy)) return;
-    if (dir.includes("node_modules") || dir.includes("target") || dir.includes(".git") || dir.includes(".🧬semio")) return;
-    for (const name of readdirSync(dir)) {
-      const full = join(dir, name);
-      if (taxonomyRelativePathIsExcluded(relative(repoRoot, full), taxonomy)) continue;
-      const ent = lstatSync(full);
-      if (ent.isDirectory()) {
-        walk(full);
-      } else if (ent.isFile() && name === "Cargo.toml" && full !== join(repoRoot, "Cargo.toml")) {
-        try {
-          const content = readFileSync(full, "utf8");
-          const pkgMatch = content.match(/\[package\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
-          const libMatch = content.match(/\[lib\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
-          if (pkgMatch) {
-            const pkgName = pkgMatch[1];
-            const libName = libMatch ? libMatch[1] : pkgName.replaceAll("-", "_");
-            const record: CrateIndexRecord = { dir: dirname(full), pkgName, libName };
-            exactPkgNames.add(pkgName);
-            const libList = libNameToCrates.get(libName) ?? [];
-            if (!libList.includes(record)) libList.push(record);
-            libNameToCrates.set(libName, libList);
-
-            addAlias(libName, record);
-            addAlias(pkgName, record);
-
-            for (const v of generateCargoVariants(pkgName)) addAlias(v, record);
-            if (libName) {
-              for (const v of generateCargoVariants(libName.replaceAll("_", "-"))) addAlias(v, record);
-            }
-          }
-        } catch {
-          /* ignore unreadable Cargo.toml */
-        }
-      }
-    }
-  };
-
-  walk(repoRoot);
+  const workspace = (Bun.TOML.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as { workspace?: { members?: string[] } }).workspace;
+  for (const member of workspace?.members ?? []) {
+    const manifest = join(repoRoot, member, "Cargo.toml");
+    if (!existsSync(manifest)) continue;
+    const parsed = Bun.TOML.parse(readFileSync(manifest, "utf8")) as { package?: { name?: string }; lib?: { name?: string } };
+    const pkgName = parsed.package?.name;
+    if (!pkgName) continue;
+    const libName = parsed.lib?.name ?? pkgName.replaceAll("-", "_");
+    const record: CrateIndexRecord = { dir: dirname(manifest), pkgName, libName };
+    exactPkgNames.add(pkgName);
+    libNameToCrates.set(libName, [...(libNameToCrates.get(libName) ?? []), record]);
+    addAlias(libName, record);
+    addAlias(pkgName, record);
+    for (const variant of generateCargoVariants(pkgName)) addAlias(variant, record);
+    for (const variant of generateCargoVariants(libName.replaceAll("_", "-"))) addAlias(variant, record);
+  }
   cachedCrateIndex.current = { exactPkgNames, libNameToCrates, aliasToCrates };
   return cachedCrateIndex.current;
 }
@@ -2809,7 +2784,7 @@ export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundV
  * explicit `SEMIO_RENDERER` (launch row, `extra`) selects — wgpu only as the unset default. The value
  * picks the `dev-<variant>-<renderer>-<profile>` target in `resolveNxInvocation`, so a react launch
  * row reaches Vite and never the wgpu browser server. */
-export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[], plugin: string, extra: NodeJS.ProcessEnv = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[], plugin: string, extra: Partial<NodeJS.ProcessEnv> = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const renderer = extra.SEMIO_RENDERER ?? env.SEMIO_RENDERER ?? "wgpu";
   const defaultPort = frameworkOsPlaygroundDefaultPort(catalog, plugin, renderer);
   const portVal = extra.S_OS_PORT || env.S_OS_PORT || String(defaultPort);
@@ -2826,7 +2801,7 @@ export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[
  * native filesystem events don't reach the watcher (bind-mounted devcontainers) — on native macOS/
  * Windows/Linux it just burns CPU/RSS across every spawned dev server for no benefit. An explicit
  * `WATCHPACK_POLLING` always wins as a manual override in either direction. */
-export function playPollingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+export function playPollingEnv(extra: Partial<NodeJS.ProcessEnv> = {}): NodeJS.ProcessEnv {
   const pollingDefault = process.env.WATCHPACK_POLLING !== undefined ? {} : process.env.DEVCONTAINER === "true" ? { WATCHPACK_POLLING: "true", CHOKIDAR_USEPOLLING: "true" } : {};
   return devToolingEnv({
     ...pollingDefault,

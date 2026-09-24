@@ -34,7 +34,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddThe
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add zone {} to thermal enclosure {}", self.zone_id.0, self.id.0), &format!("Zone {} zu Wärmenhülle {} hinzufügen", self.zone_id.0, self.id.0))
+        protocol::LocalizedLabel::native(&format!("Add zone {} to thermal enclosure {}", self.zone_id.0, self.id.0), &format!("Zone {} zu thermischer Hülle {} hinzufügen", self.zone_id.0, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

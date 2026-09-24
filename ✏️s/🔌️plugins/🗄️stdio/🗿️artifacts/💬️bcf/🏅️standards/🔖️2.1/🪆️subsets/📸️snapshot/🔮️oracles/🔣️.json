@@ -5,39 +5,6 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "mutationManifests": [
-    {
-      "schema": "semio.repository-test.mutation-manifest/v2",
-      "artifact": "s.stdio.bcf",
-      "standard": "2.1",
-      "subset": "snapshot",
-      "standardDirectoryName": "🔖️2.1",
-      "subsetDirectoryName": "📸️snapshot",
-      "mutations": [
-        {
-          "id": "set-viewpoint-snapshot",
-          "capability": "bcf-2-1-snapshot-mutate",
-          "outcomes": [
-            "rejected",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-viewpoint-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetViewpointSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "bcf-2-1-snapshot-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "jszip-bcf-2-1-mutate-reader"
-            }
-          ],
-          "payloadSchema": "../../🖊️markup/🧬️schema/🧬️mutations/📸set-viewpoint-snapshot/🦀️.rs#SetViewpointSnapshot"
-        }
-      ]
-    }
-  ],
   "fixtureManifests": [
     {
       "schema": "semio.repository-test.fixture/v2",

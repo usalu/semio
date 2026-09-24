@@ -101,7 +101,6 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                  | params                                                                                                                                                                                                                                                                             |
-      | no-mutation         | {}                                                                                                                                                                                                                                                                                 |
       | set-snapshot        | {"body": [{"kind":"paragraph","style":"Heading1","runs":[{"text":"Wave 7 replacement document","bold":false,"italic":false,"underline":false}]},{"kind":"paragraph","style":"Normal","runs":[{"text":"This whole document was replaced by a ","bold":false,"italic":false,"underline":false},{"text":"set-snapshot","bold":true,"italic":false,"underline":false},{"text":" mutation.","bold":false,"italic":false,"underline":false}]},{"kind":"table","rows":[{"cells":[{"blocks":[{"kind":"paragraph","style":"TableCell","runs":[{"text":"Left","bold":false,"italic":false,"underline":false}]}]},{"blocks":[{"kind":"paragraph","style":"TableCell","runs":[{"text":"Right","bold":false,"italic":false,"underline":false}]}]}]}]}], "styles": [{"id":"Normal","name":"Normal","basedOn":null},{"id":"Heading1","name":"heading 1","basedOn":"Normal"},{"id":"TableCell","name":"Table Cell","basedOn":"Normal"}]} |
       | insert-block        | {"path": {"segments": [{"blockIndex": 359, "row": 1, "cell": 0}], "index": 1}, "block": {"kind":"paragraph","style":"TableCell","runs":[{"text":"(wave 7 annotation)","bold":false,"italic":true,"underline":false}]}}                                                          |
       | remove-block        | {"path": {"segments": [{"blockIndex": 359, "row": 2, "cell": 0}], "index": 0}}                                                                                                                                                                                                    |
@@ -115,6 +114,17 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
       | set-part            | {"path": "docProps/app.xml", "contentType": "application/vnd.openxmlformats-officedocument.extended-properties+xml", "content": "<Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties\"><Application>semio-wave7-mutation-test</Application></Properties>"} |
       | remove-part         | {"path": "docProps/core.xml"}                                                                                                                                                                                                                                                     |
 
+  @id-no-mutation-baseline-mutate
+  @level-exhaustive
+  @mode-differential
+  Scenario: Apply no-mutation to the real document
+    Given the real input document shared://📜️example-readme.docx
+    When the no-mutation mutation is applied with its parameters
+      """
+      {"kind": "no-mutation", "params": {}}
+      """
+    Then the oracle and the subject agree on the semantic projection
+
   @id-inverse
   @level-exhaustive
   @mode-differential
@@ -127,7 +137,6 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                  | params                                                                                                                                                                                                                                                                             |
-      | no-mutation         | {}                                                                                                                                                                                                                                                                                 |
       | set-snapshot        | {"body": [{"kind":"paragraph","style":"Heading1","runs":[{"text":"Wave 7 replacement document","bold":false,"italic":false,"underline":false}]},{"kind":"paragraph","style":"Normal","runs":[{"text":"This whole document was replaced by a ","bold":false,"italic":false,"underline":false},{"text":"set-snapshot","bold":true,"italic":false,"underline":false},{"text":" mutation.","bold":false,"italic":false,"underline":false}]},{"kind":"table","rows":[{"cells":[{"blocks":[{"kind":"paragraph","style":"TableCell","runs":[{"text":"Left","bold":false,"italic":false,"underline":false}]}]},{"blocks":[{"kind":"paragraph","style":"TableCell","runs":[{"text":"Right","bold":false,"italic":false,"underline":false}]}]}]}]}], "styles": [{"id":"Normal","name":"Normal","basedOn":null},{"id":"Heading1","name":"heading 1","basedOn":"Normal"},{"id":"TableCell","name":"Table Cell","basedOn":"Normal"}]} |
       | insert-block        | {"path": {"segments": [{"blockIndex": 359, "row": 1, "cell": 0}], "index": 1}, "block": {"kind":"paragraph","style":"TableCell","runs":[{"text":"(wave 7 annotation)","bold":false,"italic":true,"underline":false}]}}                                                          |
       | remove-block        | {"path": {"segments": [{"blockIndex": 359, "row": 2, "cell": 0}], "index": 0}}                                                                                                                                                                                                    |
@@ -140,6 +149,17 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
       | set-style-based-on  | {"id": "Heading3", "basedOn": "Heading1"}                                                                                                                                                                                                                                         |
       | set-part            | {"path": "docProps/app.xml", "contentType": "application/vnd.openxmlformats-officedocument.extended-properties+xml", "content": "<Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties\"><Application>semio-wave7-mutation-test</Application></Properties>"} |
       | remove-part         | {"path": "docProps/core.xml"}                                                                                                                                                                                                                                                     |
+
+  @id-no-mutation-baseline-inverse
+  @level-exhaustive
+  @mode-differential
+  Scenario: Undoing no-mutation restores the document
+    Given the real input document shared://📜️example-readme.docx
+    When the no-mutation mutation is applied and then undone
+      """
+      {"kind": "no-mutation", "params": {}}
+      """
+    Then the oracle and the subject agree on the semantic projection
 
   @id-identity-round-trip
   @level-long

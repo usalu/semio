@@ -1,0 +1,216 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The config state lane of `s.architect.program`'s editor (✏️editor/🎚️config): its mutation vocabulary `ArchitectConfigMutation` over `ArchitectConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-architect-program-1-any-editor-config` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "architect-program-1-any-editor-config-state-lane-semantics",
+      "capabilities": [
+        "architect-program-1-any-editor-config-mutate"
+      ],
+      "rationale": "`ArchitectConfigMutation` is the config state lane of `s.architect.program`'s ✏️editor/🎚️config surface: it holds the search query and history, the last action result and the last analysis result. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`replace-config`) changes exactly its own part of `ArchitectConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A persisted key-value store for desktop settings; it has no model of this surface's typed config record, its per-kind setters, their no-op guard or the inverse each kind computes."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it defines no typed config mutations and neither their no-op nor their inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "`ArchitectConfig` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "architect-program-1-any-editor-config",
+      "capability": "architect-program-1-any-editor-config-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "replace-config"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.architect.program",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎚️config",
+      "mutations": [
+        {
+          "id": "replace-config",
+          "capability": "architect-program-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "replace-config",
+            "bridgeVersion": 1,
+            "variant": "ReplaceConfig"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "architect-program-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-config-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.architect.program",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "replace-config",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ae97da262671d88f0a55f9f41401278782ac2d952388e7cbf925625ac67ef75e",
+          "bytes": 101
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:15b55433a4aec4e776489c617179e743135861cce8b6e5c58f666850d69596ea",
+          "bytes": 180
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:87ac0c65250d4952c12f2743f1ac9ab66ff7797d7f2bf1a6958d49e8df0df593",
+          "bytes": 117
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:87ac0c65250d4952c12f2743f1ac9ab66ff7797d7f2bf1a6958d49e8df0df593",
+          "bytes": 117
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-config-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.architect.program",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "replace-config",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📸️replace-config/🟰️replace-config-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:87ac0c65250d4952c12f2743f1ac9ab66ff7797d7f2bf1a6958d49e8df0df593",
+          "bytes": 117
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📸️replace-config/🟰️replace-config-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:15b55433a4aec4e776489c617179e743135861cce8b6e5c58f666850d69596ea",
+          "bytes": 180
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📸️replace-config/🟰️replace-config-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:87ac0c65250d4952c12f2743f1ac9ab66ff7797d7f2bf1a6958d49e8df0df593",
+          "bytes": 117
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📸️replace-config/🟰️replace-config-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:87ac0c65250d4952c12f2743f1ac9ab66ff7797d7f2bf1a6958d49e8df0df593",
+          "bytes": 117
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📸️replace-config/🟰️replace-config-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Re-applying `replace-config` to the record its own contract vector produced is the leaf's warned no-op."
+    }
+  ]
+}

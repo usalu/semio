@@ -1438,6 +1438,10 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_with(layout_internal_action("patchFrame", LocalizedLabel::native("Patch Frame", "Rahmen aktualisieren"), ActionKind::Mutation))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection") })
             .action_destructive("deleteSelection")
+            .action_destructive("exportPng")
+            .action_destructive("exportSvg")
+            .action_destructive("exportPdf")
+            .action_destructive("exportPackage")
             .action_with(layout_internal_action("canvasDrop", LocalizedLabel::native("Canvas Drop", "Ablegen auf Leinwand"), ActionKind::Mutation))
             // 👁️ Ephemeral view state — active page, drop ghost, pointer, camera, engagement draft.
             // Selection/hover are framework-owned now (domain "elements") — no app-declared verbs;
@@ -1505,6 +1509,10 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
+            .action_describe("translateSelection", LocalizedLabel::native("Moves the selected frames by a delta in page units.", "Verschiebt die ausgewählten Rahmen um einen Versatz in Seiteneinheiten."))
+            .action_use_when("translateSelection", vec!["move the selected frames".into(), "shift this frame to the right".into()])
+            .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected frames by an angle in degrees.", "Dreht die ausgewählten Rahmen um einen Winkel in Grad."))
+            .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected frames by a factor per axis.", "Skaliert die ausgewählten Rahmen um einen Faktor je Achse."))
             // 📇️ Per-window action scoping — the content-authoring operations only make sense on the
             // interactive Blueprint surface; the read-only Preview surface renders output and never
             // creates or edits frames/pages. Exports, camera, pointer/drag, selection and hover are

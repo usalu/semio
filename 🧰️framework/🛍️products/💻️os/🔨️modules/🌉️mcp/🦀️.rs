@@ -440,9 +440,9 @@ fn history_redo_handler(actions: &ActionAdapter, arguments: serde_json::Value) -
 
 /// 🏗️ Builds the real `ToolRegistry` this crate serves — 28 tools, none of them a stub: the 3 core
 /// gateway tools, the 8 mutation-protocol tools (`P6-actions-policy`, backed by `actions`/
-/// `principal`), the 5 `🗿️artifact` tools, the 2 `💡️inference` discovery tools, the 4 hub-backed
-/// `💡️inference` job tools (`inference_submit`/`inference_events`/`inference_cancel`/
-/// `inference_approve`), the 4 `🖥️ui` tools (`ui_focus`/`ui_reveal`/`job_get`/`job_cancel`) and
+/// `principal`), the 5 `🗿️artifact` tools, the 2 `💡️inference` discovery tools, the 4 `💡️inference`
+/// job tools (`inference_submit`/`inference_events`/`inference_cancel`/`inference_approve`, over any
+/// declared service, guest- or hub-executed), the 4 `🖥️ui` tools (`ui_focus`/`ui_reveal`/`job_get`/`job_cancel`) and
 /// `conversation_reply` (the agent's own free-text turn, ticket 26/09/18 slice AC1). Ticket
 /// 26/08/29/AI-MCP-END-TO-END retired the last of these stubs entirely.
 ///
@@ -533,7 +533,7 @@ pub fn build_tool_registry(
     register_artifact_tools(&mut registry, workspace.clone());
     register_inference_tools(&mut registry, workspace.clone());
     //#region 💡️Inference
-    register_inference_job_tools(&mut registry, workspace.clone(), actions.clone(), principal.clone(), default_session());
+    register_inference_job_tools(&mut registry, catalog.clone(), workspace.clone(), actions.clone(), principal.clone(), default_session());
     //#endregion 💡️Inference
     //#region 💬️Conversation
     // 💬️ The agent's own voice. Registered from the SAME principal the mutation tools are gated on,
@@ -912,10 +912,12 @@ pub struct StdioOptions {
 }
 
 /// 🌉️ Starts the loopback `/bridge` listener a stdio gateway attaches a live os session through, and
-/// publishes its address as a `🛰️rendezvous` offer. Returns `None` — never an error, never a silent
-/// no-op — when the user opted out, when nothing can be published, or when no os session is live:
-/// every bridge-dependent tool then answers the typed `bridge_not_running_error`, whose details now
-/// name exactly which of those three states this process is in.
+/// publishes its address as a `🛰️rendezvous` offer — whether or not a session is live yet. A shell
+/// polls for offers (`useDiscoveredAgentBridgeConfig`), so a `dev s` started after the client launched
+/// this gateway still dials it: the order in which a person opens their MCP client and their shell is
+/// never a manual step. Returns `None` only when the user opted out (`--no-bridge`) or when nothing
+/// can be bound or published; every bridge-dependent tool then answers the typed
+/// `bridge_not_running_error`, and with a bridge but no shell yet, `no_shell_attached_error`.
 ///
 /// The listener is bridge-ONLY: this process's MCP surface is stdin/stdout, so `/mcp` on that socket
 /// is genuinely absent (404). Admission is a per-process proof published only through the owner-only
@@ -925,10 +927,6 @@ fn attach_stdio_bridge(options: &StdioOptions, principal: &AgentPrincipal, bridg
         return None;
     }
     let sessions = crate::rendezvous::live_os_sessions();
-    if sessions.is_empty() {
-        eprintln!("[semio-os-mcp] no live os session found in {} — `ui_focus`/`ui_reveal`, agent presence and shell approvals stay unavailable until a `dev s` session publishes one", crate::rendezvous::sessions_dir().display());
-        return None;
-    }
     let proof = crate::rendezvous::mint_admission_proof();
     let mut transport = HttpTransport::new(HttpTransportOptions::with_local_proof(&proof)).publishing_bridge_into(bridge_slot.clone());
     let run = match transport.start_bridge_only() {

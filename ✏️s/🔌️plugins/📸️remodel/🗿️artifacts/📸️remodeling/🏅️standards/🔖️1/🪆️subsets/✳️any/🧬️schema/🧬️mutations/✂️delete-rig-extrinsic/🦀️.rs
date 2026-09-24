@@ -32,7 +32,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for DeleteRi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete rig extrinsic \"{}\"", self.camera_id), &format!("extrinsische Rig \"{}\" löschen", self.camera_id))
+        protocol::LocalizedLabel::native(&format!("Delete rig extrinsic \"{}\"", self.camera_id), &format!("Extrinsische Rig-Kalibrierung \"{}\" löschen", self.camera_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.camera_id.clone()]

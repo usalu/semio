@@ -1,3 +1,4 @@
+use crate::editor::remodeling::engine::step_ceiling;
 use super::*;
 
 fn lcg_next(state: &mut u64) -> f64 {
@@ -802,7 +803,7 @@ fn accepted_interactive_mesh_postprocess_steps_stay_below_hard_ceiling() {
     loop {
         let started = std::time::Instant::now();
         let status = mesh_pipeline_step(&mut pipeline, 1);
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "interactive mesh worker step {steps} exceeded 8 ms: {status:?}");
+        step_ceiling::admit_step(started.elapsed(), format_args!("interactive mesh worker step {steps} exceeded 8 ms: {status:?}"));
         steps += 1;
         match status {
             MeshPipelineStatus::Done => break,
@@ -822,7 +823,7 @@ fn accepted_tsdf_extraction_and_envelope_rejection_steps_stay_below_hard_ceiling
     loop {
         let started = std::time::Instant::now();
         let complete = accepted.advance(&volume, 1);
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "accepted TSDF extraction worker step {steps} exceeded 8 ms");
+        step_ceiling::admit_step(started.elapsed(), format_args!("accepted TSDF extraction worker step {steps} exceeded 8 ms"));
         steps += 1;
         if complete {
             break;
@@ -840,7 +841,7 @@ fn accepted_tsdf_extraction_and_envelope_rejection_steps_stay_below_hard_ceiling
     while !rejected.exceeded() {
         let started = std::time::Instant::now();
         let _ = rejected.advance(&dense_volume, 1);
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "TSDF envelope-rejection worker step {steps} exceeded 8 ms");
+        step_ceiling::admit_step(started.elapsed(), format_args!("TSDF envelope-rejection worker step {steps} exceeded 8 ms"));
         steps += 1;
         assert!(steps < 20_000, "oversized TSDF extraction was not rejected");
     }
@@ -859,7 +860,7 @@ fn accepted_texture_bake_and_png_publication_steps_stay_below_hard_ceiling() {
     loop {
         let started = std::time::Instant::now();
         let complete = preparation.advance(&mesh, &unwrap.uvs, &views, 64);
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "texture bake step {steps} exceeded 8 ms");
+        step_ceiling::admit_step(started.elapsed(), format_args!("texture bake step {steps} exceeded 8 ms"));
         steps += 1;
         if complete {
             break;
@@ -871,7 +872,7 @@ fn accepted_texture_bake_and_png_publication_steps_stay_below_hard_ceiling() {
     loop {
         let started = std::time::Instant::now();
         let complete = png.advance(&texture);
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "texture PNG row exceeded 8 ms");
+        step_ceiling::admit_step(started.elapsed(), format_args!("texture PNG row exceeded 8 ms"));
         if complete {
             break;
         }

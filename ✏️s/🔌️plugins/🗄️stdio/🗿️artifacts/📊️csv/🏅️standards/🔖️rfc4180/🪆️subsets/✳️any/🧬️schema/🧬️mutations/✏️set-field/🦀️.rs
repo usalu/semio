@@ -24,7 +24,7 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetField {
         agg_inverse(&CsvMutation::SetField(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-field", "Feld setzen")
+        protocol::LocalizedLabel::native("Set field", "Feld setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

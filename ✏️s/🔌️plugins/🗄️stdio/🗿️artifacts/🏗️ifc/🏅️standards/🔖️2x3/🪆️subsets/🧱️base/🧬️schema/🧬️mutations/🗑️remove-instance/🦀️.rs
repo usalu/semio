@@ -22,7 +22,7 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for RemoveInstance {
         agg_inverse(&Ifc2x3Mutation::RemoveInstance(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-instance", "Instanz entfernen")
+        protocol::LocalizedLabel::native("Remove instance", "Instanz entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

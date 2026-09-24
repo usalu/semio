@@ -29,7 +29,7 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Flat
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Flatten node in layer #{}", self.at.layer), &format!("Verflachungsknoten in Ebene #{}", self.at.layer))
+        protocol::LocalizedLabel::native(&format!("Flatten node in layer #{}", self.at.layer), &format!("Knoten in Ebene #{} reduzieren", self.at.layer))
     }
     fn target(&self) -> Vec<String> {
         vec![self.at.layer.to_string()]

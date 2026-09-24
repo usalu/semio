@@ -27,7 +27,7 @@ impl MutationKind<Fem2dSnapshot, Fem2dMutation> for ChangeLoadCaseName {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename case \"{}\" to \"{}\"", self.case_id, self.new_name), &format!("Fall \"{}\" in \"{}\" umbenennen", self.case_id, self.new_name))
+        protocol::LocalizedLabel::native(&format!("Rename case \"{}\" to \"{}\"", self.case_id, self.new_name), &format!("Lastfall \"{}\" in \"{}\" umbenennen", self.case_id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]

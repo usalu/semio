@@ -34,7 +34,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeTransparencyMuta
         vec![PngMutation::ChangeTransparency(ChangeTransparencyMutation { trns: base.trns.clone() })]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change transparency", "Transparenz ändern")
+        protocol::LocalizedLabel::native("Change transparency", "Transparenz ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-transparency".into()]

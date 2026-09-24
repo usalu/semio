@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeBM {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change footing width B [m] to {}", self.new_b_m), &format!("Fundamentbreitenb [m] auf {} ändern", self.new_b_m))
+        protocol::LocalizedLabel::native(&format!("Change footing width B [m] to {}", self.new_b_m), &format!("Fundamentbreite B [m] auf {} ändern", self.new_b_m))
     }
 }
 //#endregion 🔖️ChangeBM

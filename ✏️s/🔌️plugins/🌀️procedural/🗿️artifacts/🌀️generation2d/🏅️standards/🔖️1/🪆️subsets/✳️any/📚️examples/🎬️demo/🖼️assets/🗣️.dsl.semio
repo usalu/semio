@@ -4,8 +4,11 @@ camera {
   x=0 y=0 zoom=1
 }
 widgets {
-  input-slider id=slider label="Number" value=3 min=0 max=10 step=0.1
-  neuron id=rect neuron-kind=math.add preview=true input-ports=[ ] output-ports=[ ]
+  input-slider id=slider label="Width" value=30 min=1 max=100 step=1
+  neuron id=rect neuron-kind=draw.shape.rect preview=true input-ports=[ "x" "y" "width" "height" ] output-ports=[ ]
+  params [key:TEXT value:BLOCK] {
+  }
+  neuron id=outline neuron-kind=draw.style.stroke preview=true input-ports=[ "drawing" "width" "colorR" "colorG" "colorB" "colorA" ] output-ports=[ ]
   params [key:TEXT value:BLOCK] {
   }
   output-preview id=preview expanded=[ ]
@@ -13,11 +16,12 @@ widgets {
   }
 }
 layout={
-  preview=x=240 y=-40 rect=x=120 y=-40 slider=x=40 y=-40
+  outline=x=240 y=-40 preview=x=360 y=-40 rect=x=120 y=-40 slider=x=40 y=-40
 }
 synapses [id:TEXT wire:WIRE] {
-  s1 slider@number->rect@a
-  s2 rect@sum->preview
+  s1 slider@number->rect@width
+  s2 rect@draw.drawing->outline@drawing
+  s3 outline@draw.drawing->preview
 }
 generations [id:TEXT name:TEXT values:MAP] {
 }

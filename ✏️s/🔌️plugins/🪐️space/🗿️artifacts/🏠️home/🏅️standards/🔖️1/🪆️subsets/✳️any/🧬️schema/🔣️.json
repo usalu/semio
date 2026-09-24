@@ -103,8 +103,8 @@
                 },
                 {
                   "type": "array",
-                  "minItems": 18,
-                  "maxItems": 18,
+                  "minItems": 17,
+                  "maxItems": 17,
                   "items": [
                     {
                       "type": "object",
@@ -525,30 +525,6 @@
                       ],
                       "properties": {
                         "id": {
-                          "const": "foldDirectoryEvents"
-                        },
-                        "disposition": {
-                          "const": "BatchOnlyPendingRewrite"
-                        },
-                        "lanes": {
-                          "const": []
-                        },
-                        "blocker": {
-                          "const": "unbounded event-page parsing and full projection fold still execute in one direct handler"
-                        }
-                      }
-                    },
-                    {
-                      "type": "object",
-                      "additionalProperties": false,
-                      "required": [
-                        "id",
-                        "disposition",
-                        "lanes",
-                        "blocker"
-                      ],
-                      "properties": {
-                        "id": {
                           "const": "presenceHeartbeat"
                         },
                         "disposition": {
@@ -619,7 +595,7 @@
             }
           },
           "title": "HomeRetainedCommandLimits",
-          "description": "The `s.space.home@1/*#editor` app's retained-command execution law: its owned job factory, eight byte/step budgets, sixteen-route disposition census, and scalar boundary cases."
+          "description": "The `s.space.home@1/*#editor` app's retained-command execution law: its owned job factory, eight byte/step budgets, seventeen-route disposition census, and scalar boundary cases."
         }
       ],
       "x-semio-formats": [

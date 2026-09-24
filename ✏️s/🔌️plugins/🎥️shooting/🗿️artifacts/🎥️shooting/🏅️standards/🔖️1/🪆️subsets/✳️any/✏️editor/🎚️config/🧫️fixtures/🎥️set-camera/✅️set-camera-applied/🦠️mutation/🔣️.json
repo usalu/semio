@@ -1,0 +1,24 @@
+{
+  "SetCamera": {
+    "camera": {
+      "position": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "target": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "zoom": 2.0,
+      "fov": 35.0,
+      "up": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "projection": "orthographic"
+    }
+  }
+}

@@ -85,7 +85,7 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ChangeHeaderFieldsMuta
         })]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change header fields", "Kopffelder ändern")
+        protocol::LocalizedLabel::native("Change header fields", "Kopffelder ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-header-fields".into()]

@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { ActionId, ActorId, ActorSystem, BitSet, DockLayoutStore, DockUiStateStore, EventId, GuardId, InvokeId, Model, NamedLayoutStore, NodeId, NullInspector, OsShellConfig, OsTransient, TestHost, TimerId, TraceInspector, WindowPaneStateStore, checkInvariants, createDevPluginSource, createExtensionSource, createLeasePool, createMemoryStoragePort, effectiveActionArgs, ephemeralBox, explore, extensionSourceEventToPluginSourceEvent, fetchWithTimeout, init, latestWins, macrostep, missingRequiredArgs, multiplexPluginSources, organizeContextMenu, persist, resolvePlaygroundBoot, resolvePluginHostConfig, resolvePluginRegistryId, restore, retryWithJitteredBackoff, runConformance, start, step, timerElapsed, waitForEvent } = dependencies;
+  const { ActionId, ActorId, ActorSystem, BitSet, DockLayoutStore, DockUiStateStore, EventId, GuardId, InvokeId, Model, NamedLayoutStore, NodeId, NullInspector, OsShellConfig, OsTransient, TestHost, TimerId, TraceInspector, WindowPaneStateStore, checkInvariants, createDevPluginSource, createExtensionSource, createLeasePool, createMemoryStoragePort, effectiveActionArgs, PluginModuleUnavailableError, ephemeralBox, explore, extensionSourceEventToPluginSourceEvent, fetchWithTimeout, init, latestWins, macrostep, missingRequiredArgs, multiplexPluginSources, organizeContextMenu, persist, resolvePlaygroundBoot, resolvePluginHostConfig, resolvePluginRegistryId, restore, retryWithJitteredBackoff, runConformance, start, step, timerElapsed, waitForEvent } = dependencies;
   type ActionArgDef = any;
   type ArgSchema = any;
   type Command = any;
@@ -435,23 +435,53 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       await expect(source.list()).resolves.toEqual(registry);
     });
 
-    it("moduleUrl() cache-busts a cold page load even before the build snapshot arrives", () => {
-      const source = createDevPluginSource(registry, "/neutral/watch");
-      const first = new URL(source.moduleUrl("note"), "http://semio.test");
-      const second = new URL(source.moduleUrl("s"), "http://semio.test");
-      expect(decodeURIComponent(first.pathname)).toBe("/🔌️plugin-modules/note/note_plugin.js");
-      expect(first.searchParams.get("v")).toMatch(/^\d+$/);
-      expect(second.searchParams.get("v")).toBe(first.searchParams.get("v"));
+    /** 🔎️ Answers the HEAD probe of a locally served module's descriptor: `served` paths answer 200. */
+    const servedModules = (served: readonly string[]) => {
+      const probes: string[] = [];
+      vi.stubGlobal("fetch", async (url: string, init?: RequestInit) => {
+        probes.push(`${init?.method ?? "GET"} ${decodeURIComponent(url)}`);
+        return new Response(null, { status: served.includes(decodeURIComponent(url)) ? 200 : 404 });
+      });
+      return probes;
+    };
+    const acquisition = () => ({ signal: new AbortController().signal });
+
+    it("acquireModule() cache-busts a cold page load even before the build snapshot arrives", async () => {
+      const probes = servedModules(["/🔌️plugin-modules/note/🔣️.json", "/🔌️plugin-modules/s/🔣️.json"]);
+      try {
+        const source = createDevPluginSource(registry, "/neutral/watch");
+        const firstAcquired = await source.acquireModule("note", undefined, acquisition());
+        const first = new URL(firstAcquired.moduleUrl, "http://semio.test");
+        const second = new URL((await source.acquireModule("s", undefined, acquisition())).moduleUrl, "http://semio.test");
+        expect(decodeURIComponent(first.pathname)).toBe("/🔌️plugin-modules/note/note_plugin.js");
+        expect(first.searchParams.get("v")).toMatch(/^\d+$/);
+        expect(second.searchParams.get("v")).toBe(first.searchParams.get("v"));
+        expect(firstAcquired.rebuiltAt).toBe(Number(first.searchParams.get("v")));
+        expect(probes).toEqual(["HEAD /🔌️plugin-modules/note/🔣️.json", "HEAD /🔌️plugin-modules/s/🔣️.json"]);
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
-    it("moduleUrl() cache-busts with a rebuiltAt query param", () => {
-      const source = createDevPluginSource(registry, "/neutral/watch");
-      expect(source.moduleUrl("note", 1785789943669)).toBe("/🔌️plugin-modules/note/note_plugin.js?v=1785789943669");
+    it("acquireModule() cache-busts with a rebuiltAt query param", async () => {
+      servedModules(["/🔌️plugin-modules/note/🔣️.json"]);
+      try {
+        const source = createDevPluginSource(registry, "/neutral/watch");
+        await expect(source.acquireModule("note", 1785789943669, acquisition())).resolves.toEqual({ moduleUrl: "/🔌️plugin-modules/note/note_plugin.js?v=1785789943669", rebuiltAt: 1785789943669 });
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
-    it("moduleUrl() throws for an unknown pluginId", () => {
-      const source = createDevPluginSource(registry, "/neutral/watch");
-      expect(() => source.moduleUrl("missing")).toThrow(/missing/);
+    it("acquireModule() answers unavailable for an unknown pluginId and for a module this device does not serve", async () => {
+      servedModules([]);
+      try {
+        const source = createDevPluginSource(registry, "/neutral/watch");
+        await expect(source.acquireModule("missing", undefined, acquisition())).rejects.toBeInstanceOf(PluginModuleUnavailableError);
+        await expect(source.acquireModule("note", undefined, acquisition())).rejects.toThrow(/HTTP 404/);
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
     it("subscribe() is a harmless no-op without a global EventSource (node/vitest)", () => {
@@ -475,7 +505,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(extensionSourceEventToPluginSourceEvent({ kind: "uninstalled", extensionId: "gamma-extension" })).toBeUndefined();
     });
 
-    it("multiplexPluginSources() merges list() and resolves moduleUrl from the matching child", async () => {
+    it("multiplexPluginSources() merges list() and acquires from the first child that serves the module", async () => {
       const catalog: PluginCatalog = {
         plugins: [],
         extensions: [{ pluginId: "gamma-extension", wasmOut: "gamma.wasm", role: "extension", contributes: [], consumes: [] }],
@@ -490,8 +520,18 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(multiplexed.id).toBe("dev+extensions");
       const listed = await multiplexed.list();
       expect(listed.map((entry) => entry.pluginId).sort()).toEqual([...registry.map((entry) => entry.pluginId), ...catalog.extensions.map((entry) => entry.pluginId)].sort());
-      expect(decodeURIComponent(new URL(multiplexed.moduleUrl("note"), "http://semio.test").pathname)).toBe("/🔌️plugin-modules/note/note_plugin.js");
-      expect(() => multiplexed.moduleUrl("missing")).toThrow(/missing/);
+      servedModules(["/🔌️plugin-modules/note/🔣️.json"]);
+      try {
+        expect(decodeURIComponent(new URL((await multiplexed.acquireModule("note", undefined, acquisition())).moduleUrl, "http://semio.test").pathname)).toBe("/🔌️plugin-modules/note/note_plugin.js");
+        await expect(multiplexed.acquireModule("gamma-extension", 7, acquisition())).resolves.toEqual({ moduleUrl: "/🧩️extension-modules/gamma-extension/🌉️bridge.js?v=7", rebuiltAt: 7 });
+        await expect(multiplexed.acquireModule("missing", undefined, acquisition())).rejects.toBeInstanceOf(PluginModuleUnavailableError);
+        const remote = { id: "remote", list: async () => [], subscribe: () => () => {}, acquireModule: async (pluginId: string) => ({ moduleUrl: `/remote/${pluginId}/🌉️bridge.js`, rebuiltAt: 9 }) };
+        await expect(multiplexPluginSources(dev, remote).acquireModule("s", undefined, acquisition())).resolves.toEqual({ moduleUrl: "/remote/s/🌉️bridge.js", rebuiltAt: 9 });
+        const failing = { ...remote, acquireModule: async () => Promise.reject(new Error("transport down")) };
+        await expect(multiplexPluginSources(failing, dev).acquireModule("note", undefined, acquisition())).rejects.toThrow("transport down");
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
   });
 

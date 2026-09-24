@@ -98,12 +98,12 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "move-step/no-ops-when-the-step-is-already-at-that-position: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op` — not the
+/// 🎯️ The declared outcome holds: `no-op`, with one untargeted Warning `mutation.no-op` — not the
 /// Fatal `mutation.invariant` this same verb raises for a non-finite coordinate.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "move-step/no-ops-when-the-step-is-already-at-that-position declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "move-step/no-ops-when-the-step-is-already-at-that-position declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <SequenceMutation as protocol::Mutation<SequenceSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

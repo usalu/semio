@@ -1,0 +1,150 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The transient state lane of `s.procedural.generation3d`'s viewer (👁️viewer/🫧️transient): its mutation vocabulary `Generation3dViewTransientMutation` over `Generation3dViewTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-procedural-generation3d-1-any-viewer-transient` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "procedural-generation3d-1-any-viewer-transient-state-lane-semantics",
+      "capabilities": [
+        "procedural-generation3d-1-any-viewer-transient-mutate"
+      ],
+      "rationale": "`Generation3dViewTransientMutation` is the transient state lane of `s.procedural.generation3d`'s 👁️viewer/🫧️transient surface: it holds the flow evaluation of the current document the preview window renders, or none before the first evaluation. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-preview-eval`) changes exactly its own part of `Generation3dViewTransient`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "zustand",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "An in-memory state container with arbitrary setter functions; it has no typed transient record, no per-kind mutation vocabulary and no computed inverse."
+          },
+          {
+            "package": "im",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Persistent immutable collections; they version values structurally but define no mutation kinds, no-op guards or inverses over this surface's record."
+          }
+        ],
+        "whyNoneQualifies": "`Generation3dViewTransient` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "procedural-generation3d-1-any-viewer-transient",
+      "capability": "procedural-generation3d-1-any-viewer-transient-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-preview-eval"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.procedural.generation3d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "👁️viewer/🫧️transient",
+      "mutations": [
+        {
+          "id": "set-preview-eval",
+          "capability": "procedural-generation3d-1-any-viewer-transient-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-preview-eval",
+            "bridgeVersion": 1,
+            "variant": "SetPreviewEval"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-generation3d-1-any-viewer-transient-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-preview-eval-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "👁️viewer/🫧️transient"
+      },
+      "mutation": "set-preview-eval",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6ff80a19c1da757c89d79f4e492e798241d4aa82a7e793bece527b84c53f75ae",
+          "bytes": 30
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6d2c9af5219ecbefc65d1b16725acf6a8b77af745fb0f029a603c339eb353b0d",
+          "bytes": 63
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e535c9996b23817b1f8b0d5bad875b0497e599c76c0d019752616f2f71a52d5e",
+          "bytes": 42
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e535c9996b23817b1f8b0d5bad875b0497e599c76c0d019752616f2f71a52d5e",
+          "bytes": 42
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "The first flow evaluation caches its JSON for the preview window."
+    }
+  ]
+}

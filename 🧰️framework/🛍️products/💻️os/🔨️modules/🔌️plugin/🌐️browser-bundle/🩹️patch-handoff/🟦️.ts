@@ -12,8 +12,18 @@ export type BrowserActorUiPatchOfferV1 = {
   readonly verifiedSurfaceId: string;
   readonly activationGeneration: string;
   readonly instanceId: number;
-  readonly patch: UiPatch;
+  readonly patches: readonly UiPatch[];
   readonly receipt: readonly number[];
+};
+
+/** ⚖️ The shell's verdict on ONE surface of an offer — the exact shape of the guest's own per-surface
+ * `patch-ack` / `patch-rejected` events (`🔌️plugin/🧬️schema/📜️.wit`). A rejected surface is reset to the
+ * empty document on the shell side, which is what the guest's full resend assumes. */
+export type BrowserActorUiPatchVerdictV1 = {
+  readonly surface: string;
+  readonly outcome: "acknowledged" | "rejected";
+  readonly revision: number;
+  readonly reason?: string;
 };
 
 export type BrowserActorUiPatchResultV1 = {
@@ -23,10 +33,11 @@ export type BrowserActorUiPatchResultV1 = {
   readonly activationGeneration: string;
   readonly instanceId: number;
   readonly receipt: readonly number[];
-  readonly outcome: "acknowledged" | "rejected";
-  readonly revision: number;
-  readonly reason?: string;
+  readonly verdicts: readonly BrowserActorUiPatchVerdictV1[];
 };
+
+/** 🪟️ One actor child renders its window plus every panel body of its verified app; this bounds one offer. */
+export const BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM = 64;
 
 type WireVariant = { readonly tag?: unknown; readonly val?: unknown };
 type WirePatch = { readonly surface?: unknown; readonly revision?: unknown; readonly baseRevision?: unknown; readonly ops?: unknown };
@@ -82,6 +93,13 @@ function normalizeNode(raw: unknown, port: BrowserActorUiPatchDecodePort): UiNod
   };
 }
 
+/** 🔢️ A WIT `list<node-id>` as the guest boundary lifts it: jco's `BigUint64Array` (`list<u64>`), or a plain list. */
+export function nodeIdList(value: unknown, path: string): readonly unknown[] {
+  if (value instanceof BigUint64Array) return Array.from(value);
+  if (Array.isArray(value)) return value;
+  throw new Error(`${path}: invalid list`);
+}
+
 function decodeOps(raw: unknown, port: BrowserActorUiPatchDecodePort): UiPatchOp[] {
   if (!Array.isArray(raw) || raw.length > 4_096) throw new Error("uiPatch.ops: invalid list");
   return raw.map((candidate, index): UiPatchOp => {
@@ -108,8 +126,7 @@ function decodeOps(raw: unknown, port: BrowserActorUiPatchDecodePort): UiPatchOp
       }
       case "set-children":
         object(value, path, ["children", "node"]);
-        if (!Array.isArray(value.children)) throw new Error(`uiPatch.ops[${index}].children: invalid list`);
-        return { type: "setChildren", id: node(), children: value.children.map((child) => port.natural(child, `uiPatch.ops[${index}].children[]`)) };
+        return { type: "setChildren", id: node(), children: nodeIdList(value.children, `uiPatch.ops[${index}].children`).map((child) => port.natural(child, `uiPatch.ops[${index}].children[]`)) };
       case "set-style":
         object(value, path, ["node", "style"]);
         return { type: "setStyle", id: node(), style: port.decodePack(bytes(value.style, `uiPatch.ops[${index}].style`), `uiPatch.ops[${index}].style`) as Extract<UiPatchOp, { type: "setStyle" }>["style"] };
@@ -180,12 +197,14 @@ function parseCanonicalOps(value: unknown): UiPatchOp[] {
   });
 }
 
-/** 🪪️ Preserves the exact guest-issued receipt while decoding the ONE canonical UI patch this reader's
- * surface owns out of the turn's batch.
+/** 🪪️ Preserves the exact guest-issued receipt while decoding every canonical UI patch of the turn's
+ * batch, each of which must name one of the `surfaces` the reader made visible (its window and its
+ * panel bodies), at most once.
  *
- * 🐛️ Until 2026-09-15 a turn carried at most one patch, so this read `patches[0]` and demanded it
- * name `expectedSurface`; a turn that now publishes every ready surface would have made the reader
- * throw on any batch whose first patch belonged to someone else.
+ * 🐛️ Until 2026-09-25 this kept only the WINDOW's patch, so a hub-bound document's panels (inspector,
+ * details, settings) were never rendered by the actor that owns the live document: they showed the
+ * local instance's cold snapshot and never moved, not even for the author's own edit (ticket 26/09/23
+ * C10, audit G-P1-4).
  *
  * 🐛️ Until 2026-09-22 `receipt` arrived here as raw bytes and was decoded with
  * `decodeActorUiPatchReceipt`. That is the SHARD wire's shape, not this one: the browser-bundle
@@ -198,29 +217,23 @@ export function captureBrowserActorUiPatchV1(
   patches: unknown,
   receipt: ActorUiPatchReceipt | null,
   expectedLifetime: ActorInstanceLifetime,
-  expectedSurface: string,
+  surfaces: ReadonlySet<string>,
   port: BrowserActorUiPatchDecodePort,
-): { readonly instanceId: number; readonly patch: UiPatch; readonly receipt: ActorUiPatchReceipt } | null {
-  if (!Array.isArray(patches)) throw new Error("uiPatch: invalid list");
+): { readonly instanceId: number; readonly patches: readonly UiPatch[]; readonly receipt: ActorUiPatchReceipt } | null {
+  if (!Array.isArray(patches) || patches.length > BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM) throw new Error("uiPatch: invalid list");
   validateActorUiPatchPairing(patches.length, receipt);
   if (patches.length === 0) return null;
   if (receipt === null || !actorInstanceLifetimeEquals(receipt.lifetime, expectedLifetime)) throw new Error("uiPatch: lifetime mismatch");
-  const named = patches.map((candidate, index) => {
+  const seen = new Set<string>();
+  const decoded = patches.map((candidate): UiPatch => {
     const patch = object(candidate, "uiPatch", ["baseRevision", "ops", "revision", "surface"]) as WirePatch;
     const surface = object(patch.surface, "uiPatch.surface", ["instance", "surface"]);
-    const instanceId = port.natural(surface.instance, "uiPatch.surface.instance");
     const surfaceId = text(surface.surface, "uiPatch.surface.surface");
-    if (instanceId !== expectedLifetime.instanceId) throw new Error("uiPatch: surface mismatch");
-    return { index, patch, instanceId, surfaceId };
+    if (port.natural(surface.instance, "uiPatch.surface.instance") !== expectedLifetime.instanceId || !surfaces.has(surfaceId) || seen.has(surfaceId)) throw new Error("uiPatch: surface mismatch");
+    seen.add(surfaceId);
+    return { surface: surfaceId, baseRevision: port.natural(patch.baseRevision, "uiPatch.baseRevision"), revision: port.natural(patch.revision, "uiPatch.revision"), ops: decodeOps(patch.ops, port) };
   });
-  const selected = named.find((entry) => entry.surfaceId === expectedSurface);
-  if (!selected) throw new Error("uiPatch: surface mismatch");
-  const { patch, instanceId, surfaceId } = selected;
-  return {
-    instanceId,
-    patch: { surface: surfaceId, baseRevision: port.natural(patch.baseRevision, "uiPatch.baseRevision"), revision: port.natural(patch.revision, "uiPatch.revision"), ops: decodeOps(patch.ops, port) },
-    receipt,
-  };
+  return { instanceId: expectedLifetime.instanceId, patches: decoded, receipt };
 }
 
 function scope(value: unknown): BrowserActorUiPatchScopeV1 {
@@ -239,11 +252,22 @@ function wireReceipt(value: unknown): number[] {
   return Array.from(encoded);
 }
 
-/** 📥️ Strictly decodes the worker-to-shell patch offer carried by the private Pack wire. */
+function surfaceList<T>(value: unknown, path: string, surfaceOf: (entry: unknown, index: number) => T & { readonly surface: string }): T[] {
+  if (!Array.isArray(value) || value.length === 0 || value.length > BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM) throw new Error(`${path}: invalid list`);
+  const seen = new Set<string>();
+  return value.map((entry, index) => {
+    const parsed = surfaceOf(entry, index);
+    if (seen.has(parsed.surface)) throw new Error(`${path}[${index}].surface: duplicate`);
+    seen.add(parsed.surface);
+    return parsed;
+  });
+}
+
+/** 📥️ Strictly decodes the worker-to-shell patch offer carried by the private Pack wire: one guest receipt, one
+ * canonical patch per distinct surface. */
 export function parseBrowserActorUiPatchOfferV1(value: unknown): BrowserActorUiPatchOfferV1 {
-  const record = object(value, "browserActorUiPatch", ["activationGeneration", "instanceId", "kind", "patch", "receipt", "scope", "verifiedSurfaceId"]);
+  const record = object(value, "browserActorUiPatch", ["activationGeneration", "instanceId", "kind", "patches", "receipt", "scope", "verifiedSurfaceId"]);
   if (record.kind !== "browser-actor-ui-patch") throw new Error("browserActorUiPatch.kind: invalid");
-  const patch = object(record.patch, "browserActorUiPatch.patch", ["baseRevision", "ops", "revision", "surface"]);
   const instanceId = naturalNumber(record.instanceId, "browserActorUiPatch.instanceId", 0xffffffff);
   return {
     kind: "browser-actor-ui-patch",
@@ -251,43 +275,48 @@ export function parseBrowserActorUiPatchOfferV1(value: unknown): BrowserActorUiP
     verifiedSurfaceId: text(record.verifiedSurfaceId, "browserActorUiPatch.verifiedSurfaceId"),
     activationGeneration: generation(record.activationGeneration),
     instanceId,
-    patch: {
-      surface: text(patch.surface, "browserActorUiPatch.patch.surface"),
-      baseRevision: naturalNumber(patch.baseRevision, "browserActorUiPatch.patch.baseRevision"),
-      revision: naturalNumber(patch.revision, "browserActorUiPatch.patch.revision"),
-      ops: parseCanonicalOps(patch.ops),
-    },
+    patches: surfaceList(record.patches, "browserActorUiPatch.patches", (entry, index) => {
+      const path = `browserActorUiPatch.patches[${index}]`;
+      const patch = object(entry, path, ["baseRevision", "ops", "revision", "surface"]);
+      return {
+        surface: text(patch.surface, `${path}.surface`),
+        baseRevision: naturalNumber(patch.baseRevision, `${path}.baseRevision`),
+        revision: naturalNumber(patch.revision, `${path}.revision`),
+        ops: parseCanonicalOps(patch.ops),
+      };
+    }),
     receipt: wireReceipt(record.receipt),
   };
 }
 
-/** 📤️ Strictly decodes the shell's exact transaction verdict. */
-export function parseBrowserActorUiPatchResultV1(value: unknown): BrowserActorUiPatchResultV1 {
-  const source = object(value, "browserActorUiPatchResult");
+function verdict(value: unknown, index: number): BrowserActorUiPatchVerdictV1 {
+  const path = `browserActorUiPatchResult.verdicts[${index}]`;
+  const source = object(value, path);
   const outcome = source.outcome;
-  const expected =
-    outcome === "rejected"
-      ? ["activationGeneration", "instanceId", "kind", "outcome", "reason", "receipt", "revision", "scope", "verifiedSurfaceId"]
-      : ["activationGeneration", "instanceId", "kind", "outcome", "receipt", "revision", "scope", "verifiedSurfaceId"];
-  object(value, "browserActorUiPatchResult", expected);
-  if (source.kind !== "browser-actor-ui-patch-result" || (outcome !== "acknowledged" && outcome !== "rejected")) throw new Error("browserActorUiPatchResult: invalid outcome");
-  const instanceId = naturalNumber(source.instanceId, "browserActorUiPatchResult.instanceId", 0xffffffff),
-    revision = naturalNumber(source.revision, "browserActorUiPatchResult.revision");
-  const reason = outcome === "rejected" ? text(source.reason, "browserActorUiPatchResult.reason") : undefined;
+  if (outcome !== "acknowledged" && outcome !== "rejected") throw new Error(`${path}: invalid outcome`);
+  object(value, path, outcome === "rejected" ? ["outcome", "reason", "revision", "surface"] : ["outcome", "revision", "surface"]);
+  const surface = text(source.surface, `${path}.surface`),
+    revision = naturalNumber(source.revision, `${path}.revision`);
+  return outcome === "rejected" ? { surface, outcome, revision, reason: text(source.reason, `${path}.reason`) } : { surface, outcome, revision };
+}
+
+/** 📤️ Strictly decodes the shell's exact per-surface verdicts. */
+export function parseBrowserActorUiPatchResultV1(value: unknown): BrowserActorUiPatchResultV1 {
+  const source = object(value, "browserActorUiPatchResult", ["activationGeneration", "instanceId", "kind", "receipt", "scope", "verdicts", "verifiedSurfaceId"]);
+  if (source.kind !== "browser-actor-ui-patch-result") throw new Error("browserActorUiPatchResult.kind: invalid");
   return {
     kind: "browser-actor-ui-patch-result",
     scope: scope(source.scope),
     verifiedSurfaceId: text(source.verifiedSurfaceId, "browserActorUiPatchResult.verifiedSurfaceId"),
     activationGeneration: generation(source.activationGeneration),
-    instanceId,
+    instanceId: naturalNumber(source.instanceId, "browserActorUiPatchResult.instanceId", 0xffffffff),
     receipt: wireReceipt(source.receipt),
-    outcome,
-    revision,
-    ...(reason === undefined ? {} : { reason }),
+    verdicts: surfaceList(source.verdicts, "browserActorUiPatchResult.verdicts", verdict),
   };
 }
 
-/** 🧬️ Exact private owner equality; revisions and surfaces never substitute for the issued receipt. */
+/** 🧬️ Exact private owner equality — the issued receipt, and one verdict per offered surface in offer order;
+ * revisions never substitute for the receipt. */
 export function browserActorUiPatchOwnerMatchesV1(offer: BrowserActorUiPatchOfferV1, result: BrowserActorUiPatchResultV1): boolean {
   return (
     offer.scope.spaceId === result.scope.spaceId &&
@@ -295,11 +324,13 @@ export function browserActorUiPatchOwnerMatchesV1(offer: BrowserActorUiPatchOffe
     offer.verifiedSurfaceId === result.verifiedSurfaceId &&
     offer.activationGeneration === result.activationGeneration &&
     offer.instanceId === result.instanceId &&
+    offer.patches.length === result.verdicts.length &&
+    offer.patches.every((patch, index) => patch.surface === result.verdicts[index]!.surface) &&
     actorUiPatchReceiptEquals(decodeActorUiPatchReceipt(Uint8Array.from(offer.receipt)), decodeActorUiPatchReceipt(Uint8Array.from(result.receipt)))
   );
 }
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️browser-actor-patch-handoff-validates-the-neutral-schema-and-exact-owner/🟦️.ts");
-  await registerTests1(import.meta.vitest, { browserActorUiPatchOwnerMatchesV1, parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1 }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1 }, { directory: import.meta.dir, url: import.meta.url });
 }

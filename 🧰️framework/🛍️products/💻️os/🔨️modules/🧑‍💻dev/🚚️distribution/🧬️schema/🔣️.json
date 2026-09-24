@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/dev/distribution/component.json",
+  "title": "Development Distribution Contracts",
+  "$defs": {
+    "DistributionDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "DistributionPathList": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000-\\u001F:]+$"
+      }
+    },
+    "DistributionLayoutChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "source", "output"],
+      "properties": {
+        "kind": { "enum": ["facade", "module"] },
+        "source": { "type": "string", "minLength": 1 },
+        "output": { "type": "string", "minLength": 1 }
+      }
+    },
+    "DistributionLayoutAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "source", "output"],
+      "properties": {
+        "kind": { "enum": ["source", "name"] },
+        "source": { "type": "string", "minLength": 1 },
+        "emittedName": { "type": "string", "minLength": 1 },
+        "output": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "name" } } },
+          "then": { "properties": { "emittedName": false } }
+        }
+      ]
+    },
+    "DistributionLayout": {
+      "title": "Distribution Layout",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "directory", "bundles", "entry", "manifest", "chunks", "assets"],
+      "properties": {
+        "version": { "const": 1 },
+        "directory": { "type": "string", "minLength": 1 },
+        "bundles": { "type": "string", "minLength": 1 },
+        "entry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "output"],
+          "properties": {
+            "source": { "type": "string", "minLength": 1 },
+            "output": { "type": "string", "minLength": 1 }
+          }
+        },
+        "manifest": { "type": "string", "minLength": 1 },
+        "chunks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/DistributionLayoutChunk" } },
+        "assets": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/DistributionLayoutAsset" } }
+      }
+    },
+    "DistributionStaticInputs": {
+      "title": "Distribution Static Compiler Inputs",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "paths", "moduleEntries"],
+      "properties": {
+        "version": { "const": 1 },
+        "paths": { "$ref": "#/$defs/DistributionPathList" },
+        "moduleEntries": { "$ref": "#/$defs/DistributionPathList" }
+      }
+    },
+    "DistributionManifestInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "$ref": "#/$defs/DistributionDigest" }
+      }
+    },
+    "DistributionManifestOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ownerId", "path", "bytes", "sha256"],
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "$ref": "#/$defs/DistributionDigest" }
+      }
+    },
+    "DistributionManifest": {
+      "title": "Distribution Bundle Manifest",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "contractId", "layoutSha256", "inputs", "outputs"],
+      "properties": {
+        "version": { "const": 1 },
+        "contractId": { "const": "dev-distribution-bundle" },
+        "layoutSha256": { "$ref": "#/$defs/DistributionDigest" },
+        "inputs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/DistributionManifestInput" } },
+        "outputs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/DistributionManifestOutput" } }
+      }
+    }
+  }
+}

@@ -93,7 +93,8 @@
           "capability": "pptx-ecma-376-transitional-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-conformance-attribute",

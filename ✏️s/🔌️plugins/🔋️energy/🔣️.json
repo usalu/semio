@@ -462,11 +462,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -1777,11 +1777,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -2995,11 +2995,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -4279,11 +4279,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -9076,7 +9076,31 @@
         "dialogs": [],
         "mediaInputs": [],
         "mediaOutputs": [],
-        "artifactKinds": [],
+        "artifactKinds": [
+          {
+            "id": "data.model",
+            "name": "Energy Model",
+            "sourceFormat": "energy.model",
+            "componentKind": "energy",
+            "dimension": "data",
+            "mediaCapability": "meshOnly",
+            "mediaType": {
+              "class": "data",
+              "form": "value"
+            },
+            "schema": "energy.model",
+            "exportFormats": [],
+            "importFormats": [],
+            "exportStdioKinds": [
+              "stdio.json",
+              "stdio.zip"
+            ],
+            "importStdioKinds": [
+              "stdio.json",
+              "stdio.zip"
+            ]
+          }
+        ],
         "config": {
           "fields": []
         },
@@ -10852,19 +10876,6 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.csv",
-          "standard": "rfc4180",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.energy.model",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
           "artifactKind": "s.stdio.json",
           "standard": "rfc8259",
           "subset": "*"
@@ -10880,19 +10891,6 @@
         "counterpart": {
           "artifactKind": "s.stdio.txt",
           "standard": "utf-8",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.energy.model",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xlsx",
-          "standard": "ecma-376",
           "subset": "*"
         },
         "direction": "import"
@@ -10925,11 +10923,6 @@
             "subset": "*"
           },
           {
-            "artifactKind": "s.stdio.csv",
-            "standard": "rfc4180",
-            "subset": "*"
-          },
-          {
             "artifactKind": "s.stdio.json",
             "standard": "rfc8259",
             "subset": "*"
@@ -10937,11 +10930,6 @@
           {
             "artifactKind": "s.stdio.txt",
             "standard": "utf-8",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xlsx",
-            "standard": "ecma-376",
             "subset": "*"
           },
           {
@@ -10954,8 +10942,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "43b20422819d629bf8a7c743b1ae7493539cb582b1ff26d4580b69e8d453fc9d",
-    "coreWasmSha256": "069320bfd6a5b9bee6fefcda29e05547177f2f68a606c4272e5fbd602f85febd",
-    "descriptorSha256": "dcfca48cef9c6f1f863ed010cb4a55e8b90a80cb0ea686785196baf761cd04b4"
+    "wasmSha256": "4799f2a4ef96f2507f6019e3bec1bfe144f75e0494a7400f6a232c2f1e5a8240",
+    "coreWasmSha256": "0b03d0caa9c1324f8711eaf7fddd93a295fec27c5d429095d450d719066293f7",
+    "descriptorSha256": "8332f79f8c259ecb835c1fdf174097cc987d1a3ae044f25e12481c398ee8a6d8"
   }
 }

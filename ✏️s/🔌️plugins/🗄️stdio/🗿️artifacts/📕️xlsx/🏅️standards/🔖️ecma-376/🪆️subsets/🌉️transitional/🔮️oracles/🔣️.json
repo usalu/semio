@@ -93,7 +93,8 @@
           "capability": "xlsx-ecma-376-transitional-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-conformance-attribute",
@@ -193,7 +194,8 @@
           "capability": "xlsx-ecma-376-transitional-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-worksheet-content-type",

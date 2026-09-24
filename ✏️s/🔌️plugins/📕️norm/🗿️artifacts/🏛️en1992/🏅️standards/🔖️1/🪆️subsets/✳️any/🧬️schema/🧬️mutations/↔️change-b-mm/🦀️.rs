@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeBMm {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change b mm to {:?}", self.new_b_mm), &format!("Bmm auf {:?} ändern", self.new_b_mm))
+        protocol::LocalizedLabel::native(&format!("Change width b [mm] to {:?}", self.new_b_mm), &format!("Breite b [mm] auf {:?} ändern", self.new_b_mm))
     }
 }
 //#endregion 🔖️ChangeBMm

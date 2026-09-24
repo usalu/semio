@@ -7162,6 +7162,14 @@
   box-shadow: none;
 }
 
+/* ⌨️ A docked chip still shows WHERE keyboard focus is: the frame reset above is unlayered, so it out-ranks the
+ * control's own layered `focus-visible:ring` and left the `Actions` / `Utilities` / `Window Options` chips with no
+ * focus indicator at all (WCAG 2.2 SC 2.4.7, measured inside `s`, ticket 26/09/23 S15). */
+[data-window-silhouette-chip] > :focus-visible,
+[data-window-silhouette-chip] :is(button, [role="button"], [tabindex]):focus-visible {
+  box-shadow: inset 0 0 0 var(--stroke-default) var(--active-base);
+}
+
 /* 🎛️ The silhouette chip already paints this level's glass. Immediate control-group shells must
  * stay transparent so Back/Next and equivalent controls do not paint the same level twice. */
 [data-window-silhouette-chip] > :is(

@@ -33,7 +33,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockFontSize {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change block \"{}\" font size to {}", self.id, self.new_font_size), &format!("Block \"{}\" Schriftgröße auf {} ändern", self.id, self.new_font_size))
+        protocol::LocalizedLabel::native(&format!("Change block \"{}\" font size to {}", self.id, self.new_font_size), &format!("Schriftgröße von Block \"{}\" auf {} ändern", self.id, self.new_font_size))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

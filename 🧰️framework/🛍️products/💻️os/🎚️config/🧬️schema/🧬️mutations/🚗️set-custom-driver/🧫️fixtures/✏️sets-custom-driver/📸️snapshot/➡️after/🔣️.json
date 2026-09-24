@@ -1,0 +1,19 @@
+{
+  "appearance": null,
+  "layout": null,
+  "driverId": null,
+  "customDrivers": {
+    "studio": {
+      "driverId": "studio",
+      "label": "Studio",
+      "config": {
+        "scale": 1.25
+      }
+    }
+  },
+  "locale": null,
+  "terminology": null,
+  "themeId": null,
+  "customThemes": {},
+  "keybindingOverrides": {}
+}

@@ -39,7 +39,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for SetAfRelationship {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set AF relationship for \"{}\"", self.file_name), &format!("AFbeziehung für \"{}\" setzen", self.file_name))
+        protocol::LocalizedLabel::native(&format!("Set AF relationship for \"{}\"", self.file_name), &format!("AF-Beziehung für \"{}\" setzen", self.file_name))
     }
 
     fn target(&self) -> Vec<String> {

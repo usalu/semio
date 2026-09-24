@@ -53,6 +53,24 @@
         "build"
       ]
     },
+    "repo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts repo",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "mcp": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts mcp",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
     "daemon": {
       "executor": "nx:run-commands",
       "options": {

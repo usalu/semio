@@ -97,7 +97,8 @@
           "capability": "pptx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-alternate-content",
@@ -117,7 +118,8 @@
           "capability": "pptx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-vml-part",
@@ -137,7 +139,8 @@
           "capability": "pptx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-alternate-content",
@@ -157,7 +160,8 @@
           "capability": "pptx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-conformance-attribute",
@@ -177,7 +181,8 @@
           "capability": "pptx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-vml-part",

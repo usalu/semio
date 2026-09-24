@@ -2,12 +2,11 @@
 //! independently of this repository's own codec so the subject has something real to be compared
 //! against instead of being checked against its own reading.
 //!
-//! Reference: none — recorded no-oracle decision `dwg-ac1024-proprietary-container`
-//! (`🔣️.json`). DWG is a proprietary, undocumented format. The only independent
-//! implementation of any weight is LibreDWG, which is GPL-3.0 C: linking it would put a copyleft C
-//! library on this repository's test host, and no owner ruling permits that. No permissively
-//! licensed Rust DWG reader exists at all (`dxf`, the crate registered for 🖋️dxf, reads DXF — the
-//! published interchange format — and explicitly not DWG).
+//! Reference: LibreDWG's `dwgread` (`libredwg-dwg-preamble-cli`, [`dwgread`]), run as a separate process
+//! and never linked. Every document the handlers below produce is written out and read by it, and its
+//! reading of the preamble must agree with the projection. The mutation itself is applied by an
+//! independently hand-written preamble writer; the permissively licensed pure-Rust `acadrust`
+//! (MPL-2.0) remains this artifact's test-only CODEC oracle (`../🚪️io/🧪️tests/🔮️acadrust-oracle/🦀️.rs`).
 //!
 //! What CAN be read independently is the plain preamble every DWG file since R13 begins with, whose
 //! offsets are published (LibreDWG's own `header.spec`) and are already cited by this subset's
@@ -51,7 +50,7 @@ use semio_repo_test_host::Json;
 /// and against BOTH DWG catalogs) in declaration order. Duplicated rather than imported: the oracle
 /// crate must never link the production crate, so this side can only compare STRINGS; the check
 /// that a kind exists as a real enum variant is the production-side test's.
-pub const KINDS: [&str; 3] = ["no-mutation", "set-snapshot", "set-version-info"];
+pub const KINDS: [&str; 2] = ["set-snapshot", "set-version-info"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Preamble
@@ -234,6 +233,58 @@ pub fn project_dwg(bytes: &[u8]) -> Result<Json, String> {
     ]))
 }
 //#endregion 🔖️Projection
+
+//#region 🔖️ThirdPartyReader
+/// 📖️ What LibreDWG's `dwgread` (0.13, GPL-3.0-or-later, run as a separate process and never linked)
+/// reads from one document: the `-v3` trace it prints while parsing the file header carries the
+/// version code, `maint_version` and `codepage`, and a document too short to be a DWG container is
+/// refused with the byte count it was given.
+///
+/// @see https://www.gnu.org/software/libredwg/manual/html_node/dwgread.html
+pub enum DwgreadReading {
+    Preamble { version: String, maintenance_version: u8, codepage: u16 },
+    TooSmall { byte_length: usize },
+}
+
+/// 📖️ Runs `dwgread -v3` on `document` and reads its trace. The JSON it would write goes to a sibling
+/// file, because only the header trace is evidence here.
+pub fn dwgread(document: &std::path::Path) -> Result<DwgreadReading, String> {
+    let output = std::process::Command::new("dwgread").arg("-v3").arg("-O").arg("JSON").arg("-o").arg(document.with_extension("dwgread.json")).arg(document).output().map_err(|error| format!("dwgread could not be started: {error}"))?;
+    let trace = String::from_utf8_lossy(&output.stderr);
+    let field = |prefix: &str| trace.lines().find_map(|line| line.strip_prefix(prefix)).map(|rest| rest.split_whitespace().next().unwrap_or("").to_string());
+    if let Some(bytes) = field("ERROR: dwg too small: ") {
+        return bytes.parse().map(|byte_length| DwgreadReading::TooSmall { byte_length }).map_err(|error| format!("dwgread reported an unreadable size {bytes:?}: {error}"));
+    }
+    let version = field("This file's version code is: ").ok_or_else(|| format!("dwgread printed no version code: {}", trace.lines().take(3).collect::<Vec<_>>().join(" | ")))?;
+    let maintenance = field("maint_version: ").ok_or("dwgread printed no maint_version")?;
+    let codepage = field("codepage: ").ok_or("dwgread printed no codepage")?;
+    Ok(DwgreadReading::Preamble {
+        version,
+        maintenance_version: u8::from_str_radix(maintenance.trim_start_matches("0x"), 16).map_err(|error| format!("dwgread maint_version {maintenance:?}: {error}"))?,
+        codepage: codepage.parse().map_err(|error| format!("dwgread codepage {codepage:?}: {error}"))?,
+    })
+}
+
+/// ⚖️ Writes `bytes` into `work_dir` and requires `dwgread`'s reading of them to agree with
+/// `projection` on every field it reports: the preamble triple of a container, or the byte length of
+/// a preamble-only document it refuses.
+pub fn dwgread_agrees(work_dir: &std::path::Path, name: &str, bytes: &[u8], projection: &Json) -> Result<(), String> {
+    std::fs::create_dir_all(work_dir).map_err(|error| error.to_string())?;
+    let document = work_dir.join(name);
+    std::fs::write(&document, bytes).map_err(|error| error.to_string())?;
+    let expected = |key: &str| projection.get(key).cloned().unwrap_or(Json::Null);
+    let observed = match dwgread(&document)? {
+        DwgreadReading::Preamble { version, maintenance_version, codepage } => vec![("version", Json::String(version)), ("maintenanceVersion", Json::Number(f64::from(maintenance_version))), ("codepage", Json::Number(f64::from(codepage)))],
+        DwgreadReading::TooSmall { byte_length } => vec![("byteLength", Json::Number(byte_length as f64))],
+    };
+    for (key, value) in observed {
+        if expected(key) != value {
+            return Err(format!("dwgread reads {key} = {value:?} from {name}, the projection says {:?}", expected(key)));
+        }
+    }
+    Ok(())
+}
+//#endregion 🔖️ThirdPartyReader
 
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.

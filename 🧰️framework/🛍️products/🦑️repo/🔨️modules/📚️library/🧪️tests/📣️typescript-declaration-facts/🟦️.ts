@@ -93,7 +93,7 @@ test("TypeScript declaration grammar has strict standalone source types", () => 
 });
 
 test("TypeScript declaration compiler oracle has strict source types", () => {
-  expect(strictSourceDiagnostics(asset("🔮️oracle/🟦️.ts"), resolve(import.meta.dir, "🔮️oracle/🟦️.ts"))).toEqual([]);
+  expect(strictSourceDiagnostics(asset("../🔮️typescript-declaration-facts-oracle/🟦️.ts"), resolve(import.meta.dir, "../🔮️typescript-declaration-facts-oracle/🟦️.ts"))).toEqual([]);
 });
 //#endregion 🧪️Declarations
 

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeHEfMm {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change effective height h_ef [mm] to {}", self.new_h_ef_mm), &format!("Effektivhöheh_ef [mm] auf {} ändern", self.new_h_ef_mm))
+        protocol::LocalizedLabel::native(&format!("Change effective height h_ef [mm] to {}", self.new_h_ef_mm), &format!("Knicklänge h_ef [mm] auf {} ändern", self.new_h_ef_mm))
     }
 }
 //#endregion 🔖️ChangeHEfMm

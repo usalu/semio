@@ -263,6 +263,17 @@
         "forwardAllArgs": true
       }
     },
+    "local-hub": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts local-hub",
+        "forwardAllArgs": true
+      }
+    },
     "collab-e2e": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -297,7 +308,17 @@
       "cache": false,
       "options": {
         "cwd": ".",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🐍️s2-s-host-foreign-kind-probe.mjs",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🐍️s3-foreign-kind-in-s.mjs",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "s-host-pinch-diagram-contrast-s": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": ".",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🐍️u4-pinch-diagram-contrast-probe.mjs",
         "forwardAllArgs": true
       },
       "outputs": []

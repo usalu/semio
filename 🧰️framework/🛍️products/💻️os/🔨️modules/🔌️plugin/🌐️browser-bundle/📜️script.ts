@@ -2,12 +2,14 @@ import { createBrowserBundleTests } from "../🧪️tests/🌐️browser-bundle/
 /** 🌐️ Build-time closure and isolation laws for browser component factories. */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { deflateRawSync } from "node:zlib";
 import { lstatSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { browserWasiInterfaces } from "./🌐️wasi/🟦️.ts";
+import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES as browserActorMaximumBytes } from "../../📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
 import { exactExecutableFingerprint, readStableBuildFile, runExactCargoLawProcess } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 
@@ -17,7 +19,6 @@ export type BrowserActorPort = import("./🌐️host/🟦️.ts").BrowserHostPor
 export type ClosedBrowserActorArtifactV1 = Readonly<{ schema: "semio.os.closed-browser-actor.v1"; codegenPolicy: "semio.os.browser-jco-1.34.0-jspi.v1"; policySha256: string; policyCanonical: string; componentSha256: string; sha256: string; byteLength: number; importInterfaces: readonly string[]; bytes: Uint8Array }>;
 export type BrowserActorBuildControl = Readonly<{ cancelled?: () => boolean; progress?: (phase: "snapshot" | "policy" | "codegen" | "closure" | "hash", completedBytes: number, totalBytes: number) => void }>;
 
-const browserActorMaximumBytes = 64 * 1024 * 1024;
 const browserActorRepoRoot = resolve(import.meta.dir, "../../../../../..");
 
 type SchemaValidator = ((value: unknown) => boolean) & { readonly errors?: unknown };
@@ -627,24 +628,25 @@ export async function closedBrowserComponentFactory(source: string, cores: reado
     if (total > 128 * 1024 * 1024) throw new Error("browser component factory: core byte bound");
   }
   if (names.size !== requested.size) throw new Error("browser component factory: missing core");
-  const table: Record<string, { length: number; chunks: string[] }> = Object.create(null);
+  const table: Record<string, { length: number; compressedLength: number; chunks: string[] }> = Object.create(null);
   let completed = 0;
   for (const core of cores) {
+    check();
+    const compressed = deflateRawSync(core.bytes, { level: 9 });
     const chunks: string[] = [];
-    for (let offset = 0; offset < core.bytes.byteLength; offset += 48 * 1024) {
+    for (let offset = 0; offset < compressed.byteLength; offset += 48 * 1024) {
       check();
-      const chunk = core.bytes.subarray(offset, Math.min(offset + 48 * 1024, core.bytes.byteLength));
-      chunks.push(Buffer.from(chunk).toString("base64"));
-      completed += chunk.byteLength;
-      control.progress?.(completed, total);
+      chunks.push(compressed.subarray(offset, Math.min(offset + 48 * 1024, compressed.byteLength)).toString("base64"));
       await new Promise<void>(resolve => setTimeout(resolve, 0));
     }
-    table[core.name] = { length: core.bytes.byteLength, chunks };
+    completed += core.bytes.byteLength;
+    control.progress?.(completed, total);
+    table[core.name] = { length: core.bytes.byteLength, compressedLength: compressed.byteLength, chunks };
   }
   check();
   return `${modifier}function __semioInstantiate(getCoreModule, imports, instantiateCore = WebAssembly.instantiate) ${body}
 const __semioRequiredInterfaces = Object.freeze(${JSON.stringify([...requiredInterfaces].sort())});
-const __semioEmbeddedCores = Object.freeze(Object.fromEntries(Object.entries(${JSON.stringify(table)}).map(([name, value]) => [name, Object.freeze({ length: value.length, chunks: Object.freeze(value.chunks) })])));
+const __semioEmbeddedCores = Object.freeze(Object.fromEntries(Object.entries(${JSON.stringify(table)}).map(([name, value]) => [name, Object.freeze({ length: value.length, compressedLength: value.compressedLength, chunks: Object.freeze(value.chunks) })])));
 async function instantiateFreshComponent(imports, control = {}) {
   const check = () => { if (control.signal?.aborted) throw new Error("browser component factory: cancelled"); };
   check();
@@ -658,23 +660,36 @@ async function instantiateFreshComponent(imports, control = {}) {
     check();
     if (!Object.hasOwn(__semioEmbeddedCores, name)) throw new Error("browser component factory: unknown core");
     const core = __semioEmbeddedCores[name];
+    const compressed = new Uint8Array(core.compressedLength);
     const bytes = new Uint8Array(core.length);
     try {
       let offset = 0;
       for (const chunk of core.chunks) {
         check();
         const decoded = atob(chunk);
-        for (let index = 0; index < decoded.length; index++) bytes[offset++] = decoded.charCodeAt(index);
-        control.onProgress?.({ phase: "decode", core: name, completed: offset, total: core.length });
+        if (offset + decoded.length > compressed.length) throw new Error("browser component factory: core length mismatch");
+        for (let index = 0; index < decoded.length; index++) compressed[offset++] = decoded.charCodeAt(index);
         await new Promise(resolve => setTimeout(resolve, 0));
       }
+      if (offset !== compressed.length) throw new Error("browser component factory: core length mismatch");
+      const reader = new Blob([compressed]).stream().pipeThrough(new DecompressionStream("deflate-raw")).getReader();
+      let inflated = 0;
+      for (;;) {
+        check();
+        const { value, done } = await reader.read();
+        if (done) break;
+        if (inflated + value.length > bytes.length) { await reader.cancel(); throw new Error("browser component factory: core length mismatch"); }
+        bytes.set(value, inflated);
+        inflated += value.length;
+        control.onProgress?.({ phase: "decode", core: name, completed: inflated, total: core.length });
+      }
       check();
-      if (offset !== core.length) throw new Error("browser component factory: core length mismatch");
+      if (inflated !== core.length) throw new Error("browser component factory: core length mismatch");
       control.onProgress?.({ phase: "compile", core: name, completed: 0, total: core.length });
       const module = await WebAssembly.compile(bytes);
       check();
       return module;
-    } finally { bytes.fill(0); }
+    } finally { compressed.fill(0); bytes.fill(0); }
   };
   const getCoreModule = (name) => {
     const operation = compileCore(name);

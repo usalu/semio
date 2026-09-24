@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCompression {
-    pub(crate) compression: u16,
+    pub compression: u16,
 }
 
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetCompression {
@@ -21,7 +21,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetCompressi
         agg_inverse(&TiffBaselineMutation::SetCompression(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-compression", "Kompression setzen")
+        protocol::LocalizedLabel::native("Set compression", "Kompression setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

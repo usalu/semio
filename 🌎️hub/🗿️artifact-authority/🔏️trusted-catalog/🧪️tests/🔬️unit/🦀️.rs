@@ -2,7 +2,7 @@ use super::*;
 use crate::artifact_authority::adapters::AUTHORITY_MAX_DIAGNOSTIC_BYTES;
 #[cfg(feature = "native-artifact-execution")]
 use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
-use crate::artifact_authority::trusted_catalog::schema::{TrustedBundleBrowserActorV1, TrustedBundleCodecV1, TrustedBundleComponentV1, TrustedBundleProfileOpenTargetV1};
+use crate::artifact_authority::trusted_catalog::schema::{TrustedBundleBrowserActorV1, TrustedBundleCodecV1, TrustedBundleComponentV1, TrustedBundlePluginModuleV1, TrustedBundleProfileOpenTargetV1};
 use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl};
 use directory::os_store::{ArtifactPackFiles, ArtifactTextFiles, VcsError, document_codec};
 use std::io::Write;
@@ -182,6 +182,7 @@ impl FixtureDirectory {
         if record["browserActor"]["kind"] == "closed-browser-actor" {
             record["browserActor"]["sourceDescriptorByteSha256"] = record["descriptor"]["sha256"].clone();
         }
+        attach_fixture_plugin_module(&self.root, record, &bytes);
         std::fs::write(self.root.join(record["descriptor"]["path"].as_str().expect("descriptor path")), bytes).expect("replace descriptor");
         self.refresh_profile_generation();
         self.persist_bundle();
@@ -199,6 +200,11 @@ impl Drop for FixtureDirectory {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.root);
     }
+}
+
+/// 🧩️ (Re)writes one fixture record's plugin module for its current descriptor bytes.
+fn attach_fixture_plugin_module(root: &Path, record: &mut serde_json::Value, descriptor: &[u8]) {
+    record["pluginModule"] = write_fixture_plugin_module(root, record["pluginId"].as_str().unwrap(), record["packageId"].as_str().unwrap(), record["version"].as_str().unwrap(), record["component"]["sha256"].as_str().unwrap(), descriptor).expect("fixture plugin module");
 }
 
 fn fixture_json() -> serde_json::Value {
@@ -229,6 +235,14 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
         parent_dialect: semio_framework::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() },
         grant: TrustedBundleGrantV1 { read: true, write: true, observe: true },
     };
+    let viewer = TrustedBundleOpenTargetV1 {
+        surface_id: "s.gis.gismap@1/*#viewer".into(),
+        app_id: "s.gis.gismap@1/*#viewer".into(),
+        window_kind_id: "gis2d-view-map".into(),
+        role: TrustedBundleOpenRole::Viewer,
+        grant: TrustedBundleGrantV1 { read: true, write: false, observe: true },
+        ..target.clone()
+    };
     let gis_identity = TrustedBundleIdentityV1 { plugin_id: "gis".into(), package_id: "semio:gis".into(), version: version.clone() };
     let stdio_identity = TrustedBundleIdentityV1 { plugin_id: "stdio".into(), package_id: "semio:stdio".into(), version: version.clone() };
     let stdio_codecs = (0u8..26).map(|index| TrustedBundleCodecV1 { artifact_kind: format!("s.stdio.fixture{index:02}"), artifact_schema: format!("stdio.fixture{index:02}"), pack_schema_hash: format!("{:02x}", index + 1).repeat(32) }).collect();
@@ -243,11 +257,12 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
             component: TrustedBundleComponentV1 { path: "packages/gis/component.wasm".into(), byte_length: 1, sha256: "11".repeat(32), blake3: "12".repeat(32) },
             descriptor: TrustedBundleFileV1 { path: "packages/gis/descriptor.semio".into(), byte_length: 1, sha256: "13".repeat(32) },
             browser_actor: serde_json::from_value(synthetic_browser_actor(&"11".repeat(32), &"13".repeat(32), "packages/gis/browser/closed-actor.mjs")).unwrap(),
+            plugin_module: TrustedBundlePluginModuleV1 { path: "packages/gis/plugin-module.json".into(), byte_length: 1, sha256: "14".repeat(32), blake3: "15".repeat(32) },
             native_codecs: vec![
                 TrustedBundleCodecV1 { artifact_kind: "s.gis.gismap".into(), artifact_schema: "gis.map".into(), pack_schema_hash: map_hash },
                 TrustedBundleCodecV1 { artifact_kind: "s.gis.gisterrain".into(), artifact_schema: "gis.terrain".into(), pack_schema_hash: "a2".repeat(32) },
             ],
-            open_targets: vec![target.clone()],
+            open_targets: vec![target.clone(), viewer.clone()],
         },
         TrustedBundlePackageV1 {
             plugin_id: "stdio".into(),
@@ -259,18 +274,19 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
             component: TrustedBundleComponentV1 { path: "packages/stdio/component.wasm".into(), byte_length: 1, sha256: "21".repeat(32), blake3: "22".repeat(32) },
             descriptor: TrustedBundleFileV1 { path: "packages/stdio/descriptor.semio".into(), byte_length: 1, sha256: "23".repeat(32) },
             browser_actor: TrustedBundleBrowserActorV1::None {},
+            plugin_module: TrustedBundlePluginModuleV1 { path: "packages/stdio/plugin-module.json".into(), byte_length: 1, sha256: "24".repeat(32), blake3: "25".repeat(32) },
             native_codecs: stdio_codecs,
             open_targets: vec![],
         },
     ];
     let selected_closure = vec![gis_identity.clone(), stdio_identity];
     let mut bundle = TrustedBundleV1 {
-        schema_version: 2,
+        schema_version: 3,
         profiles: vec![TrustedBundleProfileV1 {
             id: "local-stdio-gis-open-v1".into(),
             selected_closure,
             selected_closure_sha256: "01".repeat(32),
-            open_targets: vec![TrustedBundleProfileOpenTargetV1 { package: gis_identity, target }],
+            open_targets: vec![TrustedBundleProfileOpenTargetV1 { package: gis_identity.clone(), target }, TrustedBundleProfileOpenTargetV1 { package: gis_identity, target: viewer }],
             generation_id: "02".repeat(32),
         }],
         packages,
@@ -422,6 +438,7 @@ fn prepared_fixture() -> FixtureDirectory {
         if index == 0 {
             bundle["packages"][index]["browserActor"]["sourceDescriptorByteSha256"] = bundle["packages"][index]["descriptor"]["sha256"].clone();
         }
+        attach_fixture_plugin_module(&root, &mut bundle["packages"][index], &bytes);
         let path = root.join(bundle["packages"][index]["descriptor"]["path"].as_str().expect("descriptor path"));
         std::fs::write(path, bytes).expect("write descriptor");
     }
@@ -514,8 +531,8 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
     std::fs::write(root.join("descriptor.semio"), &bytes).expect("write actual GIS descriptor");
     std::fs::write(root.join("closed-actor.mjs"), b"abc").expect("synthetic actor, never executed");
     let (stdio_identity, stdio_record) = headless_stdio_fixture_package(&root).expect("headless Stdio dependency package");
-    let bundle = serde_json::json!({
-        "schemaVersion": 2,
+    let mut bundle = serde_json::json!({
+        "schemaVersion": 3,
         "profiles": [{ "id": "frozen-gis-test", "selectedClosure": [package.clone(), stdio_identity.clone()], "selectedClosureSha256": "01".repeat(32),
             "openTargets": [{ "package": package.clone(), "target": target.clone() }], "generationId": "02".repeat(32) }],
         "packages": [{ "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [stdio_identity],
@@ -525,6 +542,7 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
             "browserActor": synthetic_browser_actor(&component_sha256, &hex_lower(&Sha256::digest(&bytes)), "closed-actor.mjs"),
             "nativeCodecs": native_codecs, "openTargets": [target] }, stdio_record]
     });
+    attach_fixture_plugin_module(&root, &mut bundle["packages"][0], &bytes);
     let mut fixture = FixtureDirectory { bundle_path: root.join("trusted-catalog.json"), root, bundle, schema: "gis.map".into() };
     fixture.refresh_profile_generation();
     fixture.persist_bundle();
@@ -566,7 +584,7 @@ fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], _operations: &'a [u8]) -> di
 }
 
 fn fixture_codec(schema: &str, pack_schema_hash: [u8; 32]) -> ArtifactCodec {
-    ArtifactCodec { schema: schema.to_string(), extension: "fixture", pack_schema_hash, compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply }
+    ArtifactCodec { schema: schema.to_string(), extension: "fixture", pack_schema_hash, compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_apply }
 }
 
 async fn expect_load_error(fixture: &FixtureDirectory, bindings: &[NativeCodecBinding], control: &TestControl) -> AuthorityError {
@@ -623,10 +641,15 @@ async fn gis_native_provider_selection_binds_literal_owner_version_and_cancellat
         }
         fn report(&self, _progress: AuthorityProgress) {}
     }
+    let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📇️native-openable-provider/🧫️fixtures/🌍️gis-v1/🔣️.json")).unwrap();
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json")).unwrap();
     assert_eq!(fixture["packageVersion"], expected["packageVersion"]);
     let providers = NativeCodecProviderSetV1::linked();
+    let mut published = Vec::new();
+    for row in expected["receipts"].as_array().unwrap() {
+        published.push(document_codec(row["schema"].as_str().unwrap()).await.unwrap().map(|codec| codec.pack_schema_hash));
+    }
     for case in fixture["cases"].as_array().unwrap() {
         let control = SelectionControl { cancelled: case["cancelled"].as_bool().unwrap(), now_ms: case["nowMs"].as_u64().unwrap() };
         let context = OperationContext::new(case["deadlineMs"].as_u64().unwrap(), AuthorityLimits::maximum(), &control);
@@ -646,8 +669,8 @@ async fn gis_native_provider_selection_binds_literal_owner_version_and_cancellat
                 assert_eq!(binding.codec.pack_schema_hash, receipt.into_codec().unwrap().pack_schema_hash);
             }
         }
-        for row in expected["receipts"].as_array().unwrap() {
-            assert!(document_codec(row["schema"].as_str().unwrap()).await.unwrap().is_none(), "{} must not publish even a partial codec closure", case["name"]);
+        for (row, prior) in expected["receipts"].as_array().unwrap().iter().zip(&published) {
+            assert_eq!(&document_codec(row["schema"].as_str().unwrap()).await.unwrap().map(|codec| codec.pack_schema_hash), prior, "{} must not publish even a partial codec closure", case["name"]);
         }
     }
 }
@@ -749,7 +772,8 @@ async fn loader_retains_exact_bytes_and_independent_identities_before_atomic_cod
     assert_eq!(editor.package_ref().package.0, "semio:fixture-editor");
     assert_eq!(hex_lower(&editor.package_ref().hash.0), fixture_json()["componentBlake3"]);
     assert_ne!(editor.plugin_id(), editor.package_ref().package.0);
-    assert_eq!(editor.component_bytes(), b"abc");
+    assert_eq!(editor.component().byte_length(), 3);
+    assert_eq!(&*editor.component().read(&control.context()).await.expect("retained component rereads"), b"abc");
     assert_eq!(hex_lower(editor.component_sha256()), fixture_json()["componentSha256"]);
     assert_eq!(editor.descriptor().manifest.plugin_id, editor.plugin_id());
     assert_eq!(editor.descriptor().manifest.version, editor.version());
@@ -793,7 +817,8 @@ async fn loader_retains_exact_bytes_and_independent_identities_before_atomic_cod
 #[tokio::test]
 async fn selected_execution_target_assets_are_generation_and_digest_bound() {
     let fixture = prepared_fixture();
-    let catalog = load_fixture(&fixture, &[fixture.binding()], &TestControl::new().context()).await.expect("verified catalog");
+    let control = TestControl::new();
+    let catalog = load_fixture(&fixture, &[fixture.binding()], &control.context()).await.expect("verified catalog");
     let descriptor = DocumentDescriptor {
         space_id: "space".into(),
         document_id: "document".into(),
@@ -814,16 +839,17 @@ async fn selected_execution_target_assets_are_generation_and_digest_bound() {
     let assets = catalog.assets_for_current_selection(&descriptor, Some("s.fixture.document@1/*#editor"), true, &generation).expect("selected assets");
     let selection = catalog.resolve_document_open(&descriptor, Some("s.fixture.document@1/*#editor"), true).expect("selection");
     assert_eq!(assets.selection, selection);
-    assert!(!assets.component.is_empty() && !assets.descriptor.is_empty());
-    assert_eq!(hex_lower(&Sha256::digest(&assets.component)), assets.selection.package.component_sha256);
-    assert_eq!(semio_framework_hash::hash_bytes(&assets.component), assets.selection.package.component_blake3);
+    let component = assets.component.read(&control.context()).await.expect("selected component rereads");
+    assert!(!component.is_empty() && !assets.descriptor.is_empty());
+    assert_eq!(hex_lower(&Sha256::digest(&component)), assets.selection.package.component_sha256);
+    assert_eq!(semio_framework_hash::hash_bytes(&component), assets.selection.package.component_blake3);
     assert_eq!(hex_lower(&Sha256::digest(&assets.descriptor)), assets.selection.package.descriptor_byte_sha256);
-    let actor = assets.browser_actor.as_ref().expect("Wasm selection retains its actor");
+    let actor = assets.browser_actor.as_ref().expect("Wasm selection retains its actor").read(&control.context()).await.expect("selected actor rereads");
     let retained = catalog.packages.iter().find(|package| package.plugin_id == selection.package.plugin_id).unwrap();
-    assert!(Arc::ptr_eq(actor, retained.browser_actor_bytes.as_ref().unwrap()));
+    assert!(Arc::ptr_eq(&actor, &retained.browser_actor_asset.as_ref().unwrap().read(&control.context()).await.expect("resident actor")));
     assert_eq!(actor.as_ref(), b"abc");
     assert_eq!(assets.selection.browser_actor, retained.browser_actor);
-    assert!(assets.component.len() as u64 <= TRUSTED_COMPONENT_MAX_BYTES && assets.descriptor.len() as u64 <= TRUSTED_DESCRIPTOR_MAX_BYTES);
+    assert!(assets.component.byte_length() <= TRUSTED_COMPONENT_MAX_BYTES && assets.descriptor.len() as u64 <= TRUSTED_DESCRIPTOR_MAX_BYTES);
     // 🔁 A rotated (or merely guessed) generation is never served, and no role, surface or
     // descriptor substitution reaches bytes.
     assert!(catalog.assets_for_current_selection(&descriptor, Some("s.fixture.document@1/*#editor"), true, &"ab".repeat(32)).is_none());
@@ -951,16 +977,20 @@ async fn trusted_browser_actor_loader_verifies_retains_and_cancels_before_public
         assert_eq!(calls.iter().any(|package| package == "semio:fixture-editor"), accepted, "{} provider preview", law["id"]);
         if let Ok(catalog) = result {
             let package = catalog.packages.iter().find(|package| package.plugin_id == "fixture.editor").unwrap();
-            let bytes = package.browser_actor_bytes.as_ref().unwrap();
+            let asset = package.browser_actor_asset.as_ref().unwrap();
+            let bytes = asset.read(&context).await.expect("verified actor rereads");
             assert_eq!(bytes.as_ref(), b"abc");
             let selected = catalog.selected_document_open().unwrap();
             assert_eq!(selected.browser_actor, package.browser_actor);
             std::fs::write(&path, b"untrusted replacement").unwrap();
             assert_eq!(bytes.as_ref(), b"abc");
             let DocumentOpenBrowserActorV1::ClosedBrowserActor { sha256, source_component_sha256, source_descriptor_byte_sha256, .. } = &selected.browser_actor else { panic!("required actor") };
-            assert_eq!(*sha256, hex_lower(&Sha256::digest(bytes)));
+            assert_eq!(*sha256, hex_lower(&Sha256::digest(&bytes)));
             assert_eq!(*source_component_sha256, selected.package.component_sha256);
             assert_eq!(*source_descriptor_byte_sha256, selected.package.descriptor_byte_sha256);
+            assert!(Arc::ptr_eq(&bytes, &asset.read(&context).await.expect("held actor stays resident")));
+            drop(bytes);
+            assert!(asset.read(&context).await.is_err(), "a replaced actor file is refused once no reader holds the verified bytes");
         } else if control.cancel_after_descriptor {
             assert!(matches!(result, Err(AuthorityError::Cancelled)));
         }
@@ -1192,6 +1222,47 @@ async fn descriptor_owned_surface_is_required_before_any_catalog_or_codec_public
 }
 
 #[test]
+fn descriptor_open_targets_follow_the_one_pairing_rule_and_validate_as_published() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️descriptor-open-targets/🔣️.json")).unwrap();
+    let schema = "fixture.document@1";
+    for case in fixture["cases"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let mut descriptor = decode_package_descriptor(&descriptor_bytes("fixture.editor", "semio:fixture-editor", "1.0.0", &"11".repeat(32), Some(schema), None)).expect("fixture descriptor");
+        descriptor.execution = serde_json::from_value(case["execution"].clone()).expect("execution mode");
+        descriptor.manifest.artifact_kinds[0].id = case["kindId"].as_str().unwrap().to_string();
+        if case["declaredOn"] == "editor" {
+            let kind = descriptor.manifest.artifact_kinds.remove(0);
+            descriptor.manifest.apps.iter_mut().find(|app| app.role == semio_framework::AppRole::Editor).expect("editor app").artifact_kinds.push(kind);
+        }
+        if case["declaredOn"] == "plugin-and-editor" {
+            let kind = descriptor.manifest.artifact_kinds[0].clone();
+            descriptor.manifest.apps.iter_mut().find(|app| app.role == semio_framework::AppRole::Editor).expect("editor app").artifact_kinds.push(kind);
+        }
+        let bytes = os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("project descriptor"));
+        let answer: serde_json::Value = serde_json::from_slice(&descriptor_open_targets_answer(&bytes).expect("open-target answer")).expect("answer json");
+        assert_eq!(answer["schema"], fixture["answerSchema"], "{name}");
+        let targets = answer["targets"].as_array().unwrap();
+        let expected = case["targets"].as_array().unwrap();
+        assert_eq!(targets.len(), expected.len(), "{name}: {answer}");
+        for (target, expected) in targets.iter().zip(expected) {
+            assert_eq!(target["role"], expected["role"], "{name}");
+            assert_eq!(target["surfaceId"], expected["surfaceId"], "{name}");
+            assert_eq!(target["appId"], expected["surfaceId"], "{name}");
+            assert_eq!(target["windowKindId"], fixture["windowKindId"], "{name}");
+            assert_eq!(target["artifactKind"], case["kindId"], "{name}");
+            assert_eq!(target["artifactSchema"], schema, "{name}");
+            assert_eq!(target["rendererTarget"], "wasm", "{name}");
+            assert_eq!(target["grant"], serde_json::json!({ "read": true, "write": expected["write"], "observe": true }), "{name}");
+            let mut published = target.as_object().unwrap().clone();
+            published.insert("packSchemaHash".into(), serde_json::json!("44".repeat(32)));
+            let published: TrustedBundleOpenTargetV1 = serde_json::from_value(serde_json::Value::Object(published)).expect("bundle open target");
+            assert_eq!(validate_descriptor_open_target(&descriptor, &published).expect("an answered target validates").artifact_kind, "s.fixture.document", "{name}");
+        }
+    }
+    assert!(descriptor_open_targets_answer(&[]).is_err());
+}
+
+#[test]
 fn bundle_rejects_incomplete_duplicate_conflicting_and_escaping_declarations() {
     let fixture = fixture_json();
     let mut bundle: TrustedBundleV1 = serde_json::from_value(fixture["bundle"].clone()).expect("bundle");
@@ -1239,13 +1310,17 @@ fn trusted_profile_generation_binds_zero_target_package_and_every_codec_row() {
 }
 
 #[test]
-fn local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_one_map_target() {
+fn local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_one_map_editor_and_viewer() {
     let bundle = local_stdio_gis_profile_bundle();
     let selected = validate_bundle(&bundle, "local-stdio-gis-open-v1").expect("closed stdio+GIS profile");
     assert_eq!(selected.package_indices.len(), 2);
     assert_eq!(selected.package_indices, vec![1, 0]);
     assert_eq!(bundle.packages.iter().map(|package| package.native_codecs.len()).sum::<usize>(), 28);
-    assert_eq!(bundle.packages.iter().map(|package| package.open_targets.len()).sum::<usize>(), 1);
+    assert_eq!(bundle.packages.iter().map(|package| package.open_targets.len()).sum::<usize>(), 2);
+    let mut writable_viewer = local_stdio_gis_profile_bundle();
+    writable_viewer.packages[0].open_targets[1].grant.write = true;
+    writable_viewer.profiles[0].open_targets[1].target.grant.write = true;
+    assert!(validate_bundle(&writable_viewer, "local-stdio-gis-open-v1").is_err(), "a viewer target never carries a write grant");
     let mut missing_dependency = local_stdio_gis_profile_bundle();
     missing_dependency.packages[0].dependencies.clear();
     assert!(validate_bundle(&missing_dependency, "local-stdio-gis-open-v1").expect_err("missing compiled Stdio dependency").to_string().contains("exact closed"));
@@ -1276,7 +1351,8 @@ mod long {
 
     #[cfg(feature = "native-artifact-execution")]
     #[tokio::test]
-    async fn gis_map_binding_constructs_from_loaded_catalog_and_retains_verified_bytes() {
+    async fn gis_map_binding_constructs_from_loaded_catalog_and_refuses_tampered_retained_bytes() {
+        let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
         for (viewer, foreign_service) in [(false, false), (true, false), (false, true)] {
             let fixture = prepared_gis_binding_fixture(viewer, foreign_service).await;
             let control = TestControl::new();
@@ -1291,12 +1367,13 @@ mod long {
                 assert!(Arc::ptr_eq(binding.catalog(), &catalog));
                 assert_eq!(binding.selection(), catalog.selected_document_open().expect("sole selection"));
                 assert_eq!(binding.service().executable_identity(), semio_s_artifact_gis_gismap::gis_map_inference_service().executable_identity());
-                let retained = catalog.packages().iter().find(|package| package.plugin_id() == "gis").expect("verified GIS package").component_bytes().to_vec();
+                let retained = catalog.packages().iter().find(|package| package.plugin_id() == "gis").expect("verified GIS package").component().read(&control.context()).await.expect("verified GIS component rereads").to_vec();
                 let digest = binding.digest().to_owned();
                 std::fs::write(fixture.component_path(0), b"tampered").expect("mutate fixture backing component");
                 assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.is_err());
                 drop(catalog);
-                assert_eq!(binding.catalog().packages().iter().find(|package| package.plugin_id() == "gis").expect("retained GIS package").component_bytes(), retained);
+                let tampered = binding.catalog().packages().iter().find(|package| package.plugin_id() == "gis").expect("retained GIS package").component().read(&control.context()).await;
+                assert!(tampered.is_err() && !retained.is_empty(), "a retained component whose backing file changed must be refused, never served");
                 assert_eq!(binding.digest(), digest);
             }
         }
@@ -1305,6 +1382,7 @@ mod long {
     #[cfg(feature = "native-artifact-execution")]
     #[tokio::test]
     async fn linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure() {
+        let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
         let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
         let mut fixture = prepared_gis_binding_fixture(false, false).await;
         for receipt in semio_s_plugin_gis::native_codecs::native_codec_factory_receipts().unwrap() {
@@ -1337,8 +1415,9 @@ mod long {
         eprintln!("[DEBUG] linked-catalog initial-public-codecs={}", before.iter().filter(|codec| codec.is_some()).count());
         for row in corpus["atomicCases"].as_array().unwrap() {
             fixture.bundle = baseline.clone();
-            for (path, bytes) in &originals {
+            for (index, (path, bytes)) in originals.iter().enumerate() {
                 std::fs::write(path, bytes).expect("restore exact descriptor bytes");
+                attach_fixture_plugin_module(&fixture.root, &mut fixture.bundle["packages"][index], bytes);
             }
             let change = row["change"].as_str().unwrap();
             let package = if change == "stdio-catalog" { "stdio" } else { "gis" };
@@ -1371,6 +1450,7 @@ mod long {
                 if record["browserActor"]["kind"] == "closed-browser-actor" {
                     record["browserActor"]["sourceDescriptorByteSha256"] = record["descriptor"]["sha256"].clone();
                 }
+                attach_fixture_plugin_module(&fixture.root, record, &bytes);
                 std::fs::write(&originals[index].0, bytes).expect("write resealed complete candidate descriptor");
             }
             fixture.refresh_profile_generation();
@@ -1397,4 +1477,36 @@ mod long {
             eprintln!("[DEBUG] linked-catalog atomic-case={change} successful-private-previews={}", previews.len());
         }
     }
+}
+
+#[tokio::test]
+async fn a_loaded_catalog_indexes_and_serves_every_verified_plugin_module_file_and_refuses_a_tampered_one() {
+    let fixture = prepared_fixture();
+    let provider = FixtureProviderSource::new(vec![fixture.binding()]);
+    let control = TestControl::new();
+    let catalog = TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &provider, &control.context()).await.expect("fixture catalog");
+    let index = catalog.plugin_module_index();
+    plugin_module::validate_plugin_module_index(&index).expect("canonical index");
+    assert_eq!(index.generation_id, catalog.generation_id());
+    assert_eq!(index.modules.iter().map(|entry| entry.plugin_id.as_str()).collect::<Vec<_>>(), vec!["fixture.base", "fixture.editor"]);
+    assert_eq!(index.modules[1].dependencies, vec!["fixture.base".to_owned()]);
+    assert_eq!(index.modules[1].dialect_artifact_kinds, vec!["s.fixture.document".to_owned()]);
+    assert!(index.modules[0].dialect_artifact_kinds.is_empty(), "a package without apps opens no dialect");
+    assert!(index.modules.iter().all(|entry| entry.extends_plugin_id.is_none()), "plugin packages extend nothing");
+    for entry in &index.modules {
+        let module = catalog.plugin_module(&entry.bundle_sha256).expect("indexed module");
+        assert_eq!(hex_lower(&Sha256::digest(module.manifest_bytes())), entry.bundle_sha256);
+        assert_eq!(module.manifest_bytes().len() as u64, entry.bundle_byte_length);
+        assert_eq!(module.bundle().entry, entry.entry);
+        for file in &module.bundle().files {
+            let bytes = module.file(&file.path).expect("listed file").read(&control.context()).await.expect("verified file");
+            assert_eq!(hex_lower(&Sha256::digest(&bytes)), file.sha256);
+        }
+    }
+    assert!(catalog.plugin_module(&"00".repeat(32)).is_none());
+    let editor = catalog.plugin_module(&index.modules[1].bundle_sha256).expect("editor module");
+    let bridge = editor.bundle().files.iter().find(|file| file.path.ends_with("🌉️bridge.js")).expect("editor entry");
+    assert!(editor.file("fixture.editor/unlisted.js").is_none());
+    std::fs::write(fixture.root.join(plugin_module::plugin_module_blob_path(&bridge.sha256)), b"tampered").expect("tamper entry");
+    assert!(editor.file(&bridge.path).expect("editor entry").read(&control.context()).await.is_err(), "a module file tampered after verification is never served");
 }

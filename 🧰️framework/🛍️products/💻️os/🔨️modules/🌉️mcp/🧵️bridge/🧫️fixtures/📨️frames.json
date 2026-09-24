@@ -24,5 +24,8 @@
   { "direction": "shell_to_gateway", "variant": "AgentCancel", "frame": {"variant":"agentCancel","invocationId":"inv_1"}, "hex": "0a05000000696e765f31" },
   { "direction": "gateway_to_shell", "variant": "AgentToolResult", "frame": {"variant":"agentToolResult","invocationId":"inv_1","toolName":"action_invoke","ok":true,"summary":"moved 1 object"}, "hex": "0905000000696e765f310d000000616374696f6e5f696e766f6b65010e0000006d6f7665642031206f626a656374" },
   { "direction": "gateway_to_shell", "variant": "AgentReply", "frame": {"variant":"agentReply","replyId":"rep_1","inReplyTo":"msg_1","text":"Widening that wall means","complete":false}, "hex": "0a050000007265705f3101050000006d73675f3118000000576964656e696e6720746861742077616c6c206d65616e7300" },
-  { "direction": "gateway_to_shell", "variant": "AgentReply", "frame": {"variant":"agentReply","replyId":"rep_1","inReplyTo":null,"text":" the 300 mm variant \u2014 shall I?","complete":true}, "hex": "0a050000007265705f3100200000002074686520333030206d6d2076617269616e7420e28094207368616c6c20493f01" }
+  { "direction": "gateway_to_shell", "variant": "AgentReply", "frame": {"variant":"agentReply","replyId":"rep_1","inReplyTo":null,"text":" the 300 mm variant \u2014 shall I?","complete":true}, "hex": "0a050000007265705f3100200000002074686520333030206d6d2076617269616e7420e28094207368616c6c20493f01" },
+  { "direction": "gateway_to_shell", "variant": "ApprovalWithdrawn", "frame": {"variant":"approvalWithdrawn","approvalId":"appr_1","reason":"cancelled"}, "hex": "0b06000000617070725f3100" },
+  { "direction": "gateway_to_shell", "variant": "ApprovalWithdrawn", "frame": {"variant":"approvalWithdrawn","approvalId":"appr_2","reason":"timed_out"}, "hex": "0b06000000617070725f3201" },
+  { "direction": "gateway_to_shell", "variant": "ApprovalWithdrawn", "frame": {"variant":"approvalWithdrawn","approvalId":"appr_3","reason":"superseded"}, "hex": "0b06000000617070725f3302" }
 ]

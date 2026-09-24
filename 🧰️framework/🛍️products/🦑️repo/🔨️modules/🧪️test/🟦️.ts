@@ -619,6 +619,10 @@ export type OracleEntry = Readonly<{
   homepage?: string;
   rationale?: string;
   hostPath?: string;
+  /** 🧭️ The case adapter language that drives a `native` reference (a third-party CLI spawned from that adapter's oracle handler). */
+  hostImplementation?: Implementation;
+  /** 🔧️ The commands a `third-party-cli` reference runs; a command missing from PATH makes the case's oracle role unavailable, recorded with the command it lacked. */
+  executables?: readonly string[];
   productionDebt?: { reachableFrom: readonly string[]; owner: string; plan: string };
   /** 🌱️ Required, and checked by `nativeSecondImplementationBreaches`, when `kind` is `verified-native-second-implementation` — absent otherwise. */
   nativeSecondImplementation?: NativeSecondImplementationEvidence;
@@ -1567,6 +1571,11 @@ export function mutationVectorRegistryBreaches(repoRoot: string, registry: Oracl
  * The framework reads a DECLARED list, never implementation source: which language the artifact is
  * written in, and whether its vocabulary is an enum, a descriptor table or a directory of leaves, is
  * the owner's business. The owner proves the declaration matches its own code with its own test.
+ *
+ * 🧫️ A case that runs one scenario per committed VECTOR instead of per kind names its rows by the vector's
+ * registered scenario id (`mutate-<scenario>`, `inverse-<scenario>`). Such a row covers — and declares —
+ * exactly the kind the catalog's `vectors[]` registers that scenario under, so the arithmetic stays exact:
+ * nothing is matched by prefix, and an unregistered row is still a stray.
  */
 export function mutationCoverageBreaches(discovered: DiscoveredCase, feature: ParsedFeature, registry: OracleRegistry): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -1580,15 +1589,19 @@ export function mutationCoverageBreaches(discovered: DiscoveredCase, feature: Pa
     breaches.push(breach("testing/contract", "mutation-catalog-capability-mismatch", discovered.featurePath, `Catalog ${catalog.id} declares capability ${catalog.capability} but the feature declares ${feature.capability}`, "A vocabulary belongs to the capability it mutates; pointing a feature at another capability's catalog would report coverage of behaviour it never exercises.", "Align the feature's @capability- tag with the catalog, or claim the matching catalog."));
   }
   const ids = new Set(feature.scenarios.map((scenario) => scenario.id));
-  const missingMutate = catalog.kinds.filter((kind) => !ids.has(`mutate-${kind}`));
-  const missingInverse = catalog.kinds.filter((kind) => !ids.has(`inverse-${kind}`));
+  const vectorKind = new Map(catalog.vectors.flatMap((vector) => vector.scenarios.map((scenario) => [scenario.id, vector.mutationId] as const)));
+  const coveredBy = (role: "mutate" | "inverse"): Set<string> => new Set([...ids].filter((id) => id.startsWith(`${role}-`)).map((id) => id.slice(role.length + 1)).map((row) => (catalog.kinds.includes(row) ? row : vectorKind.get(row))).filter((kind): kind is string => kind !== undefined));
+  const mutated = coveredBy("mutate");
+  const inverted = coveredBy("inverse");
+  const missingMutate = catalog.kinds.filter((kind) => !mutated.has(kind));
+  const missingInverse = catalog.kinds.filter((kind) => !inverted.has(kind));
   if (missingMutate.length > 0) {
     breaches.push(breach("testing/contract", "mutation-kind-uncovered", discovered.featurePath, `${missingMutate.length} of ${catalog.kinds.length} mutation kind(s) in catalog ${catalog.id} have no mutate scenario: ${missingMutate.join(", ")}`, "Exhaustive coverage is the claim this feature makes by tagging the catalog. An unexercised kind is a mutation the implementation may corrupt with nothing to notice.", `Add a row to the Examples table for each kind so the scenario id ${"mutate-<kind>"} exists.`));
   }
   if (missingInverse.length > 0) {
     breaches.push(breach("testing/contract", "mutation-inverse-uncovered", discovered.featurePath, `${missingInverse.length} mutation kind(s) in catalog ${catalog.id} have no inverse scenario: ${missingInverse.join(", ")}`, "A mutation that cannot be undone breaks the undo history the whole event-sourced runtime rests on, and the failure only ever shows up in a user's session.", `Add the kind to the inverse-law Examples table so the scenario id ${"inverse-<kind>"} exists.`));
   }
-  const stray = [...ids].filter((id) => id.startsWith("mutate-") && !catalog.kinds.includes(id.slice("mutate-".length)));
+  const stray = [...ids].filter((id) => id.startsWith("mutate-") && !catalog.kinds.includes(id.slice("mutate-".length)) && !vectorKind.has(id.slice("mutate-".length)));
   if (stray.length > 0) {
     breaches.push(breach("testing/contract", "mutation-kind-undeclared", discovered.featurePath, `Scenario(s) ${stray.join(", ")} exercise mutation kinds the catalog does not declare`, "The catalog is what the completeness gate counts against; a kind exercised but not declared means the declared vocabulary is out of date and the gate is measuring the wrong set.", "Add the kind to the catalog, or rename the scenario if it is not a mutation case."));
   }
@@ -2332,13 +2345,12 @@ export async function testLayoutBreaches(repoRoot: string, options: TestLayoutSc
  * scope — otherwise narrowing a run to one case would make every other case's adapter look like
  * production source importing an oracle.
  */
-export function oracleImportsInProduction(repoRoot: string): { path: string; oracle: string }[] {
-  const registry = loadOracleRegistry(repoRoot);
+export function oracleImportsInProduction(repoRoot: string, registry: OracleRegistry = loadOracleRegistry(repoRoot), allCases: readonly DiscoveredCase[] = discoverTestCases(repoRoot)): { path: string; oracle: string }[] {
   // 🧩️An owner's whole contribution directory is test-owned BY DEFINITION — that is what the
   // directory is for — so it is derived from the discovered manifests rather than listed by hand.
   const contributionRoots = registry.contributions.map((entry) => entry.manifestPath.slice(0, entry.manifestPath.lastIndexOf("/")));
   const hostRoots = [...contributionRoots, ...registry.oracles.map((entry) => entry.hostPath).filter((value): value is string => value !== undefined)];
-  const caseDirs = new Set(discoverTestCases(repoRoot).map((entry) => entry.caseDir));
+  const caseDirs = new Set(allCases.map((entry) => entry.caseDir));
   // 🧩️Both halves of a host's third-party surface are probed: the packages a registered oracle
   // names, and the EXTERNAL distributions an owner puts on a generated host's import path. The
   // second half is how a Python or npm reference library reaches an adapter, so leaving it out
@@ -2450,18 +2462,24 @@ export function mutationVocabularyRequiresCatalog(vocabularyRel: string, feature
   return owner.includes(PROFILE_MARKER) || featureOwners.has(owner);
 }
 
-/** 🧾️ Repository-wide contract sweep across every discovered case. */
-export function validateAllContracts(repoRoot: string, cases: readonly DiscoveredCase[] = discoverTestCases(repoRoot)): BreachRecord[] {
-  const registry = loadOracleRegistry(repoRoot);
-  const allCases = discoverTestCases(repoRoot);
-  const featureOwners = new Set(allCases.map((discovered) => discovered.owner));
+/** 🧾️ Contract breaches of the selected cases alone: each case's own contract and the discovery self-check. */
+export function caseContractBreaches(repoRoot: string, cases: readonly DiscoveredCase[], registry: OracleRegistry = loadOracleRegistry(repoRoot)): BreachRecord[] {
   const breaches = cases.flatMap((discovered) => validateCaseContract(repoRoot, discovered, registry));
   // 🚫️Self-check: discovery must never return a path the taxonomy excludes. The excluded set is
   // vocabulary, so this check names no area of its own.
   for (const leak of cases.filter((discovered) => isExcludedTestPath(repoRoot, discovered.caseDir))) {
     breaches.push(breach("testing/discovery", "excluded-path-leak", leak.caseDir, "Discovery returned a path the taxonomy excludes", "An excluded area is excluded in the discovery library itself, not by a caller's filter.", "Fix pathExclusions in 🔣️taxonomy.json."));
   }
-  for (const hit of oracleImportsInProduction(repoRoot)) {
+  return breaches;
+}
+
+/** 🧾️ Repository-wide contract breaches. They read the FULL discovery and never a caller's selection, so narrowing a run to one case cannot change them.
+ * A mutation vocabulary is the mutations facet of a schema module (`🧬️schema/🧬️mutations`); a fixture tree that mirrors the name holds vectors, not a vocabulary.
+ * @see {@link oracleImportsInProduction} */
+export function repositoryContractBreaches(repoRoot: string, registry: OracleRegistry = loadOracleRegistry(repoRoot), allCases: readonly DiscoveredCase[] = discoverTestCases(repoRoot), oracleHits: readonly { path: string; oracle: string }[] = oracleImportsInProduction(repoRoot, registry, allCases)): BreachRecord[] {
+  const featureOwners = new Set(allCases.map((discovered) => discovered.owner));
+  const breaches: BreachRecord[] = [];
+  for (const hit of oracleHits) {
     breaches.push(breach("testing/dependency", "oracle-in-production", hit.path, `Production source imports the registered oracle ${hit.oracle}`, "An oracle is evidence a test host gathers. Once production code can reach it, the differential test compares an implementation with itself and the dependency stops being test-only.", "Move the usage into the oracle host, or remove the oracle from the registry."));
   }
   // 🔒️Shrink-only migration ratchet: the legacy backlog may only get smaller. Reported as one
@@ -2471,10 +2489,12 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
   // the catalog check above can only see what a manifest declares. Standards and owners with Gherkin
   // behaviour therefore stay in scope even when they have not registered anything yet.
   const vocabularyDir = testTaxonomy(repoRoot).testMutationVocabularyDirName;
+  const schemaDir = schemaModuleDirName(repoRoot);
   {
     walkDirectories(repoRoot, (abs, rel) => {
       if (isExcludedTestPath(repoRoot, rel)) return "skip";
       if (basename(abs) !== vocabularyDir) return "enter";
+      if (basename(dirname(abs)) !== schemaDir) return "skip";
       const owner = dirname(dirname(rel));
       const claimed = registry.contributions.some((entry) => entry.owner === owner && entry.mutationCatalogs.length > 0);
       if (!claimed && mutationVocabularyRequiresCatalog(rel, featureOwners)) {
@@ -2518,6 +2538,12 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
   breaches.push(...isolationBreaches(registry));
 
   return breaches;
+}
+
+/** 🧾️ Repository-wide contract sweep: the selected cases' own contracts plus every repository-wide gate. */
+export function validateAllContracts(repoRoot: string, cases: readonly DiscoveredCase[] = discoverTestCases(repoRoot)): BreachRecord[] {
+  const registry = loadOracleRegistry(repoRoot);
+  return [...caseContractBreaches(repoRoot, cases, registry), ...repositoryContractBreaches(repoRoot, registry)];
 }
 //#endregion 🧾️Contract
 
@@ -2637,10 +2663,12 @@ export type RunSummary = Readonly<{
   byImplementation: Readonly<Record<string, { passed: number; failed: number; errored: number }>>;
   parity: readonly { testId: string; profile: ComparisonProfile; equal: boolean; diffs: number }[];
   problems: readonly string[];
+  /** 🔧️ Cases whose third-party CLI reference is not installed here, each with the command it lacked. Visible, never a pass. */
+  oracleUnavailable: readonly { caseDir: string; oracle: string; missing: readonly string[] }[];
 }>;
 
 /** 📊️ Builds the owned run summary from raw host results plus the parity verdicts. */
-export function summarizeRun(level: TestLevel, cases: number, scenarios: number, results: readonly TestResult[], parity: RunSummary["parity"], problems: readonly string[]): RunSummary {
+export function summarizeRun(level: TestLevel, cases: number, scenarios: number, results: readonly TestResult[], parity: RunSummary["parity"], problems: readonly string[], oracleUnavailable: RunSummary["oracleUnavailable"] = []): RunSummary {
   const byImplementation: Record<string, { passed: number; failed: number; errored: number }> = {};
   for (const result of results) {
     const bucket = (byImplementation[result.implementation] ??= { passed: 0, failed: 0, errored: 0 });
@@ -2657,6 +2685,7 @@ export function summarizeRun(level: TestLevel, cases: number, scenarios: number,
     byImplementation,
     parity,
     problems,
+    oracleUnavailable,
   };
 }
 
@@ -3011,6 +3040,8 @@ export type AdapterContext = Readonly<{
   artifact(role: string, filename: string): string;
   /** 🎲️ Deterministic seed for this scenario, from its `@seed-…` tag. */
   seed: string;
+  /** 🪆️ The Examples row id this scenario expands; throws for a plain scenario. */
+  row(): string;
 }>;
 
 /** 🧭️ What a scenario handler returns: the raw artifact plus the projection the profile compares. */
@@ -3035,13 +3066,21 @@ export function defineTestAdapter(adapter: TestAdapter): TestAdapter {
 /** 🧭️ Checks a registration against the plan: no unknown scenario, no unregistered scenario. */
 export function validateRegistration(plan: TestCasePlan, adapter: TestAdapter, role: TestRole): string[] {
   const problems: string[] = [];
-  const planned = new Set(plan.scenarios.map((scenario) => scenario.id));
+  const planned = new Set(plan.scenarios.flatMap((scenario) => (scenario.outlineOf === undefined ? [scenario.id] : [scenario.id, scenario.outlineOf])));
   for (const id of Object.keys(adapter.scenarios)) if (!planned.has(id)) problems.push(`adapter registers unknown scenario ${JSON.stringify(id)}`);
   for (const scenario of plan.scenarios) {
-    const entry = adapter.scenarios[scenario.id];
-    if (entry === undefined || entry[role] === undefined) problems.push(`adapter has no ${role} registration for scenario ${JSON.stringify(scenario.id)}`);
+    if (registeredHandler(adapter, scenario, role) === undefined) problems.push(`adapter has no ${role} registration for scenario ${JSON.stringify(scenario.id)}`);
   }
   return problems;
+}
+
+/**
+ * 🪆️ The handler for one scenario and role: the one registered under the scenario's own id, else the
+ * one registered under its Scenario Outline's base id (`@id-<base>`), which serves every row the
+ * feature expands — so an adapter never mirrors a catalog's kind list by hand.
+ */
+export function registeredHandler(adapter: TestAdapter, scenario: Pick<FeatureScenario, "id" | "outlineOf">, role: TestRole): ((ctx: AdapterContext) => AdapterOutcome | Promise<AdapterOutcome>) | undefined {
+  return adapter.scenarios[scenario.id]?.[role] ?? (scenario.outlineOf === undefined ? undefined : adapter.scenarios[scenario.outlineOf]?.[role]);
 }
 
 /** 🧭️ Builds the context handed to one scenario handler, wiring fixture resolution and the work dir. */
@@ -3068,6 +3107,10 @@ export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenari
       return target;
     },
     seed: scenario.seed ?? "0",
+    row: () => {
+      if (scenario.outlineOf === undefined || !scenario.id.startsWith(`${scenario.outlineOf}-`)) throw new Error(`scenario ${scenario.id} expands no Scenario Outline row`);
+      return scenario.id.slice(scenario.outlineOf.length + 1);
+    },
     fixture: lookup,
     fixtureBytes: (uri) => readFileSync(lookup(uri)),
     copyFixture: (uri, as) => {
@@ -3300,6 +3343,7 @@ export type SubsetTarget = Readonly<{
   artifact: string;
   standard: string;
   subset: string;
+  surface?: string;
   compound?: readonly string[];
   selector?: Readonly<{ type: "entity-id" | "entity-path" | "entity-set" | "whole-subset"; value: string | readonly string[] }>;
 }>;
@@ -3400,6 +3444,33 @@ export function subsetCoordinate(target: SubsetTarget): string {
   return `${target.artifact}@${target.standard}/${scope}`;
 }
 
+/** 🎚️ A subset target plus the state lane it measures; `surface` absent is the document dispatch. */
+export type SurfaceTarget = Readonly<Pick<SubsetTarget, "artifact" | "standard" | "subset" | "surface">>;
+
+/** 🎚️ The coordinate of a subset target on one surface: the subset coordinate, then `#<surface>` for a state lane. */
+export function surfaceCoordinate(target: SurfaceTarget): string {
+  return `${subsetCoordinate(target)}${target.surface === undefined ? "" : `#${target.surface}`}`;
+}
+
+/**
+ * 🎚️ Why a manifest's `surface` is not a state lane of its own owner, or `null` when it is. The value must be
+ * exactly the owner's path below its subset directory, spelled with the taxonomy's own directories:
+ * `<subsetSurfaceDir>[/<modesDirName>/<mode>[/<windowsDirName>/<window>]]/<lane>`, where a lane is a directory
+ * every surface, mode and window may hold (`surfaceChildDirs` ∩ `modeChildDirs` ∩ `windowChildDirs`).
+ */
+export function surfaceProblem(repoRoot: string, owner: string, surface: string): string | null {
+  const taxonomy = rawTaxonomy(repoRoot) as { subsetSurfaceDirs: string[]; modesDirName: string; windowsDirName: string; surfaceChildDirs: string[]; modeChildDirs: string[]; windowChildDirs: string[] };
+  const lanes = taxonomy.surfaceChildDirs.filter((dir) => taxonomy.modeChildDirs.includes(dir) && taxonomy.windowChildDirs.includes(dir));
+  const at = owner.lastIndexOf(`/${surface}`);
+  const subsetDir = at >= 0 && at + surface.length + 1 === owner.length ? owner.slice(0, at) : null;
+  if (subsetDir === null || subsetCoordinatesOfOwner(subsetDir) === null) return `surface ${JSON.stringify(surface)} is not this manifest owner's own path below its subset directory`;
+  const segments = surface.split("/");
+  const lane = segments.at(-1)!;
+  const path = segments.slice(1, -1);
+  const shapeOk = taxonomy.subsetSurfaceDirs.includes(segments[0]!) && lanes.includes(lane) && (path.length === 0 || (path.length === 2 && path[0] === taxonomy.modesDirName) || (path.length === 4 && path[0] === taxonomy.modesDirName && path[2] === taxonomy.windowsDirName));
+  return shapeOk ? null : `surface ${JSON.stringify(surface)} is not <${taxonomy.subsetSurfaceDirs.join("|")}>[/${taxonomy.modesDirName}/<mode>[/${taxonomy.windowsDirName}/<window>]]/<${lanes.join("|")}>`;
+}
+
 /** 🪆️ Reads the standards/subsets coordinates out of an owner path, or `null` when it carries none. */
 export function subsetCoordinatesOfOwner(owner: string): { standardDirectoryName: string; subsetDirectoryName: string; standard: string; subset: string } | null {
   const match = owner.match(/\/🏅️standards\/([^/]+)\/🪆️subsets\/([^/]+)$/);
@@ -3412,6 +3483,11 @@ export function subsetCoordinatesOfOwner(owner: string): { standardDirectoryName
 /** 🎯️ The semantic class a fixture DECLARES for its mutation. "Any non-crash result" is not a class. */
 export const MUTATION_OUTCOME_CLASSES = ["applied", "no-op", "empty", "disjoint", "rejected"] as const;
 export type MutationOutcomeClass = (typeof MUTATION_OUTCOME_CLASSES)[number];
+
+/** 🚦️ Whether a raw value is one of the protocol's outcome classes. */
+export function isMutationOutcomeClass(value: unknown): value is MutationOutcomeClass {
+  return (MUTATION_OUTCOME_CLASSES as readonly unknown[]).includes(value);
+}
 
 /**
  * ✅️ The only oracle kinds that can DISCHARGE a mutation's external-oracle requirement.
@@ -3516,6 +3592,8 @@ export type MutationManifest = Readonly<{
   subset: string;
   standardDirectoryName?: string;
   subsetDirectoryName?: string;
+  /** 🎚️ The editor or viewer state lane this manifest measures, as its owner's path below the subset (`✏️editor/🎚️config`, `✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient`). Absent: the document dispatch. */
+  surface?: string;
   mutations: readonly ManifestMutation[];
 }>;
 
@@ -3525,6 +3603,7 @@ export type RuntimeMutationInventory = Readonly<{
   artifact: string;
   standard: string;
   subset: string;
+  surface?: string;
   bridgeVersion: number;
   producedBy?: string;
   mutations: readonly Readonly<{ id: string; variant: string; verb?: string; entity?: string; record?: string; outcomes: readonly MutationOutcomeClass[] }>[];
@@ -3619,12 +3698,12 @@ export function manifestsOwning(registry: OracleRegistry, mutationId: string): {
  * production bridge; it is cache state, never committed source, so a stale checked-in copy can never
  * be mistaken for what the runtime offers today.
  */
-export function runtimeInventoryPath(repoRoot: string, target: Pick<SubsetTarget, "artifact" | "standard" | "subset">): string {
-  return join(testCacheDir(repoRoot, "results"), "🏭️inventory", `${target.artifact}@${target.standard}@${target.subset}.json`.replace(/[^A-Za-z0-9@._-]+/g, "_"));
+export function runtimeInventoryPath(repoRoot: string, target: SurfaceTarget): string {
+  return join(testCacheDir(repoRoot, "results"), "🏭️inventory", `${target.artifact}@${target.standard}@${target.subset}${target.surface === undefined ? "" : `@${target.surface}`}.json`.replace(/[^A-Za-z0-9@._-]+/g, "_"));
 }
 
 /** 🏭️ Reads a generated runtime inventory, or `null` when the bridge has not been run for that subset. */
-export function readRuntimeInventory(repoRoot: string, target: Pick<SubsetTarget, "artifact" | "standard" | "subset">): RuntimeMutationInventory | null {
+export function readRuntimeInventory(repoRoot: string, target: SurfaceTarget): RuntimeMutationInventory | null {
   const path = runtimeInventoryPath(repoRoot, target);
   if (!existsSync(path)) return null;
   try {
@@ -3660,7 +3739,7 @@ export type InventoryEquality = Readonly<{
  * without any v1 gate proving the omission, because v1 never consulted dispatch at all.
  */
 export function compareInventories(manifest: MutationManifest, runtime: RuntimeMutationInventory | null, claimedTestKinds: readonly string[]): InventoryEquality {
-  const target = subsetCoordinate({ artifact: manifest.artifact, standard: manifest.standard, subset: manifest.subset });
+  const target = surfaceCoordinate(manifest);
   const manifestIds = new Set(manifest.mutations.map((mutation) => mutation.id));
   const testIds = new Set(claimedTestKinds);
   if (runtime === null) {
@@ -3747,7 +3826,12 @@ export function contentDigestOf(absPath: string): string {
   return contentDigest(readFileSync(absPath));
 }
 
-/** 🧾️ Validates one fixture manifest strictly. A fixture with incomplete provenance is a contract failure. */
+/**
+ * 🧾️ Validates one fixture manifest strictly. A fixture with incomplete provenance is a contract failure.
+ *
+ * 🎚️ A fixture whose target names a `surface` measures an editor or viewer state lane hosted by its subset rather
+ * than a document scope, so the subset's siblings never make it a wildcard — the exemption its mutation manifest has.
+ */
 export function fixtureManifestProblems(value: unknown, repoRoot?: string): string[] {
   if (!isPlainObject(value)) return ["fixture manifest is not an object"];
   const problems: string[] = [];
@@ -3765,7 +3849,9 @@ export function fixtureManifestProblems(value: unknown, repoRoot?: string): stri
     // mutations by the resolved rule made 27 fixtures of genuinely single-subset owners unregisterable.
     const artifact = String((value.target as Record<string, unknown>).artifact ?? "");
     const standard = String((value.target as Record<string, unknown>).standard ?? "");
-    const wildcard = repoRoot === undefined ? isWildcardSubset(subset) : isWildcardSubsetFor(repoRoot, artifact, standard, subset);
+    const surface = (value.target as Record<string, unknown>).surface;
+    if (surface !== undefined && (typeof surface !== "string" || surface.length === 0)) problems.push("target.surface must be a non-empty string when present");
+    const wildcard = typeof surface === "string" ? false : repoRoot === undefined ? isWildcardSubset(subset) : isWildcardSubsetFor(repoRoot, artifact, standard, subset);
     if (wildcard) problems.push(`target.subset ${JSON.stringify(subset)} is a wildcard`);
   }
   if (value.outcome !== undefined && !(MUTATION_OUTCOME_CLASSES as readonly string[]).includes(String(value.outcome))) problems.push(`outcome must be one of ${MUTATION_OUTCOME_CLASSES.join("|")}`);
@@ -3858,25 +3944,16 @@ export type MutationLeafDescriptor = Readonly<{
   binaryTag: number | null;
   invertibility: "self" | "explicit-mutation" | "plan" | "non-invertible";
   diffParticipation: "detect" | "apply-only" | "plan" | "none";
-  outcomeClasses: readonly string[];
+  outcomeClasses: readonly MutationOutcomeClass[];
   composition: "atomic" | "composite";
   requiredLanguageSurfaces: readonly string[];
 }>;
 
-/** 🎯️ Maps the implementation's outcome vocabulary onto the protocol's declared classes. */
+/** 🎯️ The protocol outcome classes a leaf descriptor declares — carried verbatim, refusing any value outside the protocol vocabulary. */
 export function outcomeClassesOf(descriptor: MutationLeafDescriptor): MutationOutcomeClass[] {
-  // 🎯️`Info`/`Warning` are DIAGNOSTIC severities on an outcome, not outcome classes — a mutation that
-  // applies with a warning still applied. `Error`/`Fatal` are the refusal. Collapsing them here is the
-  // one piece of vocabulary translation between the two records, and it is done in one place.
-  const mapped = new Set<MutationOutcomeClass>();
-  for (const raw of descriptor.outcomeClasses) {
-    const value = raw.toLowerCase();
-    if (value === "applied" || value === "info" || value === "warning") mapped.add("applied");
-    else if (value === "error" || value === "fatal" || value === "rejected") mapped.add("rejected");
-    else if ((MUTATION_OUTCOME_CLASSES as readonly string[]).includes(value)) mapped.add(value as MutationOutcomeClass);
-  }
-  if (mapped.size === 0) mapped.add("applied");
-  return [...mapped];
+  const foreign = descriptor.outcomeClasses.filter((value) => !isMutationOutcomeClass(value));
+  if (foreign.length > 0) throw new Error(`${descriptor.owner}: outcomeClasses ${JSON.stringify(foreign)} are outside the protocol vocabulary ${MUTATION_OUTCOME_CLASSES.join("|")}`);
+  return [...descriptor.outcomeClasses];
 }
 
 /** 🪪️ Every mutation leaf descriptor beneath one owner, keyed by its semantic kind. */
@@ -4130,19 +4207,19 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
   // live in the leaf's single `🦀️.rs`. 315 leaves are already in that shape, and reading only
   // `🔺️diff/` refused every one of them for evidence that was sitting in the file next door.
   const diffSource = readFirst([join(leafAbs, "🔺️diff", "🦀️.rs"), join(leafAbs, "🔺️diff", "🦀️.rs"), join(leafAbs, "🦀️.rs"), join(leafAbs, "🦀️.rs")]);
-  const outcomes = new Set<string>();
+  const outcomes = new Set<MutationOutcomeClass>();
   if (diffSource === null) refused.push("outcomeClasses: the leaf declares no 🔺️diff implementation to read them from");
   else {
     const lines = diffSource.text.split(/\r?\n/);
     const cite: string[] = [];
     for (const [index, line] of lines.entries()) {
-      if (/MutationOutcome::error\s*\(/.test(line)) {
-        outcomes.add("error");
-        cite.push(`error@${index + 1}`);
+      if (/MutationOutcome::(?:error|fatal)\s*\(/.test(line)) {
+        outcomes.add("rejected");
+        cite.push(`rejected@${index + 1}`);
       }
-      if (/MutationOutcome::empty\s*\(/.test(line)) {
-        outcomes.add("info");
-        cite.push(`empty@${index + 1}`);
+      if (/MutationOutcome::empty\s*\(|"mutation\.no-op"/.test(line)) {
+        outcomes.add("no-op");
+        cite.push(`no-op@${index + 1}`);
       }
       if (/MutationOutcome::new\s*\(/.test(line)) {
         outcomes.add("applied");
@@ -4168,9 +4245,8 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
         try {
           const status = String((JSON.parse(outcome.text) as { status?: unknown }).status ?? "");
           if (status.length === 0) continue;
-          const mapped = status === "applied" ? "applied" : status === "rejected" || status === "error" ? "error" : status === "no-op" || status === "empty" ? "info" : "";
-          if (mapped.length > 0) {
-            outcomes.add(mapped);
+          if (isMutationOutcomeClass(status)) {
+            outcomes.add(status);
             observed.push(`${scenario.name}=${status}`);
           }
         } catch {
@@ -6296,6 +6372,10 @@ export function computeRunKey(opts: {
  * claimed test inventory for exact equality, which is the thing v1 could not do: v1's audit compared
  * a catalog with checked-in physical evidence and said so in its own comment, so a mutation reachable
  * through dispatch but missing from the catalog left no trace anywhere.
+ *
+ * A state-lane manifest (`surface` set) measures an editor or viewer surface mounted in the subset that hosts it: its
+ * mutations change that surface's own config, presence or transient record, never a document subset, so the
+ * smallest-document-subset rules (`wildcard-subset-owner`, `unsplit-artifact-subset`) do not apply to it.
  */
 export function mutationInventoryBreaches(repoRoot: string, registry: OracleRegistry): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -6303,7 +6383,8 @@ export function mutationInventoryBreaches(repoRoot: string, registry: OracleRegi
 
   for (const contribution of registry.contributions) {
     for (const [index, manifest] of contribution.mutationManifests.entries()) {
-      const problems = mutationManifestProblems(manifest, contribution.owner);
+      const surfaceIssue = manifest.surface === undefined ? null : surfaceProblem(repoRoot, contribution.owner, manifest.surface);
+      const problems = [...mutationManifestProblems(manifest, contribution.owner), ...(surfaceIssue === null ? [] : [surfaceIssue])];
       for (const problem of problems) {
         breaches.push(breach("testing/contract", "mutation-manifest-invalid", contribution.manifestPath, `mutationManifests[${index}] ${problem}`, "A manifest is the authority the runtime and the tests are both measured against; a malformed one measures nothing.", "Correct the manifest record."));
       }
@@ -6341,9 +6422,9 @@ export function mutationInventoryBreaches(repoRoot: string, registry: OracleRegi
         // both declaring `set-snapshot`, `brep` and `mesh` both declaring `move-vertex`. Those are distinct
         // mutations of distinct scopes, which is exactly what the taxonomy is for; only the SAME mutation
         // of the SAME subset claimed by two manifests is a real duplicate.
-        const key = `${coordinate}::${mutation.id}`;
+        const key = `${coordinate}${manifest.surface === undefined ? "" : `#${manifest.surface}`}::${mutation.id}`;
         ownerOf.set(key, [...(ownerOf.get(key) ?? []), `${contribution.manifestPath}#${coordinate}`]);
-        if (isWildcardSubset(subset)) {
+        if (manifest.surface === undefined && isWildcardSubset(subset)) {
           const siblings = (declaredSubsets(repoRoot).get(`${manifest.artifact}@${manifest.standard}`) ?? []).filter((candidate) => !isWildcardSubset(candidate));
           if (siblings.length > 0) {
             // 🚫️The artifact HAS narrower scopes and this mutation declined them. Hard failure.
@@ -7097,6 +7178,11 @@ export function fixtureProvenanceBreaches(repoRoot: string, registry: OracleRegi
  * coverage-report gap (`measureCoverage`'s own `status: "missing"` rows), not a law-2 placement gap,
  * and duplicating that measurement here would contradict the run-dependent coverage dimension instead
  * of scoping cleanly around it.
+ *
+ * A kind a catalog sharing the mutation's capability lists in `deferredKinds` is not reported here:
+ * that declaration IS the schema-first record that no wire vector can exist for it yet, and
+ * `mutationCoverageBreaches` already keeps the debt visible as `mutation-kinds-deferred` for every
+ * feature that claims the catalog. Reporting it twice would count one declared gap as two findings.
  */
 export function mutationFixtureBreaches(registry: OracleRegistry): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -7104,16 +7190,17 @@ export function mutationFixtureBreaches(registry: OracleRegistry): BreachRecord[
   for (const contribution of registry.contributions) {
     for (const fixture of contribution.fixtureManifests) {
       if (fixture?.target?.artifact === undefined || fixture.mutation === undefined) continue;
-      fixturedMutations.add(`${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}::${fixture.mutation}`);
+      fixturedMutations.add(`${surfaceCoordinate(fixture.target)}::${fixture.mutation}`);
     }
   }
-  const vectoredMutationsByCapability = new Map<string, Set<string>>();
+  const accountedMutationsByCapability = new Map<string, Set<string>>();
   for (const contribution of registry.contributions) {
     for (const catalog of contribution.mutationCatalogs) {
       if (catalog.capability === "") continue;
-      const ids = vectoredMutationsByCapability.get(catalog.capability) ?? new Set<string>();
+      const ids = accountedMutationsByCapability.get(catalog.capability) ?? new Set<string>();
       for (const vector of catalog.vectors) ids.add(vector.mutationId);
-      vectoredMutationsByCapability.set(catalog.capability, ids);
+      for (const kind of catalog.deferredKinds ?? []) ids.add(kind);
+      accountedMutationsByCapability.set(catalog.capability, ids);
     }
   }
   for (const contribution of registry.contributions) {
@@ -7121,8 +7208,8 @@ export function mutationFixtureBreaches(registry: OracleRegistry): BreachRecord[
       if (mutationManifestProblems(manifest, contribution.owner).length > 0) continue;
       for (const mutation of manifest.mutations) {
         const subset = owningSubsetOf(manifest, mutation);
-        if (fixturedMutations.has(`${manifest.artifact}@${manifest.standard}/${subset}::${mutation.id}`)) continue;
-        if (vectoredMutationsByCapability.get(mutation.capability)?.has(mutation.id) === true) continue;
+        if (fixturedMutations.has(`${surfaceCoordinate({ artifact: manifest.artifact, standard: manifest.standard, subset, surface: manifest.surface })}::${mutation.id}`)) continue;
+        if (accountedMutationsByCapability.get(mutation.capability)?.has(mutation.id) === true) continue;
         breaches.push(
           breach(
             "testing/fixture",
@@ -7479,7 +7566,7 @@ export function buildCoverageMatrix(repoRoot: string, registry: OracleRegistry, 
       // silently smaller set — the provenance dimension read 300/300 against 303 registered fixtures,
       // because the three that FAILED it had been dropped from the denominator by the crash.
       if (fixture?.target?.artifact === undefined) continue;
-      const key = `${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}::${fixture.mutation ?? ""}::${fixture.outcome ?? ""}`;
+      const key = `${surfaceCoordinate(fixture.target)}::${fixture.mutation ?? ""}::${fixture.outcome ?? ""}`;
       fixturesByTarget.set(key, [...(fixturesByTarget.get(key) ?? []), fixture]);
     }
   }
@@ -7494,7 +7581,7 @@ export function buildCoverageMatrix(repoRoot: string, registry: OracleRegistry, 
     for (const mutation of manifest.mutations) {
       const subset = owningSubsetOf(manifest, mutation);
       for (const outcome of mutation.outcomes) {
-        const fixtureKey = `${manifest.artifact}@${manifest.standard}/${subset}::${mutation.id}::${outcome}`;
+        const fixtureKey = `${surfaceCoordinate({ artifact: manifest.artifact, standard: manifest.standard, subset, surface: manifest.surface })}::${mutation.id}::${outcome}`;
         const fixtures = fixturesByTarget.get(fixtureKey) ?? [];
         const qualifying = registry.oracles.filter((oracle) => isQualifyingOracleKind(oracle.kind) && mutation.oracleRequirements.some((requirement) => oracle.capabilities.includes(requirement.capability)));
         const executions = resultsByMutation.get(`${mutation.id}::${outcome}`) ?? [];
@@ -7560,15 +7647,15 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
   // meant one subset that had run the bridge kept the denominator non-empty, and every subset that had
   // never run it simply contributed nothing — invisible rather than reported. Each such subset is
   // counted as one uncovered coordinate so it appears in the gate's `missing` list by name.
-  const inventoried = new Set(runtimeInventories.map((inventory) => subsetCoordinate(inventory)));
-  const uninventoried = registry.mutationManifests.map((manifest) => subsetCoordinate(manifest)).filter((coordinate) => !inventoried.has(coordinate)).map((coordinate) => `${coordinate} (no runtime inventory)`);
+  const inventoried = new Set(runtimeInventories.map((inventory) => surfaceCoordinate(inventory)));
+  const uninventoried = registry.mutationManifests.map((manifest) => surfaceCoordinate(manifest)).filter((coordinate) => !inventoried.has(coordinate)).map((coordinate) => `${coordinate} (no runtime inventory)`);
 
   const runtimeMissing = [...runtimeIds.filter((id) => !owned.has(id)), ...uninventoried];
-  const wildcards = manifestMutations.filter(({ manifest, mutation }) => isWildcardSubsetFor(repoRoot, manifest.artifact, manifest.standard, owningSubsetOf(manifest, mutation))).map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
+  const wildcards = manifestMutations.filter(({ manifest, mutation }) => manifest.surface === undefined && isWildcardSubsetFor(repoRoot, manifest.artifact, manifest.standard, owningSubsetOf(manifest, mutation))).map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
   const withoutOracle = manifestMutations
     .filter(({ mutation }) => !mutation.oracleRequirements.every((requirement) => registry.oracles.some((oracle) => isQualifyingOracleKind(oracle.kind) && oracle.capabilities.includes(requirement.capability))))
     .map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
-  const fixtureSubsets = new Set(registry.contributions.flatMap((contribution) => contribution.fixtureManifests).filter((fixture) => fixture?.target?.artifact !== undefined).map((fixture) => `${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}`));
+  const fixtureSubsets = new Set(registry.contributions.flatMap((contribution) => contribution.fixtureManifests).filter((fixture) => fixture?.target?.artifact !== undefined).map((fixture) => surfaceCoordinate(fixture.target)));
   // 🧪️EVIDENCE IS THE CONJUNCTION, not the fixture alone. Counting only "a fixture targets this subset"
   // let a mutation with NO discharged oracle — an `-uncarried` kind in a subset that happens to have
   // fixtures — count as measured, and evidence then exceeded registration: 213 against 210, which is
@@ -7576,7 +7663,7 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
   // something exists to run that oracle against.
   const oracled = new Set(withoutOracle);
   const withoutEvidence = manifestMutations
-    .filter(({ manifest, mutation }) => oracled.has(`${manifest.artifact}::${mutation.id}`) || !fixtureSubsets.has(`${manifest.artifact}@${manifest.standard}/${manifest.subset}`))
+    .filter(({ manifest, mutation }) => oracled.has(`${manifest.artifact}::${mutation.id}`) || !fixtureSubsets.has(surfaceCoordinate(manifest)))
     .map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
   const requiredCapabilities = [...new Set(manifestMutations.flatMap(({ mutation }) => mutation.oracleRequirements.map((requirement) => requirement.capability)))];
   const unsupportedCapabilities = requiredCapabilities.filter((capability) => !registry.oracles.some((oracle) => isQualifyingOracleKind(oracle.kind) && oracle.capabilities.includes(capability)));

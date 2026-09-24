@@ -1182,7 +1182,8 @@
           "payloadSchema": "../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🦀️.rs#UpdateAnalysisSettings",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "update-analysis-settings",

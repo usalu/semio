@@ -28,7 +28,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveGroup {
         agg_inverse(&ObjMutation::RemoveGroup(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-group", "Gruppe entfernen")
+        protocol::LocalizedLabel::native("Remove group", "Gruppe entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -4,7 +4,7 @@
 //! A raw byte buffer has no format: there is nothing a third-party library could be authoritative
 //! about, and no independent reader exists either (there is no grammar to parse). So this module is
 //! not a reference-library adapter — it is the specification made executable, an independently
-//! written splice/append/truncate implementation that never touches this subset's own
+//! written byte-range replacement/append/truncate implementation that never touches this subset's own
 //! `BinaryDiff`/`ByteSplice`/`apply_binary_mutation` (`../🧬️schema/🧬️mutations/🦀️.rs`,
 //! `../🧬️schema/🔺️diff/🦀️.rs`) — comparing this repository's implementation against
 //! itself is the exact failure mode the whole test platform exists to prevent. Bounds validation
@@ -13,7 +13,7 @@
 //! vocabulary's own defined no-op, not an error) but is reimplemented here from scratch.
 //!
 //! The vocabulary is per SUBSET, not per artifact. This one has exactly 5 kinds: `no-mutation`,
-//! `set-snapshot`, `splice`, `append-bytes`, `truncate-at`.
+//! `set-snapshot`, `replace-byte-range`, `append-bytes`, `truncate-at`.
 //!
 //! @see ../🔣️oracle.json — the mutation catalog and the recorded no-oracle decision.
 //! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`BinaryMutation::KINDS`).
@@ -41,24 +41,24 @@ fn usize_field(value: &Json, key: &str) -> Result<usize, String> {
 }
 //#endregion 🔖️SpecReading
 
-//#region 🔖️Splice
-/// ✂️ The specification's own contract for one splice, reimplemented independently of
+//#region 🔖️ReplaceByteRange
+/// ✂️ The specification's own contract for one byte-range replacement, reimplemented independently of
 /// `ByteSplice`/`validate_binary_diff` in `../🧬️schema/🔺️diff/🦀️.rs`: `offset` must not
 /// exceed the buffer's current length, and `remove_len` must not reach past it. Both are rejected
 /// with `Err`, never clamped — a clamped offset would silently mutate the wrong range instead of
 /// failing, which is exactly the "corrupts silently" failure the spec vectors exist to catch.
 #[cfg(feature = "oracles")]
-fn splice(buffer: &mut Vec<u8>, offset: usize, remove_len: usize, insert: &[u8]) -> Result<(), String> {
+fn replace_range(buffer: &mut Vec<u8>, offset: usize, remove_len: usize, insert: &[u8]) -> Result<(), String> {
     if offset > buffer.len() {
-        return Err(format!("splice offset {offset} is outside the buffer (length {})", buffer.len()));
+        return Err(format!("replace-byte-range offset {offset} is outside the buffer (length {})", buffer.len()));
     }
     if remove_len > buffer.len() - offset {
-        return Err(format!("splice remove_len {remove_len} at offset {offset} exceeds the buffer (length {})", buffer.len()));
+        return Err(format!("replace-byte-range remove_len {remove_len} at offset {offset} exceeds the buffer (length {})", buffer.len()));
     }
     buffer.splice(offset..offset + remove_len, insert.iter().copied());
     Ok(())
 }
-//#endregion 🔖️Splice
+//#endregion 🔖️ReplaceByteRange
 
 //#region 🔖️Apply
 /// 🦠️ Every declared kind, dispatched by its kebab-case name. `set-snapshot` reads the same
@@ -74,17 +74,17 @@ fn apply(buffer: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
             let snapshot = params.get("snapshot").ok_or("set-snapshot requires a `snapshot` field")?;
             Ok(bytes_field(snapshot, "bytes"))
         }
-        "splice" => {
+        "replace-byte-range" => {
             let offset = usize_field(params, "offset")?;
             let remove_len = usize_field(params, "removeLen")?;
             let insert = bytes_field(params, "insert");
-            splice(&mut out, offset, remove_len, &insert)?;
+            replace_range(&mut out, offset, remove_len, &insert)?;
             Ok(out)
         }
         "append-bytes" => {
             let data = bytes_field(params, "data");
             let len = out.len();
-            splice(&mut out, len, 0, &data)?;
+            replace_range(&mut out, len, 0, &data)?;
             Ok(out)
         }
         "truncate-at" => {

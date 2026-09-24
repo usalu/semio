@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change ideal loads system {} outdoor air rate per person to {:?}", self.id.0, self.new_outdoor_air_per_person_m3_s), &format!("ideale Lastensystem {} Außenluftrate pro Person auf {:?} ändern", self.id.0, self.new_outdoor_air_per_person_m3_s))
+        protocol::LocalizedLabel::native(&format!("Change ideal loads system {} outdoor air rate per person to {:?}", self.id.0, self.new_outdoor_air_per_person_m3_s), &format!("Außenluftrate pro Person von Ideallastsystem {} auf {:?} ändern", self.id.0, self.new_outdoor_air_per_person_m3_s))
     }
 
     fn target(&self) -> Vec<String> {

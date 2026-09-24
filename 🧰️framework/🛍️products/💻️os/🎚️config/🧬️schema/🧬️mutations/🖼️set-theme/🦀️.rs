@@ -12,3 +12,13 @@ pub fn set_theme(theme_id: Option<String>) -> UiPreferencesConfigMutation {
     UiPreferencesConfigMutation::SetTheme(SetTheme { theme_id })
 }
 optional_setting_impl!(SetTheme, SetTheme, theme_id, "set-theme", "theme", "theme", "theme-id");
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/✏️sets-theme/🦀️.rs"]
+mod tests_sets_theme;
+
+#[cfg(test)]
+#[path = "🧪️tests/🟰️keeps-theme/🦀️.rs"]
+mod tests_keeps_theme;
+//#endregion 🧪️Tests

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorNEdK
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change anchor n ed kn to {:?}", self.new_anchor_n_ed_kn), &format!("Ankernedkn auf {:?} ändern", self.new_anchor_n_ed_kn))
+        protocol::LocalizedLabel::native(&format!("Change anchor tension load N_Ed [kN] to {:?}", self.new_anchor_n_ed_kn), &format!("Zuglast des Dübels N_Ed [kN] auf {:?} ändern", self.new_anchor_n_ed_kn))
     }
 }
 //#endregion 🔖️ChangeAnchorNEdKn

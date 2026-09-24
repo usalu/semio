@@ -27,6 +27,11 @@ import {
   contrastRatio,
   contrastRatioRgba,
   themePaintContrast,
+  themePaintContrastPairs,
+  THEME_CHROME_CONTRAST_PAIRS,
+  resolveThemeAppearancePalettes,
+  semioTheme,
+  type UiTheme,
   wcagContrastGrade,
   WCAG_AA_CONTRAST,
   WCAG_AA_LARGE_CONTRAST,
@@ -1023,6 +1028,65 @@ describe("custom theme contrast verdict", () => {
     expect(bad.passesBodyText).toBe(false);
     expect(bad.grade).toBe("fail");
     expect(Number.isInteger(Math.round(bad.ratio * 100) - bad.ratio * 100)).toBe(true);
+  });
+});
+
+/** ♿️ The text-on-surface pair law, replayed from `🧫️fixtures/♿️chrome-contrast-pairs.json` — whose ratios
+ * were computed by an independent Python WCAG implementation, so this is a cross-language oracle too. */
+describe("chrome text-on-surface contrast pairs", () => {
+  const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/♿️chrome-contrast-pairs.json"), "utf8")) as {
+    readonly palette: Record<string, Rgba8>;
+    readonly cases: Record<string, { readonly text: string; readonly surface: string; readonly counterpart: string; readonly ratio: number; readonly grade: string } | null>;
+  };
+
+  it("names the worst pair every paint takes part in, and no pair for a border", () => {
+    for (const [paintKey, expected] of Object.entries(fixture.cases)) {
+      const worst = themePaintContrastPairs(fixture.palette, paintKey)[0] ?? null;
+      if (expected === null) {
+        expect(worst).toBeNull();
+        continue;
+      }
+      expect(worst).not.toBeNull();
+      expect({ text: worst!.text, surface: worst!.surface, counterpart: worst!.counterpart, grade: worst!.grade }).toEqual({ text: expected.text, surface: expected.surface, counterpart: expected.counterpart, grade: expected.grade });
+      expect(worst!.ratio).toBeCloseTo(expected.ratio, 2);
+    }
+  });
+
+  it("never compares a text paint with another text paint, nor a border with anything", () => {
+    for (const pair of THEME_CHROME_CONTRAST_PAIRS) {
+      expect(pair.text === "foreground" || pair.text.endsWith("Foreground")).toBe(true);
+      expect(pair.surface.endsWith("Foreground") || pair.surface === "foreground" || pair.surface.startsWith("border")).toBe(false);
+    }
+  });
+
+  /** ♿️ Every SHIPPED theme — the default `semio` theme built from `🎨️styling/🔣️.json` and the `mono` preset
+   * `🌓️theme/🔣️.json` — clears WCAG 2.2 AA (4.5:1) on every chrome text/surface pair in BOTH appearances, measured
+   * by this module and, as the independent oracle, by the third-party `color` package's WCAG contrast.
+   * U4 measured the untouched light default failing `mutedForeground` on `panel` (2.34) and `base` (3.54) and
+   * `activeForeground` on `activeHover` (4.45); the dark appearance failed five pairs (ticket 26/09/23 S15). */
+  it("every shipped theme passes AA on every chrome text/surface pair, both appearances, against a third-party oracle", async () => {
+    const thirdPartyColorSpecifier = "color";
+    const { default: Color } = (await import(thirdPartyColorSpecifier)) as { default: (value: string) => { contrast(other: unknown): number } };
+    const mono = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌓️theme/🔣️.json"), "utf8")) as UiTheme;
+    const hex = (paint: Rgba8) => `#${paint.slice(0, 3).map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+    const failures: string[] = [];
+    for (const [name, theme] of [["semio", semioTheme()], ["mono", mono]] as const) {
+      for (const appearance of ["light", "dark"] as const) {
+        const chrome = resolveThemeAppearancePalettes(theme, appearance).chrome;
+        for (const pair of THEME_CHROME_CONTRAST_PAIRS) {
+          const ratio = contrastRatioRgba(chrome[pair.text]!, chrome[pair.surface]!);
+          const oracle = Color(hex(chrome[pair.text]!)).contrast(Color(hex(chrome[pair.surface]!)));
+          expect(ratio, `${name} ${appearance} ${pair.text}/${pair.surface} oracle`).toBeCloseTo(oracle, 2);
+          if (ratio < WCAG_AA_CONTRAST) failures.push(`${name} ${appearance} ${pair.text}/${pair.surface}=${ratio.toFixed(2)}`);
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it("the shipped default chrome palette is measured on the same pairs (surfaces the ladder gates pass AA with foreground)", () => {
+    const theme = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌓️theme/🔣️.json"), "utf8"));
+    expect(Object.keys(theme.appearances.light.chrome)).toEqual(expect.arrayContaining([...new Set(THEME_CHROME_CONTRAST_PAIRS.flatMap((pair) => [pair.text, pair.surface]))]));
   });
 });
 //#endregion ♿️CustomThemeContrast

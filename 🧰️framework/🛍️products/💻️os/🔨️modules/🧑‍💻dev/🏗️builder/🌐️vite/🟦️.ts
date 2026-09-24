@@ -7,7 +7,7 @@ import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
-import { semioAgentBridgeRendezvousVitePlugin, semioLocalHubSessionVitePlugin, semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
+import { semioAgentBridgeRendezvousVitePlugin, semioAgentCredentialInstallVitePlugin, semioLocalHubSessionVitePlugin, semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioServiceWorkerScopeVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
 import { loadFrameworkOsPlaygroundCatalog as _semioPlaygroundGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
 import { BUILD_BUDGET_MS as _semioProcessGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { developmentRuntimeRoot, playgroundSessionViteAlias, pluginModulesRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
@@ -209,6 +209,7 @@ return {
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),
     playgroundFlowWasmDevStubPlugin(repoRoot),
+    semioServiceWorkerScopeVitePlugin(),
     semioDescriptorRouteGuardVitePlugin([
       { route: MODULE_PLUGIN_ROUTE, root: pluginModulesDir, directoryNames: new Set(PLUGIN_BUILD_TARGETS.filter((target) => target.role === "plugin").map((target) => moduleDirectoryName(target.pluginId))) },
       { route: MODULE_EXTENSION_ROUTE, root: installedExtensionsDir, directoryNames: new Set(EXTENSION_TARGETS.map((target) => moduleDirectoryName(target.pluginId))) },
@@ -216,6 +217,7 @@ return {
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
     semioAgentBridgeRendezvousVitePlugin(),
+    semioAgentCredentialInstallVitePlugin({ repoRoot }),
     semioLocalHubSessionVitePlugin(),
     ...(command === "serve" ? [...semioSourceFreshnessVitePlugins({ repoRoot }), semioActivationVitePlugin({ receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: activationComponents }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot })] : []),
     ...semioAssetsVitePlugin(repoRoot),

@@ -23,7 +23,7 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetHolidaysDst {
         agg_inverse(&EpwMutation::SetHolidaysDst(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-holidays-dst", "Feiertagendst setzen")
+        protocol::LocalizedLabel::native("Set holidays DST", "Feiertage und Sommerzeit setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -3373,7 +3373,7 @@ pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect,
         };
         let plan = match entry.node_graph.as_ref() {
             Some(NodeGraphEngine::Flow(host)) => NodeGraphWheelPlan::Flow(host.plan_wheel(sx, sy, 0.0, delta as f64, true)),
-            Some(NodeGraphEngine::Dag(host)) => NodeGraphWheelPlan::Dag(host.plan_wheel(sx, sy, delta as f64, true)),
+            Some(NodeGraphEngine::Dag(host)) => NodeGraphWheelPlan::Dag(host.plan_wheel(sx, sy, 0.0, delta as f64, true)),
             None => return Ok(None),
         };
         graph_interaction_snapshot(entry, Some(plan.camera())).map(|snapshot| Some((plan, snapshot)))

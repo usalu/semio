@@ -491,6 +491,7 @@ pub fn create_playground_editor() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("changeSchema", InteractiveJobClassification::Migrated)
         .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"))
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+        .action_destructive("setActiveExample")
         .build_definition()
 }
 //#endregion 🔖️Manifest

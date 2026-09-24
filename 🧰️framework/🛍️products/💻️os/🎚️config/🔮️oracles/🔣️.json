@@ -1,7 +1,7 @@
 {
   "$schema": "../../../🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This owner's contribution. 🎚️config carries three typed mutation vocabularies, all mounted by the plugin host from direct semantic leaves: opening preferences (set-default-app, clear-default-app), merge policy (change-merge-policy), and identity (sign-in, sign-out). Each vocabulary is claimed by exactly one exhaustive case under 🔌️plugin/🖥️host/🧪️tests, and every kind in every vocabulary carries a committed (before, mutation, after, diff, outcome) specification vector beside its own leaf.",
+  "_comment": "🧩️ This owner's contribution. 🎚️config carries four typed mutation vocabularies, all mounted by the plugin host from direct semantic leaves: opening preferences (set-default-app, clear-default-app), merge policy (change-merge-policy), identity (sign-in, sign-out), and UI preferences (the nine set-* kinds of UiPreferencesConfigMutation). Each vocabulary is claimed by exactly one exhaustive case under 🔌️plugin/🖥️host/🧪️tests, and every kind in every vocabulary carries a committed (before, mutation, after, diff, outcome) specification vector beside its own leaf.",
   "oracles": [],
   "noOracleDecisions": [
     {
@@ -87,6 +87,40 @@
           }
         ],
         "whyNoneQualifies": "os.config.identity is repository-owned session configuration (Option<Identity>); no third party implements it, so none can adjudicate sign-in or sign-out."
+      }
+    },
+    {
+      "id": "os-config-ui-preferences-mutation-semantics",
+      "capabilities": [
+        "os-config-ui-preferences-1-mutate"
+      ],
+      "rationale": "`os.config.ui-preferences` is this operating system's own persisted local-only UI preference record: appearance, chrome layout, driver and custom drivers, locale, terminology, theme and custom themes, and keybinding overrides, each a whole-record replace through `UiPreferencesDiff`. What is under test is that each of the nine kinds changes exactly its own preference, that re-setting a preference to the value it already holds is a warned `mutation.no-op` rather than a change, and that every kind's inverse, read off the pre-mutation record, restores it exactly. These are statements about this repository's preference semantics, not about JSON or key-value storage. Confidence comes from eighteen committed, handcrafted specification vectors (one `applied` and one `no-op` quintet per kind, under `../🧬️schema/🧬️mutations/<slug>/🧫️fixtures/`), each exercised against the implementation by its own scenario test, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "pypi",
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A generic persisted key-value store for desktop settings; it has no model of this operating system's typed UI preference record, its keyed custom drivers and themes, or the no-op and inverse semantics each kind defines."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it neither defines typed preference mutations nor their no-op and inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "os.config.ui-preferences is this operating system's own preference record with its own mutation vocabulary; no third party implements it, so none can adjudicate the nine set-* kinds."
       }
     }
   ],
@@ -174,6 +208,158 @@
           ]
         }
       ]
+    },
+    {
+      "id": "os-config-ui-preferences-1-any",
+      "capability": "os-config-ui-preferences-1-mutate",
+      "kinds": [
+        "set-appearance",
+        "set-layout",
+        "set-driver",
+        "set-custom-driver",
+        "set-locale",
+        "set-terminology",
+        "set-theme",
+        "set-custom-theme",
+        "set-keybinding-override"
+      ],
+      "vectors": [
+        {
+          "mutationId": "set-appearance",
+          "sourceMutationDirectoryName": "🌗️set-appearance",
+          "mutationDirectoryName": "🌗️set-appearance",
+          "scenarios": [
+            {
+              "id": "sets-appearance",
+              "directoryName": "✏️sets-appearance"
+            },
+            {
+              "id": "keeps-appearance",
+              "directoryName": "🟰️keeps-appearance"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-layout",
+          "sourceMutationDirectoryName": "📐️set-layout",
+          "mutationDirectoryName": "📐️set-layout",
+          "scenarios": [
+            {
+              "id": "sets-layout",
+              "directoryName": "✏️sets-layout"
+            },
+            {
+              "id": "keeps-layout",
+              "directoryName": "🟰️keeps-layout"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-driver",
+          "sourceMutationDirectoryName": "🕹️set-driver",
+          "mutationDirectoryName": "🕹️set-driver",
+          "scenarios": [
+            {
+              "id": "sets-driver",
+              "directoryName": "✏️sets-driver"
+            },
+            {
+              "id": "keeps-driver",
+              "directoryName": "🟰️keeps-driver"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-custom-driver",
+          "sourceMutationDirectoryName": "🚗️set-custom-driver",
+          "mutationDirectoryName": "🚗️set-custom-driver",
+          "scenarios": [
+            {
+              "id": "sets-custom-driver",
+              "directoryName": "✏️sets-custom-driver"
+            },
+            {
+              "id": "keeps-custom-driver",
+              "directoryName": "🟰️keeps-custom-driver"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-locale",
+          "sourceMutationDirectoryName": "🗣️set-locale",
+          "mutationDirectoryName": "🗣️set-locale",
+          "scenarios": [
+            {
+              "id": "sets-locale",
+              "directoryName": "✏️sets-locale"
+            },
+            {
+              "id": "keeps-locale",
+              "directoryName": "🟰️keeps-locale"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-terminology",
+          "sourceMutationDirectoryName": "📖️set-terminology",
+          "mutationDirectoryName": "📖️set-terminology",
+          "scenarios": [
+            {
+              "id": "sets-terminology",
+              "directoryName": "✏️sets-terminology"
+            },
+            {
+              "id": "keeps-terminology",
+              "directoryName": "🟰️keeps-terminology"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-theme",
+          "sourceMutationDirectoryName": "🖼️set-theme",
+          "mutationDirectoryName": "🖼️set-theme",
+          "scenarios": [
+            {
+              "id": "sets-theme",
+              "directoryName": "✏️sets-theme"
+            },
+            {
+              "id": "keeps-theme",
+              "directoryName": "🟰️keeps-theme"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-custom-theme",
+          "sourceMutationDirectoryName": "🎨️set-custom-theme",
+          "mutationDirectoryName": "🎨️set-custom-theme",
+          "scenarios": [
+            {
+              "id": "sets-custom-theme",
+              "directoryName": "✏️sets-custom-theme"
+            },
+            {
+              "id": "keeps-custom-theme",
+              "directoryName": "🟰️keeps-custom-theme"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-keybinding-override",
+          "sourceMutationDirectoryName": "⌨️set-keybinding-override",
+          "mutationDirectoryName": "⌨️set-keybinding-override",
+          "scenarios": [
+            {
+              "id": "sets-keybinding",
+              "directoryName": "✏️sets-keybinding"
+            },
+            {
+              "id": "keeps-keybinding",
+              "directoryName": "🟰️keeps-keybinding"
+            }
+          ]
+        }
+      ]
     }
   ],
   "mutationManifests": [
@@ -188,7 +374,8 @@
           "capability": "os-config-opening-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "set-default-app",
@@ -207,7 +394,8 @@
           "capability": "os-config-opening-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "clear-default-app",
@@ -234,7 +422,8 @@
           "capability": "os-config-merge-policy-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-merge-policy",
@@ -290,6 +479,194 @@
           "oracleRequirements": [
             {
               "capability": "os-config-identity-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "os.config",
+      "standard": "1",
+      "subset": "ui-preferences",
+      "mutations": [
+        {
+          "id": "set-appearance",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-appearance",
+            "bridgeVersion": 1,
+            "variant": "SetAppearance"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-layout",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-layout",
+            "bridgeVersion": 1,
+            "variant": "SetLayout"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-driver",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-driver",
+            "bridgeVersion": 1,
+            "variant": "SetDriver"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-custom-driver",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-custom-driver",
+            "bridgeVersion": 1,
+            "variant": "SetCustomDriver"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-locale",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-locale",
+            "bridgeVersion": 1,
+            "variant": "SetLocale"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-terminology",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-terminology",
+            "bridgeVersion": 1,
+            "variant": "SetTerminology"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-theme",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-theme",
+            "bridgeVersion": 1,
+            "variant": "SetTheme"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-custom-theme",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-custom-theme",
+            "bridgeVersion": 1,
+            "variant": "SetCustomTheme"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-keybinding-override",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-keybinding-override",
+            "bridgeVersion": 1,
+            "variant": "SetKeybindingOverride"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ]

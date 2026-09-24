@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeSnowAltitu
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change snow altitude to {:?}", self.new_snow_altitude_m), &format!("Schneenhöhe auf {:?} ändern", self.new_snow_altitude_m))
+        protocol::LocalizedLabel::native(&format!("Change snow altitude to {:?}", self.new_snow_altitude_m), &format!("Geländehöhe für die Schneelast auf {:?} ändern", self.new_snow_altitude_m))
     }
 }
 //#endregion 🔖️Payload

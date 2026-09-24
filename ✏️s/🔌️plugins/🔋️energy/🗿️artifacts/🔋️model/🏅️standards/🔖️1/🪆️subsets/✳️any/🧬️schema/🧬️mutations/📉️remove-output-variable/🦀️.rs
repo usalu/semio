@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Remove
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove output variable \"{}\" for \"{}\"", self.name, self.key), &format!("Ausgabenvariable \"{}\" für \"{}\" entfernen", self.name, self.key))
+        protocol::LocalizedLabel::native(&format!("Remove output variable \"{}\" for \"{}\"", self.name, self.key), &format!("Ausgabevariable \"{}\" für \"{}\" entfernen", self.name, self.key))
     }
 
     fn target(&self) -> Vec<String> {

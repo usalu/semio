@@ -28,7 +28,7 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for DeleteSlot {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete slot \"{}\"", self.id), &format!("Platz \"{}\" löschen", self.id))
+        protocol::LocalizedLabel::native(&format!("Delete slot \"{}\"", self.id), &format!("Slot \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

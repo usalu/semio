@@ -11,8 +11,10 @@ import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialo
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { createArtifactCreationCatalogMountV1, runArtifactCreationReadyOpeningV1, type ArtifactCreationCatalogMountV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
+import { isTerminalDocumentCheckInPhaseV1, type DocumentCheckInStatusV1 } from "../../../../📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
 import { directorySessionAuthorityIsCurrentV1, startDirectorySessionRefreshV1, type DirectorySessionRefreshV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
 import { directoryAdministrationCommandAllowedV1 } from "../../../../📇️directory/🧬️schema/🟦️.ts";
+import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AgentCredentialInstallUnavailableV1, parseAgentCredentialInstallReceiptV1 } from "../../../../📇️directory/🤖️delegations/🟦️.ts";
 import { HubSessionPortClientV1 } from "../../../../📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts";
 import { readHubSessionCapabilityV1, writeHubSessionCapabilityV1, type HubConnectionStorageV1, type HubSessionCapabilityV1 } from "../../../../📇️directory/🔐️sign-in/🟦️.ts";
 import { SessionAuthorityNotice } from "../../../../📇️directory/🪪️session-refresh/🪪️notice/🟦️.tsx";
@@ -99,6 +101,8 @@ import {
   type AppCatalogue,
   type PluginAppLabelsOverlay,
   type PluginContextMenuRequest,
+  type PluginModuleAcquired,
+  type PluginModuleAcquisitionProgress,
   type PluginRegistryEntry,
   type PluginSource,
   type PluginSourceEvent,
@@ -210,7 +214,7 @@ import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
 import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../👕️canvas-presence/🟦️.ts";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, quiesceSessionWorkV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
-import { focusedProgramKeyV1, focusedProgramV1, programHistoryKeyV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1 } from "./🪟️spawned-program/🟦️.ts";
+import { focusedProgramKeyV1, focusedProgramV1, programHistoryKeyV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
 import { causalOrderKeyV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, inputAppliedV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
 
 
@@ -397,7 +401,9 @@ import {
   InterpretedUiNode,
   PluginSurfaceActionsContext,
   ShellContextMenuFallbackContext,
+  TreeWindowContext,
   wireLabel,
+  type TreeWindowContextValue,
 } from "../🗣️Interpreter/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
 import { SpaceAdministrationPane, spaceAdministrationCapabilities, spaceAdministrationInviteRevocable, spaceAdministrationMemberRemovable, spaceAdministrationNameValid, type SpaceAdministrationIntentV1 } from "../🛂️SpaceAdministration/🟦️.tsx";
@@ -423,6 +429,9 @@ import {
   selectQuarantinedConflicts,
   ShellFaultBoundary,
   shellReducer,
+  upsertLoadedProgramV1,
+  localProgramsV1,
+  sessionProgramsV1,
   shouldAutoStartIntroduction,
   shouldPersistIntroductionSeen,
   shouldReplayIntroductionOnLoad,
@@ -518,6 +527,8 @@ import {
   loadPluginModuleResilient,
   pluginInstallBandTextV1,
   pluginInstallCancelTextV1,
+  pluginInstallProgressTotalV1,
+  pluginModuleStoreNoticeTextV1,
   makeEffectDispatchOne,
   mergeRecordPreservingIdentity,
   mergeUiDirtyScopeV1,
@@ -532,6 +543,9 @@ import {
   presenceEphemeralSnapshotWithinBoundV1,
   createTreeWindowSchedulerV1,
   type PanelTreeConfigCacheV1,
+  applyBrowserActorUiPatchesV1,
+  browserActorPanelKeysV1,
+  type BrowserActorPanelHostV1,
   type TreeWindowHostV1,
   type TreeWindowSchedulerV1,
   parsePanelState,
@@ -541,9 +555,11 @@ import {
   pluginShouldEstablishSession,
   AutoCheckinScheduler,
   canCheckIn,
+  checkinAbortText,
   checkinActionText,
   checkinCancelText,
   checkinMessagePlaceholderText,
+  checkinStatusText,
   checkinSubmitText,
   computeSyncPillState,
   createLatestAsyncDispatcher,
@@ -563,6 +579,7 @@ import {
   resolveDialogDefinition,
   resolveArtifactByAppId,
   resolveFrameworkLayoutSeed,
+  frameworkLayoutDeclaredInstances,
   resolveIntroductionDefinition,
   resolveKeybindingIntent,
   clipboardWriteFragmentFromEffect,
@@ -632,6 +649,7 @@ import {
   createFrameworkDisplayPanelTabs,
   createFrameworkMarketplacePanelTab,
   createFrameworkTaskManagerPanelTab,
+  FRAMEWORK_CHAT_PANEL_ID,
   FRAMEWORK_TASK_MANAGER_PANEL_ID,
   createFrameworkSettingsPanelTab,
   DEFAULT_APP_NONE_VALUE,
@@ -663,6 +681,10 @@ import { type WindowFault, type WindowFaultClass, windowFaultFromError } from ".
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT, type HubPluginSourceV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
+import { hubCatalogClosureV1, hubCatalogOwnerOfDialectV1, hubProgramIdV1, parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
+import type { TrustedPluginModuleIndexEntryV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import pluginModuleStoreWorkerUrl from "../../../../🔌️plugin/📇️registry/🌎️hub-source/👷️service-worker/🟦️.ts?worker&url";
 import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🪪️host-bootstrap/🟦️.tsx";
 import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🌱️artifact-creation/🟦️.tsx";
 import { replayRefusalCodeV1, replayRefusalNoticeTextV1, type ReplayRefusalReasonV1 } from "./📣️replay-refusal/🟦️.ts";
@@ -676,15 +698,15 @@ import {
 } from "./📇️directory-bootstrap/🟦️.tsx";
 
 
-import { HubConnectionIndicator, SyncAttachCard, type HubSessionPresenceV1 } from "../🔄️ShellSync/🟦️.tsx";
+import { HubConnectionIndicator, SyncAttachCard, type HubLinkV1, type HubSessionPresenceV1 } from "../🔄️ShellSync/🟦️.tsx";
 import { useAgentBridge, type AgentAppCommandHandler } from "../🔗️AgentBridge/🟦️.tsx";
 import { shellAppFault, type ShellAppFrameV1 } from "../../../../🌉️mcp/🐚️channel/🟦️.ts";
 import type { BridgeInstanceRef } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
 import type { ReduceResult, ShellCommand } from "../../../../🖥️shell/🟦️.ts";
 import { AgentChatPanel } from "../💬️AgentChatPanel/🟦️.tsx";
-import { AgentApprovals } from "../🤖️AgentApprovals/🟦️.tsx";
-import { TaskManagerWindow } from "../🧵️TaskManager/🟦️.tsx";
-import { type ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { AgentApprovalsNotice, focusAgentApprovalV1 } from "../🤖️AgentApprovals/🟦️.tsx";
+import { TaskManagerWindow, installTasksV1, spawnedJobTasksV1, toolCallTasksV1, type TaskManagerSourcesV1, type TaskManagerTaskV1 } from "../🧵️TaskManager/🟦️.tsx";
+import { cancelSpawnedJobV1, pluginRuntimeActivationRegistryV1, registerProgramExtensionV1, spawnedJobsSnapshotV1, subscribeSpawnedJobsV1, type SpawnedJobRowV1 } from "../🔌️PluginRuntime/🟦️.tsx";
 import { UIFind, UIFindProvider, UISearch, type UISearchItem } from "../🔎️ShellSearch/🟦️.tsx";
 import { UTILITY_CATEGORY_ICON_ID } from "../🎛️UtilityTree/🟦️.tsx";
 import { coerceWireBytes } from "../🔌️PluginRuntime/🟦️.tsx";
@@ -860,6 +882,11 @@ const TRANSIENT_NOTICE_TONE_CLASS: Record<Severity, string> = {
  * mirrors the Rust guest's `Fault("mutation.rejected")`. */
 const MUTATION_REJECTED_FAULT_CODE = "mutation.rejected";
 
+/** 🎫️ Minimum spacing between two claims of a development session from `/_semio/dev/local-session`: a lapsed or refused
+ * local session is re-claimed from the local hub owner's broker at most this often, so a hub that keeps refusing can
+ * never drive a claim loop. */
+const LOCAL_SESSION_RECLAIM_INTERVAL_MS = 30_000;
+
 /** ⚖️ Maps one of the frozen seven `mutation.*` codes (contract freeze §C2 — no per-plugin codes,
  * ever) onto its `ui.mutation.code.*` label key; an unrecognized code falls back to the generic
  * rejected-title key rather than fabricating a key the schema doesn't have. */
@@ -974,7 +1001,7 @@ function seededActiveWindowId(modeLayout: WindowLayoutNode): string | null {
 function windowActionInvocation(
   session: ActiveSession,
   action: ActionDescriptor,
-  extraInstances: readonly ExtraWindowInstance[] = [],
+  extraInstances: readonly Pick<ExtraWindowInstance, "id" | "windowKindId">[] = [],
   requestedWindowId?: string,
 ): ActionInvocation {
   const instances = sessionWindowInstances(session.app, extraInstances);
@@ -997,7 +1024,7 @@ function windowActionInvocation(
 }
 
 /** 🧩️ Serializes the exact action invocation used by the retained actor and ordinary plugin routes. */
-function encodeWindowActionInvocation(session: ActiveSession, action: ActionDescriptor, extraInstances: readonly ExtraWindowInstance[] = [], requestedWindowId?: string): string {
+function encodeWindowActionInvocation(session: ActiveSession, action: ActionDescriptor, extraInstances: readonly Pick<ExtraWindowInstance, "id" | "windowKindId">[] = [], requestedWindowId?: string): string {
   return JSON.stringify(windowActionInvocation(session, action, extraInstances, requestedWindowId));
 }
 
@@ -1259,11 +1286,6 @@ export interface FrameworkOsShellProps {
    * otherwise all auto-play their onboarding at once the moment they boot. Defaults to `false` (existing
    * single-shell-per-page behavior unchanged). */
   readonly suppressAutoIntroduction?: boolean;
-  /** 🧵️ The actor runtime this shell watches in its `os.task-manager` window: row source
-   * (`ActivationRegistry.metricsBus`'s `os.runtime.metrics`) and the target of its suspend/resume/
-   * cancel row actions. Optional because a host may legitimately run no kernel — the window then says
-   * so instead of showing an empty table (ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END`, U1). */
-  readonly activationRegistry?: ActivationRegistry | null;
 }
 
 //#region 🔖️Identity
@@ -2031,6 +2053,9 @@ export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
 }
 //#endregion 🔖️BuiltNodeStoreCache
 
+/** ⌨️ How many animation frames an opened program's active window has to mount before it is no longer offered focus. */
+const SPAWNED_FOCUS_FRAME_BUDGET = 240;
+
 function FrameworkOsShellInner({
   pluginFilter,
   plugins,
@@ -2041,7 +2066,6 @@ function FrameworkOsShellInner({
   defaults: defaultsProp,
   brand,
   suppressAutoIntroduction = false,
-  activationRegistry,
 }: {
   readonly pluginFilter?: string;
   readonly plugins: readonly PluginRegistryEntry[];
@@ -2052,7 +2076,6 @@ function FrameworkOsShellInner({
   readonly defaults?: FrameworkOsDefaults;
   readonly brand?: ShellBrand;
   readonly suppressAutoIntroduction?: boolean;
-  readonly activationRegistry?: ActivationRegistry | null;
 }) {
   const scope = useShellScope();
   const shellContextMenuTitleLabel = useLabel("ui.surfaceContextMenu.workspace");
@@ -2084,6 +2107,9 @@ function FrameworkOsShellInner({
   const lastDispatchedExampleIdRef = useRef("");
   const localHistoryOrderRef = useRef(0);
   const { loadedPlugins, pluginStatusById, pluginSupervisorById, session, error, sessionFault, instanceFault } = shellState.pluginRuntime;
+  /** 🔌️ The device's own programs ({@link localProgramsV1}): hub documents' catalog-resolved programs run beside them and
+   * never enter routing, the program launcher, contributions or the dialect index. */
+  const localPrograms = useMemo(() => localProgramsV1(loadedPlugins), [loadedPlugins]);
   // 🌐️ Read with the other render-time `shellState` slice above the memo block below: `spacePrograms`'s dependency
   // array reads `uiLocale`/`uiTerminology` during this render, and a `const` declared after it is still in its
   // temporal dead zone there — the shell then throws `Cannot access 'uiLocale' before initialization` on first paint.
@@ -2096,7 +2122,6 @@ function FrameworkOsShellInner({
   // moves the scope's own i18n instance and `documentElement.lang`, and the two ports must move
   // together (`syncShellLabelLocale`'s own doc). Guarded so an unchanged locale costs one compare.
   if (shellLabelLocale() !== uiLocale) syncShellLabelLocale(uiLocale);
-  const boardSessionFactory = useMemo(() => resolveAppSurfaceSessionFactory(surfaceSessionFactories ?? [], session ? { pluginId: session.pluginId, appId: session.app.id, instanceId: session.instanceId } : null), [surfaceSessionFactories, session?.pluginId, session?.app.id, session?.instanceId]);
   /** 🧾️ Applies one `HistoryPatch` to the projection of the program that produced it. `owner` is that
    * program — the dispatch's target session, the completion's spawned instance, the snapshot's
    * instance — and defaults to the live session for the shell's own lanes. */
@@ -2225,7 +2250,7 @@ function FrameworkOsShellInner({
   const hostCatalogueTabId = hostApp ? requiredHostPanelLeafId(hostApp) : undefined;
   const spacePrograms = useMemo<readonly SpaceProgramEntry[]>(
     () =>
-      loadedPlugins.flatMap((entry) =>
+      localPrograms.flatMap((entry) =>
         entry.manifest.apps.map((app) => ({
           pluginId: entry.handle.pluginId,
           workflowStepId: app.id,
@@ -2235,7 +2260,7 @@ function FrameworkOsShellInner({
           yields: "",
         })),
       ),
-    [loadedPlugins, uiLocale, uiTerminology],
+    [localPrograms, uiLocale, uiTerminology],
   );
   useEffect(() => {
     if (!hostAppsResolution.error) return;
@@ -2450,7 +2475,8 @@ function FrameworkOsShellInner({
           treeWindowSchedulerRef.current?.settled(bodyKey);
           return;
         }
-        void refresh(live, { kind: "partial", panelBodies: [bodyKey] })
+        const windowBody = live.app.windowKinds.some((kind) => kind.bodyKey === bodyKey);
+        void refresh(live, windowBody ? { kind: "partial", windowBodies: [bodyKey] } : { kind: "partial", panelBodies: [bodyKey] })
           .catch((error) => console.error("[os-shell] tree window refresh failed", error))
           .finally(() => treeWindowSchedulerRef.current?.settled(bodyKey));
       },
@@ -2466,6 +2492,25 @@ function FrameworkOsShellInner({
       reportWindows: (bodyKey, requests, viewportRows) => treeWindowSchedulerRef.current!.reportWindows(bodyKey, requests, viewportRows),
     }),
     [],
+  );
+  /** 🪟️ The streaming channel of one WINDOW body — the same host-owned windows and the same scheduler the
+   * panel bodies speak, addressed by the window kind's `bodyKey`, so a windowed table (or tree) in a window
+   * streams its rows exactly like a panel tree does. One stable value per body key. */
+  const windowTreeContextsRef = useRef(new Map<string, TreeWindowContextValue>());
+  const windowTreeContext = useCallback(
+    (bodyKey: string): TreeWindowContextValue => {
+      const known = windowTreeContextsRef.current.get(bodyKey);
+      if (known) return known;
+      const created: TreeWindowContextValue = {
+        bodyKey,
+        openStates: {},
+        setOpen: (nodeKey, open) => treeWindowHost.setOpen(bodyKey, nodeKey, open),
+        reportWindows: (requests, viewportRows) => treeWindowHost.reportWindows(bodyKey, requests, viewportRows),
+      };
+      windowTreeContextsRef.current.set(bodyKey, created);
+      return created;
+    },
+    [treeWindowHost],
   );
   //#endregion 🪟️TreeWindows
   /** 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-A — diagnostic + defensive
@@ -2575,6 +2620,9 @@ function FrameworkOsShellInner({
   /** 🪪️ True once a hub env is configured but the hub could not be reached (§C3 "keep the last
    * persisted identity, show an offline chip... never blocks the UI thread"). */
   const [identityOffline, setIdentityOffline] = useState(false);
+  /** 🚫️ The hub pronounced the remembered session over (refused or expired), or the human cancelled its
+   * verification: the badge then offers sign-in instead of reading a shortage it would never recover from. */
+  const [hubSessionRefused, setHubSessionRefused] = useState(false);
   const [verifiedSessionAuthority, setVerifiedSessionAuthority] = useState<DirectorySessionAuthorityV1 | null>(null);
   const verifiedSessionAuthorityRef = useRef<DirectorySessionAuthorityV1 | null>(null);
   const sessionRefreshRef = useRef<DirectorySessionRefreshV1 | null>(null);
@@ -2601,8 +2649,11 @@ function FrameworkOsShellInner({
     writeHubSessionCapabilityV1(hubSessionStorageV1(), next);
     setHubSessionCapability(next);
   }, []);
+  const localSessionClaimedAtRef = useRef(0);
   useEffect(() => {
-    if (!hubEnv || hubSessionCapability !== null) return;
+    if (!hubEnv || (hubSessionCapability !== null && !hubSessionRefused)) return;
+    if (Date.now() - localSessionClaimedAtRef.current < LOCAL_SESSION_RECLAIM_INTERVAL_MS) return;
+    localSessionClaimedAtRef.current = Date.now();
     let cancelled = false;
     void (async () => {
       try {
@@ -2618,7 +2669,7 @@ function FrameworkOsShellInner({
     return () => {
       cancelled = true;
     };
-  }, [hubEnv, hubSessionCapability, rememberHubSessionCapability]);
+  }, [hubEnv, hubSessionCapability, hubSessionRefused, rememberHubSessionCapability]);
 
   /** 🎫️ The mount-time capability the hub port is seeded with — a ref, because the port holds the
    * live token in its own closure and must never be rebuilt underneath an in-flight request. */
@@ -2647,7 +2698,7 @@ function FrameworkOsShellInner({
     });
     return promise;
   }, []);
-  /** 📇️ Set by the `foldDirectoryEvents` region below once it's defined — `ensureBackboneWorker`'s
+  /** 📇️ Set by the `DirectoryLane` region below once it's defined — `ensureBackboneWorker`'s
    * `onmessage` (created once, `useCallback([])`) reads this indirection rather than the callback
    * itself so a fold that depends on `session`/`hostConfig`/`onActionRef` never goes stale. */
   const dispatchDirectoryEventsRef = useRef<(events: readonly DirectoryEvent[]) => void>(() => {});
@@ -2811,6 +2862,15 @@ function FrameworkOsShellInner({
           : async (file) => {
               downloadMediaExport(file.fileName, file.mediaType, file.contents);
             },
+        installAgentCredential: async (request, signal) => {
+          const response = await fetch(AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(request), signal, cache: "no-store" });
+          if (response.status === 404 || response.status === 405) throw new AgentCredentialInstallUnavailableV1();
+          if (!response.ok) throw new Error(`directory.delegations.install-refused.${response.status}`);
+          return parseAgentCredentialInstallReceiptV1(await response.text());
+        },
+        uninstallAgentCredential: async (delegationId) => {
+          await fetch(`${AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1}/${encodeURIComponent(delegationId)}`, { method: "DELETE", cache: "no-store" });
+        },
       }),
     [rememberHubSessionCapability, restoredHubSessionCapability],
   );
@@ -2982,7 +3042,7 @@ function FrameworkOsShellInner({
     if (origin === null || !isCurrentDialogOrigin(origin) || !active?.app.dialogs?.some((entry) => entry.id === dialogId)) return null;
     return { openingId: ++dialogOpeningRef.current, dialogId, origin, ...(seedArgs === undefined ? {} : { seedArgs }) };
   }, [isCurrentDialogOrigin]);
-  type RetainedBrowserActorUiV1 = { readonly clientInstanceId: string; readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly scope: DocumentScope; readonly sessionInstanceId: number; readonly windowKindId: string; readonly store: UiDocumentStore; readonly identity: BrowserActorUiMountedV1 | null; readonly actions: BrowserActorActionMailboxV1 };
+  type RetainedBrowserActorUiV1 = { readonly clientInstanceId: string; readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly scope: DocumentScope; readonly sessionInstanceId: number; readonly windowKindId: string; readonly store: UiDocumentStore; readonly panels: Map<string, UiDocumentStore>; readonly identity: BrowserActorUiMountedV1 | null; readonly actions: BrowserActorActionMailboxV1 };
   const browserActorUiByRuntimeKeyRef = useRef(new Map<string, RetainedBrowserActorUiV1>());
   const [browserActorUiVersion, setBrowserActorUiVersion] = useState(0);
   const retireBrowserActorUi = useCallback((runtimeKey: string, reason: string) => {
@@ -3014,8 +3074,15 @@ function FrameworkOsShellInner({
    * requested UI surfaces"; the rejection escaped, the tree froze, and the human's subsequent
    * successful hub sign-in could no longer re-establish anything — every recovery path in this file was
    * intact and simply never re-entered. A guest refusal is a WINDOW FAULT: it is shown, and the shell
-   * keeps running so the next identity/session change can recover from it. */
+   * keeps running so the next identity/session change can recover from it.
+   *
+   * A refresh that lands on a RETIRED instance ({@link isPluginInstanceRetiredV1}) is not a fault: the
+   * window it would have refreshed is already gone, exactly the drop `dropForRetiredInstance` makes.
+   * Reporting it raised the shell's boot error beacon for ~1 s on every `de` boot of the `s` host (a
+   * locale-driven re-open retires the Home instance while its refresh is in flight; measured
+   * `wp-g10/generated/boot-probe-de-1.txt`). */
   const reportRefreshFault = useCallback((pluginId: string, error: unknown): void => {
+    if (isPluginInstanceRetiredV1(error)) return;
     const fault = windowFaultFromError(error, pluginSupervisorByIdRef.current[pluginId]);
     dispatch({ type: "SET_ERROR", value: fault.message, fault });
   }, []);
@@ -3048,6 +3115,31 @@ function FrameworkOsShellInner({
    * `pluginStatusById`'s own `"installing"`), and an abort must reach the exact load that is running
    * rather than whatever a render pass last captured. */
   const pluginInstallAbortsRef = useRef<Map<string, AbortController>>(new Map());
+  /** 📈️ Bytes every downloading install has verified so far — what the install band shows beside its
+   * cancel. Chunk reports land in a ref and reach state at most every 120 ms, so a 60 MB module does
+   * not re-render the shell once per 64 KiB chunk; a finished install clears its row at once. */
+  const [pluginInstallProgressById, setPluginInstallProgressById] = useState<Readonly<Record<string, PluginModuleAcquisitionProgress>>>({});
+  const pluginInstallProgressRef = useRef<Map<string, PluginModuleAcquisitionProgress>>(new Map());
+  const pluginInstallProgressFlushRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const notePluginInstallProgress = useCallback((pluginId: string, progress: PluginModuleAcquisitionProgress | null) => {
+    if (progress) pluginInstallProgressRef.current.set(pluginId, progress);
+    else if (!pluginInstallProgressRef.current.delete(pluginId)) return;
+    if (progress && pluginInstallProgressFlushRef.current !== null) return;
+    if (pluginInstallProgressFlushRef.current !== null) clearTimeout(pluginInstallProgressFlushRef.current);
+    pluginInstallProgressFlushRef.current = setTimeout(
+      () => {
+        pluginInstallProgressFlushRef.current = null;
+        setPluginInstallProgressById(Object.fromEntries(pluginInstallProgressRef.current));
+      },
+      progress ? 120 : 0,
+    );
+  }, []);
+  useEffect(
+    () => () => {
+      if (pluginInstallProgressFlushRef.current !== null) clearTimeout(pluginInstallProgressFlushRef.current);
+    },
+    [],
+  );
 
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
@@ -3067,7 +3159,6 @@ function FrameworkOsShellInner({
         const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId: message.scope.spaceId, documentId: message.scope.documentId });
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         const expectedSurfaceId = entry?.scope !== undefined && entry.session.app.dialect ? canonicalSurfaceId(entry.session.app.dialect, entry.session.app.role) : null;
-        const windowKind = entry?.session.app.windowKinds.find((candidate) => candidate.id === message.patch.surface);
         // 🩻️ An offer this shell cannot apply is REFUSED by name, never dropped. Dropping it left the
         // worker's 15 s patch-result deadline to close the child with no reason anywhere, so a guest
         // whose surface the session disagreed about looked exactly like a guest that had stopped.
@@ -3075,38 +3166,32 @@ function FrameworkOsShellInner({
         // left to answer for.
         if (entry === undefined || entry.clientInstanceId !== message.clientInstanceId) return;
         const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+        const windowKind = entry.session.app.windowKinds.find((candidate) => (retained === undefined ? message.patches.some((patch) => patch.surface === candidate.id) : candidate.id === retained.windowKindId));
         const refusal =
           entry.scope === undefined || entry.scope.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId
             ? "scope-mismatch"
             : expectedSurfaceId !== message.verifiedSurfaceId
               ? `verified-surface-mismatch: session ${expectedSurfaceId ?? "<none>"} offer ${message.verifiedSurfaceId}`
               : windowKind === undefined
-                ? `unknown-window-kind: ${message.patch.surface}`
+                ? `unknown-window-kind: ${message.patches.map((patch) => patch.surface).join(",")}`
                 : message.instanceId !== 0
                   ? `instance-mismatch: ${message.instanceId}`
-                  : retained !== undefined && (retained.clientInstanceId !== message.clientInstanceId || retained.activationGeneration !== message.activationGeneration || retained.verifiedSurfaceId !== message.verifiedSurfaceId || retained.sessionInstanceId !== entry.session.instanceId || retained.windowKindId !== windowKind.id)
+                  : retained !== undefined && (retained.clientInstanceId !== message.clientInstanceId || retained.activationGeneration !== message.activationGeneration || retained.verifiedSurfaceId !== message.verifiedSurfaceId || retained.sessionInstanceId !== entry.session.instanceId)
                     ? "retained-owner-mismatch"
-                    : retained === undefined && message.patch.baseRevision !== 0
-                      ? `base-revision-mismatch: ${message.patch.baseRevision}`
-                      : null;
+                    : null;
+        const answer = (verdicts: readonly { readonly surface: string; readonly outcome: "acknowledged" | "rejected"; readonly revision: number; readonly reason?: string }[]) =>
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, verdicts }) });
         if (refusal !== null || windowKind === undefined) {
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "rejected", revision: retained?.store.getRevisionSnapshot() ?? 0, reason: refusal ?? "unknown-window-kind" }) });
+          answer(message.patches.map((patch) => ({ surface: patch.surface, outcome: "rejected" as const, revision: 0, reason: refusal ?? "unknown-window-kind" })));
           return;
         }
-        const store = retained?.store ?? new UiDocumentStore(windowKind.id);
-        const applied = store.applyPatch(message.patch);
-        const revision = store.getRevisionSnapshot();
-        if (applied.ok) {
-          if (retained === undefined) {
-            const actions = new BrowserActorActionMailboxV1((request) => worker.postMessage({ wire: encodeBackboneWorkerRequest({ ...request, clientInstanceId: entry.clientInstanceId }) }));
-            browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, scope: { ...message.scope }, sessionInstanceId: entry.session.instanceId, windowKindId: windowKind.id, store, identity: null, actions });
-            setBrowserActorUiVersion((current) => current + 1);
-          }
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "acknowledged", revision }) });
-        } else {
-          const reason = applied.rejection.type;
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "rejected", revision, reason }) });
+        const applied = applyBrowserActorUiPatchesV1(message.patches, windowKind.id, browserActorPanelKeysV1(entry.session.app), retained === undefined ? null : { window: retained.store, panels: retained.panels });
+        if (applied.stores !== null && retained === undefined) {
+          const actions = new BrowserActorActionMailboxV1((request) => worker.postMessage({ wire: encodeBackboneWorkerRequest({ ...request, clientInstanceId: entry.clientInstanceId }) }));
+          browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, scope: { ...message.scope }, sessionInstanceId: entry.session.instanceId, windowKindId: windowKind.id, store: applied.stores.window, panels: applied.stores.panels, identity: null, actions });
         }
+        if (applied.stores !== null && (retained === undefined || applied.panelsAdded)) setBrowserActorUiVersion((current) => current + 1);
+        answer(applied.verdicts);
         return;
       }
       if (message.kind === "browser-actor-ui-mounted") {
@@ -3220,6 +3305,14 @@ function FrameworkOsShellInner({
         setSpaceArtifactCreationCatalog(null);
         setSpaceArtifactCreationCatalogUi(loading);
         worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
+        return;
+      }
+      if (message.kind === "document-check-in-status") {
+        const owner = documentCheckInOwnersRef.current.get(message.status.requestId);
+        const entry = owner === undefined ? undefined : openDocumentSessionsRef.current.get(owner.runtimeKey);
+        if (owner === undefined || entry === undefined || entry.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId) return;
+        if (isTerminalDocumentCheckInPhaseV1(message.status.phase)) documentCheckInOwnersRef.current.delete(message.status.requestId);
+        setDocumentCheckInUi((current) => ({ ...current, [owner.runtimeKey]: { requestId: message.status.requestId, scope: message.scope, status: message.status } }));
         return;
       }
       if (message.kind === "space-artifact-creation-status") {
@@ -3352,8 +3445,9 @@ function FrameworkOsShellInner({
         // broadcast finding its way back to the same socket — correct only if that subscription is
         // guaranteed already-open at command-issue time, which a fresh page load racing identity
         // bootstrap does not guarantee. The live broadcast path (`directory-message` above) still
-        // folds the same events for every OTHER client; a duplicate here is harmless —
-        // `FoldDirectoryEvent`'s fold is idempotent per event id (config lane, "last envelope wins").
+        // relays the same events for every OTHER client; a duplicate here is harmless — the Space
+        // index fold re-derives the same config snapshot from the same batch. Home is never folded:
+        // its sealed page lane wakes on the broadcast instead (`dispatchDirectoryEventBatch`).
         retainDirectoryCommandResult(directoryCommandResultsRef.current, message.requestId, { kind: "receipt", receipt: message.receipt });
         if (message.receipt.outcome === "accepted" && message.receipt.events.length > 0) dispatchDirectoryEventsRef.current(message.receipt.events);
         return;
@@ -3471,6 +3565,11 @@ function FrameworkOsShellInner({
             }));
           }
         })();
+      } else if (event.kind === "commandOutcome") {
+        // 🌐️ A hub `Ack` that refused or transformed this human's batch: the worker already rolled the local edit back
+        // (or re-applied the transformed envelope), so the only honest thing left is to SAY so — silent loss otherwise.
+        if (event.outcome.kind === "rejected") showTransientNoticeRef.current(`${shellLabel("ui.conflict.hubRejected")}: ${event.outcome.reason}`, "warning", "sync.command.rejected");
+        else if (event.outcome.kind === "transformed") showTransientNoticeRef.current(shellLabel("ui.conflict.hubTransformed"), "info", "sync.command.transformed");
       } else if (event.kind === "conflict") {
         // ⚖️ Investigated for contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
         // CLASS-CONFLICTS` §C6/§C9 (lane L1): this is `🏪️store/🔄️sync/🦀️.rs`'s hub-relay
@@ -3624,6 +3723,7 @@ function FrameworkOsShellInner({
     verifiedSessionAuthorityRef.current = null;
     setVerifiedSessionAuthority(null);
     setIdentityOffline(true);
+    setHubSessionRefused(true);
     shellActorIdRef.current = shellActorId(shellSessionIdRef.current, null);
     setPluginRuntimeActor(shellActorIdRef.current);
     const clientInstanceId = identityClientInstanceIdRef.current;
@@ -3640,6 +3740,7 @@ function FrameworkOsShellInner({
     // and the hub badge offers sign-in. Only a signed-in human has hub authority to bootstrap.
     const capability = hubSessionCapability;
     if (!hubEnv || capability === null) return;
+    setHubSessionRefused(false);
     let cancelled = false;
     const identityWaitAbort = new AbortController();
     identityBootstrapAbortRef.current = identityWaitAbort;
@@ -3700,6 +3801,7 @@ function FrameworkOsShellInner({
           verifiedSessionAuthorityRef.current = authority;
           if (authorityChanged) setVerifiedSessionAuthority(authority);
           setIdentityOffline(false);
+          setHubSessionRefused(false);
           const resolved: Identity = { userId: authority.userId, email: authority.email, displayName: authority.displayName, hubBaseUrl: hubEnv.hubBaseUrl, issuedAtMs: cachedIdentity?.userId === authority.userId ? cachedIdentity.issuedAtMs : Date.now() };
           shellActorIdRef.current = shellActorId(shellSessionIdRef.current, resolved);
           setPluginRuntimeActor(shellActorIdRef.current);
@@ -3718,6 +3820,7 @@ function FrameworkOsShellInner({
           verifiedSessionAuthorityRef.current = null;
           setVerifiedSessionAuthority(null);
           setIdentityOffline(true);
+          setHubSessionRefused(true);
           shellActorIdRef.current = shellActorId(shellSessionIdRef.current, null);
           setPluginRuntimeActor(shellActorIdRef.current);
         },
@@ -3831,17 +3934,36 @@ function FrameworkOsShellInner({
   const shellPluginCanvasStatus = useMemo((): UiStatus | undefined => {
     return resolvePluginCanvasStatus(!!session, error, primaryPluginId ? pluginStatusById[primaryPluginId] : undefined, primaryPluginId ? pluginSupervisorById[primaryPluginId] : undefined);
   }, [session, error, primaryPluginId, pluginStatusById, pluginSupervisorById]);
+  /** 🌎️ A shell with a hub installs a module this device does not serve from the hub's trusted catalog into its
+   * persisted plugin module store ({@link createHubPluginSource}); `null` without a hub. Its notices reach the person
+   * through the shell's own transient notice, in their language. */
+  const hubPluginSource: HubPluginSourceV1 | null = useMemo(
+    () =>
+      hubEnv && typeof navigator !== "undefined" && "serviceWorker" in navigator && typeof caches !== "undefined" && "locks" in navigator
+        ? createHubPluginSource({
+            hubMount: HUB_SAME_ORIGIN_MOUNT,
+            storeWorkerUrl: pluginModuleStoreWorkerUrl,
+            origin: globalThis.location.origin,
+            onNotice: (notice) => showTransientNoticeRef.current(pluginModuleStoreNoticeTextV1(notice, uiLocaleRef.current), notice.kind === "quota-exceeded" ? "error" : "info", `plugin-module-store.${notice.kind}`),
+            caches,
+            locks: navigator.locks,
+            serviceWorker: navigator.serviceWorker,
+            persist: () => navigator.storage?.persist?.() ?? Promise.resolve(false),
+          })
+        : null,
+    [hubEnv],
+  );
   /** 🔌️ Dev hosts stream availability over SSE `/watch`; shipped static bundles replay one immediate
    * `snapshot` per tree ({@link createBundledPluginSource}) so dependency contributors install without
-   * Vite middleware. */
+   * Vite middleware. The modules staged beside the shell answer first; the hub source answers what this
+   * device does not serve — local-first, and only when something opens it: the hub source announces nothing. */
   const extensionRegistry = useMemo(() => extensionRegistryFromCatalog(PLUGIN_CATALOG), []);
-  const pluginSource: PluginSource = useMemo(
-    () =>
-      import.meta.env.PROD
-        ? multiplexPluginSources(createBundledPluginSource(registry), createBundledPluginSource(extensionRegistry))
-        : multiplexPluginSources(createDevPluginSource(registry, `${MODULE_PLUGIN_ROUTE}/watch`), createExtensionSource(PLUGIN_CATALOG, `${MODULE_EXTENSION_ROUTE}/watch`)),
-    [extensionRegistry, registry],
-  );
+  const pluginSource: PluginSource = useMemo(() => {
+    const local = import.meta.env.PROD
+      ? [createBundledPluginSource(registry), createBundledPluginSource(extensionRegistry)]
+      : [createDevPluginSource(registry, `${MODULE_PLUGIN_ROUTE}/watch`), createExtensionSource(PLUGIN_CATALOG, `${MODULE_EXTENSION_ROUTE}/watch`)];
+    return multiplexPluginSources(...local, ...(hubPluginSource ? [hubPluginSource] : []));
+  }, [extensionRegistry, registry, hubPluginSource]);
 
   /** 🔌️ Recreates the primary session instance for `handle` — the exact `hostConfig`/non-studio
    * app-resolution logic the boot effect used to run once inline, now shared with `reloadPlugin` so a
@@ -3972,14 +4094,22 @@ function FrameworkOsShellInner({
   /** 🔌️ Installs a registry entry that isn't loaded yet: acquires its module (worker-backed, refcounted
    * — see `acquirePluginModule`), upserts it into `loadedPlugins`, and — if this is the primary plugin
    * and no session exists yet — establishes the session. Shared by the boot effect (primary plugin
-   * only) and the `PluginSource` subscription effect (every other plugin, as its build lands). */
+   * only) and the `PluginSource` subscription effect (every other plugin, as its build lands).
+   * `loadedPluginsRef` advances with the upsert, not a render later, so a caller that awaited this install
+   * (an opening that first installs its kind's owner) routes over the set that already holds it. */
   const installPlugin = useCallback(
     async (pluginId: string, rebuiltAt?: number): Promise<PluginInstallOutcome> => {
       if (pluginOpInFlightRef.current.has(pluginId)) return "in-flight";
       if (loadedPluginsRef.current.some((entry) => entry.handle.pluginId === pluginId)) return "already-loaded";
-      const entry = registry.find((candidate) => candidate.pluginId === pluginId);
-      if (!entry) return "missing-registry";
       pluginOpInFlightRef.current.add(pluginId);
+      // 👷️ The store's service worker must control the page before the first plugin worker exists, or no plugin worker
+      // could ever load a stored module. A hub whose store cannot start leaves every local install untouched.
+      await hubPluginSource?.ready().catch((error: unknown) => console.warn("plugin module store unavailable", error));
+      const entry = registry.find((candidate) => candidate.pluginId === pluginId) ?? (await pluginSource.list().catch(() => [])).find((candidate) => candidate.pluginId === pluginId);
+      if (!entry) {
+        pluginOpInFlightRef.current.delete(pluginId);
+        return "missing-registry";
+      }
       dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "installing" });
       // 🛑️ One abort per install, registered while it runs so the install band's cancel control has
       // something to fire. `"installing"` is already the phase the band reads; this is the half that
@@ -3987,15 +4117,25 @@ function FrameworkOsShellInner({
       const abort = new AbortController();
       pluginInstallAbortsRef.current.set(pluginId, abort);
       try {
-        const moduleUrl = pluginSource.moduleUrl(pluginId, rebuiltAt);
-        const handle = await loadPluginModuleResilient(pluginId, moduleUrl, abort.signal);
+        let acquired: PluginModuleAcquired;
+        try {
+          acquired = await pluginSource.acquireModule(pluginId, rebuiltAt, { signal: abort.signal, onProgress: (progress) => notePluginInstallProgress(pluginId, progress) });
+        } catch (error) {
+          if (abort.signal.aborted) console.debug(`plugin install cancelled ${pluginId}`);
+          else console.error("program module unavailable", pluginId, error);
+          dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "failed" });
+          dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
+          return "failed";
+        }
+        const handle = await loadPluginModuleResilient(pluginId, acquired.moduleUrl, abort.signal);
         if (!handle) {
           dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "failed" });
           dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
           return "failed";
         }
-        pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
-        recordPluginArtifactRebuiltAt(pluginId, rebuiltAt);
+        pluginModuleUrlByIdRef.current.set(pluginId, acquired.moduleUrl);
+        recordPluginArtifactRebuiltAt(pluginId, acquired.rebuiltAt);
+        loadedPluginsRef.current = upsertLoadedProgramV1(loadedPluginsRef.current, { handle, manifest: handle.manifest });
         dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle, manifest: handle.manifest } });
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
         dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "loaded" });
@@ -4015,15 +4155,17 @@ function FrameworkOsShellInner({
         return "loaded";
       } finally {
         pluginOpInFlightRef.current.delete(pluginId);
+        notePluginInstallProgress(pluginId, null);
         if (pluginInstallAbortsRef.current.get(pluginId) === abort) pluginInstallAbortsRef.current.delete(pluginId);
       }
     },
-    [registry, pluginSource, primaryPluginId, establishPrimaryWithShardRetry, appId, recordPluginArtifactRebuiltAt],
+    [registry, pluginSource, hubPluginSource, primaryPluginId, establishPrimaryWithShardRetry, appId, recordPluginArtifactRebuiltAt, notePluginInstallProgress],
   );
 
   /** 🎬️ Every plugin whose install is running right now, from the SAME `"installing"` status the
    * install path already dispatches — no second notion of "an install is happening" to keep in sync. */
   const installingPluginIds = useMemo(() => Object.keys(pluginStatusById).filter((pluginId) => pluginStatusById[pluginId] === "installing").sort(), [pluginStatusById]);
+  const pluginInstallProgress = useMemo(() => pluginInstallProgressTotalV1(pluginInstallProgressById, installingPluginIds), [pluginInstallProgressById, installingPluginIds]);
 
   /** 🛑️ Stops every install currently in flight — what the install band's one cancel control does.
    * Each aborted load settles as a refusal through `loadPluginModuleResilient`'s own `null`, so the
@@ -4052,8 +4194,8 @@ function FrameworkOsShellInner({
       let committed = false;
       let ownsSession = false;
       try {
-        const moduleUrl = pluginSource.moduleUrl(pluginId, rebuiltAt);
-        newHandle = await loadPluginModuleResilient(pluginId, moduleUrl);
+        const acquired = await pluginSource.acquireModule(pluginId, rebuiltAt, { signal: new AbortController().signal });
+        newHandle = await loadPluginModuleResilient(pluginId, acquired.moduleUrl);
         if (!newHandle) throw new Error(`program ${pluginId} failed to reload`);
         const activeSession = sessionRef.current;
         ownsSession = activeSession?.pluginId === pluginId;
@@ -4117,8 +4259,8 @@ function FrameworkOsShellInner({
           }
         }
 
-        pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
-        recordPluginArtifactRebuiltAt(pluginId, rebuiltAt);
+        pluginModuleUrlByIdRef.current.set(pluginId, acquired.moduleUrl);
+        recordPluginArtifactRebuiltAt(pluginId, acquired.rebuiltAt);
         dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle: newHandle, manifest: newHandle.manifest } });
         committed = true;
 
@@ -4276,7 +4418,7 @@ function FrameworkOsShellInner({
         if (!guessedId) return;
         extensionId = guessedId;
         try {
-          moduleUrl = pluginSource.moduleUrl(extensionId);
+          moduleUrl = (await pluginSource.acquireModule(extensionId, undefined, { signal: extensionFetchAbortRef.current.signal })).moduleUrl;
         } catch (resolveError) {
           return;
         }
@@ -4490,6 +4632,7 @@ function FrameworkOsShellInner({
       ),
     [session, hostMode, activeSpawnedEntry, activeSpawnedApp],
   );
+  const boardSessionFactory = useMemo(() => resolveAppSurfaceSessionFactory(surfaceSessionFactories ?? [], focusedProgram), [surfaceSessionFactories, focusedProgram?.pluginId, focusedProgram?.appId, focusedProgram?.instanceId]);
   const focusedApp = hostMode && activeSpawnedApp ? activeSpawnedApp : (session?.app ?? null);
   const focusedSpawnedId = focusedProgram?.spawnedId ?? null;
   /** 🧾️ The history the History panel, the undo/redo controls, the uncommitted-edit count and
@@ -4513,7 +4656,7 @@ function FrameworkOsShellInner({
   useEffect(() => {
     const spawned = (spawnedAppsRef.current ?? []).flatMap((entry) => {
       const app = loadedPluginsRef.current.find((candidate) => candidate.handle.pluginId === entry.pluginId)?.manifest.apps.find((candidate) => candidate.id === entry.appId);
-      return app ? [{ id: entry.id, pluginId: entry.pluginId, appId: app.id, instanceId: entry.instanceId, windowIds: spawnedProgramWindowInstancesV1(entry.id, app.windowKinds.map((kind) => ({ id: kind.id, bodyKey: kind.bodyKey }))).map((instance) => instance.id) }] : [];
+      return app ? [{ id: entry.id, pluginId: entry.pluginId, appId: app.id, instanceId: entry.instanceId, windowIds: spawnedProgramWindowInstancesV1(entry.id, app.windowKinds.map((kind) => ({ id: kind.id, bodyKey: kind.bodyKey })), frameworkLayoutDeclaredInstances(app.defaultLayout, app.windowKinds)).map((instance) => instance.id) }] : [];
     });
     const census = spawnedBridgeCensusV1(
       session ? { pluginId: session.pluginId, appId: session.app.id, instanceId: session.instanceId, windowIds: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => instance.id) } : null,
@@ -4540,7 +4683,7 @@ function FrameworkOsShellInner({
       focusedApp === null
         ? []
         : focusedSpawnedId !== null
-          ? spawnedProgramWindowInstancesV1(focusedSpawnedId, focusedApp.windowKinds)
+          ? spawnedProgramWindowInstancesV1(focusedSpawnedId, focusedApp.windowKinds, frameworkLayoutDeclaredInstances(focusedApp.defaultLayout, focusedApp.windowKinds))
           : sessionWindowInstances(focusedApp, extraWindowInstances),
     [focusedApp, focusedSpawnedId, extraWindowInstances],
   );
@@ -5183,7 +5326,7 @@ function FrameworkOsShellInner({
         hostMode,
         session: nextSession,
         targetViewState: resolvedTargetViewState(nextSession),
-        consumedTopics: registry.find((entry) => entry.pluginId === nextSession.pluginId)?.consumes ?? [],
+        consumedTopics: registry.find((entry) => entry.pluginId === (loaded.find((program) => program.handle.pluginId === nextSession.pluginId)?.catalogModule?.pluginId ?? nextSession.pluginId))?.consumes ?? [],
         // 🔁️ The install's own re-arm (`flowEvalTick` per attached preview) is dispatched on a fresh
         // microtask against the LIVE session, never inside the guest crossing that produced it.
         dispatchDeferredEffects: (deferredPluginId, deferredInstanceId, deferredEffects) =>
@@ -5255,7 +5398,7 @@ function FrameworkOsShellInner({
       // its own owned unit (see the `🧩️ContributionsPush` region above). A refresh superseded mid
       // document-read therefore no longer abandons it, and a later refresh joins the same run rather
       // than starting a second one (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-      const contributionsInstalled = publishContributions(nextSession, loadedPlugins);
+      const contributionsInstalled = publishContributions(nextSession, sessionProgramsV1(loadedPlugins, nextSession.pluginId));
       const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
       const isSessionSwitch = layoutSeedKeyRef.current !== layoutSeedKey;
       // 🐢️ A session switch invalidates every cached hash from the previous instance — force a full
@@ -5293,7 +5436,7 @@ function FrameworkOsShellInner({
       // `PluginHost::load_plugin`/`hot_swap_plugin` time) lives in a separate linear memory from the
       // space app's own statically-linked copy of the same os-core crate, so nothing crosses the wasm
       // boundary unless this shell pushes it explicitly.
-      const appRegistrationsJson = JSON.stringify(loadedPlugins.flatMap((entry) => (entry.manifest.apps ?? []).map((app) => ({ pluginId: entry.handle.pluginId, app }))));
+      const appRegistrationsJson = JSON.stringify(localProgramsV1(loadedPlugins).flatMap((entry) => (entry.manifest.apps ?? []).map((app) => ({ pluginId: entry.handle.pluginId, app }))));
       // 🧩️ Contributions are deliberately absent here: `publishContributions` (the unit started above)
       // installs them into the guest through the paged `setContributions` run, which the guest folds
       // into its own registry. Riding the aggregated closure inside this view state put 248 635
@@ -5626,7 +5769,7 @@ function FrameworkOsShellInner({
       // window instance ids (its window kind ids — it has exactly one instance), while the shell keys
       // them under `${spawnedId}::` so two spawned instances of one app cannot collide
       // (`🪟️spawned-program`).
-      const windowKinds = app.windowKinds.map((kind) => ({ id: kind.id, bodyKey: kind.bodyKey }));
+      const windowKinds = spawnedGuestWindowInstancesV1(app.windowKinds, frameworkLayoutDeclaredInstances(app.defaultLayout, app.windowKinds));
       const guestActiveWindowId = guestWindowIdV1(activeWindowIdRef.current, spawnedIdsRef.current) ?? resolveCanvasBodyKey(app);
       // 🧩️ A spawned instance reads contributions from the registry the paged `setContributions` run
       // installed, exactly like a primary session — the view context carries none.
@@ -5636,7 +5779,7 @@ function FrameworkOsShellInner({
           locale: uiLocale,
           terminology: uiTerminology,
           windowId: guestActiveWindowId,
-          windowInstances: windowKinds.map((kind) => ({ id: kind.id, windowKindId: kind.id })),
+          windowInstances: windowKinds.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
           activeUtilityByWindowId: guestActiveUtilityByWindowIdV1(activeUtilityByWindowIdRef.current, spawned.id, spawnedIdsRef.current),
         },
         spawnedWindowInstanceIdV1(spawned.id, guestActiveWindowId),
@@ -5650,7 +5793,7 @@ function FrameworkOsShellInner({
         if (generation !== spawnedRefreshGenerationRef.current) return;
         applyUiRefreshResponseToCache(cache, response);
       }
-      const uiByWindowId = Object.fromEntries(windowKinds.map((kind) => [spawnedWindowInstanceIdV1(spawned.id, kind.id), (cache.get(`window:${kind.bodyKey}`)?.value as BuiltNode | undefined) ?? pendingWindowUiNode()] as const));
+      const uiByWindowId = Object.fromEntries(windowKinds.map((kind) => [spawnedWindowInstanceIdV1(spawned.id, kind.id), (cache.get(`window:${kind.id}`)?.value as BuiltNode | undefined) ?? pendingWindowUiNode()] as const));
       const spawnedKeyed = <T,>(byGuestWindowId: Readonly<Record<string, T>>): Readonly<Record<string, T>> =>
         Object.fromEntries(Object.entries(byGuestWindowId).map(([windowId, value]) => [spawnedWindowInstanceIdV1(spawned.id, windowId), value] as const));
       const dynamicEngagements = spawnedKeyed((cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {});
@@ -5756,7 +5899,7 @@ function FrameworkOsShellInner({
       // 🪟️ Leaving the session's own canvas — remember it before the spawned seed replaces it.
       if (sessionLayoutBeforeSpawnRef.current === null) sessionLayoutBeforeSpawnRef.current = { layout: shellLayout ?? null, activeWindowId: activeWindowIdRef.current };
       const seed = resolveFrameworkLayoutSeed(focusedApp.defaultLayout, withLocalizedWindowKindLabels(focusedApp.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
-      const modeLayout = renameLayoutWindowIdsV1(seed.modeLayout as WindowLayoutNode & { kind: "window" | "stack" | "row" | "column" }, spawnedLayoutRenameV1(focusedSpawnedId, focusedApp.windowKinds)) as WindowLayoutNode;
+      const modeLayout = renameLayoutWindowIdsV1(seed.modeLayout as WindowLayoutNode & { kind: "window" | "stack" | "row" | "column" }, spawnedLayoutRenameV1(focusedSpawnedId, focusedApp.windowKinds, frameworkLayoutDeclaredInstances(focusedApp.defaultLayout, focusedApp.windowKinds))) as WindowLayoutNode;
       dispatch({ type: "SET_SHELL_LAYOUT", value: modeLayout });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(modeLayout) });
       return;
@@ -5776,6 +5919,26 @@ function FrameworkOsShellInner({
     // and listing the live layout would re-enter it on every drag the user makes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusedProgramKey, focusedSpawnedId, focusedApp, session, appLabelsOverlay, uiTerminology, uiLocale]);
+
+  /** ⌨️ A program the user just opened takes keyboard focus once its active window has mounted — its dock tabpanel,
+   * the same stop a pointer click lands on — but only while nothing else holds focus. Opening a program from the
+   * command palette used to leave focus on `<body>`, so the next Tab restarted at the navbar instead of inside the
+   * program the user asked for (WCAG 2.2 SC 2.4.3, measured inside `s`, ticket 26/09/23 S15). */
+  useEffect(() => {
+    if (focusedSpawnedId === null) return;
+    let frames = 0;
+    let handle = 0;
+    const attempt = (): void => {
+      const holder = document.activeElement;
+      if (holder instanceof HTMLElement && holder !== document.body) return;
+      const windowId = activeWindowIdRef.current;
+      const panel = windowId === null ? null : scope.rootRef.current?.querySelector<HTMLElement>(`[data-slot="window"][id="${CSS.escape(windowId)}"]`)?.closest<HTMLElement>('[role="tabpanel"]');
+      if (panel) panel.focus({ preventScroll: true });
+      else if (++frames < SPAWNED_FOCUS_FRAME_BUDGET) handle = requestAnimationFrame(attempt);
+    };
+    handle = requestAnimationFrame(attempt);
+    return () => cancelAnimationFrame(handle);
+  }, [focusedProgramKey, focusedSpawnedId]);
 
   const updateSpacePanel = useCallback((panelState: SpacePanelState) => {
     dispatch({
@@ -6994,9 +7157,19 @@ function FrameworkOsShellInner({
 
   const spawnProgram = useCallback(
     async (program: SpaceProgramEntry) => {
+      const refuse = (reason: SpawnProgramRefusalReasonV1, ...detail: readonly unknown[]): void => {
+        console.warn(`[os-shell] spawnProgram ${program.pluginId} ${program.appId}: ${spawnProgramRefusalCodeV1(reason)}`, ...detail);
+        showTransientNoticeRef.current(spawnProgramRefusalNoticeTextV1(reason, program.breadcrumb.join(" · "), uiLocaleRef.current), "warning", spawnProgramRefusalCodeV1(reason));
+      };
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
-      if (!pluginEntry || !session) return;
-      const instanceId = await pluginEntry.handle.createApp(program.appId);
+      if (!pluginEntry) return refuse("program-not-installed");
+      if (!session) return refuse("session-not-ready");
+      let instanceId: number;
+      try {
+        instanceId = await pluginEntry.handle.createApp(program.appId);
+      } catch (openError) {
+        return refuse("open-failed", openError);
+      }
       const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
       const spawnedId = `${program.pluginId}-${instanceId}`;
       updateSpacePanel(
@@ -7438,7 +7611,7 @@ function FrameworkOsShellInner({
          * `undeclaredActionDiagnostic` drops the action — the shape that made every foreign-kind verb
          * unreachable inside `s` (`🪟️spawned-program`). */
         const dispatchWindowId = guestWindowIdV1(hostWindowId, spawnedIdsRef.current);
-        const dispatchExtraInstances = targetSpawnedId === null ? extraWindowInstancesRef.current : [];
+        const dispatchExtraInstances = targetSpawnedId === null ? extraWindowInstancesRef.current : frameworkLayoutDeclaredInstances(targetSession.app.defaultLayout, targetSession.app.windowKinds);
         // 🧹️ `clearSelection` retires the host's own leftover overlay on the SAME turn it is dispatched.
         // The guest's half of the clear is exact — measured on 6018, the clearing turn's
         // `turn-result.presence` carries the cleared mark for the row that lost the selection — but the
@@ -7646,11 +7819,12 @@ function FrameworkOsShellInner({
    * plugin's session-only command-history panel — routed through the exact same `onAction` funnel as every
    * other action (see `NOTE_SHELL_COMMAND_ACTION_ID`) so it lands on `targetSession.instanceId` via the
    * standard `handleAction` call, just tagged with an id the plugin intercepts before the app sees it.
-   * No-ops when there's no active app session. */
+   * Answers the ledger outcome, so a caller that retires the target instance right after (closing a spawned
+   * program's last window) can wait for the note to land first. No-ops when there's no active app session. */
   const noteShellCommand = useCallback(
-    (commandId: string, label: string, detail?: Record<string, unknown>) => {
-      if (!session) return;
-      onAction(buildNoteShellCommandAction(session.app.controllerId, commandId, label, detail));
+    (commandId: string, label: string, detail?: Record<string, unknown>): Promise<InputOutcomeV1 | null> => {
+      if (!session) return Promise.resolve(null);
+      return onAction(buildNoteShellCommandAction(session.app.controllerId, commandId, label, detail));
     },
     [session, onAction],
   );
@@ -7667,10 +7841,11 @@ function FrameworkOsShellInner({
   const onActionStable = useCallback((action: Parameters<typeof onAction>[0]): Promise<InputOutcomeV1> => onActionRef.current(action), []);
   // 🎯️ `onIntent` consumers (`🗣️Interpreter`) await a `Promise<void>` that means "settled"; the ledger outcome itself is the `onAction` contract.
   const onIntentStable = useCallback((intent: Parameters<typeof uiIntentToActionDescriptor>[0]): Promise<void> => onActionStable(uiIntentToActionDescriptor(intent)).then(() => undefined), [onActionStable]);
-  const onBrowserActorIntent = useCallback((runtimeKey: string, captured: RetainedBrowserActorUiV1, intent: Parameters<typeof uiIntentToActionDescriptor>[0]) => {
+  const onBrowserActorIntent = useCallback((runtimeKey: string, captured: RetainedBrowserActorUiV1, surfaceKey: string, intent: Parameters<typeof uiIntentToActionDescriptor>[0]) => {
     const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
-    if (retained?.actions !== captured.actions || retained.identity === null || entry?.clientInstanceId !== captured.clientInstanceId || entry.session.instanceId !== captured.sessionInstanceId || !shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session)) return;
+    const store = surfaceKey === captured.windowKindId ? retained?.store : retained?.panels.get(surfaceKey);
+    if (store === undefined || retained?.actions !== captured.actions || retained.identity === null || entry?.clientInstanceId !== captured.clientInstanceId || entry.session.instanceId !== captured.sessionInstanceId || !shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session)) return;
     const current = (): boolean => {
       const live = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
       const opening = openDocumentSessionsRef.current.get(runtimeKey);
@@ -7682,8 +7857,8 @@ function FrameworkOsShellInner({
       activationGeneration: retained.activationGeneration,
       appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION,
       instanceId: retained.identity.instanceId,
-      surfaceRevision: retained.store.getRevisionSnapshot(),
-    }, retained.windowKindId, intent).then((result) => {
+      surfaceRevision: store.getRevisionSnapshot(),
+    }, surfaceKey, intent).then((result) => {
       return publishBrowserActorHostEffectsV1(result.hostEffects, current, (effect) => {
         if ("requestInferenceProposal" in effect) return requestInferenceProposal(entry.session, current);
         else window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
@@ -8113,38 +8288,22 @@ function FrameworkOsShellInner({
   //#endregion 🎥️TutorialOrchestration
 
   //#region 🔖️DirectoryLane
-  /** 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C6 — folds one batch of
-   * `DirectoryEvent`s into the CURRENTLY mounted session (home, studio, or the new `s.space` app) as
-   * the `foldDirectoryEvents` plugin view action; the fold itself is `…ConfigMutation::FoldDirectoryEvent`
-   * on the plugin side (contract §C6), this only relays the raw batch through the existing action
-   * funnel. Brief's prose says "home session AND the open space session" — this shell keeps exactly
-   * ONE plugin session mounted at a time (`session`/`switchToPluginApp`), so only whichever of
-   * home/studio/space is actually live right now can receive it.
-   *
-   * w4-h root-cause fix #1: every `command_from_action` implementation on the Rust side
-   * (`home/…/✏️editor/🦀️.rs`, `space/…/✏️editor/🦀️.rs`) reads the batch as a
-   * `eventsJson: string` field (`args.get("eventsJson")` → `.as_str()` → `serde_json::from_str`), never
-   * a raw `events` array — sending `{ events }` left `.get("eventsJson")` finding nothing and silently
-   * falling back to `"[]"` on every call, so the fold ran on zero events every single time regardless
-   * of whether the live broadcast or the command-result round trip delivered the real payload. Proven
-   * live: the collab-e2e harness's new console capture shows the WS frame with the real
-   * `space.created` event arriving, yet no row ever appeared — a data-shape bug, not a thrown error,
-   * which is why neither `pageerror` nor any `console.error` ever caught it.
-   *
-   * Host aliases are resolved once against the immutable live manifest. Directory gating therefore
-   * compares exact canonical app identities and never relies on registry aliases or app ordering. */
+  /** 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C6 — relays one batch of
+   * `DirectoryEvent`s to the mounted Space index session as its `foldDirectoryEvents` view action, the
+   * only app that still folds raw events. Home never receives them: its projection has exactly one
+   * writer, the receipt-sealed `applyDirectoryEventPage` lane, and a live event only WAKES the worker's
+   * acknowledged stream into fetching the next sealed page. A raw fold there advanced the projection
+   * cursor past its receipt, so the next page answered `s.home.directory-event-page-frontier-race`
+   * (ticket 26/09/18 U5 §6b). The batch travels as the `eventsJson: string` field every Rust
+   * `command_from_action` reads (w4-h root-cause fix #1). */
   const dispatchDirectoryEventBatch = useCallback(
     (events: readonly DirectoryEvent[]) => {
       if (events.length === 0 || !hostConfig) return;
       const current = sessionRef.current;
-      if (!current) return;
-      const isHome = current.app.id === landingApp?.id;
-      const isStudio = current.app.id === hostApp?.id;
-      const isSpaceIndex = current.app.dialect !== undefined && dialectCoordinate(current.app.dialect) === dialectCoordinate(SPACE_INDEX_DIALECT);
-      if (!isHome && !isStudio && !isSpaceIndex) return;
+      if (current?.app.dialect === undefined || dialectCoordinate(current.app.dialect) !== dialectCoordinate(SPACE_INDEX_DIALECT)) return;
       onActionRef.current({ controllerId: current.app.controllerId, action: "foldDirectoryEvents", args: { eventsJson: JSON.stringify(events) } });
     },
-    [hostConfig, landingApp, hostApp],
+    [hostConfig],
   );
   dispatchDirectoryEventsRef.current = dispatchDirectoryEventBatch;
   //#endregion 🔖️DirectoryLane
@@ -8504,28 +8663,28 @@ function FrameworkOsShellInner({
   const appRouter = useMemo(
     (): AppRouter =>
       AppRouter.build(
-        loadedPlugins.map((entry): AppRouterManifest => ({
+        localPrograms.map((entry): AppRouterManifest => ({
           pluginId: entry.handle.pluginId,
           apps: entry.manifest.apps as unknown as Record<string, unknown>[],
           artifactKinds: entry.manifest.artifactKinds,
           dependencies: entry.manifest.dependencies,
         })),
       ),
-    [loadedPlugins, registry],
+    [localPrograms, registry],
   );
   /** 🧯️ `pluginId -> the surface fault that excluded it from {@link appRouter}` — merged onto the
    * plugin's own status so an excluded plugin is visible instead of silently unroutable. */
   const routerFaultByPluginId = useMemo(() => new Map(appRouter.pluginFaults().map((fault) => [fault.scope.pluginId ?? "", fault] as const)), [appRouter]);
-  const pluginLabelById = useMemo(() => new Map(loadedPlugins.map((entry) => [entry.handle.pluginId, entry.manifest.label || entry.handle.pluginId])), [loadedPlugins]);
+  const pluginLabelById = useMemo(() => new Map(localPrograms.map((entry) => [entry.handle.pluginId, entry.manifest.label || entry.handle.pluginId])), [localPrograms]);
   /** 👁️✏️ Every dialect any loaded app declares — read straight off `AppDefinition.dialect`
    * (contract freeze §1), never inferred from a surface id string. Feeds the Settings
    * `SettingsDefaultApps` table; `appRouter` itself has no public "every registered dialect"
    * accessor (by design — it's addressed one `(dialect, role)` pair at a time). */
   const knownDialects = useMemo((): readonly ArtifactDialect[] => {
     const byCoordinate = new Map<string, ArtifactDialect>();
-    for (const entry of loadedPlugins) for (const app of entry.manifest.apps) if (app.dialect) byCoordinate.set(dialectCoordinate(app.dialect), app.dialect);
+    for (const entry of localPrograms) for (const app of entry.manifest.apps) if (app.dialect) byCoordinate.set(dialectCoordinate(app.dialect), app.dialect);
     return [...byCoordinate.values()];
-  }, [cancelSpaceArtifactCreationsForRuntime, loadedPlugins]);
+  }, [cancelSpaceArtifactCreationsForRuntime, localPrograms]);
 
   /** 🎚️ Client-side fold of `os.config.opening` (contract freeze §4) — event-sourced the same way
    * the host materializes it (`foldOpeningPreferences`), never a mutated map. There is no host
@@ -8558,11 +8717,11 @@ function FrameworkOsShellInner({
       } catch {
         throw relayError;
       }
-      const owner = artifactKindActivationOwner(PLUGIN_CATALOG, artifactKind);
+      const owner = artifactKindActivationOwner(PLUGIN_CATALOG, artifactKind) ?? (await hubPluginSource?.ownerOfDialect(artifactKind).catch(() => undefined));
       if (owner === undefined || loadedPluginsRef.current.some((entry) => entry.handle.pluginId === owner)) throw relayError;
       const outcome = await installPlugin(owner);
       if (outcome !== "loaded" && outcome !== "already-loaded") throw relayError;
-      const installed = AppRouter.build(loadedPluginsRef.current.map((entry): AppRouterManifest => ({
+      const installed = AppRouter.build(localProgramsV1(loadedPluginsRef.current).map((entry): AppRouterManifest => ({
         pluginId: entry.handle.pluginId,
         apps: entry.manifest.apps as unknown as Record<string, unknown>[],
         artifactKinds: entry.manifest.artifactKinds,
@@ -8570,7 +8729,7 @@ function FrameworkOsShellInner({
       })));
       return resolveArtifactOpeningRelay(actionId, args, installed, openingPreferences);
     }
-  }, [installPlugin, openingPreferences]);
+  }, [installPlugin, openingPreferences, hubPluginSource]);
   resolveArtifactOpeningWithActivationRef.current = installActivationOwnerAndResolve;
 
   /** 👁️✏️ `PluginRuntime`'s `PluginWasmHandle` wraps the raw `exchange` ABI behind typed methods —
@@ -9388,17 +9547,78 @@ function FrameworkOsShellInner({
     ],
   );
   marketplaceHostRef.current = marketplaceHost;
-  const frameworkMarketplaceTab = useMemo(() => createFrameworkMarketplacePanelTab(() => marketplaceHostRef.current), [marketplaceHost]);
+  const frameworkMarketplaceTab = useMemo(() => createFrameworkMarketplacePanelTab(() => marketplaceHostRef.current), [marketplaceHost, uiLocale]);
   const frameworkChatTab = useMemo(
     () => createFrameworkChatPanelTab(() => <AgentChatPanel status={agentBridge.status} presence={agentBridge.presence} conversation={agentBridge.conversation} onSendMessage={agentBridge.sendAgentMessage} onCancelToolCall={agentBridge.cancelToolCall} onResolveApproval={agentBridge.resolveApproval} />),
-    [agentBridge.presence, agentBridge.status, agentBridge.conversation, agentBridge.sendAgentMessage, agentBridge.cancelToolCall],
+    [agentBridge.presence, agentBridge.status, agentBridge.conversation, agentBridge.sendAgentMessage, agentBridge.cancelToolCall, uiLocale],
   );
-  /** 🧵️ The `os.task-manager` window — the one central progress + cancel surface for actor-level work
-   * (audit `📓️g5-ux-completeness-audit.md` ranked item 1), until now present in code and reachable by
-   * nobody. `activationRegistry` is the shell's optional actor runtime: absent on this React host,
-   * whose plugin runtime talks to `ShardClient` without a kernel, so `TaskManagerWindow` says
-   * "no runtime attached" rather than showing an empty table that reads as "nothing is running". */
-  const frameworkTaskManagerTab = useMemo(() => createFrameworkTaskManagerPanelTab(() => <TaskManagerWindow registry={activationRegistry ?? null} />), [activationRegistry]);
+  /** 🧵️ The `os.task-manager` window — the one central progress + cancel surface: every spawned plugin job
+   * (the plugin runtime's own ledger), every plugin installation and every agent tool call still running,
+   * each cancellable, above the actor table of the runtime this tab's plugins actually run on. The window
+   * reads through stable `sources`, so a job advancing re-renders the window, never the dock. */
+  const taskManagerShellTasksRef = useRef<readonly TaskManagerTaskV1[]>([]);
+  const taskManagerListenersRef = useRef(new Set<() => void>());
+  const taskManagerTasksCacheRef = useRef<{ readonly jobs: readonly SpawnedJobRowV1[]; readonly shell: readonly TaskManagerTaskV1[]; readonly tasks: readonly TaskManagerTaskV1[] } | null>(null);
+  const installStartedAtRef = useRef(new Map<string, number>());
+  const taskManagerCancelRef = useRef<(task: TaskManagerTaskV1) => void>(() => undefined);
+  taskManagerCancelRef.current = (task) => {
+    if (task.lane === "job") cancelSpawnedJobV1(task.id.slice("job:".length));
+    else if (task.lane === "activation") pluginInstallAbortsRef.current.get(task.id.slice("install:".length))?.abort();
+    else agentBridge.cancelToolCall(task.id.slice("tool:".length));
+  };
+  const taskManagerSources = useMemo((): TaskManagerSourcesV1 => ({
+    registry: pluginRuntimeActivationRegistryV1,
+    tasks: () => {
+      const jobs = spawnedJobsSnapshotV1();
+      const shell = taskManagerShellTasksRef.current;
+      const cached = taskManagerTasksCacheRef.current;
+      if (cached && cached.jobs === jobs && cached.shell === shell) return cached.tasks;
+      const tasks = [...spawnedJobTasksV1(jobs), ...shell];
+      taskManagerTasksCacheRef.current = { jobs, shell, tasks };
+      return tasks;
+    },
+    subscribe: (listener) => {
+      taskManagerListenersRef.current.add(listener);
+      const unsubscribeJobs = subscribeSpawnedJobsV1(listener);
+      return () => {
+        taskManagerListenersRef.current.delete(listener);
+        unsubscribeJobs();
+      };
+    },
+    cancel: (task) => taskManagerCancelRef.current(task),
+  }), []);
+  useEffect(() => {
+    const startedAt = installStartedAtRef.current;
+    for (const pluginId of [...startedAt.keys()]) if (!installingPluginIds.includes(pluginId)) startedAt.delete(pluginId);
+    for (const pluginId of installingPluginIds) if (!startedAt.has(pluginId)) startedAt.set(pluginId, Date.now());
+    taskManagerShellTasksRef.current = [...installTasksV1(installingPluginIds, startedAt), ...toolCallTasksV1(agentBridge.conversation)];
+    for (const listener of [...taskManagerListenersRef.current]) listener();
+  }, [agentBridge.conversation, installingPluginIds]);
+  const frameworkTaskManagerTab = useMemo(() => createFrameworkTaskManagerPanelTab(() => <TaskManagerWindow sources={taskManagerSources} />), [taskManagerSources, uiLocale]);
+  /** ⛩️ An approval request has ONE affordance: its row in the agent conversation. Revealing the chat panel
+   * is what makes it visible; `focus` additionally moves keyboard focus onto it (the footer notice's
+   * Review), retried across a few frames while the panel mounts. */
+  const revealAgentApproval = useCallback((approvalId: string, focus = true) => {
+    dispatch({ type: "SET_PANEL_PATH", anchor: "top-right", value: [FRAMEWORK_CHAT_PANEL_ID] });
+    dispatch({ type: "SET_PANEL_VISIBLE", anchor: "top-right", value: true });
+    if (!focus) return;
+    let frames = 0;
+    const attempt = () => {
+      if (focusAgentApprovalV1(approvalId) || frames++ >= 30) return;
+      requestAnimationFrame(attempt);
+    };
+    requestAnimationFrame(attempt);
+  }, []);
+  /** 🔔️ Every NEWLY arrived approval reveals the conversation it lives in — without taking focus from what
+   * the human is typing; the footer notice and its live region carry the announcement. */
+  const revealedApprovalIdsRef = useRef(new Set<string>());
+  useEffect(() => {
+    for (const approval of agentBridge.pendingApprovals) {
+      if (revealedApprovalIdsRef.current.has(approval.approvalId)) continue;
+      revealedApprovalIdsRef.current.add(approval.approvalId);
+      revealAgentApproval(approval.approvalId, false);
+    }
+  }, [agentBridge.pendingApprovals, revealAgentApproval]);
 
   // 🐚️ Gated to this shell via `useShellKeydown` below — was an unconditional `window` keydown listener,
   // so every mounted shell fired its bound action (and could `preventDefault()` out from under another
@@ -9521,12 +9741,38 @@ function FrameworkOsShellInner({
   );
   useShellKeydown(scope.rootRef, handleAppKeydown, [handleAppKeydown]);
 
+  /** 📌️ Reverse-lookup: `openDocumentSessionsRef` is keyed by exact runtime identity, never
+   * the other way around (no `ActiveSession.documentId` field exists — see `📓️w3-a-report.md`'s
+   * "Design decisions"). This tiny scan intentionally runs on every render because `openDocument`
+   * fills the ref while retaining the same visible session identity. */
+  const currentDocumentRuntimeKey = (() => {
+    if (!session) return null;
+    for (const [runtimeKey, entry] of openDocumentSessionsRef.current) {
+      if (entry.session.pluginId === session.pluginId && entry.session.instanceId === session.instanceId) return runtimeKey;
+    }
+    return null;
+  })();
+  const currentBrowserActorUi = useMemo(
+    () => currentDocumentRuntimeKey === null ? undefined : browserActorUiByRuntimeKeyRef.current.get(currentDocumentRuntimeKey),
+    [browserActorUiVersion, currentDocumentRuntimeKey],
+  );
+  /** 🎭️ The panel route of an actor-bound document ({@link BrowserActorPanelHostV1}): its intents go to the verified
+   * actor under the panel's own surface; `browserActorUiVersion` moves when a panel store first arrives. */
+  const browserActorPanelIntent = useMemo(
+    () => currentDocumentRuntimeKey === null || currentBrowserActorUi === undefined ? null : (tabId: string, intent: Parameters<typeof uiIntentToActionDescriptor>[0]) => onBrowserActorIntent(currentDocumentRuntimeKey, currentBrowserActorUi, tabId, intent),
+    [currentBrowserActorUi, currentDocumentRuntimeKey, onBrowserActorIntent],
+  );
+  const browserActorPanels = useMemo(
+    (): BrowserActorPanelHostV1 | null => !session || browserActorPanelIntent === null || currentBrowserActorUi?.sessionInstanceId !== session.instanceId ? null : { stores: new Map(currentBrowserActorUi.panels), onIntent: browserActorPanelIntent, onAction: refuseBrowserActorActionDescriptor },
+    [browserActorPanelIntent, browserActorUiVersion, currentBrowserActorUi, refuseBrowserActorActionDescriptor, session],
+  );
+
   const activeRightPanelTab = session?.app.panelTabs.find((tab) => panelAnchorForGroup(tab.group) === "top-right");
   const activePanelTabId = panel?.activePanelTab ?? (activeRightPanelTab ? panelTabKindId(activeRightPanelTab.kind) : undefined) ?? (session?.app.panelTabs[0] ? panelTabKindId(session.app.panelTabs[0].kind) : undefined);
 
   const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
-    const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current));
+    const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, browserActorPanels));
     if (hostMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginArtifactTab = flattenPanelTabNodes(pluginLeftTabs).some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
     if (hasPluginArtifactTab) return pluginLeftTabs;
@@ -9574,12 +9820,12 @@ function FrameworkOsShellInner({
       }),
     });
     return [artifactTab, ...pluginLeftTabs];
-  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, hostMode, uiLocale, uiTerminology, hostAppId, openWithEntries, openWithFocusRole, openArtifactWithAppRef, dispatchSetDefaultApp, dispatchClearDefaultApp, treeWindowHost, treeWindowGeneration]);
+  }, [appLabelsOverlay, browserActorPanels, onAction, panel?.spawnedApps.length, panelUiByKey, session, hostMode, uiLocale, uiTerminology, hostAppId, openWithEntries, openWithFocusRole, openArtifactWithAppRef, dispatchSetDefaultApp, dispatchClearDefaultApp, treeWindowHost, treeWindowGeneration]);
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
-    return session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current));
-  }, [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration]);
+    return session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, browserActorPanels));
+  }, [appLabelsOverlay, browserActorPanels, onAction, panelUiByKey, session, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration]);
 
   /**
    * 🧭️ The two bottom anchors' app-declared tabs — `PanelGroup::Display` → `bottom-left`,
@@ -9600,9 +9846,9 @@ function FrameworkOsShellInner({
       session
         ? session.app.panelTabs
             .filter((tab) => panelAnchorForGroup(tab.group) === anchor && !shellRendersPanelTabItself(panelTabKindId(tab.kind)))
-            .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current))
+            .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, browserActorPanels))
         : [],
-    [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration],
+    [appLabelsOverlay, browserActorPanels, onAction, panelUiByKey, session, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration],
   );
   const displayBottomLeftTabs = useMemo(() => appTabsForBottomAnchor("bottom-left"), [appTabsForBottomAnchor]);
   const settingsBottomRightTabs = useMemo(() => appTabsForBottomAnchor("bottom-right"), [appTabsForBottomAnchor]);
@@ -9617,17 +9863,6 @@ function FrameworkOsShellInner({
   // `TouchArtifact` relay to the space index. Placed ahead of `🧰️FooterUtilityLeaves`/`🔄️SyncLeaf`
   // (their `useMemo`s below close over these) — everything here is additive, no existing behaviour
   // changed for a session outside a hub-bound space.
-  /** 📌️ Reverse-lookup: `openDocumentSessionsRef` is keyed by exact runtime identity, never
-   * the other way around (no `ActiveSession.documentId` field exists — see `📓️w3-a-report.md`'s
-   * "Design decisions"). This tiny scan intentionally runs on every render because `openDocument`
-   * fills the ref while retaining the same visible session identity. */
-  const currentDocumentRuntimeKey = (() => {
-    if (!session) return null;
-    for (const [runtimeKey, entry] of openDocumentSessionsRef.current) {
-      if (entry.session.pluginId === session.pluginId && entry.session.instanceId === session.instanceId) return runtimeKey;
-    }
-    return null;
-  })();
   const currentDocumentId = currentDocumentRuntimeKey === null ? null : (openDocumentSessionsRef.current.get(currentDocumentRuntimeKey)?.documentId ?? null);
   const selectedSpaceArtifactCreationCatalog = useMemo(() => selectedSpaceArtifactCreationCatalogV1(
     spaceArtifactCreationCatalog,
@@ -9636,10 +9871,6 @@ function FrameworkOsShellInner({
   ), [captureDialogOrigin, currentDocumentId, currentDocumentRuntimeKey, session, spaceArtifactCreationCatalog, spaceArtifactCreationCatalogUi]);
   const selectedSpaceArtifactKinds = selectedSpaceArtifactCreationCatalog?.kinds;
   const artifactCreationChoiceRevisionRef = useRef<string | undefined>(undefined);
-  const currentBrowserActorUi = useMemo(
-    () => currentDocumentRuntimeKey === null ? undefined : browserActorUiByRuntimeKeyRef.current.get(currentDocumentRuntimeKey),
-    [browserActorUiVersion, currentDocumentRuntimeKey],
-  );
 
   // 👥️ Host-only normalized roster, keyed by the exact verified document runtime. It never enters a
   // plugin view-state payload, so an app cannot forge or persist Shell presence chrome.
@@ -9652,12 +9883,15 @@ function FrameworkOsShellInner({
    * that badge is that it is NOT the active document's, so this reads the full map rather than
    * `currentSyncStatus`. */
   const hubConnectionStatuses = useMemo(() => Object.values(syncStatusByDocumentId), [syncStatusByDocumentId]);
-  /** 🔐️ Derived from the SHELL's own verified session authority, not from the workspace overlay's
-   * mirror of it. That is the only honest source: the authority is what every hub-authenticated
-   * operation is admitted against, it survives the overlay being closed, and it is already live when
-   * a reloaded page re-bootstraps a remembered session — which the old mirror read as `signedOut`
-   * until a human opened the workspace once. Never `"none"`: this shell always mounts the surface. */
-  const hubSessionPresence: HubSessionPresenceV1 = verifiedSessionAuthority === null ? "signedOut" : "signedIn";
+  /** 🔐️ Derived from the SHELL's own hub session, not from the workspace overlay's mirror of it: a
+   * remembered capability is a session until the hub pronounces it over (`hubSessionRefused`), which
+   * survives the overlay being closed and a reload re-verifying it. `"none"` only when this shell was
+   * served without any hub (`VITE_S_HUB_URL` unset) — purely local-first, nothing to sign in to. */
+  const hubSessionPresence: HubSessionPresenceV1 = hubEnv === null ? "none" : hubSessionCapability === null || hubSessionRefused ? "signedOut" : "signedIn";
+  /** 🔗️ What the session revalidation loop last learned about the link: an unreachable hub while the
+   * verified authority is kept is a short shortage the loop rides out on its bounded backoff — the badge
+   * says `reconnecting` and nothing else in the shell stops. */
+  const hubLink: HubLinkV1 = identityOffline ? "unreachable" : verifiedSessionAuthority !== null ? "reachable" : "verifying";
   /** 🔗️ Opens the hub workspace through its own address, so the badge, the palette verb and a pasted
    * `/hub` link all take one path — but the overlay's own state is opened directly, because the URI
    * lane is host-mode-only: `applyShellUri` is guarded by `hostMode`, so in a plugin playground a
@@ -9762,6 +9996,23 @@ function FrameworkOsShellInner({
    * sharedFileRequest). `checkpointDispatchedRef` lets the effect below tell "a checkpoint we asked
    * for landed" apart from "the session just mounted with a pre-existing checkpoint". */
   const checkpointDispatchedRef = useRef(false);
+  /** 📌️ Hub Check Ins this shell asked for, by request id, and the latest status per document — the
+   * worker names the acknowledged head and drives the hub job; the shell only shows and cancels it. */
+  const documentCheckInOwnersRef = useRef<Map<string, { readonly runtimeKey: string }>>(new Map());
+  const [documentCheckInUi, setDocumentCheckInUi] = useState<Readonly<Record<string, { readonly requestId: string; readonly scope: DocumentScope; readonly status: DocumentCheckInStatusV1 }>>>({});
+  const requestHubCheckIn = useCallback((runtimeKey: string) => {
+    const entry = openDocumentSessionsRef.current.get(runtimeKey);
+    const worker = backboneWorkerRef.current;
+    if (entry?.scope === undefined || worker === null) return;
+    const requestId = mintDirectoryCommandRequestId();
+    documentCheckInOwnersRef.current.set(requestId, { runtimeKey });
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "document-check-in", requestId, clientInstanceId: entry.clientInstanceId, scope: entry.scope }) });
+  }, []);
+  const cancelHubCheckIn = useCallback((runtimeKey: string) => {
+    const current = documentCheckInUi[runtimeKey];
+    if (current === undefined || isTerminalDocumentCheckInPhaseV1(current.status.phase)) return;
+    backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "document-check-in-cancel", requestId: current.requestId, scope: current.scope }) });
+  }, [documentCheckInUi]);
   const dispatchCheckpoint = useCallback(
     (message: string) => {
       if (!session) return;
@@ -9783,11 +10034,12 @@ function FrameworkOsShellInner({
     previousCheckpointIdRef.current = next;
     if (!checkpointDispatchedRef.current || !next || next === previous) return;
     checkpointDispatchedRef.current = false;
+    if (currentDocumentRuntimeKey !== null) requestHubCheckIn(currentDocumentRuntimeKey);
     const spaceId = openSpaceIdRef.current;
     if (spaceId && currentDocumentId && currentDocumentId !== S_SPACE_INDEX_DOCUMENT_ID) {
       void touchSpaceIndexArtifact(spaceId, currentDocumentId);
     }
-  }, [historyProjection.currentCheckpointId, currentDocumentId, touchSpaceIndexArtifact]);
+  }, [historyProjection.currentCheckpointId, currentDocumentId, currentDocumentRuntimeKey, requestHubCheckIn, touchSpaceIndexArtifact]);
 
   // 📌️ §C5 item 2 — auto check-in, delegated to the framework-free `AutoCheckinScheduler`
   // (`ShellHelpers`) so the debounce/storm-guard logic is unit-testable with fake timers without
@@ -9910,6 +10162,22 @@ function FrameworkOsShellInner({
                         </button>
                       ),
                     },
+                    ...(currentDocumentRuntimeKey === null || documentCheckInUi[currentDocumentRuntimeKey] === undefined
+                      ? []
+                      : [
+                          {
+                            id: "framework.history.checkin-status",
+                            label: "",
+                            control: (
+                              <span style={{ display: "inline-flex", gap: 4 }}>
+                                <span id="s-checkin-status" role="status" aria-live="polite">{checkinStatusText(documentCheckInUi[currentDocumentRuntimeKey]!.status, uiLocale)}</span>
+                                {isTerminalDocumentCheckInPhaseV1(documentCheckInUi[currentDocumentRuntimeKey]!.status.phase) ? null : (
+                                  <button type="button" id="s-checkin-abort" onClick={() => cancelHubCheckIn(currentDocumentRuntimeKey)}>{checkinAbortText(uiLocale)}</button>
+                                )}
+                              </span>
+                            ),
+                          },
+                        ]),
                   ]),
             ],
           },
@@ -9936,7 +10204,7 @@ function FrameworkOsShellInner({
         ],
       },
     });
-  }, [appLabelsOverlay, checkinDialog, historyProjection, onAction, session, shellCanUndo, submitCheckin, uiLocale, uiTerminology, uncommittedEditCount]);
+  }, [appLabelsOverlay, cancelHubCheckIn, checkinDialog, currentDocumentRuntimeKey, documentCheckInUi, historyProjection, onAction, session, shellCanUndo, submitCheckin, uiLocale, uiTerminology, uncommittedEditCount]);
   //#endregion 🧰️FooterUtilityLeaves
 
   //#region 🔄️SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
@@ -10113,7 +10381,7 @@ function FrameworkOsShellInner({
   }, [session, sessionRoleApps, surfaceSwitchBusy, switchToSessionRole, controlKeybindings, uiTerminology, uiLocale]);
 
   const resolvedCommands = useMemo(() => {
-    const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds);
+    const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds);
     // 👁️✏️ Hides every `Mutation`-kind command from a viewer session's palette (contract freeze §5) —
     // `resolveCommands` itself stays role-agnostic (os hosts/tests call it without a session at all).
     return session?.app.role === "viewer" ? resolved.filter((entry) => !isMutationKindDefinition(entry.definition)) : resolved;
@@ -10138,8 +10406,10 @@ function FrameworkOsShellInner({
     for (const spawned of panel?.spawnedApps ?? []) {
       const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
       if (app === undefined) continue;
-      for (const kind of app.windowKinds) {
-        for (const definition of resolveWindowActions(app, kind)) actionDefinitions.push({ ownerId: actionStageKey(spawnedWindowInstanceIdV1(spawned.id, kind.id), definition.id), args: choiceArgs(definition.args) });
+      for (const instance of spawnedProgramWindowInstancesV1(spawned.id, app.windowKinds, frameworkLayoutDeclaredInstances(app.defaultLayout, app.windowKinds))) {
+        const kind = app.windowKinds.find((candidate) => candidate.id === instance.windowKindId);
+        if (kind === undefined) continue;
+        for (const definition of resolveWindowActions(app, kind)) actionDefinitions.push({ ownerId: actionStageKey(instance.id, definition.id), args: choiceArgs(definition.args) });
       }
     }
     for (const retirement of artifactKindChoiceDraftRetirementsV1(actionPaneStagedArgsByKey, actionDefinitions)) {
@@ -11293,15 +11563,21 @@ function FrameworkOsShellInner({
     if (hostMode && activeSpawnedEntry && activeSpawnedApp && focusedSpawnedId !== null) {
       const spawned = activeSpawnedEntry;
       const spawnedApp = activeSpawnedApp;
-      return spawnedApp.windowKinds.map((windowKind) => {
-        const windowId = spawnedWindowInstanceIdV1(spawned.id, windowKind.id);
+      const spawnedKindById = new Map(spawnedApp.windowKinds.map((kind) => [kind.id, kind] as const));
+      const spawnedDeclaredTitles = new Map(resolveFrameworkLayoutSeed(spawnedApp.defaultLayout, withLocalizedWindowKindLabels(spawnedApp.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).extraInstances.map((extra) => [extra.id, extra.title] as const));
+      return spawnedGuestWindowInstancesV1(spawnedApp.windowKinds, frameworkLayoutDeclaredInstances(spawnedApp.defaultLayout, spawnedApp.windowKinds)).flatMap((guest) => {
+        const kind = spawnedKindById.get(guest.windowKindId);
+        return kind ? [{ guestId: guest.id, windowKind: kind }] : [];
+      }).map(({ guestId, windowKind }) => {
+        const windowId = spawnedWindowInstanceIdV1(spawned.id, guestId);
+        const declaredTitle = spawnedDeclaredTitles.get(guestId);
         const chrome = spawnedWindowChromeForKind(windowKind, windowId, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[windowId] ?? undefined, onActionStable);
         const spawnedUtilities = resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[windowId], windowId, appLabelsOverlay, uiTerminology, uiLocale, utilityGenerationFor(windowId));
         const body = spawnedWindowUiByWindowId[windowId];
         return {
           id: windowId,
           iconId: windowIconsById[windowId] ?? windowKind.iconId ?? "app-window",
-          title: wireLabel(spawnedApp.windowKinds.length > 1 ? appWindowLabel(spawnedApp, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", windowKind.id, resolveManifestLabel(windowKind.label as LocalizedLabel | string, uiTerminology, uiLocale)), uiLocale) : appBreadcrumb(resolveAppBreadcrumb(spawnedApp, uiTerminology))),
+          title: wireLabel(declaredTitle !== undefined ? appWindowLabel(spawnedApp, uiTerminology, declaredTitle, uiLocale) : spawnedApp.windowKinds.length > 1 ? appWindowLabel(spawnedApp, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", windowKind.id, resolveManifestLabel(windowKind.label as LocalizedLabel | string, uiTerminology, uiLocale)), uiLocale) : appBreadcrumb(resolveAppBreadcrumb(spawnedApp, uiTerminology))),
           fill: true,
           measures: chrome.measures,
           measuresFolded: measuresFoldedFor(windowId, windowKind.id),
@@ -11309,7 +11585,7 @@ function FrameworkOsShellInner({
           search: chrome.search,
           utilityBar: utilityBarNode(spawnedUtilities, windowId, onActionStable, introductionUtilityId, chrome.utilityOptions),
           utilityBarFolded: utilityBarFoldedFor(windowId, windowKind.id),
-          actionPane: windowActionPaneNode(spawnedApp, windowKind, windowId, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds),
+          actionPane: windowActionPaneNode(spawnedApp, windowKind, windowId, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds),
           actionsFolded: actionsFoldedFor(windowId, windowKind.id),
           onActionsFoldedChange: onActionsFoldedFor(windowId),
           status: body?.activity,
@@ -11342,7 +11618,7 @@ function FrameworkOsShellInner({
         search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
         utilityBar: utilityBarNode(utilities, kind.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
         utilityBarFolded: utilityBarFoldedFor(kind.id, kind.id),
-        actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds),
+        actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds),
         actionsFolded: actionsFoldedFor(kind.id, kind.id),
         onActionsFoldedChange: onActionsFoldedFor(kind.id),
         status: browserActorStore?.getState().root === null ? windowUiByWindowId[kind.id]?.activity : browserActorStore?.getState().nodes.get(browserActorStore.getState().root!)?.activity ?? windowUiByWindowId[kind.id]?.activity,
@@ -11352,7 +11628,9 @@ function FrameworkOsShellInner({
             <WindowInstanceIdContext.Provider value={kind.id}>
               <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                 {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
-                <InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? PENDING_WINDOW_UI_NODE)} onAction={browserActorStore === undefined ? onActionStable : refuseBrowserActorActionDescriptor} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => { if (currentDocumentRuntimeKey !== null && currentBrowserActorUi !== undefined) onBrowserActorIntent(currentDocumentRuntimeKey, currentBrowserActorUi, intent); }} />
+                <TreeWindowContext.Provider value={windowTreeContext(kind.bodyKey)}>
+                <InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? PENDING_WINDOW_UI_NODE)} onAction={browserActorStore === undefined ? onActionStable : refuseBrowserActorActionDescriptor} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => { if (currentDocumentRuntimeKey !== null && currentBrowserActorUi !== undefined) onBrowserActorIntent(currentDocumentRuntimeKey, currentBrowserActorUi, currentBrowserActorUi.windowKindId, intent); }} />
+                </TreeWindowContext.Provider>
               </ShellFaultBoundary>
             </WindowInstanceIdContext.Provider>
           </ChromeAwareWindowScrollSurface>
@@ -11382,7 +11660,7 @@ function FrameworkOsShellInner({
           search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
           utilityBar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
           utilityBarFolded: utilityBarFoldedFor(instance.id, instance.windowKindId),
-          actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds),
+          actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds),
           actionsFolded: actionsFoldedFor(instance.id, instance.windowKindId),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
           status: windowUiByWindowId[instance.id]?.activity,
@@ -11397,7 +11675,9 @@ function FrameworkOsShellInner({
               <WindowInstanceIdContext.Provider value={instance.id}>
                 <ShellFaultBoundary boundaryId={`window-${instance.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                   {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
-                  <InterpretedUiNode store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={onIntentStable} />
+                  <TreeWindowContext.Provider value={windowTreeContext(kind.bodyKey)}>
+                    <InterpretedUiNode store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={onIntentStable} />
+                  </TreeWindowContext.Provider>
                 </ShellFaultBoundary>
               </WindowInstanceIdContext.Provider>
             </ChromeAwareWindowScrollSurface>
@@ -11614,7 +11894,7 @@ function FrameworkOsShellInner({
               onLayoutChange={handleModeLayoutChange}
               onTemplateDrop={mobile ? undefined : handleTemplateDrop}
               onWindowClose={(windowId) => {
-                noteShellCommand("shell.windowClose", shellLabel("ui.shellCommand.windowClose"), { windowId });
+                const closeNoted = noteShellCommand("shell.windowClose", shellLabel("ui.shellCommand.windowClose"), { windowId });
                 // 🪟️ A spawned program now owns one window per declared kind, so closing ONE of them
                 // closes that window; the instance is retired when its LAST window goes. Before this,
                 // a spawned app was a single window whose id was the instance id itself.
@@ -11623,7 +11903,8 @@ function FrameworkOsShellInner({
                   const closedSpawned = panel.spawnedApps.find((entry) => entry.id === closedSpawnedId);
                   const closedApp = closedSpawned ? loadedPlugins.find((entry) => entry.handle.pluginId === closedSpawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === closedSpawned.appId) : undefined;
                   const mountedWindowIds = modeLayoutStacksV1(effectiveModeLayoutRef.current as WindowScopeLayoutNodeV1 | null).flatMap((stack) => [...stack.windowIds]);
-                  const remaining = (closedApp?.windowKinds ?? []).map((kind) => spawnedWindowInstanceIdV1(closedSpawnedId, kind.id)).filter((id) => id !== windowId && mountedWindowIds.includes(id));
+                  const closedInstances = closedApp ? spawnedProgramWindowInstancesV1(closedSpawnedId, closedApp.windowKinds, frameworkLayoutDeclaredInstances(closedApp.defaultLayout, closedApp.windowKinds)) : [];
+                  const remaining = closedInstances.map((instance) => instance.id).filter((id) => id !== windowId && mountedWindowIds.includes(id));
                   if (remaining.length === 0) {
                     const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== closedSpawnedId);
                     updateSpacePanel(buildSpacePanelState(nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
@@ -11632,11 +11913,11 @@ function FrameworkOsShellInner({
                     // entry was dropped from the UI, but nothing ever told the guest to free it.
                     if (closedSpawned) {
                       const closedPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === closedSpawned.pluginId)?.handle;
-                      void closedPlugin?.destroyApp(closedSpawned.instanceId).catch(() => {});
+                      void closeNoted.then(() => closedPlugin?.destroyApp(closedSpawned.instanceId)).catch(() => {});
                     }
                     // 🧰️ Its per-window host registers go with it — a stale `activeUtilityByWindowId`
                     // row keeps arming a utility for a window nobody can see.
-                    for (const kind of closedApp?.windowKinds ?? []) writeUtilityRegister(spawnedWindowInstanceIdV1(closedSpawnedId, kind.id), null, null);
+                    for (const instance of closedInstances) writeUtilityRegister(instance.id, null, null);
                   }
                 }
                 clearPendingWorldProjection(windowId);
@@ -11709,11 +11990,14 @@ function FrameworkOsShellInner({
     // off the exact corner pixel that floating corner panels also anchor to (a second flex-1 would center the funding
     // credit under the Command overlay; `w-double` reads as flush against the toggle group).
     // 📱️ The three tab bars have no anchor on mobile (all anchors merge into the mobile panel) — only the credits stay.
+    // 🗜️ A tablet carries the dock anchors but not the desktop footer's labelled width: every chip goes icon-only
+    // (its name stays its accessible name) so the trailing tabs are not clipped out of reach.
+    const compactFooter = uiDevice === "tablet";
     const items: NavbarItem[] = mobile
       ? []
       : [
-          { key: "bottomLeftPanelTabs", content: <PanelChromeTabBar anchor="bottom-left" {...buildPanelSelectionProps("bottom-left")} /> },
-          { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" {...buildPanelSelectionProps("bottom-middle")} /> },
+          { key: "bottomLeftPanelTabs", content: <PanelChromeTabBar anchor="bottom-left" compactLabels={compactFooter} {...buildPanelSelectionProps("bottom-left")} /> },
+          { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" compactLabels={compactFooter} {...buildPanelSelectionProps("bottom-middle")} /> },
         ];
     if (brand?.id && (ENTWERFEN_MIT_BESTAND_BRAND_IDS as readonly string[]).includes(brand.id)) {
       items.push(
@@ -11729,15 +12013,18 @@ function FrameworkOsShellInner({
     // 👥️ ticket §C0/§5 lane 4-F — `#s-presence-peers`, right-aligned in the footer, mirroring the wgpu
     // shell's own `render_presence_bar` placement (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`) rather than hiding behind a
     // panel tab click: presence is ambient chrome, always visible while a document is open.
-    if (!mobile) items.push({ key: "presenceBar", content: <PresenceBar id="s-presence-peers" peers={presencePeers} /> });
+    if (!mobile && !(compactFooter && presencePeers.length === 0)) items.push({ key: "presenceBar", content: <PresenceBar id="s-presence-peers" peers={presencePeers} /> });
     // 📶️ The hub link itself, beside presence and on every device — a human with several documents
     // open used to have to open each one's own sync popover to learn the hub was unreachable
     // (`📓️g5-ux-completeness-audit.md` §5). Mobile keeps it too: it is one short badge, and a phone is
     // exactly where a connection drops.
-    items.push({ key: "hubConnection", content: <HubConnectionIndicator statuses={hubConnectionStatuses} session={hubSessionPresence} onSignIn={openHubWorkspace} /> });
-    if (!mobile) items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> });
+    // ⛩️ The pointer to waiting agent approvals — it decides nothing, it takes the human to the one
+    // affordance in the agent conversation. Present on every device, absent while nothing waits.
+    if (agentBridge.pendingApprovals.length > 0) items.push({ key: "agentApprovals", content: <AgentApprovalsNotice approvals={agentBridge.pendingApprovals} onReview={revealAgentApproval} /> });
+    items.push({ key: "hubConnection", content: <HubConnectionIndicator statuses={hubConnectionStatuses} session={hubSessionPresence} link={hubLink} onSignIn={openHubWorkspace} /> });
+    if (!mobile) items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" compactLabels={compactFooter} {...buildPanelSelectionProps("bottom-right")} /> });
     return items;
-  }, [brand?.id, buildPanelSelectionProps, hubConnectionStatuses, hubSessionPresence, mobile, openHubWorkspace, presencePeers, uiLocale]);
+  }, [agentBridge.pendingApprovals, brand?.id, buildPanelSelectionProps, hubConnectionStatuses, hubLink, hubSessionPresence, mobile, openHubWorkspace, presencePeers, revealAgentApproval, uiDevice, uiLocale]);
 
   const buildPanelProps = useCallback(
     (anchor: Anchor) => ({
@@ -12001,7 +12288,7 @@ function FrameworkOsShellInner({
           {Object.values(executionTargetUiByDocument).length > 0 ? (
             <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 mt-double flex -translate-x-1/2 flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
               {Object.entries(executionTargetUiByDocument).map(([runtimeKey, status]) => (
-                <ExecutionTargetStatusNotice key={runtimeKey} status={status} locale={uiLocale} />
+                <ExecutionTargetStatusNotice key={runtimeKey} status={status} locale={uiLocale} onCancel={() => closeDocument(runtimeKey)} />
               ))}
             </div>
           ) : null}
@@ -12089,7 +12376,16 @@ function FrameworkOsShellInner({
               data-plugin-install-ids={installingPluginIds.join(",")}
               className="pointer-events-auto absolute top-workbench left-1/2 z-50 mt-double -translate-x-1/2 rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm"
             >
-              {pluginInstallBandTextV1(installingPluginIds, uiLocale)}
+              {pluginInstallBandTextV1(installingPluginIds.map((programId) => parseHubProgramIdV1(programId)?.pluginId ?? programId), uiLocale, pluginInstallProgress)}
+              {pluginInstallProgress ? (
+                <progress
+                  className="ml-single align-middle"
+                  data-semio-plugin-install-progress=""
+                  value={pluginInstallProgress.completedBytes}
+                  max={pluginInstallProgress.totalBytes}
+                  aria-label={pluginInstallBandTextV1(installingPluginIds, uiLocale, pluginInstallProgress)}
+                />
+              ) : null}
               <button type="button" className="ml-single underline" data-semio-plugin-install-cancel="" onClick={cancelPluginInstalls}>
                 {pluginInstallCancelTextV1(uiLocale)}
               </button>
@@ -12145,7 +12441,6 @@ function FrameworkOsShellInner({
         <UISearch items={searchItems} open={searchOpen} onOpenChange={(value) => dispatch({ type: "SET_SEARCH_OPEN", value })} />
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
         <TextSelectionContextMenuHost />
-        <AgentApprovals approvals={agentBridge.pendingApprovals} onDecision={agentBridge.resolveApproval} />
         <ContextMenuController
           title={shellContextMenuTitleLabel}
           open={shellContextMenu != null}
@@ -12177,7 +12472,7 @@ function FrameworkOsShellInner({
             if (!isCurrentDialogOrigin(overlayDialog.origin)) return null;
             const dialog = session.app.dialogs?.find((entry) => entry.id === overlayDialog.dialogId);
             if (!dialog) return null;
-            const resolved = resolveDialogDefinition(dialog, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds);
+            const resolved = resolveDialogDefinition(dialog, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds);
             const artifactKindArgIds = resolved.args.filter((def) => def.schema.kind === "string" && def.schema.format?.kind === "artifactKind").map((def) => def.id);
             const creationCatalog = artifactKindArgIds.length > 0 ? selectedSpaceArtifactCreationCatalog : null;
             const choiceRevisions = creationCatalog === null ? undefined : Object.fromEntries(artifactKindArgIds.map((id) => [id, creationCatalog.choiceRevision]));

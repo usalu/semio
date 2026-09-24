@@ -37,7 +37,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create zone equipment {}", self.id.0), &format!("Zoneanlage {} erstellen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Create zone equipment {}", self.id.0), &format!("Zonengerät {} erstellen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

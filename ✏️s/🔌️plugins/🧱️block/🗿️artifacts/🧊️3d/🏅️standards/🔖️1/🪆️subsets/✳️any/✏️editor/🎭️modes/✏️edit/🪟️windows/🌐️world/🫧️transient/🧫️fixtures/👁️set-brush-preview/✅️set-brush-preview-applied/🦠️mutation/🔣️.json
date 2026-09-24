@@ -1,0 +1,16 @@
+{
+  "SetBrushPreview": {
+    "preview": {
+      "position": [
+        3.0,
+        1.0,
+        -2.0
+      ],
+      "direction": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    }
+  }
+}

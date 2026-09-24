@@ -153,7 +153,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-screen-size",
         "set-global-color-table",
@@ -178,48 +177,16 @@
       "subsetDirectoryName": "🧱️base",
       "mutations": [
         {
-          "id": "no-mutation",
-          "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#NoMutation",
-          "outcomes": [
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "no-mutation",
-            "bridgeVersion": 1,
-            "variant": "GifMutation::NoMutation"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "gif-89a-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-any-mutate-reader"
-            }
-          ],
-          "carriers": [
-            "gif"
-          ],
-          "invariants": {
-            "local": [
-              "byte-identical-round-trip"
-            ],
-            "enclosing": [
-              "gif-reencode-round-trip-agrees-with-reference-decoder"
-            ]
-          }
-        },
-        {
           "id": "set-snapshot",
           "capability": "gif-89a-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
           "outcomes": [
-            "applied",
-            "no-op"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetSnapshot"
+            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -250,7 +217,7 @@
           "productionDispatch": {
             "operation": "set-screen-size",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetScreenSize"
+            "variant": "SetScreenSize"
           },
           "oracleRequirements": [
             {
@@ -281,7 +248,7 @@
           "productionDispatch": {
             "operation": "set-global-color-table",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetGlobalColorTable"
+            "variant": "SetGlobalColorTable"
           },
           "oracleRequirements": [
             {
@@ -307,12 +274,13 @@
           "capability": "gif-89a-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetBackgroundColorIndex",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-background-color-index",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetBackgroundColorIndex"
+            "variant": "SetBackgroundColorIndex"
           },
           "oracleRequirements": [
             {
@@ -343,7 +311,7 @@
           "productionDispatch": {
             "operation": "set-pixel-aspect-ratio",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetPixelAspectRatio"
+            "variant": "SetPixelAspectRatio"
           },
           "oracleRequirements": [
             {
@@ -369,12 +337,14 @@
           "capability": "gif-89a-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertFrame",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-frame",
             "bridgeVersion": 1,
-            "variant": "GifMutation::InsertFrame"
+            "variant": "InsertFrame"
           },
           "oracleRequirements": [
             {
@@ -400,12 +370,14 @@
           "capability": "gif-89a-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveFrame",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-frame",
             "bridgeVersion": 1,
-            "variant": "GifMutation::RemoveFrame"
+            "variant": "RemoveFrame"
           },
           "oracleRequirements": [
             {
@@ -431,12 +403,13 @@
           "capability": "gif-89a-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#MoveFrame",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "move-frame",
             "bridgeVersion": 1,
-            "variant": "GifMutation::MoveFrame"
+            "variant": "MoveFrame"
           },
           "oracleRequirements": [
             {
@@ -462,12 +435,14 @@
           "capability": "gif-89a-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameGeometry",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-frame-geometry",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetFrameGeometry"
+            "variant": "SetFrameGeometry"
           },
           "oracleRequirements": [
             {
@@ -493,12 +468,14 @@
           "capability": "gif-89a-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFramePixels",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-frame-pixels",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetFramePixels"
+            "variant": "SetFramePixels"
           },
           "oracleRequirements": [
             {
@@ -524,12 +501,14 @@
           "capability": "gif-89a-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameInterlace",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-frame-interlace",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetFrameInterlace"
+            "variant": "SetFrameInterlace"
           },
           "oracleRequirements": [
             {
@@ -556,12 +535,13 @@
           "subset": "application",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetLoopCount",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "set-loop-count",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetLoopCount"
+            "variant": "SetLoopCount"
           },
           "oracleRequirements": [
             {
@@ -588,12 +568,14 @@
           "subset": "graphic-control",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameDelay",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-frame-delay",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetFrameDelay"
+            "variant": "SetFrameDelay"
           },
           "oracleRequirements": [
             {
@@ -620,12 +602,14 @@
           "subset": "graphic-control",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameDisposal",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-frame-disposal",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetFrameDisposal"
+            "variant": "SetFrameDisposal"
           },
           "oracleRequirements": [
             {
@@ -652,12 +636,14 @@
           "subset": "graphic-control",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameTransparency",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-frame-transparency",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetFrameTransparency"
+            "variant": "SetFrameTransparency"
           },
           "oracleRequirements": [
             {
@@ -684,12 +670,14 @@
           "subset": "graphic-control",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameUserInput",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-frame-user-input",
             "bridgeVersion": 1,
-            "variant": "GifMutation::SetFrameUserInput"
+            "variant": "SetFrameUserInput"
           },
           "oracleRequirements": [
             {
@@ -716,12 +704,14 @@
           "subset": "comment",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertComment",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-comment",
             "bridgeVersion": 1,
-            "variant": "GifMutation::InsertComment"
+            "variant": "InsertComment"
           },
           "oracleRequirements": [
             {
@@ -748,12 +738,14 @@
           "subset": "comment",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveComment",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-comment",
             "bridgeVersion": 1,
-            "variant": "GifMutation::RemoveComment"
+            "variant": "RemoveComment"
           },
           "oracleRequirements": [
             {
@@ -780,12 +772,14 @@
           "subset": "application",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#AddAppExtension",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-app-extension",
             "bridgeVersion": 1,
-            "variant": "GifMutation::AddAppExtension"
+            "variant": "AddAppExtension"
           },
           "oracleRequirements": [
             {
@@ -812,12 +806,14 @@
           "subset": "application",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveAppExtension",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-app-extension",
             "bridgeVersion": 1,
-            "variant": "GifMutation::RemoveAppExtension"
+            "variant": "RemoveAppExtension"
           },
           "oracleRequirements": [
             {
@@ -890,8 +886,6 @@
         "standard": "89a",
         "subset": "base"
       },
-      "mutation": "no-mutation",
-      "outcome": "no-op",
       "units": {
         "length": "unitless",
         "angle": "degree"

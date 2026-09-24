@@ -24,7 +24,7 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Scal
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("ScaleNode node in layer #{}", self.at.layer), &format!("ScaleNodenknoten in Ebene #{}", self.at.layer))
+        protocol::LocalizedLabel::native(&format!("Scale node in layer #{}", self.at.layer), &format!("Knoten in Ebene #{} skalieren", self.at.layer))
     }
     fn target(&self) -> Vec<String> {
         vec![self.at.layer.to_string()]

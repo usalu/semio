@@ -12,9 +12,8 @@
   "diffParticipation": "detect",
   "outcomeClasses": [
     "applied",
-    "warning",
-    "error",
-    "fatal"
+    "no-op",
+    "rejected"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

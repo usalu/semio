@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeZInvestiga
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change investigated depth [m] to {}", self.new_z_investigated_m), &format!("untersuchte Tiefe [m] auf {} ändern", self.new_z_investigated_m))
+        protocol::LocalizedLabel::native(&format!("Change investigated depth [m] to {}", self.new_z_investigated_m), &format!("Erkundungstiefe [m] auf {} ändern", self.new_z_investigated_m))
     }
 }
 //#endregion 🔖️ChangeZInvestigatedM

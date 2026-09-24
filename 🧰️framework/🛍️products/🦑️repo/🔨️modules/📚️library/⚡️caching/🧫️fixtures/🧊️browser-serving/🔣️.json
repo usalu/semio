@@ -37,8 +37,8 @@
     },
     {
       "url": "/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin",
-      "root": "fonts",
-      "file": "🔤️guestslim-typst-fonts.bin",
+      "root": "modules",
+      "file": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
       "content": "completed font producer bytes"
     }
   ],

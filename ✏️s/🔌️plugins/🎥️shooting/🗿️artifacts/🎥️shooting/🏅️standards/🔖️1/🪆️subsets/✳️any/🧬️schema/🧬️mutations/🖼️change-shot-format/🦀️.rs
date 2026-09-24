@@ -22,7 +22,7 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeShotFormat {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change shot \"{}\" format", self.id), &format!("Aufnahme \"{}\" Format ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change shot \"{}\" format", self.id), &format!("Format von Aufnahme \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

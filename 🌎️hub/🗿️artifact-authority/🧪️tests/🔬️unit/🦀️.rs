@@ -172,8 +172,12 @@ fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], operations: &'a [u8]) -> dir
     })
 }
 
+fn fixture_replay<'a>(_pack: &'a [u8], _spr: &'a [u8], _envelopes: &'a [u8]) -> directory::os_store::ArtifactCodecApplyFuture<'a> {
+    Box::pin(async { Err(VcsError::ValidationFailed("the number fixture codec has no ledger replay".to_string())) })
+}
+
 fn fixture_artifact_codec() -> ArtifactCodec {
-    ArtifactCodec { schema: "fixture.number@1".to_string(), extension: "fixture", pack_schema_hash: [0x11; 32], compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply }
+    ArtifactCodec { schema: "fixture.number@1".to_string(), extension: "fixture", pack_schema_hash: [0x11; 32], compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_replay }
 }
 
 fn fixture_manifest() -> semio_framework::PluginManifest {

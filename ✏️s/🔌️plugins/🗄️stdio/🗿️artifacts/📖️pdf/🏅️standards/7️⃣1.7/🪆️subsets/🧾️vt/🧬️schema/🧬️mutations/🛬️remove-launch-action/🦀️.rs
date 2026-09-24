@@ -30,7 +30,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveLaunchAction {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove launch action", "Startaktion entfernen")
+        protocol::LocalizedLabel::native("Remove launch action", "Launch-Aktion entfernen")
     }
 
     fn target(&self) -> Vec<String> {

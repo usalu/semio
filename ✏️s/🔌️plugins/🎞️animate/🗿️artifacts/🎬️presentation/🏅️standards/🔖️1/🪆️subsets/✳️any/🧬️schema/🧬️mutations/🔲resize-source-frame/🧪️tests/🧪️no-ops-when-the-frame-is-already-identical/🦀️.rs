@@ -103,12 +103,12 @@ fn committed_json_is_canonical() {
     assert!(payload.new_frame.width > 0.0 && payload.new_frame.height > 0.0 && payload.new_frame.x.is_finite(), "the committed frame must clear both geometry invariants so the identity guard is the one under test");
 }
 
-/// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op` — not the
+/// 🎯️ The declared outcome holds: `no-op`, with one untargeted Warning `mutation.no-op` — not the
 /// Fatal `mutation.invariant` this same verb raises for a degenerate rect.
 #[test]
 fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "resize-source-frame/no-ops-when-the-frame-is-already-identical declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "resize-source-frame/no-ops-when-the-frame-is-already-identical declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

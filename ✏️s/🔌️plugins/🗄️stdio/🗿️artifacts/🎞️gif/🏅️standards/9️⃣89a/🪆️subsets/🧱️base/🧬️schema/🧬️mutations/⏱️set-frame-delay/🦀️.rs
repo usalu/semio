@@ -23,7 +23,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDelay {
         agg_inverse(&GifMutation::SetFrameDelay(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-frame-delay", "Rahmenverzögerung setzen")
+        protocol::LocalizedLabel::native("Set frame delay", "Verzögerung des Einzelbilds setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

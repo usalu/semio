@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteAccessRule {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete access rule \"{}\"", self.id.0), &format!("Zugangregel \"{}\" löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete access rule \"{}\"", self.id.0), &format!("Zugangsregel \"{}\" löschen", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

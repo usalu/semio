@@ -29,25 +29,25 @@ fn set_snapshot_replaces_the_whole_buffer() {
 }
 
 #[test]
-fn splice_replaces_the_named_range() {
+fn replace_byte_range_replaces_the_named_range() {
     let input = vec![1, 2, 3, 4, 5];
     let params = obj(vec![("offset", Json::Number(1.0)), ("removeLen", Json::Number(2.0)), ("insert", num_array(&[0xAA, 0xBB, 0xCC]))]);
-    let out = oracle_apply_mutation(&input, &spec("splice", params)).unwrap();
+    let out = oracle_apply_mutation(&input, &spec("replace-byte-range", params)).unwrap();
     assert_eq!(out, vec![1, 0xAA, 0xBB, 0xCC, 4, 5]);
 }
 
 #[test]
-fn splice_out_of_range_offset_is_rejected_without_corrupting() {
+fn replace_byte_range_out_of_range_offset_is_rejected_without_corrupting() {
     let input = vec![1, 2, 3];
     let params = obj(vec![("offset", Json::Number(4.0)), ("removeLen", Json::Number(0.0)), ("insert", num_array(&[]))]);
-    assert!(oracle_apply_mutation(&input, &spec("splice", params)).is_err());
+    assert!(oracle_apply_mutation(&input, &spec("replace-byte-range", params)).is_err());
 }
 
 #[test]
-fn splice_remove_len_past_the_end_is_rejected() {
+fn replace_byte_range_remove_len_past_the_end_is_rejected() {
     let input = vec![1, 2, 3];
     let params = obj(vec![("offset", Json::Number(2.0)), ("removeLen", Json::Number(5.0)), ("insert", num_array(&[]))]);
-    assert!(oracle_apply_mutation(&input, &spec("splice", params)).is_err());
+    assert!(oracle_apply_mutation(&input, &spec("replace-byte-range", params)).is_err());
 }
 
 #[test]

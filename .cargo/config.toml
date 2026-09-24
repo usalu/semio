@@ -45,11 +45,14 @@ rustflags = ['--cfg', 'getrandom_backend="wasm_js"', '-C', 'link-arg=-zstack-siz
 [target.wasm32-wasip2]
 rustflags = ["-Z", "threads=8", "-C", "link-arg=--max-memory=536870912", "-C", "link-arg=-zstack-size=8388608"]
 
-[target.x86_64-unknown-linux-gnu]
-rustflags = ["-C", "link-arg=-fuse-ld=mold"]
-
-[target.aarch64-unknown-linux-gnu]
-rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+# 🔗️ Every glibc Linux host links with the `rust-lld` the pinned toolchain ships (`lib/rustlib/<host>/bin/gcc-ld`),
+# so no distribution package decides whether a native build links: `mold` was required here, installed only on
+# apt-get systems, and every other distribution failed at the first build script's link step. x86_64 already
+# defaults to the self-contained LLD; aarch64 still defaults to GNU ld, so both hosts state it explicitly. Measured
+# link times against mold and GNU ld: ticket 26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP, `📓️wp-z2.md`.
+# Target-scoped rustflags REPLACE [build].rustflags, so `-Z threads=8` is repeated.
+[target.'cfg(all(target_os = "linux", target_env = "gnu"))']
+rustflags = ["-Z", "threads=8", "-C", "linker-features=+lld", "-C", "link-self-contained=+linker", "-Z", "unstable-options"]
 
 # 🧵️ The NATIVE test thread's stack. `libtest` spawns every test on a thread whose default stack is
 # 2 MiB, and an unoptimised build of an artifact app overruns it before the first assertion: the async

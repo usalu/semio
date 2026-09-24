@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fenestration {} fin depth to {} m", self.id.0, self.new_fin_depth_m), &format!("Fenster {} Lamellentiefe auf {} m ändern", self.id.0, self.new_fin_depth_m))
+        protocol::LocalizedLabel::native(&format!("Change fenestration {} fin depth to {} m", self.id.0, self.new_fin_depth_m), &format!("Seitenblendentiefe von Fenster {} auf {} m ändern", self.id.0, self.new_fin_depth_m))
     }
 
     fn target(&self) -> Vec<String> {

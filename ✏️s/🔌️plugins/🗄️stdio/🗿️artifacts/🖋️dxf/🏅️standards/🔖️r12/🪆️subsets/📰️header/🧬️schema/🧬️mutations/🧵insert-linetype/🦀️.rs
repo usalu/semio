@@ -22,7 +22,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertLinetype {
         agg_inverse(&DxfMutation::InsertLinetype(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-linetype", "Linientyp einfügen")
+        protocol::LocalizedLabel::native("Insert linetype", "Linientyp einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

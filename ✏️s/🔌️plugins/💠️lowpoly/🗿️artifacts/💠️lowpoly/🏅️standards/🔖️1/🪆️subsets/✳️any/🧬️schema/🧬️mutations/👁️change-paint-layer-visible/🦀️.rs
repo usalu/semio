@@ -26,7 +26,7 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ChangePaintLay
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set paint layer visible to {}", self.new_visible), &format!("sichtbare Farbenebene auf {} setzen", self.new_visible))
+        protocol::LocalizedLabel::native(&format!("Set paint layer visible to {}", self.new_visible), &format!("Sichtbarkeit der Malebene auf {} setzen", self.new_visible))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

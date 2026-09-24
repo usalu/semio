@@ -22,7 +22,7 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertViewpoint {
         agg_inverse(&BcfMutation::InsertViewpoint(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-viewpoint", "Blickpunkt einfügen")
+        protocol::LocalizedLabel::native("Insert viewpoint", "Blickpunkt einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

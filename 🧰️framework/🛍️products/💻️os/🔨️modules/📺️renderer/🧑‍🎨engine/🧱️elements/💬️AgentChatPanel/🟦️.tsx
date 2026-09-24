@@ -19,7 +19,7 @@ import { type ReactElement, useEffect, useRef, useState } from "react";
 import { Button, Textarea, useLabel } from "@semio-tech/ui-react";
 import { AgentPresence, type AgentPresenceProps } from "../🚦️AgentPresence/🟦️.tsx";
 import { agentUiLabel, type AgentConversationEntry } from "../🔗️AgentBridge/🟦️.tsx";
-import { approvalSecondsRemaining, parseApprovalSummary } from "../🤖️AgentApprovals/🟦️.tsx";
+import { AgentApprovalAffordance } from "../🤖️AgentApprovals/🟦️.tsx";
 import { type ApprovalDecision } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -35,11 +35,10 @@ export type AgentChatPanelProps = AgentPresenceProps & {
    * rather than offering one that does nothing. */
   readonly onCancelToolCall?: (invocationId: string) => boolean;
   /** ⛩️ `useAgentBridge().resolveApproval` — decides one approval the gateway parked for a
-   * destructive capability, inline in the transcript. The `🤖️AgentApprovals` dialog remains the
-   * full-detail surface (risk, change summary, capability); this is the same decision offered where
-   * the human is already reading, because the gateway BLOCKS on it (ticket 26/09/18 slice M4, audit
-   * `📓️g7-mcp-agent-and-collaboration-audit.md` §6 P0.2). Omitted means no decision path is
-   * attached, and no row offers a control that would do nothing. */
+   * destructive capability. The transcript row IS the approval's one affordance
+   * (`🤖️AgentApprovals`' `AgentApprovalAffordance`: verb, target, change summary, risk, countdown and the
+   * three decisions); no modal copy exists beside it (ticket 26/09/18 session 11 slice U5). Omitted means
+   * no decision path is attached, and no row offers a control that would do nothing. */
   readonly onResolveApproval?: (approvalId: string, decision: ApprovalDecision, note?: string) => void;
 };
 
@@ -47,21 +46,6 @@ export type AgentChatPanelProps = AgentPresenceProps & {
  * row without depending on its position in the feed. */
 function entryElementId(entry: AgentConversationEntry): string {
   return `framework.chat.entry.${entry.kind}.${entry.id}`;
-}
-
-/** ⏱️ Whole seconds left on a parked approval, re-read once a second while it is pending.
- * `null` means the producer named no budget, so nothing is counted rather than a number invented.
- * The ticker only runs while there IS something to count: a resolved row, and a summary with no
- * `timeoutMs`, both schedule nothing. */
-function useApprovalCountdown(timeoutMs: number | null, requestedAtMs: number, pending: boolean): number | null {
-  const [nowMs, setNowMs] = useState(() => Date.now());
-  useEffect(() => {
-    if (!pending || timeoutMs === null) return;
-    const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);
-    return () => window.clearInterval(ticker);
-  }, [pending, timeoutMs]);
-  if (!pending) return null;
-  return approvalSecondsRemaining(timeoutMs, requestedAtMs, nowMs);
 }
 
 /** 💬️ One conversation row. Split out so the feed's own markup stays readable and so every row gets
@@ -85,36 +69,17 @@ function AgentChatEntry({
   const runningLabel = useLabel(agentUiLabel("os.agent.chat.running"));
   const failedLabel = useLabel(agentUiLabel("os.agent.chat.failed"));
   const succeededLabel = useLabel(agentUiLabel("os.agent.chat.succeeded"));
-  const approvalPendingLabel = useLabel(agentUiLabel("os.agent.chat.approvalPending"));
   const resultRoleLabel = useLabel(agentUiLabel("os.agent.chat.toolResultRole"));
   const cancellingLabel = useLabel(agentUiLabel("os.agent.chat.cancelling"));
   const cancelLabel = useLabel(agentUiLabel("os.agent.chat.cancel"));
   const cancelToolLabel = useLabel(agentUiLabel("os.agent.chat.cancelToolCall"), { tool: entry.kind === "toolCall" ? entry.toolName : "" });
-  const approvalActionsLabel = useLabel(agentUiLabel("os.agent.chat.approvalActionsLabel"));
-  const denyLabel = useLabel(agentUiLabel("os.agent.approvals.decisionDeny"));
-  const approveOnceLabel = useLabel(agentUiLabel("os.agent.approvals.decisionOnce"));
-  const approveSessionLabel = useLabel(agentUiLabel("os.agent.approvals.decisionSession"));
-  const approvalVerbLabel = useLabel(agentUiLabel("os.agent.chat.approvalVerb"));
-  const approvalTargetLabel = useLabel(agentUiLabel("os.agent.chat.approvalTarget"));
-  const requestedByLabel = useLabel(agentUiLabel("os.agent.approvals.requestedBy"));
-  const approvalExpiredLabel = useLabel(agentUiLabel("os.agent.chat.approvalExpired"));
   const replyStreamingLabel = useLabel(agentUiLabel("os.agent.chat.replyStreaming"));
   const replyToLabel = useLabel(agentUiLabel("os.agent.chat.replyTo"));
-  // 🧾️ The parked approval, read out of the ONE wire string the gateway sends (`🛡️policy`'s
-  // `ApprovalRequest::shell_summary`). Parsed unconditionally — hooks may not run behind a branch —
-  // and only rendered on an approval row.
-  const approval = parseApprovalSummary(entry.kind === "approval" ? entry.summary : "");
-  const secondsLeft = useApprovalCountdown(entry.kind === "approval" ? approval.timeoutMs : null, entry.kind === "approval" ? entry.atMs : 0, entry.kind === "approval" && entry.state === "pending");
-  const countdownLabel = useLabel(agentUiLabel("os.agent.chat.approvalCountdown"), { seconds: String(secondsLeft ?? 0) });
-
   const toolState = entry.kind === "toolCall" ? (entry.state === "running" ? runningLabel : entry.state === "cancelling" ? cancellingLabel : entry.state === "failed" ? failedLabel : succeededLabel) : "";
-  const state = entry.kind === "toolCall" ? toolState : entry.kind === "approval" ? (entry.state === "pending" ? approvalPendingLabel : (entry.decision ?? "")) : entry.kind === "agentMessage" && entry.state === "streaming" ? replyStreamingLabel : "";
+  const state = entry.kind === "toolCall" ? toolState : entry.kind === "agentMessage" && entry.state === "streaming" ? replyStreamingLabel : "";
   // 🛑️ Only a call still reported as running can be cancelled: a `cancelling` row already sent its
   // frame, and a settled one has nothing left to stop.
   const cancellable = entry.kind === "toolCall" && entry.state === "running" && onCancelToolCall !== undefined;
-  // ⛩️ Only a still-pending approval can be decided: a resolved row already carries its decision,
-  // and with no decision path attached no control is offered at all.
-  const decidable = entry.kind === "approval" && entry.state === "pending" && onResolveApproval !== undefined;
 
   return (
     <li id={entryElementId(entry)} data-semio-agent-chat-entry={entry.kind} data-agent-chat-state={entry.kind === "toolCall" ? entry.state : entry.kind === "approval" ? entry.state : entry.kind === "agentMessage" ? entry.state : "sent"} className="flex min-w-0 flex-col gap-single py-single">
@@ -129,6 +94,7 @@ function AgentChatEntry({
               icon="square"
               id={`framework.chat.cancel.${entry.id}`}
               data-semio-agent-chat-cancel={entry.id}
+              data-semio-agent-chat-tool={entry.toolName}
               aria-label={cancelToolLabel}
               title={cancelToolLabel}
               text={cancelLabel}
@@ -154,47 +120,7 @@ function AgentChatEntry({
           {entry.text}
         </p>
       ) : null}
-      {entry.kind === "approval" ? (
-        // 🧾️ WHO asked, WHAT it does, WHAT it touches — the three facts a human needs to decide,
-        // each omitted rather than blanked when the producer did not send it. A row missing every
-        // rich field still shows its `diffSummary`, which for a plain-text producer is the whole
-        // wire string, so this surface never goes empty.
-        <div className="flex min-w-0 flex-col gap-single text-xs text-foreground">
-          {approval.capabilityTitle ? (
-            <p className="min-w-0 break-words" data-semio-agent-chat-approval-verb={approval.capabilityId ?? ""}>
-              <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{approvalVerbLabel}: </span>
-              <span className="font-medium">{approval.capabilityTitle}</span>
-            </p>
-          ) : null}
-          {approval.description ? <p className="min-w-0 whitespace-pre-wrap break-words text-muted-foreground">{approval.description}</p> : null}
-          {approval.artifactKind ? (
-            <p className="min-w-0 break-words text-muted-foreground" data-semio-agent-chat-approval-target={approval.artifactKind}>
-              <span className="text-2xs font-semibold uppercase tracking-wide">{approvalTargetLabel}: </span>
-              {approval.artifactKind}
-            </p>
-          ) : null}
-          <p className="min-w-0 whitespace-pre-wrap break-words">{approval.diffSummary}</p>
-          {approval.requestedBy ? (
-            <p className="min-w-0 break-words text-2xs text-muted-foreground">
-              {requestedByLabel}: {approval.requestedBy}
-            </p>
-          ) : null}
-          {secondsLeft !== null ? (
-            // ⏳️ A live region, because the number changes without the human doing anything: a
-            // screen reader is told politely, never interrupted mid-sentence.
-            <p role="status" aria-live="polite" data-semio-agent-chat-approval-countdown={String(secondsLeft)} className="min-w-0 break-words text-2xs text-muted-foreground">
-              {secondsLeft > 0 ? countdownLabel : approvalExpiredLabel}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-      {decidable ? (
-        <div role="group" aria-label={approvalActionsLabel} data-semio-agent-chat-approval={entry.id} className="flex flex-wrap items-center gap-single">
-          <Button type="button" variant="ghost" icon="x" id={`framework.chat.approval.deny.${entry.id}`} text={denyLabel} aria-label={denyLabel} onClick={() => onResolveApproval?.(entry.id, "deny")} />
-          <Button type="button" icon="check" id={`framework.chat.approval.once.${entry.id}`} text={approveOnceLabel} aria-label={approveOnceLabel} onClick={() => onResolveApproval?.(entry.id, "once")} />
-          <Button type="button" variant="ghost" icon="check" id={`framework.chat.approval.session.${entry.id}`} text={approveSessionLabel} aria-label={approveSessionLabel} onClick={() => onResolveApproval?.(entry.id, "session")} />
-        </div>
-      ) : null}
+      {entry.kind === "approval" ? <AgentApprovalAffordance approvalId={entry.id} summary={entry.summary} requestedAtMs={entry.atMs} state={entry.state} decision={entry.decision} withdrawal={entry.withdrawal} onDecision={onResolveApproval} /> : null}
       {entry.kind === "toolCall" ? (
         <>
           <p className="break-words font-mono text-xs text-foreground">{entry.toolName}</p>

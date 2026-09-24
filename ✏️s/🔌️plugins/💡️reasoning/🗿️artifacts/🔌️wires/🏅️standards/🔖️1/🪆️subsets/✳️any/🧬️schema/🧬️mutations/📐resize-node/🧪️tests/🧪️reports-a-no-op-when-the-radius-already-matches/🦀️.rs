@@ -10,7 +10,7 @@
 //! `resize-node`'s own diff builder, however, returns through a real no-op guard BEFORE it ever
 //! reaches `diff_board_fixture`: an extent that already matches yields `MutationOutcome::empty()`
 //! plus a `warn`/`mutation.no-op`. That branch mints no handle at all, so this case is a genuine
-//! APPLIED one — empty diff, `➡️after` equal to `⬅️before`, and every one of the seven fixture
+//! NO-OP one — empty diff, `➡️after` equal to `⬅️before`, and every one of the seven fixture
 //! assertions live.
 //!
 //! 📐 The committed node deliberately carries `width`/`height` alongside `radius` — the state a
@@ -90,12 +90,12 @@ async fn committed_json_is_canonical() {
     assert!(original.get("newWidth").is_none() && original.get("newHeight").is_none(), "an untouched extent field must be OMITTED from the payload, never written as null");
 }
 
-/// 🎯️ The declared outcome — `applied` carrying one `warn`/`mutation.no-op` — is exactly what
+/// 🎯️ The declared outcome — `no-op` carrying one `warn`/`mutation.no-op` — is exactly what
 /// `resize-node`'s unchanged-extent guard emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "resize-node/reports-a-no-op-when-the-radius-already-matches declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "resize-node/reports-a-no-op-when-the-radius-already-matches declares a no-op outcome");
     let produced = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its diagnostics");

@@ -43,7 +43,7 @@ impl MutationKind<PdfSnapshot, PdfA1Mutation> for SetPageText {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set page text", "Seitentext setzen")
+        protocol::LocalizedLabel::native("Set page text", "Seitentext setzen")
     }
 
     fn target(&self) -> Vec<String> {

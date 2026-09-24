@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerQNomi
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change tower nominal behaviour factor q to {}", self.new_tower_q_nominal), &format!("Turmnominalverhaltenfaktorq auf {} ändern", self.new_tower_q_nominal))
+        protocol::LocalizedLabel::native(&format!("Change tower nominal behaviour factor q to {}", self.new_tower_q_nominal), &format!("Verhaltensbeiwert des Turms q auf {} ändern", self.new_tower_q_nominal))
     }
 }
 //#endregion 🔖️ChangeTowerQNominal

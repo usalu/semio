@@ -23,7 +23,7 @@ impl protocol::MutationKind<WriterMainWindowConfig, WriterMainWindowConfigMutati
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Writer Window Camera", "Schreiberfensterkamera setzen")
+        protocol::LocalizedLabel::native("Set Writer Window Camera", "Kamera des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]

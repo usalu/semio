@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetComponentSampling {
-    pub(crate) id: u8,
-    pub(crate) h_sampling: u8,
-    pub(crate) v_sampling: u8,
+    pub id: u8,
+    pub h_sampling: u8,
+    pub v_sampling: u8,
 }
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetComponentSampling {
@@ -23,7 +23,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetComponentSa
         agg_inverse(&JpgBaselineMutation::SetComponentSampling(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-component-sampling", "Komponentenabtastung setzen")
+        protocol::LocalizedLabel::native("Set component sampling", "Komponentenabtastung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

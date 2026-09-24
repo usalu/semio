@@ -39,6 +39,12 @@ pub mod space_artifact_creation;
 pub mod document_index;
 pub use document_index::{DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1};
 
+#[path = "📌️document-check-in-v1/🦀️.rs"]
+pub mod document_check_in;
+pub use document_check_in::{
+    DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1,
+};
+
 #[path = "🌐️browser-actor/🦀️.rs"]
 pub mod browser_actor;
 pub use browser_actor::{
@@ -379,19 +385,14 @@ pub enum DirectoryCommand {
 }
 //#endregion 🔖️Command
 
-//#region 📣️CheckpointPublicationCommand
-/// 📦️ Exact command and receipt body ceiling; canonical pairs travel through content hashes.
-pub const CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES: usize = 8 * 1024;
-/// ⏱️ Fixed end-to-end authority deadline for one public checkpoint publication.
-pub const CHECKPOINT_PUBLICATION_DEADLINE_MS: u64 = 30_000;
-/// 🧯️ Public publication ceiling aligned with the existing bounded Hub blob ingress.
-pub const CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES: u64 = 1024 * 1024;
-
-/// 🌊️ Client-declared artifact frontier with a canonical hexadecimal chain hash.
+//#region 🌊️EditedArtifactFrontier
+/// 🌊️ One edited, committed point of a document's ledger in its cross-runtime wire grammar: the
+/// counters and content chain the hub's document authority published for it and the edit id at its
+/// tip. Genesis has no edited point, so a zero ordinal or commit never validates.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct CheckpointPublicationFrontierV1 {
+pub struct EditedArtifactFrontierV1 {
     pub document_id: String,
     pub head_edit_ordinal: u64,
     pub head_edit_id: String,
@@ -399,7 +400,7 @@ pub struct CheckpointPublicationFrontierV1 {
     pub chain_sha256: String,
 }
 
-impl CheckpointPublicationFrontierV1 {
+impl EditedArtifactFrontierV1 {
     /// 🛡️ Checks the cross-runtime integer, text, and hash boundary.
     pub fn validate(&self) -> bool {
         valid_document_open_text(&self.document_id, DOCUMENT_OPEN_ID_MAX_BYTES)
@@ -424,86 +425,20 @@ impl CheckpointPublicationFrontierV1 {
             chain_hash: ArtifactHash::parse_hex(&self.chain_sha256)?,
         })
     }
-}
 
-/// 🎯️ Exact durable parent expectation; genesis carries no caller-invented empty frontier.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
-#[serde(tag = "state", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
-#[value(tag = "state", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
-pub enum CheckpointPublicationCurrentV1 {
-    Genesis { checkpoint_id: String },
-    Active { checkpoint_id: String, baseline_frontier: CheckpointPublicationFrontierV1 },
-}
-
-/// 🪞️ Public content identity for one already-landed Hub blob, in the two hash spaces the product
-/// actually keeps apart. `blake3` is the **address**: the hub's payload store is a BLAKE3 CAS by
-/// declaration (`PayloadStorage`), so it is the only word that can find the bytes, and the only word
-/// `PUT /spaces/{space}/blobs/{hash}` accepts. `sha256` stays what it always was — the **integrity
-/// claim** the artifact lineage is written in (`ArtifactBlobIntegrity`, `bootstrap_snapshot_hash`,
-/// checkpoint identity) — and is verified against the resolved bytes. Carrying only `sha256` made a
-/// publication unresolvable: it named its inputs in a keyspace the store does not index.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct CheckpointPublicationBlobV1 {
-    pub sha256: String,
-    pub blake3: String,
-    pub byte_length: u64,
-}
-
-/// 📤️ One scope-from-route command to validate and publish an existing canonical pair.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct CheckpointPublicationCommandV1 {
-    pub schema: String,
-    pub correlation_id: String,
-    pub descriptor_digest_v1: String,
-    pub expected_document_frontier: DocumentFrontier,
-    pub expected_current: CheckpointPublicationCurrentV1,
-    pub baseline_frontier: CheckpointPublicationFrontierV1,
-    pub pack: CheckpointPublicationBlobV1,
-    pub spr: CheckpointPublicationBlobV1,
-}
-
-impl CheckpointPublicationCommandV1 {
-    /// 🛡️ Validates the schema-owned command independently of route-owned scope.
-    pub fn validate(&self) -> bool {
-        let frontier_valid = |frontier: &DocumentFrontier| frontier.head_seq <= DOCUMENT_OPEN_MAX_SAFE_INTEGER && frontier.commit_seq <= frontier.head_seq && frontier.epoch <= DOCUMENT_OPEN_MAX_SAFE_INTEGER;
-        let blob_valid = |blob: &CheckpointPublicationBlobV1| blob.byte_length > 0 && blob.byte_length <= DOCUMENT_OPEN_MAX_SAFE_INTEGER && valid_document_open_hash(&blob.sha256) && valid_document_open_hash(&blob.blake3);
-        self.schema == "semio.hub.checkpoint-publication-command/v1"
-            && self.correlation_id.len() == DIRECTORY_COMMAND_REQUEST_ID_LEN
-            && !self.correlation_id.bytes().all(|byte| byte == b'0')
-            && self.correlation_id.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
-            && valid_document_open_hash(&self.descriptor_digest_v1)
-            && frontier_valid(&self.expected_document_frontier)
-            && self.baseline_frontier.validate()
-            && match &self.expected_current {
-                CheckpointPublicationCurrentV1::Genesis { checkpoint_id } => valid_document_open_hash(checkpoint_id),
-                CheckpointPublicationCurrentV1::Active { checkpoint_id, baseline_frontier } => valid_document_open_hash(checkpoint_id) && baseline_frontier.validate(),
-            }
-            && blob_valid(&self.pack)
-            && blob_valid(&self.spr)
-            && self.pack.byte_length.checked_add(self.spr.byte_length).is_some_and(|bytes| bytes <= CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES)
-    }
-
-    /// 📥️ Parses one exact canonical body, rejecting padding and unknown fields.
-    pub fn parse_canonical_json(json: &str) -> Option<Self> {
-        if json.len() > CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES {
-            return None;
-        }
-        let value: Self = crate::os_pack::json::from_json_str(json).ok()?;
-        (value.validate() && crate::os_pack::json::to_json_string(&value) == json).then_some(value)
+    /// 🔁️ The wire grammar of an edited directory frontier; `None` for genesis.
+    pub fn of_artifact_frontier(frontier: &ArtifactFrontier) -> Option<Self> {
+        let wire = Self {
+            document_id: frontier.document_id.clone(),
+            head_edit_ordinal: frontier.head_edit_ordinal,
+            head_edit_id: frontier.head_edit_id.clone(),
+            last_commit_seq: frontier.last_commit_seq,
+            chain_sha256: frontier.chain_hash.hex(),
+        };
+        wire.validate().then_some(wire)
     }
 }
-
-/// 🧾️ Success-only public completion; checkpoint bytes and locators remain private.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct CheckpointPublicationReceiptV1 {
-    pub schema: String,
-    pub correlation_id: String,
-    pub checkpoint: PublishedArtifactCheckpoint,
-}
-//#endregion 📣️CheckpointPublicationCommand
+//#endregion 🌊️EditedArtifactFrontier
 
 //#region 🔖️CommandReceipt
 /// 📦️ Exact posted-command request ceiling; matches the hub's public administrator request ceiling.
@@ -2239,7 +2174,7 @@ impl GisMapInferenceApprovalReceiptV1 {
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GisMapApprovalUndoHandleV1 {
     pub target_id: String,
-    pub expected_current: CheckpointPublicationFrontierV1,
+    pub expected_current: EditedArtifactFrontierV1,
 }
 
 /// 📨️ Closed undo intent: a server-minted target, exact tail expectation and retry identity.
@@ -2251,7 +2186,7 @@ pub struct GisMapApprovalUndoRequestV1 {
     pub version: u32,
     pub target_id: String,
     pub idempotency_key: String,
-    pub expected_current: CheckpointPublicationFrontierV1,
+    pub expected_current: EditedArtifactFrontierV1,
 }
 
 impl GisMapApprovalUndoRequestV1 {
@@ -2279,7 +2214,7 @@ pub struct GisMapApprovalUndoReceiptV1 {
     pub command_hash: String,
     pub applied: bool,
     pub replayed: bool,
-    pub frontier: CheckpointPublicationFrontierV1,
+    pub frontier: EditedArtifactFrontierV1,
 }
 
 /// 🚦 The complete published failure vocabulary the four authenticated routes may answer with, plus

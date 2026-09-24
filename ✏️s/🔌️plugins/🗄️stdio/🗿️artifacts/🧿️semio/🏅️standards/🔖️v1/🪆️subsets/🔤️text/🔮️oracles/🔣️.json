@@ -159,8 +159,9 @@
           "capability": "semio-v1-text-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-mark",
@@ -179,8 +180,9 @@
           "capability": "semio-v1-text-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-run-language",
@@ -199,8 +201,9 @@
           "capability": "semio-v1-text-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "edit-run",
@@ -219,7 +222,8 @@
           "capability": "semio-v1-text-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-run",
@@ -278,8 +282,9 @@
           "capability": "semio-v1-text-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-runs",

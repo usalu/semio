@@ -79,7 +79,7 @@
     {
       "id": "semantic-svg-basic-1-1-v1",
       "description": "SVG Basic 1.1 mutation round trips compared structurally: element/text/CDATA/comment/PI tree shape and content exact, attributes compared as a name-sorted set (attribute order is real writer freedom), and the viewBox/transform attribute values decomposed into typed numeric geometry rather than compared as raw strings, with a small absolute tolerance for cross-implementation float formatting. The clip-path attribute is deliberately NOT decomposed and NOT ignored: its exact url(#id) string is what the profile's clip-to-text rule is evaluated against, so it is compared verbatim. Self-closing versus explicit empty open/close tags are equivalent by construction and never distinguished by either side.",
-      "tolerance": 1e-9,
+      "tolerance": 1e-09,
       "ignoreKeys": []
     }
   ],
@@ -139,7 +139,8 @@
           "capability": "svg-1-1-basic-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-element",
@@ -221,7 +222,8 @@
           "capability": "svg-1-1-basic-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-text",
@@ -241,7 +243,8 @@
           "capability": "svg-1-1-basic-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-transform",
@@ -261,7 +264,8 @@
           "capability": "svg-1-1-basic-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-view-box",

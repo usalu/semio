@@ -60,7 +60,7 @@ Feature: Apply every typed identity mutation to its committed specification vect
       """
       {"kind": "<id>", "account": "<account>", "wasAccount": "<wasAccount>"}
       """
-    Then the record equals the committed before-snapshot again and holds the <wasAccount> session with its original token and issue time
+    Then the record equals the committed before-snapshot again and holds the <wasAccount> session with its original email and issue time
     Examples:
       | id       | account | wasAccount |
       | sign-in  | grace   | ada        |
@@ -80,4 +80,4 @@ Feature: Apply every typed identity mutation to its committed specification vect
   Scenario: Decode and re-encode the committed signed-in record without passing bytes through
     Given the committed before-snapshot of the sign-in vector
     When the record is decoded into IdentitySetting and re-encoded from the typed value alone
-    Then the re-encoded projection is the committed one, field for field, and the decode is proven real by reading the account and its token back off the typed value rather than off the text
+    Then the re-encoded projection is the committed one, field for field, and the decode is proven real by reading the account and its email back off the typed value rather than off the text

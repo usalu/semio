@@ -300,11 +300,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -933,11 +933,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -6149,17 +6149,12 @@
             "exportStdioKinds": [
               "stdio.csv",
               "stdio.json",
-              "stdio.md",
               "stdio.obj",
               "stdio.stl",
               "stdio.txt"
             ],
             "importStdioKinds": [
-              "stdio.csv",
               "stdio.json",
-              "stdio.md",
-              "stdio.obj",
-              "stdio.stl",
               "stdio.txt"
             ]
           }
@@ -7617,11 +7612,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -8246,11 +8241,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -13186,17 +13181,12 @@
             "exportStdioKinds": [
               "stdio.csv",
               "stdio.json",
-              "stdio.md",
               "stdio.obj",
               "stdio.stl",
               "stdio.txt"
             ],
             "importStdioKinds": [
-              "stdio.csv",
               "stdio.json",
-              "stdio.md",
-              "stdio.obj",
-              "stdio.stl",
               "stdio.txt"
             ]
           }
@@ -14680,8 +14670,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "d58879eee24201d572f5e0ace294e2ca15488a70e6c6d5004c43465e367ce2b8",
-    "coreWasmSha256": "b65dade290e856eef2264f93ceb411e518443270085cc1d48f26b39fa7f3f0e5",
-    "descriptorSha256": "34f5c1f1babb0a5e5e32a14ea60a77990996d7930d56ff2bbcfdcf75da8a0fc0"
+    "wasmSha256": "9172b9aae1d0cbf52182eb9b7eb124b1515b2f453cb2c286c5e5d6c4f9386a29",
+    "coreWasmSha256": "33dd5a0f214532fcfca7e0e25b3da48993ab7ad8fc572e6ee81977e76e48ef89",
+    "descriptorSha256": "6d61bd2069d3ff899d68962e85dd315f6ed857225149f5ec5612cb1fe22a98b7"
   }
 }

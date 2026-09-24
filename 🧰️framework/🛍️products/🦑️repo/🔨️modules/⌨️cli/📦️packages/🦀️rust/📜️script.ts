@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { buildCargoArtifacts } from "../../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { cargoTargetDirectory } from "../../../📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 /** @emoji ⚙️ Builds/tests the `repo_cli` crate and execs the `semio` binary (nx bridge for `repo/cli/rs`). */
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -54,20 +55,31 @@ class WorkflowScript extends BundleScript {
 
 
 /**
- * 🔌️ Forwards `semio mcp …`: builds the binary, then serves the repo MCP server on stdio with the
- * profile taken from the first argument.
+ * 🧭️ Runs the repo command line: builds `semio-repo`, then execs it with the forwarded verb.
+ */
+class RepoScript extends BundleScript {
+  run(segments: string[]): void {
+    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli", "--bin", "semio-repo"], { cwd: this.repoRoot, env: devToolingEnv() });
+    const binName = process.platform === "win32" ? "semio-repo.exe" : "semio-repo";
+    process.exit(runCmdStatus(join(cargoTargetDirectory(this.repoRoot), "debug", binName), segments, { cwd: this.repoRoot, env: devToolingEnv() }));
+  }
+}
+
+/**
+ * 🔌️ Forwards `semio-repo mcp …`: builds the repo command line, then serves the repo MCP server on
+ * stdio with the profile taken from the first argument.
  */
 class McpScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli"], { cwd: this.repoRoot, env: devToolingEnv() });
-    const binName = process.platform === "win32" ? "semio.exe" : "semio";
-    const bin = join(this.repoRoot, "target", "debug", binName);
+    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli", "--bin", "semio-repo"], { cwd: this.repoRoot, env: devToolingEnv() });
+    const binName = process.platform === "win32" ? "semio-repo.exe" : "semio-repo";
+    const bin = join(cargoTargetDirectory(this.repoRoot), "debug", binName);
     const status = runCmdStatus(bin, ["mcp", ...segments], { cwd: this.repoRoot, env: devToolingEnv() });
     process.exit(status);
   }
 }
 
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript).register("workflow", WorkflowScript).register("mcp", McpScript);
+  const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript).register("workflow", WorkflowScript).register("mcp", McpScript).register("repo", RepoScript);
   await runBundleScriptMain(router, import.meta.url);
 }

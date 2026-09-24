@@ -221,6 +221,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -241,6 +242,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -260,7 +262,8 @@
           "capability": "wfc-bitmap-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-seed",
@@ -280,6 +283,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -320,6 +324,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -340,6 +345,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -360,6 +366,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -408,6 +415,13 @@
         "specification-vectors",
         "independent-implementations"
       ]
+    }
+  ],
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
     }
   ]
 }

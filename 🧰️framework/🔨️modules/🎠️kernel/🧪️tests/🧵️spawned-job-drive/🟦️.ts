@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import Ajv from "ajv";
 import {
+  FRAMEWORK_RESERVED_JOB_KIND,
   jobPlacementFromWireName,
   JOB_PLACEMENTS,
   spawnedJobCompletion,
@@ -63,6 +64,7 @@ interface RefusalFixture {
 
 interface DriveFixture {
   readonly schema: string;
+  readonly reservedKind: string;
   readonly budget: { readonly stepCeiling: number; readonly fuel: string; readonly deadlineMs: number };
   readonly placements: { readonly wire: readonly string[]; readonly refusals: readonly string[] };
   readonly transcripts: readonly TranscriptFixture[];
@@ -112,6 +114,7 @@ export async function testSpawnedJobDriveContract(): Promise<void> {
   assert.equal(fixture.budget.stepCeiling, SPAWNED_JOB_STEP_CEILING, "step ceiling");
   assert.equal(BigInt(fixture.budget.fuel), SPAWNED_JOB_FUEL, "fuel");
   assert.equal(fixture.budget.deadlineMs, SPAWNED_JOB_DEADLINE_MS, "deadline");
+  assert.equal(fixture.reservedKind, FRAMEWORK_RESERVED_JOB_KIND, "reserved tool job kind");
 
   // 2️⃣ The placement vocabulary is closed, ordered and round-trips; nothing outside it resolves.
   assert.deepEqual([...JOB_PLACEMENTS], [...fixture.placements.wire], "the WIT enum order is part of the contract");

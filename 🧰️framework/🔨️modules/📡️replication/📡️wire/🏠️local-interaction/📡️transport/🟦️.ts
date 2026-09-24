@@ -25,7 +25,8 @@ export function encodeLocalInteractionUnsigned(text: string): number[] {
 
 class Reader {
   offset = 0;
-  constructor(readonly bytes: Uint8Array) { if (bytes.length > maximumWireBytes) throw new Error("local-interaction.wire-envelope"); }
+  readonly bytes: Uint8Array;
+  constructor(bytes: Uint8Array) { if (bytes.length > maximumWireBytes) throw new Error("local-interaction.wire-envelope"); this.bytes = bytes; }
   byte(): number { const value = this.bytes[this.offset++]; if (value === undefined) throw new Error("local-interaction.truncated"); return value; }
   unsigned(): string {
     let value = 0n;

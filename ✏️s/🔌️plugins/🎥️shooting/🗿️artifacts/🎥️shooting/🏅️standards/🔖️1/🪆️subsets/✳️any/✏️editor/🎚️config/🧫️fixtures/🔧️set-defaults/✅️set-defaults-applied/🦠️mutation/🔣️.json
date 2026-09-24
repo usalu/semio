@@ -1,0 +1,7 @@
+{
+  "SetDefaults": {
+    "shotFormat": "svg",
+    "shotShape": "ellipse",
+    "assetFormat": "obj"
+  }
+}

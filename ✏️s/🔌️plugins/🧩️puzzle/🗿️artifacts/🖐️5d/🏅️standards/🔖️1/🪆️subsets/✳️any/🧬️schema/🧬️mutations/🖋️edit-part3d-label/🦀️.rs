@@ -26,7 +26,7 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for EditPart3dLa
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Edit part \"{}\" 3d label", self.id), &format!("Bauteil \"{}\" 3Dbeschriftung bearbeiten", self.id))
+        protocol::LocalizedLabel::native(&format!("Edit part \"{}\" 3d label", self.id), &format!("3D-Beschriftung von Bauteil \"{}\" bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

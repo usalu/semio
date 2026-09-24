@@ -1,0 +1,7 @@
+{
+  "entry": "import { fileURLToPath } from 'node:url';\nexport const witness = 'runtime-kept';\nif (process.argv[1] === fileURLToPath(import.meta.url)) { const config = await import('./⚙️config.mjs'); console.log(config.default); }\n",
+  "config": "import { witness } from './📜️entry.mjs';\nexport default witness;\n",
+  "detached": "const config = await import(process.argv[1]); console.log(config.default);",
+  "expected": "runtime-kept",
+  "timeoutMs": 1500
+}

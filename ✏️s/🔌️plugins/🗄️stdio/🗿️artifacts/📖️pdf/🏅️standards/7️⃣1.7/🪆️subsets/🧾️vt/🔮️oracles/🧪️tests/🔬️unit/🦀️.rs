@@ -4,7 +4,7 @@ use super::*;
 /// 🧫️ The real committed document this subset's case runs on, read where the artifact already
 /// keeps it — a 6.3 MB, 65-page LaTeX bachelor thesis with 3,189 indirect objects and 23
 /// `/FontDescriptor` objects, every one of them carrying an embedded font program.
-const FIXTURE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf");
+const FIXTURE: &[u8] = include_bytes!("../../../../🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf");
 
 fn json_object(pairs: Vec<(&str, Json)>) -> Json {
     Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
@@ -41,7 +41,7 @@ fn spec(kind: &str) -> Json {
 }
 
 fn fixture() -> Vec<u8> {
-    std::fs::read(FIXTURE).expect("the committed bachelor-thesis document")
+    FIXTURE.to_vec()
 }
 
 #[test]

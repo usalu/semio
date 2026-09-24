@@ -27,7 +27,10 @@ impl MutationKind<CadSnapshot, CadMutation> for ScaleObjects {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Scale {} object(s)", self.placements.len()), &format!("{} Objekt(s) skalieren", self.placements.len()))
+        match self.placements.len() {
+            1 => protocol::LocalizedLabel::native("Scale 1 object", "1 Objekt skalieren"),
+            count => protocol::LocalizedLabel::native(&format!("Scale {count} objects"), &format!("{count} Objekte skalieren")),
+        }
     }
     fn target(&self) -> Vec<String> {
         self.placements.iter().map(|placement| placement.object_id.clone()).collect()

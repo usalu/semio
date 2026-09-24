@@ -23,7 +23,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for MoveImage {
         agg_inverse(&GifMutation::MoveImage(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("move-image", "Bild verschieben")
+        protocol::LocalizedLabel::native("Move image", "Bild verschieben")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

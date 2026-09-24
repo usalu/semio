@@ -58,6 +58,18 @@ class TestScript extends BundleScript {
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 240_000 });
       return;
     }
+    if (segments[0] === "cross-platform-bootstrap") {
+      if (segments.length !== 1) throw new Error("Expected test cross-platform-bootstrap");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥾️cross-platform-bootstrap/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
+      return;
+    }
+    if (segments[0] === "process-tree-termination") {
+      if (segments.length !== 1) throw new Error("Expected test process-tree-termination");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪓️process-tree-termination/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
+      return;
+    }
     if (segments[0] === "kind-only-basename") {
       if (segments.length !== 1) throw new Error("Expected test kind-only-basename");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🌳️kind-only-basename/🟦️.ts");
@@ -482,8 +494,9 @@ class TestScript extends BundleScript {
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
-    const { rest } = resolveTestLevel(segments);
-    await runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🔬️workspace-contract/🟦️.ts", ...rest], { cwd: this.root, env: repoTestArtifactEnvironment(this.repoRoot, "workspace-contract") });
+    const { level, rest } = resolveTestLevel(segments);
+    const lawTimeout = level === "long" || level === "exhaustive" ? ["--timeout", String(TEST_LEVEL_BUDGET_MS[level])] : [];
+    await runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🔬️workspace-contract/🟦️.ts", ...lawTimeout, ...rest], { cwd: this.root, env: repoTestArtifactEnvironment(this.repoRoot, "workspace-contract") });
   }
 }
 

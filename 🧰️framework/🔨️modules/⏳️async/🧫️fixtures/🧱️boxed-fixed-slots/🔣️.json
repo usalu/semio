@@ -66,16 +66,6 @@
       "ownerSizeBytes": 4112
     },
     {
-      "guard": "renderer::kernel_runtime",
-      "crate": "semio-framework-os-renderer-wgpu",
-      "owner": "kernel_runtime::MountedTypedOperationResultExchange",
-      "capacityConstant": "MOUNTED_TYPED_OPERATION_RESULT_PAGES",
-      "capacity": 64,
-      "elementType": "Option<MountedTypedOperationResultPage>",
-      "elementSizeBytes": 4160,
-      "ownerSizeBytes": 24
-    },
-    {
       "guard": "ui::wgpu_engine",
       "crate": "semio-framework-ui",
       "owner": "wgpu::engine::UiSurfaceRegistry",

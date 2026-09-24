@@ -2989,6 +2989,172 @@ pub struct MaterializeReport {
 }
 //#endregion 🔖️Snapshot
 
+//#region 🔖️LedgerTail
+/// 🧮️ Ceiling on the committed transactions one ledger tail may carry, equal to the hub
+/// authority's own `AUTHORITY_MAX_OPERATIONS`.
+pub const ARTIFACT_LEDGER_TAIL_MAX_COMMITS: usize = 16_384;
+
+/// 📍️ One exact point of a document's committed ledger: the counters and content chain the
+/// document authority publishes plus the edit id at its tip (`None` only for genesis).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ArtifactLedgerPoint {
+    pub head_seq: u64,
+    pub commit_seq: u64,
+    pub chain_hash: [u8; 32],
+    pub head_edit_id: Option<protocol::MutationId>,
+}
+
+impl ArtifactLedgerPoint {
+    /// 🌱️ The point of a document nothing was ever committed to.
+    pub const fn genesis() -> Self {
+        Self { head_seq: 0, commit_seq: 0, chain_hash: [0; 32], head_edit_id: None }
+    }
+
+    /// 📸️ The point an actor-serialized snapshot names.
+    pub fn of_snapshot(snapshot: &CheckpointPublicationSnapshot) -> Self {
+        Self { head_seq: snapshot.frontier.head_seq, commit_seq: snapshot.frontier.commit_seq, chain_hash: snapshot.frontier.chain_hash, head_edit_id: snapshot.head_edit_id.clone() }
+    }
+
+    fn is_genesis(&self) -> bool {
+        *self == Self::genesis()
+    }
+}
+
+/// 📜️ One committed command transaction of the ledger tail: its envelopes in WAL order and the
+/// point the document authority published for it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ArtifactLedgerCommit {
+    pub point: ArtifactLedgerPoint,
+    pub envelopes: Vec<protocol::MutationEnvelope>,
+}
+
+/// 📜️ The committed command transactions strictly after `after` through exactly `through`, read
+/// from the same WAL and with the same point derivation `ArtifactEngine::open` replays: a command
+/// transaction's point is its terminal `Frontier` record plus its last command's id, and a durable
+/// group decision advances the point by one head and one commit to its parent post revision. Both
+/// points must be ledger points exactly, `after` must precede `through`, and a durable group
+/// decision inside the range is refused: its content is an approval's, published with its own
+/// checkpoint, and never an envelope a replica folds. `cancelled` stops the walk at the next record.
+///
+/// See `🌎️hub/🗿️artifact-authority/📌️check-in` for the hub Check In that consumes it.
+pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, after: &ArtifactLedgerPoint, through: &ArtifactLedgerPoint, cancelled: Arc<std::sync::atomic::AtomicBool>) -> Result<Vec<ArtifactLedgerCommit>, DbError> {
+    if through.head_seq <= after.head_seq || through.commit_seq <= after.commit_seq || through.head_edit_id.is_none() {
+        return Err(DbError::InvalidArgument("ledger tail must end at an edited point after its start".to_string()));
+    }
+    let control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(300), usize::MAX)?;
+    let mut records = db_wal::replay_committed_document(wal, document, control).await?;
+    let result = async {
+        let mut point = ArtifactLedgerPoint::genesis();
+        let mut decisions: HashSet<String> = HashSet::new();
+        let mut started = after.is_genesis();
+        let mut commits = Vec::new();
+        loop {
+            if cancelled.load(std::sync::atomic::Ordering::Acquire) {
+                return Err(DbError::Unavailable("ledger tail cancelled".to_string()));
+            }
+            let mut transaction = match records.next_transaction_step().await? {
+                db_wal::WalCommittedStep::Transaction(transaction) => transaction,
+                db_wal::WalCommittedStep::Yield => {
+                    semio_framework_async::yield_once().await;
+                    continue;
+                }
+                db_wal::WalCommittedStep::Done => return Err(DbError::NotFound("ledger tail end is not a committed ledger point".to_string())),
+            };
+            let mut envelopes = Vec::new();
+            let mut frontier = None;
+            let mut decision = None;
+            loop {
+                let record = match transaction.next_record_step()? {
+                    db_wal::WalCommittedRecordStep::Record(record) => record,
+                    db_wal::WalCommittedRecordStep::Yield => {
+                        semio_framework_async::yield_once().await;
+                        continue;
+                    }
+                    db_wal::WalCommittedRecordStep::Done => break,
+                };
+                match record {
+                    db_wal::WalRecord::Command(bytes) => {
+                        let mut control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+                        let retained = decode_retained_envelope(bytes, &mut control).await?;
+                        let envelope = adapt_retained_envelope(retained, &mut control).await?;
+                        if envelope.document_id.0 != document.0 {
+                            return Err(DbError::Corrupt("ledger envelope document differs".to_string()));
+                        }
+                        envelopes.push(envelope);
+                    }
+                    db_wal::WalRecord::Frontier(committed) => {
+                        if committed.document != *document {
+                            return Err(DbError::Corrupt("ledger frontier document differs".to_string()));
+                        }
+                        frontier = Some(committed.clone());
+                    }
+                    db_wal::WalRecord::Event(bytes) => {
+                        let mut canonical_pack = Vec::with_capacity(bytes.len());
+                        for fragment in bytes.fragments() {
+                            canonical_pack.extend_from_slice(fragment);
+                        }
+                        decision = Some(store::durable_group::DurableOwnedGroupJournalRecordV1::admit_canonical(canonical_pack).map_err(|error| DbError::Corrupt(format!("committed durable group decision is invalid: {error}")))?);
+                    }
+                    _ => {}
+                }
+                while transaction.close_record_step()? {
+                    semio_framework_async::yield_once().await;
+                }
+            }
+            transaction.finish()?;
+            let next = match (decision, frontier, envelopes.last()) {
+                (Some(record), None, None) => {
+                    if !decisions.insert(record.decision_sha256().to_string()) {
+                        continue;
+                    }
+                    if started {
+                        return Err(DbError::Conflict("ledger tail contains a durable group decision".to_string()));
+                    }
+                    ArtifactLedgerPoint {
+                        head_seq: point.head_seq.checked_add(1).ok_or(DbError::LimitExceeded("ledger tail head sequence"))?,
+                        commit_seq: point.commit_seq.checked_add(1).ok_or(DbError::LimitExceeded("ledger tail commit sequence"))?,
+                        chain_hash: record.parent_post_revision(),
+                        head_edit_id: Some(protocol::MutationId(record.parent_edit_id().to_string())),
+                    }
+                }
+                (None, Some(frontier), Some(last)) => ArtifactLedgerPoint { head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash, head_edit_id: Some(last.mutation_id.clone()) },
+                (None, None, None) => continue,
+                _ => return Err(DbError::Corrupt("ledger transaction is neither one command batch with its frontier nor one durable group decision".to_string())),
+            };
+            if next.head_seq <= point.head_seq || next.commit_seq <= point.commit_seq {
+                return Err(DbError::Corrupt("ledger points do not advance".to_string()));
+            }
+            point = next;
+            if !started {
+                if point == *after {
+                    started = true;
+                } else if point.commit_seq >= after.commit_seq {
+                    return Err(DbError::NotFound("ledger tail start is not a committed ledger point".to_string()));
+                }
+                continue;
+            }
+            if commits.len() == ARTIFACT_LEDGER_TAIL_MAX_COMMITS {
+                return Err(DbError::LimitExceeded("ledger tail commits"));
+            }
+            let reached = point == *through;
+            if !reached && point.commit_seq >= through.commit_seq {
+                return Err(DbError::NotFound("ledger tail end is not a committed ledger point".to_string()));
+            }
+            commits.push(ArtifactLedgerCommit { point: point.clone(), envelopes });
+            if reached {
+                return Ok(commits);
+            }
+        }
+    }
+    .await;
+    while records.close_owner_step()? {
+        semio_framework_async::yield_once().await;
+    }
+    drop(records);
+    result
+}
+//#endregion 🔖️LedgerTail
+
 //#region 🔖️HistoryReplay
 const HISTORY_REPLAY_PAGE_BYTES: u64 = 16 * 1024;
 const HISTORY_REPLAY_SEGMENT_PAGES: u64 = 1_024;
@@ -4983,13 +5149,18 @@ struct ArtifactRunnerRetirementReservation {
     ticket: Option<semio_framework_async::WorkerMaintenanceTicket>,
 }
 
+/// 🧹️ One retirement turn for the cursor in slot `index`. A reservation whose cursor is not committed
+/// yet sleeps (`Idle`) — its commit requests the turn again — so an early wake can never retire the
+/// hook and strand the cursor; only a generation that no longer owns the slot retires it.
 #[cfg(not(target_arch = "wasm32"))]
 fn artifact_runner_retirement_step([index, generation]: [u64; 2]) -> semio_framework_async::WorkerMaintenanceStep {
     let Ok(index) = usize::try_from(index) else { return semio_framework_async::WorkerMaintenanceStep::Retire };
     let Some(slot) = ARTIFACT_RUNNER_RETIREMENTS.get(index) else { return semio_framework_async::WorkerMaintenanceStep::Retire };
     let mut row = slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    if row.as_ref().is_none_or(|owner| owner.generation != generation) {
-        return semio_framework_async::WorkerMaintenanceStep::Retire;
+    match row.as_ref() {
+        Some(owner) if owner.generation == generation => {}
+        None if ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire) == generation => return semio_framework_async::WorkerMaintenanceStep::Idle,
+        _ => return semio_framework_async::WorkerMaintenanceStep::Retire,
     }
     let mut cursor = row.take();
     drop(row);
@@ -5039,8 +5210,8 @@ impl ArtifactRunnerRetirementReservation {
 
     fn commit(mut self, close: Arc<dyn Fn() -> bool + Send + Sync>, handoff: Arc<ArtifactRunnerHandoff>, pool_use: Arc<semio_framework_async::WorkerPoolUse>) {
         let ticket = self.ticket.take().expect("artifact runner retirement reservation lost maintenance ticket");
+        *ARTIFACT_RUNNER_RETIREMENTS[self.index].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactRunnerRetirementCursor { generation: self.generation, close, handoff: handoff.clone(), pool: self.pool.clone(), _pool_use: pool_use, ticket });
         *handoff.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((self.pool.clone(), ticket));
-        *ARTIFACT_RUNNER_RETIREMENTS[self.index].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactRunnerRetirementCursor { generation: self.generation, close, handoff, pool: self.pool.clone(), _pool_use: pool_use, ticket });
         let _ = self.pool.request_maintenance(ticket);
     }
 }
@@ -5063,12 +5234,18 @@ struct ArtifactRunnerClosePoll {
 impl Drop for ArtifactRunnerClosePoll {
     fn drop(&mut self) {
         use std::sync::atomic::Ordering;
-        let driver = self.handoff.driver.load(Ordering::Acquire);
         let faulted = self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
-        let next = if driver == ArtifactRunnerDriver::ClosingPollingWake as u8 && !faulted { ArtifactRunnerDriver::ClosingReady } else { ArtifactRunnerDriver::ClosingParked };
-        if driver == ArtifactRunnerDriver::ClosingPolling as u8 || driver == ArtifactRunnerDriver::ClosingPollingWake as u8 {
-            if self.handoff.driver.compare_exchange(driver, next as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() && next == ArtifactRunnerDriver::ClosingReady {
-                self.handoff.request_retirement_maintenance();
+        loop {
+            let driver = self.handoff.driver.load(Ordering::Acquire);
+            if driver != ArtifactRunnerDriver::ClosingPolling as u8 && driver != ArtifactRunnerDriver::ClosingPollingWake as u8 {
+                return;
+            }
+            let next = if driver == ArtifactRunnerDriver::ClosingPollingWake as u8 && !faulted { ArtifactRunnerDriver::ClosingReady } else { ArtifactRunnerDriver::ClosingParked };
+            if self.handoff.driver.compare_exchange(driver, next as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                if next == ArtifactRunnerDriver::ClosingReady {
+                    self.handoff.request_retirement_maintenance();
+                }
+                return;
             }
         }
     }
@@ -5926,14 +6103,18 @@ impl ArtifactAuthority {
 
     #[cfg(test)]
     pub(crate) fn shutdown_debug_witness(&self) -> String {
+        let close_error = self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+        let close_retry = self.handoff.close_retry_progress();
         format!(
-            "driver={} terminal={} active_history={} terminal_job={} retirement_maintenance={} runner_pool_use={}",
+            "driver={} terminal={} active_history={} terminal_job={} retirement_maintenance={} runner_pool_use={} close_error={:?} close_retry={:?}",
             self.handoff.driver.load(std::sync::atomic::Ordering::Acquire),
             self.handoff.terminal.load(std::sync::atomic::Ordering::Acquire),
             self.handoff.active_history.load(std::sync::atomic::Ordering::Acquire),
             self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),
             self.handoff.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),
             self.handoff.pool_use.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),
+            close_error,
+            close_retry,
         )
     }
 }

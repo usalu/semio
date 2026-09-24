@@ -22,7 +22,7 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateTensionCom
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-1-11 tension component inputs", "EN 1993-1-11 Zugkomponenteneingaben aktualisieren")
+        protocol::LocalizedLabel::native("Update EN 1993-1-11 tension component inputs", "EN 1993-1-11 Eingaben für Zugglieder aktualisieren")
     }
 }
 //#endregion 🔖️Payload

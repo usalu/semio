@@ -30,3 +30,13 @@ impl protocol::OpBinary for Fem3dResultsWindowTransientMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+
+//#region 🌉️TestBridge
+/// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
+/// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Fem3dResultsWindowTransient`.
+///
+/// @see store::os_store::test_support::mutation_report_json
+pub fn fem3d_results_window_transient_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
+    store::os_store::test_support::mutation_report_json::<Fem3dResultsWindowTransient, Fem3dResultsWindowTransientMutation>(base_json, mutation_json, after_json)
+}
+//#endregion 🌉️TestBridge

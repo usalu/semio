@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeASMm2 {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change a s mm2 to {:?}", self.new_a_s_mm2), &format!("Smm2 auf {:?} ändern", self.new_a_s_mm2))
+        protocol::LocalizedLabel::native(&format!("Change reinforcement area A_s [mm2] to {:?}", self.new_a_s_mm2), &format!("Bewehrungsquerschnitt A_s [mm2] auf {:?} ändern", self.new_a_s_mm2))
     }
 }
 //#endregion 🔖️ChangeASMm2

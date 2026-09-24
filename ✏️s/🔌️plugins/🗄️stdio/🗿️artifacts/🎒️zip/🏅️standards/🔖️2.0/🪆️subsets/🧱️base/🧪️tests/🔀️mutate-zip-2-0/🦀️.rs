@@ -19,11 +19,6 @@ use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves, unordered};
 
 //#region 🔖️Input
-/// 🦠️ Every declared `ZipMutation` variant, kebab-case — mirrors `../../🏅️standards/🔖️2.0/🪆️subsets/
-/// 🧱️base/🧬️schema/🧬️mutations/🦀️.rs`'s `KINDS` and that same standard's
-/// `🔣️oracle.json` catalog. Declared locally rather than imported so the oracle-only
-/// role's registration loop never has to link `semio-s-plugin-stdio`.
-const KINDS: [&str; 6] = ["set-snapshot", "set-archive-comment", "add-entry", "remove-entry", "rename-entry", "set-entry-data"];
 
 const INPUT: &str = "shared://🗜️.zip";
 
@@ -104,7 +99,7 @@ mod subject {
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::set_entry_data::SetEntryData;
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::set_snapshot::SetSnapshot;
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::snapshot::ZipEntry;
-    use crate::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_zip::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::base::project_zip_mutation;
 
     //#region 🔖️Spec
@@ -193,12 +188,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

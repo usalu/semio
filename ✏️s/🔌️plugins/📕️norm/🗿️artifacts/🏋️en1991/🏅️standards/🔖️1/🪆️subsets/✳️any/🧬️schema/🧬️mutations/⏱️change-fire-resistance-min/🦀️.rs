@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeFireResist
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fire resistance to {:?}", self.new_fire_resistance_min), &format!("Brandwiderstand auf {:?} ändern", self.new_fire_resistance_min))
+        protocol::LocalizedLabel::native(&format!("Change fire resistance to {:?}", self.new_fire_resistance_min), &format!("Feuerwiderstand auf {:?} ändern", self.new_fire_resistance_min))
     }
 }
 //#endregion 🔖️Payload

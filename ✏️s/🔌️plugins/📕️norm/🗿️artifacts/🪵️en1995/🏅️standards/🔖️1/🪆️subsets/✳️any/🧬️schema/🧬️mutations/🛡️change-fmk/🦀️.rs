@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeFMK {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change f m k to {:?}", self.new_f_m_k), &format!("Fmk auf {:?} ändern", self.new_f_m_k))
+        protocol::LocalizedLabel::native(&format!("Change bending strength f_m,k to {:?}", self.new_f_m_k), &format!("Biegefestigkeit f_m,k auf {:?} ändern", self.new_f_m_k))
     }
 }
 //#endregion 🔖️ChangeFMK

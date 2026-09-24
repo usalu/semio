@@ -30,7 +30,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for InsertNormal {
         agg_inverse(&ObjMutation::InsertNormal(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-normal", "Normale einfügen")
+        protocol::LocalizedLabel::native("Insert normal", "Normale einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

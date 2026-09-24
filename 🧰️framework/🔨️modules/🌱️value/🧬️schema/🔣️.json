@@ -32,6 +32,13 @@
         }
       ]
     },
+    "U64": {
+      "title": "U64",
+      "description": "🔢️ One u64 carried as a canonical decimal string: no sign, no leading zero, no separator, 0 ≤ value ≤ 18446744073709551615. A u64 exceeds IEEE-754 double precision, so every JSON carrier on the wire spells it this way and references this export instead of restating the pattern.",
+      "type": "string",
+      "maxLength": 20,
+      "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$"
+    },
     "NonZeroU64": {
       "title": "NonZeroU64",
       "description": "🔢️ A non-zero u64 carried as a decimal string, the wire form every 64-bit counter in this family uses (`activationGeneration`, `returnSequence`, `pageSequence`). The bound is the same exhaustive [0, u64::MAX] alternation the actor page schema's `Word` pins, with the `0` branch removed — zero is what these counters use to mean \"never issued\", so a value that carries one is never zero.",

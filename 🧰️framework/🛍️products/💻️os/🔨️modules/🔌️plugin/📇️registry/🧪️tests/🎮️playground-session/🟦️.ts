@@ -103,7 +103,6 @@ describe("playground session output ownership", () => {
     const stagedRoot = join(scratch, fixture.isolation.stagedOutputRoot);
     expect(existsSync(canonicalRoot)).toBe(false);
     expect(existsSync(stagedRoot)).toBe(false);
-    console.log(`[DEBUG] isolated session fixture preserves ${liveBefore.staged.exists ? Object.keys(liveBefore.staged.files).length : 0} live staged files`);
 
     const devScript = absolute(fixture.default.producerScript);
     const isolatedEnv = { ...process.env, [fixture.isolation.canonicalRootEnvironment]: canonicalRoot };
@@ -159,6 +158,5 @@ describe("playground session output ownership", () => {
     expect(previewProjection.staleRemovals).toEqual([]);
     expect(snapshotFile(canonical)).toEqual(canonicalBefore);
     expect(liveSnapshot()).toEqual(liveBefore);
-    console.log(`[DEBUG] isolated identities ${fixture.staging.variants.map((row) => `${row.variant}:${row.pluginId}`).join(",")} preserve default ${canonicalBefore.exists ? canonicalBefore.sha256 : "missing"}`);
   }, 120_000);
 });

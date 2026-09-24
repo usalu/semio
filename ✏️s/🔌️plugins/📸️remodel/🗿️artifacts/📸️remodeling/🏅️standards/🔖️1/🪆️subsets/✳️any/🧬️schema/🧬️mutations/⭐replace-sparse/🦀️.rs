@@ -36,7 +36,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceS
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace sparse", "dünn ersetzen")
+        protocol::LocalizedLabel::native("Replace sparse", "Dünne Punktwolke ersetzen")
     }
 }
 //#endregion 🔖️Mutation

@@ -535,6 +535,8 @@ pub const SEMIO_OWNED_PACK_SCHEMA_HASH_EXPORT: &str = "semio_owned_pack_schema_h
 pub const SEMIO_OWNED_GENESIS_EXPORT: &str = "semio_owned_genesis_v1";
 pub const SEMIO_OWNED_PRINT_MIRROR_EXPORT: &str = "semio_owned_print_mirror_v1";
 pub const SEMIO_OWNED_APPLY_OPS_EXPORT: &str = "semio_owned_apply_ops_v1";
+/// 📜️ The owned twin of `codec.replay-envelopes`, the hub's Check In fold.
+pub const SEMIO_OWNED_REPLAY_ENVELOPES_EXPORT: &str = "semio_owned_replay_envelopes_v1";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SemioActorExport {
@@ -592,10 +594,11 @@ pub enum OwnedSemioExport {
     Genesis,
     PrintMirror,
     ApplyOps,
+    ReplayEnvelopes,
 }
 
 impl OwnedSemioExport {
-    pub const ALL: [Self; 13] = [
+    pub const ALL: [Self; 14] = [
         Self::Allocate,
         Self::Deallocate,
         Self::Checkpoint,
@@ -609,6 +612,7 @@ impl OwnedSemioExport {
         Self::Genesis,
         Self::PrintMirror,
         Self::ApplyOps,
+        Self::ReplayEnvelopes,
     ];
 
     pub fn core_name(self) -> &'static str {
@@ -626,6 +630,7 @@ impl OwnedSemioExport {
             Self::Genesis => SEMIO_OWNED_GENESIS_EXPORT,
             Self::PrintMirror => SEMIO_OWNED_PRINT_MIRROR_EXPORT,
             Self::ApplyOps => SEMIO_OWNED_APPLY_OPS_EXPORT,
+            Self::ReplayEnvelopes => SEMIO_OWNED_REPLAY_ENVELOPES_EXPORT,
         }
     }
 
@@ -634,7 +639,7 @@ impl OwnedSemioExport {
             Self::Allocate => FunctionType { parameters: vec![ValueType::I32], results: vec![ValueType::I32] },
             Self::Deallocate => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![] },
             Self::Checkpoint | Self::Describe => FunctionType { parameters: vec![], results: vec![ValueType::I64] },
-            Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps => {
+            Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes => {
                 FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![ValueType::I64] }
             }
         }

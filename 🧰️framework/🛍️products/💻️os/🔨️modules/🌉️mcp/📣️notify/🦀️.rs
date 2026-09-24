@@ -461,6 +461,22 @@ pub fn jobs_for_request(request_id: &serde_json::Value) -> Vec<String> {
     let bindings = progress_bindings().lock().expect("progress binding lock poisoned");
     bindings.jobs_by_request.get(&request_key(request_id)).cloned().unwrap_or_default()
 }
+
+/// 🛑️ Whether the `tools/call` running on this thread was asked to stop — by `notifications/cancelled`
+/// naming its request, or by a cancel of any job minted under it (the shell's `AgentCancel` flips the
+/// tool call's own job). A call that blocks on a human (a parked approval) polls this, so a stop ends
+/// the wait instead of its deadline. Outside a request scope nothing can name the call: `false`.
+pub fn active_request_cancel_requested() -> bool {
+    let Some(key) = ACTIVE_REQUEST.with(|active| active.borrow().clone()) else { return false };
+    let jobs = {
+        let bindings = progress_bindings().lock().expect("progress binding lock poisoned");
+        if bindings.cancelled_requests.contains(&key) {
+            return true;
+        }
+        bindings.jobs_by_request.get(&key).cloned().unwrap_or_default()
+    };
+    jobs.iter().any(|job_id| crate::ui::job_registry().is_cancel_requested(job_id))
+}
 //#endregion 🔖️Progress
 
 //#region 🔖️Pagination

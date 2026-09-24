@@ -11,7 +11,7 @@
 // repository's own `encode_pdf`:
 //
 //   * `🦀️engine`       — writes `📊️report-strip.pdf`, the shared seed ASSET other subsets reuse.
-//   * `⚖️lopdf-engine` — writes the sixteen before/after MUTATION pairs, applying each
+//   * `⚖️lopdf-engine` — writes the sixty before/after MUTATION pairs, applying each
 //                        mutation through lopdf's own public COS API and reading the structural
 //                        projection back through it, so nothing here predicts what the reader judges.
 //
@@ -22,7 +22,7 @@
 // that writes into `../🧫️fixtures/`, and its output is reviewed and committed before any test reads it.
 //
 //   bun 📜️script.ts generate [--out <dir>]   # (re)builds both engines and writes every fixture
-//   bun 📜️script.ts manifests                 # prints the fixtureManifests entries for all 17 committed fixtures
+//   bun 📜️script.ts manifests                 # prints the fixtureManifests entries for all 61 committed fixtures
 //
 // @see ../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️gif-las-pdf17-findings.md
 
@@ -49,7 +49,7 @@ const ASSET_RECIPE = "report-strip";
 const ASSET_DIRECTORY = "📊️report-strip";
 const ASSET_FILE = "📊️report-strip.pdf";
 /** 🧾️ Kept in step with `🔁️codec/🦀️.rs::KINDS`. */
-const KINDS: readonly string[] = ["insert-page", "remove-page", "move-page", "set-page-media-box", "set-page-crop-box", "set-page-rotation", "set-page-content", "append-page-content", "set-info", "insert-object", "remove-object", "set-object-value", "set-dict-entry", "remove-dict-entry", "set-trailer-entry", "remove-trailer-entry"];
+const KINDS: readonly string[] = ["insert-page", "remove-page", "move-page", "set-page-media-box", "set-page-crop-box", "set-page-rotation", "set-page-content", "append-page-content", "set-info", "insert-object", "remove-object", "set-object-value", "set-dict-entry", "remove-dict-entry", "set-trailer-entry", "remove-trailer-entry", "set-page-box", "set-page-user-unit", "insert-content", "remove-content", "replace-content", "insert-annotation", "remove-annotation", "set-annotation", "set-font", "remove-font", "set-image", "remove-image", "set-form", "remove-form", "set-ext-g-state", "remove-ext-g-state", "set-shading", "remove-shading", "set-pattern", "remove-pattern", "set-color-space", "remove-color-space", "set-properties", "remove-properties", "set-embedded-file", "remove-embedded-file", "set-outlines", "set-named-destination", "remove-named-destination", "set-page-labels", "set-output-intents", "set-acro-form", "set-optional-content", "set-page-layout", "set-page-mode", "set-viewer-preferences", "set-open-action", "set-language", "set-mark-info", "set-metadata", "set-document-id", "set-encryption", "set-catalog-entry", "remove-catalog-entry"];
 const FIXTURE_DIRECTORY_BY_KIND: Readonly<Record<string, string>> = {
   "insert-page": "📥️insert-page",
   "remove-page": "🗑️remove-page",
@@ -67,6 +67,50 @@ const FIXTURE_DIRECTORY_BY_KIND: Readonly<Record<string, string>> = {
   "remove-dict-entry": "🚫️remove-dict-entry",
   "set-trailer-entry": "🧳️set-trailer-entry",
   "remove-trailer-entry": "🧽️remove-trailer-entry",
+  "set-page-box": "🖼️set-page-box",
+  "set-page-user-unit": "📏️set-page-user-unit",
+  "insert-content": "🖋️insert-content",
+  "remove-content": "🧻️remove-content",
+  "replace-content": "🔁️replace-content",
+  "insert-annotation": "📌️insert-annotation",
+  "remove-annotation": "📍️remove-annotation",
+  "set-annotation": "📝️set-annotation",
+  "set-font": "🔤️set-font",
+  "remove-font": "🅾️remove-font",
+  "set-image": "🏞️set-image",
+  "remove-image": "🌫️remove-image",
+  "set-form": "📄️set-form",
+  "remove-form": "🗞️remove-form",
+  "set-ext-g-state": "🎛️set-ext-g-state",
+  "remove-ext-g-state": "🎚️remove-ext-g-state",
+  "set-shading": "🌅️set-shading",
+  "remove-shading": "🌄️remove-shading",
+  "set-pattern": "🧩️set-pattern",
+  "remove-pattern": "🪡️remove-pattern",
+  "set-color-space": "🌈️set-color-space",
+  "remove-color-space": "🎨️remove-color-space",
+  "set-properties": "🏷️set-properties",
+  "remove-properties": "🔖️remove-properties",
+  "set-embedded-file": "📎️set-embedded-file",
+  "remove-embedded-file": "🗃️remove-embedded-file",
+  "set-outlines": "📑️set-outlines",
+  "set-named-destination": "🎯️set-named-destination",
+  "remove-named-destination": "🎪️remove-named-destination",
+  "set-page-labels": "🔢️set-page-labels",
+  "set-output-intents": "🏳️set-output-intents",
+  "set-acro-form": "📋️set-acro-form",
+  "set-optional-content": "👁️set-optional-content",
+  "set-page-layout": "📖️set-page-layout",
+  "set-page-mode": "🖥️set-page-mode",
+  "set-viewer-preferences": "🛠️set-viewer-preferences",
+  "set-open-action": "🚪️set-open-action",
+  "set-language": "🗣️set-language",
+  "set-mark-info": "🔏️set-mark-info",
+  "set-metadata": "🧾️set-metadata",
+  "set-document-id": "🆔️set-document-id",
+  "set-encryption": "🔐️set-encryption",
+  "set-catalog-entry": "🗂️set-catalog-entry",
+  "remove-catalog-entry": "🧺️remove-catalog-entry",
 };
 const BEFORE_FILENAME = "⬅️before.pdf";
 const AFTER_FILENAME = "➡️after.pdf";

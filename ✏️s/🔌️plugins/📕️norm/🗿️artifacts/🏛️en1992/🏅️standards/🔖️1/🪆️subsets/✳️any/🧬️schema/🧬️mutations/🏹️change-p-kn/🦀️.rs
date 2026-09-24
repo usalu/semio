@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangePKn {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change p kn to {:?}", self.new_p_kn), &format!("Pkn auf {:?} ändern", self.new_p_kn))
+        protocol::LocalizedLabel::native(&format!("Change load P [kN] to {:?}", self.new_p_kn), &format!("Last P [kN] auf {:?} ändern", self.new_p_kn))
     }
 }
 //#endregion 🔖️ChangePKn

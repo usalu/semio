@@ -22,7 +22,7 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetAnalysisMo
         agg_inverse(&Ifc2x3SavMutation::SetAnalysisModel(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-analysis-model", "Analysenmodell setzen")
+        protocol::LocalizedLabel::native("Set analysis model", "Analysemodell setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

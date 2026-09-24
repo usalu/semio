@@ -450,6 +450,11 @@ impl MutationDag {
         self.envelopes.is_empty() && self.applied.is_empty() && self.pending.is_empty()
     }
 
+    /// ⏳️ No inserted envelope still waits on a dependency this dag has never seen.
+    pub fn pending_is_empty(&self) -> bool {
+        self.pending.is_empty()
+    }
+
     /// @emoji ➕️ Inserts one envelope. Returns `AlreadyApplied` if its id was applied before,
     /// `Err(Duplicate)` if it's already buffered as pending, `Pending` if any dependency is wholly
     /// unknown to this dag, else `Applied`.

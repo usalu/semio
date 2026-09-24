@@ -33,7 +33,7 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ReplaceTiles {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace tiles with {} tiles", self.new_tiles.len()), &format!("Kacheln mit {} Kacheln ersetzen", self.new_tiles.len()))
+        protocol::LocalizedLabel::native(&format!("Replace tiles with {} tiles", self.new_tiles.len()), &format!("Kacheln durch {} Kacheln ersetzen", self.new_tiles.len()))
     }
 
     fn target(&self) -> Vec<String> {

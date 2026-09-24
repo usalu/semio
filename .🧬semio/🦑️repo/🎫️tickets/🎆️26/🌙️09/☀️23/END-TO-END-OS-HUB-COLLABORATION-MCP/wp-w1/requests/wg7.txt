@@ -1,0 +1,37 @@
+WG7 (session 11) guest requests — 2026-09-25 02:20
+1. crate semio-s-plugin-note (📝️note, app s.note.note@1/*#editor, schema note.document) — the wasm32 BROWSER wgpu shell's
+   two-user collaboration E2E opens a note hub document on hub 7800.
+   Needs: (a) note in the post-landing catalog on hub 7800 (it is in catalog A today, but built before H9's 01:13 owned-ABI
+   change, so a browser shell from the current tree refuses the served guest); (b) the wgpu browser activation of the SAME
+   build: `activate note wgpu dev` (served plugin-modules + browser runtime), whose descriptor `hashes.wasmSha256` must
+   equal the catalog package's `component.sha256` — the browser shell now binds a hub document of a codec-less kind only
+   when the hub's execution-target lease names the mounted component (plugin, package, component SHA-256, schema, surface).
+   If the catalog is published from component-release while the wgpu serve stages component-dev, the two SHAs differ and the
+   open is refused by design; please say which profile each uses, and append the served dir + both SHAs here.
+2. No other guest is needed by WG7. The renderer's own browser wasm build (`@semio-tech/framework-renderer-wgpu:wasm`,
+   single crate) WG7 runs itself through the wasm mutex.
+WG7 addendum 2026-09-25 03:30 — measured: served dev note (materialized 03:06) wasmSha256 f26fb83c…, served release note
+(09-24 04:16) acfaf580…, catalog A note component 70ba2d15…: all three differ. The browser shell's lease check needs the
+served component == the catalog component, so WG7 will serve the RELEASE variant (`serve note release`, modules from
+`🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules`). Please make the note release materialization and the
+note catalog package the same component-release bytes, and append the release descriptor wasmSha256 + catalog note
+component.sha256 here when done. (A dev serve against a release catalog is refused by design, not a bug.)
+   (i.e. the wgpu browser activation WG7 needs is `activate note wgpu release` → dist/runtime/wgpu/release/note, not dev.)
+
+[w2 2026-09-25 03:5x] ACK. Profiles: the trusted catalog's package is the wasm-RELEASE component (bootstrap `produceFreshComponentV1`,
+  `componentProfile: "wasm-release"`, the same `pluginComponentRustcArgs(pkg, "wasm-release")` unit as `<p>-plugin:component-release`);
+  `activate note wgpu dev` stages the wasm-DEV component (describe/materialize-dev). Their SHAs differ by construction, so a dev-lane browser
+  shell will never match the hub lease. Options that hold by design: fetch the component from the hub's execution target
+  (`/spaces/{s}/documents/{d}/execution-target/component`, the exact catalog bytes), or serve a release activation. After the full catalog
+  publish W2 appends here: catalog note component.sha256, dist/component-release sha256, and the wgpu dev served dir + its wasmSha256.
+WG7 05:40: ran activate-note-wgpu-dev (single plugin) — note component-dev rebuilt from the current tree + re-materialized dev; your verify may list note as re-staged at 05:39.
+WG7 07:55 — measured: my `activate-note-wgpu-release` (07:31–07:49, in the wasm mutex) rebuilt note component-release →
+70640810…, while your 06:45 catalog-B warm-up produced 991e840b… — the tree moved between the two builds, so equal bytes
+cannot be had by building twice. Precise ask: in catalog B's publish hold, right after `trusted-catalog-bootstrap` builds
+note, run `bun nx run @semio-tech/framework-os-dev:activate-note-wgpu-release` (same cargo unit, no source change in
+between ⇒ the catalog's exact bytes get materialized for the wgpu release serve), then append the catalog note
+component.sha256 and the served `dist/release/🔌️plugin-modules/🗒️note/🔣️.json` hashes.wasmSha256 here. WG7 then serves
+`note release` on 6551 and runs the two-browser collaboration against hub 7800.
+WG7 10:41 — seen: catalog B publish rc=1 twice, the 10:30 cause is block's `codec.pack-schema-hash(kit.catalog)` ("artifact codec schema is owned by no app of this bundle", publish-w2-catalog-b.txt:19141). WG7 needs only note (+ the served release activation of the same note bytes); if block holds B up, a B without block unblocks the browser E2E.
+
+[w2 2026-09-25 12:3x] catalog B note component.sha256 (wasm-release) = 4567a6707d77f7afc14a25220821c1148a9946c3e04ec697420dd5791c283940; the wasm-dev staged note is a different build by construction (see above).

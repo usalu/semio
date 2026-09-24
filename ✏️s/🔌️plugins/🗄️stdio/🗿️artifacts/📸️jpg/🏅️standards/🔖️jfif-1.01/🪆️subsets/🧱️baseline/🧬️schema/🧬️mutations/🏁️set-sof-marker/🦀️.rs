@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSofMarker {
-    pub(crate) marker: u8,
+    pub marker: u8,
 }
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSofMarker {
@@ -21,7 +21,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSofMarker {
         agg_inverse(&JpgBaselineMutation::SetSofMarker(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-sof-marker", "Sofmarker setzen")
+        protocol::LocalizedLabel::native("Set SOF marker", "SOF-Marker setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

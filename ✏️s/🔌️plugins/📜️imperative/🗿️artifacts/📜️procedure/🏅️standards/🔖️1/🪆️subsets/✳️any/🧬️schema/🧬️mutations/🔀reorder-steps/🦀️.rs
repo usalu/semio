@@ -30,7 +30,7 @@ impl protocol::MutationKind<ProcedureSnapshot, ProcedureMutation> for ReorderSte
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder step \"{}\" to position {}", self.id, self.to_index), &format!("Schritt \"{}\" zu Position {} umordnen", self.id, self.to_index))
+        protocol::LocalizedLabel::native(&format!("Reorder step \"{}\" to position {}", self.id, self.to_index), &format!("Schritt \"{}\" an Position {} verschieben", self.id, self.to_index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

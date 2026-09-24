@@ -25,7 +25,7 @@ impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetErrorN {
         vec![SeverityMutation::RestoreN(RestoreN { n: base.n })]
     }
     fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native("Set Error N", "Fehlern setzen")
+        crate::LocalizedLabel::native("Set Error N", "Fehler N setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["n".into()]

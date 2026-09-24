@@ -5,9 +5,9 @@ import { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "./🔒️preferences/🟦️.ts";
  * servers, and through them `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery`
  * taxonomy walk into its module graph. */
 import { ephemeralBox } from "@semio-tech/framework";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
+import { declaredWorkspaces, getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
 import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
 export type PlaygroundHostKind = string;
@@ -31,29 +31,18 @@ type PlaygroundPortSpec = {
   readonly env: string;
 };
 
-/** @emoji 🔌️ Builds playground port table from semio.app manifests plus non-app hosts. */
+/** @emoji 🔌️ Builds the playground port table from the declared workspaces' `semio.app` manifests plus non-app hosts. */
 function buildPlaygroundPortsFromManifests(): Record<string, PlaygroundPortSpec> {
   const ports: Record<string, PlaygroundPortSpec> = {
     storybook: { dev: 6010, env: "STORYBOOK_PORT" },
   };
   for (const row of loadFrameworkOsPlaygroundCatalog()) ports[row.variant] = { dev: row.ports.react, test: row.ports.wgpu, env: "S_OS_PORT" };
-  const walk = (directory: string): void => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-      if (entry.name === "node_modules" || entry.name === "target" || entry.name === "🎫️tickets" || entry.name.startsWith(".")) continue;
-      const path = join(directory, entry.name);
-      if (entry.isDirectory()) {
-        walk(path);
-        continue;
-      }
-      if (entry.name !== "package.json") continue;
-      try {
-        const manifest = JSON.parse(readFileSync(path, "utf8")) as { semio?: { app?: { hostKind?: string; port?: { dev?: number; test?: number; env?: string } } } };
-        const app = manifest.semio?.app;
-        if (app?.hostKind && Number.isSafeInteger(app.port?.dev) && app.port?.env) ports[app.hostKind] = { dev: app.port.dev!, test: app.port.test, env: app.port.env };
-      } catch {}
-    }
-  };
-  walk(getWorkspaceRoot());
+  const root = getWorkspaceRoot();
+  for (const workspace of declaredWorkspaces(root)) {
+    const manifest = JSON.parse(readFileSync(join(root, workspace, "package.json"), "utf8")) as { semio?: { app?: { hostKind?: string; port?: { dev?: number; test?: number; env?: string } } } };
+    const app = manifest.semio?.app;
+    if (app?.hostKind && Number.isSafeInteger(app.port?.dev) && app.port?.env) ports[app.hostKind] = { dev: app.port.dev!, test: app.port.test, env: app.port.env };
+  }
   return ports;
 }
 

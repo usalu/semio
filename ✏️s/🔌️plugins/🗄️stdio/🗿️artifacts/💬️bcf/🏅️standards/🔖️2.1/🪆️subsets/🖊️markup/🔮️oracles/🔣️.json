@@ -16,7 +16,13 @@
       ],
       "license": "MIT",
       "testOnly": true,
-      "productionDebt": {"reachableFrom": ["🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"], "owner": "🧰️framework/🛍️products/💻️os/🖥️host", "plan": "The same reach the `zip` oracle records in ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json: the OS host declares an optional `zip` dependency for container handling. This oracle's subject does not link it; the stdio and architect crates keep `zip` as a dev-dependency. The debt retires when the host routes containers through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."},
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
+        "plan": "The same reach the `zip` oracle records in ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json: the OS host declares an optional `zip` dependency for container handling. This oracle's subject does not link it; the stdio and architect crates keep `zip` as a dev-dependency. The debt retires when the host routes containers through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."
+      },
       "homepage": "https://github.com/zip-rs/zip2 ; https://github.com/tafia/quick-xml",
       "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
@@ -146,7 +152,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-version",
         "insert-topic",
@@ -327,30 +332,12 @@
       "subsetDirectoryName": "🖊️markup",
       "mutations": [
         {
-          "id": "no-mutation",
-          "capability": "bcf-2-1-mutate",
-          "outcomes": [
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "no-mutation",
-            "bridgeVersion": 1,
-            "variant": "NoMutation"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "bcf-2-1-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "jszip-bcf-2-1-mutate-reader"
-            }
-          ]
-        },
-        {
           "id": "set-snapshot",
           "capability": "bcf-2-1-mutate",
           "outcomes": [
+            "applied",
             "no-op",
-            "applied"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -388,7 +375,6 @@
           "id": "insert-topic",
           "capability": "bcf-2-1-mutate",
           "outcomes": [
-            "rejected",
             "applied"
           ],
           "productionDispatch": {
@@ -503,6 +489,116 @@
               "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
+        },
+        {
+          "id": "insert-viewpoint",
+          "capability": "bcf-2-1-viewpoint-mutate",
+          "subset": "viewpoint",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-viewpoint",
+            "bridgeVersion": 1,
+            "variant": "InsertViewpoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-viewpoint-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../🧬️schema/🧬️mutations/👁️insert-viewpoint/🦀️.rs#InsertViewpoint"
+        },
+        {
+          "id": "remove-viewpoint",
+          "capability": "bcf-2-1-viewpoint-mutate",
+          "subset": "viewpoint",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-viewpoint",
+            "bridgeVersion": 1,
+            "variant": "RemoveViewpoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-viewpoint-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../🧬️schema/🧬️mutations/🙈remove-viewpoint/🦀️.rs#RemoveViewpoint"
+        },
+        {
+          "id": "set-viewpoint-camera",
+          "capability": "bcf-2-1-viewpoint-mutate",
+          "subset": "viewpoint",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-viewpoint-camera",
+            "bridgeVersion": 1,
+            "variant": "SetViewpointCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-viewpoint-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../🧬️schema/🧬️mutations/📷set-viewpoint-camera/🦀️.rs#SetViewpointCamera"
+        },
+        {
+          "id": "set-viewpoint-components",
+          "capability": "bcf-2-1-viewpoint-mutate",
+          "subset": "viewpoint",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-viewpoint-components",
+            "bridgeVersion": 1,
+            "variant": "SetViewpointComponents"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-viewpoint-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧱set-viewpoint-components/🦀️.rs#SetViewpointComponents"
+        },
+        {
+          "id": "set-viewpoint-snapshot",
+          "capability": "bcf-2-1-snapshot-mutate",
+          "subset": "snapshot",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-viewpoint-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetViewpointSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-snapshot-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ],
+          "payloadSchema": "../🧬️schema/🧬️mutations/📸set-viewpoint-snapshot/🦀️.rs#SetViewpointSnapshot"
         }
       ]
     }
@@ -517,8 +613,6 @@
         "standard": "2.1",
         "subset": "markup"
       },
-      "mutation": "no-mutation",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"

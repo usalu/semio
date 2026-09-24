@@ -38,7 +38,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for InsertTextChunkMutatio
         }
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert text chunk", "Textchunk einfügen")
+        protocol::LocalizedLabel::native("Insert text chunk", "Text-Chunk einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-text-chunk".into()]

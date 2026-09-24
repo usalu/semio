@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeDuctTe
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change duct test pressure to {}", self.new_duct_test_pressure_pa), &format!("Kanaltestdruck auf {} ändern", self.new_duct_test_pressure_pa))
+        protocol::LocalizedLabel::native(&format!("Change duct test pressure to {}", self.new_duct_test_pressure_pa), &format!("Prüfdruck der Kanäle auf {} ändern", self.new_duct_test_pressure_pa))
     }
 }
 //#endregion 🔖️ChangeDuctTestPressurePa

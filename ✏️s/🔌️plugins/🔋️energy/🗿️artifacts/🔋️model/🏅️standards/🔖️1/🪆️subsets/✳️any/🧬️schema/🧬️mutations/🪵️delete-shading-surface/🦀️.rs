@@ -32,7 +32,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Delete
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete shading surface {}", self.id.0), &format!("Verschattungsoberfläche {} löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete shading surface {}", self.id.0), &format!("Verschattungsfläche {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

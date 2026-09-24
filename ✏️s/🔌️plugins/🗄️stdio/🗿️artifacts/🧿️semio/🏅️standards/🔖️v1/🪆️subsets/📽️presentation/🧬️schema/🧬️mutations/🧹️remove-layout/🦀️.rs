@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
         agg_inverse(&SemioPresentationMutation::RemoveLayout(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-layout", "Layout entfernen")
+        protocol::LocalizedLabel::native("Remove layout", "Layout entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

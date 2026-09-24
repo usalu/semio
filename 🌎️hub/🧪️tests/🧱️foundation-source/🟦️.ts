@@ -396,6 +396,8 @@ test("source definition boundaries match TypeScript AST and reject stale credent
     launch: native.launch,
   };
   expect(mcpCredentialSourceOrderConforms(mcp)).toBe(true);
+  expect(mcpCredentialSourceOrderConforms({ ...mcp, workspace: mcp.workspace.replace("surface: Some(PROBE_SURFACE_ID.to_string()) },", "surface: Some(PROBE_SURFACE_ID.to_string()) }, _ if lease.is_some() => unreachable!(),") })).toBe(false);
+  expect(mcpCredentialSourceOrderConforms({ ...mcp, workspace: mcp.workspace.replace("pub fn open_hub(", "fn stale_probe_claim(&self) { self.artifact_host.set_document_execution_target_lease(&key, probe); }\n    pub fn open_hub(") })).toBe(false);
   expect(mcpCredentialSourceOrderConforms({ ...mcp, entrypoint: mcp.entrypoint.replace('claim_inherited_local_hub_credential("mcp")', 'claim_inherited_local_hub_credential("late")') })).toBe(false);
   expect(mcpCredentialSourceOrderConforms({ ...mcp, entrypoint: mcp.entrypoint.replace("return;\n    }", "return;\n    }\n    return;") })).toBe(false);
   expect(() => proveMcpCredentialSourceOrder(repoRoot)).not.toThrow();

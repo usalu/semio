@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
         agg_inverse(&SemioPresentationMutation::SetSlideLayout(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-slide-layout", "Folienlayout setzen")
+        protocol::LocalizedLabel::native("Set slide layout", "Folienlayout setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

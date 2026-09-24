@@ -2,7 +2,7 @@
 use super::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_dxf_r12};
 use semio_repo_test_host::parse_json;
 
-const FIXTURE: &str = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/📚️examples/🚏️bus-shelter/🖼️assets/🖊️bus-shelter-r12.dxf";
+const FIXTURE: &[u8] = include_bytes!("../../../📚️examples/🚏️bus-shelter/🖼️assets/🧪️bus-shelter-r12/🖊️.dxf");
 
 const ROWS: &[(&str, &str)] = &[
     ("no-mutation", "{}"),
@@ -29,7 +29,7 @@ const ROWS: &[(&str, &str)] = &[
 #[test]
 fn all_kinds_mutate_and_invert_cleanly() {
     assert_eq!(ROWS.len(), 19, "must exercise all 19 declared kinds");
-    let input = std::fs::read(FIXTURE).expect("read committed fixture");
+    let input = FIXTURE.to_vec();
     let base_projection = project_dxf_r12(&input).expect("project base fixture");
 
     for (kind, params) in ROWS {
@@ -51,7 +51,7 @@ fn all_kinds_mutate_and_invert_cleanly() {
 
 #[test]
 fn identity_round_trip_is_not_byte_identical() {
-    let input = std::fs::read(FIXTURE).expect("read committed fixture");
+    let input = FIXTURE.to_vec();
     let spec = parse_json(r#"{"kind": "no-mutation", "params": {}}"#).expect("valid spec");
     let output = oracle_apply_mutation(&input, &spec).expect("no-mutation re-encode");
     assert_ne!(output, input, "byte pass-through: dxf-crate re-encode is bit-identical to the input");

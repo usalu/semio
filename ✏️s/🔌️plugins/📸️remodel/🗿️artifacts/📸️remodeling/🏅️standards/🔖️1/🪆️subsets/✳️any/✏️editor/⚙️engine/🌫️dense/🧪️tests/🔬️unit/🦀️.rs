@@ -1,3 +1,4 @@
+use crate::editor::remodeling::engine::step_ceiling;
 use super::*;
 
 fn lcg_next(state: &mut u64) -> f64 {
@@ -242,7 +243,7 @@ fn maximum_patchmatch_allocation_and_one_pixel_step_stay_below_hard_ceiling_in_e
     let sources = (0..8).map(|index| (reference.clone(), translated_pose(index as f64 * 0.01, 0.0, 0.0), intrinsics)).collect::<Vec<_>>();
     let started = std::time::Instant::now();
     let mut preparation = PatchMatchPreparation::new(width, height);
-    assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum PatchMatch fixed-envelope buffer reservation exceeded 8 ms");
+    step_ceiling::admit_step(started.elapsed(), format_args!("maximum PatchMatch fixed-envelope buffer reservation exceeded 8 ms"));
     assert_eq!(preparation.depths.capacity(), pixels);
     preparation.phase = PatchMatchPhase::Initialize;
     preparation.depths.push(0.0);
@@ -254,7 +255,7 @@ fn maximum_patchmatch_allocation_and_one_pixel_step_stay_below_hard_ceiling_in_e
     let config = PatchMatchConfig { window_radius: 4, iterations: 1, depth_min: 0.1, depth_max: 100.0, seed: u64::MAX, best_k: 4, confidence_floor: None };
     let started = std::time::Instant::now();
     assert!(!preparation.advance(&reference, &(pose, intrinsics), &sources, &config, 1));
-    assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum-source/radius PatchMatch pixel step exceeded 8 ms");
+    step_ceiling::admit_step(started.elapsed(), format_args!("maximum-source/radius PatchMatch pixel step exceeded 8 ms"));
 }
 // #endregion 🔖️PatchMatchTests
 
@@ -425,7 +426,7 @@ fn fuse_depth_maps_recovers_plane_points() {
 fn maximum_fusion_reservation_and_comparison_step_stay_below_hard_ceiling_in_each_build_profile() {
     let started = std::time::Instant::now();
     let mut preparation = FusionPreparation::new(usize::MAX);
-    assert!(started.elapsed() < std::time::Duration::from_millis(8), "bounded fused-cloud reservation exceeded 8 ms");
+    step_ceiling::admit_step(started.elapsed(), format_args!("bounded fused-cloud reservation exceeded 8 ms"));
     assert_eq!(preparation.output.positions.capacity(), MAX_INTERACTIVE_FUSED_POINTS);
 
     let intrinsics = intrinsics_for(1, 1);
@@ -433,7 +434,7 @@ fn maximum_fusion_reservation_and_comparison_step_stay_below_hard_ceiling_in_eac
     let depth_maps = (0..12).map(|_| DepthMap { width: 1, height: 1, depth: vec![4.0], normal: vec![[0.0, 0.0, -1.0]], confidence: vec![1.0] }).collect::<Vec<_>>();
     let started = std::time::Instant::now();
     let _ = preparation.advance(&views, &depth_maps, &FusionConfig::default(), 256);
-    assert!(started.elapsed() < std::time::Duration::from_millis(8), "12-view/256-comparison fusion worker step exceeded 8 ms");
+    step_ceiling::admit_step(started.elapsed(), format_args!("12-view/256-comparison fusion worker step exceeded 8 ms"));
 
     preparation.output.positions.resize(MAX_INTERACTIVE_FUSED_POINTS, [0.0; 3]);
     preparation.output.normals.resize(MAX_INTERACTIVE_FUSED_POINTS, [0.0; 3]);
@@ -485,13 +486,13 @@ fn maximum_tsdf_sample_and_malformed_parameter_steps_stay_below_hard_ceiling_in_
     let mut preparation = TsdfIntegrationPreparation::new();
     let started = std::time::Instant::now();
     assert!(!preparation.advance(&mut volume, &depth, &(pose, intrinsics), true, 256));
-    assert!(started.elapsed() < std::time::Duration::from_millis(8), "256-sample TSDF allocation/integration worker step exceeded 8 ms");
+    step_ceiling::admit_step(started.elapsed(), format_args!("256-sample TSDF allocation/integration worker step exceeded 8 ms"));
 
     let mut malformed = TsdfVolume::new(0.0, f64::NAN);
     let mut preparation = TsdfIntegrationPreparation::new();
     let started = std::time::Instant::now();
     assert!(preparation.advance(&mut malformed, &depth, &(pose, intrinsics), true, 256));
-    assert!(started.elapsed() < std::time::Duration::from_millis(8), "malformed TSDF parameter rejection exceeded 8 ms");
+    step_ceiling::admit_step(started.elapsed(), format_args!("malformed TSDF parameter rejection exceeded 8 ms"));
 }
 
 #[test]

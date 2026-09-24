@@ -7,7 +7,7 @@ fn sample_dwg() -> DwgSnapshot {
     let mut drawing = DwgDrawing::default();
     let layer = drawing.ensure_layer("walls");
     drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] } });
-    DwgSnapshot { version: "AC1015".into(), drawing: DwgLogicalDrawing::from_native(&drawing).expect("valid sample drawing"), ..DwgSnapshot::default() }
+    DwgSnapshot::from_drawing(&drawing).expect("valid sample drawing")
 }
 
 #[semio_framework_async_macros::async_test]

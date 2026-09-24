@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteWorkshop {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete workshop \"{}\"", self.id.0), &format!("Werkstatt \"{}\" löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete workshop \"{}\"", self.id.0), &format!("Workshop \"{}\" löschen", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

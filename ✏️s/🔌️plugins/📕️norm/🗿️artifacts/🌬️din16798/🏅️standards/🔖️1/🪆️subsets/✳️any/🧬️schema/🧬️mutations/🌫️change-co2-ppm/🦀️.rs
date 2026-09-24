@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCo2Ppm
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change CO2 concentration to {}", self.new_co2_ppm), &format!("CO2 Konzentration auf {} ändern", self.new_co2_ppm))
+        protocol::LocalizedLabel::native(&format!("Change CO2 concentration to {}", self.new_co2_ppm), &format!("CO2-Konzentration auf {} ändern", self.new_co2_ppm))
     }
 }
 //#endregion 🔖️ChangeCo2Ppm

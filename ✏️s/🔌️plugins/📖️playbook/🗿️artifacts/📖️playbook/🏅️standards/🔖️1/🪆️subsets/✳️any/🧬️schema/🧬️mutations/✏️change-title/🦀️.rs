@@ -40,7 +40,7 @@ impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for ChangeTitle 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change playbook title to \"{}\"", self.new_title.clone().unwrap_or_default()), &format!("Playbooktitel auf \"{}\" ändern", self.new_title.clone().unwrap_or_default()))
+        protocol::LocalizedLabel::native(&format!("Change playbook title to \"{}\"", self.new_title.clone().unwrap_or_default()), &format!("Playbook-Titel auf \"{}\" ändern", self.new_title.clone().unwrap_or_default()))
     }
 }
 //#endregion 🔖️Mutation

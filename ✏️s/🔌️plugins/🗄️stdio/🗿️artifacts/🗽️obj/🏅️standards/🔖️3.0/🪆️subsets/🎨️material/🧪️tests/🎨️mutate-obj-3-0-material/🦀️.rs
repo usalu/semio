@@ -20,16 +20,10 @@
 //! subsets.md`), not a second copy.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::obj::standards::v3_0::subsets::any::{oracle_apply_mutation, oracle_document_projection};
+use semio_s_plugin_stdio_test_oracle::artifacts::obj::standards::v3_0::subsets::geometry::{oracle_apply_mutation, oracle_document_projection};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 use semio_s_plugin_stdio_test_oracle::mesh::project_obj;
 
-//#region 🔖️Kinds
-/// 🏷️ Mirrors this subset's own `obj-3.0-material` catalog `kinds` (`../../🔮️oracles/🔣️.json`). Kept as a plain literal here rather than imported since
-/// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
-/// coverage against that catalog) is what keeps the two lists honest against each other.
-const KINDS: &[&str] = &["set-mtllib", "set-usemtl"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🧪️pattern-sphere/🧊️.obj";
@@ -254,12 +248,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

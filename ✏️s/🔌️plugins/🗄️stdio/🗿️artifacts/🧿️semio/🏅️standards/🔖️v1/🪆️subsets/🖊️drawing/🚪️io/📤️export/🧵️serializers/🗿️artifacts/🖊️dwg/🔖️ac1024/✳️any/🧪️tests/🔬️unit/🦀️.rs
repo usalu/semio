@@ -27,7 +27,7 @@ fn sample_drawing() -> SemioDrawingSnapshot {
 async fn real_round_trip_through_relocated_dwg_codec() {
     let drawing = sample_drawing();
     let dwg = semio_framework_plugin::resolve_ready(SemioDrawingToDwg::serialize(&drawing)).expect("serialize");
-    assert_eq!(dwg.version, DWG_CODEC_VERSION);
+    assert_eq!(dwg.version, "AC1024");
     let round_tripped = semio_framework_plugin::resolve_ready(SemioDrawingFromDwg::deserialize(&dwg)).expect("deserialize");
     assert_eq!(round_tripped.layers.len(), 1);
     match &round_tripped.layers[0].root {

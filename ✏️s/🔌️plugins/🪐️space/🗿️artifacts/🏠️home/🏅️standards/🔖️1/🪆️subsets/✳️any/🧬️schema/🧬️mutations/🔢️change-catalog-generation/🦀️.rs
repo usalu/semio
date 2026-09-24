@@ -30,7 +30,7 @@ impl protocol::MutationKind<SHomeSnapshot, SHomeMutation> for ChangeCatalogGener
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change catalog generation to {}", self.new_catalog_generation), &format!("Katalogerzeugung auf {} ändern", self.new_catalog_generation))
+        protocol::LocalizedLabel::native(&format!("Change catalog generation to {}", self.new_catalog_generation), &format!("Katalogstand auf {} ändern", self.new_catalog_generation))
     }
 }
 //#endregion 🔖️Mutation

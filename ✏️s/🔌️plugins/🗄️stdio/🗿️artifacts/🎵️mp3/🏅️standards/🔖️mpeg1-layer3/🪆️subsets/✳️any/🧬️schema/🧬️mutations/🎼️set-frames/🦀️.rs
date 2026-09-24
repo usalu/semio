@@ -21,7 +21,7 @@ impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for SetFrames {
         agg_inverse(&Mp3Mutation::SetFrames(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-frames", "Rahmen setzen")
+        protocol::LocalizedLabel::native("Set frames", "Frames setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

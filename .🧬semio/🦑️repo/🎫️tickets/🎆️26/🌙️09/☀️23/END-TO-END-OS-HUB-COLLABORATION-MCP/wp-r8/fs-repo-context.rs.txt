@@ -1,0 +1,1074 @@
+//#region 🗄️FsRepoContext
+
+use semio_framework_repo_codebase::{Codebase, CodebaseContext, Scope as CodebaseScope};
+use semio_framework_repo_goals::{FsGoalStore, GoalError, GoalStore, Goals, NullManagement};
+use semio_framework_repo_model::FixResult;
+use semio_framework_repo_providers::{ManagementLabel, ManagementMilestone, ManagementProvider, ManagementProviders, McpClientKind, VersionControlProvider};
+use semio_framework_repo_statutes::{SourceFile, SourceSet};
+use semio_framework_repo_tickets::{CoordinatorEventSink, FileTicketStore, PlanRoots, SystemClock as TicketSystemClock, TicketChangeRequest, TicketCloseRequest, TicketId, TicketLayout, TicketOpenRequest, TicketReopenRequest, TicketService};
+use semio_framework_repo_todos::{FsDraftStore, FsTodoTree, Todos};
+
+/// 📡️ The emitter that forwards an aggregate event to the repository coordinator.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct CoordinatorEmitter;
+
+impl semio_framework_repo_events::Emitter for CoordinatorEmitter {
+    fn emit(&self, kind: &str, source: &str, payload: &Json) {
+        semio_framework_repo_events::emit(kind, source, payload);
+    }
+}
+
+/// 🐙️ The goal management port answered by the repository's management provider.
+pub struct ProviderManagement {
+    provider: ManagementProviders,
+    repo_url: String,
+}
+
+impl ProviderManagement {
+    /// 🆕️ Binds the provider the machine is configured for and the repository URL milestones hang off.
+    pub fn system() -> ProviderManagement {
+        ProviderManagement { provider: semio_framework_repo_providers::system_management_provider(), repo_url: VersionControlProvider::repo_url(&semio_framework_repo_providers::system_version_control_provider()).unwrap_or_default() }
+    }
+}
+
+impl semio_framework_repo_goals::ManagementPort for ProviderManagement {
+    fn create_milestone(&self, title: &str, description: &str) -> Result<i64, GoalError> {
+        ManagementProvider::create_milestone(&self.provider, title, description).map_err(|error| GoalError::Port(error.message))
+    }
+    fn update_milestone(&self, number: i64, title: &str, description: &str, state: &str, due_on: &str) -> Result<(), GoalError> {
+        ManagementProvider::update_milestone(&self.provider, number, title, description, state, due_on).map_err(|error| GoalError::Port(error.message))
+    }
+    fn delete_milestone(&self, number: i64) -> Result<(), GoalError> {
+        ManagementProvider::delete_milestone(&self.provider, number).map_err(|error| GoalError::Port(error.message))
+    }
+    fn create_goal_issue(&self, title: &str, description: &str, milestone: Option<i64>) -> Result<String, GoalError> {
+        ManagementProvider::create_goal_issue(&self.provider, title, description, milestone).map_err(|error| GoalError::Port(error.message))
+    }
+    fn update_goal_issue(&self, issue_url: &str, title: &str, description: &str) -> Result<(), GoalError> {
+        ManagementProvider::update_goal_issue(&self.provider, issue_url, title, description).map_err(|error| GoalError::Port(error.message))
+    }
+    fn close_issue(&self, issue_url: &str) -> Result<(), GoalError> {
+        ManagementProvider::close_issue(&self.provider, issue_url).map_err(|error| GoalError::Port(error.message))
+    }
+    fn reopen_issue(&self, issue_url: &str) -> Result<(), GoalError> {
+        ManagementProvider::reopen_issue(&self.provider, issue_url).map_err(|error| GoalError::Port(error.message))
+    }
+    fn delete_issue(&self, number: &str) -> Result<(), GoalError> {
+        ManagementProvider::delete_issue(&self.provider, number).map_err(|error| GoalError::Port(error.message))
+    }
+    fn add_sub_issue(&self, parent_issue_url: &str, child_issue_url: &str) -> Result<(), GoalError> {
+        ManagementProvider::add_sub_issue(&self.provider, parent_issue_url, child_issue_url).map_err(|error| GoalError::Port(error.message))
+    }
+    fn repo_url(&self) -> String {
+        self.repo_url.clone()
+    }
+}
+
+/// 🧭️ One analyze scope, parsed the way the reference `ParseScope` reads a raw scope string.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AnalyzeScope {
+    Repo,
+    Definition(String),
+    Section(String),
+    File(String),
+    Technology(String),
+    Folder(String),
+}
+
+impl AnalyzeScope {
+    /// 🔤️ Parses a raw scope: `compose` and blank are the repository, `§` a definition, `#` a section.
+    pub fn parse(raw: &str) -> AnalyzeScope {
+        const CODE_EXTENSIONS: [&str; 13] = [".ts", ".tsx", ".js", ".jsx", ".py", ".cs", ".go", ".json", ".md", ".yaml", ".yml", ".sql", ".graphql"];
+        if raw.is_empty() || raw == "compose" {
+            return AnalyzeScope::Repo;
+        }
+        if let Some((file, _)) = raw.split_once('§') {
+            return AnalyzeScope::Definition(file.to_string());
+        }
+        if let Some((file, _)) = raw.split_once('#') {
+            return AnalyzeScope::Section(file.to_string());
+        }
+        let extension = semio_framework_repo_identity::ext_of(raw).to_lowercase();
+        if CODE_EXTENSIONS.contains(&extension.as_str()) {
+            return AnalyzeScope::File(raw.to_string());
+        }
+        if raw.starts_with("compose/") {
+            return AnalyzeScope::Technology(raw.to_string());
+        }
+        AnalyzeScope::Folder(raw.to_string())
+    }
+
+    /// 🎯️ Whether a breach belongs to this scope, twin of `BreachMatchesScope`.
+    pub fn matches(&self, breach: &Breach) -> bool {
+        let scope = breach.scope.replace('\\', "/");
+        let prefix = |base: &str| {
+            let base = base.replace('\\', "/");
+            let base = base.trim_end_matches('/');
+            base.is_empty() || scope == base || scope.starts_with(&format!("{base}/"))
+        };
+        match self {
+            AnalyzeScope::Repo => true,
+            AnalyzeScope::File(path) => {
+                let path = path.replace('\\', "/");
+                scope == path || scope.starts_with(&format!("{path}#")) || scope.starts_with(&format!("{path}::"))
+            }
+            AnalyzeScope::Folder(path) | AnalyzeScope::Technology(path) => prefix(path),
+            AnalyzeScope::Section(path) | AnalyzeScope::Definition(path) => scope.starts_with(&path.replace('\\', "/")),
+        }
+    }
+}
+
+/// 🗄️ The production context: every aggregate answered from the repository on disk through the
+/// domain crate that owns it. Twin of `NewRepoContext` in `🔗️graphql/📦️packages/🐹️go/🐹️.go`.
+pub struct FsRepoContext {
+    root: std::path::PathBuf,
+    codebase: Codebase,
+}
+
+impl FsRepoContext {
+    /// 🆕️ Opens the context of one repository root.
+    pub fn open(root: &std::path::Path) -> FsRepoContext {
+        FsRepoContext { root: root.to_path_buf(), codebase: Codebase::new(root) }
+    }
+
+    /// 🏠️ The repository root the context reads.
+    pub fn root(&self) -> &std::path::Path {
+        &self.root
+    }
+
+    /// 🗂️ The codebase the context walks.
+    pub fn codebase(&self) -> &Codebase {
+        &self.codebase
+    }
+
+    /// ✍️ The alias the invoking git identity resolves to.
+    pub fn author(&self) -> String {
+        semio_framework_repo_contributors::git_author_alias(&self.root)
+    }
+
+    fn slash_root(&self) -> String {
+        self.root.display().to_string().replace('\\', "/")
+    }
+
+    fn layout(&self) -> TicketLayout {
+        TicketLayout::new(format!("{}/{}/{}", self.slash_root(), semio_framework_repo_workspace::SEMIO_DIR_NAME, semio_framework_repo_workspace::REPO_DIR_NAME))
+    }
+
+    /// 🎫️ Runs one operation against the ticket domain bound to this repository.
+    pub fn with_tickets<R>(&self, kind: McpClientKind, body: impl FnOnce(&TicketService<'_, FileTicketStore, ManagementProviders, TicketSystemClock, CoordinatorEventSink>) -> R) -> R {
+        let store = FileTicketStore::new();
+        let tracker = semio_framework_repo_providers::system_management_provider();
+        let clock = TicketSystemClock;
+        let events = CoordinatorEventSink;
+        let roots = PlanRoots { repo_root: self.slash_root(), home_dir: std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).unwrap_or_default().replace('\\', "/") };
+        let service = TicketService::new(self.layout(), &store, &tracker, &clock, &events).with_roots(roots).with_mcp_client(kind);
+        body(&service)
+    }
+
+    /// 🎯️ Runs one operation against the goal aggregate bound to this repository.
+    pub fn with_goals<R>(&self, no_management: bool, body: impl FnOnce(&Goals<'_>) -> R) -> R {
+        let store = FsGoalStore::new(&self.root);
+        let emitter = CoordinatorEmitter;
+        let author = self.author();
+        if no_management {
+            body(&Goals::new(&store, &NullManagement, &emitter, &author))
+        } else {
+            body(&Goals::new(&store, &ProviderManagement::system(), &emitter, &author))
+        }
+    }
+
+    fn with_todos<R>(&self, body: impl FnOnce(&Todos<'_>) -> R) -> R {
+        let tree = FsTodoTree::new(&self.root);
+        let emitter = CoordinatorEmitter;
+        body(&Todos::new(&tree, &emitter, &self.author()))
+    }
+
+    fn considered(&self) -> CodebaseContext<'_> {
+        let mut context = CodebaseContext::new(&self.codebase);
+        context.load_bundles();
+        context.load_files();
+        context
+    }
+
+    fn read(&self, path: &str) -> Option<String> {
+        std::fs::read_to_string(self.root.join(path)).ok()
+    }
+
+    fn ticket(&self, year: i64, month: i64, day: i64, slug: &str) -> Result<Ticket, ContextError> {
+        self.with_tickets(McpClientKind::Generic, |service| service.read(&TicketId::new(year, month, day, slug))).map_err(|error| ContextError::new(error.message))
+    }
+
+    fn ticket_by_id(&self, id: &str) -> Result<Ticket, ContextError> {
+        let id = TicketId::parse(id).map_err(|error| ContextError::new(error.message))?;
+        self.ticket(id.year, id.month, id.day, &id.slug)
+    }
+
+    fn retitle(&self, id: &TicketId, title: Option<&String>, no_management: bool) -> Result<TicketId, ContextError> {
+        let Some(title) = title.filter(|title| !title.trim().is_empty()) else { return Ok(id.clone()) };
+        let before = self.ticket(id.year, id.month, id.day, &id.slug)?;
+        let outcome = self
+            .with_tickets(McpClientKind::Generic, |service| service.change(&TicketChangeRequest { id: id.id(), title: Some(title.clone()), no_management, ..Default::default() }))
+            .map_err(|error| ContextError::new(error.message))?;
+        if let Some(issue) = before.management.as_ref().map(|management| management.issue.clone()).filter(|issue| !issue.is_empty() && !no_management) {
+            if let Err(error) = ManagementProvider::update_issue_title(&semio_framework_repo_providers::system_management_provider(), &issue, title) {
+                eprintln!("Warning: Failed to update GitHub issue title: {}", error.message);
+            }
+        }
+        TicketId::parse(&outcome.id).map_err(|error| ContextError::new(error.message))
+    }
+
+    fn ensure_goal_milestone(&self, provider: &ManagementProviders, goal: &mut Goal) -> Result<Option<ManagementMilestone>, ContextError> {
+        if goal.title.trim().is_empty() || !semio_framework_repo_goals::is_root_goal(&goal.id) {
+            return Ok(None);
+        }
+        let known = goal.management.as_ref().map(|management| management.milestone.clone()).unwrap_or_default();
+        if let Some(number) = parse_milestone_number(&known).filter(|number| *number > 0) {
+            if let Ok(Some(milestone)) = ManagementProvider::get_milestone(provider, number) {
+                return Ok(Some(milestone));
+            }
+        }
+        let found = ManagementProvider::find_milestone_by_title(provider, &goal.title).map_err(|error| ContextError::new(error.message))?;
+        let milestone = match found {
+            Some(milestone) => milestone,
+            None => {
+                let number = ManagementProvider::create_milestone(provider, &goal.title, &goal.description).map_err(|error| ContextError::new(error.message))?;
+                if !goal.dates.due.is_empty() {
+                    let _ = ManagementProvider::update_milestone(provider, number, "", "", "", &goal.dates.due);
+                }
+                ManagementProvider::get_milestone(provider, number).ok().flatten().unwrap_or(ManagementMilestone { number, title: goal.title.clone(), description: goal.description.clone(), ..Default::default() })
+            }
+        };
+        let repo_url = VersionControlProvider::repo_url(&semio_framework_repo_providers::system_version_control_provider()).map_err(|error| ContextError::new(error.message))?;
+        let link = format!("{repo_url}/milestone/{}", milestone.number);
+        let management = goal.management.get_or_insert_with(GoalManagementData::default);
+        if management.milestone != link {
+            management.milestone = link;
+            self.save_goal(goal)?;
+        }
+        Ok(Some(milestone))
+    }
+
+    fn save_goal(&self, goal: &Goal) -> Result<(), ContextError> {
+        let document = semio_framework_repo_goals::encode_goal(goal).map_err(|error| ContextError::new(error.to_string()))?;
+        GoalStore::write(&FsGoalStore::new(&self.root), &goal.id, &document).map_err(|error| ContextError::new(error.to_string()))
+    }
+
+    fn file_record(&self, path: &str) -> File {
+        let name = semio_framework_repo_identity::base_of(path);
+        File {
+            id: self.codebase.build_file_id(path),
+            path: path.to_string(),
+            uri: self.codebase.file_uri(path),
+            name: name.clone(),
+            extension: semio_framework_repo_identity::ext_of(&name),
+            folder_id: None,
+            bundle_id: None,
+            kind: semio_framework_repo_model::derive_file_kind(&name).as_str().to_string(),
+            emoji: String::new(),
+            ignored: false,
+            generated: false,
+        }
+    }
+
+    fn apply(&self, plan: Result<semio_framework_repo_move::Plan, semio_framework_repo_move::MoveError>) -> Result<Vec<String>, ContextError> {
+        let plan = plan.map_err(|error| ContextError::new(error.0))?;
+        let (starting, ended): (Vec<&semio_framework_repo_move::PlanEvent>, Vec<&semio_framework_repo_move::PlanEvent>) = plan.events.iter().partition(|event| event.kind.ends_with(".starting"));
+        for event in starting {
+            semio_framework_repo_events::emit(&event.kind, "repo-cli", &event.payload);
+        }
+        let mut executor = semio_framework_repo_move::FileSystemExecutor::new(&self.root);
+        semio_framework_repo_move::execute(&plan, &mut executor).map_err(|error| ContextError::new(error.0))?;
+        for event in ended {
+            semio_framework_repo_events::emit(&event.kind, "repo-cli", &event.payload);
+        }
+        Ok(plan.lines())
+    }
+
+    /// 📄️ The header region a new file opens with, twin of `GenerateFileHeader`.
+    pub fn file_header(&self, path: &str) -> String {
+        let Some(language) = semio_framework_repo_languages::language_for_path(path) else { return String::new() };
+        let year = semio_framework_repo_tickets::Clock::stamp(&TicketSystemClock).chars().take(4).collect::<String>();
+        let header = semio_framework_repo_languages::Header {
+            file_id: self.codebase.build_file_id(path),
+            file_uri: self.codebase.file_uri(path),
+            summary: String::new(),
+            contributors: format!("{year} {}", semio_framework_repo_workspace::git_author(&self.root)),
+            license: semio_framework_repo_workspace::AGPL_LICENSE_TEXT.to_string(),
+            requirements: String::new(),
+        };
+        semio_framework_repo_languages::format_header(language, &header)
+    }
+
+    /// 🗂️ The in-memory workspace a move plan reads: the named files, and every considered file
+    /// below the named directories — structurally excluded and ignored paths never enter it.
+    pub fn workspace(&self, files: &[&str], directories: &[&str]) -> semio_framework_repo_move::Workspace {
+        let mut workspace = semio_framework_repo_move::Workspace::new();
+        for directory in directories.iter().filter(|directory| !directory.is_empty()) {
+            let absolute = self.root.join(directory);
+            if absolute.is_dir() {
+                if *directory != "." {
+                    workspace.insert_directory(directory);
+                }
+                self.load_directory(&mut workspace, if *directory == "." { "" } else { directory });
+            } else if let Some(content) = self.read(directory) {
+                workspace.insert_file(directory, &content);
+            }
+        }
+        for file in files.iter().filter(|file| !file.is_empty()) {
+            if let Some(content) = self.read(file) {
+                workspace.insert_file(file, &content);
+            }
+        }
+        if let Some(agents) = self.read("AGENTS.md") {
+            workspace.insert_file("AGENTS.md", &agents);
+        }
+        workspace
+    }
+
+    fn load_directory(&self, workspace: &mut semio_framework_repo_move::Workspace, directory: &str) {
+        let Ok(entries) = std::fs::read_dir(self.root.join(directory)) else { return };
+        let mut entries: Vec<std::fs::DirEntry> = entries.flatten().collect();
+        entries.sort_by_key(std::fs::DirEntry::file_name);
+        for entry in entries {
+            let name = entry.file_name().to_string_lossy().to_string();
+            let relative = if directory.is_empty() { name } else { format!("{directory}/{name}") };
+            if self.codebase.is_repo_excluded_path(&relative) || self.codebase.is_gitignored(&relative) {
+                continue;
+            }
+            let Ok(kind) = entry.file_type() else { continue };
+            if kind.is_dir() {
+                workspace.insert_directory(&relative);
+                self.load_directory(workspace, &relative);
+            } else if kind.is_file() {
+                if let Ok(content) = std::fs::read_to_string(entry.path()) {
+                    workspace.insert_file(&relative, &content);
+                }
+            }
+        }
+    }
+
+    /// 📑️ Renames a section of one file and reports the plan lines.
+    pub fn move_section(&self, file: &str, old_name: &str, new_name: &str) -> Result<Vec<String>, ContextError> {
+        let workspace = self.workspace(&[file], &[]);
+        self.apply(semio_framework_repo_move::plan_section_move(&workspace, file, old_name, new_name))
+    }
+
+    /// 🧩️ Integrates a whole file into a named section of another file.
+    pub fn integrate_file(&self, source: &str, target_section: &str, target_file: &str, target_parent: &str) -> Result<Vec<String>, ContextError> {
+        let workspace = self.workspace(&[source, target_file], &[]);
+        self.apply(semio_framework_repo_move::plan_integrate(&workspace, source, target_section, target_file, target_parent))
+    }
+
+    /// 🧲️ Extracts one section of a file into a file of its own.
+    pub fn extract_section(&self, source_file: &str, source_section: &str, target_file: &str) -> Result<Vec<String>, ContextError> {
+        let workspace = self.workspace(&[source_file, target_file], &[]);
+        self.apply(semio_framework_repo_move::plan_extract(&workspace, source_file, source_section, target_file))
+    }
+
+    /// 🔤️ Rewrites every casing of one token across the contents and names below a scope.
+    pub fn rename_token(&self, old_token: &str, new_token: &str, scope: &str) -> Result<Vec<String>, ContextError> {
+        let workspace = self.workspace(&[], &[if scope.is_empty() { "." } else { scope }]);
+        self.apply(semio_framework_repo_move::plan_rename(&workspace, old_token, new_token, scope))
+    }
+
+    /// 📂️ Every breach the repository's breach cache records.
+    pub fn cached_breachs(&self) -> Result<Vec<Breach>, ContextError> {
+        let directory = semio_framework_repo_workspace::repo_meta_path_for_root(&self.root, "⚡️cache/breaches");
+        let Ok(entries) = std::fs::read_dir(&directory) else { return Ok(Vec::new()) };
+        let mut names: Vec<std::path::PathBuf> = entries.flatten().map(|entry| entry.path()).filter(|path| path.is_file() && path.extension().is_some_and(|extension| extension == "json")).collect();
+        names.sort();
+        let documents = names.iter().map(|path| std::fs::read_to_string(path).map_err(|error| ContextError::new(format!("{}: {error}", path.display())))).collect::<Result<Vec<String>, ContextError>>()?;
+        semio_framework_repo_statutes::breachs_from_cache(&documents).map_err(ContextError::new)
+    }
+
+    /// 🩹️ Applies every autofix to the files of one scope and reports how many breaches it cleared.
+    pub fn autofix(&self, scope: Option<&str>) -> Result<FixResult, ContextError> {
+        let scope = AnalyzeScope::parse(scope.unwrap_or("compose"));
+        let files = self.codebase.scope_to_files(&match &scope {
+            AnalyzeScope::Repo => CodebaseScope::Repo,
+            AnalyzeScope::Technology(name) => CodebaseScope::Technology(name.clone()),
+            AnalyzeScope::Folder(path) => CodebaseScope::Folder(if path.ends_with('/') { path.clone() } else { format!("{path}/") }),
+            AnalyzeScope::File(path) | AnalyzeScope::Section(path) | AnalyzeScope::Definition(path) => CodebaseScope::File(path.clone()),
+        });
+        let sources: Vec<SourceFile> = files.iter().filter_map(|path| self.read(path).map(|content| SourceFile { path: path.clone(), content })).collect();
+        let before = semio_framework_repo_statutes::filter_ignored(semio_framework_repo_statutes::analyze(&SourceSet::new(sources.clone())), &SourceSet::new(sources.clone()));
+        let mut fixed_sources = Vec::with_capacity(sources.len());
+        for source in &sources {
+            let fixed = semio_framework_repo_statutes::autofix(source);
+            if fixed.content != source.content {
+                std::fs::write(self.root.join(&source.path), &fixed.content).map_err(|error| ContextError::new(format!("{}: {error}", source.path)))?;
+            }
+            fixed_sources.push(SourceFile { path: source.path.clone(), content: fixed.content });
+        }
+        let set = SourceSet::new(fixed_sources);
+        let after = semio_framework_repo_statutes::filter_ignored(semio_framework_repo_statutes::analyze(&set), &set);
+        Ok(FixResult { fixed: before.len().saturating_sub(after.len()) as i64, remaining: after.len() as i64, breachs: Some(after) })
+    }
+}
+
+impl RepoContext for FsRepoContext {
+    fn root_dir(&self) -> String {
+        self.slash_root()
+    }
+
+    fn technologies(&self) -> Vec<Technology> {
+        self.codebase.technologies()
+    }
+
+    fn bundles(&self) -> Vec<Bundle> {
+        self.codebase.bundles()
+    }
+
+    fn checkpoints(&self, limit: Option<i64>) -> Result<Vec<Checkpoint>, ContextError> {
+        Ok(semio_framework_repo_contributors::list_checkpoints(&semio_framework_repo_contributors::GitCheckpoints::new(&self.root), limit.map(|limit| limit.max(0) as usize)))
+    }
+
+    fn folders(&self) -> Vec<Folder> {
+        self.considered()
+            .build_folders()
+            .into_iter()
+            .map(|folder| Folder {
+                kind: self.codebase.derive_folder_kind(&folder.path),
+                generated: semio_framework_repo_codebase::is_generated_folder(&folder.path),
+                id: folder.id,
+                path: folder.path,
+                uri: folder.uri,
+                name: folder.name,
+                parent_id: folder.parent_id,
+                bundle_id: folder.bundle_id,
+                emoji: String::new(),
+                ignored: false,
+            })
+            .collect()
+    }
+
+    fn files(&self) -> Vec<File> {
+        self.considered()
+            .build_files()
+            .into_iter()
+            .map(|file| {
+                let mut record = self.file_record(&file.path);
+                record.id = file.id;
+                record.uri = file.uri;
+                record.folder_id = file.folder_id;
+                record.bundle_id = file.bundle_id;
+                record
+            })
+            .collect()
+    }
+
+    fn sections(&self) -> Vec<Section> {
+        let context = self.considered();
+        let mut result = Vec::new();
+        for file in &context.files {
+            let Some(content) = self.read(file) else { continue };
+            let file_id = self.codebase.build_file_id(file);
+            for mut section in semio_framework_repo_languages::parse_sections(&content, file) {
+                section.file_path = file.clone();
+                section.id = semio_framework_repo_model::build_section_id(&file_id, &semio_framework_repo_languages::normalize_section_path(&section.path));
+                result.push(section);
+            }
+        }
+        result
+    }
+
+    fn definitions(&self) -> Vec<Definition> {
+        let context = self.considered();
+        let mut result = Vec::new();
+        for file in &context.files {
+            let Some(content) = self.read(file) else { continue };
+            let file_id = self.codebase.build_file_id(file);
+            for mut definition in semio_framework_repo_codebase::file_definitions(&content, file) {
+                definition.id = semio_framework_repo_codebase::definition_id(&file_id, &definition);
+                result.push(definition);
+            }
+        }
+        result
+    }
+
+    fn contributors(&self) -> Result<Vec<Contributor>, ContextError> {
+        Ok(semio_framework_repo_contributors::list_contributors(&semio_framework_repo_contributors::FsContributorStore::new(&self.root)))
+    }
+
+    fn goals(&self) -> Result<Vec<Goal>, ContextError> {
+        self.with_goals(true, |goals| goals.list()).map_err(|error| ContextError::new(error.to_string()))
+    }
+
+    fn tickets(&self, year: Option<i64>, month: Option<i64>, day: Option<i64>, status: Option<TicketStatus>) -> Result<Vec<Ticket>, ContextError> {
+        let tickets = self.with_tickets(McpClientKind::Generic, |service| service.list(year, month, day)).map_err(|error| ContextError::new(error.message))?;
+        Ok(tickets.into_iter().filter(|ticket| status.is_none_or(|status| ticket.status == status)).collect())
+    }
+
+    fn policies(&self) -> Vec<Policy> {
+        semio_framework_repo_statutes::policies().to_vec()
+    }
+
+    fn drafts(&self) -> Result<Vec<Draft>, ContextError> {
+        Ok(semio_framework_repo_todos::list_drafts(&FsDraftStore::new(&self.root)))
+    }
+
+    fn todos(&self, filter: Option<&FilterInput>) -> Result<Vec<Todo>, ContextError> {
+        let all = self.with_todos(|todos| todos.list());
+        let Some(search) = filter.and_then(|filter| filter.filter.as_ref()).map(|search| search.to_lowercase()) else { return Ok(all) };
+        Ok(all.into_iter().filter(|todo| todo.name.to_lowercase().contains(&search) || todo.description.to_lowercase().contains(&search)).collect())
+    }
+
+    fn statutes(&self) -> Vec<StatuteMeta> {
+        semio_framework_repo_statutes::statutes().to_vec()
+    }
+
+    fn interactions(&self) -> Result<Vec<InteractionResource>, ContextError> {
+        let tickets = self.tickets(None, None, None, None)?;
+        Ok(tickets
+            .into_iter()
+            .flat_map(|ticket| {
+                let id = emoji_text(entity("ticket")) + &flat(&ticket.slug);
+                let goal = ticket.goal.clone();
+                ticket.interactions.into_iter().map(move |interaction| InteractionResource { interaction, source_kind: "ticket".to_string(), source_id: id.clone(), goal_id: goal.clone(), ticket_id: id.clone() })
+            })
+            .collect())
+    }
+
+    fn analyze(&self, scope: Option<&str>) -> Result<AnalyzeResult, ContextError> {
+        let scope = AnalyzeScope::parse(scope.unwrap_or("compose"));
+        let statutes = semio_framework_repo_statutes::statutes();
+        let breachs: Vec<Breach> = self.cached_breachs()?.into_iter().filter(|breach| scope.matches(breach)).collect();
+        let mut by_priority = PriorityCount::default();
+        let mut autofixable = 0i64;
+        for breach in &breachs {
+            let meta = statutes.iter().find(|meta| meta.kind == breach.kind);
+            match breach.lint_priority.or(meta.map(|meta| meta.priority)).unwrap_or(BreachPriority::Low) {
+                BreachPriority::High => by_priority.high += 1,
+                BreachPriority::Medium => by_priority.medium += 1,
+                BreachPriority::Low => by_priority.low += 1,
+            }
+            if breach.lint_autofixable.or(meta.map(|meta| meta.autofixable)).unwrap_or(false) {
+                autofixable += 1;
+            }
+        }
+        Ok(AnalyzeResult { metrics: Some(AnalyzeMetrics { total: breachs.len() as i64, by_priority: Some(by_priority), autofixable }), breachs: Some(breachs) })
+    }
+
+    fn goal_create(&self, input: GoalCreateInput) -> Result<Goal, ContextError> {
+        self.with_goals(input.no_management, |goals| goals.create(&input)).map_err(|error| ContextError::new(error.to_string()))
+    }
+
+    fn goal_change(&self, input: GoalChangeInput) -> Result<Goal, ContextError> {
+        self.with_goals(input.no_management, |goals| goals.change(&input)).map_err(|error| ContextError::new(error.to_string()))
+    }
+
+    fn goal_close(&self, input: GoalCloseInput) -> Result<Goal, ContextError> {
+        self.with_goals(input.no_management, |goals| goals.close(&input)).map_err(|error| ContextError::new(error.to_string()))
+    }
+
+    fn goal_reopen(&self, input: GoalReopenInput) -> Result<Goal, ContextError> {
+        self.with_goals(input.no_management, |goals| goals.reopen(&input)).map_err(|error| ContextError::new(error.to_string()))
+    }
+
+    fn goal_delete(&self, input: GoalDeleteInput) -> Result<bool, ContextError> {
+        self.with_goals(input.no_management, |goals| goals.delete(&input)).map_err(|error| ContextError::new(error.to_string()))
+    }
+
+    fn todo_create(&self, input: TodoCreateInput) -> Result<Todo, ContextError> {
+        self.with_todos(|todos| todos.create(&input)).map_err(|error| ContextError::new(error.to_string()))
+    }
+
+    fn todo_change(&self, input: TodoChangeInput) -> Result<Todo, ContextError> {
+        self.with_todos(|todos| todos.change(&input)).map_err(|error| ContextError::new(error.to_string()))
+    }
+
+    fn todo_delete(&self, id: &str) -> Result<bool, ContextError> {
+        self.with_todos(|todos| todos.delete(id)).map_err(|error| ContextError::new(error.to_string()))
+    }
+
+    fn draft_create(&self, input: DraftCreateInput) -> Result<Draft, ContextError> {
+        let files = input
+            .files
+            .iter()
+            .map(|path| std::fs::read_to_string(self.root.join(path)).map(|content| (path.clone(), content)).map_err(|error| ContextError::new(format!("{path}: {error}"))))
+            .collect::<Result<Vec<(String, String)>, ContextError>>()?;
+        let draft = semio_framework_repo_todos::create_draft(&FsDraftStore::new(&self.root), &input.title, &files).map_err(|error| ContextError::new(error.to_string()))?;
+        semio_framework_repo_events::emit(semio_framework_repo_events::DRAFT_CREATE_ENDED, "repo-cli", &json!({ "slug": draft.id, "title": input.title }));
+        Ok(draft)
+    }
+
+    fn draft_delete(&self, id: &str) -> Result<bool, ContextError> {
+        semio_framework_repo_todos::delete_draft(&FsDraftStore::new(&self.root), id).map_err(|error| ContextError::new(error.to_string()))?;
+        semio_framework_repo_events::emit(semio_framework_repo_events::DRAFT_DELETE_ENDED, "repo-cli", &json!({ "slug": id }));
+        Ok(true)
+    }
+
+    fn ticket_open(&self, input: TicketOpenInput) -> Result<Ticket, ContextError> {
+        let client = semio_framework_repo_model::resolve_allowed_client(&input.client).map_err(|error| ContextError::new(error.to_string()))?;
+        let kind = semio_framework_repo_providers::mcp_kind_from_resolved_client(&client);
+        let request = TicketOpenRequest {
+            emoji: input.emoji,
+            title: input.title,
+            prompt: input.prompt,
+            llm: input.llm,
+            effort: input.effort,
+            client: input.client,
+            goal: input.goal,
+            parent: input.parent,
+            no_issue: input.no_issue,
+            no_management: input.no_management,
+            issue: input.issue,
+            session: String::new(),
+            plan_id: input.plan_id,
+            spec_id: input.spec_id,
+        };
+        let outcome = self.with_tickets(kind, |service| service.open(&request)).map_err(|error| ContextError::new(error.message))?;
+        for warning in &outcome.warnings {
+            eprintln!("Warning: {warning}");
+        }
+        self.ticket_by_id(&outcome.id)
+    }
+
+    fn ticket_close(&self, input: TicketCloseInput) -> Result<Ticket, ContextError> {
+        if input.all {
+            let mut last = None;
+            for ticket in self.tickets(None, None, None, Some(TicketStatus::Open))? {
+                let id = TicketId::new(ticket.year, ticket.month, ticket.day, ticket.slug.clone());
+                println!("Closing ticket {}...", ticket.slug);
+                let request = TicketCloseRequest { id: id.id(), summary: "Bulk close".to_string(), files: Vec::new(), no_management: input.no_management, bulk: true };
+                match self.with_tickets(McpClientKind::Generic, |service| service.close(&request)) {
+                    Ok(_) => last = self.ticket_by_id(&id.id()).ok(),
+                    Err(error) => eprintln!("Warning: Failed to close ticket {}: {}", ticket.slug, error.message),
+                }
+            }
+            if !input.no_management {
+                let provider = semio_framework_repo_providers::system_management_provider();
+                match ManagementProvider::list_open_issues_with_label(&provider, "ticket") {
+                    Ok(issues) => {
+                        for issue in issues {
+                            println!("Closing GitHub issue {issue}...");
+                            if let Err(error) = ManagementProvider::close_issue(&provider, &issue) {
+                                eprintln!("Warning: Failed to close GitHub issue {issue}: {}", error.message);
+                            }
+                        }
+                    }
+                    Err(error) => eprintln!("Warning: Failed to list GitHub issues with 'ticket' label: {}", error.message),
+                }
+            }
+            return last.ok_or_else(|| ContextError::new("no open tickets"));
+        }
+        let id = self.retitle(&TicketId::new(input.year, input.month, input.day, input.slug.clone()), input.title.as_ref(), input.no_management)?;
+        let request = TicketCloseRequest { id: id.id(), summary: input.summary, files: input.files.unwrap_or_default(), no_management: input.no_management, bulk: false };
+        let outcome = self.with_tickets(McpClientKind::Generic, |service| service.close(&request)).map_err(|error| ContextError::new(error.message))?;
+        for warning in &outcome.warnings {
+            eprintln!("Warning: {warning}");
+        }
+        self.ticket_by_id(&outcome.id)
+    }
+
+    fn ticket_reopen(&self, input: TicketReopenInput) -> Result<Ticket, ContextError> {
+        let id = self.retitle(&TicketId::new(input.year, input.month, input.day, input.slug.clone()), input.title.as_ref(), input.no_management)?;
+        let client = semio_framework_repo_model::resolve_allowed_client(&input.client).map_err(|error| ContextError::new(error.to_string()))?;
+        let kind = semio_framework_repo_providers::mcp_kind_from_resolved_client(&client);
+        let request = TicketReopenRequest {
+            id: id.id(),
+            prompt: input.prompt,
+            llm: input.llm,
+            effort: input.effort,
+            client: input.client,
+            goal: input.goal,
+            parent: input.parent,
+            no_management: input.no_management,
+            session: String::new(),
+            plan_id: input.plan_id,
+            spec_id: input.spec_id,
+        };
+        let outcome = self.with_tickets(kind, |service| service.reopen(&request)).map_err(|error| ContextError::new(error.message))?;
+        for warning in &outcome.warnings {
+            eprintln!("Warning: {warning}");
+        }
+        self.ticket_by_id(&outcome.id)
+    }
+
+    fn ticket_change(&self, input: TicketChangeInput) -> Result<Ticket, ContextError> {
+        let id = self.retitle(&TicketId::new(input.year, input.month, input.day, input.slug.clone()), input.title.as_ref(), input.no_management)?;
+        let mut ticket = self.ticket(id.year, id.month, id.day, &id.slug)?;
+        let mut changed = false;
+        if let Some(prompt) = &input.prompt {
+            ticket.description = prompt.clone();
+            if let Some(last) = ticket.interactions.last_mut() {
+                last.prompt = prompt.clone();
+            }
+            changed = true;
+        }
+        if let Some(last) = ticket.interactions.last_mut() {
+            if let Some(llm) = &input.llm {
+                last.llm = semio_framework_repo_model::resolve_allowed_llm(llm).map_err(|error| ContextError::new(error.to_string()))?;
+                changed = true;
+            }
+            if let Some(effort) = &input.effort {
+                last.effort = semio_framework_repo_model::resolve_allowed_effort(effort).map_err(|error| ContextError::new(error.to_string()))?;
+                changed = true;
+            }
+            if let Some(client) = &input.client {
+                last.client = semio_framework_repo_model::resolve_allowed_client(client).map_err(|error| ContextError::new(error.to_string()))?;
+                changed = true;
+            }
+        }
+        if let Some(goal) = &input.goal {
+            ticket.goal = goal.clone();
+            changed = true;
+        }
+        if let Some(parent) = &input.parent {
+            ticket.parent = parent.clone();
+            changed = true;
+        }
+        if changed {
+            self.with_tickets(McpClientKind::Generic, |service| service.save(&ticket)).map_err(|error| ContextError::new(error.message))?;
+            semio_framework_repo_events::emit(
+                semio_framework_repo_events::TICKET_CHANGE_ENDED,
+                "repo-cli",
+                &json!({ "id": id.id(), "year": id.year, "month": id.month, "day": id.day, "slug": id.slug, "title": input.title, "prompt": input.prompt, "llm": input.llm, "effort": input.effort, "goal": input.goal, "parent": input.parent, "author": self.author() }),
+            );
+        }
+        Ok(ticket)
+    }
+
+    fn ticket_delete(&self, input: TicketDeleteInput) -> Result<bool, ContextError> {
+        let ticket = self.ticket(input.year, input.month, input.day, &input.slug)?;
+        if !input.no_management {
+            if let Some(issue) = ticket.management.as_ref().map(|management| management.issue.clone()).filter(|issue| !issue.is_empty()) {
+                let number = issue.rsplit('/').next().unwrap_or_default().to_string();
+                ManagementProvider::delete_issue(&semio_framework_repo_providers::system_management_provider(), &number).map_err(|error| ContextError::new(error.message))?;
+            }
+        }
+        std::fs::remove_dir_all(&ticket.folder_path).map_err(|error| ContextError::new(format!("{}: {error}", ticket.folder_path)))?;
+        Ok(true)
+    }
+
+    fn contributor_add(&self, input: ContributorAddInput) -> Result<Contributor, ContextError> {
+        let mut contributor = match semio_framework_repo_contributors::load_contributor(&self.root, &input.github) {
+            Ok(contributor) => contributor,
+            Err(_) => semio_framework_repo_contributors::create_contributor(&self.root, &input.github).map_err(ContextError::new)?,
+        };
+        let mut changed = false;
+        let mut fill = |slot: &mut String, value: &Option<String>| {
+            if let Some(value) = value.as_ref().filter(|value| !value.is_empty() && slot.is_empty()) {
+                *slot = value.clone();
+                changed = true;
+            }
+        };
+        fill(&mut contributor.name, &input.name);
+        fill(&mut contributor.email, &input.email);
+        fill(&mut contributor.fingerprint, &input.fingerprint);
+        for (list, values) in [(&mut contributor.names, &input.names), (&mut contributor.emails, &input.emails), (&mut contributor.fingerprints, &input.fingerprints)] {
+            for value in values {
+                if !list.contains(value) {
+                    list.push(value.clone());
+                    changed = true;
+                }
+            }
+        }
+        if changed {
+            semio_framework_repo_contributors::save_contributor(&self.root, &contributor).map_err(ContextError::new)?;
+            semio_framework_repo_events::emit(semio_framework_repo_events::CONTRIBUTOR_ADD_ENDED, "repo-cli", &json!({ "github": contributor.github, "author": self.author() }));
+        }
+        Ok(contributor)
+    }
+
+    fn contributor_remove(&self, github: &str) -> Result<(), ContextError> {
+        semio_framework_repo_contributors::remove_contributor(&self.root, github).map_err(ContextError::new)?;
+        semio_framework_repo_events::emit(semio_framework_repo_events::CONTRIBUTOR_REMOVE_ENDED, "repo-cli", &json!({ "github": github, "author": self.author() }));
+        Ok(())
+    }
+
+    fn folder_create(&self, path: &str) -> Result<Folder, ContextError> {
+        let workspace = self.workspace(&[], &[]);
+        self.apply(semio_framework_repo_move::plan_folder_create(&workspace, path))?;
+        Ok(Folder {
+            id: self.codebase.build_folder_id(path),
+            path: path.to_string(),
+            uri: self.codebase.folder_uri(path),
+            name: semio_framework_repo_identity::base_of(path),
+            parent_id: None,
+            bundle_id: None,
+            kind: self.codebase.derive_folder_kind(path),
+            emoji: String::new(),
+            ignored: false,
+            generated: semio_framework_repo_codebase::is_generated_folder(path),
+        })
+    }
+
+    fn folder_move(&self, source: &str, destination: &str) -> Result<Folder, ContextError> {
+        let workspace = self.workspace(&[], &[source, destination]);
+        self.apply(semio_framework_repo_move::plan_folder_move(&workspace, source, destination))?;
+        let mut folder = self.folder_create_record(destination);
+        folder.id = self.codebase.build_folder_id(destination);
+        Ok(folder)
+    }
+
+    fn folder_delete(&self, path: &str) -> Result<(), ContextError> {
+        let workspace = self.workspace(&[], &[path]);
+        self.apply(semio_framework_repo_move::plan_folder_delete(&workspace, path))?;
+        Ok(())
+    }
+
+    fn file_create(&self, path: &str) -> Result<File, ContextError> {
+        let workspace = self.workspace(&[path], &[]);
+        let header = self.file_header(path);
+        self.apply(semio_framework_repo_move::plan_file_create(&workspace, path, &header))?;
+        Ok(self.file_record(path))
+    }
+
+    fn file_move(&self, source: &str, destination: &str) -> Result<File, ContextError> {
+        let workspace = self.workspace(&[source, destination], &[]);
+        self.apply(semio_framework_repo_move::plan_file_move(&workspace, source, destination))?;
+        Ok(self.file_record(destination))
+    }
+
+    fn file_delete(&self, path: &str) -> Result<(), ContextError> {
+        let workspace = self.workspace(&[path], &[]);
+        self.apply(semio_framework_repo_move::plan_file_delete(&workspace, path))?;
+        Ok(())
+    }
+
+    fn section_create(&self, file: &str, name: &str, parent: Option<&str>) -> Result<Section, ContextError> {
+        let path = match parent.filter(|parent| !parent.is_empty()) {
+            Some(parent) => format!("{parent}/{name}"),
+            None => name.to_string(),
+        };
+        let workspace = self.workspace(&[file], &[]);
+        self.apply(semio_framework_repo_move::plan_section_create(&workspace, file, &path))?;
+        let id = semio_framework_repo_model::build_section_id(&self.codebase.build_file_id(file), &path.split('/').map(str::to_string).collect::<Vec<String>>());
+        Ok(section_record(id, name, &path, file))
+    }
+
+    fn section_move(&self, file: &str, old_name: &str, new_name: &str) -> Result<Section, ContextError> {
+        self.move_section(file, old_name, new_name)?;
+        let id = semio_framework_repo_model::build_section_id(&self.codebase.build_file_id(file), &new_name.split('/').map(str::to_string).collect::<Vec<String>>());
+        Ok(section_record(id, new_name, new_name, file))
+    }
+
+    fn section_delete(&self, file: &str, name: &str) -> Result<(), ContextError> {
+        let workspace = self.workspace(&[file], &[]);
+        self.apply(semio_framework_repo_move::plan_section_delete(&workspace, file, name))?;
+        Ok(())
+    }
+
+    fn integrate(&self, source: Option<&str>, target_section: Option<&str>, target_file: Option<&str>, target_parent: Option<&str>) -> Result<File, ContextError> {
+        let target = target_file.unwrap_or_default();
+        self.integrate_file(source.unwrap_or_default(), target_section.unwrap_or_default(), target, target_parent.unwrap_or_default())?;
+        Ok(self.file_record(target))
+    }
+
+    fn extract(&self, source_file: Option<&str>, source_section: Option<&str>, target_file: Option<&str>) -> Result<File, ContextError> {
+        let target = target_file.unwrap_or_default();
+        self.extract_section(source_file.unwrap_or_default(), source_section.unwrap_or_default(), target)?;
+        Ok(self.file_record(target))
+    }
+
+    fn sync_management(&self) -> Result<bool, ContextError> {
+        println!("Syncing local tickets and goals with GitHub...");
+        let provider = semio_framework_repo_providers::system_management_provider();
+        let mut valid: Vec<String> = vec!["repo".to_string()];
+        for technology in self.codebase.technologies() {
+            valid.push(format!("@{}", technology.name.trim_start_matches('@')));
+            for bundle in technology.bundles.unwrap_or_default() {
+                valid.push(semio_framework_repo_codebase::normalize_bundle_label(&bundle.name));
+            }
+        }
+        valid.sort();
+        valid.dedup();
+        if let Err(error) = ManagementProvider::sync_repo_label_catalog(&provider, &valid) {
+            eprintln!("Warning: Failed to sync GitHub label catalog: {}", error.message);
+        }
+        match self.goals() {
+            Err(error) => eprintln!("Warning: Failed to list goals: {error}"),
+            Ok(mut goals) => {
+                goals.sort_by_key(|goal| semio_framework_repo_goals::goal_depth(&goal.id));
+                for mut goal in goals {
+                    self.sync_goal(&provider, &mut goal);
+                }
+            }
+        }
+        for ticket in self.tickets(None, None, None, None)? {
+            let Some(issue) = ticket.management.as_ref().map(|management| management.issue.clone()).filter(|issue| !issue.is_empty()) else { continue };
+            let remote = match ManagementProvider::get_issue_details(&provider, &issue) {
+                Ok(Some(remote)) => remote,
+                Ok(None) => continue,
+                Err(error) => {
+                    eprintln!("Warning: Failed to get GitHub issue {issue}: {}", error.message);
+                    continue;
+                }
+            };
+            if ticket.status == TicketStatus::Closed && remote.state.eq_ignore_ascii_case("open") {
+                println!("Closing GitHub issue {issue} (Ticket is closed locally)");
+                if let Err(error) = ManagementProvider::close_issue(&provider, &issue) {
+                    eprintln!("Warning: Failed to close GitHub issue {issue}: {}", error.message);
+                }
+            }
+            if !ticket.goal.is_empty() {
+                if let Ok(mut root_goal) = self.with_goals(true, |goals| goals.read(&semio_framework_repo_goals::root_goal_id(&ticket.goal))) {
+                    match self.ensure_goal_milestone(&provider, &mut root_goal) {
+                        Err(error) => eprintln!("Warning: Failed to resolve goal milestone for issue {issue}: {error}"),
+                        Ok(Some(milestone)) if !milestone.title.is_empty() && remote.milestone.as_ref().is_none_or(|current| current.title != milestone.title) => {
+                            println!("Updating milestone for issue {issue} to {}...", milestone.title);
+                            if let Err(error) = ManagementProvider::update_issue_milestone(&provider, &issue, &milestone.title) {
+                                eprintln!("Warning: Failed to update milestone for GitHub issue {issue}: {}", error.message);
+                            }
+                        }
+                        Ok(_) => {}
+                    }
+                }
+            }
+            prune_labels(&provider, &issue, &remote.labels, &valid);
+        }
+        match ManagementProvider::list_issues_for_label_sync(&provider) {
+            Err(error) => eprintln!("Warning: Failed to list GitHub issues for label sync: {}", error.message),
+            Ok(issues) => {
+                for issue in issues {
+                    prune_labels(&provider, &issue.url, &issue.labels, &valid);
+                }
+            }
+        }
+        println!("GitHub sync completed.");
+        Ok(true)
+    }
+}
+
+/// 💗️ The section record a section mutation answers with.
+fn section_record(id: String, name: &str, path: &str, file: &str) -> Section {
+    Section { id, name: name.to_string(), path: path.to_string(), file_path: file.to_string(), emoji: String::new(), start_line: 0, end_line: 0, start_index: 0, end_index: 0, children: Vec::new(), definitions: Vec::new() }
+}
+
+/// 🏷️ Removes every technology label an issue carries that the catalog no longer declares.
+fn prune_labels(provider: &ManagementProviders, issue: &str, labels: &[ManagementLabel], valid: &[String]) {
+    let stale: Vec<String> = labels.iter().map(|label| label.name.clone()).filter(|name| name.starts_with('@') && !valid.contains(name)).collect();
+    if stale.is_empty() {
+        return;
+    }
+    println!("Removing invalid technology labels from issue {issue}: {stale:?}");
+    if let Err(error) = ManagementProvider::remove_labels(provider, issue, &stale) {
+        eprintln!("Warning: Failed to remove labels from GitHub issue {issue}: {}", error.message);
+    }
+}
+
+impl FsRepoContext {
+    fn folder_create_record(&self, path: &str) -> Folder {
+        Folder {
+            id: String::new(),
+            path: path.to_string(),
+            uri: self.codebase.folder_uri(path),
+            name: semio_framework_repo_identity::base_of(path),
+            parent_id: None,
+            bundle_id: None,
+            kind: self.codebase.derive_folder_kind(path),
+            emoji: String::new(),
+            ignored: false,
+            generated: semio_framework_repo_codebase::is_generated_folder(path),
+        }
+    }
+
+    fn sync_goal(&self, provider: &ManagementProviders, goal: &mut Goal) {
+        if semio_framework_repo_goals::is_root_goal(&goal.id) {
+            if let Some(management) = goal.management.as_mut().filter(|management| !management.issue.is_empty()) {
+                println!("Migrating root goal {}: removing issue reference", goal.id);
+                management.issue.clear();
+            }
+            match self.ensure_goal_milestone(provider, goal) {
+                Err(error) => eprintln!("Warning: Failed to ensure milestone for root goal {}: {error}", goal.id),
+                Ok(Some(milestone)) => {
+                    let state = if goal.status == GoalStatus::Closed { "closed" } else { "open" };
+                    if let Err(error) = ManagementProvider::update_milestone(provider, milestone.number, &goal.title, &goal.description, state, &goal.dates.due) {
+                        eprintln!("Warning: Failed to update milestone for root goal {}: {}", goal.id, error.message);
+                    }
+                }
+                Ok(None) => {}
+            }
+            return;
+        }
+        if let Some(management) = goal.management.as_mut().filter(|management| !management.milestone.is_empty()) {
+            println!("Migrating child goal {}: removing milestone", goal.id);
+            if let Some(number) = parse_milestone_number(&management.milestone) {
+                if let Err(error) = ManagementProvider::delete_milestone(provider, number) {
+                    eprintln!("Warning: Failed to delete milestone {number} for child goal {}: {}", goal.id, error.message);
+                }
+            }
+            management.milestone.clear();
+        }
+        let issue = goal.management.as_ref().map(|management| management.issue.clone()).unwrap_or_default();
+        if issue.is_empty() {
+            let milestone = if semio_framework_repo_goals::is_first_gen_goal(&goal.id) {
+                self.with_goals(true, |goals| goals.read(&semio_framework_repo_goals::root_goal_id(&goal.id))).ok().and_then(|root| root.management).and_then(|management| parse_milestone_number(&management.milestone))
+            } else {
+                None
+            };
+            let created = match ManagementProvider::create_goal_issue(provider, &goal.title, &goal.description, milestone) {
+                Ok(created) => created,
+                Err(error) => {
+                    eprintln!("Warning: Failed to create issue for child goal {}: {}", goal.id, error.message);
+                    return;
+                }
+            };
+            goal.management.get_or_insert_with(GoalManagementData::default).issue = created.clone();
+            println!("Created issue for child goal {}: {created}", goal.id);
+            if goal.status == GoalStatus::Closed {
+                let _ = ManagementProvider::close_issue(provider, &created);
+            }
+            if semio_framework_repo_goals::is_deeper_goal(&goal.id) {
+                let parent_id = semio_framework_repo_goals::parent_goal_id(&goal.id);
+                if let Some(parent_issue) = self.with_goals(true, |goals| goals.read(&parent_id)).ok().and_then(|parent| parent.management).map(|management| management.issue).filter(|issue| !issue.is_empty()) {
+                    match ManagementProvider::add_sub_issue(provider, &parent_issue, &created) {
+                        Ok(()) => println!("Linked sub-issue {} to parent {parent_id}", goal.id),
+                        Err(error) => eprintln!("Warning: Failed to link sub-issue {} to parent {parent_id}: {}", goal.id, error.message),
+                    }
+                }
+            }
+            if let Err(error) = self.save_goal(goal) {
+                eprintln!("Warning: Failed to save goal {}: {error}", goal.id);
+            }
+            return;
+        }
+        let remote = match ManagementProvider::get_issue_details(provider, &issue) {
+            Ok(Some(remote)) => remote,
+            Ok(None) => return,
+            Err(error) => {
+                eprintln!("Warning: Failed to get issue for goal {}: {}", goal.id, error.message);
+                return;
+            }
+        };
+        if goal.status == GoalStatus::Closed && remote.state.eq_ignore_ascii_case("open") {
+            let _ = ManagementProvider::close_issue(provider, &issue);
+        } else if goal.status == GoalStatus::Open && remote.state.eq_ignore_ascii_case("closed") {
+            let _ = ManagementProvider::reopen_issue(provider, &issue);
+        }
+        if semio_framework_repo_goals::is_first_gen_goal(&goal.id) {
+            if let Ok(root_goal) = self.with_goals(true, |goals| goals.read(&semio_framework_repo_goals::root_goal_id(&goal.id))) {
+                let has_milestone = root_goal.management.as_ref().is_some_and(|management| parse_milestone_number(&management.milestone).is_some());
+                if has_milestone && remote.milestone.as_ref().is_none_or(|current| current.title != root_goal.title) {
+                    let _ = ManagementProvider::update_issue_milestone(provider, &issue, &root_goal.title);
+                }
+            }
+        } else if semio_framework_repo_goals::is_deeper_goal(&goal.id) {
+            if remote.milestone.is_some() {
+                if let Err(error) = ManagementProvider::clear_issue_milestone(provider, &issue) {
+                    eprintln!("Warning: Failed to clear milestone for goal {}: {}", goal.id, error.message);
+                }
+            }
+            let parent_id = semio_framework_repo_goals::parent_goal_id(&goal.id);
+            if let Some(parent_issue) = self.with_goals(true, |goals| goals.read(&parent_id)).ok().and_then(|parent| parent.management).map(|management| management.issue).filter(|issue| !issue.is_empty()) {
+                match ManagementProvider::get_issue_parent_url(provider, &issue) {
+                    Err(error) => eprintln!("Warning: Failed to resolve parent for goal {}: {}", goal.id, error.message),
+                    Ok(current) if current != parent_issue => match ManagementProvider::add_sub_issue(provider, &parent_issue, &issue) {
+                        Ok(()) => println!("Linked sub-issue {} to parent {parent_id}", goal.id),
+                        Err(error) => eprintln!("Warning: Failed to link sub-issue {} to parent {parent_id}: {}", goal.id, error.message),
+                    },
+                    Ok(_) => {}
+                }
+            }
+        }
+        if !remote.labels.iter().any(|label| label.name == "goal") {
+            if let Err(error) = ManagementProvider::add_labels(provider, &issue, &["goal".to_string()]) {
+                eprintln!("Warning: Failed to add goal label for {}: {}", goal.id, error.message);
+            }
+        }
+    }
+}
+
+//#endregion 🗄️FsRepoContext
+

@@ -6,14 +6,16 @@
  * sequence, so two replicas that shared an identity would mint the same id), the human lane sends
  * a real note operation over its own document socket. Every lane must be relayed to the observer,
  * advance the ledger head by one, and reach a late joiner's catch-up — before and after the gate
- * restarts the hub on the same data directory.
+ * restarts the hub on the same data directory. Every agent lane must also appear in the observer's
+ * roster under its delegation label as an `agent` principal.
  *
- * The gate owns its hub (a restart is part of the law) and its document: every run creates a fresh
- * note through the hub's own server-owned creation transaction, so the document always matches the
- * catalog generation the hub serves. Configuration by environment:
+ * The gate owns its hub (a restart is part of the law), its space and its document: every run creates
+ * a fresh space through the directory's own `create-space` command and a fresh note through the hub's
+ * server-owned creation transaction, so the document always matches the catalog generation the hub
+ * serves and a freshly published catalog root needs no manual step. Configuration by environment:
  *
  *   OS_MCP_HUB_BINARY    the `os-hub` executable to boot
- *   OS_MCP_HUB_DATA_DIR  a published catalog root (note in its generation) where the human authors a space (copied, never mutated)
+ *   OS_MCP_HUB_DATA_DIR  a published catalog root (note in its generation) holding the human's credential (copied, never mutated)
  *   OS_MCP_HUB_PORT      loopback port (default 7852)
  *   OS_MCP_HUB_EMAIL / OS_MCP_HUB_PASSWORD  the human (defaults `user1@semio.dev`)
  *   SEMIO_TEST_ARTIFACT_DIR  where the run copy of the data directory lives (default: tmpdir)
@@ -24,8 +26,10 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { McpClientSession, mcpServerEntries, requireMcpBinary } from "../../🟦️.ts";
-import { decodeServerFrame, encodeClientFrame } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
+import { decodePresencePeer, decodeServerFrame, encodeClientFrame } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
 import { sealSpaceArtifactCreateV1 } from "../../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../📇️directory/🧬️schema/🟦️.ts";
+import { createSpaceCommandV1 } from "../../../📇️directory/🏘️spaces/🟦️.ts";
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 function findRepoRoot(start: string): string {
@@ -75,8 +79,13 @@ cpSync(SOURCE, dataDir, { recursive: true, filter: (path) => !path.includes(".se
 process.env.OS_HUB_CREDENTIAL_SIGN_IN = "true";
 const bootHub = async () => {
   const run = await startLocalHub(repoRoot, join(hubRoot, "📦️packages", "🦀️rust"), [{ profileId: "developer", subject: "local-developer-hub-edit-durability", displayName: "Local Developer", allowedClientClasses: ["native", "mcp"] }], { port: PORT, dataDir, binaryPath: BINARY, capture: true });
-  const readiness = await waitForReadiness(run, false, fixture.budgets.readinessMs);
-  return { run, readiness };
+  try {
+    return { run, readiness: await waitForReadiness(run, false, fixture.budgets.readinessMs) };
+  } catch (error) {
+    const tail = run.output().slice(-4_096).replaceAll(run.channelKey.toString("hex"), "<channel-key-redacted>");
+    await finishLocalHub(run).catch(() => undefined);
+    throw new Error(`${error instanceof Error ? error.message : String(error)}\nlast hub output:\n${tail}`);
+  }
 };
 
 /** 🔌️ One human document socket: open-plan → socket-grant → `semio.session.v1` hello; frames are collected decoded. */
@@ -146,7 +155,10 @@ try {
   const signIn = await hub("POST", "/auth/sessions", undefined, { schema: "semio.hub.auth.credential-sign-in/v1", email: EMAIL, password: PASSWORD, deviceInstanceId: `hubeditdurability${randomBytes(8).toString("hex")}`, clientClass: "browser" });
   const token = String(signIn.json?.token ?? "");
   row("1 the human signs in", signIn.status === 200 && token.length > 0, `HTTP ${signIn.status}`);
-  const spaceId = String((await hub("GET", "/directory/spaces", token)).json?.filter((entry: any) => entry?.access === "author").map((entry: any) => entry?.space?.id).filter(Boolean).at(-1) ?? "");
+  const spaceName = `Hub edit durability ${randomBytes(4).toString("hex")}`;
+  const spaceCommand = await fetch(`${ORIGIN}/directory/commands`, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}`, origin: ORIGIN }, body: directoryCommandRequestJson(sealDirectoryCommandRequestV1(randomBytes(16).toString("hex"), createSpaceCommandV1(spaceName, "atelier", "private"))), signal: AbortSignal.timeout(60_000) });
+  const spaceId = String((await hub("GET", "/directory/spaces", token)).json?.find((entry: any) => entry?.space?.name === spaceName && entry?.access === "author")?.space?.id ?? "");
+  row("1b the human creates the gate's own space", spaceCommand.status === 202 && spaceId.length > 0, `HTTP ${spaceCommand.status} space=${spaceId}`);
   const creations = `/spaces/${encodeURIComponent(spaceId)}/artifact-creations`;
   const catalog = await hub("GET", creations, token);
   const kind = (catalog.json?.kinds ?? []).find((row: any) => String(row?.schema ?? "").startsWith(fixture.document.schemaPrefix));
@@ -201,6 +213,12 @@ try {
     const ids = (relayed?.Commands?.envelopes ?? []).map((envelope: any) => String(envelope.mutation_id));
     committed.push(...ids);
     row(`5 ${lane.id}'s edit is relayed to the observer`, ids.length > 0, `ids=${JSON.stringify(ids)}`);
+    if (lane.kind === "agent") {
+      const rostered = (frame: any) => "Presence" in frame && (frame.Presence.peers as number[][]).map((bytes) => decodePresencePeer(new Uint8Array(bytes), [0])).some((peer) => peer.principalKind === "agent" && peer.label === lane.label);
+      const seen = await observer!.waitFor((frame) => rostered(frame), fixture.budgets.presenceMs);
+      const kinds = observer!.frames.filter((frame) => "Presence" in frame).flatMap((frame) => (frame.Presence.peers as number[][]).map((bytes) => { const peer = decodePresencePeer(new Uint8Array(bytes), [0]); return `${peer.label ?? peer.actor}:${peer.principalKind ?? "human"}`; }));
+      row(`5p ${lane.id} is in the human's roster as an agent principal`, Boolean(seen), `roster=${JSON.stringify([...new Set(kinds)])}`);
+    }
     let after = await status();
     for (const deadline = Date.now() + fixture.budgets.headMs; after < before + fixture.expectations.headAdvancePerLane && Date.now() < deadline; after = await status()) await pause(500);
     row(`6 ${lane.id}'s edit advances the ledger head`, after === before + fixture.expectations.headAdvancePerLane, `head_seq ${before}→${after}`);

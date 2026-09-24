@@ -22,7 +22,7 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for AddStoredEntry
         agg_inverse(&ZipIso21320Mutation::AddStoredEntry(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("add-stored-entry", "gespeicherte Eintrag hinzufügen")
+        protocol::LocalizedLabel::native("Add stored entry", "Unkomprimierten Eintrag hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

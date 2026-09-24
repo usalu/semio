@@ -1,0 +1,93 @@
+{
+  "why": "The ONE multi-touch recognizer law every viewport host obeys (🖥️Board2dHost, 🌐️World3dHost, the dag 🕸️NodeGraph surface, and any future twin). Each case is a pointer-event sequence and the verdict the recognizer must return for every event, in order. Language-agnostic on purpose: a Rust or other twin replays the same rows.",
+  "liveDefect": "Before the recognizer, each host re-assembled pointer set + pinch frame by hand and decided 'multi-touch' per event. After a pinch, lifting one finger dropped the count to one, so the finger left down resumed the single-pointer lane: its moves drove a marquee/drag and its release was replayed as a click (Board2dHost pointerUpScreen, World3dHost pick). The latch rows below pin that shut.",
+  "recognizer": [
+    {
+      "name": "mouse click stays single",
+      "events": [
+        { "type": "down", "pointerId": 1, "x": 10, "y": 10 },
+        { "type": "move", "pointerId": 1, "x": 20, "y": 10 },
+        { "type": "up", "pointerId": 1 }
+      ],
+      "verdicts": [{ "kind": "single" }, { "kind": "single" }, { "kind": "single" }]
+    },
+    {
+      "name": "hover move of an untracked pointer passes through",
+      "events": [{ "type": "move", "pointerId": 7, "x": 5, "y": 5 }],
+      "verdicts": [{ "kind": "single" }]
+    },
+    {
+      "name": "two-finger spread is one pinch, latched until the last finger lifts",
+      "events": [
+        { "type": "down", "pointerId": 1, "x": 0, "y": 0 },
+        { "type": "down", "pointerId": 2, "x": 100, "y": 0 },
+        { "type": "move", "pointerId": 2, "x": 200, "y": 0 },
+        { "type": "up", "pointerId": 1 },
+        { "type": "move", "pointerId": 2, "x": 300, "y": 40 },
+        { "type": "up", "pointerId": 2 },
+        { "type": "down", "pointerId": 3, "x": 50, "y": 50 }
+      ],
+      "verdicts": [
+        { "kind": "single" },
+        { "kind": "pinchBegin", "centroidX": 50, "centroidY": 0, "distance": 100 },
+        { "kind": "pinch", "scale": 2, "panX": 50, "panY": 0, "rotation": 0 },
+        { "kind": "held" },
+        { "kind": "held" },
+        { "kind": "pinchEnd" },
+        { "kind": "single" }
+      ]
+    },
+    {
+      "name": "two-finger pan translates without scaling",
+      "events": [
+        { "type": "down", "pointerId": 1, "x": 0, "y": 0 },
+        { "type": "down", "pointerId": 2, "x": 100, "y": 0 },
+        { "type": "move", "pointerId": 1, "x": 30, "y": 20 },
+        { "type": "move", "pointerId": 2, "x": 130, "y": 20 }
+      ],
+      "verdicts": [
+        { "kind": "single" },
+        { "kind": "pinchBegin", "centroidX": 50, "centroidY": 0, "distance": 100 },
+        { "kind": "pinch", "panX": 15, "panY": 10 },
+        { "kind": "pinch", "panX": 15, "panY": 10 }
+      ]
+    },
+    {
+      "name": "a third finger never moves the anchor; lifting a pinch finger re-seeds from the remaining two",
+      "events": [
+        { "type": "down", "pointerId": 1, "x": 0, "y": 0 },
+        { "type": "down", "pointerId": 2, "x": 100, "y": 0 },
+        { "type": "down", "pointerId": 3, "x": 500, "y": 500 },
+        { "type": "move", "pointerId": 3, "x": 600, "y": 600 },
+        { "type": "up", "pointerId": 1 },
+        { "type": "move", "pointerId": 3, "x": 300, "y": 0 }
+      ],
+      "verdicts": [
+        { "kind": "single" },
+        { "kind": "pinchBegin", "centroidX": 50, "centroidY": 0, "distance": 100 },
+        { "kind": "held" },
+        { "kind": "pinch", "scale": 1, "panX": 0, "panY": 0 },
+        { "kind": "held" },
+        { "kind": "pinch", "scale": 0.25607375986579195, "panX": -150, "panY": -300 }
+      ]
+    },
+    {
+      "name": "a cancelled contact ends the gesture exactly like a lift",
+      "events": [
+        { "type": "down", "pointerId": 1, "x": 0, "y": 0 },
+        { "type": "down", "pointerId": 2, "x": 100, "y": 0 },
+        { "type": "up", "pointerId": 2 },
+        { "type": "up", "pointerId": 1 },
+        { "type": "up", "pointerId": 1 }
+      ],
+      "verdicts": [{ "kind": "single" }, { "kind": "pinchBegin", "centroidX": 50, "centroidY": 0, "distance": 100 }, { "kind": "held" }, { "kind": "pinchEnd" }, { "kind": "single" }]
+    }
+  ],
+  "notches": [
+    { "name": "two whole notches in", "pendingLogScale": 0, "scale": 1.21, "in": 1.1, "out": 0.9, "notches": 2, "remainderScale": 1 },
+    { "name": "sub-notch spread is carried, not dropped", "pendingLogScale": 0, "scale": 1.05, "in": 1.1, "out": 0.9, "notches": 0, "remainderScale": 1.05 },
+    { "name": "carried remainder completes a notch", "pendingLogScale": 0.04879016416943205, "scale": 1.05, "in": 1.1, "out": 0.9, "notches": 1, "remainderScale": 1.0022727272727272 },
+    { "name": "two whole notches out", "pendingLogScale": 0, "scale": 0.81, "in": 1.1, "out": 0.9, "notches": -2, "remainderScale": 1 },
+    { "name": "a non-finite scale contributes nothing", "pendingLogScale": 0, "scale": 0, "in": 1.1, "out": 0.9, "notches": 0, "remainderScale": 1 }
+  ]
+}

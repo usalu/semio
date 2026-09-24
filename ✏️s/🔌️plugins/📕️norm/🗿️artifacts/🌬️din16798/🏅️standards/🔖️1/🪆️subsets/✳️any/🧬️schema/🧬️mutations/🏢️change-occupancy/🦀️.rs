@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeOccupa
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change occupancy type to \"{}\"", self.new_occupancy), &format!("Belegungstyp auf \"{}\" ändern", self.new_occupancy))
+        protocol::LocalizedLabel::native(&format!("Change occupancy type to \"{}\"", self.new_occupancy), &format!("Nutzungsart auf \"{}\" ändern", self.new_occupancy))
     }
 }
 //#endregion 🔖️ChangeOccupancy

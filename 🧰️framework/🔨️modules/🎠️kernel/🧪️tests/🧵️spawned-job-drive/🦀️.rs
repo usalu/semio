@@ -79,6 +79,8 @@ struct CompletedEventCase {
 
 #[derive(serde::Deserialize)]
 struct DriveFixture {
+    #[serde(rename = "reservedKind")]
+    reserved_kind: String,
     budget: BudgetFixture,
     placements: PlacementFixture,
     transcripts: Vec<TranscriptFixture>,
@@ -112,6 +114,7 @@ fn the_host_admission_budget_is_the_declared_one() {
     assert_eq!(fixture.budget.step_ceiling, SPAWNED_JOB_STEP_CEILING);
     assert_eq!(fixture.budget.fuel.parse::<u64>().expect("fuel is a u64 decimal"), SPAWNED_JOB_FUEL);
     assert_eq!(fixture.budget.deadline_ms, SPAWNED_JOB_DEADLINE_MS);
+    assert_eq!(fixture.reserved_kind, FRAMEWORK_RESERVED_JOB_KIND);
 }
 
 /// 🚦 The placement vocabulary is closed, ordered and round-trips; nothing outside it resolves.

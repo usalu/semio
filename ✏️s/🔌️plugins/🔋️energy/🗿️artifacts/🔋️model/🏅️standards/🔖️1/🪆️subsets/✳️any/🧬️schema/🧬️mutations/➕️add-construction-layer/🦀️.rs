@@ -34,7 +34,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddCon
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add layer {} to construction {} at index {}", self.material_id.0, self.id.0, self.index), &format!("Ebene {} zu Konstruktion {} an Index {} hinzufügen", self.material_id.0, self.id.0, self.index))
+        protocol::LocalizedLabel::native(&format!("Add layer {} to construction {} at index {}", self.material_id.0, self.id.0, self.index), &format!("Schicht {} zu Konstruktion {} an Index {} hinzufügen", self.material_id.0, self.id.0, self.index))
     }
 
     fn target(&self) -> Vec<String> {

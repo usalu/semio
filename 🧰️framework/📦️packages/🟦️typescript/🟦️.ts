@@ -29,8 +29,13 @@ export {
   GESTURE_MULTI_TOUCH_POINTERS,
   IDENTITY_PINCH_STEP,
   PINCH_MIN_DISTANCE_PX,
+  PINCH_NOTCH_LOG_EPSILON,
   PINCH_WHEEL_PIXELS_PER_DOUBLING,
+  GestureRecognizer,
+  IDLE_GESTURE_RECOGNIZER,
   applyPinchToCamera,
+  applyPinchToOffsetCamera,
+  applyPinchToOrbit,
   clampZoom,
   gestureIsMultiTouch,
   gesturePointerDown,
@@ -39,10 +44,14 @@ export {
   pinchFrame,
   pinchStep,
   pinchWheelDelta,
+  pinchZoomNotches,
+  recognizeGesturePointerDown,
+  recognizeGesturePointerMove,
+  recognizeGesturePointerUp,
   shortestAngleDelta,
   zoomAboutPoint,
 } from "../../🔨️modules/🕹️interaction/👆️gesture/🟦️.ts";
-export type { GesturePointer, GesturePointers, PinchFrame, PinchStep, ZoomBounds } from "../../🔨️modules/🕹️interaction/👆️gesture/🟦️.ts";
+export type { GesturePointer, GesturePointers, GestureRecognizerState, GestureTransition, GestureVerdict, OrbitPose, OrbitProjection, OrbitVector, PinchFrame, PinchStep, ZoomBounds, ZoomNotchFactors } from "../../🔨️modules/🕹️interaction/👆️gesture/🟦️.ts";
 export * from "../../🔨️modules/🎠️kernel/🟦️.ts";
 export * from "../../🔨️modules/🔄️machine/🟦️.ts";
 export { NumericIndex, NumericIndexEdit, NumericIndexReader, NumericIndexRetirement } from "../../🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";

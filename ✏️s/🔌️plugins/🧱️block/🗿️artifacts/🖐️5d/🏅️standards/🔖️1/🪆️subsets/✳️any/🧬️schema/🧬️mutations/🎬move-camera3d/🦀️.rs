@@ -32,7 +32,7 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for MoveCamera3d {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Move 3D camera to {:?}", self.new_position), &format!("3Dkamera nach {:?} verschieben", self.new_position))
+        protocol::LocalizedLabel::native(&format!("Move 3D camera to {:?}", self.new_position), &format!("3D-Kamera nach {:?} verschieben", self.new_position))
     }
 }
 //#endregion 🔖️Mutation

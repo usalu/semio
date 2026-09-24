@@ -13,7 +13,7 @@ pub mod approval;
 pub type InferenceApprovalRequestV1 = approval::InferenceApprovalRequestV1;
 
 /// ↩️ The GIS approval undo contract hub decodes; its shared struct is mounted in the os kernel.
-pub type GisMapDocumentFrontierV1 = directory::os_directory::CheckpointPublicationFrontierV1;
+pub type GisMapDocumentFrontierV1 = directory::os_directory::EditedArtifactFrontierV1;
 pub type GisMapApprovalUndoHandleV1 = directory::os_directory::GisMapApprovalUndoHandleV1;
 pub type GisMapApprovalUndoReceiptV1 = directory::os_directory::GisMapApprovalUndoReceiptV1;
 pub type GisMapApprovalUndoRequestV1 = directory::os_directory::GisMapApprovalUndoRequestV1;
@@ -109,7 +109,11 @@ mod scope_schema_export_law;
 pub const REQUEST_MAX_BYTES: usize = 1024;
 pub const RECONCILE_REQUEST_MAX_BYTES: usize = 256;
 pub const SERVER_ID_MAX_BYTES: usize = 96;
-pub const INPUT_MAX_BYTES: usize = 65_536;
+/// 📏️ The largest map base one inference may run on: the verified pack of the document's active
+/// checkpoint. It must admit every document the hub itself creates — the GIS kind's default map packs
+/// to ~81 KB — so a freshly created map is always inferable; 1 MiB leaves an order of magnitude of
+/// room for real edits while bounding the job ledger (`JOB_CAPACITY` × this) to 128 MiB.
+pub const INPUT_MAX_BYTES: usize = 1_048_576;
 pub const RESULT_MAX_BYTES: usize = 16_384;
 pub const PROPOSAL_MAX_BYTES: usize = 4096;
 pub const IDENTITY_JSON_MAX_BYTES: usize = 8192;
@@ -120,6 +124,10 @@ pub const CLAIM_LEASE_MAX_MS: u64 = 30_000;
 pub const JOB_MAX_LIFETIME_MS: u64 = 120_000;
 pub const SAFE_INTEGER_MAX: u64 = 9_007_199_254_740_991;
 pub const GIS_SERVICE_ID: &str = "s.gis.gismap.inference";
+/// 🧭️ The document-relative route family this hub serves `GIS_SERVICE_ID` jobs under — published in
+/// readiness (`features.inferenceServices[].route`) so a client resolves a hub-executed service's
+/// transport from what the hub declares instead of from a table of its own.
+pub const GIS_SERVICE_ROUTE: &str = "inference/gis-map";
 pub const GIS_PACKAGE_ID: &str = "semio:gis";
 pub const GIS_ARTIFACT_KIND: &str = "s.gis.gismap";
 pub const GIS_DOCUMENT_SCHEMA: &str = "gis.map";

@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pathBudget", "scriptEncoding", "cargoLinker", "repoLocalGitConfig", "unixBootstrap", "windowsBootstrap", "nodePin", "workspaceManifests", "freshClone"],
+  "definitions": {
+    "strings": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true }
+  },
+  "properties": {
+    "pathBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "windowsMaxPath", "cloneRootMax", "componentMax"],
+      "properties": {
+        "unit": { "const": "utf16" },
+        "windowsMaxPath": { "type": "integer", "minimum": 1 },
+        "cloneRootMax": { "type": "integer", "minimum": 3 },
+        "componentMax": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "scriptEncoding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bomExtensions", "lfExtensions", "excludedPrefixes"],
+      "properties": {
+        "bomExtensions": { "$ref": "#/definitions/strings" },
+        "lfExtensions": { "$ref": "#/definitions/strings" },
+        "excludedPrefixes": { "$ref": "#/definitions/strings" }
+      }
+    },
+    "cargoLinker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["config", "linuxTable", "linuxRustflags", "forbiddenRustflagFragments"],
+      "properties": {
+        "config": { "type": "string", "minLength": 1 },
+        "linuxTable": { "type": "string", "minLength": 1 },
+        "linuxRustflags": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        "forbiddenRustflagFragments": { "$ref": "#/definitions/strings" }
+      }
+    },
+    "repoLocalGitConfig": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 2, "maxItems": 2 }
+    },
+    "unixBootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "packageManagers", "requiredTools", "forbidden"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "packageManagers": { "$ref": "#/definitions/strings" },
+        "requiredTools": { "$ref": "#/definitions/strings" },
+        "forbidden": { "$ref": "#/definitions/strings" }
+      }
+    },
+    "windowsBootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "required", "forbidden"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "required": { "$ref": "#/definitions/strings" },
+        "forbidden": { "$ref": "#/definitions/strings" }
+      }
+    },
+    "nodePin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "dockerfile", "dockerfileArg"],
+      "properties": {
+        "manifest": { "type": "string", "minLength": 1 },
+        "dockerfile": { "type": "string", "minLength": 1 },
+        "dockerfileArg": { "type": "string", "pattern": "^[A-Z_]+$" }
+      }
+    },
+    "workspaceManifests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootManifest"],
+      "properties": {
+        "rootManifest": { "type": "string", "minLength": 1 }
+      }
+    },
+    "freshClone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bootstrapSources", "bootstrapSourcesSchema", "entries"],
+      "properties": {
+        "bootstrapSources": { "type": "string", "minLength": 1 },
+        "bootstrapSourcesSchema": { "type": "string", "minLength": 1 },
+        "entries": { "$ref": "#/definitions/strings" }
+      }
+    }
+  }
+}

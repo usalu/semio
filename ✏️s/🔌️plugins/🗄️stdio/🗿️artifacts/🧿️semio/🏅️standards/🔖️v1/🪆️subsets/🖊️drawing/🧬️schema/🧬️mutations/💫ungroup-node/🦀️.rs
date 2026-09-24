@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Ungr
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Ungroup node in layer #{}", self.at.layer), &format!("Gruppierungsaufhebungsknoten in Ebene #{}", self.at.layer))
+        protocol::LocalizedLabel::native(&format!("Ungroup node in layer #{}", self.at.layer), &format!("Gruppierung von Knoten in Ebene #{} aufheben", self.at.layer))
     }
     fn target(&self) -> Vec<String> {
         vec![self.at.layer.to_string()]

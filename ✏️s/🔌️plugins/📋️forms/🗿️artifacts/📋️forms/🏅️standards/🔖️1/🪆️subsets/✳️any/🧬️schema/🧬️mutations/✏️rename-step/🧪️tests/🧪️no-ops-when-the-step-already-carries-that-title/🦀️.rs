@@ -90,13 +90,13 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "rename-step/no-ops-when-the-step-already-carries-that-title: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared outcome holds: `applied`, carrying one Warning `mutation.no-op`. The warning is
+/// 🎯️ The declared outcome holds: `no-op`, carrying one Warning `mutation.no-op`. The warning is
 /// deliberately untargeted — `MutationOutcome::warn` takes no address, unlike the Error-level
 /// `mutation.target-missing` this same verb raises when the id does not resolve.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "rename-step/no-ops-when-the-step-already-carries-that-title declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "rename-step/no-ops-when-the-step-already-carries-that-title declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

@@ -33,7 +33,7 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for ChangeTileMedia {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Tile Media", "Kachelmedien ändern")
+        protocol::LocalizedLabel::native("Change Tile Media", "Medien der Kachel ändern")
     }
 }
 //#endregion 🔖️ChangeTileMedia

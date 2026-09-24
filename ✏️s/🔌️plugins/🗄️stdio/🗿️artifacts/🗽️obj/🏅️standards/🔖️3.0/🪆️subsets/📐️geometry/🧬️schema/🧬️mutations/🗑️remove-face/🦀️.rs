@@ -28,7 +28,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveFace {
         agg_inverse(&ObjMutation::RemoveFace(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-face", "Fläche entfernen")
+        protocol::LocalizedLabel::native("Remove face", "Fläche entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

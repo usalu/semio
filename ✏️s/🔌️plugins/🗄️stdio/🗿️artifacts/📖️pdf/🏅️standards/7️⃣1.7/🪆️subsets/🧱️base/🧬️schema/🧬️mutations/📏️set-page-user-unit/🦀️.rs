@@ -30,7 +30,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageUserUnit {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set page {} user unit", self.index), &format!("Seite {} Benutzereinheit setzen", self.index))
+        protocol::LocalizedLabel::native(&format!("Set page {} user unit", self.index), &format!("Benutzereinheit von Seite {} setzen", self.index))
     }
 
     fn target(&self) -> Vec<String> {

@@ -20,7 +20,7 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RemoveSelect
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove selection constraint #{}", self.index), &format!("Auswahlrandbedingung #{} entfernen", self.index))
+        protocol::LocalizedLabel::native(&format!("Remove selection constraint #{}", self.index), &format!("Auswahlbedingung #{} entfernen", self.index))
     }
 }
 //#endregion 🔖️Payload

@@ -33,7 +33,7 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ReplaceAttra
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace attraction \"{}\" geometry", self.id), &format!("Attraktion \"{}\" Geometrie ersetzen", self.id))
+        protocol::LocalizedLabel::native(&format!("Replace attraction \"{}\" geometry", self.id), &format!("Geometrie von Anziehung \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -136,13 +136,13 @@ export function runCatalogCoverageCase(): void {
   scenarioDistinctness();
   scenarioLanguages();
   scenarioGenerated();
-  console.log("[DEBUG] print: catalog-coverage — 8 fundamental scenarios passed");
+  console.log("print: catalog-coverage — 8 fundamental scenarios passed");
 }
 
 /** 🧪️ Runs the long scenario: every catalogue family is registered by a namespace package. */
 export function runCatalogFamilyRegistration(): void {
   scenarioFamilies();
-  console.log("[DEBUG] print: catalog-coverage — family registration complete");
+  console.log("print: catalog-coverage — family registration complete");
 }
 //#endregion 🔖️Scenarios
 

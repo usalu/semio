@@ -100,6 +100,11 @@ export function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, 
   const quarantinedLabel = useLabel("ui.conflict.quarantined");
   const statusAccessibleLabel = useLabel("ui.sync.statusLabel");
   const statusLine = useSyncStatusLabel(status);
+  const backboneTitles: Readonly<Record<SyncCardKind, string>> = {
+    file: useLabel("ui.sync.backboneFile"),
+    folder: useLabel("ui.sync.backboneFolder"),
+    remote: useLabel("ui.sync.backboneRemote"),
+  };
   const placeholder = cardKind === "remote" ? "127.0.0.1:8787/studio-1/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
 
   const attachFromDraft = () => {
@@ -128,7 +133,7 @@ export function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, 
       {open ? (
         <PopoverContent side="top" align="center" className="w-80 space-y-3 p-3">
           <div className="space-y-1">
-            <p className="text-sm font-medium capitalize">{cardKind} backbone</p>
+            <p className="text-sm font-medium">{cardKind ? backboneTitles[cardKind] : null}</p>
             {activeUri ? <p className="break-all text-xs text-muted-foreground">{activeUri}</p> : null}
             {activeUri && statusLine ? (
               <p role="status" aria-live="polite" aria-label={statusAccessibleLabel} data-semio-sync-status="" className="text-xs text-muted-foreground">
@@ -167,13 +172,18 @@ export function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, 
 //#endregion 🔖️sync-attach-card
 
 //#region 🔖️hub-connection-indicator
-/** 🔐️ Whether this shell holds a hub session. `"none"` means no hub sign-in surface is mounted at
- * all (the shell is running purely local-first), which is NOT the same as being signed out of one —
- * only `"signedOut"` is a state the human can act on, and only it offers the sign-in entry point. */
+/** 🔐️ Whether this shell holds a hub session. `"none"` means this shell runs without any hub configured
+ * (purely local-first), which is NOT the same as being signed out of one — only `"signedOut"` is a state
+ * the human can act on, and only it offers the sign-in entry point. */
 export type HubSessionPresenceV1 = "signedIn" | "signedOut" | "none";
 
+/** 🔗️ What the shell's own session revalidation last learned about the hub link, independent of any
+ * document: still `verifying` a remembered session, `reachable`, or `unreachable` — a short shortage the
+ * refresh loop is riding out on a bounded backoff while it keeps the authority it already verified. */
+export type HubLinkV1 = "verifying" | "reachable" | "unreachable";
+
 /** 📶️ What the always-visible chrome badge reports about the hub link as a whole. */
-export type HubConnectionIndicatorStateV1 = "signedOut" | "live" | "connecting" | "reconnecting" | "offline";
+export type HubConnectionIndicatorStateV1 = "local" | "signedOut" | "live" | "online" | "connecting" | "reconnecting" | "offline";
 
 /** 📶️ The aggregate a single badge can honestly show for however many documents are attached. */
 export interface HubConnectionSummaryV1 {
@@ -185,33 +195,42 @@ export interface HubConnectionSummaryV1 {
   readonly documentCount: number;
 }
 
-/** 📶️ Folds every attached document's `RemoteState` into ONE aggregate, best state first: a single
- * live document means the hub is reachable, so `live` wins; a document still dialling outranks one
- * already in backoff; everything detached (or nothing attached at all) is `offline`. Being signed out
- * outranks all of them, because no transport state is meaningful without a session. Pure — the
- * indicator below is the only place this is rendered. */
-export function hubConnectionSummaryV1(statuses: readonly ArtifactSyncStatus[], session: HubSessionPresenceV1): HubConnectionSummaryV1 {
-  if (session === "signedOut") return { state: "signedOut", peerCount: 0, documentCount: statuses.length };
+/** 📶️ Folds the shell's own hub link and every attached document's `RemoteState` into ONE aggregate, best
+ * state first. No hub configured is `local`; no session is `signedOut`, because no transport state means
+ * anything without one. A live document means the hub answers right now, so `live` wins over everything
+ * else; an unreachable session link is a shortage in progress (`reconnecting`), which outranks a document
+ * still dialling; a verified, reachable link with no live document is `online`; nothing at all is `offline`.
+ * Pure — the indicator below is the only place this is rendered. */
+export function hubConnectionSummaryV1(statuses: readonly ArtifactSyncStatus[], session: HubSessionPresenceV1, link: HubLinkV1): HubConnectionSummaryV1 {
+  const documentCount = statuses.length;
+  if (session === "none") return { state: "local", peerCount: 0, documentCount };
+  if (session === "signedOut") return { state: "signedOut", peerCount: 0, documentCount };
   const peerCount = statuses.reduce((best, status) => (status.remote.kind === "live" ? Math.max(best, status.remote.peerCount) : best), 0);
-  if (statuses.some((status) => status.remote.kind === "live")) return { state: "live", peerCount, documentCount: statuses.length };
-  if (statuses.some((status) => status.remote.kind === "connecting")) return { state: "connecting", peerCount: 0, documentCount: statuses.length };
-  if (statuses.some((status) => status.remote.kind === "backoff")) return { state: "reconnecting", peerCount: 0, documentCount: statuses.length };
-  return { state: "offline", peerCount: 0, documentCount: statuses.length };
+  if (statuses.some((status) => status.remote.kind === "live")) return { state: "live", peerCount, documentCount };
+  if (link === "unreachable") return { state: "reconnecting", peerCount: 0, documentCount };
+  if (link === "verifying" || statuses.some((status) => status.remote.kind === "connecting")) return { state: "connecting", peerCount: 0, documentCount };
+  if (statuses.some((status) => status.remote.kind === "backoff")) return { state: "reconnecting", peerCount: 0, documentCount };
+  if (link === "reachable") return { state: "online", peerCount: 0, documentCount };
+  return { state: "offline", peerCount: 0, documentCount };
 }
 
 /** 🎨️ One icon per state — the badge carries icon AND text, never colour alone, so it survives a
  * monochrome theme and a colour-vision deficiency exactly as it survives a screen reader. */
 const HUB_CONNECTION_ICON: Readonly<Record<HubConnectionIndicatorStateV1, IconName>> = {
+  local: "link-2-off",
   signedOut: "user",
   live: "cloud",
+  online: "cloud",
   connecting: "loader-2",
   reconnecting: "rotate-ccw",
   offline: "link-2-off",
 };
 
 const HUB_CONNECTION_TONE: Readonly<Record<HubConnectionIndicatorStateV1, string>> = {
+  local: "text-muted-foreground",
   signedOut: "text-muted-foreground",
   live: "text-emphasized",
+  online: "text-emphasized",
   connecting: "text-muted-foreground",
   reconnecting: "text-amber-400",
   offline: "text-muted-foreground",
@@ -220,6 +239,7 @@ const HUB_CONNECTION_TONE: Readonly<Record<HubConnectionIndicatorStateV1, string
 export interface HubConnectionIndicatorProps {
   readonly statuses: readonly ArtifactSyncStatus[];
   readonly session: HubSessionPresenceV1;
+  readonly link: HubLinkV1;
   /** 🔐️ Entry point into the sign-in surface, offered only while `session` is `"signedOut"`. Absent
    * means no such surface is mounted yet, and the badge then reports the state without offering an
    * action it cannot perform. */
@@ -229,16 +249,19 @@ export interface HubConnectionIndicatorProps {
 /** @emoji 📶️ The persistent hub-connection badge. Lives in the shell footer beside the presence bar,
  * so "the hub is unreachable" is readable without opening any one document's sync popover — audit
  * `📓️g5-ux-completeness-audit.md` §5's last gap. `role="status"` + `aria-live="polite"` announce a
- * transition once; the accessible name is the localized state text, never a colour. */
-export function HubConnectionIndicator({ statuses, session, onSignIn }: HubConnectionIndicatorProps): ReactElement {
-  const summary = hubConnectionSummaryV1(statuses, session);
+ * transition once; the accessible name is the localized state text, never a colour. It only renders:
+ * a shortage never blocks the shell, it just reads `reconnecting` until the link answers again. */
+export function HubConnectionIndicator({ statuses, session, link, onSignIn }: HubConnectionIndicatorProps): ReactElement {
+  const summary = hubConnectionSummaryV1(statuses, session, link);
   const hubLabel = useLabel("ui.sync.hubLabel");
   const signInLabel = useLabel("ui.sync.hubSignIn");
   const peerOne = useLabel("ui.sync.peerOne", { count: summary.peerCount });
   const peerMany = useLabel("ui.sync.peerMany", { count: summary.peerCount });
   const stateText: Readonly<Record<HubConnectionIndicatorStateV1, string>> = {
+    local: useLabel("ui.sync.localOnly"),
     signedOut: useLabel("ui.sync.signedOut"),
     live: useLabel("ui.sync.live"),
+    online: useLabel("ui.sync.online"),
     connecting: useLabel("ui.sync.connecting"),
     reconnecting: useLabel("ui.sync.reconnecting"),
     offline: useLabel("ui.sync.offline"),

@@ -32,7 +32,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Rename
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename energy model to \"{}\"", self.new_name), &format!("Energienmodell in \"{}\" umbenennen", self.new_name))
+        protocol::LocalizedLabel::native(&format!("Rename energy model to \"{}\"", self.new_name), &format!("Energiemodell in \"{}\" umbenennen", self.new_name))
     }
 }
 //#endregion 🔖️Mutation

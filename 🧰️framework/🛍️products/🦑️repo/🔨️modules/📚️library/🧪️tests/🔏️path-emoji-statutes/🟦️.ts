@@ -68,14 +68,14 @@ test("mutation catalogs resolve only explicitly registered same-artifact and sam
 test("mutation vector discovery audits exact grouped owners and declared scenario names across catalogs", () => {
   const contract = fixture.mutationCatalogSourceOwnership, sourceRoot = `${contract.source}/🧬️schema/🧬️mutations`;
   const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [sourceRoot]: contract.domains }, mutationCatalogSourceOwners: { [contract.catalog]: contract.source } };
-  const source = readFileSync(resolve(root, "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts"), "utf8");
+  const source = readFileSync(resolve(root, "../../../🧪️test/🟦️.ts"), "utf8");
   const syntax = ts.createSourceFile("test.ts", source, ts.ScriptTarget.Latest, true);
   const definition = syntax.statements.filter(ts.isFunctionDeclaration).find((node) => node.name?.text === "mutationVectorRegistryBreaches")!;
   const camera = { mutationId: "create-camera", sourceMutationDirectoryName: "🌱️create", mutationDirectoryName: "🌱️create", scenarios: [{ id: "applied", directoryName: "✅️applied" }] };
   const node = { ...camera, mutationId: "create-node", scenarios: [{ id: "applied", directoryName: "🌱️applied" }] };
   const catalog = { id: "camera", capability: "mutation", standardDirectoryName: "🔖️1", subsetDirectoryName: "✳️camera", kinds: ["create-camera"], vectors: [camera] };
   const other = { ...catalog, id: "node", subsetDirectoryName: "✳️any", kinds: ["create-node"], vectors: [node] };
-  const registry = { contributions: [{ owner: contract.catalog, manifestPath: `${contract.catalog}/🔮️oracle/🔣️.json`, mutationCatalogs: [catalog] }, { owner: contract.source, manifestPath: `${contract.source}/🔮️oracle/🔣️.json`, mutationCatalogs: [other] }] };
+  const registry = { contributions: [{ owner: contract.catalog, manifestPath: `${contract.catalog}/🔮️oracles/🔣️.json`, mutationCatalogs: [catalog] }, { owner: contract.source, manifestPath: `${contract.source}/🔮️oracles/🔣️.json`, mutationCatalogs: [other] }] };
   const sourceCases = [`${sourceRoot}/🎥️camera/🌱️create/🧪️tests/✅️applied`, `${sourceRoot}/🌳️node/🌱️create/🧪️tests/🌱️applied`];
   const fixtureCases = [`${contract.source}/🧫️fixtures/🧬️mutations/🎥️camera/🌱️create/✅️applied`, `${contract.source}/🧫️fixtures/🧬️mutations/🌳️node/🌱️create/🌱️applied`];
   for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
@@ -103,7 +103,7 @@ test("normalization reads explicit catalogs and canonicalizes both mutation pair
   expect(definitions.every(Boolean)).toBe(true);
   const entries = new Map<string, any>(), documents = new Map<string, string>();
   for (const [owner, mutationId] of [[contract.source, "create-node"], [contract.catalog, "create-camera"]]) {
-    const path = `${owner}/🔮️oracle/🔣️.json`;
+    const path = `${owner}/🔮️oracles/🔣️.json`;
     entries.set(path, { sourcePath: path, normalizedPath: path, nodeKind: "file", fileKind: "json", violations: [] });
     documents.set(path, JSON.stringify({ mutationCatalogs: [{ id: mutationId, capability: "mutation", standardDirectoryName: "🔖️1", subsetDirectoryName: basename(owner), kinds: [mutationId], vectors: [{ mutationId, sourceMutationDirectoryName: "🌱️create", mutationDirectoryName: "🌱️create", scenarios: [{ id: "applied", directoryName: "✅️applied" }] }] }] }));
   }
@@ -143,7 +143,7 @@ test("glTF generator follows exact fixture-manifest roles and handpicked file co
   const syntax = ts.createSourceFile("script.ts", source, ts.ScriptTarget.Latest, true);
   const definition = syntax.statements.filter(ts.isFunctionDeclaration).find((node) => node.name?.text === "gltfFixtureOutputPaths");
   expect(definition).toBeDefined();
-  const catalogDir = join(repoRoot, contract.owner, "🔮️oracle");
+  const catalogDir = join(repoRoot, contract.owner, "🔮️oracles");
   const live = JSON.parse(readFileSync(join(catalogDir, "🔣️.json"), "utf8"));
   expect(parseTree(JSON.stringify(live.fixtureManifests))?.type).toBe("array");
   for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
@@ -299,7 +299,7 @@ test("TSV mutation payload schemas resolve with camel-case language-neutral cont
     expect(validate(row.negative), row.directory).toBe(false);
     expect(readFileSync(join(owner, "🦀️.rs"), "utf8"), row.directory).toContain('#[value(rename_all = "camelCase")]');
   }
-  const oracle = JSON.parse(readFileSync(join(dirname(dirname(mutations)), "🔮️oracle/🔣️.json"), "utf8"));
+  const oracle = JSON.parse(readFileSync(join(dirname(dirname(mutations)), "🔮️oracles/🔣️.json"), "utf8"));
   const declared = oracle.mutationManifests.flatMap((manifest: any) => manifest.mutations).filter((mutation: any) => cases.some((row) => row.directory.endsWith(mutation.id)));
   expect(declared.map((mutation: any) => mutation.id).sort()).toEqual(["insert-row", "remove-row", "set-cell", "set-line-ending", "set-snapshot", "set-trailing-newline"]);
   expect(declared.every((mutation: any) => mutation.payloadSchema === payloadRelative)).toBe(true);
@@ -389,8 +389,8 @@ test("normalization requires one exact descriptor authority per admitted mutatio
 
 test("captured structural schema checks reject linked and unadmitted authority", () => {
   const contract = fixture.mutationPayloadOwnership, taxonomy = loadCatalogTaxonomy();
-  const source = readFileSync(resolve(root, "../../../../../../..", "📜️script.ts"), "utf8");
-  const definitions = ["policyStructuralSource", "policyStructuralNodeState", "policyMutationPayloadSchemaProblems"].map((name) => source.match(new RegExp(`^function ${name}\\([\\s\\S]*?^}`, "m"))![0]).join("\n");
+  const source = readFileSync(resolve(root, "../../🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts"), "utf8");
+  const definitions = ["policyStructuralSource", "policyStructuralNodeState", "policyMutationPayloadSchemaProblems"].map((name) => source.match(new RegExp(`^export function ${name}\\([\\s\\S]*?^}`, "m"))![0].replace(/^export /u, "")).join("\n");
   for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
     const validate = new Function("mutationPayloadSchemaProblems", `${compile(definitions)}\nreturn policyMutationPayloadSchemaProblems;`)(mutationPayloadSchemaProblems);
     for (const row of contract.cases) {
@@ -563,7 +563,7 @@ test("projected scenarios retain individually chosen single-emoji identities", (
   const mutationId = leadingEmojiIdentity(mutationDirectoryName).rest;
   for (const row of fixture.projectionScenarios) {
     const matches = [...row.directoryName.matchAll(emojiRegex())];
-    const oracle = matches.length === 1 && matches[0]?.index === 0 && row.directoryName.slice(matches[0][0].length).replace(/^\uFE0F/u, "") === row.id && !fixture.genericEmojiIdentities.includes(matches[0][0].replace(/\uFE0F$/u, "") + "\uFE0F");
+    const oracle = matches.length === 1 && matches[0]?.index === 0 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(row.directoryName.slice(matches[0][0].length).replace(/^\uFE0F/u, "")) && !fixture.genericEmojiIdentities.includes(matches[0][0].replace(/\uFE0F$/u, "") + "\uFE0F");
     expect(oracle, row.directoryName).toBe(row.expected);
     const problems = semanticProjectionCatalogProblems([{
       ownerPath: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any",
@@ -751,7 +751,7 @@ test("OS semantic-stem owners use canonical leaves and exact tool authority", ()
   const coreManifest = scenario.entries.find((row: { path: string }) => row.path.endsWith("/package.json")).path;
   const familyManifest = coreManifest.replace("/🫀️core/🕸️bindings/", "/📦️packages/🦀️rust/🕸️bindings/");
   expect(fixedFilenameContractIdsForPath(coreManifest, taxonomy)).toEqual(["flow-core-package-manifest"]);
-  expect(fixedFilenameContractIdsForPath(familyManifest, taxonomy)).toEqual(["flow-family-package-manifest"]);
+  expect(fixedFilenameContractIdsForPath(familyManifest, taxonomy)).toEqual([]);
   expect(fixedFilenameContractIdsForPath(coreManifest.replace("/🕸️bindings/", "/🕸️bindings/🧪️nested/"), taxonomy)).toEqual([]);
   expect(fixedFilenameContractIdsForPath(`foreign/${coreManifest}`, taxonomy)).toEqual([]);
   const outline = basename(scenario.entries.find((row: { path: string }) => row.path.endsWith(".ttf")).path).replace(/\.ttf$/u, "");

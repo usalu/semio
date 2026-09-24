@@ -23,7 +23,7 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for ReplaceBlock {
         agg_inverse(&MdMutation::ReplaceBlock(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("replace-block", "Block ersetzen")
+        protocol::LocalizedLabel::native("Replace block", "Block ersetzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

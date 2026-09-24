@@ -57,6 +57,12 @@ impl ArtifactViewer for RasterViewer {
         store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("raster.child-projection"), error.to_string()))
     }
 
+    /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
+    /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::spr::raster_document_store_owners())
+    }
+
     /// 📄️ Boots on the constant empty shell `empty_raster_snapshot()`, like the editor: the store's
     /// construction derive-`Clone`s and `encode_pack`s the initial snapshot, and raster admits only
     /// the empty shell to both — see `RasterPlayApp::initial_snapshot`. A viewer instance receives its

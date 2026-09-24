@@ -1,0 +1,4 @@
+T9 (DWG codec rewrite): semio-s-artifact-stdio-dwg changed its writer (real AC1024), reader (AC1018/1021/1024/1027/1032) and
+snapshot schema (typed entity bodies replace DwgEntityBody::Geometry; pack record spec changed). Every guest linking stdio-dwg
+needs a rebuild + describe: stdio, raster, cad, draw, lowpoly, gis, layout, note, puzzle, procedural, process, shooting, animate.
+Also semio-s-artifact-stdio-deflate gained a dev-dependency (miniz_oxide, test-only; no guest impact).

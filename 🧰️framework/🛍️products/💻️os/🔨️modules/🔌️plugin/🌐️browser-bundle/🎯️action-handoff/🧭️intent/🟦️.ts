@@ -9,12 +9,12 @@ function unsigned(value: number, path: string, maximum = Number.MAX_SAFE_INTEGER
 }
 
 /** 🎯️ Preserves every intent field while binding the renderer surface to its native instance. */
-export function createBrowserActorUiIntentRequestV1(owner: BrowserActorActionOwnerV1, windowKindId: string, intent: UiIntent): BrowserActorActionRequestV1 {
-  if (windowKindId.length === 0 || intent.surface !== windowKindId || intent.revision !== owner.surfaceRevision) throw new Error("browser-actor-intent: stale surface");
+export function createBrowserActorUiIntentRequestV1(owner: BrowserActorActionOwnerV1, surfaceKey: string, intent: UiIntent): BrowserActorActionRequestV1 {
+  if (surfaceKey.length === 0 || intent.surface !== surfaceKey || intent.revision !== owner.surfaceRevision) throw new Error("browser-actor-intent: stale surface");
   if (typeof intent.seq !== "bigint" || intent.seq < 0n || intent.seq > 0xffffffffffffffffn) throw new Error("browser-actor-intent: invalid sequence");
   const payload = encodePackValue({
     ...intent,
-    surface: `${owner.instanceId}:${windowKindId}`,
+    surface: `${owner.instanceId}:${surfaceKey}`,
     revision: unsigned(intent.revision, "revision"),
     node: unsigned(intent.node, "node"),
     action: { ...intent.action, version: unsigned(intent.action.version, "action version", 0xffff) },

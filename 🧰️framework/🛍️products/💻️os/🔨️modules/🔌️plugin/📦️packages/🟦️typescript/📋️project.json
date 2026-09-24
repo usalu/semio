@@ -10,11 +10,15 @@
       ],
       "outputs": [
         "{projectRoot}/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
+        "{projectRoot}/dist/dev/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin",
         "{projectRoot}/dist/dev/🔌️plugin-modules/🧵️shard"
       ],
       "options": {
         "command": "bun ./📜️script.ts support dev"
-      }
+      },
+      "dependsOn": [
+        "semio-framework-os-infinite:fonts"
+      ]
     },
     "support-release": {
       "executor": "nx:run-commands",
@@ -25,11 +29,15 @@
       ],
       "outputs": [
         "{projectRoot}/dist/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
+        "{projectRoot}/dist/release/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin",
         "{projectRoot}/dist/release/🔌️plugin-modules/🧵️shard"
       ],
       "options": {
         "command": "bun ./📜️script.ts support release"
-      }
+      },
+      "dependsOn": [
+        "semio-framework-os-infinite:fonts"
+      ]
     }
   },
   "namedInputs": {

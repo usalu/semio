@@ -28,7 +28,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveMarkInfo {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove PDF/UA marked flag", "PDF/markierte UAschalter entfernen")
+        protocol::LocalizedLabel::native("Remove PDF/UA marked flag", "PDF/UA-Markierungskennung entfernen")
     }
 
     fn target(&self) -> Vec<String> {

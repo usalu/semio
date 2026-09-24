@@ -1,0 +1,13 @@
+g10 (2026-09-25 00:53) — G9 commit binding LANDED (see 📓️landing.md row G10).
+  1. wfc: describe + materialize + restage. New: bitmap editor action `pin-solution` (destructive), `commit` field on
+     every inference payload contract (`WireInferencePayloadContract.commit`; bitmap → pin-solution). Every guest links
+     semio-framework-plugin, so every describe moves with the full rebuild anyway.
+  2. Catalog: my live proof needs a hub whose catalog carries stdio, gis, note, wfc from the post-landing tree
+     (the full all-package catalog is fine). Purpose: generic inference quartet live (wfc guest-executed, gis hub-executed).
+g10 (2026-09-25 05:24) — hub binary need (W2 / hub owner): `semio-hub` hub.inference `INPUT_MAX_BYTES` 65_536 → 1_048_576
+  (schema const + JSON `InferenceLimitsV1.inputMaxBytes` + TS twin + `gis-map-proposal-approval-v1` fixture + law). Measured on
+  hub 8030 (catalog A): every map the hub creates packs to 80,801 B, so `inference_submit` of gis on any fresh map answered 413
+  `inference.bounds` — hub-executed GIS inference could never run. Needs an os-hub built after 05:23 for the live quartet (gis half).
+  `cargo check -p semio-hub --lib --tests` green 05:23.
+
+[w2 2026-09-25 12:3x] catalog B published from the post-landing tree: /Users/ueli/Documents/semio/.🧬semio/🌐hub/w2-catalog-b (generation e8167ce8ed3e61f0a4252661df9f2e3043aabb258e474b797fc3f0612c9ecc53, 9 packages stdio,gis,note,animate,block,writer,draw,puzzle,wfc; 12 editor open targets, compressed closed actors, S15 plugin modules). Hub 7800 runs it since 11:50 with binary .tmp-ticket/wp-w2/generated/bin/os-hub-hub-7800-b (Hub Handoff in 📓️wp-w2.md). Open-plan probe 12/12 (wp-w2/generated/open-plan-probe-7800-b.txt). The full --packages all catalog follows.

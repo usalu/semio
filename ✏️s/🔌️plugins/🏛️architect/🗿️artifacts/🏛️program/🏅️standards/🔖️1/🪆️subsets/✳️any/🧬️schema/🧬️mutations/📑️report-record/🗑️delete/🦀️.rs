@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteReportRecord {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete report record \"{}\"", self.id.0), &format!("Berichtdatensatz \"{}\" löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete report record \"{}\"", self.id.0), &format!("Berichtsdatensatz \"{}\" löschen", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

@@ -4,9 +4,9 @@ export async function registerTests1(
   vitest: NonNullable<ImportMeta["vitest"]>,
   dependencies: Pick<
     typeof import("../../🟦️.ts"),
-    "ensureMcpBinary" | "mcpSourceContentHash" | "requireMcpBinary" | "resolveBuiltMcpBinaryPath" | "resolveMcpBinaryContentHashPath" | "resolveMcpBinaryPath"
+    "ensureMcpBinary" | "mcpBinaryFreshness" | "requireMcpBinary" | "resolveBuiltMcpBinaryPath" | "resolveMcpBinarySourcesPath" | "resolveMcpBinaryPath"
   > &
-    Pick<typeof import("node:fs"), "chmodSync" | "copyFileSync" | "mkdirSync" | "mkdtempSync" | "readFileSync" | "rmSync" | "writeFileSync"> &
+    Pick<typeof import("node:fs"), "chmodSync" | "copyFileSync" | "mkdirSync" | "mkdtempSync" | "readFileSync" | "rmSync" | "utimesSync" | "writeFileSync"> &
     Pick<typeof import("node:path"), "join"> &
     Pick<typeof import("node:os"), "tmpdir">,
   source: TestSource,
@@ -16,18 +16,25 @@ export async function registerTests1(
     copyFileSync,
     ensureMcpBinary,
     join,
-    mcpSourceContentHash,
+    mcpBinaryFreshness,
     mkdirSync,
     mkdtempSync,
     readFileSync,
     requireMcpBinary,
     resolveBuiltMcpBinaryPath,
-    resolveMcpBinaryContentHashPath,
+    resolveMcpBinarySourcesPath,
     resolveMcpBinaryPath,
     rmSync,
     tmpdir,
+    utimesSync,
     writeFileSync,
   } = dependencies;
+  const { CARGO_BINARY_SOURCES_SCHEMA_V1, CARGO_BUILD_OWNER_PID_ENV, cargoBinarySourcesFreshnessV1, cargoBuildOwnerAliveV1, cargoDepInfoSourcesV1 } = await import("../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts");
+  const gate = JSON.parse(readFileSync(new URL("./🎚️config/🧱️binary-gate.json", source.url), "utf8")) as {
+    sourcesFile: string;
+    depInfoCases: Array<{ name: string; text: string; sources: string[] }>;
+    freshnessCases: Array<{ name: string; builtAtMs: number; modified: Record<string, number | null>; fresh: boolean; changed: string | null }>;
+  };
 
   const { describe, expect, it } = vitest;
 
@@ -72,7 +79,7 @@ export async function registerTests1(
       expect(staged).toBe(0);
     });
 
-    it("stages once when absent, then skips on a matching content-hash stamp", () => {
+    it("stages once when absent, skips while every recorded source is unchanged, and restages after a dependency changes", () => {
       const fakeRepo = mkdtempSync(join(tmpdir(), "semio-mcp-repo-"));
       let staged = 0;
       try {
@@ -80,29 +87,70 @@ export async function registerTests1(
         const fakeArtifact = join(fakeRepo, ...relParts);
         mkdirSync(fakeArtifact, { recursive: true });
         const fakeBinary = join(fakeArtifact, process.platform === "win32" ? "semio-os-mcp.exe" : "semio-os-mcp");
-        const mcpRoot = join(fakeRepo, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp");
-        mkdirSync(mcpRoot, { recursive: true });
-        writeFileSync(join(mcpRoot, "Cargo.toml"), "[package]\nname=\"probe\"\n");
-        const hash = mcpSourceContentHash(fakeRepo);
-        expect(hash).toMatch(/^[0-9a-f]{64}$/);
+        const ownSource = join(fakeRepo, "own.rs");
+        const dependencySource = join(fakeRepo, "kernel.rs");
+        writeFileSync(ownSource, "fn main() {}\n");
+        writeFileSync(dependencySource, "pub fn abi() {}\n");
+        const past = new Date(Date.now() - 60_000);
+        utimesSync(ownSource, past, past);
+        utimesSync(dependencySource, past, past);
         const fakeStaging = {
           stage: () => {
             staged += 1;
             copyFileSync(process.execPath, fakeBinary);
             if (process.platform !== "win32") chmodSync(fakeBinary, 0o755);
+            writeFileSync(resolveMcpBinarySourcesPath(fakeBinary), JSON.stringify({ schema: CARGO_BINARY_SOURCES_SCHEMA_V1, builtAtMs: Date.now(), sources: [ownSource, dependencySource] }));
             return 0;
           },
         };
-        const first = ensureMcpBinary(fakeRepo, {}, process.platform, fakeStaging);
-        expect(first).toBe(fakeBinary);
+        expect(mcpBinaryFreshness(fakeBinary).fresh).toBe(false);
+        expect(ensureMcpBinary(fakeRepo, {}, process.platform, fakeStaging)).toBe(fakeBinary);
         expect(staged).toBe(1);
-        expect(readFileSync(resolveMcpBinaryContentHashPath(fakeBinary), "utf8").trim()).toBe(hash);
-        const second = ensureMcpBinary(fakeRepo, {}, process.platform, fakeStaging);
-        expect(second).toBe(fakeBinary);
+        expect(resolveMcpBinarySourcesPath(fakeBinary).endsWith(gate.sourcesFile)).toBe(true);
+        expect(ensureMcpBinary(fakeRepo, {}, process.platform, fakeStaging)).toBe(fakeBinary);
         expect(staged).toBe(1);
+        const future = new Date(Date.now() + 60_000);
+        utimesSync(dependencySource, future, future);
+        expect(mcpBinaryFreshness(fakeBinary)).toEqual({ fresh: false, reason: `${dependencySource} changed after the staged build` });
+        expect(ensureMcpBinary(fakeRepo, {}, process.platform, fakeStaging)).toBe(fakeBinary);
+        expect(staged).toBe(2);
       } finally {
         rmSync(fakeRepo, { recursive: true, force: true });
       }
     });
+
+    it("treats a binary without its sources record as stale, never as fresh", () => {
+      const fakeRepo = mkdtempSync(join(tmpdir(), "semio-mcp-repo-"));
+      try {
+        const fakeBinary = join(fakeRepo, "semio-os-mcp");
+        copyFileSync(process.execPath, fakeBinary);
+        expect(mcpBinaryFreshness(fakeBinary)).toEqual({ fresh: false, reason: "the staged binary carries no sources record" });
+        writeFileSync(resolveMcpBinarySourcesPath(fakeBinary), "{\"schema\":\"other\"}");
+        expect(mcpBinaryFreshness(fakeBinary)).toEqual({ fresh: false, reason: "the staged binary's sources record is malformed" });
+      } finally {
+        rmSync(fakeRepo, { recursive: true, force: true });
+      }
+    });
+  });
+
+  describe("cargo binary sources record", () => {
+    for (const row of gate.depInfoCases) {
+      it(`dep-info: ${row.name}`, () => {
+        expect(cargoDepInfoSourcesV1(row.text)).toEqual(row.sources);
+      });
+    }
+    it("a staging build lives exactly as long as the process it was started for", async () => {
+      const { spawnSync } = await import("node:child_process");
+      const finished = spawnSync(process.execPath, ["-e", "0"]).pid;
+      expect(cargoBuildOwnerAliveV1({})).toBe(true);
+      expect(cargoBuildOwnerAliveV1({ [CARGO_BUILD_OWNER_PID_ENV]: String(process.pid) })).toBe(true);
+      expect(cargoBuildOwnerAliveV1({ [CARGO_BUILD_OWNER_PID_ENV]: String(finished) })).toBe(false);
+    });
+    for (const row of gate.freshnessCases) {
+      it(`freshness: ${row.name}`, () => {
+        const record: import("../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts").CargoBinarySourcesV1 = { schema: CARGO_BINARY_SOURCES_SCHEMA_V1, builtAtMs: row.builtAtMs, sources: Object.keys(row.modified) };
+        expect(cargoBinarySourcesFreshnessV1(record, (path) => row.modified[path] ?? null)).toEqual({ fresh: row.fresh, changed: row.changed });
+      });
+    }
   });
 }

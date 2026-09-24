@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeUseFem {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change use fem to {:?}", self.new_use_fem), &format!("Nutzungsfem auf {:?} ändern", self.new_use_fem))
+        protocol::LocalizedLabel::native(&format!("Change use of FEM analysis to {:?}", self.new_use_fem), &format!("Verwendung der FEM-Berechnung auf {:?} ändern", self.new_use_fem))
     }
 }
 //#endregion 🔖️ChangeUseFem

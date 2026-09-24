@@ -19,7 +19,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let variant = "RenameWriter";
         let directory = "🏷️rename-writer";
         let tag = 0;
-        let outcomes = &["applied", "warning"][..];
+        let outcomes = &["applied", "no-op"][..];
         let owner = mutation_root.join("🏷️rename-writer");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");
@@ -61,7 +61,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let variant = "ChangeUri";
         let directory = "🔗change-uri";
         let tag = 1;
-        let outcomes = &["applied", "warning"][..];
+        let outcomes = &["applied", "no-op"][..];
         let owner = mutation_root.join("🔗change-uri");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");
@@ -103,7 +103,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let variant = "ChangeLanguage";
         let directory = "🌐change-language";
         let tag = 2;
-        let outcomes = &["applied", "warning"][..];
+        let outcomes = &["applied", "no-op"][..];
         let owner = mutation_root.join("🌐change-language");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");
@@ -145,7 +145,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let variant = "EditText";
         let directory = "✏️edit-text";
         let tag = 3;
-        let outcomes = &["applied", "warning"][..];
+        let outcomes = &["applied", "no-op"][..];
         let owner = mutation_root.join("✏️edit-text");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");

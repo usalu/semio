@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorC1Mm
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change anchor c1 mm to {:?}", self.new_anchor_c1_mm), &format!("Ankerc1 mm auf {:?} ändern", self.new_anchor_c1_mm))
+        protocol::LocalizedLabel::native(&format!("Change anchor edge distance c1 [mm] to {:?}", self.new_anchor_c1_mm), &format!("Randabstand des Dübels c1 [mm] auf {:?} ändern", self.new_anchor_c1_mm))
     }
 }
 //#endregion 🔖️ChangeAnchorC1Mm

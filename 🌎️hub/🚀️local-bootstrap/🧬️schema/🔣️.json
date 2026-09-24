@@ -774,6 +774,92 @@
           "pattern": "^[0-9a-f]{2,32760}$"
         }
       }
+    },
+    "LocalSessionBrokerRecordV1": {
+      "description": "\ud83c\udfab\ufe0f The local session broker record the owner of a loopback development hub writes 0600 into its data root.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "hubOrigin",
+        "runId",
+        "port",
+        "secret",
+        "profiles"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.local-session-broker/v1"
+        },
+        "hubOrigin": {
+          "type": "string",
+          "pattern": "^http://127\\.0\\.0\\.1:[0-9]{1,5}$"
+        },
+        "runId": {
+          "$ref": "#/$defs/hex16"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "secret": {
+          "$ref": "#/$defs/hex32"
+        },
+        "profiles": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/boundedId"
+          }
+        }
+      }
+    },
+    "LocalSessionRequestV1": {
+      "description": "\ud83c\udfab\ufe0f One loopback request for a fresh react-relay session of a declared local profile.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "profileId"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.local-session-request/v1"
+        },
+        "profileId": {
+          "$ref": "#/$defs/boundedId"
+        }
+      }
+    },
+    "LocalSessionV1": {
+      "description": "\ud83c\udfab\ufe0f One issued development session: the react-relay capability and the user it resolves to.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "profileId",
+        "token",
+        "userId"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.local-session/v1"
+        },
+        "profileId": {
+          "$ref": "#/$defs/boundedId"
+        },
+        "token": {
+          "type": "string",
+          "pattern": "^session\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
     }
   }
 }

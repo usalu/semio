@@ -8,7 +8,7 @@
 //! `DefaultHasher` digest of the child content, re-minted by `diff_board_fixture` on every
 //! board-writing diff — a kind-CHANGING `➡️after` would therefore need a hand-forged `std`
 //! default-hash value. `change-node-kind`'s own guard gives an honest way out that is still an
-//! APPLIED case: when `nodeKind` already reads what the payload asks for, the builder returns
+//! NO-OP case: when `nodeKind` already reads what the payload asks for, the builder returns
 //! `MutationOutcome::empty().warn("mutation.no-op", …)` before `set_node_field` is ever called.
 //!
 //! 🏷️ `change-node-kind` and its sibling `change-node-shape` share verb AND entity (`change`/
@@ -86,12 +86,12 @@ async fn committed_json_is_canonical() {
     assert_eq!(original.get("mutation").and_then(serde_json::Value::as_str), Some("changeNodeKind"), "the internally-tagged variant name must be the camelCased ChangeNodeKind");
 }
 
-/// 🎯️ The declared outcome — `applied` with one `warn`/`mutation.no-op` — is exactly what the
+/// 🎯️ The declared outcome — `no-op` with one `warn`/`mutation.no-op` — is exactly what the
 /// already-that-kind guard emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-node-kind/reports-a-no-op-when-the-kind-already-reads-topic declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "change-node-kind/reports-a-no-op-when-the-kind-already-reads-topic declares a no-op outcome");
     let produced = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its diagnostics");

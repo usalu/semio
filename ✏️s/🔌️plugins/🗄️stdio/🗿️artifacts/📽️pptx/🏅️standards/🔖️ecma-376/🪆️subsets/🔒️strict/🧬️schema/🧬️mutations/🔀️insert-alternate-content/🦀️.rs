@@ -21,7 +21,7 @@ impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for InsertAlternat
         agg_inverse(&PptxStrictMutation::InsertAlternateContent(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-alternate-content", "alternative Inhalt einfügen")
+        protocol::LocalizedLabel::native("Insert alternate content", "Alternativen Inhalt einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -7,9 +7,9 @@
 //!   on the injected process `WorkerPool`; WebSocket readiness remains on the ambient Tokio I/O
 //!   reactor and all actor deadlines use the pool's `TimerWheel`.
 //! - **Browser wgpu build** (`wasm32-unknown-unknown`): the actor runs on the owned browser-local
-//!   executor with a `web_sys::WebSocket` semio_hub transport (no threads, no filesystem). The
-//!   production browser shell instead uses a TS twin (`🏪️store/👷️worker/🟦️.ts`, WS-E); this wasm actor
-//!   keeps the crate coherent for a future in-wasm host.
+//!   executor and dials its hub through the same `semio.session.v1` admission as the native actor, over
+//!   the socket the host's injected `DocumentSocketDialer` opens (no threads, no filesystem). The React
+//!   shell's browser host keeps its TS twin (`🏪️store/👷️worker/🟦️.ts`, WS-E).
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
@@ -25,7 +25,7 @@ use crate::os_store::{
     BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
 };
 use semio_framework_value_derive::{FromValue, ToValue};
-use tokio::sync::{broadcast, mpsc};
+use tokio::sync::broadcast;
 
 //#region 🔖️Errors
 #[derive(Debug, PartialEq, Eq)]
@@ -598,11 +598,14 @@ pub struct ArtifactSyncStatus {
     pub persisted: bool,
     pub pending_mutations: usize,
     pub remote: RemoteState,
+    /// 📌️ The edited head the hub acknowledged, present only while nothing local is unacknowledged —
+    /// the head a hub Check In names. `None` before the first edit and while mutations are in flight.
+    pub acknowledged_head: Option<crate::os_directory::EditedArtifactFrontierV1>,
 }
 
 impl Default for ArtifactSyncStatus {
     fn default() -> Self {
-        Self { persisted: false, pending_mutations: 0, remote: RemoteState::Detached }
+        Self { persisted: false, pending_mutations: 0, remote: RemoteState::Detached, acknowledged_head: None }
     }
 }
 
@@ -726,6 +729,13 @@ fn validate_artifact_bootstrap_identity(bootstrap: &ArtifactBootstrap, document_
 }
 
 
+/// 📌️ The hub's frontier in the Check In head grammar; `None` for a genesis (never edited) frontier.
+fn acknowledged_edited_head(frontier: &RuntimeFrontierSummary) -> Option<crate::os_directory::EditedArtifactFrontierV1> {
+    let chain_sha256: String = frontier.chain_hash.iter().map(|byte| format!("{byte:02x}")).collect();
+    let head = crate::os_directory::EditedArtifactFrontierV1 { document_id: frontier.document_id.0.clone(), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_sha256 };
+    head.validate().then_some(head)
+}
+
 fn frontier_reaches(actual: &RuntimeFrontierSummary, required: &RuntimeFrontierSummary) -> bool {
     actual == required
 }
@@ -829,10 +839,8 @@ pub mod backbone_worker_wire {
 //#endregion 🔖️BackboneWorkerWire
 
 //#region 🔖️Endpoints
-// 🧱️ `ArtifactId` is used only by native-only test helpers below (the wire bridge and production
-// folder-reconstruction path move `crate::os_spr::MutationEnvelope`s without spelling this type), so it
-// stays a native-only import to avoid an unused-import warning on the wasm32 build.
-#[cfg(not(target_arch = "wasm32"))]
+// 🧱️ `ArtifactId` names the document of every envelope `envelopes_from_history_edit` rebuilds off an spr
+// log, which both actors (native and browser) read.
 use crate::os_spr::ArtifactId;
 
 /// @emoji 🆔️ One `HistoryEdit`'s op ids, matching `crate::os_spr::mutation_envelope_from_edit`'s own
@@ -967,6 +975,145 @@ async fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: 
     }
 }
 //#endregion 🔖️Endpoints
+
+//#region 🔖️DocumentSocketConnect
+/// @emoji 🧬️ The pack schema identity a document socket's hello and bootstrap are checked against: the
+/// kind's codec when this process resolves one ([`crate::os_store::document_kind_codec`] — the linked
+/// Rust codec, else the codec of the mounted component that owns the kind, asked of that component
+/// exactly as the hub's trusted catalog asks it), otherwise the verified execution-target lease's — the
+/// hub-selected package a client that mounted no owning component will run. Neither is no identity at
+/// all, and the caller refuses to dial rather than guess.
+pub async fn document_pack_schema_hash(schema: &str, lease: Option<&crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> Option<[u8; 32]> {
+    if let Ok(Some(codec)) = crate::os_store::document_kind_codec(schema).await {
+        return codec.pack_schema_hash().await.ok();
+    }
+    let lease = lease.filter(|lease| lease.artifact.schema == schema)?;
+    crate::os_directory::client::decode_lower_hex_32(&lease.artifact.pack_schema_hash)
+}
+
+/// @emoji 🎫️ What a document actor asks of the hub's open plan for its binding.
+pub fn document_socket_expectation(schema: &str, pack_schema_hash: [u8; 32], surface: Option<&str>, lease: Option<&crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> crate::os_directory::client::DocumentSocketExpectationV1 {
+    crate::os_directory::client::DocumentSocketExpectationV1 { artifact_schema: schema.to_string(), pack_schema_hash, requested_surface_id: surface.map(str::to_string), lease: lease.cloned() }
+}
+
+/// @emoji 🧷️ The one binding a document actor holds a hub socket for.
+#[derive(Clone, Copy, Debug)]
+pub struct DocumentSocketBinding<'a> {
+    pub hub_base_url: &'a str,
+    pub space_id: &'a str,
+    pub document_id: &'a str,
+    pub schema: &'a str,
+    pub pack_schema_hash: [u8; 32],
+    pub surface: Option<&'a str>,
+    pub lease: Option<&'a crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+}
+
+/// @emoji ⚖️ Whether one admitted authority may carry this binding at `now_ms`: unexpired, from the bound
+/// hub origin, for exactly this scope, schema, pack identity and surface, and — when the client verified
+/// an execution-target lease — for exactly that lease.
+pub fn document_socket_authority_admits(authority: &crate::os_directory::client::DocumentSocketAuthorityV1, binding: &DocumentSocketBinding<'_>, now_ms: u64) -> bool {
+    authority.expires_at_unix_ms > now_ms
+        && authority.hub_origin.trim_end_matches('/') == binding.hub_base_url.trim_end_matches('/')
+        && authority.scope.space_id == binding.space_id
+        && authority.scope.document_id == binding.document_id
+        && authority.artifact.schema == binding.schema
+        && authority.pack_schema_hash == binding.pack_schema_hash
+        && binding.surface.is_none_or(|surface| surface == authority.surface.surface_id)
+        && binding.lease.is_none_or(|lease| authority.matches_lease_fields(lease))
+}
+
+/// @emoji 👋️ The client-first frame every document socket opens with.
+pub fn document_socket_hello(schema: &str, pack_schema_hash: [u8; 32], resume_token: Option<String>, frontier: Option<RuntimeFrontierSummary>) -> ClientFrame {
+    ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: schema.to_string(), pack_schema_hash, resume_token, frontier }
+}
+
+/// @emoji 🔐️ The one ordered subprotocol offer a document socket dials with — the grant receipt's
+/// protocol, then the session capability — which a browser joins into the single
+/// `Sec-WebSocket-Protocol` value the hub splits on `", "`.
+pub fn document_socket_protocols(receipt_protocol: &str, capability: &str) -> [String; 2] {
+    [receipt_protocol.to_string(), capability.to_string()]
+}
+
+/// @emoji 📦️ One `Commands` frame ready for a socket: its batch id, the local envelopes it relays (the
+/// rollback owner) and its encoded bytes.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CommandsFrame {
+    pub batch_id: u64,
+    pub local: Vec<MutationEnvelope>,
+    pub bytes: Vec<u8>,
+}
+
+/// @emoji 📏️ The frames one relay sends, every one within the socket's ceiling, plus the envelopes that
+/// cannot fit a frame even alone.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct CommandsFramePlan {
+    pub frames: Vec<CommandsFrame>,
+    pub oversized: Vec<MutationEnvelope>,
+}
+
+/// @emoji ✂️ Splits one relay into `Commands` frames no larger than `max_frame_bytes`, halving a batch
+/// until it fits and keeping envelope order; batch ids run consecutively from `first_batch_id`. `local`
+/// and `wire` are the same envelopes before and after socket stamping.
+pub async fn commands_frames_within(max_frame_bytes: usize, first_batch_id: u64, local: Vec<MutationEnvelope>, wire: Vec<MutationEnvelope>) -> CommandsFramePlan {
+    let mut plan = CommandsFramePlan::default();
+    let mut batch_id = first_batch_id;
+    let mut pending = std::collections::VecDeque::from([(local, wire)]);
+    while let Some((local, wire)) = pending.pop_front() {
+        let bytes = encode_client_frame(&ClientFrame::Commands { batch_id, envelopes: wire.clone() }, Lane::Command).await;
+        if bytes.len() <= max_frame_bytes {
+            plan.frames.push(CommandsFrame { batch_id, local, bytes });
+            batch_id = batch_id.wrapping_add(1);
+        } else if local.len() > 1 {
+            let middle = local.len() / 2;
+            let (local_head, local_tail) = local.split_at(middle);
+            let (wire_head, wire_tail) = wire.split_at(middle);
+            pending.push_front((local_tail.to_vec(), wire_tail.to_vec()));
+            pending.push_front((local_head.to_vec(), wire_head.to_vec()));
+        } else {
+            plan.oversized.extend(local);
+        }
+    }
+    plan
+}
+
+/// @emoji 🎲️ One document actor's hybrid-logical-clock replica seed: platform entropy, so two replicas
+/// of one user (two tabs, two processes) never tie on `(seed, counter)` — H4's per-replica law.
+pub fn replica_hlc_seed() -> Result<u64, crate::os_identity::EntropyError> {
+    crate::os_identity::entropy_u64()
+}
+//#endregion 🔖️DocumentSocketConnect
+
+//#region 🔖️DocumentSocketDoor
+/// @emoji 📬️ One observation of a browser document socket's receive side.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DocumentSocketPoll {
+    Frame(Vec<u8>),
+    Pending,
+    Closed(Option<u16>),
+    Lost(u32),
+}
+
+/// @emoji 🔌️ One page-owned document socket as the browser actor drives it: never blocking, polled on
+/// the actor's own cadence, and honest about loss — a dropped frame is [`DocumentSocketPoll::Lost`],
+/// which the actor answers with a reconnect and a hub catch-up rather than a silent gap.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+pub trait DocumentSocket {
+    fn is_open(&self) -> bool;
+    /// 📏️ The largest frame this socket carries; the actor splits a `Commands` batch to fit it.
+    fn max_frame_bytes(&self) -> usize;
+    fn send_binary(&mut self, bytes: Vec<u8>) -> Result<(), String>;
+    fn poll(&mut self) -> DocumentSocketPoll;
+    fn close(&mut self);
+}
+
+/// @emoji ☎️ Opens document sockets for the browser actor. The host injects it (the wgpu renderer's
+/// duplex socket door), so the kernel names no page API and every browser socket has one owner.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+pub trait DocumentSocketDialer {
+    fn dial(&self, url: &str, protocols: &[String]) -> Result<Box<dyn DocumentSocket>, String>;
+}
+//#endregion 🔖️DocumentSocketDoor
 
 //#region 🔖️WireBridge
 // 🎯️ W6 kernel unification: `to_wire_envelope`/`from_wire_envelope` are DELETED — this actor's
@@ -1276,6 +1423,8 @@ pub struct ArtifactHost {
     pool: std::sync::Arc<semio_framework_async::WorkerPool>,
     credential: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<crate::os_directory::client::LocalHubCredential>>>>,
     socket_grant_source: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+    document_socket_dialer: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<dyn DocumentSocketDialer>>>>,
     cancel: semio_framework_async::CancelToken,
 }
 
@@ -1284,7 +1433,15 @@ impl Clone for ArtifactHost {
         let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.host_references = state.host_references.checked_add(1).expect("artifact host reference capacity exhausted");
         drop(state);
-        Self { inner: self.inner.clone(), pool: self.pool.clone(), credential: self.credential.clone(), socket_grant_source: self.socket_grant_source.clone(), cancel: self.cancel.clone() }
+        Self {
+            inner: self.inner.clone(),
+            pool: self.pool.clone(),
+            credential: self.credential.clone(),
+            socket_grant_source: self.socket_grant_source.clone(),
+            #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+            document_socket_dialer: self.document_socket_dialer.clone(),
+            cancel: self.cancel.clone(),
+        }
     }
 }
 
@@ -1297,6 +1454,8 @@ impl ArtifactHost {
             pool,
             credential: std::sync::Arc::new(std::sync::RwLock::new(None)),
             socket_grant_source: std::sync::Arc::new(std::sync::RwLock::new(None)),
+            #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+            document_socket_dialer: std::sync::Arc::new(std::sync::RwLock::new(None)),
             cancel: semio_framework_async::CancelToken::root_now(),
         }
     }
@@ -1322,8 +1481,19 @@ impl ArtifactHost {
         true
     }
 
+    /// @emoji ☎️ Installs the browser's document-socket dialer; every later hub document actor dials through it.
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+    pub fn set_document_socket_dialer(&self, dialer: std::sync::Arc<dyn DocumentSocketDialer>) {
+        *self.document_socket_dialer.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(dialer);
+    }
+
+    /// @emoji 🟢️ Whether a hub document opened now can dial at once: a credential, a grant source and,
+    /// in a browser, the socket dialer the page owns.
     pub fn local_hub_ready(&self) -> bool {
-        self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() && self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+        let admitted = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() && self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
+        #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+        let admitted = admitted && self.document_socket_dialer.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
+        admitted
     }
 
     /// @emoji 🚀️ Spawns (or replaces) the actor for `config.document_id` and returns the channels the
@@ -1350,9 +1520,16 @@ impl ArtifactHost {
         // `OpenDocument::runner` and `ArtifactChannels::runner` are themselves
         // `cfg(not(target_arch = "wasm32"))`, so nothing downstream expects a runner here.
         #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-        spawn_actor(self.pool.clone(), config, remote, cmd_rx, event_tx.clone()).await;
+        spawn_actor(
+            config,
+            remote,
+            cmd_rx,
+            event_tx.clone(),
+            wasm_actor::WasmActorHub { credential: self.credential.clone(), socket_grant_source: self.socket_grant_source.clone(), dialer: self.document_socket_dialer.clone(), lease: document_execution_target_lease, cancel: document_cancel.clone() },
+        )
+        .await;
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-        let _ = (&self.pool, config, remote, cmd_rx);
+        let _ = (&self.pool, config, remote, cmd_rx, document_execution_target_lease);
         #[cfg(not(target_arch = "wasm32"))]
         {
             let weak_host = std::sync::Arc::downgrade(&self.inner);
@@ -1640,8 +1817,8 @@ mod native_actor {
             match self {
                 FolderEndpoint::EventLog { storage, document_id, schema } => storage.write_archive(document_id, schema, archive_bytes).await.map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    let codec = crate::os_store::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot persist synchronized archive mirrors"))?;
-                    let mirror = (codec.print_mirror)(&archive.parent_pack, &archive.parent_spr).await.map_err(|error| error.to_string())?;
+                    let codec = crate::os_store::document_kind_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {schema:?} — cannot persist synchronized archive mirrors"))?;
+                    let mirror = codec.print_mirror(&archive.parent_pack, &archive.parent_spr).await.map_err(|error| error.to_string())?;
                     let pack_files = ArtifactPackFiles { pack: archive.parent_pack, spr: archive.parent_spr, ops: mirror.ops };
                     storage.write_archive(document_id, extension, archive_bytes, &pack_files, &mirror.dsl).await.map_err(|error| error.to_string())
                 }
@@ -1828,6 +2005,9 @@ mod native_actor {
         }
 
         /// @emoji 🏃️ Advances exactly one command, readiness source, timer, backbone owner, or status turn.
+        /// It idles only after observing an empty mailbox and an empty store outbound in the same turn:
+        /// a command that relayed one backbone owner consumes that owner's wake, so a second queued
+        /// owner has no wake left (ticket 26/09/23 `📓️wp-h6.md`).
         async fn drive_one(&mut self) -> ArtifactDrive {
             if !self.started {
                 self.started = true;
@@ -1934,7 +2114,9 @@ mod native_actor {
                     }
                 }
                 ArtifactDrivePhase::Backbone => {
-                    let _ = self.relay_one_backbone().await;
+                    if !matches!(self.relay_one_backbone().await, Ok(false)) {
+                        self.drive_phase = ArtifactDrivePhase::Backbone;
+                    }
                 }
                 ArtifactDrivePhase::Status => {
                     if self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
@@ -1942,6 +2124,13 @@ mod native_actor {
                         return ArtifactDrive::MoreWork;
                     }
                     self.emit_status_if_changed().await;
+                    if self.cmd_rx.close_handle().has_pending() {
+                        return ArtifactDrive::MoreWork;
+                    }
+                    if !matches!(self.relay_one_backbone().await, Ok(false)) {
+                        self.drive_phase = ArtifactDrivePhase::Backbone;
+                        return ArtifactDrive::MoreWork;
+                    }
                     return ArtifactDrive::Idle { deadline: [self.reconnect_at, self.fs_deadline, self.socket_authority_deadline].into_iter().flatten().min() };
                 }
             }
@@ -1999,6 +2188,7 @@ mod native_actor {
                     false
                 }
                 ArtifactActorMsg::DocumentBackbone { message } => {
+                    eprintln!("[DEBUG] wg8 actor backbone actor={:x} bytes={} space={:?}", self.hlc_seed, message.len(), self.hub_space_id);
                     let envelopes = match decode_document_backbone_message_exact(&message) {
                         Ok(envelopes) if envelopes.iter().all(|envelope| envelope.document_id.0 == self.document_id) => envelopes,
                         Ok(envelopes) => {
@@ -2010,7 +2200,9 @@ mod native_actor {
                             return false;
                         }
                     };
+                    eprintln!("[DEBUG] wg8 actor backbone decoded actor={:x} envelopes={}", self.hlc_seed, envelopes.len());
                     if let Err(reason) = self.document_backbone_retention.retain(message.len(), &envelopes) {
+                        eprintln!("[DEBUG] wg8 actor backbone retention refused actor={:x} {reason}", self.hlc_seed);
                         self.reject_document_backbone(reason, vec![envelopes.len().min(u8::MAX as usize) as u8]);
                         return false;
                     }
@@ -2325,7 +2517,7 @@ mod native_actor {
             let document_id = self.document_id.clone();
             let surface = self.hub_surface.clone();
             let schema = self.schema.clone();
-            let Some(pack_schema_hash) = crate::os_store::document_codec(&schema).await.ok().flatten().map(|codec| codec.pack_schema_hash) else {
+            let Some(pack_schema_hash) = document_pack_schema_hash(&schema, self.document_execution_target_lease.as_ref()).await else {
                 self.schedule_reconnect().await;
                 return;
             };
@@ -2378,7 +2570,7 @@ mod native_actor {
         async fn finish_connect_hub(&mut self, connection: Result<ConnectedDocumentSocket, ()>) {
             match connection {
                 Ok(ConnectedDocumentSocket { mut stream, socket_actor, authority }) => {
-                    let local_schema_hash = crate::os_store::document_codec(&self.schema).await.ok().flatten().map(|codec| codec.pack_schema_hash);
+                    let local_schema_hash = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await;
                     let now = now_ms().await;
                     if self.operation_cancel.is_cancelled_now()
                         || authority.expires_at_unix_ms <= now
@@ -2448,18 +2640,11 @@ mod native_actor {
 
         async fn start_artifact_bootstrap(&mut self, bootstrap: ArtifactBootstrap, resume_token: String, server_frontier: RuntimeFrontierSummary) {
             self.abort_artifact_bootstrap();
-            let codec = match crate::os_store::document_codec(&self.schema).await {
-                Ok(Some(codec)) => codec,
-                Ok(None) => {
-                    self.fail_artifact_bootstrap(format!("no document codec registered for schema {:?}", self.schema)).await;
-                    return;
-                }
-                Err(error) => {
-                    self.fail_artifact_bootstrap(error.to_string()).await;
-                    return;
-                }
+            let Some(local_schema_hash) = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await else {
+                self.fail_artifact_bootstrap(format!("no pack schema identity resolves schema {:?}", self.schema)).await;
+                return;
             };
-            if let Err(error) = validate_artifact_bootstrap_identity(&bootstrap, &self.document_id, &self.schema, codec.pack_schema_hash, &server_frontier) {
+            if let Err(error) = validate_artifact_bootstrap_identity(&bootstrap, &self.document_id, &self.schema, local_schema_hash, &server_frontier) {
                 self.fail_artifact_bootstrap(error).await;
                 return;
             }
@@ -2493,11 +2678,11 @@ mod native_actor {
         }
 
         async fn install_artifact_bootstrap(&mut self, pending: PendingArtifactBootstrap, pair: ArtifactBootstrapPair) -> Result<(), String> {
-            let codec = crate::os_store::document_codec(&self.schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {:?}", self.schema))?;
-            if codec.pack_schema_hash != pending.pack_schema_hash {
+            let codec = crate::os_store::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {:?}", self.schema))?;
+            if codec.pack_schema_hash().await.map_err(|error| error.to_string())? != pending.pack_schema_hash {
                 return Err("artifact bootstrap codec changed during transfer".into());
             }
-            (codec.print_mirror)(&pair.pack, &pair.spr).await.map_err(|error| format!("artifact bootstrap decode failed: {error}"))?;
+            codec.print_mirror(&pair.pack, &pair.spr).await.map_err(|error| format!("artifact bootstrap decode failed: {error}"))?;
             let op_ids = spr_op_ids(&pair.spr).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
             let archive = crate::os_spr::DocumentArchivePack { parent_pack: pair.pack.clone(), parent_spr: pair.spr.clone(), members: Vec::new() };
             let archive_bytes = crate::os_spr::encode_document_archive_bytes(&archive).map_err(|error| format!("artifact bootstrap archive failed: {error}"))?;
@@ -2674,6 +2859,7 @@ mod native_actor {
         }
 
         async fn on_hub_frame(&mut self, frame: ServerFrame) {
+            eprintln!("[DEBUG] wg8 hub recv actor={:x} {}", self.hlc_seed, format!("{frame:?}").chars().take(160).collect::<String>());
             match frame {
                 ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
                     self.requeue_pending_batches();
@@ -2852,6 +3038,7 @@ mod native_actor {
         }
 
         async fn relay_operations_to_hub(&mut self, envelopes: &[MutationEnvelope]) {
+            eprintln!("[DEBUG] wg8 actor relay actor={:x} envelopes={} expired={} socket_actor={:?}", self.hlc_seed, envelopes.len(), self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()), self.socket_actor);
             if envelopes.is_empty() {
                 return;
             }
@@ -2865,6 +3052,7 @@ mod native_actor {
                 return;
             };
             if !self.socket_actor_confirmed || self.semio_hub.is_none() || self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
+                eprintln!("[DEBUG] wg8 actor outbox actor={:x} confirmed={} hub={} bootstrap={} tail={}", self.hlc_seed, self.socket_actor_confirmed, self.semio_hub.is_some(), self.artifact_bootstrap.is_some(), self.required_tail_frontier.is_some());
                 self.queue_outbox(envelopes.iter().cloned());
                 return;
             }
@@ -2881,6 +3069,7 @@ mod native_actor {
         }
 
         async fn send_client_frame(&mut self, frame: ClientFrame, lane: Lane) {
+            eprintln!("[DEBUG] wg8 hub send actor={:x} connected={} {}", self.hlc_seed, self.semio_hub.is_some(), format!("{frame:?}").chars().take(160).collect::<String>());
             let bytes = encode_client_frame(&frame, lane).await;
             self.send_raw(Message::Binary(bytes.into())).await;
         }
@@ -2944,10 +3133,13 @@ mod native_actor {
 
         /// 🚫️async: E1 pure sync body — see `emit` above; same `&self`-across-await mechanism.
         fn status(&self) -> ArtifactSyncStatus {
-            ArtifactSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pending_mutations: self.pending_batches.values().map(Vec::len).sum(), remote: self.remote_state.clone() }
+            let pending_mutations = self.pending_batches.values().map(Vec::len).sum();
+            let acknowledged_head = if pending_mutations == 0 && self.outbox.is_empty() { self.server_frontier.as_ref().and_then(acknowledged_edited_head) } else { None };
+            ArtifactSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pending_mutations, remote: self.remote_state.clone(), acknowledged_head }
         }
 
         async fn set_remote_state(&mut self, state: RemoteState) {
+            eprintln!("[DEBUG] wg8 hub state actor={:x} {state:?}", self.hlc_seed);
             self.remote_state = state;
             self.emit_status_if_changed().await;
         }
@@ -3201,16 +3393,24 @@ mod native_actor {
     }
 
     impl ActorRunner {
+        /// 📬️ A mailbox, readiness or close wake targets whichever turn is current: it carries no
+        /// generation, so a turn that completes between the sender's read and its request cannot
+        /// turn it into a stale wake (the actor then idled with a queued command, ticket 26/09/23
+        /// `📓️wp-h6.md`).
         fn schedule(self: &Arc<Self>) {
-            self.request_wake(self.turn_generation.load(std::sync::atomic::Ordering::Acquire));
-        }
-
-        fn request_wake(self: &Arc<Self>, generation: u64) {
-            if self.complete.load(std::sync::atomic::Ordering::Acquire) || self.terminal.load(std::sync::atomic::Ordering::Acquire) || generation != self.turn_generation.load(std::sync::atomic::Ordering::Acquire) {
+            if self.complete.load(std::sync::atomic::Ordering::Acquire) || self.terminal.load(std::sync::atomic::Ordering::Acquire) {
                 return;
             }
             let _ = self.wake_requested.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire);
             self.enqueue(false);
+        }
+
+        /// ⏰️ A turn future's own waker, or its deadline: only the turn that armed it may wake it.
+        fn request_wake(self: &Arc<Self>, generation: u64) {
+            if generation != self.turn_generation.load(std::sync::atomic::Ordering::Acquire) {
+                return;
+            }
+            self.schedule();
         }
 
         fn enqueue(self: &Arc<Self>, terminal_close: bool) {
@@ -3505,8 +3705,28 @@ mod native_actor {
         }
     }
 
+    /// 🔌️ The one platform I/O reactor every native document actor polls its hub socket against: a
+    /// current-thread Tokio runtime whose only thread (`semio-document-io`) parks on the I/O and time
+    /// drivers, created on first use and never shut down, like `db_storage_driver_runtime`. Actors keep
+    /// running on the `WorkerPool` and only enter this handle while polled. It used to be whatever
+    /// runtime the spawning thread happened to be inside; a native wgpu shell spawns from a plain
+    /// thread, so the first hub dial panicked with `there is no reactor running` and the document
+    /// socket never left `Connecting` (ticket 26/09/23 slice WG8, `hub-live-collaboration-check` run 1).
+    /// `None` only when the operating system refuses the reactor, which the dial then reports as a fault.
+    fn document_socket_io_reactor() -> Option<tokio::runtime::Handle> {
+        static REACTOR: std::sync::OnceLock<Option<tokio::runtime::Handle>> = std::sync::OnceLock::new();
+        REACTOR
+            .get_or_init(|| {
+                let runtime = tokio::runtime::Builder::new_current_thread().enable_io().enable_time().build().ok()?;
+                let handle = runtime.handle().clone();
+                std::thread::Builder::new().name("semio-document-io".to_string()).stack_size(1 << 20).spawn(move || runtime.block_on(std::future::pending::<()>())).ok()?;
+                Some(handle)
+            })
+            .clone()
+    }
+
     /// @emoji 🚀️ Creates one finite-turn actor on the process WorkerPool. Tokio remains only the
-    /// platform I/O reactor; it never owns an actor or timer thread.
+    /// platform I/O reactor ([`document_socket_io_reactor`]); it never owns an actor or timer thread.
     pub(super) async fn spawn_actor(
         pool: Arc<semio_framework_async::WorkerPool>,
         generation: u64,
@@ -3519,7 +3739,7 @@ mod native_actor {
         document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
         operation_cancel: semio_framework_async::CancelToken,
     ) -> ArtifactActorRunnerHandle {
-        let io_reactor = tokio::runtime::Handle::try_current().ok();
+        let io_reactor = document_socket_io_reactor();
         let mailbox = cmd_rx.close_handle();
         let actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events, credential, socket_grant_source, document_execution_target_lease, operation_cancel).await;
         let runner = Arc::new(ActorRunner {
@@ -3579,22 +3799,40 @@ pub use native_actor::{ArtifactActorRunnerHandle, ArtifactActorRunnerTicket, Art
 //#endregion 🔖️NativeActor
 
 //#region 🔖️WasmActor
-/// @emoji 🌐️ Browser wgpu build: the actor runs on `spawn_local` with a `web_sys::WebSocket` semio_hub
-/// transport. No filesystem, so folder bindings are ignored (the browser uses the dev-middleware
-/// SSE watch instead, wired by WS-E's TS twin). Kept coherent so a future in-wasm host can link it.
-/// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this is a browser-only WebSocket
-/// bridge, so it is narrowed to exclude the WASI component target — no plugin currently activates
-/// the `sync`/`worker` features that reach this module at all.
+/// @emoji 🌐️ Browser wgpu build: the document actor runs on the isolate's own executor and reaches its
+/// hub through the same `semio.session.v1` admission the native actor uses (open plan → plan-bound socket
+/// grant → one socket whose single subprotocol value carries the session capability), over the socket
+/// the host's injected [`DocumentSocketDialer`] opens. No filesystem, so a folder binding is never
+/// served here — the shell refuses one before an actor exists.
+/// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this is a browser-only bridge, so it is
+/// narrowed to exclude the WASI component target.
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 mod wasm_actor {
     use super::*;
-    use wasm_bindgen::prelude::*;
+    use std::sync::{Arc, RwLock};
     use wasm_bindgen::JsCast;
-    use web_sys::{BinaryType, MessageEvent, WebSocket};
 
-    enum WasmIncoming {
-        Binary(Vec<u8>),
-        Closed,
+    /// ⏱️ How often a dialed socket's page-owned receive queue is read while it is connecting or live.
+    const DOCUMENT_SOCKET_POLL_MS: u64 = 16;
+    /// ⏱️ The longest the actor sleeps with nothing dialed and nothing scheduled.
+    const DOCUMENT_ACTOR_IDLE_MS: u64 = 1_000;
+    /// 📃️ Frames one socket turn hands to the actor before it yields to its mailbox again.
+    const DOCUMENT_SOCKET_FRAMES_PER_TURN: usize = 32;
+    /// ⏱️ The admission deadline, the native actor's own.
+    const DOCUMENT_ADMISSION_TIMEOUT_MS: u64 = 5_000;
+
+    type SharedCredential = Arc<RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>;
+    type SharedGrantSource = Arc<RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>;
+    type SharedDialer = Arc<RwLock<Option<Arc<dyn DocumentSocketDialer>>>>;
+
+    /// 🔐️ What the host lends one browser actor for its hub binding: the late-bound credential, grant
+    /// source and dialer (sign-in may come after the open), the verified lease, and the document's cancel.
+    pub(super) struct WasmActorHub {
+        pub(super) credential: SharedCredential,
+        pub(super) socket_grant_source: SharedGrantSource,
+        pub(super) dialer: SharedDialer,
+        pub(super) lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+        pub(super) cancel: semio_framework_async::CancelToken,
     }
 
     struct PendingWasmArtifactBootstrap {
@@ -3626,67 +3864,289 @@ mod wasm_actor {
         }
     }
 
+    /// 🕰️ Wall-clock milliseconds; `std`'s `SystemTime` panics on this target.
+    fn wall_ms() -> u64 {
+        js_sys::Date::now() as u64
+    }
+
+    /// 💤️ Resolves after `ms` on the global `setTimeout`, which a page and a dedicated Worker both own —
+    /// the actor's own cadence, independent of whoever pumps the renderer's cooperative pool.
+    async fn sleep_ms(ms: u64) {
+        let promise = js_sys::Promise::new(&mut |resolve, _reject| {
+            let global = js_sys::global();
+            if let Ok(set_timeout) = js_sys::Reflect::get(&global, &wasm_bindgen::JsValue::from_str("setTimeout")).and_then(|value| value.dyn_into::<js_sys::Function>().map_err(Into::into)) {
+                let _ = set_timeout.call2(&global, &resolve, &wasm_bindgen::JsValue::from_f64(ms as f64));
+            }
+        });
+        let _ = semio_framework_async::browser::JsFuture::from(promise).await;
+    }
+
+    /// 🧯️ Overwrites a secret string's bytes before it is dropped.
+    fn wipe(value: &mut String) {
+        unsafe { value.as_mut_vec().fill(0) };
+    }
+
     struct WasmActor {
         document_id: String,
         schema: String,
-        actor: String,
         remote: ChannelBackboneRemote,
         events: broadcast::Sender<ArtifactEvent>,
         hub_base_url: Option<String>,
         hub_space_id: Option<String>,
         hub_surface: Option<String>,
-        /// @emoji 🎨️ See the native actor's matching field — same role, wasm side.
+        credential: SharedCredential,
+        socket_grant_source: SharedGrantSource,
+        dialer: SharedDialer,
+        document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+        operation_cancel: semio_framework_async::CancelToken,
+        socket: Option<Box<dyn DocumentSocket>>,
+        hello: Option<ClientFrame>,
+        socket_actor: Option<String>,
+        socket_actor_confirmed: bool,
+        socket_authority: Option<crate::os_directory::client::DocumentSocketAuthorityV1>,
+        /// @emoji 🎨️ See the native actor's matching field — same role, browser side.
         session_color: Option<u8>,
-        ws: Option<WebSocket>,
-        server_frontier: Option<crate::os_spr::RuntimeFrontierSummary>,
+        server_frontier: Option<RuntimeFrontierSummary>,
         resume_token: Option<String>,
         pending_resume_token: Option<String>,
         required_tail_frontier: Option<RuntimeFrontierSummary>,
+        artifact_rebootstrap_required: bool,
         artifact_bootstrap: Option<PendingWasmArtifactBootstrap>,
         pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
         outbox: Vec<MutationEnvelope>,
         document_backbone_retention: DocumentBackboneRetentionV1,
         next_batch_id: u64,
         next_local_rejection_batch_id: u64,
-        hlc_seed: u64,
+        hlc_seed: Option<u64>,
         hlc_counter: u64,
-        incoming_tx: mpsc::UnboundedSender<WasmIncoming>,
-        _closures: Vec<Closure<dyn FnMut(MessageEvent)>>,
-        _open_closures: Vec<Closure<dyn FnMut()>>,
-        _close_closures: Vec<Closure<dyn FnMut()>>,
+        remote_state: RemoteState,
+        last_status: Option<ArtifactSyncStatus>,
+        backoff_ms: u64,
+        reconnect_at_ms: Option<u64>,
     }
 
     impl WasmActor {
-        async fn connect(&mut self) {
-            let _ = (&self.hub_base_url, &self.hub_space_id, &self.hub_surface);
+        //#region 🔖️Status
+        fn status(&self) -> ArtifactSyncStatus {
+            let pending_mutations = self.pending_batches.values().map(Vec::len).sum();
+            let acknowledged_head = if pending_mutations == 0 && self.outbox.is_empty() { self.server_frontier.as_ref().and_then(acknowledged_edited_head) } else { None };
+            ArtifactSyncStatus { persisted: self.server_frontier.is_some(), pending_mutations, remote: self.remote_state.clone(), acknowledged_head }
         }
 
-        async fn send_frame(&self, frame: &ClientFrame, lane: Lane) {
-            if let Some(ws) = &self.ws {
-                let mut bytes = encode_client_frame(frame, lane).await;
-                let _ = ws.send_with_u8_array(&mut bytes);
+        fn set_remote_state(&mut self, state: RemoteState) {
+            self.remote_state = state;
+            self.emit_status_if_changed();
+        }
+
+        fn emit_status_if_changed(&mut self) {
+            let status = self.status();
+            if self.last_status.as_ref() != Some(&status) {
+                self.last_status = Some(status.clone());
+                let _ = self.events.send(ArtifactEvent::Status(status));
+            }
+        }
+        //#endregion 🔖️Status
+
+        //#region 🔖️Connect
+        /// 🌐️ One hub admission and dial, the native actor's `start_connect_hub`/`finish_connect_hub`
+        /// sequence on this isolate: every refusal backs off with the same doubling law and nothing
+        /// is dialed until credential, grant source, dialer, replica seed and kind identity all exist.
+        async fn connect(&mut self) {
+            let Some(base_url) = self.hub_base_url.clone() else { return };
+            if self.socket.is_some() || self.operation_cancel.is_cancelled_now() || self.reconnect_at_ms.is_some_and(|at| at > wall_ms()) {
+                return;
+            }
+            self.reconnect_at_ms = None;
+            let credential = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+            let source = self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+            let dialer = self.dialer.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+            let (Some(credential), Some(source), Some(dialer), Some(hlc_seed)) = (credential, source, dialer, self.hlc_seed) else {
+                self.schedule_reconnect();
+                return;
+            };
+            let Some(pack_schema_hash) = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await else {
+                self.schedule_reconnect();
+                return;
+            };
+            let space_id = self.hub_space_id.clone().unwrap_or_default();
+            let expectation = document_socket_expectation(&self.schema, pack_schema_hash, self.hub_surface.as_deref(), self.document_execution_target_lease.as_ref());
+            let client_instance_id = format!("browser-document-{hlc_seed:016x}");
+            self.set_remote_state(RemoteState::Connecting);
+            let ctx = semio_framework_async::OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 1, deadline_ms: None, cancel: self.operation_cancel.child_now(), capability: None };
+            let admission = source.admit_document_socket(&ctx, &space_id, &self.document_id, &expectation, &client_instance_id, DOCUMENT_ADMISSION_TIMEOUT_MS).await;
+            let Ok(crate::os_directory::client::DocumentSocketAdmissionV1 { mut socket, authority }) = admission else {
+                self.schedule_reconnect();
+                return;
+            };
+            let binding = DocumentSocketBinding {
+                hub_base_url: &base_url,
+                space_id: &space_id,
+                document_id: &self.document_id,
+                schema: &self.schema,
+                pack_schema_hash,
+                surface: self.hub_surface.as_deref(),
+                lease: self.document_execution_target_lease.as_ref(),
+            };
+            if ctx.cancel.is_cancelled_now() || !document_socket_authority_admits(&authority, &binding, wall_ms()) {
+                self.schedule_reconnect();
+                return;
+            }
+            let url = hub_ws_url(&authority.hub_origin, &authority.scope.space_id, &authority.scope.document_id, Some(&authority.surface.surface_id)).await;
+            let Ok(capability) = credential.capability() else {
+                self.schedule_reconnect();
+                return;
+            };
+            let mut protocols = document_socket_protocols(&socket.protocol, capability);
+            let dialed = dialer.dial(&url, &protocols);
+            wipe(&mut protocols[1]);
+            let Ok(dialed) = dialed else {
+                self.schedule_reconnect();
+                return;
+            };
+            self.socket = Some(dialed);
+            self.socket_actor = Some(std::mem::take(&mut socket.actor_id));
+            self.socket_actor_confirmed = false;
+            self.hub_surface = Some(authority.surface.surface_id.clone());
+            self.hello = Some(document_socket_hello(&self.schema, pack_schema_hash, self.resume_token.clone(), self.server_frontier.clone()));
+            self.socket_authority = Some(authority);
+            self.session_color = None;
+        }
+
+        fn schedule_reconnect(&mut self) {
+            let retry = self.backoff_ms;
+            self.set_remote_state(RemoteState::Backoff { retry_in_ms: retry });
+            self.reconnect_at_ms = Some(wall_ms().saturating_add(retry));
+            self.backoff_ms = crate::os_directory::client::next_backoff_ms(self.backoff_ms);
+        }
+
+        fn clear_socket_epoch(&mut self) {
+            self.socket_actor = None;
+            self.socket_actor_confirmed = false;
+            self.socket_authority = None;
+            self.session_color = None;
+            self.hello = None;
+        }
+
+        fn close_socket(&mut self) {
+            if let Some(mut socket) = self.socket.take() {
+                socket.close();
+            }
+            self.clear_socket_epoch();
+        }
+
+        /// 🔁️ A socket that closed, lost frames or broke the protocol: keep unacknowledged work, drop the
+        /// epoch, and back off before a fresh admission (a catch-up resumes from the last frontier).
+        fn disconnect(&mut self) {
+            self.abort_artifact_bootstrap();
+            self.requeue_pending_batches();
+            self.close_socket();
+            self.schedule_reconnect();
+        }
+
+        /// ⏳️ How long the loop may sleep before this actor has work of its own.
+        fn next_wake_ms(&self) -> u64 {
+            if self.socket.is_some() {
+                return DOCUMENT_SOCKET_POLL_MS;
+            }
+            match (self.hub_base_url.as_ref(), self.reconnect_at_ms) {
+                (Some(_), Some(at)) => at.saturating_sub(wall_ms()).clamp(1, DOCUMENT_ACTOR_IDLE_MS),
+                _ => DOCUMENT_ACTOR_IDLE_MS,
             }
         }
 
-        /// @emoji 🧺️ Builds + sends one `Commands` batch, tracking it in `pending_batches` for
-        /// {@link WasmActor::handle_ack}. Mirrors the native actor's `relay_operations_to_hub`.
+        /// 📥️ One socket turn: greet the hub once the page reports the socket open, then hand at most one
+        /// page of frames to the protocol. An expired authority, a close or any lost frame reconnects.
+        async fn pump_socket(&mut self) {
+            if self.socket_authority.as_ref().is_some_and(|authority| authority.expires_at_unix_ms <= wall_ms()) {
+                self.disconnect();
+                return;
+            }
+            let Some(socket) = self.socket.as_mut() else { return };
+            if self.hello.is_some() && socket.is_open() {
+                let hello = self.hello.take().expect("hello was just observed");
+                let bytes = encode_client_frame(&hello, Lane::Command).await;
+                let Some(socket) = self.socket.as_mut() else { return };
+                if socket.send_binary(bytes).is_err() {
+                    self.disconnect();
+                    return;
+                }
+                self.backoff_ms = crate::os_directory::client::HUB_RECONNECT_MIN_MS;
+            }
+            for _ in 0..DOCUMENT_SOCKET_FRAMES_PER_TURN {
+                let Some(socket) = self.socket.as_mut() else { return };
+                match socket.poll() {
+                    DocumentSocketPoll::Frame(bytes) => self.on_binary(&bytes).await,
+                    DocumentSocketPoll::Pending => return,
+                    DocumentSocketPoll::Closed(_) | DocumentSocketPoll::Lost(_) => {
+                        self.disconnect();
+                        return;
+                    }
+                }
+            }
+        }
+
+        async fn send_frame(&mut self, frame: &ClientFrame, lane: Lane) {
+            let bytes = encode_client_frame(frame, lane).await;
+            self.send_encoded(bytes).await;
+        }
+
+        async fn send_encoded(&mut self, bytes: Vec<u8>) {
+            if self.hello.is_some() || !self.socket.as_ref().is_some_and(|socket| socket.is_open()) {
+                return;
+            }
+            let Some(socket) = self.socket.as_mut() else { return };
+            if socket.send_binary(bytes).is_err() {
+                self.disconnect();
+            }
+        }
+        //#endregion 🔖️Connect
+
+        //#region 🔖️Relay
+        /// @emoji 🧺️ Builds + sends `Commands` batches under the hub-issued socket actor, tracking each in
+        /// `pending_batches` for {@link WasmActor::handle_ack}. Mirrors the native `relay_operations_to_hub`:
+        /// nothing leaves before the hub confirmed the socket actor and every catch-up completed. A batch
+        /// whose frame exceeds the socket's own ceiling is halved until it fits; one envelope that can never
+        /// fit is rolled back locally and reported, never retried into a reconnect loop.
         async fn relay_operations(&mut self, envelopes: &[MutationEnvelope]) {
             if envelopes.is_empty() {
                 return;
             }
-            if self.ws.as_ref().is_none_or(|socket| socket.ready_state() != WebSocket::OPEN) || self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
+            let (Some(socket_actor), Some(hlc_seed)) = (self.socket_actor.clone(), self.hlc_seed) else {
+                self.queue_outbox(envelopes.iter().cloned());
+                return;
+            };
+            if !self.socket_actor_confirmed || self.socket.is_none() || self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
                 self.queue_outbox(envelopes.iter().cloned());
                 return;
             }
-            let batch_id = self.next_batch_id;
-            self.next_batch_id = self.next_batch_id.wrapping_add(1);
-            let mut wire_envelopes: Vec<crate::os_spr::MutationEnvelope> = Vec::new();
+            let max_frame = self.socket.as_ref().map_or(usize::MAX, |socket| socket.max_frame_bytes());
+            let mut wire_envelopes: Vec<MutationEnvelope> = Vec::with_capacity(envelopes.len());
             for envelope in envelopes {
-                let timestamp = next_timestamp(self.hlc_seed, &mut self.hlc_counter).await;
-                wire_envelopes.push(crate::os_spr::MutationEnvelope { timestamp, ..envelope.clone() });
+                let timestamp = next_timestamp(hlc_seed, &mut self.hlc_counter).await;
+                wire_envelopes.push(MutationEnvelope { actor: ActorId(socket_actor.clone()), timestamp, ..envelope.clone() });
             }
-            self.pending_batches.insert(batch_id, envelopes.to_vec());
-            self.send_frame(&ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
+            let plan = commands_frames_within(max_frame, self.next_batch_id, envelopes.to_vec(), wire_envelopes).await;
+            for frame in plan.frames {
+                self.next_batch_id = frame.batch_id.wrapping_add(1);
+                self.pending_batches.insert(frame.batch_id, frame.local);
+                self.send_encoded(frame.bytes).await;
+            }
+            if !plan.oversized.is_empty() {
+                self.refuse_oversized_batch(plan.oversized).await;
+            }
+            self.emit_status_if_changed();
+        }
+
+        /// 📏️ One envelope whose `Commands` frame exceeds the socket's ceiling on its own: the hub can never
+        /// receive it, so its speculative local head is rolled back and the refusal is published.
+        async fn refuse_oversized_batch(&mut self, local: Vec<MutationEnvelope>) {
+            self.document_backbone_retention.release(&local);
+            let mut rollbacks: Vec<MutationEnvelope> = Vec::with_capacity(local.len());
+            for envelope in local.iter().rev() {
+                rollbacks.push(rollback_envelope(envelope).await);
+            }
+            let _ = self.deliver_remote_operations(rollbacks).await;
+            self.reject_document_backbone("document socket frame exceeds the socket's ceiling", vec![local.len().min(u8::MAX as usize) as u8]);
         }
 
         async fn relay_one_backbone(&mut self) -> Result<bool, vcs::VcsError> {
@@ -3752,18 +4212,6 @@ mod wasm_actor {
             let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason: reason.into(), messages } });
         }
 
-        fn bootstrap_control(&self, _started_ms: u64, cancelled: bool) -> WasmBootstrapControl {
-            WasmBootstrapControl { cancelled, now_ms: js_sys::Date::now() as u64, events: self.events.clone() }
-        }
-
-        fn abort_artifact_bootstrap(&mut self) {
-            if let Some(mut pending) = self.artifact_bootstrap.take() {
-                pending.assembler.abort();
-            }
-            self.pending_resume_token = None;
-            self.required_tail_frontier = None;
-        }
-
         fn requeue_pending_batches(&mut self) {
             let mut batches: Vec<(u64, Vec<MutationEnvelope>)> = self.pending_batches.drain().collect();
             batches.sort_by_key(|(batch_id, _)| *batch_id);
@@ -3782,11 +4230,44 @@ mod wasm_actor {
         }
 
         async fn flush_outbox(&mut self) {
-            if self.outbox.is_empty() {
+            if self.outbox.is_empty() || self.socket.is_none() {
                 return;
             }
             let envelopes = std::mem::take(&mut self.outbox);
             self.relay_operations(&envelopes).await;
+        }
+        //#endregion 🔖️Relay
+
+        //#region 🔖️Bootstrap
+        fn bootstrap_control(&self, cancelled: bool) -> WasmBootstrapControl {
+            WasmBootstrapControl { cancelled, now_ms: wall_ms(), events: self.events.clone() }
+        }
+
+        fn abort_artifact_bootstrap(&mut self) {
+            if let Some(mut pending) = self.artifact_bootstrap.take() {
+                pending.assembler.abort();
+            }
+            self.pending_resume_token = None;
+            self.required_tail_frontier = None;
+        }
+
+        /// ⚠️ A bootstrap or protocol fault is reported as the native actor reports it — one `Conflict` —
+        /// and the socket reconnects for a fresh catch-up.
+        fn fail_artifact_bootstrap(&mut self, detail: impl Into<String>) {
+            let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new("artifactBootstrap"), message: detail.into(), target: vec![self.document_id.clone()], op_index: None }));
+            self.disconnect();
+        }
+
+        /// ♻️ Hub lag forces a canonical pair refresh: keep unacked work queued, clear the projection
+        /// tokens and reconnect — the native `require_artifact_rebootstrap`.
+        fn require_artifact_rebootstrap(&mut self) {
+            self.requeue_pending_batches();
+            self.abort_artifact_bootstrap();
+            self.server_frontier = None;
+            self.resume_token = None;
+            self.artifact_rebootstrap_required = true;
+            self.close_socket();
+            self.schedule_reconnect();
         }
 
         async fn finish_catchup_if_ready(&mut self) {
@@ -3799,40 +4280,29 @@ mod wasm_actor {
             if let Some(resume_token) = self.pending_resume_token.take() {
                 self.resume_token = Some(resume_token);
             }
+            self.set_remote_state(RemoteState::Live { peer_count: 0 });
             self.flush_outbox().await;
-        }
-
-        fn disconnect(&mut self) {
-            self.abort_artifact_bootstrap();
-            self.requeue_pending_batches();
-            if let Some(socket) = self.ws.take() {
-                let _ = socket.close();
-            }
         }
 
         async fn start_artifact_bootstrap(&mut self, bootstrap: ArtifactBootstrap, resume_token: String, server_frontier: RuntimeFrontierSummary) {
             self.abort_artifact_bootstrap();
-            let codec = match crate::os_store::document_codec(&self.schema).await {
-                Ok(Some(codec)) => codec,
-                _ => {
-                    self.disconnect();
-                    return;
-                }
+            let Some(pack_schema_hash) = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await else {
+                self.fail_artifact_bootstrap(format!("no pack schema identity for schema {:?}", self.schema));
+                return;
             };
-            if validate_artifact_bootstrap_identity(&bootstrap, &self.document_id, &self.schema, codec.pack_schema_hash, &server_frontier).is_err() {
-                self.disconnect();
+            if let Err(error) = validate_artifact_bootstrap_identity(&bootstrap, &self.document_id, &self.schema, pack_schema_hash, &server_frontier) {
+                self.fail_artifact_bootstrap(error);
                 return;
             }
             let inline = bootstrap.inline.is_some();
-            let started_ms = js_sys::Date::now() as u64;
+            let started_ms = wall_ms();
             let baseline_frontier = bootstrap.baseline_frontier.clone();
             let required_tail_frontier = bootstrap.required_tail_frontier.clone();
-            let pack_schema_hash = bootstrap.pack_schema_hash;
-            let mut control = self.bootstrap_control(started_ms, false);
+            let mut control = self.bootstrap_control(false);
             let assembler = match ArtifactBootstrapAssembler::new(bootstrap.clone(), bootstrap.descriptor_hash, ArtifactBootstrapLimits::default(), Some(started_ms.saturating_add(ARTIFACT_BOOTSTRAP_DEADLINE_MS)), &mut control) {
                 Ok(assembler) => assembler,
-                Err(_) => {
-                    self.disconnect();
+                Err(error) => {
+                    self.fail_artifact_bootstrap(error.to_string());
                     return;
                 }
             };
@@ -3841,149 +4311,181 @@ mod wasm_actor {
                 self.artifact_bootstrap = Some(pending);
                 return;
             }
-            let mut control = self.bootstrap_control(started_ms, false);
+            let mut control = self.bootstrap_control(false);
             match pending.assembler.finish(None, &mut control) {
                 Ok(pair) => {
-                    if self.install_artifact_bootstrap(pending, pair).await.is_err() {
-                        self.disconnect();
+                    if let Err(error) = self.install_artifact_bootstrap(pending, pair).await {
+                        self.fail_artifact_bootstrap(error);
                     }
                 }
-                Err(_) => self.disconnect(),
+                Err(error) => self.fail_artifact_bootstrap(error.to_string()),
             }
         }
 
+        /// 🗃️ Installs one assembled canonical pair. With a codec this process resolves for the kind
+        /// (linked, or the mounted component's — [`crate::os_store::document_kind_codec`]) the pair is
+        /// decoded here first; without one the pair's identity was already bound to the verified lease's
+        /// pack schema hash, and the mounted guest that owns the kind validates the archive when the shell
+        /// loads it.
         async fn install_artifact_bootstrap(&mut self, pending: PendingWasmArtifactBootstrap, pair: ArtifactBootstrapPair) -> Result<(), String> {
-            let codec = crate::os_store::document_codec(&self.schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {:?}", self.schema))?;
-            if codec.pack_schema_hash != pending.pack_schema_hash {
-                return Err("artifact bootstrap codec changed during transfer".into());
+            if let Some(codec) = crate::os_store::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())? {
+                if codec.pack_schema_hash().await.map_err(|error| error.to_string())? != pending.pack_schema_hash {
+                    return Err("artifact bootstrap codec changed during transfer".into());
+                }
+                codec.print_mirror(&pair.pack, &pair.spr).await.map_err(|error| format!("artifact bootstrap decode failed: {error}"))?;
             }
-            (codec.print_mirror)(&pair.pack, &pair.spr).await.map_err(|error| error.to_string())?;
-            let events = spr_events(&pair.spr, &self.document_id, &self.schema).await?;
-            self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await.map_err(|error| error.to_string())?;
+            let events = spr_events(&pair.spr, &self.document_id, &self.schema).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
+            self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
             if !events.is_empty() {
-                self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&events) }).await.map_err(|error| error.to_string())?;
+                self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&events) }).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
             }
             let archive = crate::os_spr::DocumentArchivePack { parent_pack: pair.pack, parent_spr: pair.spr, members: Vec::new() };
-            let archive = crate::os_spr::encode_document_archive_bytes(&archive).map_err(|error| error.to_string())?;
+            let archive = crate::os_spr::encode_document_archive_bytes(&archive).map_err(|error| format!("artifact bootstrap archive failed: {error}"))?;
             let _ = self.events.send(ArtifactEvent::DocumentArchiveReplaced { archive });
             self.server_frontier = Some(pending.baseline_frontier);
             self.pending_resume_token = Some(pending.resume_token);
             self.required_tail_frontier = Some(pending.required_tail_frontier);
             if !self.outbox.is_empty() && self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&self.outbox) }).await.is_err() {
-                self.disconnect();
+                let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage {
+                    level: crate::os_dsl::Severity::Error,
+                    code: crate::os_dsl::FaultCode::new("artifactBootstrapLocalReplay"),
+                    message: "artifact baseline committed; pending local replay will retry after reconnect".into(),
+                    target: vec![self.document_id.clone()],
+                    op_index: None,
+                }));
+                self.close_socket();
+                self.schedule_reconnect();
                 return Ok(());
             }
             self.finish_catchup_if_ready().await;
             Ok(())
         }
+        //#endregion 🔖️Bootstrap
 
+        //#region 🔖️Protocol
+        /// 📡️ The native actor's `on_hub_frame`, frame for frame: the socket actor the grant named is the
+        /// only origin this replica filters as its own, `Session` must confirm it, and `Live` is reached
+        /// only after every catch-up.
         async fn on_binary(&mut self, bytes: &[u8]) {
-            let Ok((_lane, frame)) = decode_server_frame(bytes).await else {
-                self.disconnect();
-                return;
+            let frame = match decode_server_frame(bytes).await {
+                Ok((_lane, frame)) => frame,
+                Err(error) => {
+                    self.fail_artifact_bootstrap(format!("malformed hub frame: {error}"));
+                    return;
+                }
             };
             match frame {
                 ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
                     self.requeue_pending_batches();
                     match bootstrap {
                         Bootstrap::None => {
+                            if self.artifact_rebootstrap_required {
+                                self.fail_artifact_bootstrap("artifact rebootstrap returned no canonical pair");
+                                return;
+                            }
                             self.abort_artifact_bootstrap();
                             self.resume_token = Some(resume_token);
                             self.server_frontier = Some(server_frontier);
+                            self.set_remote_state(RemoteState::Live { peer_count: 0 });
                             self.flush_outbox().await;
                         }
                         Bootstrap::Tail => {
+                            if self.artifact_rebootstrap_required {
+                                self.fail_artifact_bootstrap("artifact rebootstrap returned tail without a canonical pair");
+                                return;
+                            }
                             self.abort_artifact_bootstrap();
                             self.pending_resume_token = Some(resume_token);
                             self.required_tail_frontier = Some(server_frontier);
                             self.finish_catchup_if_ready().await;
                         }
-                        Bootstrap::Snapshot { .. } => self.disconnect(),
-                        Bootstrap::ArtifactBootstrap(bootstrap) => self.start_artifact_bootstrap(*bootstrap, resume_token, server_frontier).await,
+                        Bootstrap::Snapshot { .. } => self.fail_artifact_bootstrap("database-private snapshot cannot seed an artifact client"),
+                        Bootstrap::ArtifactBootstrap(bootstrap) => {
+                            self.artifact_rebootstrap_required = false;
+                            self.start_artifact_bootstrap(*bootstrap, resume_token, server_frontier).await;
+                        }
                     }
                 }
-                ServerFrame::SnapshotChunk { .. } | ServerFrame::SnapshotDone { .. } => self.disconnect(),
+                ServerFrame::SnapshotChunk { .. } | ServerFrame::SnapshotDone { .. } => self.fail_artifact_bootstrap("database-private snapshot frame cannot seed an artifact client"),
                 ServerFrame::RebootstrapRequired { control } => {
                     if control.document_id != self.document_id || self.hub_space_id.as_deref() != Some(control.space_id.as_str()) || control.baseline_frontier.document_id.0 != self.document_id {
-                        self.disconnect();
-                        return;
+                        self.fail_artifact_bootstrap("rebootstrap control scope mismatch");
+                    } else {
+                        self.require_artifact_rebootstrap();
                     }
-                    self.requeue_pending_batches();
-                    self.abort_artifact_bootstrap();
-                    self.server_frontier = None;
-                    self.resume_token = None;
-                    self.pending_resume_token = None;
-                    self.required_tail_frontier = None;
-                    self.disconnect();
                 }
                 ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index, bytes } => {
                     let Some(mut pending) = self.artifact_bootstrap.take() else {
-                        self.disconnect();
+                        self.fail_artifact_bootstrap("artifact bootstrap chunk arrived without an active transfer");
                         return;
                     };
-                    let mut control = self.bootstrap_control(pending.started_ms, false);
-                    if pending.assembler.push(descriptor_hash, index, bytes.as_slice(), &mut control).is_ok() {
-                        self.artifact_bootstrap = Some(pending);
-                    } else {
-                        self.disconnect();
+                    let mut control = self.bootstrap_control(false);
+                    match pending.assembler.push(descriptor_hash, index, bytes.as_slice(), &mut control) {
+                        Ok(_) => self.artifact_bootstrap = Some(pending),
+                        Err(error) => self.fail_artifact_bootstrap(error.to_string()),
                     }
                 }
                 ServerFrame::ArtifactBootstrapDone { descriptor_hash, chunk_count } => {
                     let Some(mut pending) = self.artifact_bootstrap.take() else {
-                        self.disconnect();
+                        self.fail_artifact_bootstrap("artifact bootstrap completion arrived without an active transfer");
                         return;
                     };
-                    let mut control = self.bootstrap_control(pending.started_ms, false);
+                    let mut control = self.bootstrap_control(false);
                     match pending.assembler.finish(Some((descriptor_hash, chunk_count)), &mut control) {
                         Ok(pair) => {
-                            if self.install_artifact_bootstrap(pending, pair).await.is_err() {
-                                self.disconnect();
+                            if let Err(error) = self.install_artifact_bootstrap(pending, pair).await {
+                                self.fail_artifact_bootstrap(error);
                             }
                         }
-                        Err(_) => self.disconnect(),
+                        Err(error) => self.fail_artifact_bootstrap(error.to_string()),
                     }
                 }
                 ServerFrame::Commands { envelopes, origin, frontier } => {
                     if self.artifact_bootstrap.is_some() {
-                        self.disconnect();
+                        self.fail_artifact_bootstrap("tail arrived before artifact bootstrap completion");
                         return;
                     }
-                    if origin != ActorId(self.actor.clone()) {
-                        let converted = envelopes;
-                        if !self.deliver_remote_operations(converted).await {
-                            self.disconnect();
-                            return;
-                        }
+                    if self.socket_actor.as_deref() != Some(origin.0.as_str()) && !self.deliver_remote_operations(envelopes).await {
+                        self.fail_artifact_bootstrap("artifact tail could not be installed");
+                        return;
                     }
                     self.server_frontier = Some(frontier);
                     self.finish_catchup_if_ready().await;
                 }
                 ServerFrame::Ack { batch_id, stages, frontier } => {
                     if self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
-                        self.disconnect();
+                        self.fail_artifact_bootstrap("ack arrived before artifact catch-up completion");
                         return;
                     }
                     self.server_frontier = Some(frontier);
                     self.handle_ack(batch_id, stages).await;
                 }
                 ServerFrame::Preview { actor, key, seq, payload } => {
-                    if actor != ActorId(self.actor.clone()) {
+                    if self.socket_actor.as_deref() != Some(actor.0.as_str()) {
                         let _ = self.events.send(ArtifactEvent::Preview { actor: actor.0, key, seq, payload });
                     }
                 }
                 ServerFrame::Presence { peers } => {
-                    let mut decoded: Vec<PresencePeer> = Vec::new();
-                    for p in &peers {
-                        if let Some(peer) = presence_from_bytes(p).await {
+                    let mut decoded: Vec<PresencePeer> = Vec::with_capacity(peers.len());
+                    for peer in &peers {
+                        if let Some(peer) = presence_from_bytes(peer).await {
                             decoded.push(peer);
                         }
                     }
-                    let peers = decoded;
-                    let _ = self.events.send(ArtifactEvent::Presence { peers });
+                    if matches!(self.remote_state, RemoteState::Live { .. }) && self.artifact_bootstrap.is_none() && self.required_tail_frontier.is_none() {
+                        self.set_remote_state(RemoteState::Live { peer_count: decoded.len() });
+                    }
+                    let _ = self.events.send(ArtifactEvent::Presence { peers: decoded });
                 }
                 ServerFrame::Session { actor, color } => {
+                    if self.socket_actor.as_deref() != Some(actor.as_str()) {
+                        self.fail_artifact_bootstrap("socket receipt actor mismatch");
+                        return;
+                    }
+                    self.socket_actor_confirmed = true;
                     self.session_color = Some(color);
                     let _ = self.events.send(ArtifactEvent::Session { actor, color });
+                    self.flush_outbox().await;
                 }
                 ServerFrame::CreditGrant { .. } => {}
                 ServerFrame::Error { code, message } => {
@@ -4014,8 +4516,7 @@ mod wasm_actor {
                             rollbacks.push(rollback_envelope(envelope).await);
                         }
                         let _ = self.deliver_remote_operations(rollbacks).await;
-                        let converted = *envelope;
-                        let _ = self.deliver_remote_operations(vec![converted]).await;
+                        let _ = self.deliver_remote_operations(vec![*envelope]).await;
                         let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
                     }
                     ApplyOutcome::Rejected { reason, messages } => {
@@ -4028,6 +4529,7 @@ mod wasm_actor {
                     }
                 }
             }
+            self.emit_status_if_changed();
         }
 
         async fn deliver_remote_operations(&self, envelopes: Vec<MutationEnvelope>) -> bool {
@@ -4048,10 +4550,13 @@ mod wasm_actor {
             }
             true
         }
+        //#endregion 🔖️Protocol
     }
 
-    pub(super) async fn spawn_actor(_pool: std::sync::Arc<semio_framework_async::WorkerPool>, config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: ArtifactMailboxReceiver, events: broadcast::Sender<ArtifactEvent>) {
-        let (incoming_tx, mut incoming_rx) = mpsc::unbounded_channel::<WasmIncoming>();
+    /// 🚀️ Spawns one browser document actor on the isolate's executor. Its loop owns one cadence: the
+    /// mailbox, or — when the mailbox is quiet — the next socket poll or scheduled redial, whichever
+    /// comes first. A cancelled document (closed by the host) ends the loop and closes its socket.
+    pub(super) async fn spawn_actor(config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: ArtifactMailboxReceiver, events: broadcast::Sender<ArtifactEvent>, hub: WasmActorHub) {
         let mut hub_base_url = None;
         let mut hub_space_id = None;
         let mut hub_surface = None;
@@ -4064,58 +4569,68 @@ mod wasm_actor {
                 }
             }
         }
-        let hlc_seed = actor_seed(&config.actor).await;
         let mut actor = WasmActor {
             document_id: config.document_id,
             schema: config.schema,
-            actor: config.actor,
             remote,
             events,
             hub_base_url,
             hub_space_id,
             hub_surface,
+            credential: hub.credential,
+            socket_grant_source: hub.socket_grant_source,
+            dialer: hub.dialer,
+            document_execution_target_lease: hub.lease,
+            operation_cancel: hub.cancel,
+            socket: None,
+            hello: None,
+            socket_actor: None,
+            socket_actor_confirmed: false,
+            socket_authority: None,
             session_color: None,
-            ws: None,
             server_frontier: None,
             resume_token: None,
             pending_resume_token: None,
             required_tail_frontier: None,
+            artifact_rebootstrap_required: false,
             artifact_bootstrap: None,
             pending_batches: std::collections::HashMap::new(),
             outbox: Vec::new(),
             document_backbone_retention: DocumentBackboneRetentionV1::default(),
             next_batch_id: 0,
             next_local_rejection_batch_id: u64::MAX,
-            hlc_seed,
+            hlc_seed: replica_hlc_seed().ok(),
             hlc_counter: 0,
-            incoming_tx,
-            _closures: Vec::new(),
-            _open_closures: Vec::new(),
-            _close_closures: Vec::new(),
+            remote_state: RemoteState::Detached,
+            last_status: None,
+            backoff_ms: crate::os_directory::client::HUB_RECONNECT_MIN_MS,
+            reconnect_at_ms: None,
         };
         semio_framework_async::browser::spawn_local(async move {
-            actor.connect().await;
             loop {
+                actor.connect().await;
+                let wake_ms = actor.next_wake_ms();
                 tokio::select! {
-                    cmd = cmd_rx.recv() => {
-                        match cmd {
-                            None => { actor.document_backbone_retention.clear(); break; }
-                            Some(ArtifactActorMsg::Detach) => { actor.document_backbone_retention.clear(); let _ = actor.relay_one_backbone().await; break; }
-                            Some(message) => actor.handle_cmd(message).await,
+                    biased;
+                    cmd = cmd_rx.recv() => match cmd {
+                        None => {
+                            actor.document_backbone_retention.clear();
+                            actor.close_socket();
+                            break;
                         }
-                    }
-                    incoming = incoming_rx.recv() => {
-                        match incoming {
-                            Some(WasmIncoming::Binary(bytes)) => actor.on_binary(&bytes).await,
-                            Some(WasmIncoming::Closed) => {
-                                actor.abort_artifact_bootstrap();
-                                actor.requeue_pending_batches();
-                                actor.ws = None;
-                                actor.connect().await;
-                            }
-                            None => break,
+                        Some(ArtifactActorMsg::Detach) => {
+                            actor.document_backbone_retention.clear();
+                            let _ = actor.relay_one_backbone().await;
+                            actor.close_socket();
+                            break;
                         }
-                    }
+                        Some(message) => actor.handle_cmd(message).await,
+                    },
+                    _ = sleep_ms(wake_ms) => actor.pump_socket().await,
+                }
+                if actor.operation_cancel.is_cancelled_now() {
+                    actor.close_socket();
+                    break;
                 }
             }
         });
@@ -4733,3 +5248,6 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️persistence-data-class/🦀️.rs"]
 mod persistence_data_class_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️document-socket-connect/🦀️.rs"]
+mod document_socket_connect_tests;

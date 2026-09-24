@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
         agg_inverse(&SemioPresentationMutation::InsertMaster(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-master", "Vorlage einfügen")
+        protocol::LocalizedLabel::native("Insert master", "Master einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

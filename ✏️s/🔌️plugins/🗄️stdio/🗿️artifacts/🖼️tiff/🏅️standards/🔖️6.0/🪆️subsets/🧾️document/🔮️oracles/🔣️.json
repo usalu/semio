@@ -521,7 +521,7 @@
           "productionDispatch": {
             "operation": "change-byte-order",
             "bridgeVersion": 1,
-            "variant": "ChangeByteOrderMutation"
+            "variant": "ChangeByteOrder"
           },
           "oracleRequirements": [
             {
@@ -536,12 +536,13 @@
           "capability": "tiff-6-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-ifd",
             "bridgeVersion": 1,
-            "variant": "InsertIfdMutation"
+            "variant": "InsertIfd"
           },
           "oracleRequirements": [
             {
@@ -556,12 +557,13 @@
           "capability": "tiff-6-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-ifd",
             "bridgeVersion": 1,
-            "variant": "RemoveIfdMutation"
+            "variant": "RemoveIfd"
           },
           "oracleRequirements": [
             {
@@ -576,12 +578,13 @@
           "capability": "tiff-6-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-tag",
             "bridgeVersion": 1,
-            "variant": "RemoveTagMutation"
+            "variant": "RemoveTag"
           },
           "oracleRequirements": [
             {
@@ -601,7 +604,7 @@
           "productionDispatch": {
             "operation": "replace-pixels",
             "bridgeVersion": 1,
-            "variant": "ReplacePixelsMutation"
+            "variant": "ReplacePixels"
           },
           "oracleRequirements": [
             {
@@ -616,12 +619,13 @@
           "capability": "tiff-6-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-tag",
             "bridgeVersion": 1,
-            "variant": "ReplaceTagMutation"
+            "variant": "ReplaceTag"
           },
           "oracleRequirements": [
             {

@@ -2489,11 +2489,16 @@ dependencies = [
 name = "semio-s-artifact-gis-gismap"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-surface",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-dxf",
@@ -2511,13 +2516,18 @@ dependencies = [
 name = "semio-s-artifact-gis-gisterrain"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
+ "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-surface",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
+ "semio-s-artifact-gis-gismap",
  "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-gltf",
  "semio-s-artifact-stdio-json",

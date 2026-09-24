@@ -24,7 +24,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetSystemIdentifier {
         agg_inverse(&LasMutation::SetSystemIdentifier(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-system-identifier", "Systembezeichner setzen")
+        protocol::LocalizedLabel::native("Set system identifier", "Systembezeichner setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

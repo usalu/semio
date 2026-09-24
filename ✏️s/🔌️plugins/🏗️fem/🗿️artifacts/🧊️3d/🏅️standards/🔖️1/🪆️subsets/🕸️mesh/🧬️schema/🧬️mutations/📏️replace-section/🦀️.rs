@@ -27,7 +27,7 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for ReplaceSection {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace section \"{}\"", self.id), &format!("Abschnitt \"{}\" ersetzen", self.id))
+        protocol::LocalizedLabel::native(&format!("Replace section \"{}\"", self.id), &format!("Querschnitt \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

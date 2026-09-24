@@ -23,7 +23,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetGlobalColorTable {
         agg_inverse(&GifMutation::SetGlobalColorTable(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-global-color-table", "Globalfarbentabelle setzen")
+        protocol::LocalizedLabel::native("Set global color table", "Globale Farbtabelle setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

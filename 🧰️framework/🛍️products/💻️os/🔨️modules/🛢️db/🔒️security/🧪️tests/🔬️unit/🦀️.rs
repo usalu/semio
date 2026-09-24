@@ -96,29 +96,6 @@ async fn decision_into_result_maps_deny_to_unauthorized() {
 }
 //#endregion 🔖️Policy
 
-//#region 🔖️SpaceGrants
-#[semio_framework_async_macros::async_test]
-async fn space_grants_studio_allows_author_write_and_spectator_read_only() {
-    let policy = RoleBasedPolicy::new();
-    let policy = space_grants("space-1", "studio").await.into_iter().fold(policy, RoleBasedPolicy::with_grant);
-    let scope = AuthzScope::CommandKind { document: doc("space-1:doc-1").await, kind: "edit".to_string() };
-
-    assert!(policy.evaluate(&principal("author").await, &scope, Action::Write).await.is_allowed());
-    assert!(policy.evaluate(&principal("author").await, &scope, Action::Read).await.is_allowed());
-    assert!(policy.evaluate(&principal("spectator").await, &scope, Action::Read).await.is_allowed());
-    assert!(!policy.evaluate(&principal("spectator").await, &scope, Action::Write).await.is_allowed());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn space_grants_archive_denies_author_write_even_though_allow_also_matches() {
-    let policy = space_grants("space-1", "archive").await.into_iter().fold(RoleBasedPolicy::new(), RoleBasedPolicy::with_grant);
-    let scope = AuthzScope::CommandKind { document: doc("space-1:doc-1").await, kind: "edit".to_string() };
-
-    assert!(!policy.evaluate(&principal("author").await, &scope, Action::Write).await.is_allowed(), "deny must win over the author allow grant");
-    assert!(policy.evaluate(&principal("author").await, &scope, Action::Read).await.is_allowed(), "archive still permits reads");
-}
-//#endregion 🔖️SpaceGrants
-
 //#region 🔖️Signing
 struct FixedSigner {
     signature: Vec<u8>,

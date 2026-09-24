@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeESMpa {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change soil modulus E_s [MPa] to {}", self.new_e_s_mpa), &format!("Bodenmodule_s [MPa] auf {} ändern", self.new_e_s_mpa))
+        protocol::LocalizedLabel::native(&format!("Change soil modulus E_s [MPa] to {}", self.new_e_s_mpa), &format!("Steifemodul E_s [MPa] auf {} ändern", self.new_e_s_mpa))
     }
 }
 //#endregion 🔖️ChangeESMpa

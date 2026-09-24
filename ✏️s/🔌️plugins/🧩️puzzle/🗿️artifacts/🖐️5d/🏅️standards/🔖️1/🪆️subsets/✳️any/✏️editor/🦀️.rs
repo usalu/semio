@@ -10019,6 +10019,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
             .action_interactive_job("focusSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportFixture", InteractiveJobClassification::Migrated)
+            .action_destructive("exportFixture")
             .action_interactive_job("importFixture", InteractiveJobClassification::Migrated)
             .action_interactive_job("openAddPartDialog", InteractiveJobClassification::Migrated)
             .action_interactive_job("openImportFixture", InteractiveJobClassification::Migrated)

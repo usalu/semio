@@ -409,7 +409,8 @@ const PanelTabButton: React.FC<{
   readonly anchor?: Anchor;
   readonly dock: PanelDockContextValue | null;
   readonly onSelect: (tabId: string) => void;
-}> = ({ tab, variant, buttonClass, tabSlot, isActive, showActiveColor, stackIndex, stackSize, isDragSource, isChildDropTarget, isUnitDropReady, anchor, dock, onSelect }) => {
+  readonly compactLabels: boolean;
+}> = ({ tab, variant, buttonClass, tabSlot, isActive, showActiveColor, stackIndex, stackSize, isDragSource, isChildDropTarget, isUnitDropReady, anchor, dock, onSelect, compactLabels }) => {
   const Icon = tab.icon;
   const inlineText = useControlInlineText(tab.id, tab.name);
   const surfaceDrag = useUiDriverDragSurface();
@@ -468,7 +469,7 @@ const PanelTabButton: React.FC<{
           <div className={modeDockTabLabelClassName}>
             <span className={panelTabIconSlotClass}><Icon size={12} /></span>
             {inlineText !== undefined ? (
-              <span data-slot="inline-label" className="truncate">
+              <span data-slot="inline-label" className={compactLabels ? "sr-only" : "truncate"}>
                 {inlineText}
               </span>
             ) : null}
@@ -479,7 +480,7 @@ const PanelTabButton: React.FC<{
               <Icon size={12} />
             </span>
             {inlineText !== undefined ? (
-              <span data-slot="inline-label" className={panelTabLabelClass}>
+              <span data-slot="inline-label" className={compactLabels ? "sr-only" : panelTabLabelClass}>
                 {inlineText}
               </span>
             ) : null}
@@ -506,10 +507,12 @@ interface PanelTabRowProps {
   readonly direction?: "up" | "down";
   /** @emoji 📏️ Extends a body-hosted tab line across the panel instead of sizing it like a silhouette cap chip. */
   readonly fullWidth?: boolean;
+  /** @emoji 🗜️ Icon-only chips whose names stay the buttons' accessible names — see {@link PanelTabBarProps.compactLabels}. */
+  readonly compactLabels?: boolean;
 }
 
 /** @emoji 📑️ One row of sibling tabs; stacked by {@link PanelTabBar} into a {@link Ribbon}. Tab rows keep declared left-to-right order independently of a right anchor's spatially mirrored panel flow, so folding and unfolding never reverses visual or keyboard progression. */
-const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath = [], tabs, activeId, onSelect, showActiveColor = true, direction = "down", fullWidth = false }) => {
+const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath = [], tabs, activeId, onSelect, showActiveColor = true, direction = "down", fullWidth = false, compactLabels = false }) => {
   const barRef = reactHostPort.useRef<HTMLDivElement>(null);
   const dock = usePanelDockContext();
   const tabSlot = variant === "mobile" ? "mobile-panel" : "panel";
@@ -576,6 +579,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
               anchor={anchor}
               dock={dock}
               onSelect={onSelect}
+              compactLabels={compactLabels}
             />
           </React.Fragment>
         );
@@ -601,10 +605,14 @@ export interface PanelTabBarProps {
   readonly maxRows?: number;
   /** @emoji 🎨️ Paints the active tab's fill/border — off for a folded {@link Panel}, whose button group shouldn't claim a tab is "active" while nothing is showing. */
   readonly showActiveColor?: boolean;
+  /** @emoji 🗜️ Renders every chip icon-only, its name kept as the button's accessible name (visually hidden, never
+   * dropped) — the tablet footer, whose full labelled chrome is wider than a 768–1023 px viewport and would clip its
+   * trailing tabs out of reach (measured live at 768×1024, ticket 26/09/18 session 11 U5). */
+  readonly compactLabels?: boolean;
 }
 
 /** @emoji 📑️ Panel tab strip shared by {@link Panel}, {@link PanelChromeTabBar}, and Layout's private mobile panel — one {@link PanelTabRow} per tree level (within `[startDepth, startDepth + maxRows)`), stacked in a {@link Ribbon}. */
-export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs, activePath, onActivePathChange, direction = "down", startDepth = 0, maxRows = Infinity, showActiveColor = true }) => {
+export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs, activePath, onActivePathChange, direction = "down", startDepth = 0, maxRows = Infinity, showActiveColor = true, compactLabels = false }) => {
   const rows: RibbonRow[] = [];
   let level = tabs;
   let depth = 0;
@@ -627,6 +635,7 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs,
             showActiveColor={showActiveColor}
             direction={direction}
             fullWidth={startDepth > 0}
+            compactLabels={compactLabels}
           />
         ),
       });

@@ -1,0 +1,10 @@
+{
+  "ReplaceConfig": {
+    "config": {
+      "searchQuery": "Überblick",
+      "searchHistoryJson": "[]",
+      "lastResultJson": "[]",
+      "lastAnalysisJson": "{}"
+    }
+  }
+}

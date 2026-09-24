@@ -45,7 +45,7 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetViewBoxMutat
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set View Box", "Ansichtkasten setzen")
+        protocol::LocalizedLabel::native("Set View Box", "ViewBox setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-view-box".to_string()]

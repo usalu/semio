@@ -6,7 +6,7 @@
  * runtime exists. */
 import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, backboneKindFromUri, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
@@ -14,6 +14,9 @@ import type { PluginSourceEvent } from "@semio-tech/framework";
 import { MODULE_BRIDGE_FILE, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, resolveBootSourceContentHashes, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, writeStagedSourceFreshness, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
 import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
+import { requestLocalBrokerSession } from "../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
+import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV, DEV_LOCAL_HUB_SESSION_PATH } from "../🚀️local-hub/🏃️execution/🟦️.ts";
+import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, AGENT_CREDENTIAL_INSTALL_SCHEMA_V1, AGENT_CREDENTIAL_SCHEMA_V1, agentCredentialInstallFileNameV1, isAgentDelegationTokenV1 } from "../../📇️directory/🤖️delegations/🟦️.ts";
 /** @emoji 📥️ Filename owned by plugin store installation; inlined so the vite-plugin graph does not pull materialization. */
 const EXTENSION_INSTALL_META = "📥️install.json";
 
@@ -62,6 +65,22 @@ export function semioDescriptorRouteGuardVitePlugin(specs: readonly DescriptorRo
         res.statusCode = 404;
         res.setHeader("content-type", "application/json");
         res.end(`${JSON.stringify({ error: "descriptor-not-found", moduleDirectory: decision.moduleDirectory })}\n`);
+      });
+    },
+  };
+}
+
+/** @emoji 👷️ Lets a service worker served from the module graph (the plugin module store's, `🌎️hub-source/👷️service-worker`)
+ * control the whole shell: every script a browser fetches AS a service worker (`Service-Worker: script`) is allowed scope
+ * `/`. A deployment answers its service worker script with the same header. */
+export function semioServiceWorkerScopeVitePlugin() {
+  return {
+    name: "semio-service-worker-scope",
+    enforce: "pre" as const,
+    configureServer(server: { middlewares: { use: (handler: (req: { headers?: Record<string, string | string[] | undefined> }, res: { setHeader: (name: string, value: string) => void }, next: () => void) => void) => void } }) {
+      server.middlewares.use((req, res, next) => {
+        if (req.headers?.["service-worker"] === "script") res.setHeader("Service-Worker-Allowed", "/");
+        next();
       });
     },
   };
@@ -1383,24 +1402,133 @@ export function semioAgentBridgeRendezvousVitePlugin(options: { readonly rendezv
 }
 //#endregion 🛰️AgentBridgeRendezvous
 
-/** @emoji 🎫️ Serves the one-shot local-bootstrap session minted by `ensureDevLocalHub` to the shell. */
+//#region 🔌️AgentCredentialInstall
+/** @emoji 🗝️ Where this development host installs agent credentials for MCP clients. A directory path,
+ * never a credential, spelled with the `S_` prefix the gateway's process-entry seal admits; unset, the
+ * per-user default `~/.semio/agent/credentials` beside the bridge rendezvous. */
+export const AGENT_CREDENTIALS_DIR_ENV = "S_AGENT_CREDENTIALS_DIR";
+
+function agentCredentialsDir(): string {
+  const pinned = process.env[AGENT_CREDENTIALS_DIR_ENV];
+  if (pinned) return pinned;
+  const home = process.env.HOME ?? process.env.USERPROFILE ?? ".";
+  return join(home, ".semio", "agent", "credentials");
+}
+
+type CredentialInstallRequest = { url?: string; method?: string; headers: Record<string, string | string[] | undefined>; on(event: "data", handler: (chunk: Buffer) => void): void; on(event: "end" | "error", handler: () => void): void };
+
+/** @emoji 🔐️ The credential file bytes `semio-os-mcp --credential-file` decodes, checked key for key
+ * before anything reaches the disk. */
+function agentCredentialFileIsWellFormed(contents: string): boolean {
+  try {
+    const value = JSON.parse(contents) as Record<string, unknown>;
+    return (
+      Object.keys(value).sort().join(",") === "audience,hubOrigin,schema,spaceId,token" &&
+      value.schema === AGENT_CREDENTIAL_SCHEMA_V1 &&
+      typeof value.hubOrigin === "string" &&
+      typeof value.spaceId === "string" &&
+      (value.audience === "read" || value.audience === "edit") &&
+      typeof value.token === "string" &&
+      isAgentDelegationTokenV1(value.token)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** @emoji 🔌️ Turns an agent delegation into a working MCP client on a development host: the delegation
+ * pane posts the one-time credential here, this server writes it owner-only (`0600` in a `0700`
+ * directory) under the delegation's own file name, and answers with its absolute path and the launcher
+ * that starts `semio-os-mcp` from this checkout (`bun <repo>/📜️script.ts dev mcp stdio os`, which
+ * stages the binary itself). `DELETE <endpoint>/<delegationId>` removes it once the delegation is
+ * withdrawn. Only same-origin requests are served, so no other site can plant or remove a credential.
+ * Contract: `📇️directory/🧬️schema` `AgentCredentialInstallRequestV1` / `AgentCredentialInstallReceiptV1`. */
+export function semioAgentCredentialInstallVitePlugin(options: { readonly repoRoot: string; readonly credentialsRoot?: string }) {
+  const root = options.credentialsRoot ?? agentCredentialsDir();
+  const launcher = { command: process.execPath, args: [join(options.repoRoot, "📜️script.ts"), "dev", "mcp", "stdio", "os"] };
+  return {
+    name: "semio-agent-credential-install",
+    apply: "serve" as const,
+    configureServer(server: { middlewares: { use: (handler: (req: CredentialInstallRequest, res: RendezvousServerResponse, next: () => void) => void) => void } }) {
+      server.middlewares.use((req, res, next) => {
+        const path = req.url?.split("?")[0] ?? "";
+        if (path !== AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1 && !path.startsWith(`${AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1}/`)) return next();
+        const answer = (status: number, body?: unknown): void => {
+          res.statusCode = status;
+          res.setHeader("cache-control", "no-store");
+          if (body === undefined) return res.end();
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify(body));
+        };
+        const site = req.headers["sec-fetch-site"];
+        const origin = req.headers.origin;
+        const host = req.headers.host;
+        if (site !== "same-origin" && !(typeof origin === "string" && typeof host === "string" && (origin === `http://${host}` || origin === `https://${host}`))) return answer(403, { error: "same-origin requests only" });
+        if (req.method === "DELETE" && path.length > AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1.length + 1) {
+          try {
+            rmSync(join(root, agentCredentialInstallFileNameV1(decodeURIComponent(path.slice(AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1.length + 1)))), { force: true });
+            return answer(204);
+          } catch {
+            return answer(400, { error: "invalid delegation id" });
+          }
+        }
+        if (req.method !== "POST" || path !== AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1) return answer(405, { error: "POST a credential or DELETE /<delegationId>" });
+        const chunks: Buffer[] = [];
+        let bytes = 0;
+        let overflow = false;
+        req.on("data", (chunk) => {
+          bytes += chunk.length;
+          if (bytes > 32 * 1024) overflow = true;
+          else chunks.push(chunk);
+        });
+        req.on("error", () => answer(400, { error: "unreadable request" }));
+        req.on("end", () => {
+          if (overflow) return answer(413, { error: "credential install request too large" });
+          try {
+            const request = JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
+            if (Object.keys(request).sort().join(",") !== "contents,delegationId,schema" || request.schema !== AGENT_CREDENTIAL_INSTALL_SCHEMA_V1 || typeof request.delegationId !== "string" || typeof request.contents !== "string" || !agentCredentialFileIsWellFormed(request.contents)) {
+              return answer(400, { error: "not an AgentCredentialInstallRequestV1" });
+            }
+            const file = join(root, agentCredentialInstallFileNameV1(request.delegationId));
+            mkdirSync(root, { recursive: true, mode: 0o700 });
+            chmodSync(root, 0o700);
+            writeFileSync(file, request.contents, { mode: 0o600 });
+            chmodSync(file, 0o600);
+            return answer(201, { schema: AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, credentialPath: file, launcher });
+          } catch {
+            return answer(400, { error: "not an AgentCredentialInstallRequestV1" });
+          }
+        });
+      });
+    },
+  };
+}
+//#endregion 🔌️AgentCredentialInstall
+
+/** @emoji 🎫️ Serves the shell a FRESH development session from the local hub owner's broker on every request, for the
+ * profile this serve signs in as — so a shell whose 15-minute local session lapsed, or a second user's serve, claims one
+ * with no manual sign-in. 404 when the serve joined a hub without a broker (the shell's own sign-in stays available).
+ * @see ../🚀️local-hub/🏃️execution/🟦️.ts */
 export function semioLocalHubSessionVitePlugin() {
   return {
     name: "semio-local-hub-session",
     configureServer(server: { middlewares: { use: (handler: (req: { readonly url?: string; readonly method?: string }, res: { statusCode: number; setHeader: (k: string, v: string) => void; end: (body?: string) => void }, next: () => void) => void) => void } }) {
       server.middlewares.use((req, res, next) => {
-        if (req.method !== "GET" || req.url?.split("?")[0] !== "/_semio/dev/local-session") return next();
-        const token = process.env.SEMIO_DEV_LOCAL_HUB_TOKEN ?? "";
-        const userId = process.env.SEMIO_DEV_LOCAL_HUB_USER_ID ?? "";
-        if (!token || !userId) {
-          res.statusCode = 404;
-          res.end("local-session unavailable");
-          return;
-        }
-        res.statusCode = 200;
-        res.setHeader("content-type", "application/json");
-        res.setHeader("cache-control", "no-store");
-        res.end(JSON.stringify({ schema: "semio.os.dev-local-hub-session/v1", token, userId }));
+        if (req.method !== "GET" || req.url?.split("?")[0] !== DEV_LOCAL_HUB_SESSION_PATH) return next();
+        const dataDir = process.env[DEV_LOCAL_HUB_DATA_ENV] ?? "";
+        const hubUrl = process.env.S_HUB_URL ?? "";
+        const profileId = process.env[DEV_LOCAL_HUB_PROFILE_ENV] ?? "";
+        void (dataDir && hubUrl && profileId ? requestLocalBrokerSession(dataDir, hubUrl, profileId).catch(() => null) : Promise.resolve(null)).then((session) => {
+          res.setHeader("cache-control", "no-store");
+          if (session === null) {
+            res.statusCode = 404;
+            res.end("local-session unavailable");
+            return;
+          }
+          res.statusCode = 200;
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify({ schema: "semio.os.dev-local-hub-session/v1", token: session.token, userId: session.userId }));
+        });
       });
     },
   };

@@ -32,7 +32,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ClearF
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Clear fenestration {} glazing construction", self.id.0), &format!("Fenster {} Verglasungskonstruktion leeren", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Clear fenestration {} glazing construction", self.id.0), &format!("Verglasungsaufbau von Fenster {} entfernen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

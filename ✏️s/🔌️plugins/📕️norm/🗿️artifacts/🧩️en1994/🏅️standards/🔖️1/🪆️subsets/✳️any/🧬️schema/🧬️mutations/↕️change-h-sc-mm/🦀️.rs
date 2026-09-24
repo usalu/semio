@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeHScMm {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change stud height h_sc to {}", self.new_h_sc_mm), &format!("Ständerhöheh_sc auf {} ändern", self.new_h_sc_mm))
+        protocol::LocalizedLabel::native(&format!("Change stud height h_sc to {}", self.new_h_sc_mm), &format!("Dübelhöhe h_sc auf {} ändern", self.new_h_sc_mm))
     }
 }
 //#endregion 🔖️Payload

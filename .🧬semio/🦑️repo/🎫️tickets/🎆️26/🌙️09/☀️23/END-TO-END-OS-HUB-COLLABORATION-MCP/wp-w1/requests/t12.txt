@@ -1,0 +1,74 @@
+T12 (session 11) guest requests — 2026-09-25 03:28
+Edits that landed after W2's rebuild started (all compile-checked; native --lib --tests green):
+1. crates semio-s-plugin-architect (semio-s-artifact-architect-program) and semio-s-plugin-imperative
+   (semio-s-artifact-imperative-procedure), at 02:5x: whole-record state lanes answered an unchanged value with
+   `MutationOutcome::empty()`, and because their diff type IS the record, the store applied that default diff and WIPED
+   architect's presence/config and imperative's config to defaults on any identical re-apply (measured by the T12
+   vector harness). The 5 leaves now return the unchanged record with the same warned `mutation.no-op`.
+   Behavioral fix → please rebuild/restage both guests if they were built before 03:00.
+2. crate semio-framework-os-kernel (every guest links it), 02:4x: additive `store::os_store::test_support::
+   mutation_report_json::<S, M>` (test bridge, no production caller, no behavior change). No rebuild needed for it
+   alone; guests built before/after differ only by this unused function.
+Upcoming (will be appended here when landed): per-lane `*_report_json` one-line bridges in ~20 artifact crates
+(additive, test-only callers), raster standalone control pool refactor (production path unchanged).
+3. 03:4x crate semio-s-plugin-raster (semio-s-artifact-raster-raster): standalone control credits now come from an explicit
+   pool (production = the same process pool and capacity as before; only the saturation tests own private pools). No
+   behavior change for the guest; rebuild only if convenient. Native lib tests 228/228 ×5.
+4. S15 guest fixes (07:2x–07:4x), native-checked, wasm32 batch check pending:
+   - semio-s-plugin-sourcing AND semio-s-plugin-demonstrator (both link semio-s-artifact-sourcing-curation):
+     curationSetCount's delta/value args are now number args (manifest/descriptor change) → describe + release + restage.
+   - semio-s-plugin-norm (semio-s-artifact-norm-contract, -din18599, -en1990): setSnapshot decodes the declared
+     `snapshot` JSON → release + restage.
+   - semio-s-plugin-procedural (generation2d viewer panicked on open) + raster, process, reasoning, writer, trinity
+     (their viewers now retire documents through the artifact's own owner catalogue) → release + restage.
+     Pending: draw viewer (same one-line fix) after draw's release .ok.
+   Note: the writer viewer edit (one function, compile-checked) landed ~07:45, after batch b's 07:22 START line but
+   while batch b was still queued at the wasm mutex (WG7 held it) — batch b compiles it; no mid-build edit.
+5. S15 stdio ×9 (07:3x–07:5x) — crate semio-s-plugin-stdio (editor code of semio-s-artifact-stdio-{csv,tsv,txt,md,html,json,xml},
+   compiled only under the stdio plugin's `component-app-assembly` feature, so no other component's build is touched):
+   `set-cell`/`replace-text`/`set-node` are now app-owned retained routes (roster + Artifact-lane publication contract +
+   bounded proof + reducer sharing `handle`'s emit) and each editor owns an artifact one-item publication authority
+   (without it the lane failed `interactive-job.publication-authority-missing`, found by the new live laws).
+   Native `cargo check -p semio-s-plugin-stdio` green; lib tests of the 7 crates green (9 live kit-verb laws + html
+   invalid-text refusal). stdio was already released (.ok) before the edit → re-release + restage stdio. No ABI,
+   pack-schema or codec-hash change. wasm32 batch check pending.
+6. S15 vcs viewer (07:5x) — crate semio-s-plugin-vcs (semio-s-artifact-vcs-vcs viewer; linked by no other component): the
+   read-only history tree painted NOTHING for a document without checkpoints (every freshly opened viewer) because
+   TreeWindowKit renders no rows for an empty roster; the document is now the tree's root row (its title, `—` when
+   untitled) with the checkpoint forest beneath. Law `a_document_without_checkpoints_still_paints_its_own_row`;
+   vcs artifact lib 126/126, `cargo check -p semio-s-plugin-vcs` green → release + restage vcs.
+7. S15 gis viewer (08:0x–08:2x) — crate semio-s-plugin-gis (semio-s-artifact-gis-gismap viewer; batch-b components do not
+   link it; gis was released .ok before the edit): the viewer's map window now declares the host's `setCamera`
+   (Migrated view action with its `camera` arg) and retains the camera per window in a viewer-owned window config
+   (`gis.mapviewerwindowcfg`, the energy viewer's pattern: retained route on the WindowConfig lane only, ViewEmit
+   untouched). FREEZE NOTE: this ADDS one local-only window-config record + its `set-camera` vocabulary; no existing
+   artifact pack schema, codec or guest ABI changes. The viewer descriptor changes (one action) → describe + release
+   + restage gis. gismap lib 285/285 incl. the live law `a_dispatched_pan_is_retained_by_its_window_and_rendered_back`.
+8. S15 trinity ×2 (08:2x, W2 batch b had already built writer, the only component embedding trinity) — crate
+   semio-s-plugin-trinity (semio-s-artifact-trinity-jack / -rewriting; writer embeds both → writer too):
+   `patchNodes` now patches the selection when `nodeIds` is empty, splits a comma/space id list, and refuses loudly
+   (`mutation.target-missing` / `app.command.invalid-args`) instead of an empty emit; the text-host gesture verbs
+   (`textEdit`, `textSelect`) and rewriting's canvas verb `nodeGraphEdit` are `in_palette: false` (off the rail, the
+   palette and the context menu's transform group). Descriptor changes (in_palette, optional nodeIds) → describe +
+   release + restage trinity AND writer. jack lib 216/216, rewriting lib 160/160.
+9. draw viewer (10:2x, W2 idle) — crate semio-s-plugin-draw (semio-s-artifact-draw-drawing viewer): declares the
+   drawing's own document-store owner catalogue like the six other viewers (preventive: the viewer law is green with
+   and without it on the default document) → release + restage draw with the next batch.
+   Raster viewer: a docstring the 07:2x viewer codemod had displaced onto `build_document_store_owners` is back on
+   `initial_snapshot` (comment-only).
+   wasm32-wasip2 check of all 15 touched guest plugins (stdio sourcing demonstrator norm procedural raster process reasoning writer trinity gis vcs draw architect imperative) through the fleet mutex: EXIT 0, 95 s (10:27, wp-t12/generated/check-s15-wasm-1.txt).
+10. remodel (10:4x–11:0x): TEST-ONLY — the 29 worker-step wall-clock laws now admit steps through the runtime's own StepOverrunLedger rule (#[cfg(test)] helper). No guest behaviour change; no rebuild needed.
+11. trinity jack (11:xx, before W2's next START release) — crate semio-s-plugin-trinity (semio-s-artifact-trinity-jack; writer
+   embeds it): `✏️editor/🫧️transient` re-exports the two existing `*_transient_mutation_report_json` test bridges
+   (additive, no production caller). No behaviour change; rebuild only with the next trinity/writer batch.
+12. TEST DATA / TEST-ONLY, no guest source (13:0x–13:4x): regenerated plugin `🏭️bridge` test bridges; gisterrain view
+   window-config manifest; generation2d subset oracles + re-copied fixtures; step cc6 subset bridge removed; layout
+   `rotate-frame` vector (quintet, catalog vector, two case rows, both adapters, a #[cfg(test)] mount in the layout crate
+   root); os.config ui-preferences catalog + host case `🎨️mutate-os-config-ui-preferences` (Rust + TS adapters, taxonomy
+   member name); remodel `mutate-remodeling-1` rows renamed to their registered scenario ids (feature + both adapter
+   lists; python oracle 275/275 at exhaustive).
+13. pdf 1.7 base (13:1x–13:4x) — crate semio-s-artifact-stdio-pdf (linked by semio-s-plugin-stdio): TEST-ONLY. A
+   #[cfg(test)] mount of `🧬️schema/🧬️mutations/🧪️tests/⚖️lopdf-vectors` (44 laws, all green; crate lib 502/502), 44 lopdf
+   fixture pairs, the lopdf generator (`🏭️generator/🔁️codec`, standalone workspace) and the subset oracle manifest
+   (44 manifest mutations + 44 fixture manifests). No production code, ABI, pack schema or codec hash touched →
+   no stdio rebuild needed for it.

@@ -1,0 +1,5 @@
+{
+  "mutation": "setKeybindingOverride",
+  "controlId": "edit.undo",
+  "keys": "Meta+Z"
+}

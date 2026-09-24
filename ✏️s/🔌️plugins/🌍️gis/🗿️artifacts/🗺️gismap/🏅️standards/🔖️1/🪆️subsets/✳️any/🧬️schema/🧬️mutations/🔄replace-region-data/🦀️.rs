@@ -36,7 +36,7 @@ impl MutationKind<GisMapSnapshot, GisMapMutation> for ReplaceRegionData {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace region \"{}\" data", self.id), &format!("Region \"{}\" Daten ersetzen", self.id))
+        protocol::LocalizedLabel::native(&format!("Replace region \"{}\" data", self.id), &format!("Daten von Region \"{}\" ersetzen", self.id))
     }
 }
 //#endregion 🔹Payload

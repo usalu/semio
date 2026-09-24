@@ -1,0 +1,49 @@
+{
+  "schema": "semio.store.document-socket-connect/v1",
+  "binding": {
+    "hubBaseUrl": "http://127.0.0.1:8050",
+    "spaceId": "01a0d421-3e4e-7000-8000-000000000001",
+    "documentId": "block2d-editor-1",
+    "schema": "block.2d",
+    "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "surface": "s.block.block2d@1/*#editor"
+  },
+  "authority": {
+    "hubOrigin": "http://127.0.0.1:8050/",
+    "expiresAtUnixMs": 2000,
+    "spaceId": "01a0d421-3e4e-7000-8000-000000000001",
+    "documentId": "block2d-editor-1",
+    "schema": "block.2d",
+    "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "surfaceId": "s.block.block2d@1/*#editor"
+  },
+  "nowMs": 1000,
+  "cases": [
+    { "name": "the exact binding is admitted", "authority": {}, "binding": {}, "admits": true },
+    { "name": "the admitted authority expires at its deadline", "authority": {}, "binding": {}, "nowMs": 2000, "admits": false },
+    { "name": "a foreign hub origin is refused", "authority": { "hubOrigin": "http://127.0.0.1:9999" }, "binding": {}, "admits": false },
+    { "name": "another space is refused", "authority": { "spaceId": "01a0d421-3e4e-7000-8000-000000000002" }, "binding": {}, "admits": false },
+    { "name": "another document is refused", "authority": { "documentId": "block2d-editor-2" }, "binding": {}, "admits": false },
+    { "name": "another artifact schema is refused", "authority": { "schema": "block.3d" }, "binding": {}, "admits": false },
+    { "name": "another pack schema identity is refused", "authority": { "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222" }, "binding": {}, "admits": false },
+    { "name": "another surface is refused", "authority": { "surfaceId": "s.block.block2d@1/*#viewer" }, "binding": {}, "admits": false },
+    { "name": "a binding that names no surface takes the plan's", "authority": { "surfaceId": "s.block.block2d@1/*#viewer" }, "binding": { "surface": null }, "admits": true }
+  ],
+  "protocols": {
+    "receiptProtocol": "semio.session.v1",
+    "capability": "session.v1.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "offer": ["semio.session.v1", "session.v1.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"],
+    "headerValue": "semio.session.v1, session.v1.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "packIdentity": [
+    { "name": "no codec and no lease is no identity", "schema": "block.2d", "lease": null, "packSchemaHash": null },
+    { "name": "a lease for the schema lends its pack identity", "schema": "block.2d", "lease": { "schema": "block.2d", "packSchemaHash": "3333333333333333333333333333333333333333333333333333333333333333" }, "packSchemaHash": "3333333333333333333333333333333333333333333333333333333333333333" },
+    { "name": "a lease for another schema lends nothing", "schema": "block.2d", "lease": { "schema": "block.3d", "packSchemaHash": "3333333333333333333333333333333333333333333333333333333333333333" }, "packSchemaHash": null },
+    { "name": "a malformed lease digest lends nothing", "schema": "block.2d", "lease": { "schema": "block.2d", "packSchemaHash": "33" }, "packSchemaHash": null }
+  ],
+  "componentIdentity": [
+    { "name": "a mounted component's codec is the kind identity before any lease", "schema": "component.fixture.answers", "component": { "schema": "component.fixture.answers", "packSchemaHash": "4444444444444444444444444444444444444444444444444444444444444444" }, "lease": { "schema": "component.fixture.answers", "packSchemaHash": "3333333333333333333333333333333333333333333333333333333333333333" }, "packSchemaHash": "4444444444444444444444444444444444444444444444444444444444444444" },
+    { "name": "a component that cannot answer is no identity, never the lease's", "schema": "component.fixture.faults", "component": { "schema": "component.fixture.faults", "packSchemaHash": null }, "lease": { "schema": "component.fixture.faults", "packSchemaHash": "3333333333333333333333333333333333333333333333333333333333333333" }, "packSchemaHash": null },
+    { "name": "a component owning another kind leaves this kind to its lease", "schema": "component.fixture.leased", "component": { "schema": "component.fixture.other", "packSchemaHash": "4444444444444444444444444444444444444444444444444444444444444444" }, "lease": { "schema": "component.fixture.leased", "packSchemaHash": "3333333333333333333333333333333333333333333333333333333333333333" }, "packSchemaHash": "3333333333333333333333333333333333333333333333333333333333333333" }
+  ]
+}

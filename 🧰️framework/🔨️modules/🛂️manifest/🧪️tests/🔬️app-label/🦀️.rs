@@ -1049,7 +1049,7 @@ async fn tutorial_ui_change_round_trips_tagged_camel_case() {
 async fn tutorial_document_event_kind_round_trips_tagged_camel_case() {
     let edit = TutorialDocumentEventKind::Edit {
         forwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "translate"}))],
-        backwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "translate", "inverse": true}))],
+        backwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"inverse": true, "op": "translate"}))],
         description: Some("Move object".into()),
         coalesce_key: Some("camera".into()),
     };

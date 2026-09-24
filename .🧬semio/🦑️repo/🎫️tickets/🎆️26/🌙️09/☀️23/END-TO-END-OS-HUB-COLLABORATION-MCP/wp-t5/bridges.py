@@ -59,7 +59,50 @@ def module_files(lib):
     walk(lib, [], True, 0)
     return found
 
-AGG = re.compile(r"#\[derive\([^)]*\bMutations\b[^)]*\)\][^\n]*\n(?:\s*#\[[^\n]*\n)*\s*pub enum (\w+)\s*\{")
+def leaf_kinds(directory):
+    """Every mutation leaf `semanticKind` declared below a directory (`🧬️mutations/<leaf>/🔣️.json`)."""
+    kinds = set()
+    for dirpath, _, files in os.walk(root + directory):
+        if "🔣️.json" not in files or os.path.basename(os.path.dirname(dirpath)) != "🧬️mutations": continue
+        try:
+            kind = json.load(open(os.path.join(dirpath, "🔣️.json"), encoding="utf-8")).get("semanticKind")
+        except (ValueError, OSError, AttributeError):
+            continue
+        if kind: kinds.add(kind)
+    return kinds
+
+def reexported_region(row):
+    """The sibling standard's owner a subset dispatches through when its `🧬️mutations/🦀️.rs` is a pure glob re-export of
+    that standard's vocabulary (dwg AC1018 serves AC1024's `DwgMutation`), else `None`."""
+    source = root + row["owner"] + "/🧬️schema/🧬️mutations/🦀️.rs"
+    if not os.path.exists(source): return None
+    target = re.search(r"(?m)^pub use crate::standards::(\w+)::subsets::(\w+)::schema::mutations::\*;", open(source, encoding="utf-8").read())
+    if target is None: return None
+    ids = set(row["ids"]) if isinstance(row["ids"], list) else set()
+    for other in rows:
+        if other["artifact"] == row["artifact"] and other["owner"] != row["owner"] and other["subset"] == row["subset"] and ids <= leaf_kinds(other["owner"]) and not reexported_region_marker(other):
+            return other["owner"]
+    return None
+
+def reexported_region_marker(row):
+    """Whether a subset's vocabulary facet is itself a glob re-export (never a region another subset measures)."""
+    source = root + row["owner"] + "/🧬️schema/🧬️mutations/🦀️.rs"
+    return os.path.exists(source) and re.search(r"(?m)^pub use crate::standards::\w+::subsets::\w+::schema::mutations::\*;", open(source, encoding="utf-8").read()) is not None
+
+def leaf_region(row):
+    """The directory whose mutation leaves a manifest measures: its own owner when the leaves its ids name live there,
+    the re-exported sibling standard's owner when its vocabulary is a glob re-export, or the `🪆️subsets` root when an
+    `any` manifest owns none of its leaves and composes its sibling subsets (fem's `🌐️any` over
+    mesh/material/load/boundary/analysis)."""
+    ids = set(row["ids"]) if isinstance(row["ids"], list) else set()
+    owner = row["owner"]
+    reexported = reexported_region(row)
+    if reexported is not None: return reexported
+    if not ids or ids & leaf_kinds(owner): return owner
+    parent = os.path.dirname(owner)
+    return parent if row["subset"] == "any" and os.path.basename(parent) == "🪆️subsets" and ids <= leaf_kinds(parent) else owner
+
+AGG = re.compile(r"#\[derive\([^)]*\bMutations\b[^)]*\)\][^\n]*\n(?:\s*(?:#\[|//)[^\n]*\n)*\s*pub enum (\w+)\s*\{")
 plugins = {}
 for r in rows:
     owner = r["owner"]
@@ -81,7 +124,7 @@ for home, manifests in sorted(plugins.items()):
         for path, (mp, public) in files.items():
             if public:
                 for m in re.finditer(r"(?m)^pub struct (\w+)", open(path, encoding="utf-8").read()):
-                    structs.setdefault(m.group(1), "::".join([c["name"].replace("-", "_")] + mp + [m.group(1)]))
+                    structs.setdefault(m.group(1), []).append(mp)
         for path, (mp, public) in files.items():
             if "🧪️tests" in path or "/🏭️bridge/" in path or not path.endswith("🧬️mutations/🦀️.rs") or any(seg in path for seg in ("/✏️editor/", "/👁️viewer/", "/👥️presence/")): continue
             text = open(path, encoding="utf-8").read()
@@ -89,7 +132,11 @@ for home, manifests in sorted(plugins.items()):
                 if public:
                     head = text[max(0, m.start() - 600):m.end()]
                     snap = re.findall(r"#\[mutations\([^\]]*?snapshot\s*=\s*([\w:]+)", head)
-                    snapshot = structs.get(snap[-1].split("::")[-1], "_") if snap else "_"
+                    name = snap[-1].split("::")[-1] if snap else None
+                    homes = structs.get(name, []) if name else []
+                    shared = lambda home: len([1 for a, b in zip(home, mp) if a == b]) if all(a == b for a, b in zip(home, mp[:len(home)])) else -1
+                    best = max(homes, key=lambda home: (sum(1 for a, b in zip(home, mp) if a == b), -len(home)), default=None)
+                    snapshot = "::".join([c["name"].replace("-", "_")] + best + [name]) if best is not None else "_"
                     if snapshot == "_": problems.append(f"snapshot of {m.group(1)} not located")
                     aggregates.append((c["name"], "::".join([c["name"].replace("-", "_")] + mp + [m.group(1)]), snapshot))
                 else:
@@ -124,7 +171,11 @@ semio-framework-os-kernel = {{ path = "{kernel}" }}
 pack = {{ path = "{pack}", package = "semio-framework-pack" }}
 {deps}
 ''')
-    coords = sorted({(r["artifact"], r["standard"], r["subset"], r["owner"]) for r in manifests})
+    coords = sorted({(r["artifact"], r["standard"], r["subset"], leaf_region(r)) for r in manifests})
+    reexports = {(r["artifact"], r["standard"], r["subset"]) for r in manifests if reexported_region(r) is not None}
+    shared = {o for o in {c[3] for c in coords} if sum(1 for c in coords if c[3] == o and c[:3] not in reexports) > 1}
+    pascal = lambda slug: "".join(part.capitalize() for part in slug.split("-"))
+    coords = [(a, s_, u, o, pascal(u) if o in shared else "") for a, s_, u, o in coords]
     aggs = sorted(set(aggregates))
     open(bridge + "/🦀️.rs", "w", encoding="utf-8").write(f'''//! 🏭️ Production mutation bridge for `{home}`.
 //!
@@ -137,40 +188,23 @@ pack = {{ path = "{pack}", package = "semio-framework-pack" }}
 
 extern crate semio_framework_os_kernel as protocol;
 
-use protocol::{{Mutation, MutationLeafDescriptor, MutationOutcomeClass}};
+use protocol::{{Mutation, MutationLeafDescriptor}};
 
 /// 🧬️ One aggregate's descriptors, for the snapshot its `#[mutations(snapshot = …)]` names.
 fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {{
     M::DESCRIPTORS
 }}
 
-/// 🧭️ Every mutation aggregate the artifact crates below mount.
-const AGGREGATES: &[fn() -> &'static [MutationLeafDescriptor]] = &[
-{chr(10).join(f"    descriptors::<{snap}, {p}>," for _, p, snap in aggs)}
+/// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
+const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
+{chr(10).join(f'    ("{p.split("::")[-1]}", descriptors::<{snap}, {p}>),' for _, p, snap in aggs)}
 ];
 
-/// 🗺️ Manifest coordinate → the owner directory whose leaves it measures.
-const COORDINATES: &[(&str, &str, &str, &str)] = &[
-{chr(10).join(f'    ("{a}", "{s}", "{u}", "{o}"),' for a, s, u, o in coords)}
+/// 🗺️ Manifest coordinate → the owner directory whose leaves it measures, and, where several subsets share one
+/// owner directory, the aggregate type-name prefix that is that subset's dispatch.
+const COORDINATES: &[(&str, &str, &str, &str, &str)] = &[
+{chr(10).join(f'    ("{a}", "{s_}", "{u}", "{o}", "{pre}"),' for a, s_, u, o, pre in coords)}
 ];
-
-/// 🎯️ Production outcome severities as protocol outcome classes: `Info`/`Warning` ride on an applied outcome.
-fn protocol_outcomes(classes: &[MutationOutcomeClass]) -> Vec<&'static str> {{
-    let mut seen: Vec<&'static str> = Vec::new();
-    for outcome in classes {{
-        let mapped = match outcome {{
-            MutationOutcomeClass::Applied | MutationOutcomeClass::Info | MutationOutcomeClass::Warning => "applied",
-            MutationOutcomeClass::Error | MutationOutcomeClass::Fatal => "rejected",
-        }};
-        if !seen.contains(&mapped) {{
-            seen.push(mapped);
-        }}
-    }}
-    if seen.is_empty() {{
-        seen.push("applied");
-    }}
-    seen
-}}
 
 fn main() {{
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -178,22 +212,22 @@ fn main() {{
         eprintln!("usage: list-mutations <artifact> <standard> <subset>");
         std::process::exit(2);
     }};
-    let Some((_, _, _, owner)) = COORDINATES.iter().find(|(a, s, u, _)| command == "list-mutations" && a == artifact && s == standard && u == subset) else {{
+    let Some((_, _, _, owner, prefix)) = COORDINATES.iter().find(|(a, s, u, _, _)| command == "list-mutations" && a == artifact && s == standard && u == subset) else {{
         eprintln!("this bridge does not answer {{command}} {{artifact}} {{standard}} {{subset}}");
         std::process::exit(2);
     }};
-    let prefix = format!("{{owner}}/");
+    let owner_prefix = format!("{{owner}}/");
     let mut rows: Vec<pack::JsonValue> = Vec::new();
     let mut seen: Vec<&str> = Vec::new();
-    for descriptor in AGGREGATES.iter().flat_map(|aggregate| aggregate().iter()) {{
-        if !descriptor.owner.starts_with(&prefix) || seen.contains(&descriptor.semantic_kind) {{
+    for descriptor in AGGREGATES.iter().filter(|(name, _)| name.starts_with(prefix)).flat_map(|(_, aggregate)| aggregate().iter()) {{
+        if !descriptor.owner.starts_with(&owner_prefix) || seen.contains(&descriptor.semantic_kind) {{
             continue;
         }}
         seen.push(descriptor.semantic_kind);
         rows.push(pack::json_object([
             ("id".to_string(), pack::JsonValue::from(descriptor.semantic_kind)),
             ("variant".to_string(), pack::JsonValue::from(descriptor.aggregate_variant)),
-            ("outcomes".to_string(), pack::json_array(protocol_outcomes(descriptor.outcome_classes).into_iter().map(pack::JsonValue::from))),
+            ("outcomes".to_string(), pack::json_array(descriptor.outcome_classes.iter().map(|class| pack::JsonValue::from(class.as_str())))),
         ]));
     }}
     let out = pack::json_object([

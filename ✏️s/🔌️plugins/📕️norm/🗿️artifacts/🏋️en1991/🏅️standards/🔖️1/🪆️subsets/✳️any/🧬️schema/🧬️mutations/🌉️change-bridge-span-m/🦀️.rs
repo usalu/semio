@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeBridgeSpan
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change bridge span to {:?}", self.new_bridge_span_m), &format!("Brückenspannweite auf {:?} ändern", self.new_bridge_span_m))
+        protocol::LocalizedLabel::native(&format!("Change bridge span to {:?}", self.new_bridge_span_m), &format!("Stützweite der Brücke auf {:?} ändern", self.new_bridge_span_m))
     }
 }
 //#endregion 🔖️Payload

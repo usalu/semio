@@ -1,6 +1,7 @@
 {
   "schema": "semio.hub.compiled-stdio-dependencies/v1",
-  "publicationFiles": ["component.wasm", "descriptor.semio", "closed-actor.mjs", "stdio-component.wasm", "stdio-descriptor.semio", "trusted-catalog.json"],
+  "publicationFiles": ["component.wasm", "descriptor.semio", "closed-actor.mjs", "plugin-module-gis.json", "stdio-component.wasm", "stdio-descriptor.semio", "plugin-module-stdio.json", "trusted-catalog.json"],
+  "publicationDirectories": ["plugin-modules"],
   "descriptorPreviewCases": [
     { "id": "first-selected-descriptor-invalid", "packageIndex": 1, "previews": [] },
     { "id": "second-selected-descriptor-invalid", "packageIndex": 0, "previews": [] }

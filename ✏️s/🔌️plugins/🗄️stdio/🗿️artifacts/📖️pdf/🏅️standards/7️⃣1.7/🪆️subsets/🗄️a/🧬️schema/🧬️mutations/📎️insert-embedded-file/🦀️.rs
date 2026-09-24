@@ -28,7 +28,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for InsertEmbeddedFile {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Insert embedded file \"{}\"", self.file_name), &format!("eingebettete Datei \"{}\" einfügen", self.file_name))
+        protocol::LocalizedLabel::native(&format!("Insert embedded file \"{}\"", self.file_name), &format!("Eingebettete Datei \"{}\" einfügen", self.file_name))
     }
 
     fn target(&self) -> Vec<String> {

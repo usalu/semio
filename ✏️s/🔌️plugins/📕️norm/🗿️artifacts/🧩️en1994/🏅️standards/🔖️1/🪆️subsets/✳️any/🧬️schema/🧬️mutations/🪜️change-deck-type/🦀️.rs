@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeDeckType {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change deck type to \"{}\"", self.new_deck_type), &format!("Decktyp auf \"{}\" ändern", self.new_deck_type))
+        protocol::LocalizedLabel::native(&format!("Change deck type to \"{}\"", self.new_deck_type), &format!("Deckentyp auf \"{}\" ändern", self.new_deck_type))
     }
 }
 //#endregion 🔖️Payload

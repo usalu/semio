@@ -30,7 +30,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEmbeddedFile {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove embedded file \"{}\"", self.file_name), &format!("eingebettete Datei \"{}\" entfernen", self.file_name))
+        protocol::LocalizedLabel::native(&format!("Remove embedded file \"{}\"", self.file_name), &format!("Eingebettete Datei \"{}\" entfernen", self.file_name))
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,0 +1,3 @@
+2026-09-25T05:36:27.785Z starting port=8080 data=/Users/ueli/Documents/semio/.tmp-ticket/wp-u5/hub-8080 bin=/Users/ueli/Documents/semio/.tmp-ticket/wp-u5/bin/os-hub
+2026-09-25T05:36:31.708Z SPAWNED hold=71359 hub=71366 port=8080 runId=c7d0a9257ce869510976123c382ac0c6
+2026-09-25T05:36:31.904Z HOLD origin=http://127.0.0.1:8080 hub=71366 status=not-ready

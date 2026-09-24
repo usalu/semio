@@ -1,0 +1,4 @@
+{
+  "operation": "setCamera",
+  "cameraJson": "{\"x\":120,\"y\":-40,\"zoom\":3}"
+}

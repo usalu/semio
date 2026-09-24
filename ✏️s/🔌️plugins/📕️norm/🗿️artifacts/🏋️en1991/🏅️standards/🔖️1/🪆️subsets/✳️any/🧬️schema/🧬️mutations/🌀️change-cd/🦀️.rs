@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeCD {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change dynamic factor c_d to {:?}", self.new_c_d), &format!("Dynamikfaktorc_d auf {:?} ändern", self.new_c_d))
+        protocol::LocalizedLabel::native(&format!("Change dynamic factor c_d to {:?}", self.new_c_d), &format!("Dynamischen Faktor c_d auf {:?} ändern", self.new_c_d))
     }
 }
 //#endregion 🔖️Payload

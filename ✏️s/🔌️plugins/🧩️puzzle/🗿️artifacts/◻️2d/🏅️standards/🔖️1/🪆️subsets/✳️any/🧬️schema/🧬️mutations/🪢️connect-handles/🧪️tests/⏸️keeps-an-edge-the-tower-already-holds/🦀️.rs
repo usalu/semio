@@ -35,12 +35,12 @@ fn applies_to_committed_after() {
     assert_eq!(expected_after(), before(), "connect-handles/keeps-an-edge-the-tower-already-holds: a no-op vector's two committed snapshots must be identical");
 }
 
-/// 🎯️ The declared warning is exactly what `connect-handles` emits: an APPLIED outcome carrying a
+/// 🎯️ The declared warning is exactly what `connect-handles` emits: a NO-OP outcome carrying a
 /// warning-level `mutation.no-op`, never a rejection.
 #[test]
 fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "connect-handles/keeps-an-edge-the-tower-already-holds declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "connect-handles/keeps-an-edge-the-tower-already-holds declares a no-op outcome");
     let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a no-op vector carries a diagnostic");
     assert_eq!(message.code.0, "mutation.no-op", "connect-handles/keeps-an-edge-the-tower-already-holds: a duplicate id is reported as a no-op, never as an error");

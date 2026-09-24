@@ -2712,7 +2712,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -2739,7 +2739,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -2757,7 +2758,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -2784,7 +2785,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -2802,7 +2804,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -2829,7 +2831,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -2906,14 +2909,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -5498,8 +5501,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "99192c6e7e532242f4c5144bd0f7b32a804bf6bb6908669f84a4e16184777eb3",
-    "coreWasmSha256": "d6d3942498841723979c4b245de568f8678c6b6615fcad0aab1c8947622e93db",
-    "descriptorSha256": "a81ad9257001ed77f8a0a28be33a67a739ccb6d7dde29591be102aac89589f11"
+    "wasmSha256": "05608383a06182b06ec051af7dd216e9641b6ee70d642ffe1357167807316ec8",
+    "coreWasmSha256": "931763c5887f873f5fc8bb972528dc417c0bac8433bc12762fe4c72078bfd58f",
+    "descriptorSha256": "da28f668a0fc0ad90b3793525822278e55c11b7ba54e013a0eec7eff0f30e263"
   }
 }

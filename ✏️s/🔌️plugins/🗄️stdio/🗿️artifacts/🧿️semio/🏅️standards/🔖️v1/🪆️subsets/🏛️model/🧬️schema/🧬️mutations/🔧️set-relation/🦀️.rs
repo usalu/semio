@@ -27,7 +27,7 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for SetRelat
         agg_inverse(&SemioModelMutation::SetRelation(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-relation", "Relation setzen")
+        protocol::LocalizedLabel::native("Set relation", "Relation setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

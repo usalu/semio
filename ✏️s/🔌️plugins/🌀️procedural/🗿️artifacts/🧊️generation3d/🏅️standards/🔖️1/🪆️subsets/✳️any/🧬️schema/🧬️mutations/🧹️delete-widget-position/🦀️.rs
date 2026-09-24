@@ -29,7 +29,7 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Dele
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete widget position \"{}\"", self.id), &format!("Widgetposition \"{}\" löschen", self.id))
+        protocol::LocalizedLabel::native(&format!("Delete widget position \"{}\"", self.id), &format!("Widget-Position \"{}\" löschen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

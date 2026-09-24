@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameAccessRule {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename access rule to \"{}\"", self.new_name), &format!("Zugangregel in \"{}\" umbenennen", self.new_name))
+        protocol::LocalizedLabel::native(&format!("Rename access rule to \"{}\"", self.new_name), &format!("Zugangsregel in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

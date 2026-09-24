@@ -28,7 +28,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetSmoothingGroups {
         agg_inverse(&ObjMutation::SetSmoothingGroups(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-smoothing-groups", "Glättungsgruppen setzen")
+        protocol::LocalizedLabel::native("Set smoothing groups", "Glättungsgruppen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

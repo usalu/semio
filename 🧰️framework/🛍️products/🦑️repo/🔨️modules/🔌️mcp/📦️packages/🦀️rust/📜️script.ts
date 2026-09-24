@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** ⚙️ Builds/tests the `semio-framework-repo-mcp` protocol crate; the `repo` stdio server binary lives in `⌨️cli` because it carries the production repository. */
 import { join } from "node:path";
+import { cargoTargetDirectory } from "../../../📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const CRATE = "semio-framework-repo-mcp";
@@ -27,7 +28,7 @@ class RunScript extends BundleScript {
     const environment = devToolingEnv();
     const profile = segments[0]?.trim();
     if (profile) environment.SEMIO_REPO_MCP_CLIENT = profile;
-    process.exit(runCmdStatus(join(this.repoRoot, "target", "debug", BINARY), [], { cwd: this.repoRoot, env: environment }));
+    process.exit(runCmdStatus(join(cargoTargetDirectory(this.repoRoot), "debug", BINARY), [], { cwd: this.repoRoot, env: environment }));
   }
 }
 

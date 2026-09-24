@@ -20,7 +20,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeRhInt {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change rh int to {}", self.new_rh_int), &format!("Rhint auf {} ändern", self.new_rh_int))
+        protocol::LocalizedLabel::native(&format!("Change indoor relative humidity to {}", self.new_rh_int), &format!("Relative Raumluftfeuchte auf {} ändern", self.new_rh_int))
     }
 }
 //#endregion 🔖️Payload

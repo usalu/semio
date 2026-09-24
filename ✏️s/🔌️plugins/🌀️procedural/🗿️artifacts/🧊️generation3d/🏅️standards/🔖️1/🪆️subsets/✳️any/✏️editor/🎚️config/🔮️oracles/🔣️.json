@@ -1,0 +1,792 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The config state lane of `s.procedural.generation3d`'s editor (✏️editor/🎚️config): its mutation vocabulary `Generation3dConfigMutation` over `Generation3dConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-procedural-generation3d-1-any-editor-config` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "procedural-generation3d-1-any-editor-config-state-lane-semantics",
+      "capabilities": [
+        "procedural-generation3d-1-any-editor-config-mutate"
+      ],
+      "rationale": "`Generation3dConfigMutation` is the config state lane of `s.procedural.generation3d`'s ✏️editor/🎚️config surface: it holds the LOD tier, the preview shading mode, the flow-graph canvas camera, the 3d preview camera, the sun and the selected generation. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-snapshot`, `set-sun`, `set-show-mode`, `set-preview-camera`, `set-lod-mode`, `set-camera`, `set-selected-generation`) changes exactly its own part of `Generation3dConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A persisted key-value store for desktop settings; it has no model of this surface's typed config record, its per-kind setters, their no-op guard or the inverse each kind computes."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it defines no typed config mutations and neither their no-op nor their inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "`Generation3dConfig` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "procedural-generation3d-1-any-editor-config",
+      "capability": "procedural-generation3d-1-any-editor-config-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-snapshot",
+        "set-sun",
+        "set-show-mode",
+        "set-preview-camera",
+        "set-lod-mode",
+        "set-camera",
+        "set-selected-generation"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.procedural.generation3d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎚️config",
+      "mutations": [
+        {
+          "id": "set-snapshot",
+          "capability": "procedural-generation3d-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-generation3d-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-sun",
+          "capability": "procedural-generation3d-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-sun",
+            "bridgeVersion": 1,
+            "variant": "SetSun"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-generation3d-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-show-mode",
+          "capability": "procedural-generation3d-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-show-mode",
+            "bridgeVersion": 1,
+            "variant": "SetShowMode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-generation3d-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-preview-camera",
+          "capability": "procedural-generation3d-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-preview-camera",
+            "bridgeVersion": 1,
+            "variant": "SetPreviewCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-generation3d-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-lod-mode",
+          "capability": "procedural-generation3d-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-lod-mode",
+            "bridgeVersion": 1,
+            "variant": "SetLodMode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-generation3d-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-camera",
+          "capability": "procedural-generation3d-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-camera",
+            "bridgeVersion": 1,
+            "variant": "SetCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-generation3d-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-selected-generation",
+          "capability": "procedural-generation3d-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-selected-generation",
+            "bridgeVersion": 1,
+            "variant": "SetSelectedGeneration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-generation3d-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/⚙️set-snapshot/✅️set-snapshot-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:be3d23f29d95eb23b4692a1e547e5efa0edb7b6eb761ee70171099eb034390cb",
+          "bytes": 350
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/⚙️set-snapshot/✅️set-snapshot-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c19041d6dda5f69df81086b6fbfc3e664c58c2a5b58ccd33ad30207487abfee9",
+          "bytes": 497
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/⚙️set-snapshot/✅️set-snapshot-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a43190764d46af62244f26c3585b60edb9ad562f263ac0cedd9c94aa52c515c3",
+          "bytes": 364
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/⚙️set-snapshot/✅️set-snapshot-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a43190764d46af62244f26c3585b60edb9ad562f263ac0cedd9c94aa52c515c3",
+          "bytes": 364
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/⚙️set-snapshot/✅️set-snapshot-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Restoring a saved config replaces every field at once."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-sun-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-sun",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🌞️set-sun/✅️set-sun-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:be3d23f29d95eb23b4692a1e547e5efa0edb7b6eb761ee70171099eb034390cb",
+          "bytes": 350
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🌞️set-sun/✅️set-sun-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:349501ccd39bb920a89d61854c7b40841b6403d562b7d44028252eb567a4c1f0",
+          "bytes": 70
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🌞️set-sun/✅️set-sun-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:11e962598d1eefd293f7c051fde4006abcba54061e568fb690ae74976564eb87",
+          "bytes": 349
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🌞️set-sun/✅️set-sun-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:11e962598d1eefd293f7c051fde4006abcba54061e568fb690ae74976564eb87",
+          "bytes": 349
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🌞️set-sun/✅️set-sun-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Moving the sun replaces its JSON."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-show-mode-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-show-mode",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/👁️set-show-mode/✅️set-show-mode-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:be3d23f29d95eb23b4692a1e547e5efa0edb7b6eb761ee70171099eb034390cb",
+          "bytes": 350
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/👁️set-show-mode/✅️set-show-mode-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b00c7565159bcb057ac3c43d0b07a02244dbad5c5fdd0ea8c16ab499084e8c03",
+          "bytes": 52
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/👁️set-show-mode/✅️set-show-mode-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e386e9ec334ff1da3779fb737e6c9d8d3145a5ead8dc45fa5cf60a08aff847a9",
+          "bytes": 353
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/👁️set-show-mode/✅️set-show-mode-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e386e9ec334ff1da3779fb737e6c9d8d3145a5ead8dc45fa5cf60a08aff847a9",
+          "bytes": 353
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/👁️set-show-mode/✅️set-show-mode-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Switching to wireframe replaces the preview shading mode."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-preview-camera-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-preview-camera",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set-preview-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:be3d23f29d95eb23b4692a1e547e5efa0edb7b6eb761ee70171099eb034390cb",
+          "bytes": 350
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set-preview-camera-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e8d62c20abf6cb20cc3b0f5301a4e1105c07f58c8b32450269505f6708878cf4",
+          "bytes": 205
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set-preview-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2d535c6c201676477f86b6b2c2c94006151593fc8842436b0b84c7b3efcef756",
+          "bytes": 351
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set-preview-camera-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2d535c6c201676477f86b6b2c2c94006151593fc8842436b0b84c7b3efcef756",
+          "bytes": 351
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set-preview-camera-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Orbiting the 3d preview replaces its camera."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-lod-mode-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-lod-mode",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔬️set-lod-mode/✅️set-lod-mode-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:be3d23f29d95eb23b4692a1e547e5efa0edb7b6eb761ee70171099eb034390cb",
+          "bytes": 350
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🔬️set-lod-mode/✅️set-lod-mode-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:054fabe6173602355684fe989f9c7459074978ae0ed76adb84a0a01055982ed6",
+          "bytes": 46
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔬️set-lod-mode/✅️set-lod-mode-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:34c9376f27682afe1d06ada4042416e970a25713400ee940ee72c4efe8ca18e4",
+          "bytes": 348
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🔬️set-lod-mode/✅️set-lod-mode-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:34c9376f27682afe1d06ada4042416e970a25713400ee940ee72c4efe8ca18e4",
+          "bytes": 348
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🔬️set-lod-mode/✅️set-lod-mode-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Choosing the fine tessellation replaces the LOD tier."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-camera-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-camera",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🕸️set-camera/✅️set-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:be3d23f29d95eb23b4692a1e547e5efa0edb7b6eb761ee70171099eb034390cb",
+          "bytes": 350
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🕸️set-camera/✅️set-camera-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fc75f4c8f33d7e4f9f087106d4ce7f6f48f709f83fb15f93d024260637bddbf7",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🕸️set-camera/✅️set-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:99848281b466bba86c78741e8544e5c653e951b7367d4e678f69703d09918591",
+          "bytes": 353
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🕸️set-camera/✅️set-camera-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:99848281b466bba86c78741e8544e5c653e951b7367d4e678f69703d09918591",
+          "bytes": 353
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🕸️set-camera/✅️set-camera-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Panning the flow-graph canvas replaces its camera."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-selected-generation-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-selected-generation",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:be3d23f29d95eb23b4692a1e547e5efa0edb7b6eb761ee70171099eb034390cb",
+          "bytes": 350
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:41f45ca26538c7462a1029074ead7b818067b78a8f6117bb4ccc05a4d51cf81a",
+          "bytes": 80
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:52ef07b2c36b5f155da556a9f0c190c4b061981b219b56d337e997fbd4c237de",
+          "bytes": 360
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:52ef07b2c36b5f155da556a9f0c190c4b061981b219b56d337e997fbd4c237de",
+          "bytes": 360
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🧬️set-selected-generation/✅️set-selected-generation-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Selecting the second generation records its id."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-preview-camera-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-preview-camera",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📷️set-preview-camera/🟰️set-preview-camera-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2d535c6c201676477f86b6b2c2c94006151593fc8842436b0b84c7b3efcef756",
+          "bytes": 351
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📷️set-preview-camera/🟰️set-preview-camera-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e8d62c20abf6cb20cc3b0f5301a4e1105c07f58c8b32450269505f6708878cf4",
+          "bytes": 205
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📷️set-preview-camera/🟰️set-preview-camera-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2d535c6c201676477f86b6b2c2c94006151593fc8842436b0b84c7b3efcef756",
+          "bytes": 351
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📷️set-preview-camera/🟰️set-preview-camera-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2d535c6c201676477f86b6b2c2c94006151593fc8842436b0b84c7b3efcef756",
+          "bytes": 351
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📷️set-preview-camera/🟰️set-preview-camera-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Setting the camera to the one the config already holds is the leaf's warned no-op."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-camera-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.procedural.generation3d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-camera",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🕸️set-camera/🟰️set-camera-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:99848281b466bba86c78741e8544e5c653e951b7367d4e678f69703d09918591",
+          "bytes": 353
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🕸️set-camera/🟰️set-camera-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fc75f4c8f33d7e4f9f087106d4ce7f6f48f709f83fb15f93d024260637bddbf7",
+          "bytes": 100
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🕸️set-camera/🟰️set-camera-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:99848281b466bba86c78741e8544e5c653e951b7367d4e678f69703d09918591",
+          "bytes": 353
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🕸️set-camera/🟰️set-camera-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:99848281b466bba86c78741e8544e5c653e951b7367d4e678f69703d09918591",
+          "bytes": 353
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🕸️set-camera/🟰️set-camera-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Setting the camera to the one the config already holds is the leaf's warned no-op."
+    }
+  ]
+}

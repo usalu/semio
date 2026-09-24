@@ -78,7 +78,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeChild
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Bind Node Child", "Knotenkind binden")
+        protocol::LocalizedLabel::native("Bind Node Child", "Kindknoten binden")
     }
 
     fn target(&self) -> Vec<String> {

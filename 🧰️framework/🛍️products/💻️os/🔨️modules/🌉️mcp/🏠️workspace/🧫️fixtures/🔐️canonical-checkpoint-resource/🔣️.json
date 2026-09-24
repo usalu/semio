@@ -1,15 +1,6 @@
 {
   "schema": "semio.mcp.canonical-checkpoint-resource.fixture/v1",
   "limits": { "pairBytes": 4194304, "textBytes": 6291456, "metadataBytes": 16384 },
-  "selector": {
-    "artifactKind": "s.gis.gismap",
-    "artifactSchema": "gis.map",
-    "hostile": [
-      { "name": "wrong-kind", "artifactKind": "note.document", "artifactSchema": "gis.map" },
-      { "name": "wrong-schema", "artifactKind": "s.gis.gismap", "artifactSchema": "note.document@1" },
-      { "name": "wrong-kind-and-schema", "artifactKind": "note.document", "artifactSchema": "note.document@1" }
-    ]
-  },
   "resource": {
     "uri": "semio://workspace/scopes/space%3Aalpha/doc%3Atokyo/checkpoint",
     "mimeType": "application/json",

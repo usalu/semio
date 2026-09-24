@@ -31,7 +31,7 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for ConnectSlots {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Connect Slots", "Plätze verbinden")
+        protocol::LocalizedLabel::native("Connect Slots", "Slots verbinden")
     }
 }
 //#endregion 🔖️ConnectSlots

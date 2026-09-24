@@ -163,8 +163,10 @@ export async function waitFor(assertion: () => void | Promise<void>, timeoutMs =
   await testingWaitFor(assertion, { timeout: timeoutMs });
 }
 
-/** ⚛️ Flushes one synchronous UI update transaction. */
-export function act(update: () => void): void {
-  testingAct(update);
+/** ⚛️ Flushes one UI update transaction; an async update resolves once its awaited work and every update it scheduled have committed. */
+export function act(update: () => Promise<void>): Promise<void>;
+export function act(update: () => void): void;
+export function act(update: () => void | Promise<void>): void | Promise<void> {
+  return testingAct(update);
 }
 //#endregion 🔌️TestingLibraryAdapter

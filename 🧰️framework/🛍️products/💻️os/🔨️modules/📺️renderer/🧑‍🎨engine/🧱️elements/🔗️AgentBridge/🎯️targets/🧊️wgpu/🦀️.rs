@@ -171,6 +171,34 @@ pub enum ApprovalDecision {
     Session,
 }
 
+/// 🪦️ Why the gateway withdrew an approval request — the wgpu twin of `🌉️mcp/🧵️bridge`'s
+/// `ApprovalWithdrawal`, same tags.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ApprovalWithdrawal {
+    Cancelled,
+    TimedOut,
+    Superseded,
+}
+
+impl ApprovalWithdrawal {
+    pub fn to_tag(self) -> u8 {
+        match self {
+            ApprovalWithdrawal::Cancelled => 0,
+            ApprovalWithdrawal::TimedOut => 1,
+            ApprovalWithdrawal::Superseded => 2,
+        }
+    }
+
+    pub fn from_tag(tag: u8) -> Result<Self, BridgeFrameFault> {
+        match tag {
+            0 => Ok(ApprovalWithdrawal::Cancelled),
+            1 => Ok(ApprovalWithdrawal::TimedOut),
+            2 => Ok(ApprovalWithdrawal::Superseded),
+            other => Err(BridgeFrameFault::UnknownTag(other)),
+        }
+    }
+}
+
 impl ApprovalDecision {
     pub fn to_tag(self) -> u8 {
         match self {
@@ -329,7 +357,7 @@ mod wire {
 //#endregion 🔖️Wire
 
 //#region 🔖️GatewayToShell
-/// 📤️ Gateway→Shell frames, tags `0..9` in SSOT declaration order.
+/// 📤️ Gateway→Shell frames, tags `0..11` in SSOT declaration order.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GatewayToShell {
     Welcome {
@@ -391,6 +419,12 @@ pub enum GatewayToShell {
         text: String,
         complete: bool,
     },
+    /// 🪦️ The approval request is withdrawn — its call was cancelled, it timed out, or a newer shell
+    /// now carries it — so this shell retires the affordance and says why.
+    ApprovalWithdrawn {
+        approval_id: String,
+        reason: ApprovalWithdrawal,
+    },
 }
 
 impl GatewayToShell {
@@ -408,6 +442,7 @@ impl GatewayToShell {
             8 => GatewayToShell::AgentToolCall { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, arguments: reader.read_string()? },
             9 => GatewayToShell::AgentToolResult { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, ok: reader.read_bool()?, summary: reader.read_string()? },
             10 => GatewayToShell::AgentReply { reply_id: reader.read_string()?, in_reply_to: reader.read_option_string()?, text: reader.read_string()?, complete: reader.read_bool()? },
+            11 => GatewayToShell::ApprovalWithdrawn { approval_id: reader.read_string()?, reason: ApprovalWithdrawal::from_tag(reader.read_u8()?)? },
             other => return Err(BridgeFrameFault::UnknownTag(other)),
         };
         reader.finish()?;
@@ -477,6 +512,11 @@ impl GatewayToShell {
                 wire::write_option_string(&mut buf, in_reply_to);
                 wire::write_string(&mut buf, text);
                 wire::write_bool(&mut buf, *complete);
+            }
+            GatewayToShell::ApprovalWithdrawn { approval_id, reason } => {
+                wire::write_u8(&mut buf, 11);
+                wire::write_string(&mut buf, approval_id);
+                wire::write_u8(&mut buf, reason.to_tag());
             }
         }
         buf
@@ -627,6 +667,8 @@ pub enum AgentToolCallState {
 pub enum AgentApprovalState {
     Pending,
     Resolved,
+    /// 🪦️ The gateway took the request back before anyone here decided it.
+    Withdrawn(ApprovalWithdrawal),
 }
 
 /// 💬️ One entry of the live agent conversation, exactly as the bridge reported it — the wgpu twin of
@@ -790,6 +832,14 @@ impl AgentBridgeState {
             GatewayToShell::ApprovalResolved { approval_id, decision } => {
                 self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
                 self.resolve_conversation_approval(&approval_id, decision);
+            }
+            GatewayToShell::ApprovalWithdrawn { approval_id, reason } => {
+                self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
+                if let Some(AgentConversationEntry::Approval { state, .. }) = self.conversation.iter_mut().find(|entry| entry.id() == approval_id) {
+                    if matches!(state, AgentApprovalState::Pending) {
+                        *state = AgentApprovalState::Withdrawn(reason);
+                    }
+                }
             }
             GatewayToShell::AgentPresence { active, label, invocation_id } => {
                 self.presence = AgentBridgePresence { active, label, invocation_id };

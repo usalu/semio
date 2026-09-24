@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Remove
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove plant equipment {} from plant loop {}", self.equipment_id.0, self.id.0), &format!("Anlagenanlage {} aus Anlagenkreis {} entfernen", self.equipment_id.0, self.id.0))
+        protocol::LocalizedLabel::native(&format!("Remove plant equipment {} from plant loop {}", self.equipment_id.0, self.id.0), &format!("Anlagenkomponente {} aus Anlagenkreislauf {} entfernen", self.equipment_id.0, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

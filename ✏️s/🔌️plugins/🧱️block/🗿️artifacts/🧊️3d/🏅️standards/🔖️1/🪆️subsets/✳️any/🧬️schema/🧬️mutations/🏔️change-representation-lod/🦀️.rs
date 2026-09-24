@@ -32,7 +32,7 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeRepresen
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change representation \"{}\" LOD", self.id), &format!("Repräsentation \"{}\" LOD ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change representation \"{}\" LOD", self.id), &format!("Detailstufe von Repräsentation \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1258,11 +1258,13 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .action_interactive_job("clearTiles", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
             .action_interactive_job("resetGrid", InteractiveJobClassification::Migrated)
+            .action_destructive("resetGrid")
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("noMutation", InteractiveJobClassification::Migrated)
             .action_interactive_job("copyPrompt", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportVideoFromDeck", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_destructive("exportVideoFromDeck")
             // 🕹️ The framework-owned "tiles" interaction domain (ticket
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the document panel
             // tree (`.interaction_domain("tiles")`) and the tile-editor canvas's pick selection;

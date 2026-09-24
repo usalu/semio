@@ -282,6 +282,8 @@ impl UiTypedRetire for Component {
         ImageProps::DEPTH,
         SurfaceProps::DEPTH,
         ExtensionProps::DEPTH,
+        TableProps::DEPTH,
+        TableRowProps::DEPTH,
     ]);
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         match self {
@@ -304,6 +306,8 @@ impl UiTypedRetire for Component {
             Self::Image(field) => field.retire_typed(path, value, bytes),
             Self::Surface(field) => field.retire_typed(path, value, bytes),
             Self::Extension(field) => field.retire_typed(path, value, bytes),
+            Self::Table(field) => field.retire_typed(path, value, bytes),
+            Self::TableRow(field) => field.retire_typed(path, value, bytes),
         }
     }
 }

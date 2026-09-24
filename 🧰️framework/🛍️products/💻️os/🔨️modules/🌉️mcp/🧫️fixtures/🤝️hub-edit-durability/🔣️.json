@@ -1,7 +1,7 @@
 {
   "schema": "semio.os-mcp.hub-edit-durability/v1",
   "version": 1,
-  "description": "Every accepted edit on a hub document is durable collaboration state: it is relayed to live peers, advances the ledger head, reaches a late joiner's catch-up and survives a hub restart. Two agent lanes run the SAME gesture in fresh processes, so a replica identity collision (a replayed id acknowledged without a commit) turns the head row red.",
+  "description": "Every accepted edit on a hub document is durable collaboration state: it is relayed to live peers, advances the ledger head, reaches a late joiner's catch-up and survives a hub restart. Every agent lane is a visible principal: the human's roster lists it under its delegation label with the principal kind the hub authenticated (agent). Two agent lanes run the SAME gesture in fresh processes, so a replica identity collision (a replayed id acknowledged without a commit) turns the head row red.",
   "document": { "schemaPrefix": "note" },
   "gesture": { "capabilitySuffix": ".addBlock", "input": { "kind": "text" } },
   "lanes": [
@@ -15,7 +15,8 @@
     "distinctMutationIds": 3,
     "lateJoinerCatchUpContainsEveryLane": true,
     "restartPreservesHead": true,
-    "restartCatchUpContainsEveryLane": true
+    "restartCatchUpContainsEveryLane": true,
+    "agentLanesAppearAsAgentPrincipals": true
   },
-  "budgets": { "creationMs": 1800000, "relayMs": 60000, "headMs": 30000, "catchUpMs": 20000, "readinessMs": 600000 }
+  "budgets": { "creationMs": 1800000, "relayMs": 60000, "headMs": 30000, "catchUpMs": 20000, "presenceMs": 30000, "readinessMs": 600000 }
 }

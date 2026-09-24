@@ -29,7 +29,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveShading {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove shading {}", self.id), &format!("Verschattung {} entfernen", self.id))
+        protocol::LocalizedLabel::native(&format!("Remove shading {}", self.id), &format!("Schattierung {} entfernen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

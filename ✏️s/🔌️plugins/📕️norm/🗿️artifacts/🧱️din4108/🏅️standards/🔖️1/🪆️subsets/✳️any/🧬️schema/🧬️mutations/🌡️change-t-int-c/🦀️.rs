@@ -20,7 +20,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeTIntC {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change t int c to {}", self.new_t_int_c), &format!("Tintc auf {} ändern", self.new_t_int_c))
+        protocol::LocalizedLabel::native(&format!("Change indoor temperature [°C] to {}", self.new_t_int_c), &format!("Raumlufttemperatur [°C] auf {} ändern", self.new_t_int_c))
     }
 }
 //#endregion 🔖️Payload

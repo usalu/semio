@@ -21,7 +21,7 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for ReplacePartN
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace part-number rule", "Bauteilnummer-Regel ersetzen")
+        protocol::LocalizedLabel::native("Replace part-number rule", "Artikelnummer-Regel ersetzen")
     }
 }
 //#endregion 🔖️Payload

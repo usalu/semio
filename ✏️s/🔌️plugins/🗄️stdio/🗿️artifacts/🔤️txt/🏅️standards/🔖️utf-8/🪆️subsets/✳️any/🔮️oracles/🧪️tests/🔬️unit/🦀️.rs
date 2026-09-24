@@ -90,24 +90,20 @@ fn mixed_crlf_lf_is_still_a_lossless_round_trip() {
     }
 }
 
+/// 📓️ The second real capture, a terminal log, as committed: 27,469 bytes of LF-only lines. It was
+/// captured with two embedded CRLF sequences, which git's `text=auto eol=lf` normalization rewrote on
+/// commit (fixture trees are now `-text`, so it cannot happen again). What this document still
+/// proves is that bstr and the documented rule read a real single-style log identically; the
+/// whole-document CRLF rule on mixed content is pinned by `mixed_crlf_lf_is_still_a_lossless_round_trip`
+/// and the feature's `mixed-crlf-and-bare-lf` specification vector.
 #[test]
-fn whole_document_crlf_detection_can_collapse_real_mostly_lf_content_into_few_lines() {
-    // 📓️ The real captured fixture's own shape: 27,471 bytes, 158 bare LF, only 2 genuine
-    // embedded CRLF sequences (see `../🧫️fixtures/🔤️.txt` and its
-    // provenance note in the case feature file). Because the subset's detection rule is
-    // "the whole document is CrLf iff it contains AT LEAST ONE literal `\r\n`", this real
-    // file splits into exactly 3 giant "lines" (the two `\r\n` occurrences are the only split
-    // points), each one carrying dozens of bare `\n` characters as ordinary content — a
-    // genuine, sometimes surprising consequence of a deliberately simple per-document (never
-    // per-line) policy, not a bug. Documented here rather than silently worked around: it is
-    // exactly why the exhaustive mutate-<kind>/inverse-<kind> scenarios use a real fixture
-    // with a SINGLE consistent line-ending style instead, where indexing into "line 5" means
-    // what it looks like it means.
+fn the_real_terminal_log_is_read_identically_by_bstr_and_the_documented_rule() {
     let bytes = include_bytes!("../../../🧫️fixtures/🔤️.txt");
     let body = std::str::from_utf8(bytes).expect("fixture is valid UTF-8");
     let (lines, trailing, crlf) = independent_split(body);
-    assert!(crlf, "one real \\r\\n anywhere makes the whole document CrLf under this subset's rule");
-    assert_eq!(lines.len(), 3, "only the two real \\r\\n occurrences are split points");
+    assert!(!crlf, "the committed terminal log carries no CRLF");
+    assert_eq!(lines.len(), 158, "every bare LF is a line boundary in an LF document");
+    assert_eq!(bstr_split(bytes).expect("single-style document"), (lines.clone(), trailing, crlf), "bstr reads the real log the way the format defines it");
     assert_eq!(independent_render(&lines, trailing, crlf), body, "still exactly lossless, per the carrier law");
 }
 
@@ -222,12 +218,10 @@ fn feature_example_rows() -> Vec<Json> {
 /// 170th line is empty, and `set-trailing-newline false` has no representable result there.
 const REFUSED_ON_THIS_FIXTURE: &str = "set-trailing-newline";
 
-/// 👁️ The OBSERVABILITY law, carried here because the case cannot carry it. Every kind other
-/// with the feature file's OWN parameters, has to move the real document's
-/// semantic projection — a row whose parameters address nothing (an index past the end, a value
-/// the document already has) would report as a pass while testing nothing at all. This subset's
-/// case is a recorded no-oracle one, so the runner never dispatches its oracle-phase scenarios
-/// and this unit test is the ONLY place that claim is checked today.
+/// 👁️ The OBSERVABILITY law on the reference side. Every kind, with the feature file's OWN
+/// parameters, has to move the real document's semantic projection — a row whose parameters
+/// address nothing (an index past the end, a value the document already has) would report as a
+/// pass while testing nothing at all.
 ///
 /// 🔒️ [`REFUSED_ON_THIS_FIXTURE`] is the single exception and it is asserted, not waved through:
 /// the row must be REFUSED, with a reason that names the loss, rather than quietly leaving the
@@ -326,6 +320,19 @@ fn the_carrier_law_holds_byte_for_byte_on_the_real_document() {
     assert!(!crlf, "the real fixture is LF-only");
     assert!(trailing, "the real fixture ends with a terminator");
     assert_eq!(lines.iter().filter(|line| line.is_empty()).count(), 80, "the real fixture's 80 blank lines are what the csv cross-check cannot see -- MEASURED, correcting the \"81\" the feature file and the manifest rationale both carried");
+}
+/// 📖️ The third-party reader and the subset's documented rule read the real document and every
+/// single-style shape identically, and bstr refuses a CRLF document carrying a bare LF, which the
+/// format reads as line content and bstr as a boundary.
+#[test]
+fn bstr_reads_every_single_style_document_the_way_the_format_defines_it() {
+    let real = std::str::from_utf8(REAL_FIXTURE).expect("the real fixture is UTF-8");
+    for body in [real, "a\nb\nc\n", "a\r\nb\r\nc", "", "\n", "only one line", "x\r\n\r\n"] {
+        assert_eq!(bstr_split(body.as_bytes()).expect("single-style document"), independent_split(body), "bstr and the documented rule disagree on {body:?}");
+    }
+    for mixed in ["a\r\nb\nc\r\n", "a\nb\r\n"] {
+        assert!(bstr_split(mixed.as_bytes()).is_err(), "{mixed:?} carries a bare LF inside a CRLF document and must be refused");
+    }
 }
 //#endregion 🧪️RealFixtureLaws
 

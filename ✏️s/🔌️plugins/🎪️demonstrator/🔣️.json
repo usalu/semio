@@ -86,7 +86,25 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Text",
+                        "de": "Text"
+                      },
+                      "reuse": {
+                        "en": "Text",
+                        "de": "Text"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -146,6 +164,50 @@
                 ],
                 "external": false,
                 "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Beispiel setzen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Beispiel setzen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -2983,11 +3045,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -4608,11 +4670,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -6012,11 +6074,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -7275,11 +7337,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -8898,11 +8960,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -10513,14 +10575,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -12905,10 +12967,8 @@
               "stdio.dwg",
               "stdio.gltf",
               "stdio.json",
-              "stdio.las",
               "stdio.obj",
               "stdio.ply",
-              "stdio.png",
               "stdio.stl"
             ]
           }
@@ -13252,11 +13312,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -13881,11 +13941,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -14510,11 +14570,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -15139,11 +15199,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -16232,6 +16292,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one named property of one reference in the model's play definition — its target, placement or parameter.",
+                  "de": "Setzt eine benannte Eigenschaft einer Referenz in der Play-Definition des Modells — Ziel, Platzierung oder Parameter."
+                },
+                "reuse": {
+                  "en": "Sets one named property of one reference in the model's play definition — its target, placement or parameter.",
+                  "de": "Setzt eine benannte Eigenschaft einer Referenz in der Play-Definition des Modells — Ziel, Platzierung oder Parameter."
+                }
               }
             }
           },
@@ -16295,7 +16365,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -16322,7 +16392,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -16395,7 +16466,7 @@
             "kind": "view",
             "iconId": "scan",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -16422,7 +16493,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -17208,14 +17280,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -17259,14 +17331,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -17370,14 +17442,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -19275,11 +19347,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -20698,14 +20770,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -26091,24 +26163,10 @@
             "exportFormats": [],
             "importFormats": [],
             "exportStdioKinds": [
-              "stdio.dwg",
-              "stdio.gltf",
-              "stdio.json",
-              "stdio.las",
-              "stdio.obj",
-              "stdio.ply",
-              "stdio.png",
-              "stdio.stl"
+              "stdio.json"
             ],
             "importStdioKinds": [
-              "stdio.dwg",
-              "stdio.gltf",
-              "stdio.json",
-              "stdio.las",
-              "stdio.obj",
-              "stdio.ply",
-              "stdio.png",
-              "stdio.stl"
+              "stdio.json"
             ]
           }
         ],
@@ -26441,11 +26499,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -27068,11 +27126,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -27695,11 +27753,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -28320,11 +28378,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -28925,8 +28983,62 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
-            "inPalette": false,
+            "args": [
+              {
+                "id": "objectId",
+                "label": {
+                  "native": {
+                    "en": "Object",
+                    "de": "Objekt"
+                  },
+                  "reuse": {
+                    "en": "Object",
+                    "de": "Objekt"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "delta",
+                "label": {
+                  "native": {
+                    "en": "Delta",
+                    "de": "Delta"
+                  },
+                  "reuse": {
+                    "en": "Delta",
+                    "de": "Delta"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": false
+              },
+              {
+                "id": "value",
+                "label": {
+                  "native": {
+                    "en": "Value",
+                    "de": "Wert"
+                  },
+                  "reuse": {
+                    "en": "Value",
+                    "de": "Wert"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
             "semantics": {
               "effects": {
                 "writes": [
@@ -30643,16 +30755,10 @@
             "importFormats": [],
             "exportStdioKinds": [
               "stdio.json",
-              "stdio.obj",
-              "stdio.png",
-              "stdio.stl",
               "stdio.zip"
             ],
             "importStdioKinds": [
               "stdio.json",
-              "stdio.obj",
-              "stdio.png",
-              "stdio.stl",
               "stdio.zip"
             ]
           },
@@ -32133,11 +32239,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -32967,14 +33073,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -36998,11 +37104,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -40462,15 +40568,14 @@
               "stdio.json",
               "stdio.pdf",
               "stdio.png",
-              "stdio.svg"
+              "stdio.svg",
+              "stdio.txt"
             ],
             "importStdioKinds": [
               "stdio.dwg",
               "stdio.dxf",
               "stdio.json",
-              "stdio.pdf",
-              "stdio.png",
-              "stdio.svg"
+              "stdio.txt"
             ]
           }
         ],
@@ -40522,7 +40627,28 @@
         }
       }
     ],
-    "examples": [],
+    "examples": [
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio playground.playground.dsl v1\nschema=playground.playground\n",
+        "dialect": {
+          "artifactKind": "s.demonstrator.playground",
+          "standard": "1",
+          "subset": "*"
+        }
+      }
+    ],
     "capabilities": [
       {
         "artifact": "document",
@@ -41145,34 +41271,8 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.csv",
-          "standard": "rfc4180",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.demonstrator.playground",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
           "artifactKind": "s.stdio.json",
           "standard": "rfc8259",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.demonstrator.playground",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xlsx",
-          "standard": "ecma-376",
           "subset": "*"
         },
         "direction": "import"
@@ -41205,18 +41305,8 @@
             "subset": "*"
           },
           {
-            "artifactKind": "s.stdio.csv",
-            "standard": "rfc4180",
-            "subset": "*"
-          },
-          {
             "artifactKind": "s.stdio.json",
             "standard": "rfc8259",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xlsx",
-            "standard": "ecma-376",
             "subset": "*"
           },
           {
@@ -41229,8 +41319,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "0bbf44935a32109346f73b204985d75de6e3b63d50ee246b82984e60122bf118",
-    "coreWasmSha256": "4f6334d63a4cf16fd355a3e459ba68b3c57008d4c8a4c11f3b6ace6fc187c6aa",
-    "descriptorSha256": "0dfb64347caaebf66b5ac37422339700c948f967667260637fd6f1d4e55b40f6"
+    "wasmSha256": "b6e54a5d27241fb6a520213b5b5850c8ec54bb3ab8ed42abd74790c626fdf2be",
+    "coreWasmSha256": "9791163ce266b7fdc2415a3a97577d010a36a3b76dbd18f7c64382fa60ab78f9",
+    "descriptorSha256": "4dda877d7554ac1d9c13d7c559ab43fd8d0057f2871f0b6c6d02caed9707fd76"
   }
 }

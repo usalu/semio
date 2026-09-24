@@ -1,0 +1,324 @@
+//#region 🔌️McpVerb
+
+/// 🔌️ The production repository the repo MCP server serves: every tool reaches the domain owner the
+/// matching verb reaches, every resource reads through the repository's GraphQL surface.
+///
+/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🦀️.rs
+pub mod mcp_verb {
+    use semio_framework_repo_graphql::{Executor, FsRepoContext, RepoContext};
+    use semio_framework_repo_mcp::{Content, Context, GetPromptResult, HandlerError, Profile, Repository, RepositoryResult, ResourceContent};
+    use semio_framework_repo_model::{GoalCloseInput, GoalCreateInput, GoalReopenInput, TicketCloseInput, TicketStatus};
+    use semio_framework_repo_providers::McpClientKind;
+    use serde_json::{json, Map, Value as Json};
+    use std::collections::BTreeMap;
+    use std::path::{Path, PathBuf};
+
+    /// 🔌️ The repository of one repo root, answering as one MCP profile.
+    pub struct RepoRepository {
+        root: PathBuf,
+        profile: Profile,
+    }
+
+    impl RepoRepository {
+        /// 🆕️ Binds the repository to a root and the profile the server was started with.
+        pub fn open(root: &Path, profile: Profile) -> RepoRepository {
+            RepoRepository { root: root.to_path_buf(), profile }
+        }
+
+        fn context(&self) -> FsRepoContext {
+            FsRepoContext::open(&self.root)
+        }
+
+        /// 🪪️ The editor surface the profile stands for.
+        fn kind(&self) -> McpClientKind {
+            match self.profile {
+                Profile::Generic => McpClientKind::Generic,
+                Profile::Cursor => McpClientKind::Cursor,
+                Profile::Kiro => McpClientKind::Kiro,
+                Profile::Copilot => McpClientKind::Copilot,
+                Profile::Claude => McpClientKind::Claude,
+                Profile::Codex => McpClientKind::Codex,
+            }
+        }
+
+        /// 🛤️ A path argument as a repository-relative path.
+        fn relative(&self, path: &str) -> String {
+            let root = self.root.display().to_string().replace('\\', "/");
+            let path = path.replace('\\', "/");
+            path.strip_prefix(&format!("{root}/")).map(str::to_string).unwrap_or(path)
+        }
+
+        /// 📚️ One GraphQL read rendered as the YAML a resource carries.
+        fn yaml_of_query(&self, query: &str) -> Result<String, HandlerError> {
+            let context = self.context();
+            let data = Executor::new(&context).execute(query, &Map::new()).map_err(|error| HandlerError::tool(&error.message))?;
+            semio_framework_repo_yaml::marshal(&data).map_err(|error| HandlerError::tool(&error))
+        }
+    }
+
+    /// 🎼️ An optional string argument; a present value that is not a non-empty string is refused.
+    fn optional(arguments: &Json, key: &str) -> Result<String, HandlerError> {
+        match arguments.get(key) {
+            None => Ok(String::new()),
+            Some(Json::String(text)) if !text.is_empty() => Ok(text.clone()),
+            Some(_) => Err(HandlerError::tool(&format!("invalid {key}"))),
+        }
+    }
+
+    /// 🎼️ A required string argument.
+    fn required(arguments: &Json, key: &str) -> Result<String, HandlerError> {
+        if arguments.get(key).is_none() {
+            return Err(HandlerError::tool(&format!("missing {key}")));
+        }
+        optional(arguments, key)
+    }
+
+    /// 🎼️ An optional boolean argument.
+    fn switch(arguments: &Json, key: &str) -> Result<bool, HandlerError> {
+        match arguments.get(key) {
+            None => Ok(false),
+            Some(Json::Bool(flag)) => Ok(*flag),
+            Some(_) => Err(HandlerError::tool(&format!("invalid {key}"))),
+        }
+    }
+
+    /// 🎼️ An optional string list argument.
+    fn strings(arguments: &Json, key: &str) -> Result<Vec<String>, HandlerError> {
+        match arguments.get(key) {
+            None => Ok(Vec::new()),
+            Some(Json::Array(items)) if !items.is_empty() => items.iter().map(|item| item.as_str().filter(|text| !text.is_empty()).map(str::to_string).ok_or_else(|| HandlerError::tool(&format!("invalid {key}")))).collect(),
+            Some(_) => Err(HandlerError::tool(&format!("invalid {key}"))),
+        }
+    }
+
+    /// 🎫️ A `YY/MM/DD/SLUG` path, emoji spellings and four-digit years accepted.
+    fn ticket_id(path: &str) -> Result<semio_framework_repo_tickets::TicketId, HandlerError> {
+        let mut id = semio_framework_repo_tickets::TicketId::parse(path).map_err(|error| HandlerError::tool(&error.message))?;
+        if id.year >= 2000 {
+            id.year %= 100;
+        }
+        Ok(id)
+    }
+
+    /// 🧰️ A tool result carrying the markdown of one entity payload.
+    fn entity_result(key: &str, entity: Json, extra: &[String]) -> RepositoryResult {
+        let mut data = Map::new();
+        data.insert(key.to_string(), entity);
+        let mut lines = vec![crate::repo_cli::format_markdown_result("graphql", &Json::Object(data))];
+        lines.extend(extra.iter().cloned());
+        RepositoryResult { text: lines.join("\n"), structured: None, is_error: false }
+    }
+
+    /// 🧰️ A tool result carrying plain lines.
+    fn lines_result(lines: Vec<String>) -> RepositoryResult {
+        RepositoryResult { text: lines.join("\n"), structured: None, is_error: false }
+    }
+
+    /// 🎫️ The id and uri a ticket record answers with.
+    fn ticket_identity(slug: &str) -> (String, String) {
+        let id = semio_framework_repo_identity::emoji_text(semio_framework_repo_identity::entity("ticket")) + &semio_framework_repo_identity::flat(slug);
+        let uri = format!("repo://ticket/{id}");
+        (id, uri)
+    }
+
+    impl RepoRepository {
+        fn ticket_open(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
+            let kind = self.kind();
+            let mut client = optional(arguments, "client")?;
+            if client.trim().is_empty() {
+                client = semio_framework_repo_providers::hook_client_for_mcp_kind(kind).to_string();
+            }
+            let request = semio_framework_repo_tickets::TicketOpenRequest {
+                emoji: optional(arguments, "emoji")?,
+                title: optional(arguments, "title")?,
+                prompt: optional(arguments, "prompt")?,
+                llm: optional(arguments, "llm")?,
+                effort: optional(arguments, "effort")?,
+                client,
+                goal: optional(arguments, "goal")?,
+                parent: optional(arguments, "parent")?,
+                no_issue: switch(arguments, "no_issue")?,
+                no_management: switch(arguments, "no_management")?,
+                issue: optional(arguments, "issue")?,
+                session: String::new(),
+                plan_id: optional(arguments, "plan_id")?,
+                spec_id: optional(arguments, "spec_id")?,
+            };
+            let context = self.context();
+            let outcome = context.with_tickets(kind, |service| service.open(&request)).map_err(|error| HandlerError::tool(&error.message))?;
+            let id = semio_framework_repo_tickets::TicketId::parse(&outcome.id).map_err(|error| HandlerError::tool(&error.message))?;
+            let ticket = context.with_tickets(kind, |service| service.read(&id)).map_err(|error| HandlerError::tool(&error.message))?;
+            let (artifact, uri) = ticket_identity(&ticket.slug);
+            let mut payload = json!({ "id": artifact, "slug": ticket.slug, "year": ticket.year, "month": ticket.month, "day": ticket.day, "status": ticket.status, "path": ticket.folder_path, "uri": uri });
+            let mut extra = outcome.warnings.clone();
+            if let Some(issue) = ticket.management.as_ref().map(|management| management.issue.clone()).filter(|issue| !issue.is_empty()) {
+                payload["github"] = json!({ "issue": issue });
+                extra.push(format!("GitHub issue: {issue}"));
+            }
+            Ok(entity_result("ticketOpen", payload, &extra))
+        }
+
+        fn ticket_close(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
+            let path = optional(arguments, "path")?;
+            let context = self.context();
+            let id = if path.is_empty() {
+                let open = context.tickets(None, None, None, Some(TicketStatus::Open)).map_err(|error| HandlerError::tool(&error.message))?;
+                let latest = open.into_iter().max_by(|left, right| (left.year, left.month, left.day, &left.slug).cmp(&(right.year, right.month, right.day, &right.slug))).ok_or_else(|| HandlerError::tool("no path provided and no open tickets found"))?;
+                semio_framework_repo_tickets::TicketId::new(latest.year, latest.month, latest.day, latest.slug)
+            } else {
+                ticket_id(&path)?
+            };
+            let title = optional(arguments, "title")?;
+            let input = TicketCloseInput {
+                year: id.year,
+                month: id.month,
+                day: id.day,
+                slug: id.slug,
+                summary: optional(arguments, "summary")?,
+                files: Some(strings(arguments, "files")?),
+                title: Some(title).filter(|title| !title.is_empty()),
+                no_management: switch(arguments, "no_management")?,
+                all: false,
+            };
+            let ticket = context.ticket_close(input).map_err(|error| HandlerError::tool(&error.message))?;
+            let (artifact, _) = ticket_identity(&ticket.slug);
+            let finished = ticket.interactions.iter().rev().find(|interaction| interaction.kind.starts_with("ticket.close")).map(|interaction| interaction.date.clone()).unwrap_or_default();
+            let started = ticket.interactions.first().map(|interaction| interaction.date.clone()).unwrap_or_default();
+            Ok(entity_result("ticketClose", json!({ "id": artifact, "slug": ticket.slug, "status": ticket.status, "dates": { "created": started, "finished": finished } }), &[]))
+        }
+
+        fn ticket_reopen(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
+            let kind = self.kind();
+            let path = optional(arguments, "path")?;
+            let context = self.context();
+            let mut id = if path.is_empty() {
+                let tickets = context.tickets(None, None, None, None).map_err(|error| HandlerError::tool(&error.message))?;
+                let latest = tickets.into_iter().max_by(|left, right| (left.year, left.month, left.day, left.interactions.first().map(|interaction| interaction.date.clone())).cmp(&(right.year, right.month, right.day, right.interactions.first().map(|interaction| interaction.date.clone())))).ok_or_else(|| HandlerError::tool("no path provided and no tickets found"))?;
+                semio_framework_repo_tickets::TicketId::new(latest.year, latest.month, latest.day, latest.slug)
+            } else {
+                ticket_id(&path)?
+            };
+            let no_management = switch(arguments, "no_management")?;
+            let title = optional(arguments, "title")?;
+            if !title.is_empty() {
+                id = context.retitle(&id, Some(&title), no_management).map_err(|error| HandlerError::tool(&error.message))?;
+            }
+            let mut client = optional(arguments, "client")?;
+            if client.trim().is_empty() {
+                client = semio_framework_repo_providers::hook_client_for_mcp_kind(kind).to_string();
+            }
+            let request = semio_framework_repo_tickets::TicketReopenRequest {
+                id: id.id(),
+                prompt: optional(arguments, "prompt")?,
+                llm: optional(arguments, "llm")?,
+                effort: optional(arguments, "effort")?,
+                client,
+                goal: optional(arguments, "goal")?,
+                parent: optional(arguments, "parent")?,
+                no_management,
+                session: String::new(),
+                plan_id: optional(arguments, "plan_id")?,
+                spec_id: optional(arguments, "spec_id")?,
+            };
+            let outcome = context.with_tickets(kind, |service| service.reopen(&request)).map_err(|error| HandlerError::tool(&error.message))?;
+            let mut lines = outcome.warnings.clone();
+            lines.push(format!("\n🔓️ Ticket reopened: {}", id.slug));
+            Ok(lines_result(lines))
+        }
+
+        fn goal_open(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
+            let input = GoalCreateInput {
+                title: optional(arguments, "title")?,
+                description: optional(arguments, "description")?,
+                prompt: optional(arguments, "prompt")?,
+                due_date: optional(arguments, "due_date")?,
+                llm: optional(arguments, "llm")?,
+                effort: String::new(),
+                client: optional(arguments, "client")?,
+                no_management: switch(arguments, "no_management")?,
+                parent: optional(arguments, "parent")?,
+                milestone: optional(arguments, "milestone")?,
+            };
+            let goal = self.context().goal_create(input).map_err(|error| HandlerError::tool(&error.message))?;
+            Ok(entity_result("goalCreate", json!({ "id": goal.id, "title": goal.title, "status": goal.status, "prompt": goal.prompt, "dueDate": goal.dates.due, "client": goal.client, "llm": goal.llm }), &[]))
+        }
+
+        fn goal_close(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
+            let input = GoalCloseInput { id: required(arguments, "id")?, summary: required(arguments, "summary")?, no_management: switch(arguments, "no_management")? };
+            let goal = self.context().goal_close(input).map_err(|error| HandlerError::tool(&error.message))?;
+            Ok(entity_result("goalClose", json!({ "id": goal.id, "status": goal.status }), &[]))
+        }
+
+        fn goal_reopen(&self, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
+            let some = |value: String| Some(value).filter(|value| !value.is_empty());
+            let input = GoalReopenInput {
+                id: required(arguments, "id")?,
+                prompt: required(arguments, "prompt")?,
+                llm: required(arguments, "llm")?,
+                client: required(arguments, "client")?,
+                effort: String::new(),
+                title: some(optional(arguments, "title")?),
+                description: some(optional(arguments, "description")?),
+                due_date: some(optional(arguments, "due_date")?),
+                parent: None,
+                no_management: switch(arguments, "no_management")?,
+            };
+            let goal = self.context().goal_reopen(input).map_err(|error| HandlerError::tool(&error.message))?;
+            Ok(entity_result("goalReopen", json!({ "id": goal.id, "status": goal.status }), &[]))
+        }
+    }
+
+    impl Repository for RepoRepository {
+        fn call(&self, _context: &Context, name: &str, arguments: &Json) -> Result<RepositoryResult, HandlerError> {
+            let context = self.context();
+            let failed = |error: semio_framework_repo_graphql::ContextError| HandlerError::tool(&error.message);
+            match name {
+                "ticket_open" => self.ticket_open(arguments),
+                "ticket_close" => self.ticket_close(arguments),
+                "ticket_reopen" => self.ticket_reopen(arguments),
+                "goal_open" => self.goal_open(arguments),
+                "goal_close" => self.goal_close(arguments),
+                "goal_reopen" => self.goal_reopen(arguments),
+                "section_move" => context.move_section(&self.relative(&required(arguments, "file")?), &required(arguments, "old_name")?, &required(arguments, "new_name")?).map(lines_result).map_err(failed),
+                "file_integrate" => context
+                    .integrate_file(&self.relative(&required(arguments, "source")?), &required(arguments, "target_section")?, &self.relative(&required(arguments, "target_file")?), &optional(arguments, "target_parent_section")?)
+                    .map(lines_result)
+                    .map_err(failed),
+                "section_extract" => context.extract_section(&self.relative(&required(arguments, "source_file")?), &required(arguments, "source_section")?, &self.relative(&required(arguments, "target_file")?)).map(lines_result).map_err(failed),
+                _ => Err(HandlerError::tool("tool not found")),
+            }
+        }
+
+        fn read(&self, _context: &Context, uri: &str) -> Result<ResourceContent, HandlerError> {
+            let text = match uri {
+                "repo://" => self.yaml_of_query("query Repo { repo { id name bundles { id } tickets { id } policies { id } contributors { id } } }")?,
+                "repo://bundles" => self.yaml_of_query("query Bundles { repo { bundles { id name root sourceRoot projectType tags kind } } }")?,
+                "repo://folders" => self.yaml_of_query("query Folders { repo { folders { id path name kind } } }")?,
+                "repo://files" => self.yaml_of_query("query Files { repo { files { id path name kind extension } } }")?,
+                "repo://tickets" => self.yaml_of_query("query Tickets { repo { tickets { id slug title status prompt interactions { prompt } } } }")?,
+                "repo://policies" => self.yaml_of_query("query Policies { repo { policies { id description breachs { id } } } }")?,
+                "repo://contributors" => self.yaml_of_query("query Contributors { repo { contributors { id emails name contributions { checkpoints { id } tickets { id } } } } }")?,
+                "repo://goals" => {
+                    let goals = self.context().goals().map_err(|error| HandlerError::tool(&error.message))?;
+                    semio_framework_repo_yaml::marshal(&serde_json::to_value(goals).map_err(|error| HandlerError::tool(&error.to_string()))?).map_err(|error| HandlerError::tool(&error))?
+                }
+                _ => return Err(HandlerError::tool("resource not found")),
+            };
+            Ok(ResourceContent { uri: uri.to_string(), mime_type: "text/plain".to_string(), text, blob: String::new() })
+        }
+
+        fn prompt(&self, _context: &Context, name: &str, arguments: &BTreeMap<String, String>) -> Result<GetPromptResult, HandlerError> {
+            let Some(instruction) = semio_framework_repo_mcp::prompt_instruction(name) else { return Err(HandlerError::tool("prompt not found")) };
+            let given = arguments.get("prompt").cloned().unwrap_or_default();
+            Ok(GetPromptResult { description: instruction.to_string(), messages: vec![("user".to_string(), Content::text(&format!("{instruction}\n\n{given}")))] })
+        }
+    }
+
+    /// 🏠️ The production repository of a root, answering as the profile `SEMIO_REPO_MCP_CLIENT` names.
+    pub fn real_repository(root: PathBuf) -> RepoRepository {
+        let profile = Profile::parse(&std::env::var(semio_framework_repo_mcp::PROFILE_ENVIRONMENT).unwrap_or_default()).unwrap_or_default();
+        RepoRepository::open(&root, profile)
+    }
+}
+
+//#endregion 🔌️McpVerb

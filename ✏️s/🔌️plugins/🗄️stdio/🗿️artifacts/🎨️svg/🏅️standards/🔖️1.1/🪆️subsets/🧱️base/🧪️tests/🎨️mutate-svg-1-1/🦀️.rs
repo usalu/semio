@@ -13,13 +13,6 @@
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_svg_1_1};
 
-//#region 🔖️Kinds
-/// 📇️ Kebab-case spelling of every `SvgMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS` --
-/// duplicated rather than imported because the ORACLE-only build of this adapter must never link
-/// `semio-s-plugin-stdio` (see this file's own header).
-const KINDS: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-element-name", "set-attribute", "set-text", "set-view-box", "set-transform"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🔳️qr-code.svg";
@@ -106,7 +99,7 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{mutable_input, KINDS};
+    use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::mutations::{
         apply_svg_mutation, InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation,
@@ -347,25 +340,18 @@ mod subject {
     }
     //#endregion 🔖️Handlers
 
-    /// 🧭️ Re-exported so `super::adapter()` can register the same 11-kind sweep for the subject
-    /// role without duplicating `KINDS` a third time.
-    pub const SUBJECT_KINDS: &[&str] = KINDS;
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 11 kinds -- the scenario id only selects which fixture row's
-/// `<id>`/`<params>` doc string the shared handler reads, per `Adapter::oracle`/`subject`'s own
-/// per-scenario dispatch table.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

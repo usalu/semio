@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidRhoP
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change liquid rho p eff to {:?}", self.new_liquid_rho_p_eff), &format!("Flüssigkeitsrhopeff auf {:?} ändern", self.new_liquid_rho_p_eff))
+        protocol::LocalizedLabel::native(&format!("Change liquid-retaining effective reinforcement ratio ρ_p,eff to {:?}", self.new_liquid_rho_p_eff), &format!("Wirksamen Bewehrungsgrad ρ_p,eff (Flüssigkeitsbehälter) auf {:?} ändern", self.new_liquid_rho_p_eff))
     }
 }
 //#endregion 🔖️ChangeLiquidRhoPEff

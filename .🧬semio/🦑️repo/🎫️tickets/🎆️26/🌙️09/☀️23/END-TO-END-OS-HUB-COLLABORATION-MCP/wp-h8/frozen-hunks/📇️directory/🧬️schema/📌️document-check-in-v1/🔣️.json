@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/directory/document-check-in-v1/schema.json",
+  "title": "Document Check In",
+  "description": "A client names a committed ledger head and a label; the hub materializes the checkpoint from its own document log and advances the active checkpoint.",
+  "$defs": {
+    "safeInteger": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "positiveSafeInteger": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "requestId": {"type": "string", "pattern": "^(?!0{32}$)[0-9a-f]{32}$"},
+    "hash": {"type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$"},
+    "text": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"},
+    "label": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^\\S(?:[^\\u0000-\\u001f\\u007f-\\u009f]*\\S)?$"},
+    "EditedArtifactFrontierV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"],
+      "properties": {
+        "documentId": {"$ref": "#/$defs/text"},
+        "headEditOrdinal": {"$ref": "#/$defs/positiveSafeInteger"},
+        "headEditId": {"$ref": "#/$defs/text"},
+        "lastCommitSeq": {"$ref": "#/$defs/positiveSafeInteger"},
+        "chainSha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "DocumentCheckInV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "requestId", "head"],
+      "properties": {
+        "schema": {"const": "semio.hub.document-check-in/v1"},
+        "requestId": {"$ref": "#/$defs/requestId"},
+        "head": {"$ref": "#/$defs/EditedArtifactFrontierV1"},
+        "label": {"$ref": "#/$defs/label"}
+      }
+    },
+    "DocumentCheckInPhaseV1": {"enum": ["accepted", "materializing", "publishing", "ready", "failed", "cancelled"]},
+    "DocumentCheckInRefusalV1": {"enum": ["stale-head", "behind-active-checkpoint", "active-checkpoint-changed", "ledger-not-replayable", "codec-refused", "authority-changed", "unavailable"]},
+    "DocumentCheckInProgressV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completedUnits", "totalUnits"],
+      "properties": {"completedUnits": {"$ref": "#/$defs/safeInteger"}, "totalUnits": {"$ref": "#/$defs/safeInteger"}}
+    },
+    "DocumentCheckInReadyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checkpointId", "parentCheckpointId", "baseline"],
+      "properties": {"checkpointId": {"$ref": "#/$defs/hash"}, "parentCheckpointId": {"$ref": "#/$defs/hash"}, "baseline": {"$ref": "#/$defs/EditedArtifactFrontierV1"}}
+    },
+    "DocumentCheckInStatusV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "requestId", "phase", "progress"],
+      "properties": {
+        "schema": {"const": "semio.hub.document-check-in-status/v1"},
+        "requestId": {"$ref": "#/$defs/requestId"},
+        "phase": {"$ref": "#/$defs/DocumentCheckInPhaseV1"},
+        "progress": {"$ref": "#/$defs/DocumentCheckInProgressV1"},
+        "label": {"$ref": "#/$defs/label"},
+        "ready": {"$ref": "#/$defs/DocumentCheckInReadyV1"},
+        "refusal": {"$ref": "#/$defs/DocumentCheckInRefusalV1"}
+      },
+      "allOf": [
+        {"if": {"properties": {"phase": {"const": "ready"}}, "required": ["phase"]}, "then": {"required": ["ready"], "not": {"required": ["refusal"]}}, "else": {"not": {"required": ["ready"]}}},
+        {"if": {"properties": {"phase": {"const": "failed"}}, "required": ["phase"]}, "then": {"required": ["refusal"]}, "else": {"not": {"required": ["refusal"]}}}
+      ]
+    }
+  }
+}

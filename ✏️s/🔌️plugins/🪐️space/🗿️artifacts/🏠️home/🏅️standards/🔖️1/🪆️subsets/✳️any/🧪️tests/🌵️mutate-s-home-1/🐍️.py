@@ -62,7 +62,7 @@ def apply_change_catalog_generation(snapshot, payload):
     after = copy.deepcopy(snapshot)
     if snapshot.get("catalogGeneration") == new_value:
         diff = {"schema": None, "catalogGeneration": None, "locale": None}
-        outcome = {"status": "applied", "messages": [{"level": "warn", "code": "mutation.no-op"}]}
+        outcome = {"status": "no-op", "messages": [{"level": "warn", "code": "mutation.no-op"}]}
         return after, diff, outcome
     after["catalogGeneration"] = new_value
     diff = {"schema": None, "catalogGeneration": new_value, "locale": None}

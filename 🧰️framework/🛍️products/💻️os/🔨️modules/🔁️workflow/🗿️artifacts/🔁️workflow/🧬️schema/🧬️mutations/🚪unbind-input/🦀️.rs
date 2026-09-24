@@ -22,7 +22,7 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UnbindInput 
         base.input_bindings.iter().find(|binding| binding.input_id == self.input_id).map(|binding| vec![WorkflowMutation::BindInput(BindInput { binding: binding.clone() })]).unwrap_or_default()
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Unbind workflow input {}", self.input_id), &format!("Arbeitsablaufeingabe {} lösen", self.input_id))
+        protocol::LocalizedLabel::native(&format!("Unbind workflow input {}", self.input_id), &format!("Bindung der Arbeitsablaufeingabe {} aufheben", self.input_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["input-bindings".into(), self.input_id.clone()]

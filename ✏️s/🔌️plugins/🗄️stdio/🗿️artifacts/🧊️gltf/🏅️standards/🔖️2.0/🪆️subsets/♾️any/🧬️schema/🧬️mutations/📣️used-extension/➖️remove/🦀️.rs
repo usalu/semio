@@ -63,7 +63,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for RemoveUsedExt
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove Used Extension", "genutzte Erweiterung entfernen")
+        protocol::LocalizedLabel::native("Remove Used Extension", "Verwendete Erweiterung entfernen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -23,7 +23,7 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetDesignConditions {
         agg_inverse(&EpwMutation::SetDesignConditions(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-design-conditions", "Bemessungsbedingungen setzen")
+        protocol::LocalizedLabel::native("Set design conditions", "Auslegungsbedingungen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

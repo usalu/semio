@@ -22,7 +22,7 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetRawText {
         agg_inverse(&HtmlMutation::SetRawText(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-raw-text", "Rohtext setzen")
+        protocol::LocalizedLabel::native("Set raw text", "Rohtext setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -336,12 +336,12 @@ impl Mutation<DemoSnapshot> for DemoMutation {
 /// @emoji 🎯️ Idempotently registers the `demo/v1` codec (process-global `OnceLock` registry,
 /// shared across every test in this binary) — needed by any test exercising `FolderEndpoint`
 /// end-to-end (both `Sqlite` and `Pack` now go through `document_codec` per the pack+spr flip),
-/// mirroring a real app's program-init-time `register_document_codec_for_app` call.
+/// mirroring a real app's program-init-time `register_document_codec_for_app` call. A concurrent
+/// caller returns only once the registration has landed (a swapped flag let parallel laws run
+/// codec-less: ticket 26/09/23 `📓️wp-h6.md`).
 pub(super) async fn ensure_demo_codec_registered() {
-    static ONCE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-    if !ONCE.swap(true, std::sync::atomic::Ordering::AcqRel) {
-        register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec");
-    }
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    ONCE.call_once(|| register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec"));
 }
 
 fn bootstrap_frontier(document_id: &str, ordinal: u64, edit_id: &str, commit: u64, chain: u8) -> RuntimeFrontierSummary {

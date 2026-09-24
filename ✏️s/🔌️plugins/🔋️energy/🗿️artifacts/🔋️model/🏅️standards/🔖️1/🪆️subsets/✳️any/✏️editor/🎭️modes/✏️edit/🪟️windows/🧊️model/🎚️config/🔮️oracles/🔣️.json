@@ -1,0 +1,216 @@
+{
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The config state lane of `s.energy.model`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config): its mutation vocabulary `EnergyModelWindowConfigMutation` over `EnergyModelWindowConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-energy-model-1-any-editor-edit-model-config` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "energy-model-1-any-editor-edit-model-config-state-lane-semantics",
+      "capabilities": [
+        "energy-model-1-any-editor-edit-model-config-mutate"
+      ],
+      "rationale": "`EnergyModelWindowConfigMutation` is the config state lane of `s.energy.model`'s ✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config surface: it holds the 3d model window's camera pose (position, target, zoom). This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-camera`) changes exactly its own part of `EnergyModelWindowConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A persisted key-value store for desktop settings; it has no model of this surface's typed config record, its per-kind setters, their no-op guard or the inverse each kind computes."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it defines no typed config mutations and neither their no-op nor their inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "`EnergyModelWindowConfig` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "energy-model-1-any-editor-edit-model-config",
+      "capability": "energy-model-1-any-editor-edit-model-config-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-camera"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.energy.model",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config",
+      "mutations": [
+        {
+          "id": "set-camera",
+          "capability": "energy-model-1-any-editor-edit-model-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-camera",
+            "bridgeVersion": 1,
+            "variant": "SetCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-any-editor-edit-model-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-camera-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.energy.model",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config"
+      },
+      "mutation": "set-camera",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f75c02556c62a2f1e833d813eb8371b86aed777beb0252a2ea33d78fcf6c0521",
+          "bytes": 153
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:78063a819cd471972f01db94201b0efe54344df980879f6bb1531d55c9b48892",
+          "bytes": 175
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3d7c564c925cd56c59d306eebaee3bc81e5e81e995898dae110695ac65d7585e",
+          "bytes": 151
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3d7c564c925cd56c59d306eebaee3bc81e5e81e995898dae110695ac65d7585e",
+          "bytes": 151
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Orbiting the 3d model window to a new pose replaces the camera and nothing else."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-camera-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.energy.model",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config"
+      },
+      "mutation": "set-camera",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3d7c564c925cd56c59d306eebaee3bc81e5e81e995898dae110695ac65d7585e",
+          "bytes": 151
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:78063a819cd471972f01db94201b0efe54344df980879f6bb1531d55c9b48892",
+          "bytes": 175
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3d7c564c925cd56c59d306eebaee3bc81e5e81e995898dae110695ac65d7585e",
+          "bytes": 151
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3d7c564c925cd56c59d306eebaee3bc81e5e81e995898dae110695ac65d7585e",
+          "bytes": 151
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Setting the camera to the pose it already holds is the leaf's warned no-op."
+    }
+  ]
+}

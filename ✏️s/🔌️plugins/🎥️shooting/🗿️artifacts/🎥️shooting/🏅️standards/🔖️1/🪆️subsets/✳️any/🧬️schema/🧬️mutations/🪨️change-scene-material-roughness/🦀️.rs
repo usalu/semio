@@ -21,6 +21,6 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneMaterialRou
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change material roughness to {}", self.new_roughness), &format!("Materialrauheit auf {} ändern", self.new_roughness))
+        protocol::LocalizedLabel::native(&format!("Change material roughness to {}", self.new_roughness), &format!("Materialrauigkeit auf {} ändern", self.new_roughness))
     }
 }

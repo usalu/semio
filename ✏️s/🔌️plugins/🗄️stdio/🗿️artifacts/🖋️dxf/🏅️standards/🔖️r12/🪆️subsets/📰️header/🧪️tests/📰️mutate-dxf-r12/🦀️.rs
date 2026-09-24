@@ -13,40 +13,11 @@
 //! phase runs, and wave 14 ran the full differential comparison against the oracle.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::dxf::standards::v_r12::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_dxf_r12};
+use semio_s_plugin_stdio_test_oracle::artifacts::dxf::standards::v_r12::subsets::header::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_dxf_r12};
 
-//#region 🔖️Kinds
-/// 📇️ Kebab-case spelling of every `DxfMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS` --
-/// duplicated rather than imported because the ORACLE-only build of this adapter must never link
-/// `semio-s-plugin-stdio` (see this file's own header); `kinds_const_matches_enum_variants_in_
-/// declaration_order` on the production side and the framework's own catalog-completeness gate on
-/// this side are what keep the two lists honest against each other.
-const KINDS: &[&str] = &[
-    "no-mutation",
-    "set-snapshot",
-    "set-header-var",
-    "remove-header-var",
-    "insert-layer",
-    "remove-layer",
-    "set-layer",
-    "insert-style",
-    "remove-style",
-    "set-style",
-    "insert-linetype",
-    "remove-linetype",
-    "set-linetype",
-    "insert-entity",
-    "remove-entity",
-    "set-entity",
-    "insert-block",
-    "remove-block",
-    "set-block",
-];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "asset://🏅️standards/🔖️r12/🪆️subsets/✳️any/📚️examples/🚏️bus-shelter/🖼️assets/🖊️.dxf";
+const INPUT: &str = "asset://🚏️bus-shelter/🖊️.dxf";
 
 /// 🧫️ Copies the immutable real asset into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
@@ -160,14 +131,14 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{mutable_input, KINDS};
+    use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::mutations::{
         apply_dxf_mutation, insert_block, insert_entity, insert_layer, insert_linetype, insert_style, remove_block, remove_entity, remove_header_var, remove_layer, remove_linetype, remove_style, set_block, set_entity, set_header_var, set_layer, set_linetype, set_snapshot, set_style, DxfMutation,
     };
     use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::snapshot::{parse_dxf_document, print_dxf_document, DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle, DxfValue};
-    use crate::DxfSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::dxf::standards::v_r12::subsets::any::project_dxf_r12;
+    use semio_s_artifact_stdio_dxf::DxfSnapshot;
+    use semio_s_plugin_stdio_test_oracle::artifacts::dxf::standards::v_r12::subsets::header::project_dxf_r12;
 
     //#region 🔖️SpecCodec
     fn number(v: &Json, key: &str) -> f64 {
@@ -425,28 +396,19 @@ mod subject {
     }
     //#endregion 🔖️Handlers
 
-    /// 🧭️ Re-exported so `super::adapter()` can register the same 19-kind sweep for the subject role
-    /// without duplicating `KINDS` a third time.
-    pub const SUBJECT_KINDS: &[&str] = KINDS;
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 19 kinds -- the scenario id only selects which fixture row's
-/// `<id>`/`<params>` doc string the shared handler reads, per `Adapter::oracle`/`subject`'s own
-/// per-scenario dispatch table.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-    }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        for kind in subject::SUBJECT_KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerMRdKn
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change tower moment resistance M_Rd [kNm] to {}", self.new_tower_m_rd_knm), &format!("Turmmomentwiderstandm_Rd [kNm] auf {} ändern", self.new_tower_m_rd_knm))
+        protocol::LocalizedLabel::native(&format!("Change tower moment resistance M_Rd [kNm] to {}", self.new_tower_m_rd_knm), &format!("Momententragfähigkeit des Turms M_Rd [kNm] auf {} ändern", self.new_tower_m_rd_knm))
     }
 }
 //#endregion 🔖️ChangeTowerMRdKnm

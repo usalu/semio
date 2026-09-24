@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Rename
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename Gas Material of gas material {}", self.id.0), &format!("Gasmaterial von Gasmaterial {} umbenennen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Rename Gas Material of gas material {}", self.id.0), &format!("Gasfüllung {} umbenennen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

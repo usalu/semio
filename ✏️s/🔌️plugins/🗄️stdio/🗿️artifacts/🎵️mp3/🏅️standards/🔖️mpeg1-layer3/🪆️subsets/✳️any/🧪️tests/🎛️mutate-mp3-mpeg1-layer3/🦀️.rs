@@ -17,14 +17,6 @@ use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::mp3::standards::v_mpeg1_layer3::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_mp3};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable, reparsed_not_copied, round_trip_preserves_within};
 
-//#region 🔖️Kinds
-/// 🧾️ Mirrors `Mp3Mutation`'s declared vocabulary
-/// (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — kept
-/// in sync by the contract phase's `mutation-kind-uncovered`/`mutation-kind-undeclared` gates,
-/// which fail loudly if this list and the catalog ever drift apart, and by the oracle module's own
-/// `kinds_match_the_catalog_and_the_vocabulary` test.
-const KINDS: [&str; 4] = ["set-snapshot", "set-id3v2", "set-frames", "set-id3v1"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Profile
 /// 📏️ `semantic-mp3-mpeg1-layer3-v1`'s own declared writer freedom
@@ -253,12 +245,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

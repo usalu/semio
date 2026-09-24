@@ -47,7 +47,7 @@ UNSTATED = {"edit-text"}
 UNSTATED_REASON = (
     "this implementation refuses this kind rather than guessing it. `edit-text` writes the document's BODY, and this snapshot does not carry the body: "
     "it carries a composed child handle `{childId, target}` into an `s.stdio.semio@v1/document`. The committed vector pins "
-    "`{status: applied, messages: [{level: warn, code: mutation.no-op}]}` — the verb decided the new text was IDENTICAL to what the child already held "
+    "`{status: no-op, messages: [{level: warn, code: mutation.no-op}]}` — the verb decided the new text was IDENTICAL to what the child already held "
     "— and neither the child's content nor the rule that compares them is stated anywhere a second implementation can read. Nor is the other branch: "
     "no committed vector shows what the handle becomes when the text really does change, so the child-addressing function is unstated in the same way "
     "`mutate-program-1` reports over `knowledge`/`benchmarks`, `mutate-note-1` over `edit-block-text` and `mutate-block-3d-1` over `catalog`. Adding "

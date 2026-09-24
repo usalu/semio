@@ -7,6 +7,7 @@
 //! multi-parent handling is needed to turn it into a `TreeView`. This file imports nothing from the
 //! sibling editor module (`policyViewerPurityBreaches` forbids it outright).
 
+use crate::VcsSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, HistoryView, UiAssemblyResult, WindowKindDefinition};
 use std::collections::HashMap;
@@ -14,6 +15,12 @@ use std::collections::HashMap;
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
+/// 🆔️ The document row's key. A tree row needs a real, non-empty key that no checkpoint id spells:
+/// an empty id falls back to its positional `#0` key, which no `TreeWindowRequest` can name.
+pub const VCS_DOCUMENT_NODE_ID: &str = "$";
+/// ➖️ The document row's label while the document has no title — the same language-neutral mark the
+/// editor's summary prints for empty notes.
+const VCS_UNTITLED_LABEL: &str = "—";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -24,20 +31,24 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `HistoryView -> BuiltNode` read: every checkpoint becomes one tree node, nested under its
-/// parent (root checkpoints — `parent_checkpoint_id: None` — become tree roots). Alternative names and
-/// per-row navigation actions (`checkoutCheckpoint`/`switchAlternative`, real app actions on the
-/// editor's document panel) have no read-only counterpart here: a viewer declares no actions.
-pub fn render(history: &HistoryView) -> UiAssemblyResult<BuiltNode> {
-    TreeWindowKit::render(&history_tree_view(history))
+/// 👁️ Pure `(VcsSnapshot, HistoryView) -> BuiltNode` read: the document itself is the one root row,
+/// and every checkpoint becomes one tree node nested under its parent (root checkpoints —
+/// `parent_checkpoint_id: None` — nest directly under the document). A tree of checkpoints alone
+/// painted NOTHING for a document that has none yet — every freshly opened viewer (S15, session 11)
+/// — because `TreeWindowKit` renders no rows for an empty roster. Alternative names and per-row
+/// navigation actions (`checkoutCheckpoint`/`switchAlternative`, real app actions on the editor's
+/// document panel) have no read-only counterpart here: a viewer declares no actions.
+pub fn render(document: &VcsSnapshot, history: &HistoryView) -> UiAssemblyResult<BuiltNode> {
+    TreeWindowKit::render(&history_tree_view(document, history))
 }
 
-fn history_tree_view(history: &HistoryView) -> TreeView {
+fn history_tree_view(document: &VcsSnapshot, history: &HistoryView) -> TreeView {
     let mut children_by_parent: HashMap<Option<String>, Vec<&store::HistoryColumn>> = HashMap::new();
     for column in &history.columns {
         children_by_parent.entry(column.parent_checkpoint_id.clone()).or_default().push(column);
     }
-    TreeView { roots: history_tree_nodes(&None, &children_by_parent) }
+    let label = if document.title.is_empty() { VCS_UNTITLED_LABEL.to_string() } else { document.title.clone() };
+    TreeView { roots: vec![TreeNodeView { id: VCS_DOCUMENT_NODE_ID.to_string(), label, children: history_tree_nodes(&None, &children_by_parent) }] }
 }
 
 fn history_tree_nodes(parent: &Option<String>, children_by_parent: &HashMap<Option<String>, Vec<&store::HistoryColumn>>) -> Vec<TreeNodeView> {

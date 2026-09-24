@@ -332,10 +332,13 @@ list of `{gate, reason}` pairs (e.g. `artifactCasSweeper` /
 `publicSessionIssuance`. Point a load balancer at `/readyz` and a process supervisor at `/healthz`.
 
 The hub carries **no `tracing`/`prometheus`/`opentelemetry` dependency** — the observer is
-first-party (`semio_framework_trace`). Every HTTP route, the document WebSocket handler, the
-directory backend faults and the boot itself open a span on it, configured from `SEMIO_TRACE_LEVEL`
-and `SEMIO_TRACE_SINK`; the records go to the configured sink, and the bounded counter table behind
-them is what `/admin/api/observability` returns. `declaredEvents` ships the vocabulary so a
+first-party (`semio_framework_trace`). Every HTTP route, the document and directory WebSocket
+handlers, presence join/expiry/leave, the trusted-catalog load, the directory backend faults, boot
+and shutdown report on it, configured from `SEMIO_TRACE_LEVEL` (`off|error|warn|info|debug`, default
+`info`) and `SEMIO_TRACE_SINK` (`stderr` default, `stdout`, `none`, `file:<path>` appends). Each
+record is one JSON line against `🧰️framework/🔨️modules/⏱️trace/📝️record/🧬️schema/🔣️.json`; a
+socket's admission (`detail: upgrade`) and its close (`detail: closed`) share one `requestId`. The
+bounded counter table behind them is what `/admin/api/observability` returns. `declaredEvents` ships the vocabulary so a
 dashboard shows a never-fired event as a zero rather than a missing series, and a non-zero
 `droppedEvents` means some event name is being built from request data. Startup still prints a
 `[WARN] … closed gates: …` line when it comes up not-ready. There is no Prometheus exposition

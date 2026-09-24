@@ -1,0 +1,13 @@
+{
+  "tree": {
+    "depth": 2,
+    "breadth": 2
+  },
+  "spawnDeadlineMs": 30000,
+  "settleDeadlineMs": 5000,
+  "cases": [
+    { "id": "owned-tree", "terminator": "terminateOwnedChildTree", "survivors": 0 },
+    { "id": "third-party-tree", "terminator": "tree-kill", "survivors": 0 },
+    { "id": "root-only", "terminator": "child.kill", "survivors": 6 }
+  ]
+}

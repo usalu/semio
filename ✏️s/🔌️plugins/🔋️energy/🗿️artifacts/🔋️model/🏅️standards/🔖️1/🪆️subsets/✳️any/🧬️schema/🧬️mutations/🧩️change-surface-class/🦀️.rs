@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change surface {} class to {:?}", self.id.0, self.new_class), &format!("Oberfläche {} Klasse auf {:?} ändern", self.id.0, self.new_class))
+        protocol::LocalizedLabel::native(&format!("Change surface {} class to {:?}", self.id.0, self.new_class), &format!("Klasse von Oberfläche {} auf {:?} ändern", self.id.0, self.new_class))
     }
 
     fn target(&self) -> Vec<String> {

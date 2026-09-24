@@ -1,0 +1,49 @@
+{
+  "schema": "semio.hub.readiness/v1",
+  "status": "not-ready",
+  "runId": "c7d0a9257ce869510976123c382ac0c6",
+  "mode": "development",
+  "bindScope": "loopback",
+  "authentication": {
+    "kind": "local-bootstrap-pipe-v1",
+    "bootstrapReady": true,
+    "publicSessionIssuance": true
+  },
+  "directory": {
+    "ready": true
+  },
+  "storage": {
+    "ready": true
+  },
+  "artifactCasBarrier": {
+    "ready": true
+  },
+  "artifactPublication": {
+    "ready": true
+  },
+  "artifactCasSweeper": {
+    "ready": true,
+    "execute": false,
+    "defaultMode": "dry-run"
+  },
+  "artifactAuthority": {
+    "ready": false,
+    "reason": "trusted-catalog-never-published-in-this-data-root"
+  },
+  "adminAssets": {
+    "ready": true
+  },
+  "features": {
+    "openPlan": false,
+    "openPlanExchange": false,
+    "rebootstrap": true,
+    "mcpWorkspace": false,
+    "inferenceServices": []
+  },
+  "blockedBy": [
+    {
+      "gate": "artifactAuthority",
+      "reason": "trusted-catalog-never-published-in-this-data-root"
+    }
+  ]
+}

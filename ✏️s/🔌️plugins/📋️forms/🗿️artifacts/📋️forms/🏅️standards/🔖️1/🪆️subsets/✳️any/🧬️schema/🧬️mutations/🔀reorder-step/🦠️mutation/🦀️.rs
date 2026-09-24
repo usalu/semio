@@ -25,7 +25,7 @@ impl MutationKind<FormsSnapshot, FormMutation> for ReorderStep {
         super::inverse::inverse_reorder_step(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder step \"{}\"", self.id), &format!("Schritt \"{}\" umordnen", self.id))
+        protocol::LocalizedLabel::native(&format!("Reorder step \"{}\"", self.id), &format!("Reihenfolge von Schritt \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

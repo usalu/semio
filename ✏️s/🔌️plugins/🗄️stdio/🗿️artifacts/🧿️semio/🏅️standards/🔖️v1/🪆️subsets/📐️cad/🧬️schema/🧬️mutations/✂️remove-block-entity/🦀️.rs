@@ -23,7 +23,7 @@ impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for RemoveBlockE
         agg_inverse(&SemioCadMutation::RemoveBlockEntity(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-block-entity", "Blockentität entfernen")
+        protocol::LocalizedLabel::native("Remove block entity", "Blockentität entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -824,7 +824,8 @@
         "packRecord",
         "protocolPath",
         "protocolBytes",
-        "protocolSha256"
+        "protocolSha256",
+        "packSchemaSha256"
       ],
       "properties": {
         "factoryId": {
@@ -895,6 +896,11 @@
         "protocolSha256": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
+        },
+        "packSchemaSha256": {
+          "type": "string",
+          "pattern": "^(?!0{64}$)[a-f0-9]{64}$",
+          "description": "🧬️ The codec's structural pack-schema fingerprint (`os_pack::schema_hash`), generated from the live Rust receipt by the gis `native-codec-projection` verb; the trusted-catalog bootstrap reads it verbatim."
         }
       }
     },

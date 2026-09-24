@@ -95,7 +95,8 @@
           "capability": "xml-1-0-valid-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "declare-doctype",
@@ -115,7 +116,8 @@
           "capability": "xml-1-0-valid-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "declare-entity",
@@ -135,7 +137,8 @@
           "capability": "xml-1-0-valid-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-document-element",
@@ -155,7 +158,8 @@
           "capability": "xml-1-0-valid-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-external-subset",
@@ -175,7 +179,8 @@
           "capability": "xml-1-0-valid-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-internal-subset",
@@ -195,7 +200,8 @@
           "capability": "xml-1-0-valid-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -235,7 +241,8 @@
           "capability": "xml-1-0-valid-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-text",

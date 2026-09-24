@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Mechanical Ventilation Design Flow of mechanical ventilation {}", self.id.0), &format!("mechanische Lüftungsbemessungsfluss von mechanische Lüftung {} ändern", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Change Mechanical Ventilation Design Flow of mechanical ventilation {}", self.id.0), &format!("Bemessungsvolumenstrom von mechanischer Lüftung {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

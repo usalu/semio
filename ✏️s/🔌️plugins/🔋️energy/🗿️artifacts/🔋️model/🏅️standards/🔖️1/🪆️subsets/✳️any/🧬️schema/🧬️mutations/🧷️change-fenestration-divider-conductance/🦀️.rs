@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fenestration {} divider conductance to {} W/K", self.id.0, self.new_divider_conductance_w_k), &format!("Fenster {} Trennerleitwert auf {} W/K ändern", self.id.0, self.new_divider_conductance_w_k))
+        protocol::LocalizedLabel::native(&format!("Change fenestration {} divider conductance to {} W/K", self.id.0, self.new_divider_conductance_w_k), &format!("Sprossen-Wärmeleitwert von Fenster {} auf {} W/K ändern", self.id.0, self.new_divider_conductance_w_k))
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,0 +1,133 @@
+{
+  "completion": {
+    "project": "@semio-tech/framework-os-dev",
+    "prerequisite": "build-s-react-release",
+    "command": "bun ../../🚚️distribution/🏁completion/📜️script.ts complete",
+    "launches": ["build", "build-cad-react-release", "build-puzzle3d-react-release", "build-puzzle5d-react-release", "build-shooting-react-release"]
+  },
+  "plan": {
+    "version": 1,
+    "profile": "release",
+    "components": [
+      {
+        "pluginId": "cad",
+        "role": "plugin",
+        "cratePath": "plugins/cad"
+      },
+      {
+        "pluginId": "cad-extension-aec-building",
+        "role": "extension",
+        "cratePath": "plugins/cad/extensions/building"
+      }
+    ]
+  },
+  "destinations": [
+    "🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
+    "🔌️plugin-modules/🧵️shard",
+    "🔌️plugin-modules/🪞️vendor",
+    "🔌️plugin-modules/📐️cad",
+    "🧩️extension-modules/🏢️cad-extension-aec-building"
+  ],
+  "invalid": [
+    {
+      "version": 2,
+      "profile": "release",
+      "components": []
+    },
+    {
+      "version": 1,
+      "profile": "production",
+      "components": []
+    },
+    {
+      "version": 1,
+      "profile": "release",
+      "components": [
+        {
+          "pluginId": "cad",
+          "role": "plugin",
+          "cratePath": "../foreign"
+        }
+      ]
+    }
+  ],
+  "environment": {
+    "base": {
+      "VITE_SEMIO_APP_ROLE": "editor",
+      "UNRELATED_TEST_SELECTION": "quick"
+    },
+    "changed": {
+      "VITE_SEMIO_APP_ROLE": "viewer",
+      "UNRELATED_TEST_SELECTION": "quick"
+    },
+    "ignored": {
+      "VITE_SEMIO_APP_ROLE": "editor",
+      "UNRELATED_TEST_SELECTION": "long"
+    },
+    "dotenv": {
+      "path": ".env.production.local",
+      "bytes": "VITE_SEMIO_DEFAULT_EXAMPLE=fixture\n"
+    }
+  },
+  "session": {
+    "variant": "cad",
+    "registryPluginId": "cad",
+    "plugins": [
+      {
+        "pluginId": "cad",
+        "moduleUrl": "/🔌️plugin-modules/📐️cad/🌉️bridge.js"
+      },
+      {
+        "pluginId": "cad-extension-aec-building",
+        "moduleUrl": "/🧩️extension-modules/🏢️cad-extension-aec-building/🌉️bridge.js"
+      }
+    ]
+  },
+  "invalidSessions": [
+    null,
+    {},
+    {
+      "variant": "note",
+      "registryPluginId": "cad",
+      "plugins": [
+        {
+          "pluginId": "cad",
+          "moduleUrl": "/🔌️plugin-modules/📐️cad/🌉️bridge.js"
+        },
+        {
+          "pluginId": "cad-extension-aec-building",
+          "moduleUrl": "/🧩️extension-modules/🏢️cad-extension-aec-building/🌉️bridge.js"
+        }
+      ]
+    },
+    {
+      "variant": "cad",
+      "registryPluginId": "note",
+      "plugins": [
+        {
+          "pluginId": "cad",
+          "moduleUrl": "/🔌️plugin-modules/📐️cad/🌉️bridge.js"
+        },
+        {
+          "pluginId": "cad-extension-aec-building",
+          "moduleUrl": "/🧩️extension-modules/🏢️cad-extension-aec-building/🌉️bridge.js"
+        }
+      ]
+    },
+    {
+      "variant": "cad",
+      "registryPluginId": "cad",
+      "plugins": null
+    },
+    {
+      "variant": "cad",
+      "registryPluginId": "cad",
+      "plugins": [
+        {
+          "pluginId": "cad",
+          "moduleUrl": "/runtime/installed.js"
+        }
+      ]
+    }
+  ]
+}

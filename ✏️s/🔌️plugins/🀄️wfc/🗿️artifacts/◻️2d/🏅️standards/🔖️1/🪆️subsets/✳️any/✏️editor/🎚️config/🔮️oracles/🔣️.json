@@ -1,0 +1,320 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The config state lane of `s.wfc.wfc2d`'s editor (✏️editor/🎚️config): its mutation vocabulary `Wfc2dConfigMutation` over `Wfc2dConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-wfc-wfc2d-1-any-editor-config` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "wfc-wfc2d-1-any-editor-config-state-lane-semantics",
+      "capabilities": [
+        "wfc-wfc2d-1-any-editor-config-mutate"
+      ],
+      "rationale": "`Wfc2dConfigMutation` is the config state lane of `s.wfc.wfc2d`'s ✏️editor/🎚️config surface: it holds this pane's camera (x, y, zoom) and the tile a pin gesture assigns. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`change-active-tile`, `change-camera`, `replace-config`) changes exactly its own part of `Wfc2dConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A persisted key-value store for desktop settings; it has no model of this surface's typed config record, its per-kind setters, their no-op guard or the inverse each kind computes."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it defines no typed config mutations and neither their no-op nor their inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "`Wfc2dConfig` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "wfc-wfc2d-1-any-editor-config",
+      "capability": "wfc-wfc2d-1-any-editor-config-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "change-active-tile",
+        "change-camera",
+        "replace-config"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.wfc.wfc2d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎚️config",
+      "mutations": [
+        {
+          "id": "change-active-tile",
+          "capability": "wfc-wfc2d-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-active-tile",
+            "bridgeVersion": 1,
+            "variant": "ChangeActiveTile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-wfc2d-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-camera",
+          "capability": "wfc-wfc2d-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-camera",
+            "bridgeVersion": 1,
+            "variant": "ChangeCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-wfc2d-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-config",
+          "capability": "wfc-wfc2d-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-config",
+            "bridgeVersion": 1,
+            "variant": "ReplaceConfig"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-wfc2d-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-active-tile-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.wfc.wfc2d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "change-active-tile",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change-active-tile-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7c66a000878c6cf913b57009e6882f87864108d8d2865c6c315a3154a8a457de",
+          "bytes": 82
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change-active-tile-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:425c95ba32bc681d0a85273341c8d7f96d6202620d67eb88da2156d6d54fa52a",
+          "bytes": 79
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change-active-tile-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f78a646a0a7fefab11d3316f265a4eb4e416c510181549c48143b333b7ab959f",
+          "bytes": 87
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change-active-tile-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f78a646a0a7fefab11d3316f265a4eb4e416c510181549c48143b333b7ab959f",
+          "bytes": 87
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change-active-tile-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Choosing the grass tile makes it the tile a pin gesture assigns in this pane."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-camera-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.wfc.wfc2d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "change-camera",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7c66a000878c6cf913b57009e6882f87864108d8d2865c6c315a3154a8a457de",
+          "bytes": 82
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2511971433b00e1bff962a1756fa82aecb153cb3fe8dd58d6d7518bc7fb9da3e",
+          "bytes": 99
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:cd8e91b85e74024cece89dd371d8d28255c38206e5914d69d8a23e03a8db06e7",
+          "bytes": 84
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:cd8e91b85e74024cece89dd371d8d28255c38206e5914d69d8a23e03a8db06e7",
+          "bytes": 84
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Panning and zooming the pane moves its camera and leaves the active tile alone."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-config-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.wfc.wfc2d",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "replace-config",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7c66a000878c6cf913b57009e6882f87864108d8d2865c6c315a3154a8a457de",
+          "bytes": 82
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:607165bcbccd9673f1d7e3f2d66d4be0abadd6306640aa4d27ed36343d36ad8f",
+          "bytes": 177
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:da9335a33c8e246e4eed7aa8ce68170c36d8da88911b83b6e3418b5605af0a39",
+          "bytes": 89
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:da9335a33c8e246e4eed7aa8ce68170c36d8da88911b83b6e3418b5605af0a39",
+          "bytes": 89
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Replacing the pane config swaps the camera and the active tile in one step."
+    }
+  ]
+}

@@ -24,6 +24,6 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameGovernance {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename governance framework to \"{}\"", self.new_framework), &format!("Steuerungsframework in \"{}\" umbenennen", self.new_framework))
+        protocol::LocalizedLabel::native(&format!("Rename governance framework to \"{}\"", self.new_framework), &format!("Governance-Rahmen in \"{}\" umbenennen", self.new_framework))
     }
 }

@@ -70,6 +70,10 @@ pub const BITMAP_INFERENCE_REQUEST_SCHEMA: &str = r#"{
   }
 }"#;
 
+/// 📌️ The editor action that commits a finished solve into the document by pinning its pixels —
+/// the one action id the contract below declares and the editor's `pin-solution` command answers to.
+pub const BITMAP_INFERENCE_COMMIT_ACTION: &str = "pin-solution";
+
 /// 📜️ The whole published contract for `s.wfc.bitmap.solve`: request schema, result schema, the
 /// unit its bounded job counts, and the artifact binding that makes it callable at all.
 pub const BITMAP_INFERENCE_CONTRACT: semio_framework_plugin::ArtifactInferencePayloadContract = semio_framework_plugin::ArtifactInferencePayloadContract {
@@ -78,6 +82,7 @@ pub const BITMAP_INFERENCE_CONTRACT: semio_framework_plugin::ArtifactInferencePa
     output_schema: include_str!("🔣️.json"),
     progress_unit: "cells",
     artifact_binding: Some(semio_framework_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
+    commit: Some(semio_framework_plugin::ArtifactInferenceCommitBinding { action: BITMAP_INFERENCE_COMMIT_ACTION }),
 };
 
 /// 🧭️ Stable host roster identity for the ActionBus-owned cold solve route.

@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeConstructi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change construction activity to \"{}\"", self.new_construction_activity), &format!("Konstruktionsaktivität auf \"{}\" ändern", self.new_construction_activity))
+        protocol::LocalizedLabel::native(&format!("Change construction activity to \"{}\"", self.new_construction_activity), &format!("Bautätigkeit auf \"{}\" ändern", self.new_construction_activity))
     }
 }
 //#endregion 🔖️Payload

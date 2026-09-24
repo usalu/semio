@@ -51,6 +51,11 @@ def work_directory_is_cache_local(ctx: Context) -> Outcome:
     )
 
 
+def outline_registration(ctx: Context) -> Outcome:
+    """🪆️ One handler registered under the outline's base id serves every expanded row."""
+    return Outcome({"scenario": ctx.scenario["id"], "row": ctx.row()})
+
+
 # endregion 🔖️Scenarios
 
 
@@ -62,6 +67,7 @@ def adapter() -> Adapter:
         .subject("digest-and-fixture-resolution", digest_and_fixture_resolution)
         .subject("fixture-not-in-plan-is-an-error", fixture_not_in_plan_is_an_error)
         .subject("work-directory-is-cache-local", work_directory_is_cache_local)
+        .subject("outline-registration", outline_registration)
     )
 
 

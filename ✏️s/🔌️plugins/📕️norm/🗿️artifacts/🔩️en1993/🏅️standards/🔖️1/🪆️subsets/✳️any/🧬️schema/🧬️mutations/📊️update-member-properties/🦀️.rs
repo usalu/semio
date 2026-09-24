@@ -30,7 +30,7 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateMemberProp
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update member properties (forces, section, material)", "Gliedeigenschaften (Kräfte, Abschnitt, Material) aktualisieren")
+        protocol::LocalizedLabel::native("Update member properties (forces, section, material)", "Bauteileigenschaften (Schnittgrößen, Querschnitt, Material) aktualisieren")
     }
 }
 //#endregion 🔖️Payload

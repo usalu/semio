@@ -33,7 +33,7 @@
     "sessions": "distinct-authenticated-react-relay-profiles",
     "capabilities": "host-only-never-page-worker-or-report",
     "createDocument": "production-directory-command",
-    "initialCheckpoint": "normal-checkpoint-publication",
+    "initialCheckpoint": "hub-materialized-check-in",
     "open": "production-plan-asset-grant-session",
     "pair": "actual-terminal-pack-spr-receipt",
     "load": "genuine-plugin-load-document-pack",

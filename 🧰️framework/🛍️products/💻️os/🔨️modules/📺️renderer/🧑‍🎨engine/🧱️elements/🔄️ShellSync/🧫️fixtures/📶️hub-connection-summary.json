@@ -1,0 +1,16 @@
+{
+  "schema": "semio.os.shell-sync.hub-connection-summary/v1",
+  "description": "Language-agnostic law for the persistent hub-connection badge: (attached documents' remote states, session presence, session link) -> one aggregate state and the busiest live document's peer count.",
+  "cases": [
+    { "name": "no hub configured is local, whatever is attached", "remotes": [{ "kind": "live", "peerCount": 2 }], "session": "none", "link": "reachable", "expected": { "state": "local", "peerCount": 0, "documentCount": 1 } },
+    { "name": "signed out outranks every transport state", "remotes": [{ "kind": "live", "peerCount": 4 }], "session": "signedOut", "link": "reachable", "expected": { "state": "signedOut", "peerCount": 0, "documentCount": 1 } },
+    { "name": "one live document carries the aggregate with the busiest peer count", "remotes": [{ "kind": "detached" }, { "kind": "live", "peerCount": 2 }, { "kind": "live", "peerCount": 5 }], "session": "signedIn", "link": "reachable", "expected": { "state": "live", "peerCount": 5, "documentCount": 3 } },
+    { "name": "a live document outranks a degraded session link", "remotes": [{ "kind": "live", "peerCount": 1 }], "session": "signedIn", "link": "unreachable", "expected": { "state": "live", "peerCount": 1, "documentCount": 1 } },
+    { "name": "an unreachable session link is a shortage in progress", "remotes": [], "session": "signedIn", "link": "unreachable", "expected": { "state": "reconnecting", "peerCount": 0, "documentCount": 0 } },
+    { "name": "an unreachable link outranks a document still dialling", "remotes": [{ "kind": "connecting" }], "session": "signedIn", "link": "unreachable", "expected": { "state": "reconnecting", "peerCount": 0, "documentCount": 1 } },
+    { "name": "a remembered session being verified is connecting", "remotes": [], "session": "signedIn", "link": "verifying", "expected": { "state": "connecting", "peerCount": 0, "documentCount": 0 } },
+    { "name": "a document dialling outranks one in backoff", "remotes": [{ "kind": "backoff", "retryInMs": 800 }, { "kind": "connecting" }], "session": "signedIn", "link": "reachable", "expected": { "state": "connecting", "peerCount": 0, "documentCount": 2 } },
+    { "name": "a document in backoff is reconnecting", "remotes": [{ "kind": "backoff", "retryInMs": 800 }, { "kind": "detached" }], "session": "signedIn", "link": "reachable", "expected": { "state": "reconnecting", "peerCount": 0, "documentCount": 2 } },
+    { "name": "a verified reachable session with nothing live is online", "remotes": [{ "kind": "detached" }], "session": "signedIn", "link": "reachable", "expected": { "state": "online", "peerCount": 0, "documentCount": 1 } }
+  ]
+}

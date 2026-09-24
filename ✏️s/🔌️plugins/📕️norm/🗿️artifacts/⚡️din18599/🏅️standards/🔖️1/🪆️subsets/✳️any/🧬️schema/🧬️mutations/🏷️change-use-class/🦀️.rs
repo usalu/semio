@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeUseCla
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change building use class to {:?}", self.new_use_class), &format!("Gebäudennutzungsklasse auf {:?} ändern", self.new_use_class))
+        protocol::LocalizedLabel::native(&format!("Change building use class to {:?}", self.new_use_class), &format!("Gebäudenutzungsklasse auf {:?} ändern", self.new_use_class))
     }
 }
 //#endregion 🔖️ChangeUseClass

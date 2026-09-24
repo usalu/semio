@@ -689,6 +689,8 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-replication",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-csv",
  "semio-s-artifact-stdio-json",
@@ -703,11 +705,14 @@ name = "semio-s-artifact-fem-3d"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-dispatch-macros",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-fem-2d",
  "semio-s-artifact-stdio-csv",

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeHMm {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change h mm to {:?}", self.new_h_mm), &format!("Hmm auf {:?} ändern", self.new_h_mm))
+        protocol::LocalizedLabel::native(&format!("Change depth h [mm] to {:?}", self.new_h_mm), &format!("Höhe h [mm] auf {:?} ändern", self.new_h_mm))
     }
 }
 //#endregion 🔖️ChangeHMm

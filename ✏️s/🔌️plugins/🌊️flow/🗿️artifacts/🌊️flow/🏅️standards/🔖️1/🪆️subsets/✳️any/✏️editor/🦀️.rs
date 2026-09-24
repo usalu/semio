@@ -2863,6 +2863,7 @@ pub fn create_flow_app() -> AppDefinition {
         .action_interactive_job("spotlightCommit", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("runExtensionAction", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_destructive("setActiveExample")
         .action_interactive_job("evaluate", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("focusSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)

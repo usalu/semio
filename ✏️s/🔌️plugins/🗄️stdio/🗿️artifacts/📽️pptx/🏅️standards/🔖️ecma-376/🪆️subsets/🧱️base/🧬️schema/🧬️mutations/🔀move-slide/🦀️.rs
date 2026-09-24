@@ -22,7 +22,7 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for MoveSlide {
         agg_inverse(&PptxMutation::MoveSlide(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("move-slide", "Folie verschieben")
+        protocol::LocalizedLabel::native("Move slide", "Folie verschieben")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

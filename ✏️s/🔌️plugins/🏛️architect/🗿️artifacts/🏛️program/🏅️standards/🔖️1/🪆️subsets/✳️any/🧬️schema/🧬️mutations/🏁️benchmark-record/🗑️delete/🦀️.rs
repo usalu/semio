@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteBenchmarkRecord {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete benchmark record \"{}\"", self.id.0), &format!("Vergleichswertdatensatz \"{}\" löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete benchmark record \"{}\"", self.id.0), &format!("Benchmark-Datensatz \"{}\" löschen", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

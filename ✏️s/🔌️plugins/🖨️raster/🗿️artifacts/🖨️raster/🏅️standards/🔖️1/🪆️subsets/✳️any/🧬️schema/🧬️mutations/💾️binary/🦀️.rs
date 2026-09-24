@@ -52,33 +52,52 @@ static RASTER_RETIREMENT_PROCESS_PAGES: std::sync::atomic::AtomicUsize = std::sy
 const RASTER_INITIALIZATION_PROCESS_CONTROL_CAPACITY: usize = RASTER_NON_STACK_CONTROL_BACKINGS * RASTER_RETIREMENT_PROCESS_OPERATION_CAPACITY;
 static RASTER_INITIALIZATION_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 const RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY: usize = RASTER_NON_STACK_CONTROL_BACKINGS * RASTER_RETIREMENT_PROCESS_OPERATION_CAPACITY;
-static RASTER_STANDALONE_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+/// 🎚️ One bounded pool of standalone control credits. Production retirements claim from the process pool
+/// ([`RASTER_STANDALONE_PROCESS_CONTROLS`]); a law that must hold a pool exactly full owns a private one, because the
+/// process pool is shared with every other retirement in the process.
+struct RasterStandaloneControlPool {
+    claimed: std::sync::atomic::AtomicUsize,
+    capacity: usize,
+}
+
+impl RasterStandaloneControlPool {
+    const fn new(capacity: usize) -> Self {
+        Self { claimed: std::sync::atomic::AtomicUsize::new(0), capacity }
+    }
+
+    fn claimed(&self) -> usize {
+        self.claimed.load(std::sync::atomic::Ordering::Acquire)
+    }
+}
+
+static RASTER_STANDALONE_PROCESS_CONTROLS: RasterStandaloneControlPool = RasterStandaloneControlPool::new(RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY);
 
 struct RasterStandaloneControlCredit {
+    pool: &'static RasterStandaloneControlPool,
     held_items: usize,
     held_bytes: usize,
 }
 
 impl RasterStandaloneControlCredit {
-    fn try_claim() -> Result<Self, &'static str> {
-        let current = RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire);
+    fn try_claim(pool: &'static RasterStandaloneControlPool) -> Result<Self, &'static str> {
+        let current = pool.claimed();
         let next = current.checked_add(1).ok_or("raster-store.standalone-control-overflow")?;
-        if next > RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY {
+        if next > pool.capacity {
             return Err("raster-store.standalone-control-capacity");
         }
-        if RASTER_STANDALONE_PROCESS_CONTROLS.compare_exchange(current, next, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+        if pool.claimed.compare_exchange(current, next, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return Err("raster-store.standalone-control-capacity");
         }
-        Ok(Self { held_items: 1, held_bytes: RASTER_CONTROL_BACKING_BYTES })
+        Ok(Self { pool, held_items: 1, held_bytes: RASTER_CONTROL_BACKING_BYTES })
     }
 
     fn release(&mut self) -> Result<bool, &'static str> {
         if self.held_items != 1 || self.held_bytes != RASTER_CONTROL_BACKING_BYTES {
             return Err("raster-store.standalone-control-duplicate-release");
         }
-        let current = RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire);
+        let current = self.pool.claimed();
         let next = current.checked_sub(1).ok_or("raster-store.standalone-control-underflow")?;
-        if RASTER_STANDALONE_PROCESS_CONTROLS.compare_exchange(current, next, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+        if self.pool.claimed.compare_exchange(current, next, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return Ok(false);
         }
         self.held_items = 0;
@@ -206,12 +225,17 @@ struct RasterOwnedRetirement {
     pending_page_credit: Option<usize>,
     page_credits: [bool; RASTER_RETIREMENT_STACK_PAGE_COUNT],
     control: std::mem::ManuallyDrop<Option<RasterStandaloneControlCredit>>,
+    pool: &'static RasterStandaloneControlPool,
     depth: usize,
 }
 
 impl RasterOwnedRetirement {
     fn new(owner: RasterRetirementOwner) -> Self {
-        let control = RasterStandaloneControlCredit::try_claim().ok();
+        Self::new_in(&RASTER_STANDALONE_PROCESS_CONTROLS, owner)
+    }
+
+    fn new_in(pool: &'static RasterStandaloneControlPool, owner: RasterRetirementOwner) -> Self {
+        let control = RasterStandaloneControlCredit::try_claim(pool).ok();
         Self {
             root: std::mem::ManuallyDrop::new(Some(RasterRetirementFrame::new(owner))),
             pages: std::mem::ManuallyDrop::new(std::array::from_fn(|_| None)),
@@ -220,6 +244,7 @@ impl RasterOwnedRetirement {
             pending_page_credit: None,
             page_credits: [false; RASTER_RETIREMENT_STACK_PAGE_COUNT],
             control: std::mem::ManuallyDrop::new(control),
+            pool,
             depth: 1,
         }
     }
@@ -228,7 +253,7 @@ impl RasterOwnedRetirement {
         if self.control.is_some() {
             return Ok(true);
         }
-        match RasterStandaloneControlCredit::try_claim() {
+        match RasterStandaloneControlCredit::try_claim(self.pool) {
             Ok(control) => {
                 *self.control = Some(control);
                 Ok(true)
@@ -760,6 +785,20 @@ struct RasterSnapshotRootRetirement {
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     control: std::mem::ManuallyDrop<Option<RasterStandaloneControlCredit>>,
     control_returned: bool,
+    pool: &'static RasterStandaloneControlPool,
+}
+
+impl RasterSnapshotRootRetirement {
+    fn new_in(pool: &'static RasterStandaloneControlPool, snapshot: std::sync::Arc<RasterSnapshot>) -> Self {
+        Self {
+            owner: std::mem::ManuallyDrop::new(Some(snapshot)),
+            value: std::mem::ManuallyDrop::new(None),
+            retirement: std::mem::ManuallyDrop::new(None),
+            control: std::mem::ManuallyDrop::new(RasterStandaloneControlCredit::try_claim(pool).ok()),
+            control_returned: false,
+            pool,
+        }
+    }
 }
 
 impl store::ErasedSnapshotRetirement for RasterSnapshotRootRetirement {
@@ -768,7 +807,7 @@ impl store::ErasedSnapshotRetirement for RasterSnapshotRootRetirement {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if self.control.is_none() && !self.control_returned {
-            match RasterStandaloneControlCredit::try_claim() {
+            match RasterStandaloneControlCredit::try_claim(self.pool) {
                 Ok(control) => {
                     *self.control = Some(control);
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -794,7 +833,7 @@ impl store::ErasedSnapshotRetirement for RasterSnapshotRootRetirement {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(value) = self.value.take() {
-            *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterSnapshotRetirementFactory, value));
+            *self.retirement = Some(Box::new(RasterOwnedRetirement::new_in(self.pool, RasterRetirementOwner::Snapshot(value))));
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if self.owner.is_some() && maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
@@ -839,14 +878,7 @@ impl Drop for RasterSnapshotRootRetirement {
 
 impl store::SnapshotRetirementFactory<RasterSnapshot> for RasterSnapshotRetirementFactory {
     fn retire(&self, snapshot: std::sync::Arc<RasterSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        let control = RasterStandaloneControlCredit::try_claim().ok();
-        Box::new(RasterSnapshotRootRetirement {
-            owner: std::mem::ManuallyDrop::new(Some(snapshot)),
-            value: std::mem::ManuallyDrop::new(None),
-            retirement: std::mem::ManuallyDrop::new(None),
-            control: std::mem::ManuallyDrop::new(control),
-            control_returned: false,
-        })
+        Box::new(RasterSnapshotRootRetirement::new_in(&RASTER_STANDALONE_PROCESS_CONTROLS, snapshot))
     }
 }
 

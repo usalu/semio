@@ -30,7 +30,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageContent {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set page {} content", self.index), &format!("Seite {} Inhalt setzen", self.index))
+        protocol::LocalizedLabel::native(&format!("Set page {} content", self.index), &format!("Inhalt von Seite {} setzen", self.index))
     }
 
     fn target(&self) -> Vec<String> {

@@ -193,6 +193,8 @@ import type {
   TreeWindow as GeneratedTreeWindow,
   TreeSectionProps as GeneratedTreeSectionProps,
   TreeItemProps as GeneratedTreeItemProps,
+  TableProps as GeneratedTableProps,
+  TableRowProps as GeneratedTableRowProps,
   ImageProps as GeneratedImageProps,
   ExtensionProps as GeneratedExtensionProps,
   Component as GeneratedComponent,
@@ -279,6 +281,8 @@ export type TreeWindowRowExtent = GeneratedTreeWindowRowExtent;
 export type TreeWindow = GeneratedTreeWindow;
 export type TreeSectionProps = GeneratedTreeSectionProps;
 export type TreeItemProps = GeneratedTreeItemProps;
+export type TableProps = GeneratedTableProps;
+export type TableRowProps = GeneratedTableRowProps;
 export type ImageProps = GeneratedImageProps;
 export type ExtensionProps = GeneratedExtensionProps;
 export type Component = GeneratedComponent;

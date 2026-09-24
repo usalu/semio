@@ -64,7 +64,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindPrimiti
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Unbind Primitive Attribute", "Primitivattribut lösen")
+        protocol::LocalizedLabel::native("Unbind Primitive Attribute", "Bindung des Primitivattributs aufheben")
     }
 
     fn target(&self) -> Vec<String> {

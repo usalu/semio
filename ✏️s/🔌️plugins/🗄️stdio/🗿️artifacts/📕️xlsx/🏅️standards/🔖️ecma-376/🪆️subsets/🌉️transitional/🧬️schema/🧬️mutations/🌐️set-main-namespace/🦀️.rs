@@ -21,7 +21,7 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxTransitionalMutation> for SetMainN
         agg_inverse(&XlsxTransitionalMutation::SetMainNamespace(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-main-namespace", "Hauptnamensraum setzen")
+        protocol::LocalizedLabel::native("Set main namespace", "Hauptnamensraum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

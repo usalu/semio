@@ -22,7 +22,7 @@ impl protocol::MutationKind<PresentationConfig, PresentationConfigMutation> for 
         vec![PresentationConfigMutation::SetEngagementInput(Self { value: base.engagement_input.clone() })]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Engagement Input", "Beteiligungseingabe setzen")
+        protocol::LocalizedLabel::native("Set Engagement Input", "Interaktionseingabe setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["engagementInput".into()]

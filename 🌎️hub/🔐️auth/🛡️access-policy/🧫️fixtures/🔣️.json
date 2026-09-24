@@ -1,0 +1,1025 @@
+{
+  "schema": "semio.hub.access-policy-vectors/v1",
+  "vectors": [
+    {
+      "name": "admin space.create in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "space.create",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "admin space.rename in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "space.rename",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "admin space.visibility in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "space.visibility",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "admin space.archive in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "space.archive",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "admin space.delete in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "space.delete",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "admin member.upsert in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "member.upsert",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "admin member.remove in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "member.remove",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "admin invite.create in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "invite.create",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "admin invite.revoke in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "invite.revoke",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "admin document.announce in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "document.announce",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "admin document.read in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "document.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "admin document.write in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "document.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "admin document.check-in in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "document.check-in",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "admin artifact.create in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "artifact.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "admin blob.read in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "blob.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "admin blob.write in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "blob.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner space.create in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "space.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner space.rename in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "space.rename",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner space.visibility in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "space.visibility",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner space.archive in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "space.archive",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "owner space.delete in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "space.delete",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "owner member.upsert in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "member.upsert",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner member.remove in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "member.remove",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner invite.create in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "invite.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner invite.revoke in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "invite.revoke",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner document.announce in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "document.announce",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner document.read in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "document.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner document.write in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "document.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner document.check-in in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "document.check-in",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner artifact.create in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "artifact.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner blob.read in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "blob.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner blob.write in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "blob.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "author space.create in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "space.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "author space.rename in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "space.rename",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author space.visibility in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "space.visibility",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author space.archive in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "space.archive",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "author space.delete in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "space.delete",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "author member.upsert in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "member.upsert",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author member.remove in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "member.remove",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author invite.create in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "invite.create",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author invite.revoke in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "invite.revoke",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author document.announce in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "document.announce",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author document.read in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "document.read",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author document.write in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "document.write",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author document.check-in in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "document.check-in",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author artifact.create in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "artifact.create",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author blob.read in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "blob.read",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "author blob.write in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "blob.write",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "spectator space.create in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "space.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator space.rename in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "space.rename",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator space.visibility in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "space.visibility",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator space.archive in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "space.archive",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator space.delete in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "space.delete",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator member.upsert in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "member.upsert",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator member.remove in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "member.remove",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator invite.create in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "invite.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator invite.revoke in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "invite.revoke",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator document.announce in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "document.announce",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator document.read in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "document.read",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "spectator document.write in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "document.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator document.check-in in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "document.check-in",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator artifact.create in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "artifact.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator blob.read in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "blob.read",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "spectator blob.write in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "blob.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share space.create in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "space.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share space.rename in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "space.rename",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share space.visibility in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "space.visibility",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share space.archive in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "space.archive",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share space.delete in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "space.delete",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share member.upsert in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "member.upsert",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share member.remove in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "member.remove",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share invite.create in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "invite.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share invite.revoke in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "invite.revoke",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share document.announce in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "document.announce",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share document.read in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "document.read",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "share document.write in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "document.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share document.check-in in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "document.check-in",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share artifact.create in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "artifact.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share blob.read in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "blob.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share blob.write in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "blob.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated space.create in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "space.create",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "authenticated space.rename in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "space.rename",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated space.visibility in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "space.visibility",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated space.archive in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "space.archive",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated space.delete in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "space.delete",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated member.upsert in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "member.upsert",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated member.remove in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "member.remove",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated invite.create in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "invite.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated invite.revoke in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "invite.revoke",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated document.announce in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "document.announce",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated document.read in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "document.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated document.write in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "document.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated document.check-in in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "document.check-in",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated artifact.create in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "artifact.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated blob.read in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "blob.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated blob.write in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "blob.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner+author+authenticated document.write in a archive",
+      "roles": [
+        "owner",
+        "author",
+        "authenticated"
+      ],
+      "action": "document.write",
+      "spaceKind": "archive",
+      "permitted": false
+    },
+    {
+      "name": "owner+author+authenticated document.read in a archive",
+      "roles": [
+        "owner",
+        "author",
+        "authenticated"
+      ],
+      "action": "document.read",
+      "spaceKind": "archive",
+      "permitted": true
+    },
+    {
+      "name": "spectator+authenticated document.write in a studio",
+      "roles": [
+        "spectator",
+        "authenticated"
+      ],
+      "action": "document.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "spectator+authenticated blob.write in a studio",
+      "roles": [
+        "spectator",
+        "authenticated"
+      ],
+      "action": "blob.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share blob.read in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "blob.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "nobody document.read in a studio",
+      "roles": [],
+      "action": "document.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated document.read in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "document.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "author+authenticated document.check-in in a atelier",
+      "roles": [
+        "author",
+        "authenticated"
+      ],
+      "action": "document.check-in",
+      "spaceKind": "atelier",
+      "permitted": true
+    },
+    {
+      "name": "admin+authenticated document.write in a studio",
+      "roles": [
+        "admin",
+        "authenticated"
+      ],
+      "action": "document.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "author space.create outside any space",
+      "roles": [
+        "author",
+        "authenticated"
+      ],
+      "action": "space.create",
+      "permitted": true
+    },
+    {
+      "name": "nobody space.create",
+      "roles": [],
+      "action": "space.create",
+      "permitted": false
+    },
+    {
+      "name": "admin agent.delegate in a studio",
+      "roles": [
+        "admin"
+      ],
+      "action": "agent.delegate",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "owner agent.delegate in a studio",
+      "roles": [
+        "owner"
+      ],
+      "action": "agent.delegate",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "author agent.delegate in a studio",
+      "roles": [
+        "author"
+      ],
+      "action": "agent.delegate",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "spectator agent.delegate in a studio",
+      "roles": [
+        "spectator"
+      ],
+      "action": "agent.delegate",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "share agent.delegate in a studio",
+      "roles": [
+        "share"
+      ],
+      "action": "agent.delegate",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "authenticated agent.delegate in a studio",
+      "roles": [
+        "authenticated"
+      ],
+      "action": "agent.delegate",
+      "spaceKind": "studio",
+      "permitted": false
+    }
+  ]
+}

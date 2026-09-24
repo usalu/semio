@@ -34,7 +34,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Reorde
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder annual schedule {} rule {} to {}", self.id.0, self.from, self.to), &format!("Jahreszeitplan {} Regel {} zu {} umordnen", self.id.0, self.from, self.to))
+        protocol::LocalizedLabel::native(&format!("Reorder annual schedule {} rule {} to {}", self.id.0, self.from, self.to), &format!("Jahreszeitplan {}: Regel {} an Position {} verschieben", self.id.0, self.from, self.to))
     }
 
     fn target(&self) -> Vec<String> {

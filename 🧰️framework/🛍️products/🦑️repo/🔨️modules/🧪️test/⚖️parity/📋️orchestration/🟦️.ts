@@ -25,18 +25,24 @@ import { Script, type TestLevel, resolveTestLevel } from "../../../📚️librar
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-/** 🎭️ The case's oracle decision: which implementation serves the oracle role, or the recorded no-oracle decision. */
-export function oracleDecision(repoRoot: string, discovered: DiscoveredCase, level: TestLevel): { implementation: Implementation | null; hostedByCase: boolean; noOracleDecision: string | null; comparison: ComparisonProfile; problem: string | null } {
+/**
+ * 🎭️ The case's oracle decision: which implementation serves the oracle role, or the recorded no-oracle decision. A
+ * `native` reference is driven from the adapter its entry names in `hostImplementation`, and a reference whose
+ * `executables` are not all on PATH is `unavailable` — the phase records the missing commands instead of dispatching.
+ */
+export function oracleDecision(repoRoot: string, discovered: DiscoveredCase, level: TestLevel): { implementation: Implementation | null; hostedByCase: boolean; noOracleDecision: string | null; comparison: ComparisonProfile; problem: string | null; unavailable: { oracle: string; missing: readonly string[] } | null } {
   const registry = loadOracleRegistry(repoRoot);
   const { plan } = buildCasePlan(repoRoot, discovered, level);
   if (plan.oracle === null)
-    return { implementation: null, hostedByCase: false, noOracleDecision: plan.noOracleDecision, comparison: plan.comparison, problem: plan.noOracleDecision === null ? `${discovered.caseDir}: feature declares neither an oracle nor a no-oracle decision` : null };
+    return { implementation: null, hostedByCase: false, noOracleDecision: plan.noOracleDecision, comparison: plan.comparison, problem: plan.noOracleDecision === null ? `${discovered.caseDir}: feature declares neither an oracle nor a no-oracle decision` : null, unavailable: null };
   const entry = registry.oracles.find((candidate) => candidate.id === plan.oracle);
-  if (entry === undefined) return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: unknown oracle id ${plan.oracle}` };
-  const mapped = (entry.ecosystem === "javascript" ? "typescript" : entry.ecosystem) as Implementation;
+  if (entry === undefined) return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: unknown oracle id ${plan.oracle}`, unavailable: null };
+  const mapped = (entry.ecosystem === "native" ? entry.hostImplementation : entry.ecosystem === "javascript" ? "typescript" : entry.ecosystem) as Implementation | undefined;
+  if (mapped === undefined) return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: native oracle ${entry.id} names no hostImplementation to drive it from`, unavailable: null };
   if ((discovered.adapters as Record<string, string | undefined>)[mapped] === undefined)
-    return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: oracle ${entry.id} needs a ${mapped} adapter to run in` };
-  return { implementation: mapped, hostedByCase: entry.hostPath === discovered.caseDir, noOracleDecision: null, comparison: plan.comparison, problem: null };
+    return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: oracle ${entry.id} needs a ${mapped} adapter to run in`, unavailable: null };
+  const missing = (entry.executables ?? []).filter((command) => Bun.which(command) === null);
+  return { implementation: mapped, hostedByCase: entry.hostPath === discovered.caseDir, noOracleDecision: null, comparison: plan.comparison, problem: null, unavailable: missing.length === 0 ? null : { oracle: entry.id, missing } };
 }
 
 /**
@@ -61,6 +67,7 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
   const allResults: TestResult[] = [];
   const problems: string[] = [];
   const parity: { testId: string; profile: ComparisonProfile; equal: boolean; diffs: number }[] = [];
+  const oracleUnavailable: { caseDir: string; oracle: string; missing: readonly string[] }[] = [];
   // ⚖️One effective profile table for the whole run: the framework's domain-neutral profiles plus
   // every profile the discovered owners contribute.
   const profiles = profileTable(loadOracleRegistry(repoRoot));
@@ -92,7 +99,11 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
     const subjectRawInputs = (): Readonly<Partial<Record<Implementation, string>>> =>
       Object.fromEntries(caseResults.filter((result) => result.role === "subject" && result.status === "passed" && result.output.rawPath !== undefined).map((result) => [result.implementation, result.output.rawPath!] as const));
     if (rawInputOracle) runSubjects();
-    if (phases.includes("oracle") && decision.implementation !== null) {
+    if (phases.includes("oracle") && decision.unavailable !== null) {
+      oracleUnavailable.push({ caseDir: discovered.caseDir, ...decision.unavailable });
+      console.error(`[test] oracle-unavailable ${discovered.caseDir} (${decision.unavailable.oracle} needs ${decision.unavailable.missing.join(", ")} on PATH)`);
+    }
+    if (phases.includes("oracle") && decision.implementation !== null && decision.unavailable === null) {
       const outcome = executeOne(repoRoot, discovered, level, "oracle", decision.implementation, rawInputOracle ? subjectRawInputs() : undefined);
       caseResults.push(...outcome.results);
       problems.push(...outcome.problems);
@@ -105,7 +116,7 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
 
     const diffDir = testCacheDir(repoRoot, "diffs");
     mkdirSync(diffDir, { recursive: true });
-    if (decision.implementation !== null) {
+    if (decision.implementation !== null && decision.unavailable === null) {
       const { verdicts, unmatched } = evaluateParity(decision.comparison, caseResults, profiles);
       for (const verdict of verdicts) {
         parity.push({ testId: verdict.testId, profile: verdict.profile, equal: verdict.equal, diffs: verdict.diffs });
@@ -150,11 +161,13 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
     const why =
       decision.implementation === null && decision.noOracleDecision !== null
         ? `recorded no-oracle decision ${decision.noOracleDecision} — its evidence is discharged by the subject phase`
-        : `no implementation served the requested phase(s) ${phases.join(", ")}`;
+        : decision.unavailable !== null
+          ? `oracle ${decision.unavailable.oracle} needs ${decision.unavailable.missing.join(", ")} on PATH`
+          : `no implementation served the requested phase(s) ${phases.join(", ")}`;
     console.error(`[test] not-exercised ${discovered.caseDir} (${why})`);
   }
 
-  const summary = summarizeRun(level, cases.length, scenarioCount, allResults, parity, problems);
+  const summary = summarizeRun(level, cases.length, scenarioCount, allResults, parity, problems, oracleUnavailable);
   const dir = reportsDir(repoRoot);
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, "📊️summary.json"), `${JSON.stringify(summary, null, 2)}\n`);
@@ -165,7 +178,7 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
   markRunComplete(dir);
 
   console.log(
-    `[test] level=${level} cases=${summary.cases} executed=${summary.executed} passed=${summary.passed} failed=${summary.failed} errored=${summary.errored} parity=${parity.filter((row) => row.equal).length}/${parity.length}${unexercised.length > 0 ? ` not-exercised=${unexercised.length}` : ""}`,
+    `[test] level=${level} cases=${summary.cases} executed=${summary.executed} passed=${summary.passed} failed=${summary.failed} errored=${summary.errored} parity=${parity.filter((row) => row.equal).length}/${parity.length}${unexercised.length > 0 ? ` not-exercised=${unexercised.length}` : ""}${oracleUnavailable.length > 0 ? ` oracle-unavailable=${oracleUnavailable.length}` : ""}`,
   );
   if (segments.includes("--metrics")) console.log(formatMetrics(metrics, readImplementationCoverage(repoRoot)));
   for (const problem of problems) console.error(`[test] ${problem}`);

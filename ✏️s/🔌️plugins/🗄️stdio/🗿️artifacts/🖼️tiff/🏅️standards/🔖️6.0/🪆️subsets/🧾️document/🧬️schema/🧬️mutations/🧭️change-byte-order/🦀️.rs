@@ -34,7 +34,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for ChangeByteOrderMutat
         vec![TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: base.byte_order })]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("change byte order", "Bytereihenfolge ändern")
+        protocol::LocalizedLabel::native("Change byte order", "Bytereihenfolge ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-byte-order".into()]

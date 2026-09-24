@@ -121,6 +121,22 @@ function mcpSchemasPreflight(main: string, claim: number): boolean {
   return preflight.length === 1 && preflight[0]!.includes("schema_mirror_json()") && preflight[0]!.includes("return;") && (prefix.match(/\breturn\s*;/gu) ?? []).length === 1;
 }
 
+/** 🪪️ The probe binding never claims an execution-target lease, and a lease reaches the artifact host only inside a
+ * function handed a hub-issued `DocumentExecutionTargetLeaseFieldsV1` that this workspace fetched from the hub. */
+function mcpLeaseClaimsAreHubIssued(workspace: string): boolean {
+  const probeBinding = sourceDefinitionBodies(workspace, /\bfn\s+persistence_binding\s*\([^)]*\)\s*(?:->[^\{]+)?/gu);
+  const sinks = sourceDefinitionBodies(workspace, /\bfn\s+\w+\s*\([^)]*\blease:\s*&[\w:]*DocumentExecutionTargetLeaseFieldsV1[^)]*\)\s*(?:->[^\{]+)?/gu);
+  const claims = (body: string) => body.split("set_document_execution_target_lease(").length - 1;
+  const sinkClaims = sinks.reduce((total, body) => total + claims(body), 0);
+  return (
+    probeBinding.length === 1 &&
+    probeBinding[0]!.includes("surface: Some(PROBE_SURFACE_ID.to_string())") &&
+    !probeBinding[0]!.includes("lease") &&
+    claims(workspace) === sinkClaims &&
+    (sinkClaims === 0 || workspace.includes("fetch_execution_target_lease("))
+  );
+}
+
 /** 🌉️ Checks the one current MCP runner and permits only its pure schemas-return preflight. */
 export function mcpCredentialSourceOrderConforms(source: McpCredentialSourcePopulation): boolean {
   const mains = sourceDefinitionBodies(source.entrypoint, /\bfn\s+main\s*\([^)]*\)\s*/gu);
@@ -153,7 +169,7 @@ export function mcpCredentialSourceOrderConforms(source: McpCredentialSourcePopu
     source.workspace.includes("authenticated_probe_document_is_known") &&
     source.workspace.includes("Some(probe_record_spec())") &&
     !source.workspace.includes("probe_document_socket_surface") &&
-    !source.workspace.includes("set_document_execution_target_lease(") &&
+    mcpLeaseClaimsAreHubIssued(source.workspace) &&
     source.workspace.includes("artifact_document_key(artifact_id)") &&
     source.workspace.includes("surface: Some(PROBE_SURFACE_ID.to_string())") &&
     source.directory.includes('"/directory/socket-grants"') &&

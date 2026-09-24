@@ -1,0 +1,34 @@
+{
+  "layout": {
+    "version": 1,
+    "directory": "📤️distribution",
+    "bundles": "🧶️bundles",
+    "entry": { "source": "source/main.html", "output": "🌐️.html" },
+    "manifest": "🧾️manifest.json",
+    "chunks": [
+      { "kind": "facade", "source": "source/main.ts", "output": "🚀️bootstrap-[hash].js" },
+      { "kind": "module", "source": "source/runtime.ts", "output": "🖥️runtime-[hash].js" }
+    ],
+    "assets": [
+      { "kind": "source", "source": "source/font.woff2", "output": "🔤️fonts/🗜️font-[hash].woff2" },
+      { "kind": "name", "source": "runtime.css", "output": "🎨️runtime-[hash].css" },
+      { "kind": "source", "source": "source/style.css", "emittedName": "style.css", "output": "🖌️styles-[hash].css" }
+    ]
+  },
+  "cases": [
+    { "type": "chunk", "facts": { "facadeModuleId": "source/main.ts", "moduleIds": [] }, "output": "🧶️bundles/🚀️bootstrap-[hash].js" },
+    { "type": "chunk", "facts": { "facadeModuleId": null, "moduleIds": ["source/runtime.ts"] }, "output": "🧶️bundles/🖥️runtime-[hash].js" },
+    { "type": "asset", "facts": { "originalFileNames": ["source/font.woff2"], "names": ["font.woff2"] }, "output": "🧶️bundles/🔤️fonts/🗜️font-[hash].woff2" },
+    { "type": "asset", "facts": { "originalFileNames": [], "names": ["runtime.css"] }, "output": "🧶️bundles/🎨️runtime-[hash].css" },
+    { "type": "asset", "facts": { "originalFileNames": [], "names": ["style.css"] }, "output": "🧶️bundles/🖌️styles-[hash].css" },
+    { "type": "asset", "facts": { "originalFileNames": ["source/style.css"], "names": ["style.css"] }, "output": "🧶️bundles/🖌️styles-[hash].css" }
+  ],
+  "rejectedFacts": [
+    { "type": "chunk", "facts": { "facadeModuleId": "source/unknown.ts", "moduleIds": ["source/runtime.ts"] } },
+    { "type": "chunk", "facts": { "facadeModuleId": null, "moduleIds": [] } },
+    { "type": "asset", "facts": { "originalFileNames": ["other/font.woff2"], "names": ["font.woff2"] } },
+    { "type": "asset", "facts": { "originalFileNames": ["source/unowned.css"], "names": ["runtime.css"] } },
+    { "type": "asset", "facts": { "originalFileNames": [], "names": ["unknown.css"] } }
+  ],
+  "rejectedOutputs": ["plain-[hash].js", "📄️generic-[hash].js", "🧬️🧬️stack-[hash].js", "../🚀️escape-[hash].js", "/🚀️absolute-[hash].js", "🚀️name-[name].js", "🚀️name-[hash]/🟦️source.js"]
+}

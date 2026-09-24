@@ -125,6 +125,16 @@ principal of its own — `agent:<delegation id>` — so everything your assistan
 screen: the hub kills the delegation and every session minted from it in one transaction, and the
 agent's next frame is closed.
 
+**Or let the shell write the client config for you.** On a development host (`dev s`), the same pane
+offers **Set up MCP client** right after the delegation is created: the dev server installs the
+credential `0600` in a `0700` directory (`~/.semio/agent/credentials/semio-agent-<delegation id>.json`,
+overridable with `S_AGENT_CREDENTIALS_DIR`) and the pane shows a complete `mcpServers` entry — this
+checkout's launcher (`bun <repo>/📜️script.ts dev mcp stdio os`, which stages the binary itself), the
+delegation's `--hub`/`--space`, the installed `--credential-file`, and the scopes its audience admits —
+with a **Copy MCP configuration** control. The entry names the file, never the token. Withdrawing
+the delegation removes the installed file as well. Contract: `📇️directory/🧬️schema`
+`AgentMcpClientConfigV1`, law `📇️directory/🤖️delegations/🧫️fixtures/🔌️mcp-client-config.json`.
+
 The file is what `POST /auth/agent-delegations` returned:
 
 ```json
@@ -403,7 +413,12 @@ actors that may decide (`🛡️policy::ApprovalCoordinator`):
 3. **The live OS shell** — `GatewayToShell::ApprovalRequested` over `/bridge`, decided by the human in
    the `🤖️AgentApprovals` dialog or inline in `💬️AgentChatPanel`, answered by
    `ShellToGateway::Approval`. Bounded by `SHELL_APPROVAL_TIMEOUT_MS`; a shell that never answers
-   times out into a refusal, never into an approval.
+   times out into a refusal, never into an approval. Every request a shell was shown closes on that
+   shell with exactly one frame: `ApprovalResolved` when its human decided, or `ApprovalWithdrawn`
+   with the reason the gateway stopped waiting — `cancelled` (the agent's call was cancelled),
+   `timed_out`, or `superseded` (a newer shell connected and is asked instead, with the time that
+   remains). The shell then retires the affordance and says why; nothing stays decidable for a request
+   nobody waits on. Law: `🛡️policy/🧫️fixtures/🪦️approval-withdrawal.json`.
 
 With none of the three available, `action_invoke` answers `APPROVAL_REQUIRED` whose `details` name
 every lane it tried, why each was closed, and the remedy. It is never a silent proceed and never a
@@ -425,16 +440,17 @@ config this repo ships (`.mcp.json`, `.cursor/`, `.vscode/`, `.windsurf/`, `.kir
 
 ### Attaching a live shell from stdio
 
-`stdio` mode is what every client config launches, and it now offers the same loopback `/bridge` the
-`http` transport does. On start it looks for a live os session in
-`~/.semio/agent/bridge/sessions/` (`🛰️rendezvous`); finding one, it binds a **bridge-only** listener
-(no `/mcp` on that socket — this process's MCP surface is stdin/stdout) and publishes an owner-only
-(`0600`) offer in `~/.semio/agent/bridge/offers/<pid>.json` carrying the `ws://` url and a per-process
-admission proof, removed when the process exits. Admission is never the hub fd-3 credential: a stdio
-gateway inherits none and must not fabricate one. Finding no live session, no listener is bound and
-every bridge-dependent tool (`ui_focus`, `ui_reveal`, agent presence, shell approvals) answers a typed
-`PLUGIN_UNAVAILABLE` naming the sessions directory and the live-session count as of that call — never a
-silent no-op. `--no-bridge` opts out entirely.
+`stdio` mode is what every client config launches, and it offers the same loopback `/bridge` the
+`http` transport does. On start it binds a **bridge-only** listener (no `/mcp` on that socket — this
+process's MCP surface is stdin/stdout) and publishes an owner-only (`0600`) offer in
+`~/.semio/agent/bridge/offers/<pid>.json` (`🛰️rendezvous`; `S_AGENT_BRIDGE_DIR` pins another
+directory) carrying the `ws://` url and a per-process admission proof, removed when the process exits.
+It does so whether or not a `dev s` session is live yet: the shell polls for offers, so opening your
+MCP client first and the shell later — or the other way round — needs no reconnect. Admission is never
+the hub fd-3 credential: a stdio gateway inherits none and must not fabricate one. Until a shell dials,
+every bridge-dependent tool (`ui_focus`, `ui_reveal`, agent presence, shell approvals) answers a typed,
+retryable `PLUGIN_UNAVAILABLE` saying no shell is attached — never a silent no-op. `--no-bridge` opts
+out entirely.
 
 ## Layout
 

@@ -20,6 +20,11 @@ repo/hooks/* text eol=lf
 *.pack.semio binary
 *.spr.semio binary
 
+# 🧫️ Fixture bytes are evidence (every fixture manifest pins a sha256). Line-ending normalization
+# rewrote a real terminal log's two CRLF sequences to LF on commit, so nothing under a fixture tree is
+# ever normalized; `-text` disables EOL conversion only and keeps textual diffs.
+**/🧫️fixtures/** -text
+
 # 🧫️ Real-world artifact fixtures. `* text=auto` leaves these to git's content heuristic; a binary
 # that heuristic misreads gets line-ending normalized on checkout and is then corrupt for every
 # byte-exact round-trip test that reads it.

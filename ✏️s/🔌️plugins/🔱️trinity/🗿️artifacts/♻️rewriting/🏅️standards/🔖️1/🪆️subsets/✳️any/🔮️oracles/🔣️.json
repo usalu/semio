@@ -160,7 +160,8 @@
           "capability": "rewriting-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-parameter-binding",
@@ -179,7 +180,8 @@
           "capability": "rewriting-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-rule-layout-point",
@@ -198,7 +200,8 @@
           "capability": "rewriting-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "edit-before-fixture",
@@ -217,7 +220,8 @@
           "capability": "rewriting-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "edit-lhs",
@@ -236,7 +240,8 @@
           "capability": "rewriting-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "edit-rhs",
@@ -255,7 +260,8 @@
           "capability": "rewriting-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "remove-parameter-binding",
@@ -274,7 +280,8 @@
           "capability": "rewriting-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "remove-rule-layout-point",

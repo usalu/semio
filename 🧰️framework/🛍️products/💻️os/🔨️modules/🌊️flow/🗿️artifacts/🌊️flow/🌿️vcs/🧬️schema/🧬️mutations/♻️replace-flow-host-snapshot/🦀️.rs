@@ -23,7 +23,7 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for ReplaceFlowHostSnapshot {
         vec![FlowMutation::ReplaceFlowHostSnapshot(Self { host_snapshot: base.clone() })]
     }
     fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native("Replace flow fixture", "Flussvorrichtung ersetzen")
+        crate::LocalizedLabel::native("Replace flow fixture", "Flussbeispiel ersetzen")
     }
     fn target(&self) -> Vec<String> { vec![] }
 }

@@ -12,12 +12,6 @@
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::cobie::{oracle_apply_mutation, project_ifc_2x3_cobie};
 
-//#region 🔖️Kinds
-/// 🏷️ Mirrors this subset's own `Ifc2x3CobieMutation::KINDS`
-/// (`../../🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧬️schema/🧬️mutations/🦀️.rs`). The contract
-/// gate (mutation coverage against the `ifc-2x3-cobie` catalog) keeps the two lists honest.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "set-facility-name", "set-floor-elevation", "set-space", "set-type-assignment"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc";
@@ -355,12 +349,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), mutate_oracle).oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), subject::mutate).subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

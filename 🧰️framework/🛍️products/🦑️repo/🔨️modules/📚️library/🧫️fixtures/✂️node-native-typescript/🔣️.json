@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "configImportSpecifiers": [
+    "vite",
+    "vitest/config"
+  ],
+  "nativeEntries": [
+    "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts"
+  ],
+  "vectors": [
+    {
+      "name": "explicit-class-fields",
+      "source": "export class Reader {\n  readonly bytes: Uint8Array;\n  constructor(bytes: Uint8Array) {\n    this.bytes = bytes;\n  }\n}\n",
+      "stripOnly": true
+    },
+    {
+      "name": "parameter-property",
+      "source": "export class Reader {\n  constructor(readonly bytes: Uint8Array) {}\n}\n",
+      "stripOnly": false
+    },
+    {
+      "name": "private-parameter-property",
+      "source": "export class Counter {\n  constructor(private value = 0) {}\n}\n",
+      "stripOnly": false
+    },
+    {
+      "name": "enum",
+      "source": "export enum Phase { Open, Closed }\n",
+      "stripOnly": false
+    },
+    {
+      "name": "value-namespace",
+      "source": "export namespace Limits {\n  export const pages = 16;\n}\n",
+      "stripOnly": false
+    },
+    {
+      "name": "declared-namespace",
+      "source": "export declare namespace Limits {\n  const pages: number;\n}\n",
+      "stripOnly": true
+    },
+    {
+      "name": "type-only-import",
+      "source": "import type { Page } from \"./page.ts\";\nexport const first: Page | null = null;\n",
+      "stripOnly": true
+    },
+    {
+      "name": "import-equals",
+      "source": "import fs = require(\"node:fs\");\nexport const read = fs.readFileSync;\n",
+      "stripOnly": false
+    },
+    {
+      "name": "satisfies-and-as",
+      "source": "export const pages = [1, 2] as const satisfies readonly number[];\nexport const count = pages.length as number;\n",
+      "stripOnly": true
+    }
+  ]
+}

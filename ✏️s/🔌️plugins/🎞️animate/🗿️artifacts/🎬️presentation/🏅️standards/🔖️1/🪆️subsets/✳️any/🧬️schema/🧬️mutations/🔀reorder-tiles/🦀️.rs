@@ -30,7 +30,7 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ReorderTiles {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder tile \"{}\" to position {}", self.id, self.to_index), &format!("Kachel \"{}\" zu Position {} umordnen", self.id, self.to_index))
+        protocol::LocalizedLabel::native(&format!("Reorder tile \"{}\" to position {}", self.id, self.to_index), &format!("Kachel \"{}\" an Position {} verschieben", self.id, self.to_index))
     }
 
     fn target(&self) -> Vec<String> {

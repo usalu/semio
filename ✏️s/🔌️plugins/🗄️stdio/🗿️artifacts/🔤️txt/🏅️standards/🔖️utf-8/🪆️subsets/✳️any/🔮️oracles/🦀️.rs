@@ -1,31 +1,23 @@
-//! 🔮️ Mutation oracle for this subset — every mutation kind the subset declares, performed
-//! independently of this repository's own codec so the subject has something real to be compared
-//! against instead of being checked against its own reading.
+//! 🔮️ Mutation oracle for this subset — every mutation kind the subset declares, performed on a
+//! document READ by a third-party reader, so the subject is compared against something that never
+//! consulted this repository's own reading of line structure.
 //!
-//! Reference: none — recorded no-oracle decision `txt-utf-8-line-structure`. Line splitting,
-//! line-ending policy and trailing-newline handling are exactly what THIS subset defines; no
-//! third-party crate is authoritative over them the way `lopdf` is authoritative over PDF. What
-//! stands in for a reference implementation instead:
-//! 1. [`independent_split`]/[`independent_render`] — a hand-written re-derivation of the
-//!    subset's own documented Lf/CrLf-only spec, compiled into THIS crate
-//!    (`semio_s_plugin_stdio_test_oracle`), which never depends on the subject crate
-//!    (`semio_s_plugin_stdio`) and therefore never calls `TxtSnapshot::from_body`/`to_body`.
-//! 2. [`csv_independent_line_count`] — the `csv` crate's own record reader (already linked for
-//!    the tabular subsets) as a genuinely independent, third-party cross-check of WHERE the line
-//!    boundaries fall, on the real fixture and on every spec vector. It cannot referee the
-//!    LF-vs-CRLF/trailing-newline questions themselves (its terminator collapses CR, LF and CRLF
-//!    into one undifferentiated boundary and never reports which one it saw), so it discharges
-//!    only part of the line-splitting half — see the rationale on the manifest's
-//!    `noOracleDecisions` entry for the full accounting.
+//! Reference: `bstr-txt-utf-8-mutate-reader` (`bstr` 1.13, MIT OR Apache-2.0). [`bstr_split`] takes
+//! the document apart with bstr's own `lines_with_terminator`, which reports every line WITH the
+//! terminator it carried — so where each line ends, which terminator it used, and whether the last
+//! line is terminated at all are bstr's answers, not ours. A CRLF document that also contains a bare
+//! LF is refused: this format reads that LF as line content, bstr reads it as a line boundary, and
+//! the two readings must not be silently reconciled.
+//!
+//! Supplements, which cannot discharge the requirement on their own:
+//! 1. [`independent_split`]/[`independent_render`] — the subset's documented split/join rule
+//!    re-derived by hand; [`independent_render`] is how the oracle writes the mutated lines back.
+//! 2. [`csv_independent_line_count`] — the `csv` crate's record reader as a second third-party
+//!    cross-check of WHERE the line boundaries fall.
 //! 3. Specification vectors and the inverse law as a metamorphic property, both exercised in
 //!    `../🧪️tests/📝️mutate-txt-utf-8/`.
 //!
-//! The vocabulary is per SUBSET, not per artifact: two standards of the same format declare
-//! different mutations, and a subset that shares an implementation with another reaches it through
-//! the shared family modules rather than by copying it.
-//!
-//! @see ../🔣️oracle.json — the mutation catalog and no-oracle decision this module is
-//! measured against.
+//! @see ../🔣️oracle.json — the mutation catalog and the registered reader.
 //! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`TxtMutation`,
 //! `KINDS`).
 
@@ -84,6 +76,37 @@ pub fn non_canonical_reason(lines: &[String], trailing_newline: bool) -> Option<
 }
 //#endregion 🔖️IndependentReader
 
+//#region 🔖️ThirdPartyReader
+/// 📖️ Reads `(lines, trailing_newline, is_crlf)` with `bstr`'s own line reader: every line comes back
+/// with the terminator it actually carried, so the line boundaries, the terminator style and the
+/// presence of a final terminator are all read by the third party. A CRLF document that also
+/// carries a bare LF is refused: the format reads that LF as line content (the whole document is
+/// CRLF once one `\r\n` occurs) while bstr reads it as a boundary. An empty document is zero lines.
+///
+/// @see https://docs.rs/bstr/1.13.1/bstr/trait.ByteSlice.html#method.lines_with_terminator
+#[cfg(feature = "oracles")]
+pub fn bstr_split(input: &[u8]) -> Result<(Vec<String>, bool, bool), String> {
+    use bstr::ByteSlice;
+    let terminated: Vec<&[u8]> = input.lines_with_terminator().collect();
+    let is_crlf = terminated.iter().any(|line| line.ends_with(b"\r\n"));
+    let mut lines = Vec::with_capacity(terminated.len());
+    let mut trailing_newline = false;
+    for (index, line) in terminated.iter().enumerate() {
+        let (content, terminator): (&[u8], &str) = match (line.strip_suffix(b"\r\n"), line.strip_suffix(b"\n")) {
+            (Some(content), _) => (content, "\r\n"),
+            (None, Some(content)) => (content, "\n"),
+            (None, None) => (line, ""),
+        };
+        if !terminator.is_empty() && (terminator == "\r\n") != is_crlf {
+            return Err(format!("bstr reads line {index} terminated by {terminator:?} in a {} document: bstr splits where this CRLF document carries line content", if is_crlf { "CRLF" } else { "LF" }));
+        }
+        trailing_newline = !terminator.is_empty();
+        lines.push(content.to_str().map_err(|error| format!("bstr reads line {index} as invalid UTF-8: {error}"))?.to_string());
+    }
+    Ok((lines, trailing_newline, is_crlf))
+}
+//#endregion 🔖️ThirdPartyReader
+
 //#region 🔖️Projection
 /// 🔎️ The `exact-bytes-v1` projection: the whole re-serialized document AS TEXT, so the profile's
 /// opaque-byte-string comparison catches any difference at all — a carrier format has nothing a
@@ -113,8 +136,8 @@ fn json_bool(params: &Json, key: &str) -> bool {
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
-/// reports as a passing test. Every arm is hand-rolled against [`independent_split`]/
-/// [`independent_render`] alone, mirroring the clamping/no-op rules the subset's own
+/// reports as a passing test. The document is read by [`bstr_split`] and written back by
+/// [`independent_render`], mirroring the clamping/no-op rules the subset's own
 /// `TxtMutation::diff`/`TxtLinesDiff::apply` document (`InsertLine` clamps to `min(index, len)`;
 /// an out-of-range `RemoveLine`/`SetLine` is a no-op) — those are the FORMAT's rules, not this
 /// crate's implementation detail, so a genuinely independent reader has to agree with them too.
@@ -127,8 +150,7 @@ fn json_bool(params: &Json, key: &str) -> bool {
 /// format rule, not one implementation consulted twice.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-    let body = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
-    let (mut lines, mut trailing_newline, mut is_crlf) = independent_split(body);
+    let (mut lines, mut trailing_newline, mut is_crlf) = bstr_split(input)?;
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
     match spec.str("kind").as_str() {
         "" => return Err("mutation spec carries no `kind`".to_string()),
@@ -160,7 +182,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 }
 
 /// ↩️ The inverse mutation's OWN spec, computed by reading whatever pre-mutation state it needs
-/// straight out of `original` with the SAME independent reader [`oracle_apply_mutation`] mutates
+/// straight out of `original` with the SAME third-party reader [`oracle_apply_mutation`] mutates
 /// with — never by calling this repository's own `TxtMutation::inverse`, which would defeat the
 /// point of an independently-computed reference. Mirrors that method's documented rule exactly
 /// (index-aware, reading the pre-state it needs from the ORIGINAL document; `insert-line`'s inverse
@@ -168,13 +190,10 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 ///
 /// 🏠️ Lives HERE, in the reference module, rather than in the case adapter, because it is reference
 /// SEMANTICS and not test plumbing: the adapter drives it, and this module's own unit tests below
-/// exercise it against the real committed fixture — which is the only place the inverse law for
-/// this subset is checked at all today, the case being a recorded no-oracle one whose scenarios the
-/// runner never dispatches in the oracle phase.
+/// exercise it against the real committed fixture.
 #[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
-    let body = std::str::from_utf8(original).map_err(|error| format!("input is not UTF-8: {error}"))?;
-    let (lines, trailing_newline, is_crlf) = independent_split(body);
+    let (lines, trailing_newline, is_crlf) = bstr_split(original)?;
     let params = forward.get("params").cloned().unwrap_or(Json::Null);
     let index = |key: &str| match params.get(key) {
         Some(Json::Number(value)) => Some(*value as usize),

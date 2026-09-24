@@ -24,7 +24,7 @@ impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetBlockEnti
         agg_inverse(&SemioCadMutation::SetBlockEntityLayer(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-block-entity-layer", "Blockentitätsebene setzen")
+        protocol::LocalizedLabel::native("Set block entity layer", "Ebene der Blockentität setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

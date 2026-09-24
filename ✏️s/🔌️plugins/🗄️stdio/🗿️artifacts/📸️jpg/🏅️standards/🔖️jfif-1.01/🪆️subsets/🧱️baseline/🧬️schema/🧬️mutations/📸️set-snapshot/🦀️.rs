@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSnapshot {
-    pub(crate) snapshot: JpgSnapshot,
+    pub snapshot: JpgSnapshot,
 }
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSnapshot {
@@ -21,7 +21,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSnapshot {
         agg_inverse(&JpgBaselineMutation::SetSnapshot(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
+        protocol::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

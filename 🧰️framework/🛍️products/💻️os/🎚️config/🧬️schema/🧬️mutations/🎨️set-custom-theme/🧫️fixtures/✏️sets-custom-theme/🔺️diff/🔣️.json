@@ -1,0 +1,23 @@
+{
+  "appearance": null,
+  "layout": null,
+  "driverId": null,
+  "customDrivers": {},
+  "locale": null,
+  "terminology": null,
+  "themeId": null,
+  "customThemes": {
+    "contrast": {
+      "themeId": "contrast",
+      "label": "Contrast",
+      "config": {
+        "colors": {
+          "surface": "#000000",
+          "text": "#ffffff"
+        },
+        "radius": 4
+      }
+    }
+  },
+  "keybindingOverrides": {}
+}

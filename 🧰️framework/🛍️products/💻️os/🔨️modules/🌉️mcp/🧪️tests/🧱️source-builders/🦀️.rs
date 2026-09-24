@@ -136,9 +136,9 @@ fn cad_actions() -> Vec<ActionDefinition> {
         action("setLocale", "Set Locale", "Sprache festlegen", ActionKind::View),
         action("setTerminology", "Set Terminology", "Terminologie festlegen", ActionKind::View),
         action("setContributions", "Set Contributions", "Beiträge festlegen", ActionKind::View).in_palette(false),
-        action("saveSelected", "Save Selected", "Auswahl speichern", ActionKind::Shell).use_when(["save the selected objects", "die ausgewählten objekte speichern"]),
-        action("saveInPlay", "Save In Play", "Im Play speichern", ActionKind::Shell),
-        action("saveCurrent", "Save Current", "Aktuelles speichern", ActionKind::Shell).use_when(["export the model", "save the current model", "das modell exportieren"]).with_args([ActionArgDef::select(
+        action("saveSelected", "Save Selected", "Auswahl speichern", ActionKind::Shell).destructive().use_when(["save the selected objects", "die ausgewählten objekte speichern"]),
+        action("saveInPlay", "Save In Play", "Im Play speichern", ActionKind::Shell).destructive(),
+        action("saveCurrent", "Save Current", "Aktuelles speichern", ActionKind::Shell).destructive().use_when(["export the model", "save the current model", "das modell exportieren"]).with_args([ActionArgDef::select(
             "format",
             LocalizedLabel::native("Format", "Format"),
             vec![ActionArgOption::new("step", LocalizedLabel::native("STEP", "STEP")), ActionArgOption::new("obj", LocalizedLabel::native("OBJ", "OBJ")), ActionArgOption::new("stl", LocalizedLabel::native("STL", "STL"))],
@@ -255,7 +255,7 @@ fn note_actions() -> Vec<ActionDefinition> {
         action("setCamera", "Set Camera", "Kamera festlegen", ActionKind::View).use_when(["change the camera view", "die kameraansicht ändern"]),
         action("setCameraZoom", "Set Camera Zoom", "Kamerazoom festlegen", ActionKind::View),
         action("setLocale", "Set Locale", "Sprache festlegen", ActionKind::View),
-        action("saveDownload", "Save Download", "Als Download speichern", ActionKind::Shell).use_when(["download the note", "save the note as a file", "die notiz herunterladen"]),
+        action("saveDownload", "Save Download", "Als Download speichern", ActionKind::Shell).destructive().use_when(["download the note", "save the note as a file", "die notiz herunterladen"]),
         action("loadRequest", "Load Request", "Ladevorgang anfordern", ActionKind::Shell).use_when(["open a note file", "load a file", "eine notizdatei öffnen"]),
     ]
 }
@@ -457,7 +457,8 @@ fn draw_actions() -> Vec<ActionDefinition> {
             .with_args([ActionArgDef::text("layerId", LocalizedLabel::native("Layer", "Ebene")).required(), ActionArgDef::text("field", LocalizedLabel::native("Field", "Feld")).required()]),
         ActionDefinition { icon_id: IconName::from("download"), ..action("exportDocument", "Export PDF", "PDF exportieren", ActionKind::View) }
             .describe(LocalizedLabel::native("Renders the drawing to a downloadable file — a vector-painted PDF page or an SVG document.", "Rendert die Zeichnung in eine herunterladbare Datei — PDF oder SVG."))
-            .use_when(["export the document as pdf", "download the drawing"]),
+            .use_when(["export the document as pdf", "download the drawing"])
+            .destructive(),
         action("deleteLayer", "Delete Layer", "Ebene löschen", ActionKind::Mutation)
             .describe(LocalizedLabel::native("Removes one layer from the drawing by id — the layer's geometry is gone unless the edit is undone.", "Entfernt eine Ebene anhand ihrer Id aus der Zeichnung — die Geometrie ist fort, sofern die Änderung nicht rückgängig gemacht wird."))
             .use_when(["delete this layer", "remove the selected shape"])

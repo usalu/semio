@@ -29,7 +29,7 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for InsertEncryptionDictionary {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Insert encryption dictionary V{} R{}", self.version, self.revision), &format!("Verschlüsselungswörterbuchv{} R{} einfügen", self.version, self.revision))
+        protocol::LocalizedLabel::native(&format!("Insert encryption dictionary V{} R{}", self.version, self.revision), &format!("Verschlüsselungswörterbuch V{} R{} einfügen", self.version, self.revision))
     }
 
     fn target(&self) -> Vec<String> {

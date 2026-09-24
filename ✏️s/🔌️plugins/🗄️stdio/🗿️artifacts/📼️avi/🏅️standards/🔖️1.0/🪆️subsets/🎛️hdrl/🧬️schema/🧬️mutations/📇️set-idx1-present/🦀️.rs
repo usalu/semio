@@ -21,7 +21,7 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetIdx1Present {
         agg_inverse(&AviMutation::SetIdx1Present(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-idx1-present", "idx1 vorhanden setzen")
+        protocol::LocalizedLabel::native("Set idx1 present", "idx1-Index vorhanden setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

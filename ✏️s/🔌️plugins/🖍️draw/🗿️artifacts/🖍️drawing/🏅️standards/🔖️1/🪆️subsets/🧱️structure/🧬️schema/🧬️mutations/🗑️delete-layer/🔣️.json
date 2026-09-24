@@ -11,8 +11,8 @@
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",
   "outcomeClasses": [
-    "error",
-    "applied"
+    "applied",
+    "rejected"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

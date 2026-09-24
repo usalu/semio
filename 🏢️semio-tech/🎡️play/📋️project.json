@@ -196,7 +196,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/site"
+        "{projectRoot}/dist/pages"
       ]
     },
     "test": {

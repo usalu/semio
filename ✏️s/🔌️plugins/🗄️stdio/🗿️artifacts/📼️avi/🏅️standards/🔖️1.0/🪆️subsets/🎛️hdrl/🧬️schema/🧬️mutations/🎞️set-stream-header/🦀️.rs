@@ -22,7 +22,7 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetStreamHeader {
         agg_inverse(&AviMutation::SetStreamHeader(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-stream-header", "Stromkopf setzen")
+        protocol::LocalizedLabel::native("Set stream header", "Datenstrom-Header setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

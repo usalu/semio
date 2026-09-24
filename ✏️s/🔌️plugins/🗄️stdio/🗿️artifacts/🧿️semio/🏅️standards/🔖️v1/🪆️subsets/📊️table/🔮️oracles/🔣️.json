@@ -171,7 +171,8 @@
           "capability": "semio-v1-table-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-column",
@@ -210,8 +211,9 @@
           "capability": "semio-v1-table-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "edit-cell",
@@ -230,7 +232,8 @@
           "capability": "semio-v1-table-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-row",
@@ -269,8 +272,9 @@
           "capability": "semio-v1-table-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-column",
@@ -289,8 +293,9 @@
           "capability": "semio-v1-table-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-columns",
@@ -309,8 +314,9 @@
           "capability": "semio-v1-table-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-rows",

@@ -441,7 +441,7 @@ fn held_sync_hello_pool() -> (std::sync::Arc<semio_framework_async::WorkerPool>,
     let held = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
     let worker_entered = entered.clone();
     let worker_held = held.clone();
-    pool.try_submit(
+    pool.submit(
         semio_framework_async::Lane::Maintenance,
         Box::new(move || {
             worker_entered.store(true, std::sync::atomic::Ordering::Release);
@@ -449,9 +449,7 @@ fn held_sync_hello_pool() -> (std::sync::Arc<semio_framework_async::WorkerPool>,
                 std::thread::yield_now();
             }
         }),
-    )
-    .ok()
-    .expect("sync hello blocker admission");
+    );
     while !entered.load(std::sync::atomic::Ordering::Acquire) {
         std::thread::yield_now();
     }

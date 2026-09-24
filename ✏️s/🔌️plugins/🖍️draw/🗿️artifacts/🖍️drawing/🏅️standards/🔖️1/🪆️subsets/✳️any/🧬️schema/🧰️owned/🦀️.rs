@@ -4107,8 +4107,11 @@ struct DrawingMutationCandidateAuthority {
 }
 
 impl DrawingMutationCandidateAuthority {
-    fn try_new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<Self, &'static str> {
-        let (arena_pool, arena_slot, arena_generation, owner) = borrow_drawing_mutation_arena().map_err(DrawingMutationArenaBorrowError::as_str)?;
+    /// 🧮️ Borrows one slot of the process arena pool. `NotReady` (the pool is still bootstrapping under
+    /// maintenance) and `Contended` (another thread holds the pool for one bounded borrow) are
+    /// transient: the caller yields and borrows again on a later step.
+    fn try_new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<Self, DrawingMutationArenaBorrowError> {
+        let (arena_pool, arena_slot, arena_generation, owner) = borrow_drawing_mutation_arena()?;
         Ok(Self::from_arena(operation, generation, arena_pool, arena_slot, arena_generation, owner))
     }
 
@@ -5498,8 +5501,9 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                 if self.mutation_candidate.is_none() {
                     match DrawingMutationCandidateAuthority::try_new(self.operation, self.generation) {
                         Ok(candidate) => *self.mutation_candidate = Some(candidate),
+                        Err(DrawingMutationArenaBorrowError::NotReady | DrawingMutationArenaBorrowError::Contended) => return semio_framework_job::StepOutcome::Yield,
                         Err(error) => {
-                            self.fail(error.as_bytes());
+                            self.fail(error.as_str().as_bytes());
                             return semio_framework_job::StepOutcome::Yield;
                         }
                     }

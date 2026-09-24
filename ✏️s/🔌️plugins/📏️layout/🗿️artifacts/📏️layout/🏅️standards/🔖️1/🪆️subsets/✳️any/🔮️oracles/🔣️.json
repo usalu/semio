@@ -347,6 +347,17 @@
               "directoryName": "📐️sets-asymmetric-margins-on-page-1"
             }
           ]
+        },
+        {
+          "mutationId": "rotate-frame",
+          "sourceMutationDirectoryName": "🔄️rotate-frame",
+          "mutationDirectoryName": "🔄️rotate-frame",
+          "scenarios": [
+            {
+              "id": "rotates-the-rect-frame",
+              "directoryName": "🌀️rotates-the-rect-frame"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -393,7 +404,8 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-data-fields",
@@ -412,8 +424,9 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-frame-columns",
@@ -432,8 +445,9 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-frame-fill",
@@ -452,8 +466,9 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-frame-stroke",
@@ -472,8 +487,9 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-frame-wrap-mode",
@@ -492,8 +508,9 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-link-path",
@@ -512,8 +529,9 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-page-height",
@@ -532,8 +550,9 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-page-width",
@@ -552,7 +571,8 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-print-target",
@@ -591,7 +611,8 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-link",
@@ -610,7 +631,8 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-page",
@@ -629,7 +651,8 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-story",
@@ -728,8 +751,9 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "edit-story",
@@ -768,7 +792,8 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "rename-layout",
@@ -787,8 +812,9 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-page",
@@ -807,8 +833,9 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-pages",
@@ -843,12 +870,33 @@
           ]
         },
         {
-          "id": "update-page-columns",
+          "id": "rotate-frame",
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "rejected",
             "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-frame",
+            "bridgeVersion": 1,
+            "variant": "RotateFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-page-columns",
+          "capability": "layout-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "update-page-columns",
@@ -867,8 +915,9 @@
           "capability": "layout-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "update-page-margins",

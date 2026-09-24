@@ -4,7 +4,7 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`.
 //!
-//! ✅️ This is an APPLIED case with an EMPTY diff. `reorder-synapses`' own `🔺️diff` leaf returns
+//! ✅️ This is an NO-OP case with an EMPTY diff. `reorder-synapses`' own `🔺️diff` leaf returns
 //! `MutationOutcome::empty().warn("mutation.no-op", …)` the moment the resolved destination equals
 //! the synapse's current index, never reaching `diff_replace_content`. Because no new content handle
 //! is minted, `➡️after` equals `⬅️before` and the committed diff is `FlowDiff`'s all-`null`
@@ -91,15 +91,15 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "reorder-synapses/keeps-the-leading-synapse-at-index-zero: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared outcome is `applied` WITH a `warn`-level `mutation.no-op` — asking a synapse to
+/// 🎯️ The declared outcome is `no-op` WITH a `warn`-level `mutation.no-op` — asking a synapse to
 /// stay where it already is is a warning on an empty diff, never a rejection. (`🎯️outcome` spells
 /// the level `warn`; `Severity` itself names that level `Warning`.)
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "reorder-synapses/keeps-the-leading-synapse-at-index-zero declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "reorder-synapses/keeps-the-leading-synapse-at-index-zero declares a no-op outcome");
     let mut snapshot = before();
-    apply_flow_mutation(&mut snapshot, &mutation()).expect("reorder-synapses/keeps-the-leading-synapse-at-index-zero: declared applied but the mutation was rejected");
+    apply_flow_mutation(&mut snapshot, &mutation()).expect("reorder-synapses/keeps-the-leading-synapse-at-index-zero: declared no-op but the mutation was rejected");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its messages");
     let produced = <FlowMutation as protocol::Mutation<FlowSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

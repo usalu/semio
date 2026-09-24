@@ -44,9 +44,9 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Replac
         }
         }, &{
         if self.present {
-            format!("Luftstromnetzwerk mit {} Zoneknoten ersetzen", self.zone_ids.len())
+            format!("Luftströmungsnetz durch {} Zonenknoten ersetzen", self.zone_ids.len())
         } else {
-            "Luftstromnetzwerk ablösen".to_string()
+            "Luftströmungsnetz entfernen".to_string()
         }
         })
     }

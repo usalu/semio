@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { rmSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { COMPOSITION_TYPESCRIPT_NAME, type JsonMap } from "../../🗿️artifacts/📇️inventory/🟦️.ts";
 import { buildStdioComposition, runStdioTypeScriptCompiler } from "../../🧩️composition/🏗️build/🟦️.ts";
@@ -8,9 +8,8 @@ import { buildStdioComposition, runStdioTypeScriptCompiler } from "../../🧩️
 /** 🧪️ Builds and consumes the exact 36-export Stdio composition from the selected output root. */
 export async function testStdioComposition(packageRoot: string, outputRoot = join(packageRoot, "dist")): Promise<void> {
   await buildStdioComposition(packageRoot, outputRoot);
-  const declaration = join(outputRoot, "🟦️.d.ts");
   const probe = join(outputRoot, "🧪️consumer.ts");
-  writeFileSync(probe, `import { binary as definition } from ${JSON.stringify(`./${relative(outputRoot, declaration).replace(/\\/gu, "/")}`)};\nvoid definition;\n`);
+  writeFileSync(probe, 'import { binary as definition } from "./🟦️.js";\nvoid definition;\n');
   try {
     runStdioTypeScriptCompiler(probe, ["--noEmit"]);
   } finally {

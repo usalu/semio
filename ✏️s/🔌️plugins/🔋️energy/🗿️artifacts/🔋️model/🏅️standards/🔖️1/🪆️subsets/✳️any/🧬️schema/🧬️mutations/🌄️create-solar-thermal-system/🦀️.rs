@@ -38,7 +38,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create Solar Thermal System {} at index {}", self.id.0, self.index), &format!("Solarwärmensystem {} an Index {} erstellen", self.id.0, self.index))
+        protocol::LocalizedLabel::native(&format!("Create Solar Thermal System {} at index {}", self.id.0, self.index), &format!("Solarthermieanlage {} an Index {} erstellen", self.id.0, self.index))
     }
 
     fn target(&self) -> Vec<String> {

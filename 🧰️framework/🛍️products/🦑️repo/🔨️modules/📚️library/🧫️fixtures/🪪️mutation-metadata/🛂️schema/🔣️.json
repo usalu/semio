@@ -20,7 +20,7 @@
             }
           }
         },
-        "aliases": { "type": "array", "minItems": 15, "items": { "type": "object", "additionalProperties": false, "required": ["kind", "source", "alias", "modulePath", "conditional"], "properties": { "kind": { "enum": ["extern", "self", "use", "reexport"] }, "source": { "type": "string" }, "alias": { "type": "string" }, "modulePath": { "type": "array", "items": { "type": "string" } }, "conditional": { "type": "boolean" } } } },
+        "aliases": { "type": "array", "minItems": 15, "items": { "type": "object", "additionalProperties": false, "required": ["kind", "source", "alias", "modulePath", "conditional"], "properties": { "kind": { "enum": ["extern", "self", "use", "reexport"] }, "source": { "type": "string" }, "alias": { "type": "string" }, "modulePath": { "type": "array", "items": { "type": "string" } }, "conditional": { "type": "boolean" }, "restricted": { "const": true } } } },
         "manualMutationLeafImpls": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["traitPath", "selfType", "methods", "associatedConstants"], "properties": { "traitPath": { "type": "string" }, "selfType": { "type": "string" }, "methods": { "type": "array", "items": { "type": "string" } }, "associatedConstants": { "type": "array", "items": { "type": "string" } } } } }
       }
     }

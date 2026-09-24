@@ -27,7 +27,7 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for SetInfoAuthor {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set PDF/H author \"{}\"", self.author), &format!("PDF/Hautor \"{}\" setzen", self.author))
+        protocol::LocalizedLabel::native(&format!("Set PDF/H author \"{}\"", self.author), &format!("PDF/H-Autor \"{}\" setzen", self.author))
     }
 
     fn target(&self) -> Vec<String> {

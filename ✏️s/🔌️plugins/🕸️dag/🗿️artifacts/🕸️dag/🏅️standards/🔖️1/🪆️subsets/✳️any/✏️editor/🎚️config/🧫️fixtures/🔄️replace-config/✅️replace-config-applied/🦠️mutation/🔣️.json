@@ -1,0 +1,10 @@
+{
+  "mutation": "replaceConfig",
+  "payload": {
+    "config": {
+      "cameraX": 1,
+      "cameraY": 2,
+      "cameraZoom": 3
+    }
+  }
+}

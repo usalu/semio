@@ -1,0 +1,13 @@
+{
+  "assignments": [
+    {
+      "slotId": "r0c0",
+      "tileId": "grass"
+    },
+    {
+      "slotId": "r0c1",
+      "tileId": "water"
+    }
+  ],
+  "contradiction": false
+}

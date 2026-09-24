@@ -36,7 +36,7 @@ fn no_chrome_maintenance_lane_arms_itself_without_pressure() {
     assert!(layout.contains("last_persisted_dock_skeleton.as_ref() != Some(&self.dock_override)"), "and so is the skeleton half");
 
     let presence = lane_body(&source, "request_presence_preview");
-    assert!(presence.contains("#[cfg(not(target_arch = \"wasm32\"))]"), "the browser has no sync backbone to heartbeat to");
+    assert!(!presence.contains("cfg(not(target_arch"), "both builds heartbeat through their document actor — the browser actor dials the hub too");
     assert!(presence.contains("self.sync_channel.is_some()"), "and a shell with no channel has no peer to heartbeat to");
 }
 

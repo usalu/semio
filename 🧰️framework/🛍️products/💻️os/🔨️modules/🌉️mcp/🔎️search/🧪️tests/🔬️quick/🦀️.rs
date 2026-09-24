@@ -172,7 +172,7 @@ fn the_capability_audit_catches_an_undeclared_gesture_route_and_an_unmarked_dest
                         action.semantics.audience = None;
                         action.in_palette = true;
                     }
-                    if action.id == "deleteLayer" {
+                    if action.id == "deleteLayer" || action.id == "exportDocument" {
                         action.semantics.effects.destructive = false;
                     }
                 }
@@ -188,5 +188,24 @@ fn the_capability_audit_catches_an_undeclared_gesture_route_and_an_unmarked_dest
         findings.contains(&crate::catalog::CatalogAuditFinding::UnmarkedDestructiveVerb { capability_id: "draw.s.draw.drawing@1/*#editor.deleteLayer".into(), matched: "delete" }),
         "the unmarked destructive verb must be a finding: {findings:?}"
     );
+    assert!(
+        findings.contains(&crate::catalog::CatalogAuditFinding::UnmarkedUserPathWrite { capability_id: "draw.s.draw.drawing@1/*#editor.exportDocument".into(), matched: "export" }),
+        "an export to a user path that asks nobody must be a finding: {findings:?}"
+    );
+}
+
+/// 💾️ M5b law — an export to a user path, a shell save and a whole-document replace all gate on
+/// approval, while an additive view verb of the same kind does not.
+#[test]
+fn user_path_writes_and_document_replacement_gate_on_approval() {
+    let catalog = compile(&source_builders::note_cad_and_draw_source(), Locale::En, Terminology::Native).expect("compiles");
+    for id in ["draw.s.draw.drawing@1/*#editor.exportDocument", "note.editor.saveDownload", "note.editor.setFixtureJson"] {
+        let capability = catalog.get(id).unwrap_or_else(|| panic!("{id} is published"));
+        assert!(capability.effects.destructive, "{id} must be destructive");
+        assert_eq!(capability.policy.approval, semio_framework::manifest::ApprovalMode::WhenDestructive, "{id} must gate on approval");
+    }
+    let load = catalog.get("note.editor.loadRequest").expect("loadRequest is published");
+    assert!(!load.effects.destructive, "an import that adds content must not ask");
+    assert_ne!(load.policy.approval, semio_framework::manifest::ApprovalMode::Always);
 }
 //#endregion 🧪️M5aApprovalAndAuditLaws

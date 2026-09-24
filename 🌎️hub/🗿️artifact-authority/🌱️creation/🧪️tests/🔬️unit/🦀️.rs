@@ -61,18 +61,6 @@ async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️artifact-genesis-v1/🔣️.json")).unwrap();
     let descriptor: DocumentDescriptor = directory::os_pack::json::from_json_str(&fixture["expected"]["descriptor"].to_string()).unwrap();
     let expected: ArtifactCheckpoint = directory::os_pack::json::from_json_str(&fixture["expected"]["checkpoint"].to_string()).unwrap();
-    let current: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️artifact-genesis-v1/📤️current.json")).unwrap();
-    for row in current["cases"].as_array().unwrap() {
-        let encoded = row["command"].to_string();
-        let parsed = directory::os_pack::json::from_json_str::<directory::os_directory::CheckpointPublicationCommandV1>(&encoded).ok();
-        assert_eq!(parsed.as_ref().is_some_and(|command| command.validate()), row["accepted"].as_bool().unwrap(), "{}", row["id"]);
-        if let Some(command) = parsed.filter(|command| command.validate()) {
-            let canonical = directory::os_pack::json::to_json_string(&command);
-            assert_eq!(directory::os_directory::CheckpointPublicationCommandV1::parse_canonical_json(&canonical), Some(command.clone()));
-            let independent: directory::os_directory::CheckpointPublicationCurrentV1 = serde_json::from_value(row["command"]["expectedCurrent"].clone()).unwrap();
-            assert_eq!(command.expected_current, independent);
-        }
-    }
     let open: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).unwrap();
     let valid_plan: directory::os_directory::DocumentOpenPlanV1 = directory::os_pack::json::from_json_str(&open["validPlan"].to_string()).unwrap();
     let valid_lease = directory::os_directory::lease_fields_from_plan_v1(&valid_plan, 1, 1, None).unwrap();

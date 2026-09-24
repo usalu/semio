@@ -89,13 +89,13 @@ fn committed_json_is_canonical() {
     assert_eq!(original.get("ReplaceTiles").and_then(|payload| payload.get("newTiles")).and_then(serde_json::Value::as_array).map(Vec::len), Some(0), "the clear gesture sends an explicit empty collection");
 }
 
-/// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op`.
+/// 🎯️ The declared outcome holds: `no-op`, with one untargeted Warning `mutation.no-op`.
 /// `replace-tiles` addresses the collection as a whole, so it has no missing-target branch at all —
 /// this warning is its ONLY diagnostic.
 #[test]
 fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "replace-tiles/no-ops-when-the-collection-is-already-empty declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "replace-tiles/no-ops-when-the-collection-is-already-empty declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

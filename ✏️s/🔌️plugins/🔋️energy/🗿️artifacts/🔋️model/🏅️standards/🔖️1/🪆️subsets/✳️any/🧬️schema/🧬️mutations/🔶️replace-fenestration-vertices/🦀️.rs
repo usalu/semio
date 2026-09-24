@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Replac
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace fenestration {} with a {}-vertex polygon", self.id.0, self.new_vertices_m.len()), &format!("Fenster {} mit {}-Vertexpolygon ersetzen", self.id.0, self.new_vertices_m.len()))
+        protocol::LocalizedLabel::native(&format!("Replace fenestration {} with a {}-vertex polygon", self.id.0, self.new_vertices_m.len()), &format!("Fenster {} durch ein Polygon mit {} Ecken ersetzen", self.id.0, self.new_vertices_m.len()))
     }
 
     fn target(&self) -> Vec<String> {

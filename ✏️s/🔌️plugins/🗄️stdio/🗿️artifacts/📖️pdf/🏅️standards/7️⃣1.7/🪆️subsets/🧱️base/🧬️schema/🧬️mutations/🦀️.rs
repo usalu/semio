@@ -286,4 +286,8 @@ pub fn pdf_mutation_kinds() -> &'static [protocol::SemanticDescriptor] {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/⚖️lopdf-vectors/🦀️.rs"]
+mod tests_lopdf_vectors;
 //#endregion 🧪️Tests

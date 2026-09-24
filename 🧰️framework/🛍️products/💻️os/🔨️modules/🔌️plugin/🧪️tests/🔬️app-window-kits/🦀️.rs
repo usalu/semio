@@ -152,63 +152,67 @@ mod window_kits_tests {
         assert_eq!(scene.rows_json, r#"[{"0":"1","1":"2","id":"0"}]"#);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn table_kit_render_rows_stamps_a_stable_row_id_and_omits_the_actions_column_when_no_row_has_one() {
-        let mut view = TableRowsView::new(UiText::try_from_str("Actions").expect("bounded text"));
-        view.try_push_column(UiText::try_from_str("Name").expect("bounded text")).expect("fixed column");
-        let mut table_row = TableRow::new(UiText::try_from_str("space:abc").expect("bounded text"));
-        table_row.try_push_cell(UiText::try_from_str("Atelier").expect("bounded text")).expect("fixed cell");
-        view.try_push_row(table_row).expect("fixed row");
-        let node = TableWindowKit::render_rows(view).expect("bounded fixture");
-        assert!(matches!(node.component, Component::Container(_)));
-        assert_eq!(node.children.len(), 2);
-        assert_eq!(node.children.get(1).expect("row").key.as_str(), "space:abc");
-        assert_eq!(node.children.get(0).expect("header").children.len(), 1);
+    fn table_fixture_row(index: &usize) -> UiAssemblyResult<BuiltNode> {
+        let open = || ActionId::try_v1("s.space.home", "openSpace").expect("bounded action");
+        let key = format!("space:{index}");
+        let name = format!("Studio {index}");
+        table_window_row(&key, &[name.as_str(), "atelier"], [table_row_action(IconName::FolderOpen.as_str(), "Open", (open(), None))?], Some((open(), None)))
+    }
+
+    fn table_fixture(windows: &TreeWindows<'_>, total: usize) -> BuiltNode {
+        let entries: Vec<usize> = (0..total).collect();
+        TableWindowKit::render_rows(windows, "Studios", &["Name", "Kind"], Some("Actions"), &entries, table_fixture_row).expect("windowed table")
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn table_kit_render_rows_renders_row_action_buttons_carrying_their_dispatchable_descriptor() {
-        let action = ActionId::try_v1("s.space.home", "delete-space").expect("bounded action");
-        let mut view = TableRowsView::new(UiText::try_from_str("Actions").expect("bounded text"));
-        view.try_push_column(UiText::try_from_str("Name").expect("bounded text")).expect("fixed column");
-        let mut table_row = TableRow::new(UiText::try_from_str("space:abc").expect("bounded text"));
-        table_row.try_push_cell(UiText::try_from_str("Atelier").expect("bounded text")).expect("fixed cell");
-        table_row.try_push_action(TableRowAction::new(UiText::try_from_str(IconName::Trash2.as_str()).expect("bounded icon"), Label(UiText::try_from_str("Delete").expect("bounded label")), (action.clone(), None))).expect("fixed action");
-        view.try_push_row(table_row).expect("fixed row");
-        let node = TableWindowKit::render_rows(view).expect("bounded fixture");
-        assert_eq!(node.children.get(0).expect("header").children.len(), 2);
-        let button = node.children.get(1).expect("row").children.get(1).expect("button");
-        assert!(matches!(button.component, Component::Button(_)));
-        assert_eq!(button.bindings.get(0).expect("binding").action, action);
+    async fn table_kit_render_rows_builds_one_table_node_with_one_record_per_row() {
+        let node = table_fixture(&TreeWindows::unhosted(), 3);
+        let Component::Table(props) = &node.component else { panic!("expected Table") };
+        assert_eq!(node.key.as_str(), TableWindowKit::KIND_ID);
+        assert_eq!(props.label.0.as_str(), "Studios");
+        assert_eq!(props.columns.iter().map(|column| column.0.as_str()).collect::<Vec<_>>(), ["Name", "Kind"]);
+        assert_eq!(props.actions_label.as_ref().map(|label| label.0.as_str()), Some("Actions"));
+        assert_eq!(props.window.map(|window| (window.total, window.offset)), Some((3, 0)));
+        assert_eq!(node.children.len(), 3);
+        let row = node.children.get(1).expect("second row");
+        assert_eq!(row.key.as_str(), "space:1");
+        let Component::TableRow(row_props) = &row.component else { panic!("expected TableRow") };
+        assert_eq!(row_props.cells.iter().map(|cell| cell.as_str()).collect::<Vec<_>>(), ["Studio 1", "atelier"]);
+        assert!(row.children.is_empty(), "cells and row actions are props, never child records");
     }
 
-    #[test]
-    fn table_rows_max_plus_one_returns_the_exact_row_owner() {
-        let mut view = TableRowsView::new(UiText::default());
-        for index in 0..TABLE_WINDOW_ROWS {
-            let id = UiText::try_format(format_args!("row-{index}")).expect("bounded id");
-            assert!(view.try_push_row(TableRow::new(id)).is_ok());
-        }
-        let rejected_id = UiText::try_from_str("row-max-plus-one").expect("bounded id");
-        let rejected = view.try_push_row(TableRow::new(rejected_id.clone())).expect_err("fixed row cap");
-        assert_eq!(rejected.id, rejected_id);
+    #[semio_framework_async_macros::async_test]
+    async fn table_kit_render_rows_carries_row_actions_and_the_row_activation_as_props() {
+        let node = table_fixture(&TreeWindows::unhosted(), 1);
+        let row = node.children.get(0).expect("row");
+        let Component::TableRow(props) = &row.component else { panic!("expected TableRow") };
+        let action = props.row_actions.get(0).expect("row action");
+        assert_eq!(action.action.action.name.as_str(), "openSpace");
+        assert_eq!(action.label.as_ref().map(|label| label.0.as_str()), Some("Open"));
+        let activate = row.bindings.iter().find(|binding| binding.trigger == Trigger::Activate).expect("row activation");
+        assert_eq!(activate.action.name.as_str(), "openSpace");
     }
 
-    #[test]
-    fn abandoned_table_rows_retire_one_row_action_or_cell_per_opportunity() {
-        while close_table_rows_view_one() {}
-        let mut view = TableRowsView::new(UiText::default());
-        let mut row = TableRow::new(UiText::try_from_str("row").expect("bounded id"));
-        row.try_push_cell(UiText::try_from_str("cell").expect("bounded cell")).expect("fixed cell");
-        row.try_push_action(TableRowAction::new(UiText::try_from_str("trash-2").expect("bounded icon"), Label(UiText::try_from_str("Delete").expect("bounded label")), (ActionId::try_v1("fixture", "delete").expect("bounded action"), None)))
-            .expect("fixed action");
-        view.try_push_row(row).expect("fixed row");
-        drop(view);
-        let mut opportunities = 0;
-        while close_table_rows_view_one() {
-            opportunities += 1;
-        }
-        assert!(opportunities >= 4);
+    #[semio_framework_async_macros::async_test]
+    async fn table_kit_render_rows_serves_exactly_the_hosts_window_on_the_shared_ledger() {
+        let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 200, rows: 20 }], ..Default::default() };
+        let windows = TreeWindows::for_body(&view, "body");
+        let node = table_fixture(&windows, 500);
+        let Component::Table(props) = &node.component else { panic!("expected Table") };
+        assert_eq!(props.window.map(|window| (window.total, window.offset)), Some((500, 200)));
+        assert_eq!(node.children.len(), 20);
+        assert_eq!(node.children.get(0).expect("first served row").key.as_str(), "space:200");
+        assert_eq!(windows.nodes_remaining(), TREE_WINDOW_BODY_NODE_BUDGET - 21, "the table and its rows are charged to the body ledger the tree panels spend");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn table_kit_first_paint_stays_inside_the_body_node_budget_at_any_row_count() {
+        let windows = TreeWindows::unhosted();
+        let node = table_fixture(&windows, 10_000);
+        let Component::Table(props) = &node.component else { panic!("expected Table") };
+        assert_eq!(props.window.map(|window| window.total), Some(10_000));
+        assert!(node.children.len() + 1 <= TREE_WINDOW_BODY_NODE_BUDGET, "a first paint of 10 000 rows builds {} records", node.children.len() + 1);
+        assert_eq!(node.children.len(), TREE_WINDOW_DEFAULT_ROWS as usize, "an unhosted first paint serves one default viewport of rows");
     }
 
     #[semio_framework_async_macros::async_test]

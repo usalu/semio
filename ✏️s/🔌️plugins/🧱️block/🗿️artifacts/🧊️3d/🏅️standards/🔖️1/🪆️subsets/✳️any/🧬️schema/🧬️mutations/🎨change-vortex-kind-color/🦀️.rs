@@ -32,7 +32,7 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeVortexKi
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change vortex kind \"{}\" color to \"{}\"", self.id, self.new_color), &format!("Wirbelart \"{}\" Farbe auf \"{}\" ändern", self.id, self.new_color))
+        protocol::LocalizedLabel::native(&format!("Change vortex kind \"{}\" color to \"{}\"", self.id, self.new_color), &format!("Farbe von Wirbelart \"{}\" auf \"{}\" ändern", self.id, self.new_color))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

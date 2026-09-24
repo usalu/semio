@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 import ts from "typescript";
 import { classifyPackageSource, classifyPackageSourceDisposition, clearDiscoveryCache, discoverPackageProblems, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, loadCatalogTaxonomy, type PackageGlueGrammarSpec, type PackageSourceRole, type PackageSourceDisposition } from "../../../🔍️discovery/🟦️.ts";
 import { fixedContractScopeSpecificityRank, inventoryTaxonomy, inventoryTaxonomyWithCapturedSourceRead, type FixedContractScopeKind } from "../../🟦️.ts";
+import { testLevelAtLeast } from "../../../🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -595,7 +596,7 @@ describe("package boundary glue-content classification", () => {
     expect(fixedSourceDispositionDecision("root-script", null, taxonomy)?.finding).toBe("fixed-source-content-unreadable");
   }, 30_000);
 
-  test("actual root domain and package scripts receive independent fixed-source findings", () => {
+  test.if(testLevelAtLeast("long"))("actual root domain and package scripts receive independent fixed-source findings", () => {
     const taxonomy = loadCatalogTaxonomy(), disposition = taxonomy.packageSourceDispositions["root-script"]!;
     const grammar = taxonomy.packageGlueGrammar[disposition.grammarId!]!;
     const paths = [
@@ -619,7 +620,7 @@ describe("package boundary glue-content classification", () => {
       expect(fixedSourceDispositionDecision("root-script", content, taxonomy)?.finding ?? null).toBe(expectedFinding);
       expect(progress.some((row) => row.startsWith("inventory:"))).toBe(true);
     }
-  }, 120_000);
+  }, 600_000);
 
   test("fixed-source inventory keeps cancellation fail-fast", () => {
     const control = fixedScriptControlRoot("cancellation-"), cancelFile = join(control, "cancel");

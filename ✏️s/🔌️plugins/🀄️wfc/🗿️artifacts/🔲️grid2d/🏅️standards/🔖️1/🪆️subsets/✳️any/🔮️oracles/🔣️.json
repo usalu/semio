@@ -251,7 +251,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-seed",
@@ -271,6 +271,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -291,6 +292,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -311,7 +313,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-periodicity",
@@ -371,6 +373,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -391,6 +394,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -451,6 +455,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -491,6 +496,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {

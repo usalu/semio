@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { oklabMix, rgba8ToLinear, linearToOklab, type Rgba8 } from "../🌗️mixing/🟦️.ts";
-import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "../📦️packages/🟦️typescript/🟦️.ts";
+import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "../🌓️theme/🏛️model/🟦️.ts";
 import { SEMIO_ASSET_ROUTE } from "../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 import { writeGeneratedFileIfChanged } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts";
 import { loadFontCatalog, resolveFontSource } from "../🔤️fonts/🟦️.ts";

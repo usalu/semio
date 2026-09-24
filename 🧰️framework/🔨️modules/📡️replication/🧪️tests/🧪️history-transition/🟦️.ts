@@ -5,7 +5,7 @@ type TestSource = { readonly directory: string; readonly url: string };
 /** 🔀️ Validates the neutral `semio.history.transition` payload corpus against its JSON Schema (Ajv) and
  * re-encodes every accepted case with an encoder written from the wire grammar alone, so the corpus is
  * pinned by three independent implementations (fixture generator, Rust codec, this one). */
-export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, source: TestSource): Promise<void> {
+export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, source: TestSource, diffSchema: string): Promise<void> {
   const { describe, expect, it } = vitest;
 
   type Transition = Readonly<Record<string, any>>;
@@ -76,7 +76,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fixture, schema } = await load();
       const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
       expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-      expect(fixture.diffSchema).toBe("semio.history.transition");
+      expect(fixture.diffSchema).toBe(diffSchema);
       const accepted = fixture.cases.filter((row) => row.expect.outcome === "accepted");
       expect(accepted.map((row) => row.expect.transition?.kind).sort()).toEqual(expect.arrayContaining(["branch", "checkout", "commit", "reinstate", "repin", "revert"]));
       for (const row of accepted) {

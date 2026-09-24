@@ -99,12 +99,13 @@
           "capability": "xml-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-element",
             "bridgeVersion": 1,
-            "variant": "InsertElementPayload"
+            "variant": "InsertElement"
           },
           "oracleRequirements": [
             {
@@ -119,12 +120,13 @@
           "capability": "xml-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-element",
             "bridgeVersion": 1,
-            "variant": "RemoveElementPayload"
+            "variant": "RemoveElement"
           },
           "oracleRequirements": [
             {
@@ -139,12 +141,13 @@
           "capability": "xml-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-attribute",
             "bridgeVersion": 1,
-            "variant": "SetAttributePayload"
+            "variant": "SetAttribute"
           },
           "oracleRequirements": [
             {
@@ -164,7 +167,7 @@
           "productionDispatch": {
             "operation": "set-declaration",
             "bridgeVersion": 1,
-            "variant": "SetDeclarationPayload"
+            "variant": "SetDeclaration"
           },
           "oracleRequirements": [
             {
@@ -184,7 +187,7 @@
           "productionDispatch": {
             "operation": "set-doctype",
             "bridgeVersion": 1,
-            "variant": "SetDoctypePayload"
+            "variant": "SetDoctype"
           },
           "oracleRequirements": [
             {
@@ -199,12 +202,13 @@
           "capability": "xml-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-text",
             "bridgeVersion": 1,
-            "variant": "SetTextPayload"
+            "variant": "SetText"
           },
           "oracleRequirements": [
             {

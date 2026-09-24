@@ -147,6 +147,19 @@ async fn job_budget_from_grant(budget: semio_framework_actor::Budget) -> JobBudg
     JobBudget { fuel: budget.fuel, deadline_ms: budget.wall_ms }
 }
 
+/// ⏯️ The events one granted turn hands the guest. A turn this shard cut on its wall deadline was
+/// answered `MoreWork` (see `execute_turn_for`'s `DeadlineExceeded` arm) and left the owned guest
+/// mid-call, owning the host's next call; the kernel host continues it by granting the actor an
+/// `Event::Wake`, which is exactly "resume with no events". Any OTHER event reaching a mid-flight
+/// turn is passed through unchanged, so the runtime refuses it loudly instead of dropping it.
+pub(crate) fn turn_events(event: &Event, in_flight: bool) -> &[Event] {
+    if in_flight && matches!(event, Event::Wake) {
+        &[]
+    } else {
+        std::slice::from_ref(event)
+    }
+}
+
 /// 🌉️ `semio_framework::kernel::TurnResult` (what `GuestRuntime::execute_turn` returns) →
 /// `semio_framework_actor::TurnResult` (what the actor crate's `Kernel::complete` scheduler
 /// bookkeeping wants) — the exact bridge the wgpu-native host's `KernelThreadState::
@@ -224,12 +237,19 @@ async fn to_actor_turn_result_in_place(result: &mut TurnResult, session: u64, wa
 }
 //#endregion 🔀️BudgetBridge
 
+/// 🧮️ Most live jobs one turn can admit: one per granted effect.
+const SHARD_TURN_ADMITTED_JOBS_MAXIMUM: usize = 1_024;
+
 /// 📤️ Owned pack-coded outcome sent from a shard to its scheduler-side consumer.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ShardOutcome {
+    /// 🔁️ One granted turn's result, with the step authority of every live job the turn's
+    /// `Effect::SpawnJob`s admitted — the host needs a job's exact `JobTurn` to grant its steps
+    /// (`Payload::JobStep`), and only this shard mints it.
     Turn {
         actor: u64,
         result: semio_framework_actor::TurnResult,
+        jobs: Vec<JobTurn>,
     },
     Job {
         actor: u64,
@@ -259,9 +279,25 @@ pub enum ShardOutcome {
     Cancelled {
         actor: u64,
     },
+    /// ⏸️ The grant ended before the guest's turn returned: a resumable (owned) instance was cut on
+    /// its wall or fuel grant and owns the host's next call, which must resume it with no events —
+    /// an `Event::Wake` grant (see [`turn_events`]). Distinct from a turn whose guest answered
+    /// `MoreWork`: that turn COMPLETED and a host may hand it back to its caller, while a preempted
+    /// actor refuses every new event until a later grant completes its turn.
+    Preempted {
+        actor: u64,
+    },
 }
 
 impl ShardOutcome {
+    /// 🎭️ The actor this outcome answers — the granted one, or the one whose deferred
+    /// `Event::JobCompleted` turn this shard ran without a grant of its own.
+    pub fn actor(&self) -> u64 {
+        match self {
+            Self::Turn { actor, .. } | Self::Job { actor, .. } | Self::Fault { actor, .. } | Self::Checkpoint { actor, .. } | Self::Resumed { actor, .. } | Self::Cancelled { actor } | Self::Preempted { actor } => *actor,
+        }
+    }
+
     pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), semio_framework_actor::pack::PackError> {
         if let Self::Turn { result, .. } = self {
             if result.lifecycle_receipt.is_some_and(|receipt| !receipt.is_valid()) {
@@ -269,10 +305,14 @@ impl ShardOutcome {
             }
         }
         match self {
-            Self::Turn { actor, result } => {
+            Self::Turn { actor, result, jobs } => {
                 semio_framework_actor::pack::write_u8(out, 0).await;
                 semio_framework_actor::pack::write_u64(out, *actor).await;
                 result.pack_encode(out).await?;
+                semio_framework_actor::pack::write_u64(out, jobs.len() as u64).await;
+                for job in jobs {
+                    job.pack_encode(out).await;
+                }
             }
             Self::Job { actor, authority, request, placement, publication } => {
                 semio_framework_actor::pack::write_u8(out, 1).await;
@@ -310,6 +350,10 @@ impl ShardOutcome {
                 semio_framework_actor::pack::write_u8(out, 5).await;
                 semio_framework_actor::pack::write_u64(out, *actor).await;
             }
+            Self::Preempted { actor } => {
+                semio_framework_actor::pack::write_u8(out, 6).await;
+                semio_framework_actor::pack::write_u64(out, *actor).await;
+            }
         }
         Ok(())
     }
@@ -318,7 +362,18 @@ impl ShardOutcome {
         let tag = semio_framework_actor::pack::read_u8(bytes, pos, "ShardOutcome").await?;
         let actor = semio_framework_actor::pack::read_u64(bytes, pos, "ShardOutcome::actor").await?;
         match tag {
-            0 => Ok(Self::Turn { actor, result: semio_framework_actor::TurnResult::pack_decode(bytes, pos).await? }),
+            0 => {
+                let result = semio_framework_actor::TurnResult::pack_decode(bytes, pos).await?;
+                let count = semio_framework_actor::pack::read_u64(bytes, pos, "ShardOutcome::Turn::jobs").await?;
+                if count > SHARD_TURN_ADMITTED_JOBS_MAXIMUM as u64 {
+                    return Err(semio_framework_actor::pack::PackError::InvalidTag { what: "ShardOutcome::Turn::jobs", tag: u8::MAX, offset: *pos });
+                }
+                let mut jobs = Vec::with_capacity(count as usize);
+                for _ in 0..count {
+                    jobs.push(JobTurn::pack_decode(bytes, pos).await?);
+                }
+                Ok(Self::Turn { actor, result, jobs })
+            }
             1 => {
                 let authority = JobTurn::pack_decode(bytes, pos).await?;
                 let request = JobReplayRequest::pack_decode(bytes, pos).await?;
@@ -334,6 +389,7 @@ impl ShardOutcome {
             3 => Ok(Self::Checkpoint { actor, operation: JobOperation::pack_decode(bytes, pos).await?, checkpoint: JobCheckpoint::pack_decode(bytes, pos).await? }),
             4 => Ok(Self::Resumed { actor, operation: JobOperation::pack_decode(bytes, pos).await? }),
             5 => Ok(Self::Cancelled { actor }),
+            6 => Ok(Self::Preempted { actor }),
             other => Err(semio_framework_actor::pack::PackError::InvalidTag { what: "ShardOutcome", tag: other, offset: *pos }),
         }
     }
@@ -615,11 +671,17 @@ enum ReplaySeedCloseReason {
     Fault { stage: &'static str, detail: String },
 }
 
+/// 🌱️ One admitted `Effect::SpawnJob` from capture to its end. A `replayable` seed captures the
+/// spawning instance's checkpoint before it starts the job, so a host can later replay it on another
+/// worker; a framework reserved tool job (`semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND`) is
+/// live-only and starts right after its kind and input pages — its hosts never replay it, and a whole
+/// guest checkpoint outgrows the fixed checkpoint pages (block2d's undo, ticket 26/09/23 slice WG8 §1.4).
 struct MountedReplaySeed {
     actor: u64,
     job: u64,
     authority: JobTurn,
     placement: JobPlacement,
+    replayable: bool,
     worker_count: u16,
     worker_slot: u16,
     phase: ReplaySeedPhase,
@@ -674,6 +736,7 @@ impl MountedReplaySeed {
             job,
             authority,
             placement,
+            replayable: kind != semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND,
             worker_count: 0,
             worker_slot: 0,
             phase: ReplaySeedPhase::CaptureKind,
@@ -1068,6 +1131,9 @@ impl ShardLoop {
         let Some(seed) = self.replay_seeds.iter().flatten().find(|seed| seed.actor == actor && seed.job == turn.job) else {
             return Err(PluginHostError::Plugin(format!("ShardLoop::replay: no retained seed for actor {actor}, job {}", turn.job)));
         };
+        if !seed.replayable {
+            return Err(PluginHostError::Plugin(format!("ShardLoop::replay: job {} of actor {actor} is a live-only framework reserved tool job with no restore checkpoint", turn.job)));
+        }
         let retained = seed.seed.as_ref().ok_or_else(|| PluginHostError::Plugin(format!("ShardLoop::replay: seed for actor {actor}, job {} is closing", turn.job)))?;
         if seed.authority.operation.operation != turn.operation.operation
             || seed.authority.operation.base_revision != turn.operation.base_revision
@@ -1231,7 +1297,10 @@ impl ShardLoop {
                     seed.seed.as_mut().expect("capture fixed seed").copy_input_page(seed.input_owner.as_ref().expect("capture input"), &mut seed.input_cursor)
                 };
                 match copied {
-                    Ok(true) => self.replay_seeds[index].as_mut().expect("capture seed").phase = ReplaySeedPhase::Checkpoint,
+                    Ok(true) => {
+                        let seed = self.replay_seeds[index].as_mut().expect("capture seed");
+                        seed.phase = if seed.replayable { ReplaySeedPhase::Checkpoint } else { ReplaySeedPhase::Start };
+                    }
                     Ok(false) => {}
                     Err(()) => return Err(self.fail_replay_seed(index, "capture-input", format!("ShardLoop::replay: input page admission refused for actor {actor}"))),
                 }
@@ -1655,6 +1724,11 @@ impl ShardLoop {
                     return Ok(1);
                 }
                 DeferredAuthority::JobStep { actor, turn } => {
+                    while self.replay_seeds.iter().flatten().any(|seed| seed.actor == actor && seed.job == turn.job && !matches!(seed.phase, ReplaySeedPhase::Retained)) {
+                        if !self.drive_replay_seed().await? {
+                            break;
+                        }
+                    }
                     self.accept_job_turn(actor, turn)?;
                     selected_step = Some((actor, turn));
                 }
@@ -1809,7 +1883,8 @@ impl ShardLoop {
     /// [`super::GuestRuntime::execute_turn`], admits `SpawnJob`/`CancelJob` effects, and sends the
     /// resulting [`ShardOutcome`]. A failed guest cancellation retires the actor before reuse.
     async fn execute_turn_for(&mut self, actor_id: u64, event: &Event, granted: semio_framework_actor::Budget, actor_lane: semio_framework_actor::Lane) -> Result<bool, PluginHostError> {
-        let events = std::slice::from_ref(event);
+        let in_flight = self.instances.get(&actor_id).is_some_and(GuestInstance::turn_in_flight);
+        let events = turn_events(event, in_flight);
         // 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)`/`self.actor_lane(..)`
         // need `&self` (the whole struct), which conflicts with the `&mut self.instances` borrow
         // `instance` holds for the rest of this call (E0502).
@@ -1841,6 +1916,7 @@ impl ShardLoop {
             Ok(mut result) => {
                 let base_revision = result.ui_patches.iter().map(|patch| patch.revision.0).max().unwrap_or_default();
                 let bridged = to_actor_turn_result_in_place(&mut result, actor_id, 0, 0).await;
+                let mut admitted_jobs = Vec::new();
                 // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1): the
                 // generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet closes — see
                 // `running_jobs`'s own doc comment. `placement` (inline/isolated/exclusive) is
@@ -1875,6 +1951,7 @@ impl ShardLoop {
                                 Ok(seed) => {
                                     let slot = self.replay_seeds.iter_mut().find(|slot| slot.is_none()).expect("preflighted fixed replay seed slot");
                                     *slot = Some(seed);
+                                    admitted_jobs.push(authority);
                                 }
                                 Err((kind, input)) => {
                                     let reason: &'static [u8] = if self.replay_seeds.iter().any(Option::is_none) { b"fixed replay seed exceeds admitted page capacity" } else { b"fixed replay seed registry refused the exact spawn owner" };
@@ -1912,7 +1989,7 @@ impl ShardLoop {
                     }
                 }
                 match bridged {
-                    Ok(result) => ShardOutcome::Turn { actor: actor_id, result },
+                    Ok(result) => ShardOutcome::Turn { actor: actor_id, result, jobs: admitted_jobs },
                     Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.message },
                 }
             }
@@ -1927,6 +2004,7 @@ impl ShardLoop {
             // failure-escalation path quarantine an actor purely for being preempted by the exact
             // per-turn wall budget this ticket's own DRR scheduler assigned it — see
             // `📓️terra-shard-lane-report.md`.
+            Err(TurnFault::DeadlineExceeded | TurnFault::FuelExhausted) if instance.turn_in_flight() => ShardOutcome::Preempted { actor: actor_id },
             Err(TurnFault::DeadlineExceeded) => {
                 // 👥️ `presence: Vec::new()` — a deadline-exceeded turn never finished, so there is
                 // no guest-computed presence (or effects/ui_patches) to carry, unlike the two
@@ -1946,7 +2024,7 @@ impl ShardLoop {
                     ui_patch_receipt: None,
                 };
                 match to_actor_turn_result(result, actor_id, 0, 0).await {
-                    Ok(result) => ShardOutcome::Turn { actor: actor_id, result },
+                    Ok(result) => ShardOutcome::Turn { actor: actor_id, result, jobs: Vec::new() },
                     Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.message },
                 }
             }

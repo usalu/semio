@@ -305,7 +305,7 @@ impl<D: FlowDomain> FlowBridge<D> {
             return Err(AbiPortRejection { code: AbiErrorCode::LimitExceeded, message: returned() });
         }
         let code = request.operation.get();
-        if !(FLOW_OPERATION_FIRST..=FLOW_OPERATION_LAST).contains(&code) || matches!(code, 2_603 | 2_604 | 2_608) {
+        if !(FLOW_OPERATION_FIRST..=FLOW_OPERATION_LAST).contains(&code) || matches!(code, 2_603 | 2_604) {
             return Err(AbiPortRejection { code: AbiErrorCode::UnknownOperation, message: returned() });
         }
         if code == FLOW_OPERATION_OPEN {

@@ -21,7 +21,7 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for SetHeader {
         agg_inverse(&Ifc2x3Mutation::SetHeader(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-header", "Kopf setzen")
+        protocol::LocalizedLabel::native("Set header", "Header setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

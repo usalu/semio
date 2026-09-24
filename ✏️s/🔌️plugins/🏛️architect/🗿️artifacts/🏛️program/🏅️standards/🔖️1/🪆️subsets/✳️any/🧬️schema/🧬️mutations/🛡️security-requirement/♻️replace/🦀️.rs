@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceSecurityRequireme
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace security requirement \"{}\"", self.security_requirement.header.name), &format!("Sicherheitsanforderung \"{}\" ersetzen", self.security_requirement.header.name))
+        protocol::LocalizedLabel::native(&format!("Replace security requirement \"{}\"", self.security_requirement.header.name), &format!("Schutzanforderung \"{}\" ersetzen", self.security_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.security_requirement.header.id.0.clone()]

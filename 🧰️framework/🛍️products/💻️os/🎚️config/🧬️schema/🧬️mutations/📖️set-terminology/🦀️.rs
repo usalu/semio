@@ -12,3 +12,13 @@ pub fn set_terminology(terminology: Option<String>) -> UiPreferencesConfigMutati
     UiPreferencesConfigMutation::SetTerminology(SetTerminology { terminology })
 }
 optional_setting_impl!(SetTerminology, SetTerminology, terminology, "set-terminology", "terminology", "terminology", "terminology");
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/✏️sets-terminology/🦀️.rs"]
+mod tests_sets_terminology;
+
+#[cfg(test)]
+#[path = "🧪️tests/🟰️keeps-terminology/🦀️.rs"]
+mod tests_keeps_terminology;
+//#endregion 🧪️Tests

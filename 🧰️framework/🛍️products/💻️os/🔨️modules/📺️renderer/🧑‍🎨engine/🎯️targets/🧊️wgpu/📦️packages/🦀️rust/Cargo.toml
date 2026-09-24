@@ -125,6 +125,10 @@ tokio = { version = "1", features = ["sync", "rt", "net", "time"], default-featu
 # never compiled. `entrypoint` stays OFF here: `block_on` must not be reachable from a browser build.
 # Workspace-internal — `bun ./📜️script.ts verify dependencies` is unchanged.
 semio-framework-async = { workspace = true }
+# 📡️ The browser half of the document relay: `ArtifactHost` and the `store_sync::sync` vocabulary the
+# shell's one `open_document` body names on both targets, plus the `broadcast` receiver it drains.
+semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync"] }
+tokio = { version = "1", features = ["sync"], default-features = false }
 getrandom = { version = "0.3.4", features = ["wasm_js"] }
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"

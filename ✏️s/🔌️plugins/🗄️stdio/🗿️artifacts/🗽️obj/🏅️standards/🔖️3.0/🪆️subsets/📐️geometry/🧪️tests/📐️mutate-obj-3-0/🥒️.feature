@@ -95,7 +95,6 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params                                                                                       |
-      | no-mutation           | {}                                                                                            |
       | set-snapshot          | {"snapshot":{"vertices":[{"x":0,"y":0,"z":0},{"x":1,"y":0,"z":0},{"x":0,"y":1,"z":0}],"texcoords":[],"normals":[],"faces":[{"vertices":[{"vertex":0},{"vertex":1},{"vertex":2}]}],"groups":[],"objects":[],"mtllib":null,"usemtlRanges":[],"smoothingGroups":[],"unknownStatements":[]}} |
       | insert-vertex         | {"index":8449,"vertex":{"x":0.5,"y":0.5,"z":0.5}}                                            |
       | remove-vertex         | {"index":8448}                                                                               |
@@ -116,6 +115,17 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | set-smoothing-groups  | {"smoothingGroups":[{"faceIndexFrom":0,"group":1}]}                                          |
       | set-unknown-statements | {"unknownStatements":[{"lineIndex":0,"raw":"# replaced by mutation"}]}                       |
 
+  @id-no-mutation-baseline-mutate
+  @level-exhaustive
+  @mode-differential
+  Scenario: Apply no-mutation to the real mesh
+    Given the real input mesh shared://🧪️pattern-sphere/🧊️.obj
+    When the no-mutation mutation is applied with its parameters
+      """
+      {"kind": "no-mutation", "params": {}}
+      """
+    Then the oracle and the subject agree on the semantic projection
+
   @id-inverse
   @level-exhaustive
   @mode-property
@@ -129,7 +139,6 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
     Then the mesh matches its pre-mutation semantic projection
     Examples:
       | id                    | params                                                                                       |
-      | no-mutation           | {}                                                                                            |
       | set-snapshot          | {"snapshot":{"vertices":[{"x":0,"y":0,"z":0},{"x":1,"y":0,"z":0},{"x":0,"y":1,"z":0}],"texcoords":[],"normals":[],"faces":[{"vertices":[{"vertex":0},{"vertex":1},{"vertex":2}]}],"groups":[],"objects":[],"mtllib":null,"usemtlRanges":[],"smoothingGroups":[],"unknownStatements":[]}} |
       | insert-vertex         | {"index":8449,"vertex":{"x":0.5,"y":0.5,"z":0.5}}                                            |
       | remove-vertex         | {"index":8448}                                                                               |
@@ -149,6 +158,18 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | remove-object         | {"name":"pattern-sphere"}                                                                    |
       | set-smoothing-groups  | {"smoothingGroups":[{"faceIndexFrom":0,"group":1}]}                                          |
       | set-unknown-statements | {"unknownStatements":[{"lineIndex":0,"raw":"# replaced by mutation"}]}                       |
+
+  @id-no-mutation-baseline-inverse
+  @level-exhaustive
+  @mode-property
+  Scenario: Undoing no-mutation restores the real mesh
+    Given the real input mesh shared://🧪️pattern-sphere/🧊️.obj
+    When the no-mutation mutation is applied with its parameters
+      """
+      {"kind": "no-mutation", "params": {}}
+      """
+    And the mutation's own inverse is applied to the result
+    Then the mesh matches its pre-mutation semantic projection
 
   @id-identity-round-trip
   @level-long

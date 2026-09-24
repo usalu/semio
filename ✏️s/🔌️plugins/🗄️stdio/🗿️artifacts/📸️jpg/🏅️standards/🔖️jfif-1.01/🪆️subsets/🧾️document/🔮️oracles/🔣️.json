@@ -823,7 +823,7 @@
           "productionDispatch": {
             "operation": "change-jfif-header",
             "bridgeVersion": 1,
-            "variant": "ChangeJfifHeaderMutation"
+            "variant": "ChangeJfifHeader"
           },
           "oracleRequirements": [
             {
@@ -843,7 +843,7 @@
           "productionDispatch": {
             "operation": "change-re-encode-quality",
             "bridgeVersion": 1,
-            "variant": "ChangeReEncodeQualityMutation"
+            "variant": "ChangeReEncodeQuality"
           },
           "oracleRequirements": [
             {
@@ -863,7 +863,7 @@
           "productionDispatch": {
             "operation": "change-restart-interval",
             "bridgeVersion": 1,
-            "variant": "ChangeRestartIntervalMutation"
+            "variant": "ChangeRestartInterval"
           },
           "oracleRequirements": [
             {
@@ -878,12 +878,13 @@
           "capability": "jpg-jfif-1-01-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-other-segment",
             "bridgeVersion": 1,
-            "variant": "InsertOtherSegmentMutation"
+            "variant": "InsertOtherSegment"
           },
           "oracleRequirements": [
             {
@@ -898,12 +899,13 @@
           "capability": "jpg-jfif-1-01-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-huffman-table",
             "bridgeVersion": 1,
-            "variant": "RemoveHuffmanTableMutation"
+            "variant": "RemoveHuffmanTable"
           },
           "oracleRequirements": [
             {
@@ -918,12 +920,13 @@
           "capability": "jpg-jfif-1-01-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-other-segment",
             "bridgeVersion": 1,
-            "variant": "RemoveOtherSegmentMutation"
+            "variant": "RemoveOtherSegment"
           },
           "oracleRequirements": [
             {
@@ -938,12 +941,13 @@
           "capability": "jpg-jfif-1-01-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-quant-table",
             "bridgeVersion": 1,
-            "variant": "RemoveQuantTableMutation"
+            "variant": "RemoveQuantTable"
           },
           "oracleRequirements": [
             {
@@ -958,12 +962,14 @@
           "capability": "jpg-jfif-1-01-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-huffman-table",
             "bridgeVersion": 1,
-            "variant": "ReplaceHuffmanTableMutation"
+            "variant": "ReplaceHuffmanTable"
           },
           "oracleRequirements": [
             {
@@ -983,7 +989,7 @@
           "productionDispatch": {
             "operation": "replace-pixels",
             "bridgeVersion": 1,
-            "variant": "ReplacePixelsMutation"
+            "variant": "ReplacePixels"
           },
           "oracleRequirements": [
             {
@@ -998,12 +1004,14 @@
           "capability": "jpg-jfif-1-01-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-quant-table",
             "bridgeVersion": 1,
-            "variant": "ReplaceQuantTableMutation"
+            "variant": "ReplaceQuantTable"
           },
           "oracleRequirements": [
             {

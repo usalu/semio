@@ -17,4 +17,4 @@ path = "🦀️.rs"
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-s-artifact-fem-2d = { path = "../🗿️artifacts/◻️2d/📦️packages/🦀️rust" }
-semio-s-artifact-fem-3d = { path = "../🗿️artifacts/🧊️3d/📦️packages/🦀️rust" }
+semio-s-artifact-fem-3d = { path = "../🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }

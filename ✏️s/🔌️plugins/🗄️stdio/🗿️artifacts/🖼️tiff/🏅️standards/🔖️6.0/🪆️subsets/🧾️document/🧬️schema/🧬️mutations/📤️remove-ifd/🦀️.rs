@@ -38,7 +38,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for RemoveIfdMutation {
         }
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove ifd", "ifd entfernen")
+        protocol::LocalizedLabel::native("Remove IFD", "IFD entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-ifd".into()]

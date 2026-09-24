@@ -1,0 +1,12 @@
+{
+  "why": "The one surface <-> artifact-kind pairing rule (hub `app_opens_kind`, browser `surfaceOpensArtifactKindV1`): a surface app opens a kind it declares itself, or a plugin-level kind whose id the app's own dialect names; never a sibling surface's plugin-level kind, never a kind with another schema.",
+  "liveDefect": "Ticket 26/09/23 S15, measured inside `s` against hub 7800 on 2026-09-25: the browser admitted on the plugin-level list alone, so a note document (declaration-tree plugin, `manifest.artifactKinds = []`, `apps[0].artifactKinds = [s.note.note / note.document]`) downloaded and hashed its 14.9 MB component and was then refused with `The document component could not be verified`.",
+  "cases": [
+    { "name": "declaration-tree plugin: the app declares the kind", "pluginArtifactKinds": [], "app": { "artifactKinds": [{ "id": "s.note.note", "schema": "note.document" }], "dialectArtifactKind": "s.note.note" }, "artifact": { "kind": "s.note.note", "schema": "note.document" }, "opens": true },
+    { "name": "plugin-level kind named by the app's own dialect", "pluginArtifactKinds": [{ "id": "s.gis.gismap", "schema": "gis.map" }], "app": { "artifactKinds": [], "dialectArtifactKind": "s.gis.gismap" }, "artifact": { "kind": "s.gis.gismap", "schema": "gis.map" }, "opens": true },
+    { "name": "plugin-level kind of a sibling dialect is never opened", "pluginArtifactKinds": [{ "id": "s.gis.gismap", "schema": "gis.map" }], "app": { "artifactKinds": [], "dialectArtifactKind": "s.gis.gisterrain" }, "artifact": { "kind": "s.gis.gismap", "schema": "gis.map" }, "opens": false },
+    { "name": "an app-declared kind opens even under a sibling dialect id", "pluginArtifactKinds": [], "app": { "artifactKinds": [{ "id": "s.gis.gismap", "schema": "gis.map" }], "dialectArtifactKind": "s.gis.gisterrain" }, "artifact": { "kind": "s.gis.gismap", "schema": "gis.map" }, "opens": true },
+    { "name": "same kind, other schema", "pluginArtifactKinds": [{ "id": "s.note.note", "schema": "note.legacy" }], "app": { "artifactKinds": [{ "id": "s.note.note", "schema": "note.legacy" }], "dialectArtifactKind": "s.note.note" }, "artifact": { "kind": "s.note.note", "schema": "note.document" }, "opens": false },
+    { "name": "nothing declared (a viewer with no kinds)", "pluginArtifactKinds": [], "app": { "artifactKinds": [], "dialectArtifactKind": "s.note.note" }, "artifact": { "kind": "s.note.note", "schema": "note.document" }, "opens": false }
+  ]
+}

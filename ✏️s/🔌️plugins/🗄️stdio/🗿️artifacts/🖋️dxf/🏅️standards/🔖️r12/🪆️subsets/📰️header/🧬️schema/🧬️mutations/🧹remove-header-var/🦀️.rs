@@ -21,7 +21,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveHeaderVar {
         agg_inverse(&DxfMutation::RemoveHeaderVar(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-header-var", "Kopfvar entfernen")
+        protocol::LocalizedLabel::native("Remove header var", "Header-Variable entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

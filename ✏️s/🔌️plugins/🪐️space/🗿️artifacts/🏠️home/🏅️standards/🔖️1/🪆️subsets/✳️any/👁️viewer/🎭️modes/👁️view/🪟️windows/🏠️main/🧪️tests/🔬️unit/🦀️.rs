@@ -39,14 +39,14 @@ async fn definition_declares_the_table_surface_and_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn empty_rows_render_the_empty_message_not_a_zero_row_table() {
-    let json = project(render_rows(&[], &HomeTableLabels::NATIVE_EN).expect("empty Home viewer rows"));
+    let json = project(render_rows(&[], &HomeTableLabels::NATIVE_EN, &TreeWindows::unhosted()).expect("empty Home viewer rows"));
     assert!(json.contains("No studios yet."));
     assert!(!json.contains("framework.window.table"), "empty rows must not render the table scene at all: {json}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_row_renders_without_the_actions_column() {
-    let json = project(render_rows(&[one_hub_row().await], &HomeTableLabels::NATIVE_EN).expect("Home viewer row"));
+    let json = project(render_rows(&[one_hub_row().await], &HomeTableLabels::NATIVE_EN, &TreeWindows::unhosted()).expect("Home viewer row"));
     assert!(json.contains("Fabrication"));
     assert!(json.contains("hub"));
     assert!(json.contains("Origin"), "six columns render, the last being Origin: {json}");
@@ -57,15 +57,16 @@ async fn a_row_renders_without_the_actions_column() {
 /// viewer just never attaches row-scoped action buttons to it.
 #[semio_framework_async_macros::async_test]
 async fn a_row_stamps_the_space_row_id() {
-    observe(render_rows(&[one_hub_row().await], &HomeTableLabels::NATIVE_EN).expect("Home viewer row"), |root| {
+    observe(render_rows(&[one_hub_row().await], &HomeTableLabels::NATIVE_EN, &TreeWindows::unhosted()).expect("Home viewer row"), |root| {
         let row = root.children.iter().find(|node| node.key.as_str() == "space:sp-1").expect("Home viewer row id");
-        assert!(!row.children.iter().any(|child| matches!(&child.component, semio_framework_ui_contract::Component::Button(_))), "the viewer never carries a row action button");
+        let semio_framework_ui_contract::Component::TableRow(props) = &row.component else { panic!("a viewer row is one TableRow record") };
+        assert!(props.row_actions.is_empty() && row.bindings.is_empty(), "the viewer never carries a row action");
     });
 }
 
 #[semio_framework_async_macros::async_test]
 async fn german_locale_labels_resolve() {
-    let json = project(render_rows(&[one_hub_row().await], &HomeTableLabels::NATIVE_DE).expect("German Home viewer row"));
+    let json = project(render_rows(&[one_hub_row().await], &HomeTableLabels::NATIVE_DE, &TreeWindows::unhosted()).expect("German Home viewer row"));
     assert!(json.contains("Aktualisiert"));
     assert!(json.contains("Herkunft"));
 }

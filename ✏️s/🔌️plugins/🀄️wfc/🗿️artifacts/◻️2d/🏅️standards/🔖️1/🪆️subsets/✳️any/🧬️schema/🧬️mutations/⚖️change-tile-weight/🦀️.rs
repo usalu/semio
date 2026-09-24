@@ -31,7 +31,7 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for ChangeTileWeight {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Tile Weight", "Kachelgewicht ändern")
+        protocol::LocalizedLabel::native("Change Tile Weight", "Gewicht der Kachel ändern")
     }
 }
 //#endregion 🔖️ChangeTileWeight

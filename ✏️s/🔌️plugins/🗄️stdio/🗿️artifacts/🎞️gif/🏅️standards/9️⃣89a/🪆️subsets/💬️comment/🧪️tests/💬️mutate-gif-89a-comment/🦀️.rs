@@ -8,37 +8,9 @@
 //! builds; the subject and parity phases both run.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_arrange, project};
+use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_arrange, project};
 use semio_s_plugin_stdio_test_oracle::law;
 
-//#region 🔖️Kinds
-/// 🏷️ Mirrors `GifMutation::KINDS` (`.../🧬️schema/🧬️mutations/🦀️.rs`) as an adapter-local
-/// list rather than importing the subject crate at the top level: the oracle-only host does not link
-/// the subject crate at all (`sut` is off), so registration must not name it.
-const KINDS: [&str; 21] = [
-    "no-mutation",
-    "set-snapshot",
-    "set-screen-size",
-    "set-global-color-table",
-    "set-background-color-index",
-    "set-pixel-aspect-ratio",
-    "set-loop-count",
-    "insert-frame",
-    "remove-frame",
-    "move-frame",
-    "set-frame-geometry",
-    "set-frame-pixels",
-    "set-frame-interlace",
-    "set-frame-delay",
-    "set-frame-disposal",
-    "set-frame-transparency",
-    "set-frame-user-input",
-    "insert-comment",
-    "remove-comment",
-    "add-app-extension",
-    "remove-app-extension",
-];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "asset://💃️dancing/🧪️dancing/🖼️.gif";
@@ -111,9 +83,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{arranged_input, mutable_input, KINDS};
+    use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::any::project;
+    use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::base::project;
     use semio_framework_os_kernel::ArtifactDsl;
     use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
     use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::mutations::{
@@ -312,10 +284,8 @@ mod subject {
     /// 🧭️ Registers all 21 kinds' `mutate`/`inverse` scenario ids plus the round trip, mirroring
     /// `super::adapter`'s oracle registration.
     pub fn register(mut built: Adapter) -> Adapter {
-        for kind in KINDS {
-            built = built.subject(&format!("mutate-{kind}"), mutate);
-            built = built.subject(&format!("inverse-{kind}"), inverse);
-        }
+        built = built.subject("mutate", mutate);
+        built = built.subject("inverse", inverse);
         built.subject("identity-round-trip", identity_round_trip)
     }
 }
@@ -325,10 +295,8 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle);
-        built = built.oracle(&format!("inverse-{kind}"), inverse_oracle);
-    }
+    built = built.oracle("mutate", mutate_oracle);
+    built = built.oracle("inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {

@@ -1,0 +1,8 @@
+semio-s-artifact-gis-gismap
+semio-s-artifact-gis-gisterrain
+semio-s-artifact-layout-layout
+semio-s-artifact-note-note
+semio-s-artifact-puzzle-2d
+semio-s-artifact-procedural-generation3d
+semio-s-artifact-process-process3d
+semio-s-artifact-shooting-shooting

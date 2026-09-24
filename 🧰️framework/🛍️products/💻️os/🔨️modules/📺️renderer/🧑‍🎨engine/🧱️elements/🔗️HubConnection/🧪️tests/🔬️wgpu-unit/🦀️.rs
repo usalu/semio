@@ -328,7 +328,7 @@ fn the_redeem_control_refuses_a_capability_it_could_not_parse() {
 #[test]
 fn a_redemption_denial_names_its_cause_rather_than_a_status() {
     let mut state = signed_in(workspace());
-    state.redemption_error = Some(crate::space_browser::InviteRedemptionErrorCode::AlreadyMember);
+    state.redemption_error = Some(InviteRedemptionErrorCode::AlreadyMember);
     let announced = collected(&build_hub_workspace_ui(&state, Locale::En), attributes);
     assert!(announced.iter().any(|(key, value)| key == "data-semio-hub-redemption-error" && value == "already-member"));
 }
@@ -398,6 +398,11 @@ fn every_verb_the_surface_dispatches_is_one_of_the_declared_hub_actions() {
         action::COPY_INVITE_LINK,
         action::DISCARD_INVITE_LINK,
         action::REDEEM_INVITE,
+        action::SELECT_ARTIFACT_KIND,
+        action::SET_ARTIFACT_NAME,
+        action::CREATE_ARTIFACT,
+        action::CANCEL_ARTIFACT_CREATION,
+        action::OPEN_CREATED_ARTIFACT,
     ];
     let mut seen = Vec::new();
     verbs(&build_hub_workspace_ui(&state, Locale::En), &mut seen);
@@ -503,9 +508,9 @@ fn every_draft_field_is_read_by_the_tree_so_a_republish_is_never_wasted() {
 #[test]
 fn the_browser_door_carries_the_same_mint_route_au3_proved_live() {
     let credential = HubSignInCredential { email: "user1@semio.dev".into(), password: "collab e2e first human phrase".into(), device_instance_id: "wgr-probe".into(), client_class: crate::hub_sign_in::HubSignInClientClass::Browser };
-    let body = crate::hub_sign_in::hub_session_mint_request_json(&credential).expect("a well-formed credential seals");
-    let url = format!("http://127.0.0.1:7501{}", crate::hub_sign_in::HUB_SESSION_MINT_PATH_V1);
-    let request = crate::directory_door::encode_directory_door_request(semio_framework_os_kernel::os_directory::client::HttpMethod::Post, &url, None, Some(body.as_bytes())).expect("the door encodes a POST");
+    let body = hub_session_mint_request_json(&credential).expect("a well-formed credential seals");
+    let url = format!("http://127.0.0.1:7501{}", HUB_SESSION_MINT_PATH_V1);
+    let request = crate::directory_door::encode_directory_door_request(HttpMethod::Post, &url, None, Some(body.as_bytes())).expect("the door encodes a POST");
     let parsed: serde_json::Value = serde_json::from_str(&request).expect("the door speaks JSON");
     assert_eq!(parsed["op"], crate::directory_door::DIRECTORY_DOOR_OP);
     assert_eq!(parsed["method"], "POST");
@@ -537,10 +542,178 @@ fn every_sign_in_refusal_is_a_readable_row_in_both_tongues() {
             let tagged = collected(&tree, attributes);
             assert!(tagged.iter().any(|(key, value)| key == "data-semio-hub-error" && value == code.as_str()), "{code:?} must reach the surface as a row an assistive technology can announce, not only as shell state",);
         }
-        let english = crate::hub_sign_in::hub_sign_in_error_text(Locale::En, code, None);
-        let german = crate::hub_sign_in::hub_sign_in_error_text(Locale::De, code, None);
+        let english = hub_sign_in_error_text(Locale::En, code, None);
+        let german = hub_sign_in_error_text(Locale::De, code, None);
         assert!(!english.trim().is_empty() && !german.trim().is_empty(), "{code:?} has an untranslated column");
         assert_ne!(english, german, "{code:?} paints the same string in both tongues, which is an untranslated key rather than a translation");
     }
 }
 //#endregion 🚪️BrowserDoorLaws
+
+//#region 🌱️ArtifactCreationDoorLaws
+/// 🧫️ React's language-agnostic creation-progress fixture: both locales' texts and the per-phase
+/// cases React's `ArtifactCreationProgressNotice` is held to (`🔬️artifact-creation-ready-opening`).
+fn creation_progress_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../../🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🔣️.json")).expect("artifact creation progress fixture")
+}
+
+/// 🗂️ The one-kind catalog of React's catalog-authority fixture, as the hub would serve it.
+fn fixture_catalog() -> SpaceArtifactCreationCatalogV1 {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json")).expect("catalog authority fixture");
+    let catalog = &fixture["catalog"];
+    SpaceArtifactCreationCatalogV1 {
+        schema: "semio.hub.space-artifact-creation-catalog/v1".into(),
+        space_id: catalog["spaceId"].as_str().expect("space").into(),
+        catalog_generation_id: catalog["catalogGenerationId"].as_str().expect("generation").into(),
+        kinds: vec![serde_json::from_str(catalog["member"].as_str().expect("member")).expect("catalog member kind")],
+    }
+}
+
+fn phase_of(name: &str) -> SpaceArtifactCreationPhaseV1 {
+    match name {
+        "accepted" => SpaceArtifactCreationPhaseV1::Accepted,
+        "preparing" => SpaceArtifactCreationPhaseV1::Preparing,
+        "ready" => SpaceArtifactCreationPhaseV1::Ready,
+        "indeterminate" => SpaceArtifactCreationPhaseV1::Indeterminate,
+        "failed" => SpaceArtifactCreationPhaseV1::Failed,
+        "cancelled" => SpaceArtifactCreationPhaseV1::Cancelled,
+        other => panic!("unknown phase {other}"),
+    }
+}
+
+fn locale_of(name: &str) -> Locale {
+    if name == "de" { Locale::De } else { Locale::En }
+}
+
+/// 🌱️ A signed-in workspace on the fixture's open space with its catalog ready.
+fn creation_door() -> HubWorkspaceState {
+    let mut state = signed_in(workspace());
+    let catalog = fixture_catalog();
+    state.open_space_id = Some(catalog.space_id.clone());
+    state.creation = HubArtifactCreationState { catalog_phase: HubArtifactCatalogPhase::Ready, catalog: Some(catalog), kind_id: None, name_draft: String::new(), next_request_id: "1".repeat(32), operation: None };
+    state
+}
+
+/// 🗣️ Every text the wgpu door paints is byte-identical to React's in both locales — the fixture is
+/// the one owner React's own law is held to (`deepEqual(fixture.locales, ARTIFACT_CREATION_PROGRESS_TEXT_V1)`).
+#[test]
+fn the_creation_door_speaks_the_fixture_texts_in_both_tongues() {
+    let fixture = creation_progress_fixture();
+    for (locale_name, locale) in [("en", Locale::En), ("de", Locale::De)] {
+        let words = &fixture["locales"][locale_name];
+        for phase in ["accepted", "preparing", "ready", "indeterminate", "failed", "cancelled"] {
+            assert_eq!(hub_artifact_creation_phase_text(phase_of(phase), locale), words["phases"][phase].as_str().expect("phase text"), "{locale_name} {phase}");
+        }
+        for (label, path) in [
+            (HubArtifactCreationLabel::Heading, "/heading"),
+            (HubArtifactCreationLabel::Cancel, "/cancel"),
+            (HubArtifactCreationLabel::Cancelling, "/cancelling"),
+            (HubArtifactCreationLabel::Opening, "/opening/active"),
+            (HubArtifactCreationLabel::OpeningFailed, "/opening/failed"),
+            (HubArtifactCreationLabel::OpenRetry, "/opening/retry"),
+            (HubArtifactCreationLabel::CatalogLoading, "/catalog/loading"),
+            (HubArtifactCreationLabel::CatalogReady, "/catalog/ready"),
+            (HubArtifactCreationLabel::CatalogUnavailable, "/catalog/unavailable"),
+        ] {
+            assert_eq!(hub_artifact_creation_label(label, locale), words.pointer(path).and_then(serde_json::Value::as_str).expect("fixture text"), "{locale_name} {path}");
+        }
+    }
+}
+
+/// 🚦️ Each fixture case, painted by the wgpu door: the phase line and its role, Cancel exactly while
+/// the case is cancellable, the cancelling line once asked, the opening line while it opens and the
+/// retry control exactly when it is retryable.
+#[test]
+fn every_fixture_creation_phase_paints_its_role_and_controls() {
+    let fixture = creation_progress_fixture();
+    for case in fixture["cases"].as_array().expect("cases") {
+        let id = case["id"].as_str().expect("id");
+        let locale = locale_of(case["locale"].as_str().expect("locale"));
+        let words = &fixture["locales"][case["locale"].as_str().expect("locale")];
+        let phase = phase_of(case["phase"].as_str().expect("phase"));
+        let mut state = creation_door();
+        let catalog = state.creation.catalog.clone().expect("catalog");
+        let kind = &catalog.kinds[0];
+        let intent = SpaceArtifactCreateV1 { schema: "semio.hub.space-artifact-create/v1".into(), request_id: "2".repeat(32), expected_catalog_generation_id: catalog.catalog_generation_id.clone(), kind_id: kind.kind_id.clone(), name: "Shared Map".into() };
+        let ready = (phase == SpaceArtifactCreationPhaseV1::Ready).then(|| SpaceArtifactCreationReadyV1 {
+            artifact_id: format!("artifact-{}", "4".repeat(32)),
+            kind_id: kind.kind_id.clone(),
+            artifact_schema: kind.schema.clone(),
+            parent_dialect: kind.dialect.clone(),
+        });
+        let opening = match case["openingDisposition"].as_str().expect("opening") {
+            "opening" => HubArtifactOpening::Opening,
+            "failed" => HubArtifactOpening::Failed,
+            _ => HubArtifactOpening::Idle,
+        };
+        state.creation.operation = Some(HubArtifactCreation { intent, space_id: catalog.space_id.clone(), phase, submitted: true, cancel_requested: case["cancelRequested"].as_bool().expect("cancel"), cancel_sent: false, ready, opening, deadline_at_ms: u64::MAX, next_poll_at_ms: 0 });
+        let tree = build_hub_workspace_ui(&state, locale);
+        let painted = collected(&tree, texts);
+        let buttons = collected(&tree, enabled_buttons);
+        let tagged = collected(&tree, attributes);
+        assert!(painted.iter().any(|text| text == words["phases"][case["phase"].as_str().expect("phase")].as_str().expect("phase text")), "{id}: phase line");
+        assert!(tagged.iter().any(|(key, value)| key == "data-semio-hub-artifact-creation-role" && value == case["role"].as_str().expect("role")), "{id}: role");
+        let cancel = format!("{HUB_ARTIFACT_CREATION_ID}.cancel");
+        assert_eq!(buttons.iter().any(|(button, enabled)| *button == cancel && *enabled), case["cancellable"].as_bool().expect("cancellable"), "{id}: cancel control");
+        assert_eq!(painted.iter().any(|text| text == words["opening"]["active"].as_str().expect("opening")), case["opens"].as_bool().expect("opens"), "{id}: opening line");
+        let retry = format!("{HUB_ARTIFACT_CREATION_ID}.open");
+        assert_eq!(buttons.iter().any(|(button, _)| *button == retry), case["retryable"].as_bool().expect("retryable"), "{id}: retry control");
+        if case["cancelRequested"].as_bool().expect("cancel") && !hub_artifact_creation_terminal(phase) {
+            assert!(painted.iter().any(|text| text == words["cancelling"].as_str().expect("cancelling")), "{id}: cancelling line");
+        }
+    }
+}
+
+/// 📚️ The catalog line of each fixture catalog case, and whether the door offers any choice; a
+/// `Ready` answer carrying no valid kind is shown as unavailable, never as an empty ready chooser.
+#[test]
+fn every_fixture_catalog_phase_paints_its_line_and_choices() {
+    let fixture = creation_progress_fixture();
+    for case in fixture["catalogCases"].as_array().expect("catalog cases") {
+        let id = case["id"].as_str().expect("id");
+        let locale_name = case["locale"].as_str().expect("locale");
+        let mut state = creation_door();
+        state.creation.catalog_phase = match case["phase"].as_str().expect("phase") {
+            "loading" => HubArtifactCatalogPhase::Loading,
+            "ready" => HubArtifactCatalogPhase::Ready,
+            _ => HubArtifactCatalogPhase::Unavailable,
+        };
+        if id.starts_with("catalog-empty-invalid") {
+            state.creation.catalog.as_mut().expect("catalog").kinds.clear();
+        }
+        let tree = build_hub_workspace_ui(&state, locale_of(locale_name));
+        let painted = collected(&tree, texts);
+        let effective = case["effectivePhase"].as_str().expect("effective");
+        assert!(painted.iter().any(|text| text == fixture["locales"][locale_name]["catalog"][effective].as_str().expect("catalog text")), "{id}: catalog line");
+        let tagged = collected(&tree, attributes);
+        assert!(tagged.iter().any(|(key, value)| key == "data-semio-hub-artifact-catalog-role" && value == case["role"].as_str().expect("role")), "{id}: catalog role");
+        let choices = collected(&tree, control_ids).iter().filter(|control| control.starts_with(&format!("{HUB_ARTIFACT_CREATION_ID}.kind."))).count();
+        assert_eq!(choices > 0, case["hasChoices"].as_bool().expect("choices"), "{id}: choices");
+    }
+}
+
+/// 📥️ The sealed intent names exactly the chosen catalog row, the catalog generation it was chosen
+/// from, the trimmed name and the door's pre-minted key; no choice, a blank name or a creation still
+/// in flight seals nothing.
+#[test]
+fn the_door_seals_one_intent_for_a_chosen_kind_and_a_valid_name() {
+    let mut state = creation_door();
+    state.creation.name_draft = "  Shared Map ".into();
+    assert_eq!(hub_artifact_creation_intent(&state), None, "no kind chosen yet");
+    let kind_id = state.creation.catalog.as_ref().expect("catalog").kinds[0].kind_id.clone();
+    state.creation.kind_id = Some(kind_id.clone());
+    let intent = hub_artifact_creation_intent(&state).expect("a chosen kind and a name seal an intent");
+    assert_eq!(
+        (intent.request_id.as_str(), intent.expected_catalog_generation_id.as_str(), intent.kind_id.as_str(), intent.name.as_str()),
+        ("1".repeat(32).as_str(), fixture_catalog().catalog_generation_id.as_str(), kind_id.as_str(), "Shared Map")
+    );
+    assert!(intent.validate());
+    let buttons = collected(&build_hub_workspace_ui(&state, Locale::En), enabled_buttons);
+    assert!(buttons.contains(&(format!("{HUB_ARTIFACT_CREATION_ID}.create"), true)));
+    state.creation.operation = Some(HubArtifactCreation { intent, space_id: "space-a".into(), phase: SpaceArtifactCreationPhaseV1::Preparing, submitted: true, cancel_requested: false, cancel_sent: false, ready: None, opening: HubArtifactOpening::Idle, deadline_at_ms: u64::MAX, next_poll_at_ms: 0 });
+    assert_eq!(hub_artifact_creation_intent(&state), None, "one creation at a time");
+    state.creation.operation = None;
+    state.creation.name_draft = "   ".into();
+    assert_eq!(hub_artifact_creation_intent(&state), None, "a blank name seals nothing");
+}
+//#endregion 🌱️ArtifactCreationDoorLaws

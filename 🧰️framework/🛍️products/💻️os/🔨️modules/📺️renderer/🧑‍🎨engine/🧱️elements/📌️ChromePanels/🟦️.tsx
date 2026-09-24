@@ -46,12 +46,12 @@ import {
   uiDataLabel,
   windowTemplatePaletteTreeDragController,
 } from "@semio-tech/ui-react";
-import { themePaintContrast, type Rgba8, type WcagContrastGrade } from "@semio-tech/ui-styling";
+import { WCAG_AA_CONTRAST, themePaintContrastPairs, type Rgba8, type WcagContrastGrade } from "@semio-tech/ui-styling";
 import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, type Conflict, type ConflictResolution, type MergePolicy, type NamedLayout, type WindowLayout, createNamedLayout } from "@semio-tech/framework";
 import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { type PluginPanelStatus, type ResolvedShellLocks } from "../🐚️Shell/🟦️.tsx";
 import { ConflictDiffPreview, conflictDiffText } from "../🔺️DiffViewHost/🟦️.tsx";
-import { defaultAppsSettingsTabLabel, defaultAppsSettingsTabText, driverDisplayLabel, noneOptionText, shellLabel, shellTabIcon, shellTerminologyLabel, surfaceRoleChipText } from "../🛠️ShellHelpers/🟦️.tsx";
+import { defaultAppsSettingsTabLabel, defaultAppsSettingsTabText, driverDisplayLabel, noneOptionText, shellLabel, shellLabelLocale, shellTabIcon, shellTerminologyLabel, surfaceRoleChipText } from "../🛠️ShellHelpers/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️os-chrome-panels
@@ -692,44 +692,85 @@ const THEME_CONTRAST_GRADE_LABEL_KEYS = {
   fail: "ui.settings.theme.contrast.fail",
 } as const satisfies Record<WcagContrastGrade, UiTranslationKey>;
 
-/** @emoji ♿️ Live WCAG 2.2 verdict for ONE user-customized appearance paint against its own appearance
- * foreground. The generated default palette is gated ≥ AA by `🎨️styling/🧪️tests/🧪️levels-oklabmix/🟦️.ts`;
- * a theme a user builds by hand has no such gate, so the editor prints the ratio beside the swatch and
- * marks anything under AA. Pure — the whole law is `themePaintContrast`, exported for its own test. */
-export function themeContrastBadgeText(paint: Rgba8, foreground: Rgba8, gradeLabel: (grade: WcagContrastGrade) => string): { readonly text: string; readonly grade: WcagContrastGrade; readonly passesBodyText: boolean } {
-  const verdict = themePaintContrast(paint, foreground);
-  return { text: `${verdict.ratio.toFixed(2)}:1 · ${gradeLabel(verdict.grade)}`, grade: verdict.grade, passesBodyText: verdict.passesBodyText };
+/** @emoji ♿️ Live WCAG 2.2 verdict for ONE appearance paint: the WORST text-on-surface pair it takes part in
+ * (`themePaintContrastPairs`), as the badge text, its grade, and — below AA — the inline warning sentence that
+ * names the other paint of the pair. `null` for a paint in no pair (borders, non-chrome groups). The generated
+ * default palette's surfaces are gated ≥ AA by `🎨️styling/🧪️tests/🧪️levels-oklabmix/🟦️.ts`; a hand-built
+ * theme has no such gate, so the editor says the ratio out loud. */
+export function themeContrastBadgeText(
+  palette: Readonly<Record<string, Rgba8>>,
+  paintKey: string,
+  gradeLabel: (grade: WcagContrastGrade) => string,
+  formatRatio: (ratio: number) => string,
+  warningLabel: (options: { readonly ratio: string; readonly minimum: string; readonly counterpart: string }) => string,
+): { readonly text: string; readonly grade: WcagContrastGrade; readonly passesBodyText: boolean; readonly ratio: number; readonly counterpart: string; readonly warning: string | null } | null {
+  const worst = themePaintContrastPairs(palette, paintKey)[0];
+  if (!worst) return null;
+  const ratio = formatRatio(worst.ratio);
+  return {
+    text: `${ratio}:1 · ${gradeLabel(worst.grade)}`,
+    grade: worst.grade,
+    passesBodyText: worst.passesBodyText,
+    ratio: worst.ratio,
+    counterpart: worst.counterpart,
+    warning: worst.passesBodyText ? null : warningLabel({ ratio, minimum: formatRatio(WCAG_AA_CONTRAST), counterpart: worst.counterpart }),
+  };
+}
+
+/** @emoji 🔢️ Prints a contrast ratio with two decimals in the ACTIVE shell locale (`4.50` / `4,50`) — the
+ * ratio a user reads beside the swatch and the one a screen reader speaks are the same localized number. */
+export function themeContrastRatioFormatter(locale: string): (ratio: number) => string {
+  const format = new Intl.NumberFormat(locale ? [locale] : [], { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (ratio) => format.format(ratio);
 }
 
 function buildThemeAppearanceGroupItems(host: SettingsHostApi, appearance: ThemeAppearanceName, group: ThemePaletteGroup): TreeDataItem[] {
   const refs = host.theme.appearances[appearance][group];
   const resolved = resolveThemeAppearancePalettes(host.theme, appearance)[group];
-  const foreground = resolved.foreground;
+  const formatRatio = themeContrastRatioFormatter(shellLabelLocale());
   return Object.keys(refs)
     .sort()
     .map((paintKey) => {
       const rgba = resolved[paintKey] ?? [0, 0, 0, 255];
       const hex = rgba8ToHex(rgba);
       const alpha = rgba[3] / 255;
-      const contrast = foreground && paintKey !== "foreground" ? themeContrastBadgeText(rgba, foreground, (grade) => shellLabel(THEME_CONTRAST_GRADE_LABEL_KEYS[grade])) : null;
+      const rowId = `framework.settings.theme.appearances.${appearance}.${group}.${paintKey}`;
+      const contrast = themeContrastBadgeText(resolved, paintKey, (grade) => shellLabel(THEME_CONTRAST_GRADE_LABEL_KEYS[grade]), formatRatio, (options) => shellLabel("ui.settings.theme.contrast.warning", options));
+      const describedBy = contrast ? [`${rowId}.contrast`, ...(contrast.warning ? [`${rowId}.contrast-warning`] : [])].join(" ") : undefined;
       return {
-        id: `framework.settings.theme.appearances.${appearance}.${group}.${paintKey}`,
+        id: rowId,
         label: paintKey,
         control: (
-          <div className="flex w-full items-center gap-single">
-            <input type="color" className={cn(borderElementClass, "h-small w-10 shrink-0 rounded border bg-background")} value={hex} onChange={(event) => host.setThemeAppearancePaint(appearance, group, paintKey, event.target.value, alpha)} />
-            {themeAlphaInput(`framework.settings.theme.appearances.${appearance}.${group}.${paintKey}.alpha`, alpha, (nextAlpha) => host.setThemeAppearancePaint(appearance, group, paintKey, hex, nextAlpha))}
-            {contrast ? (
-              <span
-                id={`framework.settings.theme.appearances.${appearance}.${group}.${paintKey}.contrast`}
-                data-contrast-grade={contrast.grade}
-                className={cn("shrink-0 text-xs tabular-nums", contrast.passesBodyText ? "text-muted-foreground" : "text-destructive")}
-                title={`${shellLabel("ui.settings.theme.contrast.label")}: ${contrast.text}`}
-                aria-label={`${shellLabel("ui.settings.theme.contrast.label")}: ${contrast.text}`}
-                role={contrast.passesBodyText ? undefined : "status"}
-              >
-                {contrast.text}
-              </span>
+          <div className="flex w-full flex-col gap-single">
+            <div className="flex w-full items-center gap-single">
+              <input
+                type="color"
+                className={cn(borderElementClass, "h-small w-10 shrink-0 rounded border bg-background")}
+                value={hex}
+                aria-label={paintKey}
+                aria-describedby={describedBy}
+                aria-invalid={contrast?.warning ? true : undefined}
+                onChange={(event) => host.setThemeAppearancePaint(appearance, group, paintKey, event.target.value, alpha)}
+              />
+              {themeAlphaInput(`${rowId}.alpha`, alpha, (nextAlpha) => host.setThemeAppearancePaint(appearance, group, paintKey, hex, nextAlpha))}
+              {contrast ? (
+                <span
+                  id={`${rowId}.contrast`}
+                  data-contrast-grade={contrast.grade}
+                  data-contrast-ratio={contrast.ratio}
+                  data-contrast-counterpart={contrast.counterpart}
+                  className={cn("shrink-0 text-xs tabular-nums", contrast.passesBodyText ? "text-muted-foreground" : "text-destructive")}
+                  title={`${shellLabel("ui.settings.theme.contrast.label")}: ${contrast.text}`}
+                  aria-label={`${shellLabel("ui.settings.theme.contrast.label")}: ${contrast.text}`}
+                >
+                  {contrast.text}
+                </span>
+              ) : null}
+            </div>
+            {contrast?.warning ? (
+              <p id={`${rowId}.contrast-warning`} role="alert" data-contrast-warning="" className="text-xs text-destructive">
+                {contrast.warning}
+              </p>
             ) : null}
           </div>
         ),
@@ -1211,7 +1252,7 @@ export function useNamedLayoutHost(options: {
 export function ShellRouteNotFoundPage({ path, onHome }: { readonly path: string; readonly onHome: () => void }) {
   return (
     <div className="flex h-full min-h-0 flex-col items-center justify-center gap-double p-double" role="alert" data-shell-route-not-found={path}>
-      <p className="text-sm text-muted-foreground">{uiDataLabel(`Route not found: ${path}`)}</p>
+      <p className="text-sm text-muted-foreground">{shellLabel("ui.common.routeNotFound", { path })}</p>
       <Button icon="home" text={shellLabel("ui.common.home")} onClick={onHome} />
     </div>
   );
@@ -1229,14 +1270,14 @@ export function PluginRecoveryPanel({
   readonly onRestart: () => void;
   readonly onDisable: () => void;
 }) {
-  const message = quarantined ? uiDataLabel("This program was quarantined after repeated crashes.") : uiDataLabel("This program crashed.");
+  const message = quarantined ? shellLabel("ui.plugins.recovery.quarantined") : shellLabel("ui.plugins.recovery.crashed");
   return (
     <div className="flex h-full min-h-0 flex-col gap-double p-double" data-plugin-recovery={pluginId}>
-      <p className="text-sm font-medium">{uiDataLabel("Plugin Recovery")}</p>
+      <p className="text-sm font-medium">{shellLabel("ui.plugins.recovery.title")}</p>
       <p className="text-sm text-muted-foreground">{message}</p>
       <div className="flex flex-wrap gap-single">
-        <Button icon="rotate-ccw" text={uiDataLabel("Restart App")} onClick={onRestart} />
-        <Button icon="eye-off" text={uiDataLabel("Disable Plugin")} onClick={onDisable} />
+        <Button icon="rotate-ccw" text={shellLabel("ui.plugins.recovery.restartApp")} onClick={onRestart} />
+        <Button icon="eye-off" text={shellLabel("ui.plugins.recovery.disablePlugin")} onClick={onDisable} />
       </div>
     </div>
   );
@@ -1289,19 +1330,19 @@ function pluginStatusLabel(status: PluginPanelStatus): UiLabel {
 function marketplaceExtensionItem(entry: MarketplaceExtensionEntry, host: MarketplaceHostApi): TreeDataItem {
   return {
     id: `framework.marketplace.plugin.${entry.extendsHost}.extension.${entry.extensionId}`,
-    label: `${entry.label}${entry.version ? ` · ${entry.version}` : ""} · ${entry.enabled ? uiDataLabel("enabled") : uiDataLabel("disabled")}`,
+    label: `${entry.label}${entry.version ? ` · ${entry.version}` : ""} · ${entry.enabled ? shellLabel("ui.plugins.extension.enabled") : shellLabel("ui.plugins.extension.disabled")}`,
     loading: entry.status === "installing" || entry.status === "reloading",
     control: (
       <div className="flex items-center gap-1">
         <Button icon={entry.enabled ? "eye-off" : "eye"}
           id={`framework.marketplace.extension.${entry.extensionId}.enable`}
-          text={entry.enabled ? uiDataLabel("Disable") : uiDataLabel("Enable")}
+          text={entry.enabled ? shellLabel("ui.plugins.extension.disable") : shellLabel("ui.plugins.extension.enable")}
           disabled={entry.status !== "loaded" && entry.status !== "available"}
           onClick={() => host.setExtensionEnabled(entry.extensionId, !entry.enabled)}
         />
         <Button icon="trash-2"
           id={`framework.marketplace.extension.${entry.extensionId}.uninstall`}
-          text={uiDataLabel("Uninstall")}
+          text={shellLabel("ui.plugins.action.uninstall")}
           disabled={entry.status === "installing" || entry.status === "reloading"}
           onClick={() => host.uninstallExtension(entry.extensionId)}
         />
@@ -1358,18 +1399,18 @@ function buildMarketplaceTree(host: MarketplaceHostApi): TreePanelConfig {
   const sections: TreeDataSection[] = [
     {
       id: "framework.marketplace.extensions.install",
-      label: uiDataLabel("Install extension"),
+      label: shellLabel("ui.plugins.extension.install"),
       defaultOpen: true,
       items: [
         {
           id: "framework.marketplace.extensions.install.url",
-          label: uiDataLabel("From URL"),
+          label: shellLabel("ui.plugins.extension.fromUrl"),
           control: (
             <Button icon="download"
               id="framework.marketplace.extensions.install.url"
-              text={uiDataLabel("Install from URL")}
+              text={shellLabel("ui.plugins.extension.installFromUrl")}
               onClick={() => {
-                const sourceUri = typeof window !== "undefined" ? window.prompt("Extension package URL") : null;
+                const sourceUri = typeof window !== "undefined" ? window.prompt(String(shellLabel("ui.plugins.extension.urlPrompt"))) : null;
                 if (sourceUri?.trim()) host.installExtensionFromUrl(sourceUri.trim());
               }}
             />
@@ -1377,7 +1418,7 @@ function buildMarketplaceTree(host: MarketplaceHostApi): TreePanelConfig {
         },
         {
           id: "framework.marketplace.extensions.install.file",
-          label: uiDataLabel("From file"),
+          label: shellLabel("ui.plugins.extension.fromFile"),
           control: (
             <label className="inline-flex cursor-pointer">
               <input
@@ -1391,7 +1432,7 @@ function buildMarketplaceTree(host: MarketplaceHostApi): TreePanelConfig {
                   event.target.value = "";
                 }}
               />
-              <Button icon="download" id="framework.marketplace.extensions.install.file.trigger" text={uiDataLabel("Install from file")} />
+              <Button icon="download" id="framework.marketplace.extensions.install.file.trigger" text={shellLabel("ui.plugins.extension.installFromFile")} />
             </label>
           ),
         },
@@ -1462,12 +1503,12 @@ export function createFrameworkMarketplacePanelTab(getHost: () => MarketplaceHos
   return singleTreeLeaf({
     id: FRAMEWORK_MARKETPLACE_TAB_ID,
     icon: shellTabIcon("store"),
-    name: uiDataLabel("Marketplace"),
+    name: shellLabel("ui.plugins.marketplace"),
     order: 1,
     tree: {
       resolveTree: () => {
         const host = getHost();
-        return host ? buildMarketplaceTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: uiDataLabel("Marketplace unavailable") }] }] };
+        return host ? buildMarketplaceTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.plugins.marketplaceUnavailable") }] }] };
       },
     },
   });

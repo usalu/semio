@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeFireDurati
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fire duration min to {:?}", self.new_fire_duration_min), &format!("Branddauermin auf {:?} ändern", self.new_fire_duration_min))
+        protocol::LocalizedLabel::native(&format!("Change fire duration [min] to {:?}", self.new_fire_duration_min), &format!("Branddauer [min] auf {:?} ändern", self.new_fire_duration_min))
     }
 }
 //#endregion 🔖️ChangeFireDurationMin

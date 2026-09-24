@@ -37,12 +37,36 @@ export function spawnedWindowInstanceIdV1(spawnedId: string, windowKindId: strin
   return `${spawnedId}${SPAWNED_WINDOW_SEPARATOR}${windowKindId}`;
 }
 
-/** 🪟️ Every window instance a spawned program contributes to the session, in declaration order —
- * one per window kind, exactly as a session app contributes one per `AppDefinition.windowKinds`
- * entry. A spawned program has no split/extra instances yet; when it gains them they append here,
- * which is why the return shape already carries `windowKindId`. */
-export function spawnedProgramWindowInstancesV1(spawnedId: string, windowKinds: readonly SpawnedWindowKindV1[]): readonly SpawnedWindowInstanceV1[] {
-  return windowKinds.map((kind) => ({ id: spawnedWindowInstanceIdV1(spawnedId, kind.id), bodyKey: kind.bodyKey, windowKindId: kind.id }));
+/** 🪟️ A window instance a program's OWN default layout declares beyond the one-per-kind instances — a
+ * named instance of one of its window kinds (puzzle3d's `puzzle3d-main-top` / `-front` / `-right` /
+ * `-perspective` views of kind `puzzle3d-main`). The id is the one the GUEST knows. */
+export type SpawnedDeclaredInstanceV1 = { readonly id: string; readonly windowKindId: string };
+
+/** 🪟️ Every window instance a spawned program contributes to the session, in declaration order — one
+ * per window kind, then every instance its own default layout declares, exactly the set
+ * `sessionWindowInstances` yields for a session app seeded from the same layout. Declared instances of a
+ * kind the program does not declare, or that collide with a kind id, are skipped.
+ *
+ * 🧯️ Before declared instances belonged here, a program whose default layout names only instances (the
+ * four puzzle3d views) opened with every leaf pruned — "Drag windows from Display in the navbar" — and its
+ * seeded active window stayed the raw `puzzle3d-main-top`, so every later window-scoped shell note was
+ * refused with "That window is no longer open." (measured inside `s`, ticket 26/09/23 S15). */
+export function spawnedProgramWindowInstancesV1(spawnedId: string, windowKinds: readonly SpawnedWindowKindV1[], declaredInstances: readonly SpawnedDeclaredInstanceV1[] = []): readonly SpawnedWindowInstanceV1[] {
+  return spawnedGuestWindowInstancesV1(windowKinds, declaredInstances).map((instance) => ({ ...instance, id: spawnedWindowInstanceIdV1(spawnedId, instance.id) }));
+}
+
+/** 🪟️ The same instances under the ids the GUEST knows — what a refresh request and a dispatched view
+ * state address. */
+export function spawnedGuestWindowInstancesV1(windowKinds: readonly SpawnedWindowKindV1[], declaredInstances: readonly SpawnedDeclaredInstanceV1[] = []): readonly SpawnedWindowInstanceV1[] {
+  const bodyKeyByKindId = new Map(windowKinds.map((kind) => [kind.id, kind.bodyKey] as const));
+  const seen = new Set<string>(bodyKeyByKindId.keys());
+  const declared = declaredInstances.flatMap((instance) => {
+    const bodyKey = bodyKeyByKindId.get(instance.windowKindId);
+    if (bodyKey === undefined || seen.has(instance.id)) return [];
+    seen.add(instance.id);
+    return [{ id: instance.id, bodyKey, windowKindId: instance.windowKindId }];
+  });
+  return [...windowKinds.map((kind) => ({ id: kind.id, bodyKey: kind.bodyKey, windowKindId: kind.id })), ...declared];
 }
 
 /** 🪟️ The spawned instance a shell window id belongs to, or `null` for a session window. Resolved
@@ -57,15 +81,16 @@ export function spawnedIdOfWindowInstanceV1(windowId: string, spawnedIds: readon
   return best;
 }
 
-/** 🪟️ The window KIND a shell window id names within its spawned instance, or `null` when the id
- * belongs to no spawned instance. */
+/** 🪟️ The guest's own window instance id a shell window id names within its spawned instance — a window
+ * kind id, or an instance the program's default layout declares — or `null` when the id belongs to no
+ * spawned instance. */
 export function spawnedWindowKindOfInstanceV1(windowId: string, spawnedIds: readonly string[]): string | null {
   const spawnedId = spawnedIdOfWindowInstanceV1(windowId, spawnedIds);
   return spawnedId === null ? null : windowId.slice(spawnedId.length + SPAWNED_WINDOW_SEPARATOR.length);
 }
 /** 🪟️ The window id the GUEST knows, for a host window id. A spawned instance is a plugin instance
- * with exactly one set of windows, so its own window instance ids ARE its window kind ids — the same
- * identity a session app's windows have. The `${spawnedId}::` namespace is a HOST concern (two
+ * with exactly one set of windows, so its own window instance ids ARE the ids it declared — its window
+ * kind ids and the instances its default layout names — the same identity a session app's windows have. The `${spawnedId}::` namespace is a HOST concern (two
  * spawned instances of one app must not collide in the layout, the utility map or the DOM), so it is
  * stripped at every boundary that speaks to the guest: the refresh request, the dispatched view
  * state, and the action invocation's `windowInstanceId`.
@@ -124,13 +149,14 @@ export function renameLayoutWindowIdsV1<T extends SpawnedLayoutNodeV1>(node: T, 
   return { ...node, children: node.children.map((child) => renameLayoutWindowIdsV1(child, rename)) } as T;
 }
 
-/** 🪟️ The rename a spawned instance's layout seed needs: every one of its own window KIND ids to the
- * namespaced instance id, and nothing else. Built as a map so an app whose default layout names a
- * window kind it does not declare leaves that leaf alone (and the canvas then prunes it), instead of
- * minting a window instance the guest was never asked to render. */
-export function spawnedLayoutRenameV1(spawnedId: string, windowKinds: readonly SpawnedWindowKindV1[]): (windowId: string) => string | undefined {
-  const byKindId = new Map(windowKinds.map((kind) => [kind.id, spawnedWindowInstanceIdV1(spawnedId, kind.id)] as const));
-  return (windowId: string) => byKindId.get(windowId);
+/** 🪟️ The rename a spawned instance's layout seed needs: every one of its own window instance ids — one
+ * per KIND plus every instance its default layout declares — to the namespaced instance id, and nothing
+ * else. Built as a map so an app whose default layout names a window kind it does not declare leaves that
+ * leaf alone (and the canvas then prunes it), instead of minting a window instance the guest was never
+ * asked to render. */
+export function spawnedLayoutRenameV1(spawnedId: string, windowKinds: readonly SpawnedWindowKindV1[], declaredInstances: readonly SpawnedDeclaredInstanceV1[] = []): (windowId: string) => string | undefined {
+  const byGuestId = new Map(spawnedGuestWindowInstancesV1(windowKinds, declaredInstances).map((instance) => [instance.id, spawnedWindowInstanceIdV1(spawnedId, instance.id)] as const));
+  return (windowId: string) => byGuestId.get(windowId);
 }
 //#endregion 🪟️SpawnedLayout
 
@@ -288,3 +314,33 @@ export function spawnedBridgeCensusV1(
 }
 //#endregion 📇️SpawnedBridgeCensus
 
+
+//#region 🚫️SpawnProgramRefusal
+/** 🚫️ Every way the shell's own `spawnProgram` can fail to open a program the user picked from the
+ * palette or a studio row. Each used to be a bare `return` or an unawaited rejection: a guest whose
+ * staged `core.wasm` answered 404 left `pageerror: WebAssembly.compile … HTTP status code is not ok`
+ * and nothing on screen, so the open looked exactly like a click that was never made (measured on
+ * the real `s` host, 2026-09-24, ticket 26/09/18 session-10 S3 §1). Authored with no shell i18n
+ * import, like `📣️replay-refusal`. */
+export type SpawnProgramRefusalReasonV1 = "program-not-installed" | "session-not-ready" | "open-failed";
+
+export type SpawnProgramRefusalLabelV1 = { readonly en: string; readonly de: string };
+
+/** 🗣️ Notice text per reason; `{program}` is the program's breadcrumb (`semio · raster`). */
+export const SPAWN_PROGRAM_REFUSAL_LABELS_V1: Readonly<Record<SpawnProgramRefusalReasonV1, SpawnProgramRefusalLabelV1>> = {
+  "program-not-installed": { en: "“{program}” is not installed in this shell.", de: "„{program}“ ist in dieser Shell nicht installiert." },
+  "session-not-ready": { en: "The workspace is still loading — open “{program}” again in a moment.", de: "Der Arbeitsbereich lädt noch — „{program}“ bitte gleich erneut öffnen." },
+  "open-failed": { en: "“{program}” could not be opened.", de: "„{program}“ konnte nicht geöffnet werden." },
+};
+
+/** 🗣️ The localized notice for one refusal; only an unknown locale falls back to English. */
+export function spawnProgramRefusalNoticeTextV1(reason: SpawnProgramRefusalReasonV1, program: string, locale: string): string {
+  const label = SPAWN_PROGRAM_REFUSAL_LABELS_V1[reason];
+  return (locale === "de" ? label.de : label.en).replace("{program}", program);
+}
+
+/** 🩺️ The notice's fault code, shared by the notice, the console line and every probe. */
+export function spawnProgramRefusalCodeV1(reason: SpawnProgramRefusalReasonV1): string {
+  return `shell.spawnProgram.${reason}`;
+}
+//#endregion 🚫️SpawnProgramRefusal

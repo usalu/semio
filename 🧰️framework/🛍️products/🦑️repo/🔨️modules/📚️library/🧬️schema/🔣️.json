@@ -90,16 +90,17 @@
       ]
     },
     "outcomeClasses": {
+      "description": "🎯️ Every protocol outcome class the leaf's own diff can reach, read from its code: `applied` (a change), `no-op` (no change, no refusal), `empty`/`disjoint` (format-defined empty or disjoint results), `rejected` (an Error or Fatal message). Bridges and manifests carry these values verbatim.",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
       "items": {
         "enum": [
           "applied",
-          "info",
-          "warning",
-          "error",
-          "fatal"
+          "no-op",
+          "empty",
+          "disjoint",
+          "rejected"
         ]
       }
     },

@@ -121,7 +121,7 @@ fn kinds_match_the_catalog_and_the_vocabulary() {
         assert!(vocabulary.contains(&format!("\"{kind}\"")), "StepCc6Mutation::KINDS is missing {kind:?}");
         assert!(feature.contains(&format!("| {kind} ")), "the case's Examples table is missing kind {kind:?}");
     }
-    assert_eq!(KINDS.len(), 5);
+    assert_eq!(KINDS.len(), 4);
 }
 
 /// 🚧️ The one refusal CC6 can genuinely make: a type that is not on the ladder at all.

@@ -79,16 +79,16 @@ async fn committed_json_is_canonical() {
     assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "replace-points/replays-the-identical-empty-point-cloud: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
 }
 
-/// 🎯️ The declared outcome — applied, with one `mutation.no-op` warning — is what the builder emits.
+/// 🎯️ The declared outcome — `no-op`, with one `mutation.no-op` warning — is what the builder emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome = pack::parse_json(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("applied"), "replace-points/replays-the-identical-empty-point-cloud declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("no-op"), "replace-points/replays-the-identical-empty-point-cloud declares a no-op outcome");
     let emitted = produced();
     let messages = emitted.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "replaying an identical point cloud is reported as no-op");
-    assert_eq!(messages[0].level, protocol::Severity::Warning, "a no-op is a Warning — applied, but with nothing to change");
+    assert_eq!(messages[0].level, protocol::Severity::Warning, "a no-op is a Warning — never a refusal, it just changes nothing");
     let declared = outcome.get("messages").and_then(pack::JsonValue::as_array).expect("the declared outcome carries its warning");
     assert_eq!(declared[0].get("code").and_then(pack::JsonValue::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
 }

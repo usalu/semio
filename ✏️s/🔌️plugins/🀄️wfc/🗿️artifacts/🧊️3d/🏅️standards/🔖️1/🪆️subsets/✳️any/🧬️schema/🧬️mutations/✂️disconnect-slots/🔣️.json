@@ -10,7 +10,7 @@
   "binaryTag": 5,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
-  "outcomeClasses": ["error", "applied"],
+  "outcomeClasses": ["applied", "rejected"],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",

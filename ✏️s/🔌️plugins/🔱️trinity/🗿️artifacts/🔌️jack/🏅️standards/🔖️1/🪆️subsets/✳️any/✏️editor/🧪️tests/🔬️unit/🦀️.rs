@@ -693,3 +693,57 @@ async fn every_shipped_query_lints_clean_and_runs_on_the_curated_example() {
         crate::executor::run(&mut graph, query).unwrap_or_else(|error| panic!("{query} must run on the curated example: {error}"));
     }
 }
+
+//#region 🩹️RailVerbLaws
+/// 🕹️ Dispatches `action` with rail-staged text `args` (the Actions pane's own shape) and settles it.
+async fn dispatch_rail(app: &mut JackTestApp, action: &str, args: &[(&str, &str)]) -> Result<(), semio_framework_plugin::Fault> {
+    let args = pack::json_to_dsl_value(&pack::JsonValue::Object(args.iter().map(|(key, value)| ((*key).to_string(), pack::JsonValue::String((*value).to_string()))).collect()));
+    app.handle_action(action, Some(&args), &meta("local")).await?;
+    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE).await.map(|_| ())
+}
+
+/// ⚖️ LAW: `patchNodes` pressed from the rail with an EMPTY `nodeIds` renames the selected nodes, and a
+/// comma list in the text field names several nodes (S15: the verb "moved nothing").
+#[semio_framework_async_macros::async_test]
+async fn patch_nodes_from_the_rail_renames_the_selection_or_the_listed_nodes() {
+    let mut app = new_app().await;
+    let (first, second) = (node_id_at(&app, 0), node_id_at(&app, 1));
+    select_ast(&mut app, &[&first]).await;
+    dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 Selected")]).await.expect("an empty nodeIds patches the selection");
+    let renamed = |app: &JackTestApp, id: &str| app.snapshot().expect("projection").nodes().into_iter().find(|node| node.id == id).map(|node| node.name).expect("node");
+    assert_eq!(renamed(&app, &first), "S15 Selected");
+    dispatch_rail(&mut app, "patchNodes", &[("nodeIds", &format!("{first}, {second}")), ("field", "name"), ("value", "S15 Listed")]).await.expect("a comma list names both nodes");
+    assert_eq!((renamed(&app, &first), renamed(&app, &second)), ("S15 Listed".to_string(), "S15 Listed".to_string()));
+}
+
+/// ⚖️ LAW: a `patchNodes` that cannot move the document is refused by name — an unknown id is
+/// `mutation.target-missing`, no id and no selection or an unsupported field is `app.command.invalid-args`
+/// — and the document stays untouched. It used to answer an empty emit that read as an accepted edit.
+#[semio_framework_async_macros::async_test]
+async fn patch_nodes_refuses_what_it_cannot_apply_and_leaves_the_document_untouched() {
+    let snapshot = default_fixture();
+    let first = snapshot.nodes()[0].id.clone();
+    let code = |result: Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
+    assert_eq!(code(commands::patch_nodes(&snapshot, &["no-such-node".into()], &[], "name", "x")), "mutation.target-missing");
+    assert_eq!(code(commands::patch_nodes(&snapshot, &[], &[], "name", "x")), "app.command.invalid-args");
+    assert_eq!(code(commands::patch_nodes(&snapshot, &[first.clone()], &[], "kind", "x")), "app.command.invalid-args");
+    assert_eq!(code(commands::patch_nodes(&snapshot, &[first.clone()], &[], "name", "  ")), "app.command.invalid-args");
+    assert_eq!(commands::patch_nodes(&snapshot, &[], &[first], "name", "x").expect("the selection is the target").artifact_mutations.len(), 1);
+}
+
+/// ⚖️ LAW: the query editor's gesture verbs stay out of the palette and the Actions rail — a press there
+/// carries no buffer or caret, so `textSelect` was refused `missing start` (S15) and `textEdit` would
+/// have emptied the query — while the editor window still declares both for its text host.
+#[semio_framework_async_macros::async_test]
+async fn the_text_gesture_verbs_are_kept_off_the_rail() {
+    let definition = create_trinity_jack_app();
+    let editor = definition.window_kinds.iter().find(|window| window.id == TRINITY_JACK_PLAY_WINDOW_EDITOR).expect("the query editor window");
+    let actions = semio_framework_plugin::resolve_window_actions(&definition, editor);
+    for gesture in ["textEdit", "textSelect"] {
+        let action = actions.iter().find(|action| action.id == gesture).expect("the query editor still declares its text-host gesture");
+        assert!(!action.in_palette, "{gesture} is a text-host gesture, never a rail row");
+    }
+    let patch = actions.iter().find(|action| action.id == "patchNodes").expect("declared");
+    assert!(patch.args.iter().any(|arg| arg.id == "nodeIds" && !arg.required), "nodeIds is optional: empty means the selection");
+}
+//#endregion 🩹️RailVerbLaws

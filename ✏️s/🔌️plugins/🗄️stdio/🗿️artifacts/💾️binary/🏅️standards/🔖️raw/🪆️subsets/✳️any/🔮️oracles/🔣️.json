@@ -26,7 +26,7 @@
             "package": "coreutils dd/truncate",
             "ecosystem": "posix",
             "verdict": "cannot-express-the-mutation",
-            "reason": "Rewrites or truncates bytes at an offset, but has no notion of this vocabulary's contract: which offsets and remove lengths are refused, what an out-of-range splice returns, or the inverse each kind must yield."
+            "reason": "Rewrites or truncates bytes at an offset, but has no notion of this vocabulary's contract: which offsets and remove lengths are refused, what an out-of-range byte-range replacement returns, or the inverse each kind must yield."
           },
           {
             "package": "numpy",
@@ -35,7 +35,7 @@
             "reason": "Array insert/delete reproduce byte arithmetic only; the refusal and inverse semantics under test are this subset's own definitions."
           }
         ],
-        "whyNoneQualifies": "A raw buffer has no format, so the mutation vocabulary (offset/remove_len splice, append, truncate, snapshot) is itself the specification; a byte tool reproduces arithmetic but cannot adjudicate the refusals and inverses this subset defines."
+        "whyNoneQualifies": "A raw buffer has no format, so the mutation vocabulary (offset/remove_len byte-range replacement, append, truncate, snapshot) is itself the specification; a byte tool reproduces arithmetic but cannot adjudicate the refusals and inverses this subset defines."
       }
     }
   ],
@@ -60,7 +60,7 @@
       ],
       "kinds": [
         "set-snapshot",
-        "splice",
+        "replace-byte-range",
         "append-bytes",
         "truncate-at"
       ]
@@ -95,14 +95,15 @@
           ]
         },
         {
-          "id": "splice",
+          "id": "replace-byte-range",
           "capability": "binary-raw-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
-            "operation": "splice",
+            "operation": "replace-byte-range",
             "bridgeVersion": 1,
             "variant": "ReplaceByteRange"
           },
@@ -118,7 +119,8 @@
           "capability": "binary-raw-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -137,7 +139,8 @@
           "capability": "binary-raw-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "truncate-at",
@@ -200,14 +203,14 @@
     },
     {
       "schema": "semio.repository-test.fixture/v2",
-      "id": "splice-applied",
+      "id": "replace-byte-range-applied",
       "class": "handcrafted",
       "target": {
         "artifact": "s.stdio.binary",
         "standard": "raw",
         "subset": "any"
       },
-      "mutation": "splice",
+      "mutation": "replace-byte-range",
       "outcome": "applied",
       "units": {
         "length": "unitless",
@@ -216,14 +219,14 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/✂️splice/⬅️before.json",
+          "path": "../🧫️fixtures/✂️replace-byte-range/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:672c38b99383042be24422f0610771e70d20d10c9674586b8e2361b8acf1b1fc",
           "bytes": 104
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/✂️splice/➡️after.json",
+          "path": "../🧫️fixtures/✂️replace-byte-range/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:e3192734cc5cd2f528792fa1eb1968d2ca17f48f993d383ee3b4f7b35c21f1fd",
           "bytes": 106
@@ -239,7 +242,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "binary-carrier",
-      "notes": "ReplaceByteRange{offset:2,removeLen:2,insert:[99,99]} — wire tag `splice`, per this leaf's own `#[value(rename=\"splice\")]` — replaces bytes [2,4) in place with 2 new bytes, leaving the buffer length unchanged."
+      "notes": "ReplaceByteRange{offset:2,removeLen:2,insert:[99,99]} replaces bytes [2,4) in place with 2 new bytes, leaving the buffer length unchanged."
     },
     {
       "schema": "semio.repository-test.fixture/v2",

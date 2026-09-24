@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeWMm3 {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change w mm3 to {:?}", self.new_w_mm3), &format!("Wmm3 auf {:?} ändern", self.new_w_mm3))
+        protocol::LocalizedLabel::native(&format!("Change section modulus W [mm3] to {:?}", self.new_w_mm3), &format!("Widerstandsmoment W [mm3] auf {:?} ändern", self.new_w_mm3))
     }
 }
 //#endregion 🔖️ChangeWMm3

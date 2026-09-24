@@ -1,3 +1,4 @@
+use crate::editor::remodeling::engine::step_ceiling;
 use super::*;
 
 #[test]
@@ -25,7 +26,7 @@ fn maximum_terminal_raster_png_is_worker_step_bounded() {
         loop {
             let started = std::time::Instant::now();
             let progress = encoder.advance(4_096);
-            assert!(started.elapsed() < std::time::Duration::from_millis(8), "bounded raster PNG worker step exceeded 8 ms");
+            step_ceiling::admit_step(started.elapsed(), format_args!("bounded raster PNG worker step exceeded 8 ms"));
             match progress {
                 RasterPngProgress::Working => {}
                 RasterPngProgress::Chunk(chunk) => {

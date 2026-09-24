@@ -1229,6 +1229,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_interactive_job("setMotionParams", InteractiveJobClassification::Migrated)
             .action_interactive_job("setGeoParams", InteractiveJobClassification::Migrated)
             .action_interactive_job("resetPlaceholderMesh", InteractiveJobClassification::Migrated)
+            .action_destructive("resetPlaceholderMesh")
             .action_interactive_job("clearSparse", InteractiveJobClassification::Migrated)
             .action_interactive_job("clearDense", InteractiveJobClassification::Migrated)
             .action_interactive_job("clearMeshResult", InteractiveJobClassification::Migrated)
@@ -1240,6 +1241,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_interactive_job("setFrameCursor", InteractiveJobClassification::Migrated)
             .action_interactive_job("setReportTable", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportQcReport", InteractiveJobClassification::Migrated)
+            .action_destructive("exportQcReport")
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             // 🎯️ Typed channel surface — `io()` is this same information's single source of truth,
             // reused here rather than duplicated.

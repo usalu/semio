@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeUdlKnM {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change udl kn m to {:?}", self.new_udl_kn_m), &format!("Udlknm auf {:?} ändern", self.new_udl_kn_m))
+        protocol::LocalizedLabel::native(&format!("Change uniform load [kN/m] to {:?}", self.new_udl_kn_m), &format!("Gleichstreckenlast [kN/m] auf {:?} ändern", self.new_udl_kn_m))
     }
 }
 //#endregion 🔖️ChangeUdlKnM

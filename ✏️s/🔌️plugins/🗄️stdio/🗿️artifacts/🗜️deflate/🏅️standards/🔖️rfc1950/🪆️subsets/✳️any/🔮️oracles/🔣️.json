@@ -128,7 +128,8 @@
           "capability": "deflate-rfc1950-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",

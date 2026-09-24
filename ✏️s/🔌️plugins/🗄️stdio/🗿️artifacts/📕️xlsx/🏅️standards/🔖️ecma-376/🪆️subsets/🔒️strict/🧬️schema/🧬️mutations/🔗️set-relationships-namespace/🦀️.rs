@@ -21,7 +21,7 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetRelationshi
         agg_inverse(&XlsxStrictMutation::SetRelationshipsNamespace(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-relationships-namespace", "Beziehungennamensraum setzen")
+        protocol::LocalizedLabel::native("Set relationships namespace", "Beziehungsnamensraum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

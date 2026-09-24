@@ -3737,51 +3737,23 @@
         }
       ]
     },
-    "CheckpointPublicationCommandSafe": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 9007199254740991
-    },
-    "CheckpointPublicationCommandPositiveSafe": {
+    "EditedArtifactFrontierPositiveSafe": {
       "type": "integer",
       "minimum": 1,
       "maximum": 9007199254740991
     },
-    "CheckpointPublicationCommandHash": {
+    "EditedArtifactFrontierHash": {
       "type": "string",
       "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
     },
-    "CheckpointPublicationCommandCorrelation": {
-      "type": "string",
-      "pattern": "^(?!0{32}$)[0-9a-f]{32}$"
-    },
-    "CheckpointPublicationCommandText": {
+    "EditedArtifactFrontierText": {
       "type": "string",
       "minLength": 1,
       "maxLength": 256,
       "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"
     },
-    "CheckpointPublicationCommandDocumentFrontier": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "headSeq",
-        "commitSeq",
-        "epoch"
-      ],
-      "properties": {
-        "headSeq": {
-          "$ref": "#/$defs/CheckpointPublicationCommandSafe"
-        },
-        "commitSeq": {
-          "$ref": "#/$defs/CheckpointPublicationCommandSafe"
-        },
-        "epoch": {
-          "$ref": "#/$defs/CheckpointPublicationCommandSafe"
-        }
-      }
-    },
-    "CheckpointPublicationCommandArtifactFrontier": {
+    "EditedArtifactFrontierV1": {
+      "description": "One edited, committed point of a document's ledger: the counters and content chain the hub's document authority published for it, and the edit id at its tip.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -3793,121 +3765,201 @@
       ],
       "properties": {
         "documentId": {
-          "$ref": "#/$defs/CheckpointPublicationCommandText"
+          "$ref": "#/$defs/EditedArtifactFrontierText"
         },
         "headEditOrdinal": {
-          "$ref": "#/$defs/CheckpointPublicationCommandPositiveSafe"
+          "$ref": "#/$defs/EditedArtifactFrontierPositiveSafe"
         },
         "headEditId": {
-          "$ref": "#/$defs/CheckpointPublicationCommandText"
+          "$ref": "#/$defs/EditedArtifactFrontierText"
         },
         "lastCommitSeq": {
-          "$ref": "#/$defs/CheckpointPublicationCommandPositiveSafe"
+          "$ref": "#/$defs/EditedArtifactFrontierPositiveSafe"
         },
         "chainSha256": {
-          "$ref": "#/$defs/CheckpointPublicationCommandHash"
+          "$ref": "#/$defs/EditedArtifactFrontierHash"
         }
       }
     },
-    "CheckpointPublicationCommandCurrent": {
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "state",
-            "checkpointId"
-          ],
-          "properties": {
-            "state": {
-              "const": "genesis"
-            },
-            "checkpointId": {
-              "$ref": "#/$defs/CheckpointPublicationCommandHash"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "state",
-            "checkpointId",
-            "baselineFrontier"
-          ],
-          "properties": {
-            "state": {
-              "const": "active"
-            },
-            "checkpointId": {
-              "$ref": "#/$defs/CheckpointPublicationCommandHash"
-            },
-            "baselineFrontier": {
-              "$ref": "#/$defs/CheckpointPublicationCommandArtifactFrontier"
-            }
-          }
-        }
-      ]
+    "DocumentCheckInRequestId": {
+      "type": "string",
+      "pattern": "^(?!0{32}$)[0-9a-f]{32}$"
     },
-    "CheckpointPublicationCommandBlob": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "sha256",
-        "blake3",
-        "byteLength"
-      ],
-      "properties": {
-        "sha256": {
-          "$ref": "#/$defs/CheckpointPublicationCommandHash"
-        },
-        "blake3": {
-          "$ref": "#/$defs/CheckpointPublicationCommandHash"
-        },
-        "byteLength": {
-          "$ref": "#/$defs/CheckpointPublicationCommandPositiveSafe"
-        }
-      }
-    },
-    "CheckpointPublicationCommandV1": {
+    "DocumentCheckInV1": {
+      "description": "Check In: a document author names a committed ledger head; the hub materializes the checkpoint from its own document log and makes it the active checkpoint. No pair, pair hash, parent or scope is accepted from a client: scope comes from the route and author from the session.",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "schema",
-        "correlationId",
-        "descriptorDigestV1",
-        "expectedDocumentFrontier",
-        "expectedCurrent",
-        "baselineFrontier",
-        "pack",
-        "spr"
+        "requestId",
+        "head"
       ],
       "properties": {
         "schema": {
-          "const": "semio.hub.checkpoint-publication-command/v1"
+          "const": "semio.hub.document-check-in/v1"
         },
-        "correlationId": {
-          "$ref": "#/$defs/CheckpointPublicationCommandCorrelation"
+        "requestId": {
+          "$ref": "#/$defs/DocumentCheckInRequestId"
         },
-        "descriptorDigestV1": {
-          "$ref": "#/$defs/CheckpointPublicationCommandHash"
-        },
-        "expectedDocumentFrontier": {
-          "$ref": "#/$defs/CheckpointPublicationCommandDocumentFrontier"
-        },
-        "expectedCurrent": {
-          "$ref": "#/$defs/CheckpointPublicationCommandCurrent"
-        },
-        "baselineFrontier": {
-          "$ref": "#/$defs/CheckpointPublicationCommandArtifactFrontier"
-        },
-        "pack": {
-          "$ref": "#/$defs/CheckpointPublicationCommandBlob"
-        },
-        "spr": {
-          "$ref": "#/$defs/CheckpointPublicationCommandBlob"
+        "head": {
+          "$ref": "#/$defs/EditedArtifactFrontierV1"
         }
       }
+    },
+    "DocumentCheckInPhaseV1": {
+      "enum": [
+        "accepted",
+        "materializing",
+        "publishing",
+        "ready",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "DocumentCheckInRefusalV1": {
+      "description": "unknown-head: not a committed point of this document's ledger; stale-head: precedes the active checkpoint's baseline; active-checkpoint-changed: another check-in or approval advanced the active checkpoint meanwhile; ledger-not-replayable: the ledger range holds an approval decision; codec-refused: the trusted catalog's codec refused the ledger or the replayed pair; authority-changed: the author lost write access or the document its descriptor; unavailable: storage or the trusted catalog was unavailable.",
+      "enum": [
+        "unknown-head",
+        "stale-head",
+        "active-checkpoint-changed",
+        "ledger-not-replayable",
+        "codec-refused",
+        "authority-changed",
+        "unavailable"
+      ]
+    },
+    "DocumentCheckInProgressV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completedUnits",
+        "totalUnits"
+      ],
+      "properties": {
+        "completedUnits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "totalUnits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "DocumentCheckInReadyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpointId",
+        "parentCheckpointId",
+        "baseline"
+      ],
+      "properties": {
+        "checkpointId": {
+          "$ref": "#/$defs/EditedArtifactFrontierHash"
+        },
+        "parentCheckpointId": {
+          "$ref": "#/$defs/EditedArtifactFrontierHash"
+        },
+        "baseline": {
+          "$ref": "#/$defs/EditedArtifactFrontierV1"
+        }
+      }
+    },
+    "DocumentCheckInStatusV1": {
+      "description": "One Check In's observable state. Only ready names the checkpoint it made active and only failed names a refusal.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "requestId",
+        "phase",
+        "progress"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.document-check-in-status/v1"
+        },
+        "requestId": {
+          "$ref": "#/$defs/DocumentCheckInRequestId"
+        },
+        "phase": {
+          "$ref": "#/$defs/DocumentCheckInPhaseV1"
+        },
+        "progress": {
+          "$ref": "#/$defs/DocumentCheckInProgressV1"
+        },
+        "ready": {
+          "$ref": "#/$defs/DocumentCheckInReadyV1"
+        },
+        "refusal": {
+          "$ref": "#/$defs/DocumentCheckInRefusalV1"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "phase": {
+                "const": "ready"
+              }
+            },
+            "required": [
+              "phase"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ready": true
+            },
+            "required": [
+              "ready"
+            ]
+          },
+          "else": {
+            "not": {
+              "properties": {
+                "ready": true
+              },
+              "required": [
+                "ready"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "phase": {
+                "const": "failed"
+              }
+            },
+            "required": [
+              "phase"
+            ]
+          },
+          "then": {
+            "properties": {
+              "refusal": true
+            },
+            "required": [
+              "refusal"
+            ]
+          },
+          "else": {
+            "not": {
+              "properties": {
+                "refusal": true
+              },
+              "required": [
+                "refusal"
+              ]
+            }
+          }
+        }
+      ]
     },
     "DocumentBrowserActorDigest": {
       "type": "string",
@@ -6692,6 +6744,241 @@
               },
               "reservation": {
                 "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "AgentMcpLauncherV1": {
+      "title": "AgentMcpLauncherV1",
+      "description": "🚀️ How a host starts `semio-os-mcp`: the executable plus every argument up to and including the transport.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "args"
+      ],
+      "properties": {
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "AgentCredentialInstallRequestV1": {
+      "title": "AgentCredentialInstallRequestV1",
+      "description": "📥️ A host installs one delegation's credential file owner-only where `semio-os-mcp --credential-file` reads it. `contents` is exactly the `semio.hub.agent-credential/v1` file the delegation pane renders.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "delegationId",
+        "contents"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.agent-credential-install/v1"
+        },
+        "delegationId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,128}$"
+        },
+        "contents": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16384
+        }
+      }
+    },
+    "AgentCredentialInstallReceiptV1": {
+      "title": "AgentCredentialInstallReceiptV1",
+      "description": "🧾️ The absolute path of the installed owner-only credential file and the host's MCP launcher.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "credentialPath",
+        "launcher"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.agent-credential-install-receipt/v1"
+        },
+        "credentialPath": {
+          "type": "string",
+          "pattern": "^(/|[A-Za-z]:[\\\\/])"
+        },
+        "launcher": {
+          "$ref": "#/$defs/AgentMcpLauncherV1"
+        }
+      }
+    },
+    "AgentMcpServerEntryV1": {
+      "title": "AgentMcpServerEntryV1",
+      "description": "🧩️ One stdio server entry in the shape MCP clients read from `.mcp.json` / `claude_desktop_config.json`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "command",
+        "args"
+      ],
+      "properties": {
+        "type": {
+          "const": "stdio"
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 9
+        }
+      }
+    },
+    "AgentMcpClientConfigV1": {
+      "title": "AgentMcpClientConfigV1",
+      "description": "📄️ The MCP client configuration one agent delegation produces: exactly one `semio-<agent slug>` server, bound to the delegation's hub and space by `--hub`/`--space`, authenticated by `--credential-file` (never the token itself), granted the scopes its audience admits.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mcpServers"
+      ],
+      "properties": {
+        "mcpServers": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 1,
+          "propertyNames": {
+            "pattern": "^semio-[a-z0-9-]{1,48}$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/AgentMcpServerEntryV1"
+          }
+        }
+      }
+    },
+    "AgentMcpClientConfigLawV1": {
+      "title": "AgentMcpClientConfigLawV1",
+      "description": "⚖️ Language-agnostic law: a delegation receipt, a hub origin and a host install receipt determine exactly one MCP client configuration; an unsafe delegation id is refused before anything is written.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "law",
+        "cases",
+        "refusals"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.agent-mcp-client-config-law/v1"
+        },
+        "law": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "receipt",
+              "hubOrigin",
+              "installed",
+              "fileName",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "receipt": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "delegationId",
+                  "agentPrincipalId",
+                  "agentLabel",
+                  "spaceId",
+                  "audience",
+                  "expiresAtMs",
+                  "token"
+                ],
+                "properties": {
+                  "delegationId": {
+                    "type": "string"
+                  },
+                  "agentPrincipalId": {
+                    "type": "string"
+                  },
+                  "agentLabel": {
+                    "type": "string"
+                  },
+                  "spaceId": {
+                    "type": "string"
+                  },
+                  "audience": {
+                    "enum": [
+                      "read",
+                      "edit"
+                    ]
+                  },
+                  "expiresAtMs": {
+                    "type": "integer"
+                  },
+                  "token": {
+                    "type": "string"
+                  }
+                }
+              },
+              "hubOrigin": {
+                "type": "string"
+              },
+              "installed": {
+                "$ref": "#/$defs/AgentCredentialInstallReceiptV1"
+              },
+              "fileName": {
+                "type": "string"
+              },
+              "expected": {
+                "$ref": "#/$defs/AgentMcpClientConfigV1"
+              }
+            }
+          }
+        },
+        "refusals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "delegationId",
+              "error"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "delegationId": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
               }
             }
           }

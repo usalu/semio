@@ -15,7 +15,7 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetC
     fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfig> {
         imperative_engine::sync_imperative_module_contributions(&self.json);
         if base.contributions_json == self.json {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "The requested configuration value is already current.");
+            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "The requested configuration value is already current.");
         }
         let mut next = base.clone();
         next.contributions_json = self.json.clone();

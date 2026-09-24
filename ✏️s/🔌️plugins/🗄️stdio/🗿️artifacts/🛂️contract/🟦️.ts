@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { CARGO_COMPOSITION_NAME, CARGO_CONTRACT_NAME, COMPOSITION_TYPESCRIPT_NAME, JsonMap, STDIO_RELATIVE_ROOT, StdioArtifactPackageRecord, canonicalStdioArtifactNames, readStdioJson, slashStdioPath } from "../../📇️inventory/🟦️.ts";
+import { CARGO_COMPOSITION_NAME, CARGO_CONTRACT_NAME, COMPOSITION_TYPESCRIPT_NAME, JsonMap, STDIO_RELATIVE_ROOT, StdioArtifactPackageRecord, canonicalStdioArtifactNames, readStdioJson, slashStdioPath } from "../📇️inventory/🟦️.ts";
 
 async function parseToml(path: string): Promise<JsonMap> {
   const { parse } = await import("@iarna/toml");

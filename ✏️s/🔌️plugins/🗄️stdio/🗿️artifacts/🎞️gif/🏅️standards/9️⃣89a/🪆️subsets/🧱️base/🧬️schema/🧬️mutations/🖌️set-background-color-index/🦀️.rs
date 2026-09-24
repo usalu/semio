@@ -22,7 +22,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetBackgroundColorInde
         agg_inverse(&GifMutation::SetBackgroundColorIndex(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-background-color-index", "Hintergrundfarbenindex setzen")
+        protocol::LocalizedLabel::native("Set background color index", "Hintergrundfarbindex setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

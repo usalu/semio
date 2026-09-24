@@ -21,7 +21,7 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for RemoveStream {
         agg_inverse(&AviMutation::RemoveStream(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-stream", "Strom entfernen")
+        protocol::LocalizedLabel::native("Remove stream", "Datenstrom entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

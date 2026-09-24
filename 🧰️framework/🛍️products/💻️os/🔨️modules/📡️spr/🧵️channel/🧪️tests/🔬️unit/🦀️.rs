@@ -751,6 +751,18 @@ async fn decode_app_frame_rejects_truncated_field() {
     assert!(decode_app_frame(truncated).await.is_err());
 }
 
+/// 📏️ A frame is exactly its bytes: a payload that merely STARTS like a frame is not one. A shell
+/// message that is not a frame — a document-backbone binding receipt, whose pack-value tag 3 reads as
+/// `AppFrame::Document` — was taken for a frame by a prefix decode and vanished from the shell's
+/// messages (measured on native block2d: "binding returned 0 shell receipts", ticket 26/09/23 slice WG8).
+#[semio_framework_async_macros::async_test]
+async fn decode_app_frame_refuses_trailing_bytes() {
+    let mut bytes = encode_app_frame(&AppFrame::Document { in_reply_to: 42, pack: vec![1, 2], spr: vec![3], ops: "ops".into() }).await;
+    assert!(decode_app_frame(&bytes).await.is_ok(), "the exact frame decodes");
+    bytes.push(0);
+    assert!(decode_app_frame(&bytes).await.is_err(), "one trailing byte makes it no frame");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn decode_app_command_never_panics_on_arbitrary_short_buffers() {
     for len in 0..8 {

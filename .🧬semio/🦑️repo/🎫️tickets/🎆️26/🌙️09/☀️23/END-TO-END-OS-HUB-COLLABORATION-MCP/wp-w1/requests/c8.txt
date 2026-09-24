@@ -20,3 +20,5 @@ C8 addendum (04:38): a second guest-side fix landed in the same crate (⚛️rea
   activation gis2d 08:29: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/gis2d/activation/🔣️receipt.json
   activation s     08:29: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/activation/🔣️receipt.json (60 components)
   catalog A (stdio,gis,note,draw,writer,puzzle) publishing since 08:29 -> .🧬semio/🌐hub/w1-catalog-a (appended here when done)
+
+[w2 2026-09-25 12:3x] catalog B published from the post-landing tree: /Users/ueli/Documents/semio/.🧬semio/🌐hub/w2-catalog-b (generation e8167ce8ed3e61f0a4252661df9f2e3043aabb258e474b797fc3f0612c9ecc53, 9 packages stdio,gis,note,animate,block,writer,draw,puzzle,wfc; 12 editor open targets, compressed closed actors, S15 plugin modules). Hub 7800 runs it since 11:50 with binary .tmp-ticket/wp-w2/generated/bin/os-hub-hub-7800-b (Hub Handoff in 📓️wp-w2.md). Open-plan probe 12/12 (wp-w2/generated/open-plan-probe-7800-b.txt). The full --packages all catalog follows.

@@ -31,7 +31,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeManife
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change manifest id", "Manifestid ändern")
+        protocol::LocalizedLabel::native("Change manifest id", "Manifest-ID ändern")
     }
 }
 //#endregion 🔖️Mutation

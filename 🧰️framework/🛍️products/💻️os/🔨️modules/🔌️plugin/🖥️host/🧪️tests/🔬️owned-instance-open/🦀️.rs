@@ -129,7 +129,7 @@ async fn owned_runtime_instance_open_settles_against_a_real_plugin_component() {
     let runtime = OwnedRuntime::new();
     let compiled = runtime.compile(&package_ref("semio:note", &bytes), &bytes).await.expect("compile plugin component");
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &open_budget()).await.expect("instantiate plugin actor");
-    let turn = open_to_settle(&runtime, &mut instance, NOTE_EDITOR_APP, open_budget, |guest| runtime.turn_in_flight(guest)).await;
+    let turn = open_to_settle(&runtime, &mut instance, NOTE_EDITOR_APP, open_budget, |guest| guest.turn_in_flight()).await;
     assert!(matches!(turn.status, TurnStatus::Idle), "InstanceOpen settled as {:?}", turn.status);
 }
 
@@ -206,12 +206,12 @@ async fn a_mid_flight_owned_turn_refuses_new_events_instead_of_dropping_them() {
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(3), &[], &open_budget()).await.expect("instantiate plugin actor");
     let one_instruction = Budget { fuel: 1, ..open_budget() };
     assert!(matches!(runtime.execute_turn(&mut instance, &[instance_open_event(NOTE_EDITOR_APP, Vec::new())], one_instruction).await, Err(TurnFault::FuelExhausted)));
-    assert!(runtime.turn_in_flight(&instance), "a fuel-yielded turn is mid-flight");
+    assert!(instance.turn_in_flight(), "a fuel-yielded turn is mid-flight");
     let refusal = runtime.execute_turn(&mut instance, &[Event::Wake], open_budget()).await.expect_err("a mid-flight turn must refuse new events");
     assert!(format!("{refusal:?}").contains("mid-flight"), "a mid-flight turn must say so, got {refusal:?}");
     let resumed = runtime.execute_turn(&mut instance, &[], Budget { fuel: 1_000_000, ..open_budget() }).await;
     assert!(matches!(resumed, Err(TurnFault::FuelExhausted | TurnFault::DeadlineExceeded)), "resuming with no events continues the same turn rather than refusing it, got {resumed:?}");
-    assert!(runtime.turn_in_flight(&instance), "the resumed turn is still the same one");
+    assert!(instance.turn_in_flight(), "the resumed turn is still the same one");
 }
 
 /// 🗒️ `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs`'s `NOTE_DOCUMENT_SCHEMA` — the PRIMARY key

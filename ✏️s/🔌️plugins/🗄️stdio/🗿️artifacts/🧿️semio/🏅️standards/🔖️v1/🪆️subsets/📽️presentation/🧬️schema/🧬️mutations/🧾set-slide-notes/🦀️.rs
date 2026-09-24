@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
         agg_inverse(&SemioPresentationMutation::SetSlideNotes(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-slide-notes", "Foliennotizen setzen")
+        protocol::LocalizedLabel::native("Set slide notes", "Foliennotizen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

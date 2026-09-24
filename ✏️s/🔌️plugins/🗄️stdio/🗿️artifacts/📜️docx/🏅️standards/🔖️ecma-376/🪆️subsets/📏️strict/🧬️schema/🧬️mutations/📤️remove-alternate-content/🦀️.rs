@@ -21,7 +21,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for RemoveAlternat
         agg_inverse(&DocxStrictMutation::RemoveAlternateContent(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-alternate-content", "alternative Inhalt entfernen")
+        protocol::LocalizedLabel::native("Remove alternate content", "Alternativen Inhalt entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1413,6 +1413,11 @@ interface codec {
   /// 🧩️ Applies one `encode_ops_vec` batch to a pair and returns the next pair. This is the
   /// host-authoritative edit apply for a package whose codec the host does not link.
   apply-ops: async func(artifact-kind: string, pair: document-pair, ops: list<u8>) -> result<document-pair, plugin-error>;
+
+  /// 📜️ Folds one `encode-envelopes` ledger stream onto a pair through the replica merge gate and
+  /// returns the next pair. A hub materializes a Check In with it: edit identity and history
+  /// transitions (undo, redo, checkpoints) stay the replicas' own, which `apply-ops` cannot keep.
+  replay-envelopes: async func(artifact-kind: string, pair: document-pair, envelopes: list<u8>) -> result<document-pair, plugin-error>;
 }
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1). One world for both roles —

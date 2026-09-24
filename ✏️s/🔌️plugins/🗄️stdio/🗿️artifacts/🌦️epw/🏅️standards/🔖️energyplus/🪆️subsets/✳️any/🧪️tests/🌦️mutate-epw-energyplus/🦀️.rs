@@ -13,30 +13,6 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::{oracle_apply_mutation, project_epw, round_trip_epw};
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
-//#region 🔖️Kinds
-/// 🧾️ Test-case-local mirror of the `epw-energyplus-any` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that
-/// module lives in the SUBJECT crate, and the oracle role must not link the subject crate at all
-/// (fleet brief §5.3), while this loop registers handlers for both roles from one list. That other
-/// `KINDS` carries its own test proving it matches the enum AND the catalog manifest; a mismatch
-/// HERE against either one is caught structurally instead — the contract phase fails with
-/// `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits or invents a kind, and the
-/// runner fails every unregistered scenario id outright (`adapter has no {role} registration`).
-const KINDS: &[&str] = &[
-    "set-snapshot",
-    "set-location",
-    "set-design-conditions",
-    "set-typical-extreme-periods",
-    "set-ground-temperatures",
-    "set-holidays-dst",
-    "set-comments1",
-    "set-comments2",
-    "set-data-periods",
-    "insert-record",
-    "remove-record",
-    "set-record-field",
-];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "asset://🎬️demo/🧪️example/🌦️.epw";
@@ -70,6 +46,7 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
         _ => None,
     };
     match forward.str("kind").as_str() {
+        "no-mutation" => Ok(forward.clone()),
         "set-snapshot" => {
             let projection = project_epw(original)?;
             Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", projection)])))
@@ -189,7 +166,7 @@ mod subject {
         insert_record, remove_record, set_comments1, set_comments2, set_data_periods, set_design_conditions, set_ground_temperatures, set_holidays_dst, set_location, set_record_field, set_snapshot, set_typical_extreme_periods,
     };
     use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriod, EpwDataPeriods, EpwLocation, EpwRecord, EPW_RECORD_FIELD_COUNT};
-    use crate::{EpwMutation, EpwSnapshot};
+    use semio_s_artifact_stdio_epw::{EpwMutation, EpwSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::project_epw;
 
     fn strings(value: &Json, key: &str) -> Vec<String> {
@@ -233,13 +210,14 @@ mod subject {
 
     /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
     /// `EpwMutation` — the only channel between the feature's parameters and the subject's codec.
-    fn mutation_from_spec(spec: &Json) -> Result<EpwMutation, String> {
+    fn mutation_from_spec(spec: &Json) -> Result<Vec<EpwMutation>, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         let number = |key: &str| match params.get(key) {
             Some(Json::Number(value)) => Some(*value),
             _ => None,
         };
-        Ok(match spec.str("kind").as_str() {
+        Ok(vec![match spec.str("kind").as_str() {
+            "no-mutation" => return Ok(Vec::new()),
             "set-snapshot" => {
                 let snapshot = params.get("snapshot").cloned().unwrap_or(Json::Null);
                 let records = snapshot.array("records").iter().map(|row| if let Json::Array(cells) = row { record_from(&cells.iter().map(|c| if let Json::String(s) = c { s.clone() } else { String::new() }).collect::<Vec<_>>()) } else { EpwRecord::default() }).collect();
@@ -270,7 +248,7 @@ mod subject {
             "remove-record" => EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: number("index").ok_or("remove-record: missing `index`")? as usize }),
             "set-record-field" => EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: number("recordIndex").ok_or("set-record-field: missing `recordIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-record-field: missing `fieldIndex`")? as usize, value: params.str("value") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
-        })
+        }])
     }
 
     fn decode(bytes: &[u8]) -> Result<EpwSnapshot, String> {
@@ -280,8 +258,9 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        apply_epw_mutation(&mut snapshot, &mutation);
+        for mutation in mutation_from_spec(&ctx.doc_json()?)? {
+            apply_epw_mutation(&mut snapshot, &mutation);
+        }
         let output = encode_epw(&snapshot).into_bytes();
         let projection = project_epw(&output)?;
         Ok(Outcome::with_raw(output, projection))
@@ -291,8 +270,9 @@ mod subject {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&input)?;
-        apply_epw_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
-        apply_epw_mutation(&mut snapshot, &mutation_from_spec(&inverse_spec(&input, &spec)?)?);
+        for mutation in mutation_from_spec(&spec)?.into_iter().chain(mutation_from_spec(&inverse_spec(&input, &spec)?)?) {
+            apply_epw_mutation(&mut snapshot, &mutation);
+        }
         let output = encode_epw(&snapshot).into_bytes();
         let projection = project_epw(&output)?;
         Ok(Outcome::with_raw(output, projection))
@@ -319,12 +299,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

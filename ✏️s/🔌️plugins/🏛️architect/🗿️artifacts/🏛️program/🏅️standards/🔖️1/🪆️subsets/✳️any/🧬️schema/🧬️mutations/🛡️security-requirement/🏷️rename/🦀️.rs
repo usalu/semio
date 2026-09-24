@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameSecurityRequiremen
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename security requirement to \"{}\"", self.new_name), &format!("Sicherheitsanforderung in \"{}\" umbenennen", self.new_name))
+        protocol::LocalizedLabel::native(&format!("Rename security requirement to \"{}\"", self.new_name), &format!("Schutzanforderung in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

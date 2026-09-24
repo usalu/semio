@@ -358,6 +358,9 @@ pub struct Scenario {
     pub doc_strings: Vec<String>,
     /// 📊️ Data tables attached to this scenario's steps, in step order — header row first.
     pub data_tables: Vec<Vec<Vec<String>>>,
+    /// 🪆️ The `@id-<base>` of the Scenario Outline this row expands, empty for a plain scenario. An
+    /// adapter registered under the outline's base id serves every row the feature declares.
+    pub outline_of: String,
 }
 
 /// 🪆️ The smallest owning subset a case is scoped to. A case with no target is UNSCOPED, and Protocol
@@ -413,6 +416,7 @@ impl Plan {
                 level: entry.str("level"),
                 mode: entry.str("mode"),
                 seed: entry.str("seed"),
+                outline_of: entry.str("outlineOf"),
                 steps: entry.array("steps").iter().map(|step| (step.str("keyword"), step.str("text"))).collect(),
                 doc_strings: entry
                     .array("steps")

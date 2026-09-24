@@ -71,6 +71,10 @@ fn declared_outcome_holds() {
     let applied = apply_puzzle5d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
         "applied" => assert!(applied, "replace-kind-catalogs/null-catalogs-is-noop: declared applied but the mutation was rejected"),
+        "no-op" => {
+            assert!(applied, "replace-kind-catalogs/null-catalogs-is-noop: declared no-op but the mutation was rejected");
+            assert_eq!(snapshot, before(), "replace-kind-catalogs/null-catalogs-is-noop: a no-op must leave the snapshot untouched");
+        }
         "rejected" => {
             assert!(!applied, "replace-kind-catalogs/null-catalogs-is-noop: declared rejected but the mutation applied");
             assert_eq!(snapshot, before(), "replace-kind-catalogs/null-catalogs-is-noop: rejected mutation must leave the snapshot untouched");

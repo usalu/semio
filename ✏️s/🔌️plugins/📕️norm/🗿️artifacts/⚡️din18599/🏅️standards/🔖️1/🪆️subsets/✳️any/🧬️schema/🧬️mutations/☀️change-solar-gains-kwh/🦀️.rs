@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeSolarG
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change solar heat gains [kWh] to {}", self.new_solar_gains_kwh), &format!("Solarwärmengewinne [kWh] auf {} ändern", self.new_solar_gains_kwh))
+        protocol::LocalizedLabel::native(&format!("Change solar heat gains [kWh] to {}", self.new_solar_gains_kwh), &format!("Solare Wärmegewinne [kWh] auf {} ändern", self.new_solar_gains_kwh))
     }
 }
 //#endregion 🔖️ChangeSolarGainsKwh

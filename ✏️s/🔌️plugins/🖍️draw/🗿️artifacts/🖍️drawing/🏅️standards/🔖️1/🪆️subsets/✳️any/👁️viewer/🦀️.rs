@@ -59,6 +59,12 @@ impl ArtifactViewer for DrawingViewer {
         store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("drawing.child-projection"), error.to_string()))
     }
 
+    /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
+    /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::spr::drawing_document_store_owners())
+    }
+
     fn initial_snapshot() -> DrawingSnapshot {
         default_drawing_document("empty", None)
     }

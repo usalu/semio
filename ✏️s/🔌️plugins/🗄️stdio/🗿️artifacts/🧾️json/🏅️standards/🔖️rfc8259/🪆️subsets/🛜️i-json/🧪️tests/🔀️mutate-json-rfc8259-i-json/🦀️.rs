@@ -16,13 +16,6 @@
 use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
-/// 📇️ Case-local mirror of the `json-rfc8259-i-json` catalog, duplicated rather than imported: the
-/// oracle-only build of this adapter must never link `semio-s-plugin-stdio`. The production side's
-/// own `kinds_match_the_enum_and_the_catalog` keeps `KINDS` honest against the enum AND the manifest;
-/// a drift HERE is caught structurally instead — the contract phase fails with
-/// `mutation-kind-uncovered`/`mutation-kind-undeclared`, and the runner fails every unregistered
-/// scenario id outright.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-top-level", "upsert-member", "remove-member", "rename-member", "set-safe-number", "set-string", "insert-array-element", "remove-array-element"];
 
 const INPUT: &str = "shared://🔣️.json";
 //#endregion 🔖️Kinds
@@ -241,9 +234,6 @@ mod subject {
     }
     //#endregion 🔖️Handlers
 
-    /// 🧭️ Re-exported so `super::adapter()` registers the same ten-kind sweep without a third copy of
-    /// the list.
-    pub const SUBJECT_KINDS: &[&str] = super::KINDS;
 }
 //#endregion 🔖️Subject
 
@@ -256,9 +246,7 @@ pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        for kind in subject::SUBJECT_KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
         built = built.subject("i-json-conformance", subject::i_json_conformance).subject("identity-round-trip", subject::identity_round_trip);
     }
     built

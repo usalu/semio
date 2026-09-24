@@ -22,7 +22,7 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for RemoveRow {
         agg_inverse(&TsvMutation::RemoveRow(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-row", "Zeile entfernen")
+        protocol::LocalizedLabel::native("Remove row", "Zeile entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

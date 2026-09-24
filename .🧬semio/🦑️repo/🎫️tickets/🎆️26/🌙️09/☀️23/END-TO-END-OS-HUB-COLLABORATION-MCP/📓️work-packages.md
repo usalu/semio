@@ -78,3 +78,96 @@ Rules: `📓️session-10-preamble.md`. Every session-9 "running" package was cu
 - **R1** (wp-r1) Native: renderer-wgpu 0 failures (continues O1d), plugin logic failures (space, flow stall, extensions, stdio oracles; continues P1/P2b/P3), os vitest suites green.
 - Session 10 follow-ups: **H3** pg/neo4j WAL writer fence (done), **H4** hub ledger head / edit-id collision, **H5** graceful shutdown + db reds (done), **G5** guest step overhead (done, 2.07×, client-e2e 38/38), **G6** cancellable binding + relay hop + idle workers, **R2** kernel edit-text + semio-base (done), **R3** semio-base json oracle (done), **R4** db crate lib suite (~72 pre-existing reds, artifact runner close hang), **R5** test-platform + subset schemas + mesh (done), **P4** restore `#[derive(DslArtifact)]` pack-schema identity for 18 packages (coordinator decision), **C8** checkpoint panic + inspector refresh + collab 10/10 + STEP 14 + zero-touch, **T1** contract rules/oracles/test placement (Go in-package tests admitted by rule, coordinator decision), **T2** case/fixture layout + catalog content, **T3** real plugin import/export serializers.
 - 2026-09-24 ~07:30 the account usage limit cut all 11 running agents (reset 08:30). Wave 1 resumed 08:32 (critical path): W1, H4, C8, P5, R6, G7. Wave 2 parked until wave 1 thins out: T1, T3, P6, T4, T5 (each resumes from its own report). H5 and T2 had already finished.
+- 2026-09-24 ~13:00 second usage-limit cut of all 7 agents (reset 13:30). Resumed 13:32: W1, C8, R7, G8. Parked: T5, T6, T7 (resume from their reports when a slot frees).
+- 16:40 freeze on stdio/gis crates, kernel pack/store and the framework plugin crate until W1's catalog A + hub 7800 publish from one tree (hub links stdio/gis codecs natively). Done since the 13:30 resume: C8 (checkpoint trap + remote re-projection; live 10/10 waits on catalog), G8 (plugin-host 244/244 ×3), H6 (lost timer wake; kernel sync flake), R7 (db 769/769 nextest + in-process ×3), T6, T7 (GeoJSON), T8, T9 (DWG AC1024 writer/reader, acadrust + LibreDWG oracles). New: T10 (protocol outcome vocabulary on leaf descriptors, no severity projection; coordinator decision), H7 (schema-first structured event log without external runtime deps + checkpoint-publications decision), G9 (generic hub inference quartet). Peer session 26/09/18 (End-to-end repo completion) owns WG6, N2, M5b (MCP descriptions/destructive/BM25), S3 (foreign-kind open, block boot); its audit `📓️peer-audit-g10.md`. Pending after the final pass: G2 35-kind sweep inside `s`; G7 wgpu collaboration after WG6/N2.
+
+## Session 11 (Claude Code fleet, 2026-09-25 00:40)
+
+Rules: `📓️session-11-preamble.md`; landing log `📓️landing.md`; fleet handles `📓️fleet-11-agents.md`. Freeze lifted after W1's
+catalog A publish (2026-09-24 20:46, generation `ee491213…`).
+
+- **W2** (wp-w2) Sole all-plugin wasm owner: hub 7800 on catalog A now; after the landing window describe-all → generate/check
+  green → all 60 s guests restaged (incl. the 15 deleted `core.wasm`) → trusted catalog for ALL packages → hub 7800 ready; serve
+  `wp-w1/requests/*` (continues W1).
+- **H9** (wp-h9) Hub backend: H8 check-in command (schema-first, hub-materialized checkpoint job, delete the
+  `checkpoint-publications` upload path), store writes that can fail, declared authorization policy, db in-process gate,
+  document-socket trace leg live; hub quick + long green (continues H4–H8).
+- **C10** (wp-c10) Browser collaboration live on hub 7800: collab-e2e 10/10 + STEP 14 peer cursors, presence, short
+  connection-shortage resilience, zero-touch clean-state `dev s`/start with local hub, timed (continues C7/C8).
+- **G10** (wp-g10) Semio MCP: land G9's commit binding, generic inference quartet live, client-e2e, hub-agent-participant,
+  agent edit seen by a human, live agent tool-call transcript in the React shell (continues G4–G9).
+- **S15** (wp-s15) `s` frontend: open interactive + refused kinds inside the running `s`, full interaction sweep of every kind,
+  block in browser, raster, lazy install from the hub catalog, en/de + a11y + default-palette WCAG failures (continues S3/S14/U4).
+- **WG7** (wp-wg7) wgpu: land N2 relay + `ureq` move, browser document actor hub `connect`, native two-user collaboration 12/12,
+  wasm32 wgpu shell painted + signed in (continues G7w/N2/WG6).
+- **T12** (wp-t12) Plugin contracts: land T10 outcome switch + T11 frozen follow-ups, pdf 1.7, editor vocabularies, contract to
+  zero high rows, plugin lib-test debt (continues T10/T11).
+- **R8** (wp-r8) Non-plugin test health: framework/os crates lib tests, os TS suites, renderer-wgpu, hub TS, gates by root cause
+  (continues R1–R7).
+- Audits (Sonnet 5, read-only): `📓️audit-s11-os-frontend.md`, `📓️audit-s11-hub.md`, `📓️audit-s11-collaboration.md`,
+  `📓️audit-s11-ai-mcp.md`, `📓️audit-s11-build-health.md`.
+
+### Session 11 coordinator backlog (routed from audits)
+
+- 01:0x hub audit (`📓️audit-s11-hub.md`): P0-1 in-process creation law on synthetic bytes + DB4 document lane, P2-1 HubSagas decision,
+  P2-2 Neo4j lease on shutdown, P2-4 live-database-lanes rerun → **H9**. P0-2 `hub-edit-durability-check` live → **G10**.
+  P1-1 (TC3 hardcoded provider set) is STALE: TC3b landed catalog-carried genesis (H9 verifies no residual gate).
+  Unassigned: P1-4 `build-s-react-release` end to end + RB1 release-bundle probes (→ W2 after the full rebuild),
+  P2-3 cold `docker build` of `🌎️hub/Dockerfile` + `docker run` `/healthz` (→ wave 2), input-validation fuzzing of hub routes (→ wave 2).
+- 01:1x MCP audit (`📓️audit-s11-ai-mcp.md`): G-P1-1 launch rows, G-P1-3 extension inference roster walk, G-P2-2 agent principal marked
+  in presence UI, G-P2-3 in-product hub-bound MCP config with delegated credential, G-P2-5 duplicate resource → **G10**. G-P2-4 unify
+  approval surfaces → **S15**. G-P1-4 (empty verb descriptions) STALE per M5b. Unassigned: G-P2-1 wgpu agent reply (tag 10) +
+  approval overlay parity (→ WG7 after its collaboration items), G-P1-2 capability-audit 29 findings across ~14 plugin descriptors
+  (→ wave 2), stdio descriptor must carry its 68 inference services (→ W2 with the full rebuild).
+- 01:2x os-frontend audit (`📓️audit-s11-os-frontend.md`): P0 1–3 (sweep past id≠bodyKey, raster + 14 re-verify, lazy install) → **S15**.
+  New slice **U5** (wp-u5, Opus): mutation-label German text end to end, TaskManager + cancel UI, localized ShellSync + persistent
+  hub indicator, unified approvals (moved from S15), tablet breakpoint, dag horizontal pan, Home space table after sign-in.
+  P1-6 architect duplicate capability id → **G10**. P1-7 per-plugin `test-quick` re-verify → **T12** after landing.
+  Unassigned: P2-12 native wgpu accessibility (→ WG7 backlog).
+- 01:3x collaboration audit (`📓️audit-s11-collaboration.md`): G-P0-2, G-P1-1/2/4, G-P2-3 (same-field conflict) → **C10**. G-P0-3 wasm32
+  `WasmActor::connect` → **WG7**. New slice **WG8** (wp-wg8, Opus): native B1 kernel turn, B2 native codec for guest-owned kinds,
+  12-step wgpu gate with WG7, wgpu artifact-creation door (G-P1-3). WG7 backlog: wgpu agent reply tag 10 + approval overlay parity.
+  **Decision (G-P2-1):** A1/A2 "wire `ServerInstance::Documents` for hub" is closed as by design — the hub's own router owns
+  `/scopes/{scope}/document/ws` (grant admission, presence leases, live revocation); `HubInstance::Documents = NoDocumentAuthority` stays.
+- 00:5x build-health audit (`📓️audit-s11-build-health.md`): resolver probe, K2 orphan suites, renderer-wgpu:test reds → **R8**; one
+  registered command for the final rebuild chain → **W2** (after the rebuild). Docker answers again (29.5.3) → H9 runs pg/neo4j.
+  Cross-platform zero-touch has zero evidence → Sonnet audit `📓️audit-s11-cross-platform.md`, then a fix + devcontainer run slice.
+- 01:1x cross-platform audit (`📓️audit-s11-cross-platform.md`) → new slice **Z2** (wp-z2, Opus): Windows long paths, Linux linker, PowerShell BOM, no user-global cargo config, apt guard, tree kill; Linux container proof; devcontainer timed zero-touch after W2's rebuild.
+- 01:15 **Landing done** (G10, WG7, T12 switch, H9 H8-ABI set green native + wasm32). H9's set changes the owned guest ABI (13 → 14 exports): every host from this tree refuses older guests. W2 released for the one-tree final rebuild (stdio last, after T12's T11 stdio follow-ups); all slices notified; hub 7800 stays on its old binary + catalog A until W2 publishes the new catalog.
+- 01:2x W2 task-2 findings + **decisions**: (1) the hub's Rust open-target rule is the only authority (delete the stricter bootstrap
+  twin) — catalog A has only gismap/note open targets, so writer/draw/puzzle STEP 14 waits on the new catalog (C10 told);
+  (2) vcs kind id is `s.vcs.vcs` everywhere, no alias; (3) whole-catalog memory caps replaced by schema-declared per-component /
+  per-actor bounds + lazy instantiation, catalog total bounded by CAS storage, RSS measured. 52/60 components link T12's stdio
+  crates → W2 builds the 8 stdio-free ones while T12 lands the T11 stdio follow-ups.
+- 02:5x Coordinator killed an orphaned `dev mcp stdio os` chain (14933 → 14954 → 14955 `cargo build --locked`, ppid 1) deadlocked 59 min in `prebuild_lock_exclusive` against W2's describe; product defect (MCP server's startup build outlives its client) routed to G10. Lock-cycle watcher armed (two 5-min samples).
+- 03:1x network outage (API ENOTFOUND) cut all 11 executors mid-edit; 03:26 all resumed by SendMessage from their last step. W2's detached rebuild chain survived (wasm mutex held).
+- ~03:40 account usage limit cut all 11 executors (reset 05:20). W2's detached stage chain kept running (51/52 staged by 05:19). 05:22 wave 1 resumed (critical path): W2, C10, G10, H9, S15, WG8, WG7. Parked until slots free: T12, R8, U5, Z2 (resume each from its last step). Disk 142 GiB free.
+- 05:58 W2: describe 60/60, generate + check green, s restage verify 60/60 consistent; architect/energy ArtifactKindSpec stitched; `plugin-registry:rebuild-all` + launch row. Now component-release ×34 → os-hub → publish `--packages all`. Note rebuilt outside the mutex at 05:39 (slices reminded). U5 resumed (8 running); T12, R8, Z2 parked.
+- 06:3x WG8 partial: B1 fixed (6 native defects, law green), B2 one codec lookup landed (laws green, Live needs block catalog), wgpu creation door live on 7800 (53.7 s, en+de). Open: native reserved-tool jobs never stepped (undo/redo/copy/selection) → WG8 continues (one mechanism with C8's reserved-commit queue); 12-step wgpu gate after W2's all-package publish.
+- 06:4x H9 DONE except (a) P0-1 creation law + (b) live pg/neo4j hub restart, both needing the new catalog (resume H9 then). Check In landed (React + wgpu, en+de, laws 3/3), declared `HubAccessPolicyV1`, store writes fallible, db lost-wake fixed (705/705 ×6), observability live, hub long 346/346 quick 337/337, all-features 372/375 (1 = P0-1, 2 = trusted-catalog registry collision → W2). Z2 + R8 resumed; soft freeze on ABI/pack-schema/codec-hash changes until W2 publishes. T12 stays parked (plugin source edits) until the publish.
+- 07:xx U5: 1649 German mutation labels (105 crates), Tasks window + cancel (agent cancel 364 ms), hub indicator, unified approvals, desktop/mobile/tablet, dag pan, Home spaces 244–513 ms — live on 6580. Continues: framework table kit windowed rows (Home ≥ 9 spaces blows the 128-node window budget), puzzle rows en/de. Approval withdrawal after cancel (gateway → shell wire) → G10.
+- 07:1x S15 DONE (matrix on one-tree guests): editors 60/75, viewers 67/70, en = de, raster/dag/block pass; shell fixes (raster Actions,
+  demonstrator puzzle3d, board session, program close, hub-note descriptor admission `surfaceOpensArtifactKindV1`, "Cancel opening"),
+  Tab navigation (18 stops), 8 WCAG AA pairs, 16 strings localized, devices + persisted appearance. **Decision §4: option (a)** — hub
+  serves a trusted, content-addressed plugin module bundle per package in the catalog generation + hub-backed PluginSource (S15
+  implements; ships in W2's final publish). Guest defects (stdio ×9, curation ×2, trinity ×2, norm ×2, gis + generation2d viewers,
+  vcs viewer) → **T12** resumed. Hub-document undo `action-owner-mismatch` → **C10**.
+- 07:1x Release builds ~15 min/package serial (cgu=1, thin LTO) → W2: reorder (block, writer, draw, puzzle, wfc, dag, raster first),
+  3-way parallel inside one hold, intermediate **catalog B** on 7800, then `--packages all`.
+- 07:3x Z2 DONE (task 1 + Linux container proof with B1–B4 worked around in the copy; B1–B4 held until W2's final publish; devcontainer run needs a copy outside ~/Documents). Hygiene: auto-stager had staged `wp-c10/catalog-a-seed` (3.1 GB) + `wp-w2/hub-7800` (260 MB) + `wp-w2/state-7800` (admin capability) — C10/W2 relocate under `generated/`; preamble rule 15 added.
+- 07:5x R8: TS suites green (renderer-react long 2036/2036, flow pump fix), workspace check 2 red → 1 (repo-cli), kernel 1207/1207, db 770/770, renderer-wgpu 1386/1388 cargo + 399/399 vitest (audit "89 fails" stale; 2 → WG7), resolver probe 437/0/0, K2 orphan suites fixed. R8 continues: repo-cli decision by history, repo-lib ~30 laws → root `test quick` green, flow owner (3 residuals + 2 held product fixes after catalog B).
+- 07:3x G10 waits on catalog B: G9 landed; client-e2e 38/38; guest quartet 11/11 live; MCP conformance TS 61/61 + Rust 396/396; live-agent-loop 22/23 en+de (boot flash → S15); hub inference input bound 64 KiB → 1 MiB (needs rebuilt hub); zero-touch MCP connect fixed (no rebuild per connect, reaches shell without `dev s` first, orphan build fixed); "Set up MCP client" delegated credential live 8/8; agent presence announcement; approval withdrawal (cancel live, timeout/supersede laws); duplicate resource fixed; launch rows. Resume with `wp-g10/g10-after-w2.sh` after catalog B.
+- 07:5x U5: framework windowed table (Table/TableRow appended to `Component`, `TableWindowKit::render_rows`, ARIA grid, en/de row status) — laws green, live 30-space proof needs the space guest restage (post-catalog list); puzzle en↔de live. **Decision:** mixed catalog components before/after 07:10 are fine — variants appended at the end, serde tag by name, old guests compatible with the new host. ui-contract/runtime retirement reds (pre-existing) → R8.
+
+### Post-catalog wake list (coordinator)
+- On catalog B at 7800: H9 (P0-1 creation law, pg/neo4j hub restart), G10 (`g10-after-w2.sh`, 4b agent edit seen, hub quartet, durability gate), C10 (STEP 14 writer/draw/puzzle), WG8 + WG7 (12-step wgpu gate), R8 (2 held flow fixes).
+- On W2's next s restage (after T12 guest fixes): U5 (30-space Home proof), S15 (matrix re-run), T12 (verify fixed kinds live).
+- On the final `--packages all` publish: S15 (module bundle live), Z2 (B1–B4 + devcontainer timed run), lift the soft freeze.
+- ~08:40 second usage-limit cut (reset 10:20). W2's chain had built 9 release packages + hub; publish catalog B failed 08:34: TS `browserActorMaximumBytes` twin of the removed Rust cap (~50 MB actor closure). 10:2x coordinator pruned stale incremental sessions (debug 55 GB; free 95 → 136 GiB). Resumed W2 (config-declared bound, one authority; check base64 embedding), C10, S15, WG8, WG7, T12, R8. Idle until catalog B: H9, G10, U5; Z2 until final publish.
+- 11:50 **Catalog B live on 7800** (generation e8167ce8…, 9 packages: stdio, gis, note, animate, block, writer, draw, puzzle, wfc; open-plan probe 12/12; fresh data root `wp-w2/generated/hub-7800-b`). Root fixes on the way: actor cores deflate-compressed (gis 67 → 16.8 MB, 64 MiB schema bound kept), unowned declared kinds classified, pairing rule refined. **Decision:** viewer (read-only) open targets are emitted too (same Rust rule; shell picks by grant). Woke H9 (+ pipe 64-exchange exit, EOF-while-loading defects), G10, C10, WG8, R8. W2: rest-warm 25 packages → `--packages all`.
+- 12:2x Disk hit 42 GiB free (W2 rest-warm SIGKILLed at 12:16, rc=137). Consumer: native `debug` build-dir 318 GB units + 57 GB regrown incremental. Coordinator pruned superseded `semio-*` units > 12 h (skipping active crates) + incremental > 60 min → 137 GiB. Disk guard upgraded (pid 95076): < 100 GiB incremental prune, < 80 GiB superseded-unit prune. W2 retrying.
+- 12:2x S15 DONE design (a): hub-served plugin module bundles (schema + fixture + Ajv, hub loader/publication check/3 routes, bootstrap step, hub-backed PluginSource) — live on hub 8040: note not staged locally → installed from hub (24.5 MB, sha256+blake3, progress + cancel) → add/undo/redo; second session 12/12 from cache; catalog B on 7800 carries 9 module bundles (198 files re-verified). Boot flash root-caused (boot installs lacked a build stamp) → 0/26 error frames. Open: durable local store for hub-installed modules (HTTP cache can evict) — service-worker store not built.
+- 12:1x–12:3x **External low-disk cleanup** (disk hit 96 %/42 GiB at 12:16): SIGKILLed W2's rest-warm (files in `wp-w2/generated`), deleted ticket `generated` folders (w1, w2, c8, t11, u5, root `🗑️generated`, most session-11 captures) incl. hub 7800's data root → 7800 lost spaces/docs created 11:50–12:29; W2 restarts it on the same catalog B at `.🧬semio/🌐hub/w2-hub-7800-b`. Coordinator wrongly suspected and stopped R8's workspace-contract `bun test` (synthetic FS, innocent). Preamble rule 15 revised: durable data under `.🧬semio/🌐hub/s11-<slice>-*`; disk kept > 100 GiB.
+- 13:1x C10 blocked (0/13 on 7800): panels of hub docs now live + F10 peer crash fixed + refused edits reload with localized notice; blockers → W2 restage s now (sweep deleted 15 dev wasm; staging ≠ catalog B → "document target changed"; U5 space fix; gis2d), H9 hub rejects writes after ~20 map edits (persists across restart). **Decision:** hub documents resolve their plugin module by the serving catalog generation (local copy only on equal content hash) → S15. C10 parked until the restage verifies.
+- 13:2x R8: held flow fixes landed (flow 260/261, last needs flow bindings publish → W2), repo-lib quick 73 → 2 reds in 155 s (5 real library bugs fixed; 2 left need the s restage). **Decisions:** whole-repo walks + normalization tests → `long` (approved, failures still owed); normalization mapping rebuilt on current names; 648 discovery + 3 layering → dedicated rename slice after the final publish. R8 continues: 26 hidden typecheck errors, framework under Node strip-types, normalization rebuild; ui-contract PagedList + retirement + unbailed root quick after the publish.
+- 13:3x Coordinator stopped C10's detached zero-touch run (zt-phase-a.sh → catalog bootstrap, stdio rustc) holding the wasm mutex since 13:29; W2's s restage goes first; zero-touch timing re-measured on the final tree (post-publish wake list).

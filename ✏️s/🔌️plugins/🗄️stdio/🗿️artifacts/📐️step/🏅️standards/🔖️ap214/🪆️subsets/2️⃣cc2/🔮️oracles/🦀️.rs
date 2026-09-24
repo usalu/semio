@@ -47,7 +47,7 @@ const CLASS: &str = "ISO 10303-214 CC2 (bounded wireframe/basic surfaces)";
 
 /// 🏷️ The declared vocabulary, mirroring `StepCc2Mutation`'s own variants in declaration order.
 /// Duplicated rather than imported: the oracle crate must never link the production crate.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-schema", "set-product-identity", "set-shape-representation", "demote-shape-representation"];
+pub const KINDS: &[&str] = &["set-snapshot", "set-file-schema", "set-product-identity", "set-shape-representation", "demote-shape-representation"];
 //#endregion 🔖️Class
 
 #[cfg(feature = "oracles")]

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeITMm4 {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change torsion constant I_t [mm4] to {}", self.new_i_t_mm4), &format!("Torsionskonstanteni_t [mm4] auf {} ändern", self.new_i_t_mm4))
+        protocol::LocalizedLabel::native(&format!("Change torsion constant I_t [mm4] to {}", self.new_i_t_mm4), &format!("Torsionsträgheitsmoment I_t [mm4] auf {} ändern", self.new_i_t_mm4))
     }
 }
 //#endregion 🔖️ChangeITMm4

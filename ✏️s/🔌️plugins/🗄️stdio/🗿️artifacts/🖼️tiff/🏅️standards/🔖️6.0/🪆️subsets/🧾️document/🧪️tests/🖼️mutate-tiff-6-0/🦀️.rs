@@ -19,9 +19,6 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_tiff};
 use semio_s_plugin_stdio_test_oracle::law;
 
-//#region 🔖️Kinds
-const KINDS: &[&str] = &["change-byte-order", "insert-ifd", "remove-ifd", "replace-tag", "remove-tag", "replace-pixels"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff";
@@ -112,12 +109,12 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{mutable_input, resolve_spec, KINDS};
+    use super::{mutable_input, resolve_spec};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::mutations::apply_tiff_mutation;
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
-    use crate::{TiffMutation, TiffSnapshot};
+    use semio_s_artifact_stdio_tiff::{TiffMutation, TiffSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::project_tiff;
 
     //#region 🔖️SpecParsing
@@ -299,9 +296,6 @@ mod subject {
         Ok(Outcome::with_raw(output, projection))
     }
     //#endregion 🔖️Handlers
-
-    #[allow(dead_code)]
-    const _KEEP_KINDS_REACHABLE: &[&str] = KINDS;
 }
 //#endregion 🔖️Subject
 
@@ -309,12 +303,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

@@ -263,7 +263,7 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
   await pluginModule.libraryBootstrap;
   const { cacheInternals } = pluginModule;
   assert.equal(typeof cacheInternals.runtimeComponentClosure, "function", "Runtime preparation needs transitive component consumption");
-  const oracle = (rows: any[], roots: string[]) => cacheInternals.runtimeComponentClosure(rows, roots);
+  const oracle = (rows: any[], roots: readonly (string | { readonly id: string; readonly appScoped: boolean })[]) => cacheInternals.runtimeComponentClosure(rows, roots);
   for (const row of fixture.cases) assert.deepEqual(oracle(fixture.components, row.roots), row.expected, row.name);
   for (const row of fixture.invalid) assert.throws(() => cacheInternals.runtimeComponentClosure(row.components, row.roots), /component/i, row.name);
   const registry = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry", dev = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
@@ -795,7 +795,9 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         assert.ok(target.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
         assert.ok(target.options.command.includes(`materialize ${row.profile} --manifest`));
         assert.equal(shared?.cache, true);
-        assert.equal(shared.outputs.length, 2);
+        const supportRoot = `{projectRoot}/dist/${row.profile}/🔌️plugin-modules`;
+        assert.deepEqual(shared.outputs, [`${supportRoot}/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim`, `${supportRoot}/🪞️vendor/🔤️guestslim-typst-fonts.bin`, `${supportRoot}/🧵️shard`], "browser support owns the preview2 shims, the typst font asset every served module root needs, and the shard worker");
+        assert.deepEqual(shared.dependsOn, ["semio-framework-os-infinite:fonts"], "browser support stages the font the fonts target publishes");
       }
       for (const row of vectors.componentProfiles) {
         const target = project.targets[row.target];
@@ -901,7 +903,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
           assert.equal(server.options.command, `bun ./📜️script.ts serve ${playground.variant} react ${profile}`);
         }
         const hostLauncher = componentLaunchers.find((entry) => entry.pluginId === playground.pluginId);
-        assert.ok(hostLauncher, `${playground.variant}: host plugin must launch`);
+        if (!hostLauncher) throw new Error(`${playground.variant}: host plugin must launch`);
         const materializeDeps = preparation.dependsOn.filter((id: string) => id.endsWith(`:materialize-${profile}`));
         assert.ok(materializeDeps.includes(`${hostLauncher.project}:materialize-${profile}`), `${targetName}: boot prepare must materialize the host`);
         const fullSession = buildPlaygroundSession(playground.variant).plugins.map((row: any) => `${componentLaunchers.find((entry) => entry.pluginId === row.pluginId)!.project}:materialize-${profile}`);

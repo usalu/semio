@@ -21,7 +21,7 @@ impl MutationKind<i64, CounterMutation> for AddMissingCounter {
         Vec::new()
     }
     fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native("Add to missing counter", "zu fehlende Zähler hinzufügen")
+        crate::LocalizedLabel::native("Add to missing counter", "Zum fehlenden Zähler addieren")
     }
 }
 //#endregion ⚙️Behavior

@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateSecurityRequiremen
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create security requirement \"{}\"", self.security_requirement.header.name), &format!("Sicherheitsanforderung \"{}\" erstellen", self.security_requirement.header.name))
+        protocol::LocalizedLabel::native(&format!("Create security requirement \"{}\"", self.security_requirement.header.name), &format!("Schutzanforderung \"{}\" erstellen", self.security_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.security_requirement.header.id.0.clone()]

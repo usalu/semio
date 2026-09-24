@@ -95,12 +95,12 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "replace-block/no-ops-when-the-replacement-block-is-identical: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op` — the
+/// 🎯️ The declared outcome holds: `no-op`, with one untargeted Warning `mutation.no-op` — the
 /// same verb answers a missing step or a missing block with a two-segment Error instead.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "replace-block/no-ops-when-the-replacement-block-is-identical declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "replace-block/no-ops-when-the-replacement-block-is-identical declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

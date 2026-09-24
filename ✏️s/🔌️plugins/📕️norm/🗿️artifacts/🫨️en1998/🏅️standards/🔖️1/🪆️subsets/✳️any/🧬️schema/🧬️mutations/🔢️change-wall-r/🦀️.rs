@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeWallR {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change wall behaviour factor r to {}", self.new_wall_r), &format!("Wandverhaltenfaktorr auf {} ändern", self.new_wall_r))
+        protocol::LocalizedLabel::native(&format!("Change wall behaviour factor r to {}", self.new_wall_r), &format!("Verhaltensbeiwert der Wand r auf {} ändern", self.new_wall_r))
     }
 }
 //#endregion 🔖️ChangeWallR

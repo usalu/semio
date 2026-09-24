@@ -25,44 +25,10 @@ fn slider_value(host_snapshot: &FlowHostSnapshot, widget_id: &str) -> Option<f64
     })
 }
 
-
-/// 🧪️ Installs `math.add` with the ports the demo fixture wires (`a`/`sum`), so `FlowHost`
-/// reconnect can resolve endpoints after a disconnect.
-fn install_math_add_operator() {
-    use std::sync::Once;
-    static ONCE: Once = Once::new();
-    ONCE.call_once(|| {
-        let manifest = semio_framework_os_flow::FlowExtensionManifest {
-            schema: "flow.extension".into(),
-            id: "math".into(),
-            name: "Math".into(),
-            version: "0.0.0-test-fixture".into(),
-            activation_events: vec!["onStartup".into()],
-            contributes: semio_framework_os_flow::FlowExtensionContributes {
-                schemas: vec![],
-                operators: vec![semio_framework_os_flow::neural::OperatorInfo {
-                    id: "math.add".into(),
-                    extension: "math".into(),
-                    name: "Add".into(),
-                    abbreviation: "Add".into(),
-                    inputs: vec![semio_framework_os_flow::neural::ChannelSpec::any("a"), semio_framework_os_flow::neural::ChannelSpec::any("b")],
-                    outputs: vec![semio_framework_os_flow::neural::ChannelSpec::any("sum")],
-                    ..Default::default()
-                }],
-                widgets: vec![],
-                commands: vec![],
-                settings: vec![],
-            },
-        };
-        let manifest_json = semio_framework_os_flow::os_pack::json::to_json_string(&manifest);
-        semio_framework_os_flow::install_flow_extension_manifest("generation2d-node-graph-edit-math", &manifest_json).expect("fixture extension admission");
-    });
-}
-
-/// ⚖️ LAW: `disconnect` cuts a wire and `connect` draws it again between the same two ports.
+/// ⚖️ LAW: `disconnect` cuts a wire and `connect` draws it again between the same two ports — the
+/// demo's neurons declare their input ports, so the bare host resolves the endpoints with no operator installed.
 #[semio_framework_async_macros::async_test]
 async fn disconnect_then_connect_round_trips_one_wire() {
-    install_math_add_operator();
     let mut app = app().await;
     let (before, synapse_id, from, from_port, to, to_port) = {
         let read = snapshot_read(&app);

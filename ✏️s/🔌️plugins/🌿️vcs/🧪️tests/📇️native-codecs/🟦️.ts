@@ -88,7 +88,7 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
   const config = readFileSync(join(appBase, "🎚️config/🦀️.rs"), "utf8");
   const presence = readFileSync(join(appBase, "👥️presence/🦀️.rs"), "utf8");
   const history = readFileSync(join(appBase, "🎭️modes/✏️edit/🪟️windows/📜️history/🦀️.rs"), "utf8");
-  if (config.match(/schema_version: 1,/gu)?.length !== 1 || !config.includes('semantic_kind: "snapshot"') || !config.includes("MutationOutcomeClass::Warning") || !config.includes("fn descriptor(&self)")) throw new Error("VCS config mutation metadata is incomplete");
+  if (config.match(/schema_version: 1,/gu)?.length !== 1 || !config.includes('semantic_kind: "snapshot"') || !config.includes("MutationOutcomeClass::NoOp") || !config.includes("fn descriptor(&self)")) throw new Error("VCS config mutation metadata is incomplete");
   if (presence.match(/schema_version: 1,/gu)?.length !== 1 || !presence.includes('semantic_kind: "noop"') || !presence.includes("MutationInvertibility::SelfInvertible") || !presence.includes("fn descriptor(&self)")) throw new Error("VCS presence mutation metadata is incomplete");
   if (!readFileSync(join(owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8").includes("semio-framework-ui-scene =") || !history.includes("use semio_framework_ui_scene::GraphTimelineScene;") || history.includes("semio_framework_ui_scene::GraphTimelineScene {")) throw new Error("VCS timeline scene does not use its declared first-party scene dependency");
   console.log(`vcs-native-codec-oracle: receipts=${fixture.receipts.length} hostile=${fixture.hostile.length} ajv+node+webcrypto=1 dependency-coherence=3; no catalog activation or VCS execution claim`);

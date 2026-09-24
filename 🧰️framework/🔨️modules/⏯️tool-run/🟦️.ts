@@ -450,11 +450,12 @@ export type ToolRunTick = {
 //#region 🔖️Codec
 /** 🧨️ Encode or decode failure of a tool run wire value. */
 export class ToolRunCodecError extends Error {
-  constructor(
-    readonly kind: "pack" | "malformed" | "limit",
-    readonly what: string,
-  ) {
+  readonly kind: "pack" | "malformed" | "limit";
+  readonly what: string;
+  constructor(kind: "pack" | "malformed" | "limit", what: string) {
     super(`toolRun.codec.${kind}: ${what}`);
+    this.kind = kind;
+    this.what = what;
   }
 }
 
@@ -558,7 +559,10 @@ function encodePackBody(record: PackRecord): Uint8Array {
 
 class PackReader {
   offset = 0;
-  constructor(readonly bytes: Uint8Array) {}
+  readonly bytes: Uint8Array;
+  constructor(bytes: Uint8Array) {
+    this.bytes = bytes;
+  }
 
   u8(): number {
     const byte = this.bytes[this.offset];

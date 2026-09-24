@@ -16,19 +16,6 @@
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::valid::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_xml_valid};
 
-//#region 🔖️Kinds
-/// 📇️ Kebab-case spelling of every scenario row THIS CASE registers, oracle and subject alike --
-/// `no-mutation` plus every `XmlValidMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS`.
-/// `no-mutation` is NOT one of that production `KINDS`' entries -- it carries no `XmlValidMutation`
-/// variant of its own (dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration: `no` is not
-/// an approved semantic verb) and is handled directly by `subject::mutate`/`subject::inverse` below
-/// as the identity probe the feature file's own `no-mutation` row names it. The eight REAL kinds are
-/// duplicated rather than imported because the ORACLE-only build of this adapter must never link
-/// `semio-s-plugin-stdio`; `kinds_matches_enum_variants_in_declaration_order` on the production side
-/// and the framework's own catalog-completeness gate on this side keep the two lists honest.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "declare-doctype", "rename-document-element", "set-external-subset", "set-standalone", "declare-entity", "set-internal-subset", "set-text"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 /// 📰️ The document every mutation row runs on: a real 40 440-byte Apple PropertyList 1.0 document
@@ -131,13 +118,13 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{mutable_input, projection_divergence, KINDS};
+    use super::{mutable_input, projection_divergence};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::mutations::XmlNodePath;
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::{XmlDtdDeclaration, XmlExternalId};
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::valid::schema::valid_mutations::{declare_doctype::DeclareDoctype, declare_entity::DeclareEntity, rename_document_element::RenameDocumentElement, set_external_subset::SetExternalSubset, set_internal_subset::SetInternalSubset, set_snapshot::SetSnapshot, set_standalone::SetStandalone, set_text::SetText};
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::valid::schema::{apply_xml_valid_mutation, inverse_xml_valid_mutation, XmlValidMutation};
-    use crate::XmlSnapshot;
+    use semio_s_artifact_stdio_xml::XmlSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::valid::project_xml_valid;
 
     //#region 🔖️SpecCodec
@@ -287,27 +274,19 @@ mod subject {
     }
     //#endregion 🔖️Handlers
 
-    /// 🧭️ Re-exported so `super::adapter()` can register the same 9-kind sweep for the subject role
-    /// without duplicating `KINDS` a third time.
-    pub const SUBJECT_KINDS: &[&str] = KINDS;
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 9 kinds -- the scenario id only selects which `Examples` row's
-/// `<id>`/`<params>` doc string the shared handler reads.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-    }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        for kind in subject::SUBJECT_KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

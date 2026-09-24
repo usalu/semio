@@ -245,8 +245,9 @@
           "capability": "procedural-2d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-generation-value",
@@ -265,8 +266,8 @@
           "capability": "procedural-2d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-schema",
@@ -285,8 +286,8 @@
           "capability": "procedural-2d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "clear-widget-layout",
@@ -305,8 +306,9 @@
           "capability": "procedural-2d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "connect-synapse",
@@ -445,8 +447,9 @@
           "capability": "procedural-2d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-generation",
@@ -505,8 +508,9 @@
           "capability": "procedural-2d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "update-camera",
@@ -544,15 +548,15 @@
           "role": "expected-before",
           "path": "../🧫️fixtures/📷️update-camera/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:1d03d6ebeb3044cd87bcde8366a1f58e1ae17b2b961c76d03c0e322ff0c65b14",
-          "bytes": 793
+          "sha256": "sha256:9ea962eca96d2ebf26b99095baa4a216e535188306e7dadb8a1c1f9a19e55214",
+          "bytes": 801
         },
         {
           "role": "expected-after",
           "path": "../🧫️fixtures/📷️update-camera/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:bd78ea38ed84d8f1bb1821f16e406e8504af1360d23b8c222dcd4f0420627d88",
-          "bytes": 794
+          "sha256": "sha256:bb62e863d08cca5570d9c7d73c6d0b86df80d631b45465e28f143a64080df069",
+          "bytes": 802
         }
       ],
       "provenance": {
@@ -566,6 +570,13 @@
       "reproducible": true,
       "family": "generation2d-carrier",
       "notes": "Copied verbatim from this subset's own committed physical vector at 🧬️mutations/🎛️update-camera/🧪️tests/pans-and-zooms-the-graph-camera (a real pan+zoom of the graph camera)."
+    }
+  ],
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
     }
   ]
 }

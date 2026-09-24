@@ -32,7 +32,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Delete
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete Constant Schedule {}", self.id.0), &format!("Konstantenzeitplan {} löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete Constant Schedule {}", self.id.0), &format!("Konstanten Zeitplan {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

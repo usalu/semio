@@ -68,7 +68,7 @@ def apply_change_schema(snapshot, payload):
     if snapshot.get("schema") == new_schema:
         after = copy.deepcopy(snapshot)
         diff = {"artifact": None, "schema": None}
-        outcome = {"status": "applied", "messages": [{"level": "warn", "code": "mutation.no-op"}]}
+        outcome = {"status": "no-op", "messages": [{"level": "warn", "code": "mutation.no-op"}]}
         return after, diff, outcome
     after = copy.deepcopy(snapshot)
     after["schema"] = new_schema

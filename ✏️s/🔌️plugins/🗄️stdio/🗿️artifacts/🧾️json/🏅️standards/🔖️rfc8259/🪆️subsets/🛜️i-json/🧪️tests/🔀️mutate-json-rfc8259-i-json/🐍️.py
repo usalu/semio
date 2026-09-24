@@ -432,13 +432,9 @@ def identity_round_trip(ctx: Context) -> Outcome:
 
 # region 🔖️Registration
 def adapter() -> Adapter:
-    """🧭️ Registration entry point the host calls. `mutate-<kind>` / `inverse-<kind>` share ONE handler
-    each across all ten kinds — the scenario id only selects which Examples row's doc string the
-    shared handler reads."""
-    built = Adapter("python")
-    for kind in KINDS:
-        built = built.oracle("mutate-%s" % kind, mutate).oracle("inverse-%s" % kind, inverse)
-    return built.oracle("i-json-conformance", i_json_conformance).oracle("identity-round-trip", identity_round_trip)
+    """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
+    ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
+    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("i-json-conformance", i_json_conformance).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

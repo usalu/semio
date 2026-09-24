@@ -11,7 +11,9 @@
     "packageFiles",
     "cargo",
     "members",
-    "admission",
+    "sourceOracles",
+    "sourceCases",
+    "browserHost",
     "abi",
     "project",
     "imports",
@@ -37,6 +39,7 @@
     },
     "packageFiles": {
       "const": [
+        "Cargo.toml",
         "📋️project.json",
         "📜️script.ts"
       ]
@@ -46,7 +49,8 @@
         "name": "semio-framework-ui-host",
         "role": "framework",
         "id": "ui-host",
-        "libPath": "🦀️.rs"
+        "libPath": "../../🦀️.rs",
+        "libSourcePath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🦀️.rs"
       }
     },
     "members": {
@@ -70,24 +74,82 @@
           "name": "🎟️admission",
           "ownerKindId": "members-of-members-of-members-of-modules",
           "registry": "members-of-members-of-members-of-members-of-modules"
+        },
+        {
+          "name": "🎡️ordered-scroll",
+          "ownerKindId": "members-of-members-of-members-of-modules",
+          "registry": "members-of-members-of-members-of-members-of-modules"
         }
       ]
     },
-    "admission": {
+    "sourceOracles": {
+      "const": [
+        {
+          "scope": "input-admission",
+          "ownerPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission",
+          "scriptPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️tests/🔬️input-admission/🟦️.ts",
+          "importSpecifier": "../../📥️input/🎟️admission/🧪️tests/🔬️input-admission/🟦️.ts",
+          "functionName": "testInputAdmissionFixture",
+          "fixturePath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧫️fixtures/🔣️.json",
+          "schemaPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧬️schema/🔣️.json",
+          "arguments": []
+        },
+        {
+          "scope": "ordered-scroll",
+          "ownerPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll",
+          "scriptPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧪️tests/🔬️ordered-scroll/🟦️.ts",
+          "importSpecifier": "../../📥️input/🎡️ordered-scroll/🧪️tests/🔬️ordered-scroll/🟦️.ts",
+          "functionName": "testOrderedScrollFixture",
+          "fixturePath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧫️fixtures/🔣️.json",
+          "schemaPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧬️schema/🔣️.json",
+          "arguments": []
+        }
+      ]
+    },
+    "sourceCases": {
+      "const": [
+        {
+          "segments": [
+            "test",
+            "source"
+          ],
+          "scopes": [
+            "input-admission",
+            "ordered-scroll"
+          ]
+        },
+        {
+          "segments": [
+            "test",
+            "source",
+            "input-admission"
+          ],
+          "scopes": [
+            "input-admission"
+          ]
+        },
+        {
+          "segments": [
+            "test",
+            "source",
+            "ordered-scroll"
+          ],
+          "scopes": [
+            "ordered-scroll"
+          ]
+        }
+      ]
+    },
+    "browserHost": {
       "const": {
-        "scriptPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/📜️script.ts",
-        "importSpecifier": "../../📥️input/🎟️admission/📜️script.ts",
-        "functionName": "testInputAdmissionFixture",
-        "fixturePath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️test/🔣️s.json",
-        "schemaPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧬️schema/🔣️.json",
-        "arguments": [],
-        "callsPerCompiler": 1
+        "script": "../../🧪️tests/🌐️browser-host/🟨️.js",
+        "sourcePath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🧪️tests/🌐️browser-host/🟨️.js"
       }
     },
     "abi": {
       "const": {
         "sourcePath": "🧰️framework/🔨️modules/🌉️abi/🦀️.rs",
-        "libRelativePath": "../../../../🌉️abi/🦀️.rs"
+        "libRelativePath": "../../🌉️abi/🦀️.rs"
       }
     },
     "project": {
@@ -98,50 +160,51 @@
         "projectType": "library",
         "namedInputs": {
           "default": [
-            "{projectRoot}/**/*",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/**/*",
             "{workspaceRoot}/🧰️framework/🔨️modules/🌉️abi/🦀️.rs",
-            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/📜️script.ts",
-            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️test/🔣️s.json",
-            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧬️schema/🔣️.json",
             "sharedGlobals"
           ]
         },
         "targets": {
           "test-source": {
             "executor": "nx:run-commands",
-            "cache": false,
+            "cache": true,
             "options": {
               "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
               "command": "bun ./📜️script.ts test source",
               "forwardAllArgs": true
-            }
+            },
+            "outputs": []
           },
           "test": {
             "executor": "nx:run-commands",
-            "cache": false,
+            "cache": true,
             "options": {
               "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
               "command": "bun ./📜️script.ts test",
               "forwardAllArgs": true
-            }
+            },
+            "outputs": []
           },
           "check": {
             "executor": "nx:run-commands",
-            "cache": false,
+            "cache": true,
             "options": {
               "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
               "command": "bun ./📜️script.ts check",
               "forwardAllArgs": true
-            }
+            },
+            "outputs": []
           },
           "check-wasm": {
             "executor": "nx:run-commands",
-            "cache": false,
+            "cache": true,
             "options": {
               "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
               "command": "bun ./📜️script.ts check-wasm",
               "forwardAllArgs": true
-            }
+            },
+            "outputs": []
           }
         }
       }
@@ -295,6 +358,11 @@
         [
           "check-wasm",
           "wasm32-wasip2"
+        ],
+        [
+          "test",
+          "source",
+          "unknown-scope"
         ]
       ]
     },
@@ -305,7 +373,7 @@
             "dependencies"
           ],
           "name": "ui_render",
-          "path": "../../../🖼️render/📦️packages/🦀️rust",
+          "path": "../../../🖌️render/📦️packages/🦀️rust",
           "package": "semio-framework-ui-render"
         },
         {
@@ -332,7 +400,7 @@
             "dependencies"
           ],
           "name": "backend_metal",
-          "path": "../../../🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust",
+          "path": "../../../🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust",
           "package": "semio-framework-ui-backend-metal"
         },
         {
@@ -342,7 +410,7 @@
             "dependencies"
           ],
           "name": "backend_d3d12",
-          "path": "../../../🖼️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust",
+          "path": "../../../🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust",
           "package": "semio-framework-ui-backend-d3d12"
         },
         {
@@ -352,17 +420,17 @@
             "dependencies"
           ],
           "name": "backend_vulkan",
-          "path": "../../../🖼️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust",
+          "path": "../../../🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust",
           "package": "semio-framework-ui-backend-vulkan"
         },
         {
           "table": [
             "target",
-            "cfg(target_arch = \"wasm32\")",
+            "cfg(all(target_arch = \"wasm32\", not(target_env = \"p2\")))",
             "dependencies"
           ],
           "name": "backend_webgpu",
-          "path": "../../../🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust",
+          "path": "../../../🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust",
           "package": "semio-framework-ui-backend-webgpu"
         }
       ]
@@ -421,7 +489,7 @@
         "Cargo.lock",
         "package.json",
         "native source moves",
-        "extra source oracle",
+        "undeclared source oracle",
         "runtime dependency installation",
         "hardcoded budget override",
         "unsupported wasm32-wasip2 command"

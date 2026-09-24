@@ -39,7 +39,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for RemoveTagMutation {
         }
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove tag", "Tag entfernen")
+        protocol::LocalizedLabel::native("Remove tag", "Tag entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-tag".into()]

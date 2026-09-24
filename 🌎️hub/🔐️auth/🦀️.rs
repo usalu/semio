@@ -24,6 +24,9 @@ pub mod rate_limit;
 #[path = "🤖️agent/🦀️.rs"]
 pub mod agent;
 
+#[path = "🛡️access-policy/🦀️.rs"]
+pub mod access_policy;
+
 /// 🧬️ The scope id and `$id` every `hub.auth` export resolves under.
 pub const SCHEMA_SCOPE: &str = "hub.auth";
 pub const SCHEMA_ID: &str = "https://json.schemas.assets.semio-tech.com/hub/auth/schema.json";

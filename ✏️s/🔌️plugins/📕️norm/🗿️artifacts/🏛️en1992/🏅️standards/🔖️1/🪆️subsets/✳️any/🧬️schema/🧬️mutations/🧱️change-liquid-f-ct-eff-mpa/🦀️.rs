@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidFCtE
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change liquid f ct eff mpa to {:?}", self.new_liquid_f_ct_eff_mpa), &format!("Flüssigkeitsfcteffmpa auf {:?} ändern", self.new_liquid_f_ct_eff_mpa))
+        protocol::LocalizedLabel::native(&format!("Change liquid-retaining effective tensile strength f_ct,eff [MPa] to {:?}", self.new_liquid_f_ct_eff_mpa), &format!("Wirksame Zugfestigkeit f_ct,eff [MPa] (Flüssigkeitsbehälter) auf {:?} ändern", self.new_liquid_f_ct_eff_mpa))
     }
 }
 //#endregion 🔖️ChangeLiquidFCtEffMpa

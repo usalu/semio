@@ -20,6 +20,16 @@ function nxBootstrapServices(): typeof import("./🛠️tools/📜️script.ts")
   return createRequire(import.meta.url)("./🛠️tools/📜️script.ts");
 }
 
+/** 🌱️ Publishes the declared bootstrap sources — generated files Bun or the repository tooling must find before Nx runs
+ * and a fresh clone lacks — through their owners' dependency-free publishers, required lazily so the Nx bootstrap closure
+ * stays system-only. @see ./🌱️sources/🔣️.json */
+export function publishBootstrapSources(root: string): void {
+  const declaration = join(import.meta.dirname, "🌱️sources", "🔣️.json");
+  if (!existsSync(declaration)) return;
+  const { sources } = JSON.parse(readFileSync(declaration, "utf8")) as { sources: readonly { module: string; export: string }[] };
+  for (const source of sources) createRequire(import.meta.url)(join(root, source.module))[source.export](root);
+}
+
 /** 🧮️ Lets each watched build finish its graph while the daemon retains source watching. */
 export function nxChildEnvironment(environment: NodeJS.ProcessEnv, args: readonly string[], watching: boolean): NodeJS.ProcessEnv {
   if (args[0] === "watch") return { ...environment, NX_DAEMON: "true" };
@@ -52,6 +62,12 @@ export function waitForNxWatcher(watcher: ReturnType<typeof spawnNxProcess>): Pr
 
 //#region 🔖️NxScript
 export class NxScript extends Script {
+  /** 📦️ The locked JavaScript environment every workspace script task imports from. On a fresh clone (no
+   * `node_modules/nx`) it runs to completion before the requested graph: Nx schedules sibling setup tasks in parallel,
+   * and without this every generator, `setup-git`, `cpp-setup` and `deps-browsers` started before `bun install` finished
+   * (measured on a clean Linux container, ticket 26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP `📓️wp-z2.md`). */
+  static readonly javascriptEnvironment = "workspace:deps-javascript";
+
   /** 🧿️ `nx watch` refuses to run without the daemon, and Nx disables its daemon for every later
    * client by writing `<workspace-data>/d/disabled` whenever one start fails — a marker that outlives
    * the crash it records (seen: a 2026-09-08 start failure still blocked `bun dev:puzzle:3d` two days
@@ -137,6 +153,11 @@ export class NxScript extends Script {
     const budget = orchestratorBudgetOpts().budgetMs ?? 0;
     const timeout = budget > 0 ? setTimeout(() => { console.error(`[budget] Nx exceeded ${budget}ms`); stop("SIGTERM"); }, budget) : undefined;
     try {
+      if (!existsSync(join(this.root, "node_modules/nx/package.json")) && !invocation.args.includes(NxScript.javascriptEnvironment)) {
+        const install = launch(["run", NxScript.javascriptEnvironment, "--output-style=stream"]);
+        const installed = await new Promise<number>((accept, reject) => { install.once("error", reject); install.once("close", (code) => accept(code ?? 1)); });
+        if (installed !== 0 || cancelled) { process.exitCode = cancelled ? cancelled === "SIGINT" ? 130 : 143 : installed; return; }
+      }
       if (invocation.watch) {
         NxScript.ensureDaemon(nxCli, this.root, env);
         watcher = launch(["watch", "--all", "--includeGlobalWorkspaceFiles", "--verbose", "--", "bun", "nx", "run", invocation.watch, "--output-style=stream"], true);
@@ -289,4 +310,7 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
 }
 //#endregion 🔖️NxScript
 
-if (import.meta.main) await new ScriptRouter(WORKSPACE_ROOT).register("nx", NxScript).run(process.argv.slice(2));
+if (import.meta.main) {
+  publishBootstrapSources(WORKSPACE_ROOT);
+  await new ScriptRouter(WORKSPACE_ROOT).register("nx", NxScript).run(process.argv.slice(2));
+}

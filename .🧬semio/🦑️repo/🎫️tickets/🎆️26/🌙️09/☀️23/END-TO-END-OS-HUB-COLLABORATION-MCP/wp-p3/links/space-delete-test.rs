@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🗑️delete-selection/🧪️tests/🔬️unit/🦀️.rs

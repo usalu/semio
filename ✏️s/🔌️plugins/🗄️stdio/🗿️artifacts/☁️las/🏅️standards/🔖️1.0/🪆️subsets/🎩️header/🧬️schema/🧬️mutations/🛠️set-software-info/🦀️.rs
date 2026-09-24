@@ -24,7 +24,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetSoftwareInfo {
         agg_inverse(&LasMutation::SetSoftwareInfo(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-software-info", "Softwareninfo setzen")
+        protocol::LocalizedLabel::native("Set software info", "Softwareinfo setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

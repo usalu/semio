@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeBridgeSigm
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change bridge sigma c mpa to {:?}", self.new_bridge_sigma_c_mpa), &format!("Brückensigmacmpa auf {:?} ändern", self.new_bridge_sigma_c_mpa))
+        protocol::LocalizedLabel::native(&format!("Change bridge concrete stress σ_c [MPa] to {:?}", self.new_bridge_sigma_c_mpa), &format!("Betonspannung σ_c [MPa] (Brücke) auf {:?} ändern", self.new_bridge_sigma_c_mpa))
     }
 }
 //#endregion 🔖️ChangeBridgeSigmaCMpa

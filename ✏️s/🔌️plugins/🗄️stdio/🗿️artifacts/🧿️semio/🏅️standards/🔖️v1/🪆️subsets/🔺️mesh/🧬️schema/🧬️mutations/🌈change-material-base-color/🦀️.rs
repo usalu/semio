@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ChangeMate
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change material \"{}\" base color", self.id), &format!("Material \"{}\" Basisfarbe ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change material \"{}\" base color", self.id), &format!("Basisfarbe von Material \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

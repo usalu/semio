@@ -45,6 +45,7 @@ import {
 import { generatePluginRegistry, type PluginRegistryEntry } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
 import {
+  ensureGuestSlimTypstFontsAt,
   ensurePreview2ShimVendorAt,
   hostShimSource,
   PLUGIN_HOST_SHIM_FILE,
@@ -96,19 +97,12 @@ function ensurePreview2ShimVendor(): void {
   ensurePreview2ShimVendorAt(preview2ShimVendorDir(), repoRoot);
 }
 
-/** @emoji 🫙 Ensures `🪞️vendor/🔤️guestslim-typst-fonts.bin` exists for plugin workers' typst text path. */
+/** @emoji 🫙 Ensures `🪞️vendor/🔤️guestslim-typst-fonts.bin` exists in the dev runner's module root: the shared
+ * {@link ensureGuestSlimTypstFontsAt} from the staged seed, else the font tool builds it in place. */
 function ensureGuestSlimTypstFontsAsset(): void {
+  if (ensureGuestSlimTypstFontsAt(pluginOutRoot, repoRoot)) return;
   const out = join(pluginOutRoot, GUESTSLIM_FONT_RELATIVE);
-  if (existsSync(out) && statSync(out).size > 0) return;
   mkdirSync(dirname(out), { recursive: true });
-  const stagedSeeds = [
-    join(repoRoot, '🧰️framework', "🛍️products", "💻️os", "🔨️modules", '♾️infinite', "📦️packages", "🦀️rust", "dist", "fonts", "🔤️guestslim-typst-fonts.bin"),
-  ];
-  const seed = stagedSeeds.find((path) => existsSync(path) && statSync(path).size > 0);
-  if (seed) {
-    copyFileSync(seed, out);
-    return;
-  }
   const status = runCmdStatus("cargo", ["run", "-p", "semio-framework-os-font-assets", "--bin", "dump-guestslim-typst-fonts", "--", out], { cwd: repoRoot, budgetMs: buildBudgetMs() });
   if (status !== 0 || !existsSync(out)) {
     throw new Error(`guestslim typst fonts asset missing and dump-guestslim-typst-fonts failed (expected ${out})`);

@@ -2513,6 +2513,9 @@ pub mod editor {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️.rs"]
             mod component;
             pub use component::*;
+            #[cfg(test)]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧪️tests/🔬️step-ceiling/🦀️.rs"]
+            pub(crate) mod step_ceiling;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📷️camera/🦀️.rs"]
             pub mod camera;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🌫️dense/🦀️.rs"]

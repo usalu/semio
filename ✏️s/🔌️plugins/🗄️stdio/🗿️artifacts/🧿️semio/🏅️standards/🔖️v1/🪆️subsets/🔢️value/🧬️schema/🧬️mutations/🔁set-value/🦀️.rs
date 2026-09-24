@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for SetValue
         agg_inverse(&SemioValueMutation::SetValue(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-value", "Wert setzen")
+        protocol::LocalizedLabel::native("Set value", "Wert setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

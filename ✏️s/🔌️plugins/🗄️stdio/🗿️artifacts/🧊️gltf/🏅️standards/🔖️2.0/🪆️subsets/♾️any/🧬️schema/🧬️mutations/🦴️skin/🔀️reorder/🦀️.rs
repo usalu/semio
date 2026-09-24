@@ -62,7 +62,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderSkinsM
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Reorder Skins", "Häute umordnen")
+        protocol::LocalizedLabel::native("Reorder Skins", "Skins umordnen")
     }
 
     fn target(&self) -> Vec<String> {

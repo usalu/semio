@@ -24,6 +24,25 @@ export {
   sameDocumentBrowserActorV1,
 } from "./🌐️browser-actor/🟦️.ts";
 export type { DocumentBrowserActorSourceV1, DocumentClosedBrowserActorV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1 } from "./🌐️browser-actor/🟦️.ts";
+import { type EditedArtifactFrontierV1, isEditedArtifactFrontierV1 as editedArtifactFrontierIsValid } from "./📌️document-check-in-v1/🟦️.ts";
+export {
+  DOCUMENT_CHECK_IN_MAX_BYTES,
+  DOCUMENT_CHECK_IN_SCHEMA_V1,
+  DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1,
+  documentCheckInCanonicalJson,
+  isEditedArtifactFrontierV1,
+  isTerminalDocumentCheckInPhaseV1,
+  parseDocumentCheckInStatusV1,
+  parseDocumentCheckInV1,
+} from "./📌️document-check-in-v1/🟦️.ts";
+export type {
+  DocumentCheckInPhaseV1,
+  DocumentCheckInReadyV1,
+  DocumentCheckInRefusalV1,
+  DocumentCheckInStatusV1,
+  DocumentCheckInV1,
+  EditedArtifactFrontierV1,
+} from "./📌️document-check-in-v1/🟦️.ts";
 
 //#region 🔖️Vocabulary
 export type DirectorySpaceKind = "atelier" | "studio" | "archive";
@@ -409,126 +428,14 @@ export type DirectoryCommand =
   | { kind: "announce-document"; descriptor: DocumentDescriptor };
 //#endregion 🔖️Command
 
-//#region 📣️CheckpointPublicationCommand
-export const CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES = 8 * 1024;
-export const CHECKPOINT_PUBLICATION_DEADLINE_MS = 30_000;
-export const CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES = 1024 * 1024;
 
-export interface CheckpointPublicationFrontierV1 {
-  documentId: string;
-  headEditOrdinal: number;
-  headEditId: string;
-  lastCommitSeq: number;
-  chainSha256: string;
+//#region 🌊️EditedArtifactFrontier
+/** 🌊️ Reads one edited ledger point in its exact wire grammar; throws for anything else. */
+function editedArtifactFrontier(value: unknown): EditedArtifactFrontierV1 {
+  if (!editedArtifactFrontierIsValid(value)) throw new Error("edited-artifact-frontier.invalid");
+  return { documentId: value.documentId, headEditOrdinal: value.headEditOrdinal, headEditId: value.headEditId, lastCommitSeq: value.lastCommitSeq, chainSha256: value.chainSha256 };
 }
-
-export type CheckpointPublicationCurrentV1 = { state: "genesis"; checkpointId: string } | { state: "active"; checkpointId: string; baselineFrontier: CheckpointPublicationFrontierV1 };
-
-export interface CheckpointPublicationBlobV1 {
-  sha256: string;
-  blake3: string;
-  byteLength: number;
-}
-
-export interface CheckpointPublicationCommandV1 {
-  schema: "semio.hub.checkpoint-publication-command/v1";
-  correlationId: string;
-  descriptorDigestV1: string;
-  expectedDocumentFrontier: DocumentFrontier;
-  expectedCurrent: CheckpointPublicationCurrentV1;
-  baselineFrontier: CheckpointPublicationFrontierV1;
-  pack: CheckpointPublicationBlobV1;
-  spr: CheckpointPublicationBlobV1;
-}
-
-export interface CheckpointPublicationReceiptV1 {
-  schema: "semio.hub.checkpoint-publication-receipt/v1";
-  correlationId: string;
-  checkpoint: PublishedArtifactCheckpoint;
-}
-
-function checkpointPublicationHex(value: unknown, name: string): string {
-  if (typeof value !== "string" || value.length !== 64 || /^0+$/u.test(value) || !/^[0-9a-f]+$/u.test(value)) throw new Error(`checkpoint-publication.invalid-${name}`);
-  return value;
-}
-
-function checkpointPublicationFrontier(value: unknown): CheckpointPublicationFrontierV1 {
-  const frontier = directoryEventPageObject(value, ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"]);
-  if (
-    typeof frontier.documentId !== "string" ||
-    frontier.documentId.length === 0 ||
-    new TextEncoder().encode(frontier.documentId).length > DOCUMENT_OPEN_ID_MAX_BYTES ||
-    typeof frontier.headEditId !== "string" ||
-    frontier.headEditId.length === 0 ||
-    new TextEncoder().encode(frontier.headEditId).length > DOCUMENT_OPEN_ID_MAX_BYTES ||
-    /\p{Cc}/u.test(frontier.documentId) ||
-    /\p{Cc}/u.test(frontier.headEditId)
-  )
-    throw new Error("checkpoint-publication.invalid-frontier");
-  return {
-    documentId: frontier.documentId,
-    headEditOrdinal: directoryEventPageInteger(frontier.headEditOrdinal, true),
-    headEditId: frontier.headEditId,
-    lastCommitSeq: directoryEventPageInteger(frontier.lastCommitSeq, true),
-    chainSha256: checkpointPublicationHex(frontier.chainSha256, "chain"),
-  };
-}
-
-function checkpointPublicationBlob(value: unknown, name: string): CheckpointPublicationBlobV1 {
-  const blob = directoryEventPageObject(value, ["sha256", "blake3", "byteLength"]);
-  return {
-    sha256: checkpointPublicationHex(blob.sha256, `${name}-hash`),
-    blake3: checkpointPublicationHex(blob.blake3, `${name}-address`),
-    byteLength: directoryEventPageInteger(blob.byteLength, true),
-  };
-}
-
-/** 📥️ Parses one exact canonical checkpoint command without accepting route-owned scope fields. */
-export function parseCheckpointPublicationCommandV1(source: string): CheckpointPublicationCommandV1 {
-  if (new TextEncoder().encode(source).length > CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES) throw new Error("checkpoint-publication.request-too-large");
-  const object = directoryEventPageObject(JSON.parse(source), ["schema", "correlationId", "descriptorDigestV1", "expectedDocumentFrontier", "expectedCurrent", "baselineFrontier", "pack", "spr"]);
-  if (object.schema !== "semio.hub.checkpoint-publication-command/v1") throw new Error("checkpoint-publication.invalid-envelope");
-  const expectedDocumentFrontier = directoryEventPageObject(object.expectedDocumentFrontier, ["headSeq", "commitSeq", "epoch"]);
-  const headSeq = directoryEventPageInteger(expectedDocumentFrontier.headSeq, false);
-  const commitSeq = directoryEventPageInteger(expectedDocumentFrontier.commitSeq, false);
-  const epoch = directoryEventPageInteger(expectedDocumentFrontier.epoch, false);
-  if (commitSeq > headSeq) throw new Error("checkpoint-publication.invalid-document-frontier");
-  const expectedCurrentObject = directoryEventPageObject(object.expectedCurrent, ["state"], ["checkpointId", "baselineFrontier"]);
-  const expectedCurrent: CheckpointPublicationCurrentV1 =
-    expectedCurrentObject.state === "genesis"
-      ? (() => {
-          const genesis = directoryEventPageObject(object.expectedCurrent, ["state", "checkpointId"]);
-          return { state: "genesis", checkpointId: checkpointPublicationHex(genesis.checkpointId, "checkpoint") };
-        })()
-      : expectedCurrentObject.state === "active"
-        ? (() => {
-            const active = directoryEventPageObject(object.expectedCurrent, ["state", "checkpointId", "baselineFrontier"]);
-            return {
-              state: "active",
-              checkpointId: checkpointPublicationHex(active.checkpointId, "checkpoint"),
-              baselineFrontier: checkpointPublicationFrontier(active.baselineFrontier),
-            };
-          })()
-        : (() => {
-            throw new Error("checkpoint-publication.invalid-current");
-          })();
-  const pack = checkpointPublicationBlob(object.pack, "pack");
-  const spr = checkpointPublicationBlob(object.spr, "spr");
-  if (pack.byteLength + spr.byteLength > CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES) throw new Error("checkpoint-publication.pair-too-large");
-  const command: CheckpointPublicationCommandV1 = {
-    schema: object.schema,
-    correlationId: directoryCommandRequestId(object.correlationId),
-    descriptorDigestV1: checkpointPublicationHex(object.descriptorDigestV1, "descriptor"),
-    expectedDocumentFrontier: { headSeq, commitSeq, epoch },
-    expectedCurrent,
-    baselineFrontier: checkpointPublicationFrontier(object.baselineFrontier),
-    pack,
-    spr,
-  };
-  if (JSON.stringify(command) !== source) throw new Error("checkpoint-publication.noncanonical");
-  return command;
-}
-//#endregion 📣️CheckpointPublicationCommand
+//#endregion 🌊️EditedArtifactFrontier
 
 //#region 🔖️CommandReceipt
 export const DIRECTORY_COMMAND_REQUEST_MAX_BYTES = 8 * 1024;
@@ -1629,6 +1536,28 @@ export function leaseFieldsFromPlanV1(plan: DocumentOpenPlanV1, byteLengths: { r
   });
 }
 
+/** 🗂️ One artifact kind a descriptor declares, reduced to the pair a document open is admitted on. */
+export type SurfaceArtifactKindV1 = { readonly id: string; readonly schema: string };
+
+/** 🗂️ The one surface ↔ artifact-kind pairing rule, the browser twin of the hub's `app_opens_kind`
+ * (`🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`) that publishes and verifies every open target: a surface
+ * app opens a kind it declares itself (a plugin on the declaration tree stitches its spec onto the app), or a
+ * plugin-level kind (`PluginBuilder::artifact_kind`) whose id the app's own dialect names — never a sibling
+ * surface's. Replayed from `🔏️trusted-catalog/🧫️fixtures/🗂️surface-opens-kind/🔣️.json`.
+ *
+ * 🧯️ The browser used to admit on the plugin-level list alone, so every document of a plugin migrated onto the
+ * declaration tree (note, draw, writer, puzzle, …: `manifest.artifactKinds = []`) was refused after its
+ * verified download with "The document component could not be verified" (measured inside `s` against hub 7800,
+ * ticket 26/09/23 S15). */
+export function surfaceOpensArtifactKindV1(
+  pluginArtifactKinds: readonly SurfaceArtifactKindV1[],
+  app: { readonly artifactKinds: readonly SurfaceArtifactKindV1[]; readonly dialectArtifactKind: string },
+  artifact: { readonly kind: string; readonly schema: string },
+): boolean {
+  const declares = (kinds: readonly SurfaceArtifactKindV1[]): boolean => kinds.some((kind) => kind.id === artifact.kind && kind.schema === artifact.schema);
+  return declares(app.artifactKinds) || (declares(pluginArtifactKinds) && app.dialectArtifactKind === artifact.kind);
+}
+
 /** ⚖️ The one shared full-field lease relation. Every transport compares every field through it; a
  * browser or native subset comparison is never permitted. */
 export function sameLeaseFieldsV1(left: DocumentExecutionTargetLeaseFieldsV1, right: DocumentExecutionTargetLeaseFieldsV1): boolean {
@@ -1688,7 +1617,7 @@ export function sameLeaseFieldsV1(left: DocumentExecutionTargetLeaseFieldsV1, ri
 
 /** 🌐️ Complete localized execution-target status vocabulary. No code carries an origin, URL, path,
  * receipt, grant, digest or user identity; EN and DE are both explicit with no default language. */
-export type DocumentExecutionTargetStatusCodeV1 = "verifying" | "integrity-failed" | "stale" | "cancelled" | "renderer-unavailable";
+export type DocumentExecutionTargetStatusCodeV1 = "verifying" | "integrity-failed" | "stale" | "cancelled" | "renderer-unavailable" | "link-expired" | "access-revoked";
 
 export const DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1: Readonly<Record<DocumentExecutionTargetStatusCodeV1, Readonly<Record<"en" | "de", string>>>> = Object.freeze({
   verifying: Object.freeze({ en: "Verifying document component…", de: "Dokumentkomponente wird überprüft…" }),
@@ -1696,6 +1625,8 @@ export const DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1: Readonly<Record<DocumentE
   stale: Object.freeze({ en: "The document target changed. Reopen the document.", de: "Das Dokumentziel wurde geändert. Öffnen Sie das Dokument erneut." }),
   cancelled: Object.freeze({ en: "Opening the document was cancelled.", de: "Das Öffnen des Dokuments wurde abgebrochen." }),
   "renderer-unavailable": Object.freeze({ en: "The verified document component is ready, but this renderer is unavailable.", de: "Die überprüfte Dokumentkomponente ist bereit, aber dieser Renderer ist nicht verfügbar." }),
+  "link-expired": Object.freeze({ en: "The connection was lost for too long. Reconnect to keep editing this document.", de: "Die Verbindung war zu lange unterbrochen. Verbinden Sie sich erneut, um dieses Dokument weiter zu bearbeiten." }),
+  "access-revoked": Object.freeze({ en: "Your access to this document was removed.", de: "Ihr Zugriff auf dieses Dokument wurde entfernt." }),
 });
 
 /** 🔊️ ARIA live-region politeness for one execution-target status: progress announces, every
@@ -1846,7 +1777,7 @@ export interface GisMapInferenceApprovalReceiptV1 {
 /** ↩️ Owner-bound durable undo locator minted only from a committed GIS approval witness. */
 export interface GisMapApprovalUndoHandleV1 {
   targetId: string;
-  expectedCurrent: CheckpointPublicationFrontierV1;
+  expectedCurrent: EditedArtifactFrontierV1;
 }
 
 /** 📨️ Closed undo intent; inverse bytes never cross this boundary. */
@@ -1855,7 +1786,7 @@ export interface GisMapApprovalUndoRequestV1 {
   version: 1;
   targetId: string;
   idempotencyKey: string;
-  expectedCurrent: CheckpointPublicationFrontierV1;
+  expectedCurrent: EditedArtifactFrontierV1;
 }
 
 /** 🧾️ Durable inverse receipt published only after a second verified WAL decision. */
@@ -1867,7 +1798,7 @@ export interface GisMapApprovalUndoReceiptV1 {
   commandHash: string;
   applied: boolean;
   replayed: boolean;
-  frontier: CheckpointPublicationFrontierV1;
+  frontier: EditedArtifactFrontierV1;
 }
 
 /** 🚦️ The complete published failure vocabulary the four authenticated routes may answer with,
@@ -2303,7 +2234,7 @@ export function parseGisMapInferenceApprovalReceiptV1(value: unknown): GisMapInf
     commandHash: gisMapInferenceHex(object.commandHash, 64),
     proposalHash: gisMapInferenceHex(object.proposalHash, 64),
     applied: object.applied,
-    undo: { targetId: gisMapInferenceHex(undo.targetId, 32), expectedCurrent: checkpointPublicationFrontier(undo.expectedCurrent) },
+    undo: { targetId: gisMapInferenceHex(undo.targetId, 32), expectedCurrent: editedArtifactFrontier(undo.expectedCurrent) },
   };
 }
 
@@ -2316,7 +2247,7 @@ export function parseGisMapApprovalUndoRequestV1(value: unknown): GisMapApproval
     version: object.version,
     targetId: gisMapInferenceHex(object.targetId, 32),
     idempotencyKey: gisMapInferenceHex(object.idempotencyKey, 32),
-    expectedCurrent: checkpointPublicationFrontier(object.expectedCurrent),
+    expectedCurrent: editedArtifactFrontier(object.expectedCurrent),
   };
 }
 
@@ -2338,7 +2269,7 @@ export function parseGisMapApprovalUndoReceiptV1(value: unknown): GisMapApproval
     commandHash: gisMapInferenceHex(object.commandHash, 64),
     applied: object.applied,
     replayed: object.replayed,
-    frontier: checkpointPublicationFrontier(object.frontier),
+    frontier: editedArtifactFrontier(object.frontier),
   };
 }
 
@@ -2549,10 +2480,12 @@ export interface CanonicalCheckpointPairV1 {
 }
 
 class CanonicalPairCursor {
-  constructor(
-    private readonly bytes: Uint8Array,
-    public offset = 0,
-  ) {}
+  private readonly bytes: Uint8Array;
+  offset: number;
+  constructor(bytes: Uint8Array, offset = 0) {
+    this.bytes = bytes;
+    this.offset = offset;
+  }
 
   get exhausted(): boolean {
     return this.offset === this.bytes.length;

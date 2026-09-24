@@ -1,0 +1,12 @@
+process attach --name os_hub_test_dbg --waitfor
+br set -r 'WorkerPool>::callback_at'
+br set -r 'WorkerParking>::signal_timer_from_firing_worker'
+br set -r 'WorkerParking>::signal_timer$'
+br set -r 'WorkerParking>::hand_off_timers'
+br command add -o 'continue' 1
+br command add -o 'continue' 2
+br command add -o 'continue' 3
+br command add -o 'continue' 4
+continue
+br list
+quit

@@ -562,7 +562,7 @@ fn mutation_leaf_descriptor_enum_wires_match_neutral_fixture() {
     let wires = serde_json::json!({
         "invertibility": json_oracle(&vec![MutationInvertibility::SelfInvertible, MutationInvertibility::ExplicitMutation, MutationInvertibility::Plan, MutationInvertibility::NonInvertible]),
         "diffParticipation": json_oracle(&vec![MutationDiffParticipation::Detect, MutationDiffParticipation::ApplyOnly, MutationDiffParticipation::Plan, MutationDiffParticipation::None]),
-        "outcomeClasses": json_oracle(&vec![MutationOutcomeClass::Applied, MutationOutcomeClass::Info, MutationOutcomeClass::Warning, MutationOutcomeClass::Error, MutationOutcomeClass::Fatal]),
+        "outcomeClasses": json_oracle(&vec![MutationOutcomeClass::Applied, MutationOutcomeClass::NoOp, MutationOutcomeClass::Empty, MutationOutcomeClass::Disjoint, MutationOutcomeClass::Rejected]),
         "composition": json_oracle(&vec![MutationComposition::Atomic, MutationComposition::Composite]),
         "requiredLanguageSurfaces": json_oracle(&vec![MutationLanguageSurface::Rust, MutationLanguageSurface::Typescript, MutationLanguageSurface::Graphql, MutationLanguageSurface::Protobuf, MutationLanguageSurface::JsonSchema, MutationLanguageSurface::Text, MutationLanguageSurface::Binary]),
     });

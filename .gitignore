@@ -12,9 +12,8 @@ old
 *.exe
 generated
 reports
-**dist*
-!🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/
-!🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/**
+📤️dist
+📤️distribution
 target*
 🎯️target/
 🎯️target-*/
@@ -59,6 +58,7 @@ TODOS.md
 .nx/cache
 .nx/workspace-data
 .nx/workspace-data-terminal
+.nx/installation
 #--------------------------------------JAVASCRIPT--------------------------------------
 node_modules
 .env

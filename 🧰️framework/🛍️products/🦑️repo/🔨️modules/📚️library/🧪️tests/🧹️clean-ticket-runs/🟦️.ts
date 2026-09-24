@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
-import { CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES } from "../../🧼️workspace-cleanup/🔍️candidate-discovery/🟦️.ts";
+import { CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES, CLEAN_TICKET_FILE_MAX_BYTES } from "../../🧼️workspace-cleanup/🔍️candidate-discovery/🟦️.ts";
 import { CleanScript } from "../../🧼️workspace-cleanup/🎮️command/🟦️.ts";
 
 test("clean removes generated ticket run output without removing ticket material", () => {
@@ -80,7 +80,7 @@ test("clean removes oversized ignored files from open tickets", () => {
   }
 });
 
-test("clean removes oversized non-ignored files from open tickets", () => {
+test("clean removes files above the ticket limit from open tickets", () => {
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for cleanup fixture output.");
   mkdirSync(artifactRoot, { recursive: true });
@@ -91,7 +91,7 @@ test("clean removes oversized non-ignored files from open tickets", () => {
   try {
     mkdirSync(ticket, { recursive: true });
     writeFileSync(huge, "x");
-    truncateSync(huge, CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES + 1);
+    truncateSync(huge, CLEAN_TICKET_FILE_MAX_BYTES + 1);
     writeFileSync(join(ticket, "🎫️ticket.json"), JSON.stringify({ status: "open" }, null, 2));
     writeFileSync(retained, "ticket material\n");
     new CleanScript(root, root).run([]);

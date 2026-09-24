@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Battery Max Discharge of battery {}", self.id.0), &format!("Batterienmaximalabgabe von Batterie {} ändern", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Change Battery Max Discharge of battery {}", self.id.0), &format!("Maximale Entladeleistung von Batterie {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

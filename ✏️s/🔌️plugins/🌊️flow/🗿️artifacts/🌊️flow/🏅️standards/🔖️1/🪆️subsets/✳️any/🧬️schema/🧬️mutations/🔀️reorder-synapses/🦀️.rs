@@ -24,7 +24,7 @@ impl MutationKind<FlowSnapshot, FlowMutation> for ReorderSynapses {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder synapse \"{}\" to {}", self.id, self.to_index), &format!("Synapse \"{}\" zu {} umordnen", self.id, self.to_index))
+        protocol::LocalizedLabel::native(&format!("Reorder synapse \"{}\" to {}", self.id, self.to_index), &format!("Synapse \"{}\" an Position {} verschieben", self.id, self.to_index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

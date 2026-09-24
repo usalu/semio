@@ -19,7 +19,7 @@
   "enumWireValues": {
     "invertibility": ["self", "explicit-mutation", "plan", "non-invertible"],
     "diffParticipation": ["detect", "apply-only", "plan", "none"],
-    "outcomeClasses": ["applied", "info", "warning", "error", "fatal"],
+    "outcomeClasses": ["applied", "no-op", "empty", "disjoint", "rejected"],
     "composition": ["atomic", "composite"],
     "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
   },

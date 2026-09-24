@@ -312,8 +312,9 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reference-hidden",
@@ -333,8 +334,9 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reference-locked",
@@ -354,8 +356,9 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reference-width",
@@ -375,7 +378,9 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-building-model",
@@ -395,7 +400,8 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-drawing",
@@ -415,7 +421,9 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-energy-model",
@@ -435,7 +443,8 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-node",
@@ -451,11 +460,35 @@
           "subset": "node"
         },
         {
+          "id": "create-object",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "no-op",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-object",
+            "bridgeVersion": 1,
+            "variant": "CreateObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "object"
+        },
+        {
           "id": "create-shape-model",
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-shape-model",
@@ -475,7 +508,9 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-structure-classic-model",
@@ -495,7 +530,8 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "delete-building-model",
@@ -536,7 +572,8 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "delete-energy-model",
@@ -573,11 +610,33 @@
           "subset": "node"
         },
         {
+          "id": "delete-object",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-object",
+            "bridgeVersion": 1,
+            "variant": "DeleteObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "object"
+        },
+        {
           "id": "delete-shape-model",
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "delete-shape-model",
@@ -597,7 +656,8 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "delete-structure-classic-model",
@@ -613,12 +673,35 @@
           "subset": "structure"
         },
         {
-          "id": "move-reference",
+          "id": "move-objects",
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "rejected",
+            "no-op",
             "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-objects",
+            "bridgeVersion": 1,
+            "variant": "MoveObjects"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "object"
+        },
+        {
+          "id": "move-reference",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-reference",
@@ -638,8 +721,9 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-node",
@@ -659,8 +743,9 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-reference-media",
@@ -680,7 +765,8 @@
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "replace-references",
@@ -694,6 +780,50 @@
             }
           ],
           "subset": "reference"
+        },
+        {
+          "id": "rotate-objects",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "no-op",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-objects",
+            "bridgeVersion": 1,
+            "variant": "RotateObjects"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "object"
+        },
+        {
+          "id": "scale-objects",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "no-op",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-objects",
+            "bridgeVersion": 1,
+            "variant": "ScaleObjects"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "object"
         }
       ]
     }

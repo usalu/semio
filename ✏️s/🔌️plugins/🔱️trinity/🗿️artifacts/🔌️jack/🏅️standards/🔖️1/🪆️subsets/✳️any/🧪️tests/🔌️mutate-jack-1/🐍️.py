@@ -192,7 +192,7 @@ def bag(document, entity, kind):
     """🎒️ The property bag one `entity` addresses, or `None` when it names nothing.
 
     An ABSENT target is not a rejection for the property verbs: two committed vectors declare
-    `status: "applied"` with a `mutation.no-op` warning against a scene that holds neither the node
+    `status: "no-op"` with a `mutation.no-op` warning against a scene that holds neither the node
     nor the edge they name. Only the two `delete-` verbs reject an absent target, and their own
     committed vectors say so.
     """

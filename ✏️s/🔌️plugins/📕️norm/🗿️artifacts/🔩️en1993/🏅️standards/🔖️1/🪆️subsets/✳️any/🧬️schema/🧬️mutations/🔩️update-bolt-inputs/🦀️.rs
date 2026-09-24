@@ -29,7 +29,7 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateBoltInputs
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-1-8 bolted connection inputs", "EN 1993-1-8 geschraubte Verbindungseingaben aktualisieren")
+        protocol::LocalizedLabel::native("Update EN 1993-1-8 bolted connection inputs", "EN 1993-1-8 Eingaben für Schraubverbindungen aktualisieren")
     }
 }
 //#endregion 🔖️Payload

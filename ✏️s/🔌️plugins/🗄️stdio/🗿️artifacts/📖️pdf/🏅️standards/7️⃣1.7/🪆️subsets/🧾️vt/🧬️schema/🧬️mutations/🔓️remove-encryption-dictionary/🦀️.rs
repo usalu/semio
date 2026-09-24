@@ -31,7 +31,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveEncryptionDictionary {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove encryption dictionary V{} R{}", self.version, self.revision), &format!("Verschlüsselungswörterbuchv{} R{} entfernen", self.version, self.revision))
+        protocol::LocalizedLabel::native(&format!("Remove encryption dictionary V{} R{}", self.version, self.revision), &format!("Verschlüsselungswörterbuch V{} R{} entfernen", self.version, self.revision))
     }
 
     fn target(&self) -> Vec<String> {

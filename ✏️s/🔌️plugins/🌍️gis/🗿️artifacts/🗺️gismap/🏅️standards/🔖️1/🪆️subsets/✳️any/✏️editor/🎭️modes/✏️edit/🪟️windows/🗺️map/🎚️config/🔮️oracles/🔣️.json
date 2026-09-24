@@ -1,0 +1,972 @@
+{
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The config state lane of `s.gis.gismap`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config): its mutation vocabulary `MapWindowConfigMutation` over `MapWindowConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-gis-gismap-1-any-editor-edit-map-config` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "gis-gismap-1-any-editor-edit-map-config-state-lane-semantics",
+      "capabilities": [
+        "gis-gismap-1-any-editor-edit-map-config-mutate"
+      ],
+      "rationale": "`MapWindowConfigMutation` is the config state lane of `s.gis.gismap`'s ✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config surface: it holds per-layer visibility and stroke scale, the map camera, the render mode, the vector style and the LOD tier. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-camera`, `set-vector-style`, `set-layer-visibility`, `set-layer-stroke-scale`, `set-lod-mode`, `set-render-mode`) changes exactly its own part of `MapWindowConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A persisted key-value store for desktop settings; it has no model of this surface's typed config record, its per-kind setters, their no-op guard or the inverse each kind computes."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it defines no typed config mutations and neither their no-op nor their inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "`MapWindowConfig` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "gis-gismap-1-any-editor-edit-map-config",
+      "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-camera",
+        "set-vector-style",
+        "set-layer-visibility",
+        "set-layer-stroke-scale",
+        "set-lod-mode",
+        "set-render-mode"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.gis.gismap",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config",
+      "mutations": [
+        {
+          "id": "set-camera",
+          "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-camera",
+            "bridgeVersion": 1,
+            "variant": "SetCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-vector-style",
+          "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-vector-style",
+            "bridgeVersion": 1,
+            "variant": "SetVectorStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-layer-visibility",
+          "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-layer-visibility",
+            "bridgeVersion": 1,
+            "variant": "SetLayerVisibility"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-layer-stroke-scale",
+          "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-layer-stroke-scale",
+            "bridgeVersion": 1,
+            "variant": "SetLayerStrokeScale"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-lod-mode",
+          "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-lod-mode",
+            "bridgeVersion": 1,
+            "variant": "SetLodMode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-render-mode",
+          "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-render-mode",
+            "bridgeVersion": 1,
+            "variant": "SetRenderMode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gis-gismap-1-any-editor-edit-map-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-layer-visibility-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-layer-visibility",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️set-layer-visibility-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
+          "bytes": 229
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️set-layer-visibility-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c2fbe624d0c9c4bc9f7b76437def8e5b6bbb68884924a94e977aaee1a4e2d848",
+          "bytes": 84
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️set-layer-visibility-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:9bda7ba032c40d90792be6ae1036a00c102da27b99152192ac81dbe32cf2b1e1",
+          "bytes": 230
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️set-layer-visibility-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a067dc4c4937a00326ba63ebf1ba71d4ea8f54259e5306b87d3920621350cde1",
+          "bytes": 225
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/✅️set-layer-visibility-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Hiding the parcels layer flips its visibility entry and nothing else."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-camera-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-camera",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
+          "bytes": 229
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6dc9fc80351295cd9d877b619c294b8c985f4b62ec704c1524bbab3cc2bcb43b",
+          "bytes": 83
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:65183940c344d9a1c390feb659bd34ac8f74a0973b6b5516d8142f93f3c8efd6",
+          "bytes": 233
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c450703613c84d568b17dd03c6c58f647f2ef0879ffea0a67d2f1de0517ab130",
+          "bytes": 223
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Panning the map replaces the camera JSON."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-render-mode-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-render-mode",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🖼️set-render-mode/✅️set-render-mode-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
+          "bytes": 229
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🖼️set-render-mode/✅️set-render-mode-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e268ce231fca64b7e9807de6dfcd2edf897ec31d4cccea8e4d3219f8ee6161a3",
+          "bytes": 56
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🖼️set-render-mode/✅️set-render-mode-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b6825940da3fc24633bc9b86eb983528bc6f56e2cbe7ed0c94b9e884e9080326",
+          "bytes": 227
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🖼️set-render-mode/✅️set-render-mode-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:21110ed07f56608a8c2f9dd4758257286530eb3e031057afb5858e4804ab92da",
+          "bytes": 197
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🖼️set-render-mode/✅️set-render-mode-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Switching to vector rendering replaces the render mode."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-vector-style-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-vector-style",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎨️set-vector-style/✅️set-vector-style-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
+          "bytes": 229
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎨️set-vector-style/✅️set-vector-style-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:784dd820b0f532dcb4ec5d1624d7cfa0c7e8a0c27a7203ee722041a5a6792d95",
+          "bytes": 63
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎨️set-vector-style/✅️set-vector-style-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fd701f3a47e9b9222d1a5b848529289e5b7beefa2c494e90f64648d6b7d3f9fb",
+          "bytes": 234
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎨️set-vector-style/✅️set-vector-style-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:31a2c41d06f3ac901318dbc4277651cf2a3189a16e5c815ab856619dadaa07f6",
+          "bytes": 203
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎨️set-vector-style/✅️set-vector-style-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Switching to the figure-ground style replaces the vector style."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-lod-mode-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-lod-mode",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️set-lod-mode-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
+          "bytes": 229
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️set-lod-mode-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6d0db858a8228681d79d630e9193c26d77bdef896590048ac54b7e9d28522887",
+          "bytes": 51
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️set-lod-mode-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3aabc848f77cc52923020324d772a5a234ea0093aebd58cdcab44b5e1c899ba5",
+          "bytes": 224
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️set-lod-mode-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:37f505b264e813ee4c81c64399c82f6f32376481963fb1336c2123d4da3a26c1",
+          "bytes": 195
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/✅️set-lod-mode-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Pinning the fine LOD tier replaces the automatic one."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-layer-stroke-scale-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-layer-stroke-scale",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️set-layer-stroke-scale-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7ff306de40c140175e70089952b22e410448786f65407e6cc58e4d5a6e40693d",
+          "bytes": 229
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️set-layer-stroke-scale-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:351cc1860187a25b4585deda6a9b67780edbc736ad8883327fb6894374c1cae4",
+          "bytes": 81
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️set-layer-stroke-scale-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4a3773a8bb94283d41f94fb4082b07b1b1134b0b83d1c0df1f90e5f816d8ab48",
+          "bytes": 229
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️set-layer-stroke-scale-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e53bec0c1115ebf58dbfb9058762c264379201adff16fa99f2562eefde971379",
+          "bytes": 223
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/✅️set-layer-stroke-scale-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Thickening the parcels strokes sets their multiplier to 2.5."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-layer-visibility-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-layer-visibility",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️set-layer-visibility-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:9bda7ba032c40d90792be6ae1036a00c102da27b99152192ac81dbe32cf2b1e1",
+          "bytes": 230
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️set-layer-visibility-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c2fbe624d0c9c4bc9f7b76437def8e5b6bbb68884924a94e977aaee1a4e2d848",
+          "bytes": 84
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️set-layer-visibility-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:9bda7ba032c40d90792be6ae1036a00c102da27b99152192ac81dbe32cf2b1e1",
+          "bytes": 230
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️set-layer-visibility-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
+          "bytes": 18
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/👁️set-layer-visibility/🟰️set-layer-visibility-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Setting a map window field to the value it already holds is the leaf's warned no-op."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-camera-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-camera",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:65183940c344d9a1c390feb659bd34ac8f74a0973b6b5516d8142f93f3c8efd6",
+          "bytes": 233
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6dc9fc80351295cd9d877b619c294b8c985f4b62ec704c1524bbab3cc2bcb43b",
+          "bytes": 83
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:65183940c344d9a1c390feb659bd34ac8f74a0973b6b5516d8142f93f3c8efd6",
+          "bytes": 233
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
+          "bytes": 18
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Setting a map window field to the value it already holds is the leaf's warned no-op."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-render-mode-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-render-mode",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️set-render-mode-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b6825940da3fc24633bc9b86eb983528bc6f56e2cbe7ed0c94b9e884e9080326",
+          "bytes": 227
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️set-render-mode-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e268ce231fca64b7e9807de6dfcd2edf897ec31d4cccea8e4d3219f8ee6161a3",
+          "bytes": 56
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️set-render-mode-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b6825940da3fc24633bc9b86eb983528bc6f56e2cbe7ed0c94b9e884e9080326",
+          "bytes": 227
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️set-render-mode-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
+          "bytes": 18
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🖼️set-render-mode/🟰️set-render-mode-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Setting a map window field to the value it already holds is the leaf's warned no-op."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-vector-style-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-vector-style",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️set-vector-style-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fd701f3a47e9b9222d1a5b848529289e5b7beefa2c494e90f64648d6b7d3f9fb",
+          "bytes": 234
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️set-vector-style-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:784dd820b0f532dcb4ec5d1624d7cfa0c7e8a0c27a7203ee722041a5a6792d95",
+          "bytes": 63
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️set-vector-style-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fd701f3a47e9b9222d1a5b848529289e5b7beefa2c494e90f64648d6b7d3f9fb",
+          "bytes": 234
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️set-vector-style-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
+          "bytes": 18
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎨️set-vector-style/🟰️set-vector-style-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Setting a map window field to the value it already holds is the leaf's warned no-op."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-lod-mode-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-lod-mode",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️set-lod-mode-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3aabc848f77cc52923020324d772a5a234ea0093aebd58cdcab44b5e1c899ba5",
+          "bytes": 224
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️set-lod-mode-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6d0db858a8228681d79d630e9193c26d77bdef896590048ac54b7e9d28522887",
+          "bytes": 51
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️set-lod-mode-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3aabc848f77cc52923020324d772a5a234ea0093aebd58cdcab44b5e1c899ba5",
+          "bytes": 224
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️set-lod-mode-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
+          "bytes": 18
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🔽️set-lod-mode/🟰️set-lod-mode-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Setting a map window field to the value it already holds is the leaf's warned no-op."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-layer-stroke-scale-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.gis.gismap",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config"
+      },
+      "mutation": "set-layer-stroke-scale",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️set-layer-stroke-scale-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4a3773a8bb94283d41f94fb4082b07b1b1134b0b83d1c0df1f90e5f816d8ab48",
+          "bytes": 229
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️set-layer-stroke-scale-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:351cc1860187a25b4585deda6a9b67780edbc736ad8883327fb6894374c1cae4",
+          "bytes": 81
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️set-layer-stroke-scale-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4a3773a8bb94283d41f94fb4082b07b1b1134b0b83d1c0df1f90e5f816d8ab48",
+          "bytes": 229
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️set-layer-stroke-scale-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:06a47cf1fb789f4455b297272f9ec7cf2fd1b612e10a35886ecdbce39669b6b4",
+          "bytes": 18
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📏️set-layer-stroke-scale/🟰️set-layer-stroke-scale-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Setting a map window field to the value it already holds is the leaf's warned no-op."
+    }
+  ]
+}

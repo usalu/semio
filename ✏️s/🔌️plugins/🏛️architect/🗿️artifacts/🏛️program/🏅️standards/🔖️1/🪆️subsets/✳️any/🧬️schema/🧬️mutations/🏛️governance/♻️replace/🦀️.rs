@@ -25,6 +25,6 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceGovernance {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace governance \"{}\"", self.new_governance.framework), &format!("Steuerung \"{}\" ersetzen", self.new_governance.framework))
+        protocol::LocalizedLabel::native(&format!("Replace governance \"{}\"", self.new_governance.framework), &format!("Governance \"{}\" ersetzen", self.new_governance.framework))
     }
 }

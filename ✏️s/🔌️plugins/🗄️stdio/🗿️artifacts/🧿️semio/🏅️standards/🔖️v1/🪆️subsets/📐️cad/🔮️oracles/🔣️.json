@@ -591,7 +591,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "add-layer",
         "remove-layer",
@@ -620,48 +619,13 @@
       "subsetDirectoryName": "📐️cad",
       "mutations": [
         {
-          "id": "no-mutation",
-          "capability": "semio-v1-cad-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#NoMutation",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "no-mutation",
-            "bridgeVersion": 1,
-            "variant": "NoMutation"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-cad-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "dxf-crate-cad-r12-read"
-            },
-            {
-              "capability": "semio-v1-cad-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "ruststep-cad-line-circle-read"
-            }
-          ],
-          "carriers": [
-            "dxf",
-            "step"
-          ],
-          "invariants": {
-            "local": [
-              "entity-graph-agrees-across-every-registered-carrier"
-            ],
-            "enclosing": [
-              "carrier-that-cannot-encode-the-change-reports-unsupported-not-ok"
-            ]
-          }
-        },
-        {
           "id": "set-snapshot",
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -698,7 +662,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#AddLayer",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-layer",
@@ -729,7 +695,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveLayer",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-layer",
@@ -760,7 +728,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetLayer",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-layer",
@@ -791,7 +761,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#AddBlock",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-block",
@@ -822,7 +794,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveBlock",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-block",
@@ -853,7 +827,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetBlockBasePoint",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-block-base-point",
@@ -884,7 +860,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#AddEntity",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-entity",
@@ -921,7 +899,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveEntity",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-entity",
@@ -958,7 +938,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetEntityLayer",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-entity-layer",
@@ -989,7 +971,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetEntityGeometry",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-entity-geometry",
@@ -1026,7 +1010,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#AddBlockEntity",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-block-entity",
@@ -1057,7 +1043,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveBlockEntity",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-block-entity",
@@ -1088,7 +1076,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetBlockEntityLayer",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-block-entity-layer",
@@ -1119,7 +1109,9 @@
           "capability": "semio-v1-cad-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetBlockEntityGeometry",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-block-entity-geometry",
@@ -1158,8 +1150,6 @@
         "standard": "v1",
         "subset": "cad"
       },
-      "mutation": "no-mutation",
-      "outcome": "applied",
       "units": {
         "length": "millimetre",
         "angle": "degree",
@@ -2045,8 +2035,6 @@
         "standard": "v1",
         "subset": "cad"
       },
-      "mutation": "no-mutation",
-      "outcome": "applied",
       "units": {
         "length": "millimetre",
         "angle": "degree",

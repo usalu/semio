@@ -31,5 +31,7 @@ semio-s-artifact-stdio-contract = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+# 🔮 Test-only DWG ORACLE: `acadrust` (MPL-2.0, pure Rust) reads and writes DWG independently of this codec.
+acadrust = { version = "0.5.5", default-features = false }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }

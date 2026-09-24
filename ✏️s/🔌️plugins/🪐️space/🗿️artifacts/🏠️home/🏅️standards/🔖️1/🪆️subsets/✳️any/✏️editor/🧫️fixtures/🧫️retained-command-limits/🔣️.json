@@ -136,12 +136,6 @@
       "blocker": ""
     },
     {
-      "id": "foldDirectoryEvents",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "unbounded event-page parsing and full projection fold still execute in one direct handler"
-    },
-    {
       "id": "presenceHeartbeat",
       "disposition": "Migrated",
       "lanes": [

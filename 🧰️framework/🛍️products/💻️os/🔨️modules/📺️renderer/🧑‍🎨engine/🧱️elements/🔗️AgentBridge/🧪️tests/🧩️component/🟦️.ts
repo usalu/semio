@@ -482,6 +482,56 @@ describe("useAgentBridge agentReply", () => {
 });
 //#endregion 💬️AgentReply
 
+//#region 🪦️ApprovalWithdrawal
+/** 🪦️ Replays `🌉️mcp/🛡️policy/🧫️fixtures/🪦️approval-withdrawal.json`'s `retiredAffordances` through the
+ * real hook over a fake socket: the same frames the gateway sends end every approval as pending,
+ * resolved or withdrawn-with-its-reason, and a withdrawn one leaves nothing waiting. */
+const withdrawalLaw = JSON.parse(readFileSync(join(here, "../../../../../../🌉️mcp/🛡️policy/🧫️fixtures/🪦️approval-withdrawal.json"), "utf8")) as {
+  readonly retiredAffordances: readonly { readonly name: string; readonly frames: readonly Record<string, string>[]; readonly state: string; readonly withdrawal: string | null; readonly pending: number }[];
+};
+
+describe("useAgentBridge approval withdrawal", () => {
+  for (const row of withdrawalLaw.retiredAffordances) {
+    it(`${row.name}: the approval ends ${row.state}${row.withdrawal ? ` (${row.withdrawal})` : ""}`, async () => {
+      const { renderHook, act } = await import("@testing-library/react");
+      let live: { onmessage: ((event: { data: ArrayBuffer }) => void) | null } | null = null;
+      class Socket {
+        static OPEN = 1;
+        readyState = 1;
+        onopen: (() => void) | null = null;
+        onmessage: ((event: { data: ArrayBuffer }) => void) | null = null;
+        onerror: (() => void) | null = null;
+        onclose: (() => void) | null = null;
+        binaryType = "arraybuffer";
+        constructor() {
+          live = this as unknown as { onmessage: ((event: { data: ArrayBuffer }) => void) | null };
+        }
+        send(): void {}
+        close(): void {}
+      }
+      vi.stubGlobal("WebSocket", Socket);
+      const config: AgentBridgeConfig = { url: "ws://127.0.0.1:6300/bridge", admissionProof: "session.v1.withdrawal.proof" };
+      const hook = renderHook(() => useAgentBridge({ config }));
+      try {
+        for (const frame of row.frames) {
+          const full = { approvalId: "appr_law", ...(frame.variant === "approvalRequested" ? { summary: "{}" } : {}), ...frame } as GatewayToShell;
+          const wire = encodeGatewayToShell(full);
+          act(() => live?.onmessage?.({ data: wire.buffer.slice(wire.byteOffset, wire.byteOffset + wire.byteLength) as ArrayBuffer }));
+        }
+        const entry = hook.result.current.conversation.find((candidate) => candidate.id === "appr_law");
+        expect(entry?.kind).toBe("approval");
+        expect(entry?.kind === "approval" && entry.state).toBe(row.state);
+        expect(entry?.kind === "approval" && entry.withdrawal).toBe(row.withdrawal);
+        expect(hook.result.current.pendingApprovals).toHaveLength(row.pending);
+      } finally {
+        hook.unmount();
+        vi.unstubAllGlobals();
+      }
+    });
+  }
+});
+//#endregion 🪦️ApprovalWithdrawal
+
 //#region 🔖️LiveArtifactRoute
 /** 🧪️ Ticket `26/09/18` slice LB1: the LIVE artifact route — the seam that makes an MCP client's
  * `action_invoke`/`history_undo`/`transaction_*` execute in THIS shell instead of in the gateway's

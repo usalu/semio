@@ -121,7 +121,7 @@ impl Mutation<Gis3dPresence> for Gis3dPresenceMutation {
         binary_tag: None,
         invertibility: protocol::MutationInvertibility::ExplicitMutation,
         diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::NoOp],
         composition: protocol::MutationComposition::Atomic,
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
     }];

@@ -8,10 +8,10 @@
 use crate::standards::v1::subsets::any::schema::snapshot::{space_index_table_row, SSpaceSnapshot, SpaceArtifactRow, SPACE_INDEX_TABLE_COLUMNS};
 use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
-use semio_framework_plugin::app::{TableRow, TableRowAction, TableRowsView, TableWindowKit, WindowKit};
+use semio_framework_plugin::app::{table_row_action, table_window_row, TableWindowKit, TreeWindows, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude::Label;
 use semio_framework_plugin::{IconName, WindowKindDefinition};
-use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
+use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, HasStackLayout};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -51,39 +51,23 @@ fn fixed_label(value: &str, code: &'static str) -> semio_framework_plugin::UiAss
     Label::try_from(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new(code, "fixed table label admission failed"))
 }
 
-fn artifact_row_action(icon: IconName, label: &'static str, action: &'static str, row: &SpaceArtifactRow) -> semio_framework_plugin::UiAssemblyResult<TableRowAction> {
+fn open_artifact_action(row: &SpaceArtifactRow) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     let args = crate::editor::space_index::ui_value_map([("id", crate::editor::space_index::ui_value_text(&row.id)?)])?;
-    Ok(TableRowAction::new(fixed_text(icon.as_str(), "ui.table.action-icon")?, fixed_label(label, "ui.table.action-label")?, space_index_action(action, Some(args))?))
-}
-
-fn row_actions(row: &SpaceArtifactRow) -> semio_framework_plugin::UiAssemblyResult<[TableRowAction; 1]> {
-    Ok([artifact_row_action(IconName::FolderOpen, "Open", "openArtifact", row)?])
+    space_index_action("openArtifact", Some(args))
 }
 
 /// 📊️ `config` supplies the live presence fold (`presence-heartbeat`/`fold-directory-events`); the ID
-/// column's own cell still carries the raw artifact id (unchanged), while the row's OWN identity now
-/// separately carries the `artifact:<id>` grammar contract §C0 needs. Split out from `render` (lane
-/// 4-F) so the pure table structure stays unit-testable in isolation, same rationale as Home's own
-/// `render_rows`/`render` split.
-fn render_table(config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut view = TableRowsView::new(fixed_text("Actions", "ui.table.actions-label")?);
-    for column in SPACE_INDEX_TABLE_COLUMNS {
-        let column = fixed_text(column, "ui.table.column")?;
-        view.try_push_column(column).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.columns", "fixed table column admission failed"))?;
-    }
-    for row in &config.indexed_artifacts {
-        let row_id = semio_framework_plugin::UiText::try_format(format_args!("artifact:{}", row.id)).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-id", "fixed table row id admission failed"))?;
-        let mut table_row = TableRow::new(row_id);
-        for cell in space_index_table_row(row, &config.presence_for(&row.id).join(", ")) {
-            let cell = semio_framework_plugin::UiText::try_from_string(cell).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cell", "fixed table cell admission failed"))?;
-            table_row.try_push_cell(cell).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cells", "fixed table cell admission failed"))?;
-        }
-        for action in row_actions(row)? {
-            table_row.try_push_action(action).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
-        }
-        view.try_push_row(table_row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.rows", "fixed table row admission failed"))?;
-    }
-    TableWindowKit::render_rows(view)
+/// column's own cell still carries the raw artifact id, while the row's OWN identity carries the
+/// `artifact:<id>` grammar contract §C0 needs. One `TableRow` record per artifact inside the windowed
+/// table kit, so a space of any size stays inside the window's node budget. Split out from `render`
+/// (lane 4-F) so the pure table structure stays unit-testable in isolation.
+fn render_table(config: &SpaceIndexConfig, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    TableWindowKit::render_rows(windows, "Artifacts", &SPACE_INDEX_TABLE_COLUMNS, Some("Actions"), &config.indexed_artifacts, |row| {
+        let cells = space_index_table_row(row, &config.presence_for(&row.id).join(", "));
+        let cells: Vec<&str> = cells.iter().map(String::as_str).collect();
+        let key = format!("artifact:{}", row.id);
+        table_window_row(&key, &cells, [table_row_action(IconName::FolderOpen.as_str(), "Open", open_artifact_action(row)?)?], Some(open_artifact_action(row)?))
+    })
 }
 
 /// 🩹️ **Known framework gap, worked around here** (lane 4-F, out-of-lease root cause — same one
@@ -118,12 +102,13 @@ fn create_artifact_button() -> semio_framework_plugin::UiAssemblyResult<semio_fr
     builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create", "create button admission failed"))
 }
 
-pub fn render(_document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(_document: &SSpaceSnapshot, config: &SpaceIndexConfig, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut children = semio_framework_plugin::UiFixedList::<semio_framework_plugin::BuiltNode>::default();
-    for child in [window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_artifact_button()?, render_table(config)?] {
+    for child in [window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_artifact_button()?, render_table(config, &TreeWindows::for_body(view_state, BODY_KEY))?] {
         children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?;
     }
     semio_framework_ui_contract::column()
+        .grow(true)
         .try_children(children)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?
         .try_build()

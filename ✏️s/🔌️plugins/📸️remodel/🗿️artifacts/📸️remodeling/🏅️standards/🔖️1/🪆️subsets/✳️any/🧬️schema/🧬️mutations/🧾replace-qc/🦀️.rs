@@ -36,7 +36,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceQ
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace qc", "qc ersetzen")
+        protocol::LocalizedLabel::native("Replace qc", "Qualitätsprüfung ersetzen")
     }
 }
 //#endregion 🔖️Mutation

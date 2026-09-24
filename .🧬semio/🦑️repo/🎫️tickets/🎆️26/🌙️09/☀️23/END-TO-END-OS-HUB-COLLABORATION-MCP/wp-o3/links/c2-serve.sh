@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/.tmp-ticket-0918/📜️c2-serve.sh

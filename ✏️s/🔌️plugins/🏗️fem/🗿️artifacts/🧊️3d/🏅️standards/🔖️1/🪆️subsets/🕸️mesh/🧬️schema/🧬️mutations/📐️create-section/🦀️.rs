@@ -25,7 +25,7 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for CreateSection {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create section \"{}\"", self.section.id), &format!("Abschnitt \"{}\" erstellen", self.section.id))
+        protocol::LocalizedLabel::native(&format!("Create section \"{}\"", self.section.id), &format!("Querschnitt \"{}\" erstellen", self.section.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.section.id.clone()]

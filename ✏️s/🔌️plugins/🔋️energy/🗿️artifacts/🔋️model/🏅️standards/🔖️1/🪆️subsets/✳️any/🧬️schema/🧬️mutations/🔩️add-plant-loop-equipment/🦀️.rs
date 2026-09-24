@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddPla
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add plant equipment {} to plant loop {}", self.equipment_id.0, self.id.0), &format!("Anlagenanlage {} zu Anlagenkreis {} hinzufügen", self.equipment_id.0, self.id.0))
+        protocol::LocalizedLabel::native(&format!("Add plant equipment {} to plant loop {}", self.equipment_id.0, self.id.0), &format!("Anlagenkomponente {} zu Anlagenkreislauf {} hinzufügen", self.equipment_id.0, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

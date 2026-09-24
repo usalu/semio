@@ -1,4 +1,4 @@
-import { FLOW_MAX_REQUEST_BYTES, FlowOperation, attachFlowSurface, createFlowFeatures, createFlowHost, decodeFlowMessage } from "../../🖥️host/🏃️runtime/🟨️.js";
+import { FLOW_MAX_REQUEST_BYTES, FlowOperation, attachFlowSurface, createFlowFeatures, createFlowHost, createFlowPumpScheduler, decodeFlowMessage } from "../../🖥️host/🏃️runtime/🟨️.js";
 import { createFlowBrowserRuntime } from "../../🌐️browser/🏃️runtime/🟨️.js";
 import * as flowBrowser from "../../🌐️browser/🏃️runtime/🟨️.js";
 import { readFile } from "node:fs/promises";
@@ -259,7 +259,22 @@ try { await held.result; } catch (error) { cancelled = error.message === "cancel
 equal(cancelled, true, "cancel-terminal-after-nine-refused-controls");
 await hostileHost.close();
 
+const pumpSchedule = createFlowPumpScheduler();
+const pumpStarted = Date.now();
+let dueTimerAfter;
+let pumpRounds = 0;
+setTimeout(() => { dueTimerAfter = Date.now() - pumpStarted; }, 1);
+await new Promise((resolve) => {
+  const round = () => {
+    pumpRounds += 1;
+    if (dueTimerAfter === undefined && Date.now() - pumpStarted < 2_000) pumpSchedule(round);
+    else resolve();
+  };
+  pumpSchedule(round);
+});
+equal(dueTimerAfter !== undefined && dueTimerAfter < 1_000, true, `a pump polling a pending request yields to a due timer (fired after ${dueTimerAfter} ms, ${pumpRounds} rounds)`);
+
 await features.lifetime.close();
 await host.close();
 equal(host.terminalIsEmpty(), true, "terminal-empty");
-console.log(JSON.stringify({ reactive: "progress-cancel", surface: "generation-status", controls: "nine-rejected-then-valid", bytes: "max-plus-one", terminal: "empty" }));
+console.log(JSON.stringify({ reactive: "progress-cancel", surface: "generation-status", controls: "nine-rejected-then-valid", bytes: "max-plus-one", pump: "yields-to-due-timers", terminal: "empty" }));

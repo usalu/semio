@@ -28,7 +28,10 @@ impl MutationKind<CadSnapshot, CadMutation> for RotateObjects {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rotate {} object(s)", self.placements.len()), &format!("{} Objekt(s) drehen", self.placements.len()))
+        match self.placements.len() {
+            1 => protocol::LocalizedLabel::native("Rotate 1 object", "1 Objekt drehen"),
+            count => protocol::LocalizedLabel::native(&format!("Rotate {count} objects"), &format!("{count} Objekte drehen")),
+        }
     }
     fn target(&self) -> Vec<String> {
         self.placements.iter().map(|placement| placement.object_id.clone()).collect()

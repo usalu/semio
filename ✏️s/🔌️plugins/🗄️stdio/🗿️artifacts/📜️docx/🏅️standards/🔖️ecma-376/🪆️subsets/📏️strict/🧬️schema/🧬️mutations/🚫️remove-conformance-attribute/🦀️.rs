@@ -19,7 +19,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for RemoveConforma
         agg_inverse(&DocxStrictMutation::RemoveConformanceAttribute(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-conformance-attribute", "Konformitätsattribut entfernen")
+        protocol::LocalizedLabel::native("Remove conformance attribute", "Konformitätsattribut entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

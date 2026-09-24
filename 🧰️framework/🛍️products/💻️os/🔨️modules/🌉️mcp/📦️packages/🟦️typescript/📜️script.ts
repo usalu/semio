@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { requireMcpBinary, runMcpClientEndToEnd } from "../../🟦️.ts";
 import { proveMcpInferenceBridgeFixture } from "../../💡️inference-bridge/🟦️.ts";
+import { proveInferenceServiceLaw } from "../../💡️inference/💼️jobs/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -28,6 +29,8 @@ class InferenceBridgeCheckScript extends BundleScript {
     if (segments.length > 1 || !["--source", "--process"].includes(mode)) throw new Error("usage: inference-bridge-check [--source|--process]");
     const report = proveMcpInferenceBridgeFixture(this.repoRoot);
     console.log(`inference-bridge-oracle: ajv=${report.ajv} hostile=${report.hostile} errors=${report.errors} visibility=${report.visibility} lifecycle=${report.lifecycle} routes=${report.routes} limits=${report.limits}`);
+    const service = proveInferenceServiceLaw(this.repoRoot);
+    console.log(`inference-service-law: ajv=${service.ajv} selection=${service.selection} proposals=${service.proposals} lifecycles=${service.lifecycles}`);
     if (mode === "--process") {
       console.log(`[inference-bridge] ${requireMcpBinary(this.repoRoot)}`);
       resolveTestLevel(["long"]);

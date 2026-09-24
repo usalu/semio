@@ -32,7 +32,7 @@ impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeExaggeration
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change terrain exaggeration to {}", self.new_exaggeration), &format!("Geländenüberhöhung auf {} ändern", self.new_exaggeration))
+        protocol::LocalizedLabel::native(&format!("Change terrain exaggeration to {}", self.new_exaggeration), &format!("Geländeüberhöhung auf {} ändern", self.new_exaggeration))
     }
 }
 //#endregion 🔹Payload

@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/.tmp-ticket-0918/📓️s10-s-host-studios-and-sweep.md

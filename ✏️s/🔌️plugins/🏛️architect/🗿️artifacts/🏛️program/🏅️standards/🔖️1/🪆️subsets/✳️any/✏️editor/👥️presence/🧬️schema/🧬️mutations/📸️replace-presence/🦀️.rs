@@ -15,7 +15,7 @@ impl protocol::MutationKind<ArchitectPresence, ArchitectPresenceMutation> for Re
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "presence", kind: "replace-presence", record: "ReplacePresence" };
     fn diff(&self, base: &ArchitectPresence) -> protocol::MutationOutcome<ArchitectPresence> {
         if &self.presence == base {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Requested presence already matches.");
+            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Requested presence already matches.");
         }
         protocol::MutationOutcome::new(self.presence.clone())
     }

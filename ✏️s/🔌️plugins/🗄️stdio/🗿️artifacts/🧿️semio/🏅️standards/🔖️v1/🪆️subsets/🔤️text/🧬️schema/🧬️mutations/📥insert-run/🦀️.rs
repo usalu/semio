@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for InsertRun 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Insert run at #{}", self.index), &format!("Lauf an #{} einfügen", self.index))
+        protocol::LocalizedLabel::native(&format!("Insert run at #{}", self.index), &format!("Textlauf an #{} einfügen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

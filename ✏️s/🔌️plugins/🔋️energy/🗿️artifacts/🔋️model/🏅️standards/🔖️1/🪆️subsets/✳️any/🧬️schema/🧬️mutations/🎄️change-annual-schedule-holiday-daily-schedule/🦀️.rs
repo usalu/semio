@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Annual Schedule Holiday Daily Schedule of annual schedule {}", self.id.0), &format!("Jahreszeitplanfeiertagtageszeitplan von Jahreszeitplan {} ändern", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Change Annual Schedule Holiday Daily Schedule of annual schedule {}", self.id.0), &format!("Feiertags-Tageszeitplan von Jahreszeitplan {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

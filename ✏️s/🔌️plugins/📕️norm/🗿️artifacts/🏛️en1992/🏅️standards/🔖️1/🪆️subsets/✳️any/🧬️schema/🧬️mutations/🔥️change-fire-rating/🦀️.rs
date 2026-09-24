@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeFireRating
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fire rating to {:?}", self.new_fire_rating), &format!("Brandbewertung auf {:?} ändern", self.new_fire_rating))
+        protocol::LocalizedLabel::native(&format!("Change fire rating to {:?}", self.new_fire_rating), &format!("Feuerwiderstandsklasse auf {:?} ändern", self.new_fire_rating))
     }
 }
 //#endregion 🔖️ChangeFireRating

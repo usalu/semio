@@ -1,5 +1,5 @@
 @capability-txt-utf-8-mutate
-@no-oracle-txt-utf-8-line-structure
+@oracle-bstr-txt-utf-8-mutate-reader
 @comparison-exact-bytes-v1
 @mutations-txt-utf-8-any
 Feature: Apply every typed UTF-8 text-line mutation to a real document
@@ -10,38 +10,26 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
   `…conversation.\n\n`, which matters below. Every scenario copies it into the case work
   directory before touching it; the committed file is never written to.
 
-  ⚠️ WHAT THE `oracle` AND `subject` ROWS BELOW ACTUALLY COMPARE, stated plainly. The reference half is
-  `✏️s/🔌️plugins/🗄️stdio/🔮️oracles`'s hand-written `oracle_apply_mutation`/`independent_split`/
-  `independent_render`, which never calls this subset's production `TxtSnapshot`/`TxtMutation` code.
-  That is a genuinely separate implementation — and it is OUR code, in OUR language, in OUR crate, by
-  OUR authors. Under the raised bar it is not a second PRODUCER, and the `txt-utf-8-line-structure`
-  decision now records that as a DEBT rather than as a verdict. A Python reference is writable here
-  from `🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` and the nine literal
-  byte vectors this feature already carries; what blocks it is that the oracle role is already
-  occupied by another owner's module, and that the projection's `schema` member is the Rust constant
-  `STDIO_TXT_DOCUMENT_SCHEMA` whose value no committed document states.
-
-  There is no credible third-party crate that is authoritative over plain-text line structure —
-  line splitting on LF/CRLF, one line-ending style per document and trailing-newline presence are
-  exactly what THIS subset defines, not a fact an external library could confirm or refute. See the
-  recorded no-oracle decision `txt-utf-8-line-structure`: the `csv` crate, already linked for the
-  tabular subsets, genuinely cross-checks line boundaries on single-style, non-blank real content
-  (its record reader silently drops blank lines — a real limitation found and documented in the
-  oracle module's own tests, not hidden), but cannot referee LF vs CRLF vs trailing-newline at all.
-  Confidence instead comes from specification vectors (below), the inverse law as a metamorphic
-  property, and a hand-written reference implementation of the mutation semantics in this subset's
-  own oracle module that never calls this subset's production `TxtSnapshot`/`TxtMutation` code.
+  ⚠️ WHAT THE `oracle` AND `subject` ROWS BELOW ACTUALLY COMPARE, stated plainly. The reference half
+  reads every document with the third-party `bstr` crate (`bstr-txt-utf-8-mutate-reader`):
+  `lines_with_terminator` returns each line together with the terminator it actually carried, so
+  where a line ends, whether it ended in LF or CRLF and whether the last line is terminated at all
+  are bstr's reading, not this repository's. The oracle applies the kind to those lines and writes
+  them back with the subset's documented join; it never calls this subset's production
+  `TxtSnapshot`/`TxtMutation` code. A CRLF document that also carries a bare LF is refused by the
+  reader, since this format reads that LF as line content and bstr as a boundary; the
+  `@id-spec-vector` rows, which pin exactly that format rule, stay on the hand-written re-derivation
+  of the split rule. The `csv` record reader remains a supplement in the oracle module's own tests.
 
   What the subset claims: exactly `Lf`/`CrLf`, one style for the whole document (CrLf iff at least
   one literal `\r\n` occurs anywhere), a trailing terminator tracked as a separate boolean whose
   only legal combinations are the ones the split can return (a terminated document has at least one
   line; an unterminated one's last line is never empty — see the 🔒️ note below), and UTF-8 content
   with NO normalization, NO BOM handling and NO NEL(U+0085)/LS(U+2028)/PS(U+2029) line-breaking — see the `@id-spec-vector` scenarios for exactly what that means byte-for-byte. A
-  second real capture, shared://🔤️.txt (a genuine terminal log, mostly LF with two real
-  embedded CRLF sequences from a subprocess's own convention), is exercised directly in the oracle
-  module's own tests rather than here: it demonstrates the whole-document CrLf detection rule
-  collapsing real mostly-LF content into very few split points, which is why it is not also used as
-  this feature's main exhaustive-mutation fixture.
+  second real capture, shared://🔤️.txt (a genuine terminal log, LF-only as committed: its two
+  captured CRLF sequences were normalized away by git before fixture trees became `-text`), is read
+  in the oracle module's own tests, where bstr and the documented rule must agree on it line for
+  line.
 
 
 
@@ -58,18 +46,11 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
   you cannot insert, remove or replace line 100 of a 170-line real document without actually having
   parsed it into lines.
 
-  ⚠️ TWO things about this case a reader must not take on trust. FIRST: the runner does not execute
-  a `@no-oracle-` case's scenarios in the oracle phase at all — `[test] not-exercised … recorded
-  no-oracle decision txt-utf-8-line-structure`. The SUBJECT phase does run (`bun ./📜️script.ts
-  subject exhaustive --owner 🗄️stdio --case mutate-txt-utf-8` → `executed=24 passed=24`), and it is
-  the only phase that ever will for this case, so it is the only thing standing between these 24
-  scenarios and no evidence at all. That is exactly why every subject handler below asserts its law
-  IN ROLE: until 2026-08-24 the `mutate-<kind>`, `inverse-<kind>` and `identity-round-trip` handlers
-  computed a result and asserted NOTHING about it — 15 of the 24 scenarios were reporting green
-  while proving only that the codec did not panic. That is the correct and permanent reading
-  for this case; it is not a number waiting to improve. The reference module's own `#[cfg(test)]`
-  suite (`cargo test --features oracles --lib`) exercises the observability, inverse and carrier
-  laws against THIS fixture with THESE exact Examples parameters, independently of the subject.
+  ⚠️ Two things about this case a reader must not take on trust. FIRST: both phases run. The oracle
+  phase reads every document through bstr and the subject phase through this subset's own
+  `TxtSnapshot`/`TxtMutation`, and each handler also asserts its law IN ROLE (observability for
+  `mutate-<kind>`, the inverse law, the carrier law), so a green row never means only "did not
+  panic" — until 2026-08-24 fifteen of these scenarios did exactly that.
 
   🔒️ SECOND, and found by asserting the inverse law rather than describing it: `set-trailing-newline`
   did not invert on this document, and the defect was in this subset's own data model. The pair

@@ -25,7 +25,7 @@ impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for EditDesign {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Edit design {}", self.id), &format!("Bemessung {} bearbeiten", self.id))
+        protocol::LocalizedLabel::native(&format!("Edit design {}", self.id), &format!("Entwurf {} bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

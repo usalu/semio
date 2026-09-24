@@ -1,0 +1,35 @@
+[workspace]
+
+[package]
+name = "t12-vector-harness"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "t12-vector-harness"
+path = "main.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-s-artifact-animate-presentation = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust" }
+semio-s-artifact-block-3d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-dag-dag = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust" }
+semio-s-artifact-fem-3d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-forms-forms = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust" }
+semio-s-artifact-gis-gismap = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-imperative-procedure = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust" }
+semio-s-artifact-mathematical-equation = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust" }
+semio-s-artifact-note-note = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust" }
+semio-s-artifact-playbook-playbook = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-generation2d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-procedural-generation3d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-reasoning-wires = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust" }
+semio-s-artifact-shooting-shooting = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-2d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-wfc-3d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-wfc-bitmap = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-writer-writer = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust", features = ["component-app-assembly"] }

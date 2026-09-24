@@ -12,7 +12,7 @@
   "diffParticipation": "apply-only",
   "outcomeClasses": [
     "applied",
-    "error"
+    "rejected"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

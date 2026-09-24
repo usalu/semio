@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for RemoveFr
         agg_inverse(&SemioImageMutation::RemoveFrame(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-frame", "Rahmen entfernen")
+        protocol::LocalizedLabel::native("Remove frame", "Einzelbild entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -32,7 +32,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Delete
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete Shw System {}", self.id.0), &format!("Trinkwarmwassersystem {} löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete Shw System {}", self.id.0), &format!("Trinkwarmwasseranlage {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

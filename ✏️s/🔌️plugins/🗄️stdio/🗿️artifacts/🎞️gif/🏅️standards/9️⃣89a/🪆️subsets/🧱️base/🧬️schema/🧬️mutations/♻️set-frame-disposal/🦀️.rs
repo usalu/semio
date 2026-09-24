@@ -23,7 +23,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDisposal {
         agg_inverse(&GifMutation::SetFrameDisposal(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-frame-disposal", "Rahmenentsorgung setzen")
+        protocol::LocalizedLabel::native("Set frame disposal", "Entsorgungsmethode des Einzelbilds setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

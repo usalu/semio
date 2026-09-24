@@ -109,12 +109,12 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: committed editStepParams JSON is not canonical");
 }
 
-/// 🎯️ An already-identical dictionary is `applied` with a single Warning — `step-1` resolves, so
+/// 🎯️ An already-identical dictionary is `no-op` with a single Warning — `step-1` resolves, so
 /// this is never the Error `mutation.target-missing` branch of the same oracle.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "edit-step-params/warns-that-step-1-already-carries-the-requested-params: a no-op is applied, not rejected");
+    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "edit-step-params/warns-that-step-1-already-carries-the-requested-params: a no-op is its own outcome class, not a rejection");
     let produced = built_outcome();
     assert_eq!(produced.worst_level(), Some(protocol::Severity::Warning), "edit-step-params/warns-that-step-1-already-carries-the-requested-params: an unchanged dictionary is a Warning, never an Error");
     assert_eq!(produced.messages().len(), 1, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: exactly one diagnostic is raised");

@@ -99,11 +99,11 @@ fn committed_json_is_canonical() {
     assert_eq!(original.get("ReorderTiles").and_then(|payload| payload.get("toIndex")).and_then(serde_json::Value::as_u64), Some(0), "the landing slot is addressed by id plus a final-state index");
 }
 
-/// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op`.
+/// 🎯️ The declared outcome holds: `no-op`, with one untargeted Warning `mutation.no-op`.
 #[test]
 fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

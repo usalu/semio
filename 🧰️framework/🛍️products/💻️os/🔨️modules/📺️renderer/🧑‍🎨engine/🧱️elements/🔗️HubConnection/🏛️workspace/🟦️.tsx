@@ -108,6 +108,8 @@ export function HubWorkspace({ port, locale, activeSpaceId, onlineUserIds, onOpe
         onCreate={hub.createDelegation}
         onDownloadCredential={hub.downloadAgentCredential}
         onDismissCredential={hub.dismissAgentCredential}
+        onInstallMcpClient={hub.installAgentMcpClient}
+        onCopyMcpClientConfig={hub.copyAgentMcpClientConfig}
         onRevoke={hub.revokeDelegation}
       />
     </section>

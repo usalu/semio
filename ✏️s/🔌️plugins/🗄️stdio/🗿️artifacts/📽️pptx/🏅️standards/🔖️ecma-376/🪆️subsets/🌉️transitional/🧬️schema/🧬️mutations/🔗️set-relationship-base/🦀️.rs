@@ -21,7 +21,7 @@ impl protocol::MutationKind<PptxSnapshot, PptxTransitionalMutation> for SetRelat
         agg_inverse(&PptxTransitionalMutation::SetRelationshipBase(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-relationship-base", "Beziehungsbasis setzen")
+        protocol::LocalizedLabel::native("Set relationship base", "Beziehungsbasis setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

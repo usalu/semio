@@ -547,11 +547,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -1174,11 +1174,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -1799,11 +1799,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -2424,11 +2424,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -3049,11 +3049,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -4071,7 +4071,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -7404,19 +7404,6 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.md",
-          "standard": "commonmark",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.flow.flow",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
           "artifactKind": "s.stdio.txt",
           "standard": "utf-8",
           "subset": "*"
@@ -7443,11 +7430,6 @@
             "subset": "*"
           },
           {
-            "artifactKind": "s.stdio.md",
-            "standard": "commonmark",
-            "subset": "*"
-          },
-          {
             "artifactKind": "s.stdio.txt",
             "standard": "utf-8",
             "subset": "*"
@@ -7457,8 +7439,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "6a32ea55fddaf19c7083d7efb1e2f99126b41273d35ef542c5cc8b0e6030f607",
-    "coreWasmSha256": "0ff1644f737b65369d51aa8990166a4ff28b66eb3a4cefb376df6db6d47073f3",
-    "descriptorSha256": "1957b0ca6559f997bc9cdc950d368b064b76f0390e184ff6297f52a38dbfebb9"
+    "wasmSha256": "063be9cf3750ee049e9d056185cec4e47637f4cc51fec0b0652129bc5177fbf1",
+    "coreWasmSha256": "5b35bf6bc9c9e2813ba4b8f4f246555806dfbb25ab69fed461106296cbdaaa2f",
+    "descriptorSha256": "cd97ab2dcdd5d789ef7a145129e8fbbf80c5831c683e5ddca267969df94ce332"
   }
 }

@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Se
         agg_inverse(&SemioDocumentMutation::SetParagraphStyle(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-paragraph-style", "Absatzstil setzen")
+        protocol::LocalizedLabel::native("Set paragraph style", "Absatzstil setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

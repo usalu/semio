@@ -96,7 +96,7 @@ def rejected(document, code, path):
 
 
 def no_op():
-    return {"status": "applied", "messages": [{"level": "warn", "code": "mutation.no-op"}]}
+    return {"status": "no-op", "messages": [{"level": "warn", "code": "mutation.no-op"}]}
 
 
 def applied():

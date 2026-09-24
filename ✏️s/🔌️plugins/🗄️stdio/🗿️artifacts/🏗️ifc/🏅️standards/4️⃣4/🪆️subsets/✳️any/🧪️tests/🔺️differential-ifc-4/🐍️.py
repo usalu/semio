@@ -653,10 +653,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
 # region 🔖️Registration
 def adapter() -> Adapter:
     """🧭️ Registration entry point the host calls — by full expanded scenario id, one per row."""
-    built = Adapter("python")
-    for kind in KINDS:
-        built = built.oracle("differential-%s" % kind, mutate).oracle("differential-inverse-%s" % kind, inverse)
-    return built.oracle("differential-identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("differential", mutate).oracle("differential-inverse", inverse).oracle("differential-identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

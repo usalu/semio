@@ -104,11 +104,11 @@ async fn committed_json_is_canonical() {
     assert!(original.get("params").map(serde_json::Value::is_object).unwrap_or(false), "a transparent StepParams encodes as a bare object, never as a wrapper");
 }
 
-/// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op`.
+/// 🎯️ The declared outcome holds: `no-op`, with one untargeted Warning `mutation.no-op`.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "edit-step-params/no-ops-when-the-params-are-already-identical declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "edit-step-params/no-ops-when-the-params-are-already-identical declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <SequenceMutation as protocol::Mutation<SequenceSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

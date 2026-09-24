@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for AddDesign {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add design {}", self.id), &format!("Bemessung {} hinzufügen", self.id))
+        protocol::LocalizedLabel::native(&format!("Add design {}", self.id), &format!("Entwurf {} hinzufügen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

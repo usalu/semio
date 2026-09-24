@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCoolin
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change cooling degree hours to {}", self.new_cooling_delta_t_h), &format!("Kühlungsgradstunden auf {} ändern", self.new_cooling_delta_t_h))
+        protocol::LocalizedLabel::native(&format!("Change cooling degree hours to {}", self.new_cooling_delta_t_h), &format!("Kühlgradstunden auf {} ändern", self.new_cooling_delta_t_h))
     }
 }
 //#endregion 🔖️ChangeCoolingDeltaTH

@@ -1,0 +1,10 @@
+{
+  "entry": "📜️entry.ts",
+  "files": {
+    "📜️entry.ts": "import { readFileSync } from 'node:fs'; export { value } from './📦️dependency.ts';\n",
+    "📦️dependency.ts": "import data from './📇️data.json'; import './📜️entry.ts'; export const value = data.value;\n",
+    "📇️data.json": "{\"value\":42}\n"
+  },
+  "expected": ["📇️data.json", "📜️entry.ts", "📦️dependency.ts"],
+  "rejectedEntries": ["../outside.ts", "/absolute.ts", "📜️missing.ts"]
+}

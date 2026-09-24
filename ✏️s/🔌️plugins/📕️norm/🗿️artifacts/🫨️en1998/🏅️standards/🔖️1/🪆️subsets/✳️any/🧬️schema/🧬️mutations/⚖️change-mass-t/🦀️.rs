@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeMassT {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change seismic mass [t] to {}", self.new_mass_t), &format!("seismische Masse [t] auf {} ändern", self.new_mass_t))
+        protocol::LocalizedLabel::native(&format!("Change seismic mass [t] to {}", self.new_mass_t), &format!("Seismische Masse [t] auf {} ändern", self.new_mass_t))
     }
 }
 //#endregion 🔖️ChangeMassT

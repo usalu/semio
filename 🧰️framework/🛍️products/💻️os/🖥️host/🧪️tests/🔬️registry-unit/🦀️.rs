@@ -43,6 +43,7 @@ mod tests {
                 output_schema: None,
                 capabilities: Vec::new(),
             }),
+            actions: vec![],
             panel_tabs: vec![],
             keybindings: vec![],
             utilities: Vec::new(),

@@ -1,0 +1,15 @@
+[workspace]
+
+[package]
+name = "t12-remodel-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "t12-remodel-probe"
+path = "main.rs"
+
+[dependencies]
+semio-s-artifact-remodel-remodeling = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust" }
+png = "0.17.16"

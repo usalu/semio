@@ -32,3 +32,15 @@ Feature: Every native test host implements the same protocol
     Given the plan's work directory
     When the host inspects it
     Then it lies under the repository test cache and carries the ownership marker
+
+  @id-outline-registration
+  @level-fundamental
+  @mode-differential
+  Scenario Outline: One registration under an outline's base id serves every row <id>
+    Given a Scenario Outline whose rows no adapter names one by one
+    When the host runs its row <id> through the handler registered for the outline
+    Then every implementation projects the same expanded scenario id and row id
+    Examples:
+      | id     |
+      | first  |
+      | second |

@@ -9,18 +9,29 @@
   ],
   "levels": ["off", "error", "warn", "info", "debug"],
   "events": [
+    "server.artifact.creation",
     "server.artifact.maintenance",
+    "server.auth.agent.delegate",
+    "server.auth.agent.list",
+    "server.auth.agent.revoke",
+    "server.auth.agent.session",
     "server.auth.credential.change",
     "server.auth.session.mint",
     "server.auth.session.read",
     "server.auth.session.revoke",
     "server.boot",
     "server.catalog.publication",
+    "server.directory.backend",
     "server.directory.command",
     "server.directory.socket",
+    "server.document.check-in",
     "server.document.socket",
+    "server.presence.expiry",
+    "server.presence.join",
+    "server.presence.leave",
     "server.rate-limit",
     "server.readiness",
-    "server.saga.drain"
+    "server.saga.drain",
+    "server.shutdown"
   ]
 }

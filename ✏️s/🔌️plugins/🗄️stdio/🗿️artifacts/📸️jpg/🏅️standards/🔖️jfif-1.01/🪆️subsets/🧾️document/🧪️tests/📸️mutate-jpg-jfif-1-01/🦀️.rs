@@ -19,15 +19,9 @@ use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::document::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_jpg_mutation};
 use semio_s_plugin_stdio_test_oracle::law;
 
-//#region 🔖️Kinds
-/// 🦠️ Kebab-case spelling of every `JpgMutation` variant, matching the subject's own `KINDS` const
-/// and the catalog's declared `kinds` — the registration bookkeeping loop below iterates this once
-/// for `mutate-<kind>` and once for `inverse-<kind>`.
-const KINDS: &[&str] = &["change-jfif-header", "replace-quant-table", "remove-quant-table", "replace-huffman-table", "remove-huffman-table", "change-restart-interval", "insert-other-segment", "remove-other-segment", "replace-pixels", "change-re-encode-quality"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
+const INPUT: &str = "shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
@@ -140,7 +134,7 @@ mod subject {
     use semio_s_artifact_stdio_jpg::schema::mutations::{apply_jpg_mutation, inverse_jpg_mutation, JpgMutation};
     use semio_s_artifact_stdio_jpg::schema::snapshot::{JfifDensityUnits, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgSegment};
     use semio_s_artifact_stdio_jpg::io::{decode_jpg, encode_jpg};
-    use crate::JpgSnapshot;
+    use semio_s_artifact_stdio_jpg::JpgSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
 
     //#region 🔖️Json
@@ -265,15 +259,11 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-    }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        for kind in KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

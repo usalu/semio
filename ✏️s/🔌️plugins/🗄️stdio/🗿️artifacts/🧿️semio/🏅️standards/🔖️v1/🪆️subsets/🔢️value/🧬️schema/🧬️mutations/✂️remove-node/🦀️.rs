@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for RemoveNo
         agg_inverse(&SemioValueMutation::RemoveNode(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-node", "Knoten entfernen")
+        protocol::LocalizedLabel::native("Remove node", "Knoten entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

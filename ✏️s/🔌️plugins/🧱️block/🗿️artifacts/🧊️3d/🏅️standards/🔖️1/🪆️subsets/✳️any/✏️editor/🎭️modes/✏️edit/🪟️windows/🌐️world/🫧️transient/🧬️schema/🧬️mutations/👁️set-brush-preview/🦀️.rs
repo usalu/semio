@@ -25,7 +25,7 @@ impl protocol::MutationKind<Block3dWorldWindowTransient, Block3dWorldWindowTrans
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set World Window Brush Preview", "Weltfensterpinselvorschau setzen")
+        protocol::LocalizedLabel::native("Set World Window Brush Preview", "Pinselvorschau im Weltfenster setzen")
     }
 
     fn target(&self) -> Vec<String> {

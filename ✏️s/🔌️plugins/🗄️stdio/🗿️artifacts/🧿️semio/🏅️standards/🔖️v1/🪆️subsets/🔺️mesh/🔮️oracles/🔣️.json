@@ -116,7 +116,14 @@
       ],
       "license": "Apache-2.0",
       "testOnly": true,
-      "productionDebt": {"reachableFrom": ["✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json"], "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f", "plan": "`three-mesh-bvh`, the closest-point helper this oracle links for its symmetric Hausdorff bound, is a runtime dependency of the r3f world renderer and the fem package. The judge itself, manifold-3d, stays test-only, and the semio mesh subject links neither. The debt retires when those renderers stop needing a BVH from the three ecosystem. No path may join."},
+      "productionDebt": {
+        "reachableFrom": [
+          "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f",
+        "plan": "`three-mesh-bvh`, the closest-point helper this oracle links for its symmetric Hausdorff bound, is a runtime dependency of the r3f world renderer and the fem package. The judge itself, manifold-3d, stays test-only, and the semio mesh subject links neither. The debt retires when those renderers stop needing a BVH from the three ecosystem. No path may join."
+      },
       "productionReachable": false,
       "networkDuringExecution": false,
       "platforms": [
@@ -167,7 +174,21 @@
       ],
       "license": "Apache-2.0",
       "testOnly": true,
-      "productionDebt": {"reachableFrom": ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🟦️.tsx", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🟦️.tsx", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️.tsx", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx", "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️unified-gumball/🧪️.story.tsx", "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx", "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx"], "owner": "✏️s/🔌️plugins/📐️cad", "plan": "three is already a production-runtime dependency of ✏️s/🔌️plugins/📐️cad, 🧩️puzzle and the os renderer, so this oracle is NOT isolated from production the way manifold-3d is. A bug shared between three's loaders and a production consumer of three would not be caught by this oracle alone. The independence this pilot actually rests on is the measuring half, manifold-3d, which is test-only and a different engine family; three is the parser, manifold is the judge."},
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️unified-gumball/🧪️.story.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx"
+        ],
+        "owner": "✏️s/🔌️plugins/📐️cad",
+        "plan": "three is already a production-runtime dependency of ✏️s/🔌️plugins/📐️cad, 🧩️puzzle and the os renderer, so this oracle is NOT isolated from production the way manifold-3d is. A bug shared between three's loaders and a production consumer of three would not be caught by this oracle alone. The independence this pilot actually rests on is the measuring half, manifold-3d, which is test-only and a different engine family; three is the parser, manifold is the judge."
+      },
       "productionReachable": false,
       "networkDuringExecution": false,
       "platforms": [
@@ -456,8 +477,9 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-material-base-color",
@@ -493,8 +515,9 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-material-metallic",
@@ -530,8 +553,9 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-material-roughness",
@@ -567,8 +591,9 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-texture-mime",
@@ -604,7 +629,8 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-material",
@@ -640,7 +666,8 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-mesh",
@@ -719,7 +746,8 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-texture",
@@ -909,8 +937,9 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-vertex",
@@ -949,8 +978,9 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-primitive-geometry",
@@ -989,8 +1019,9 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-texture-bytes",
@@ -1026,8 +1057,9 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-primitive-material",
@@ -1063,8 +1095,9 @@
           "capability": "semio-v1-mesh-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-primitive-topology",

@@ -14,7 +14,7 @@ async fn codec_round_trip() {
     let snap = crate::schema::snapshot::decode_dwg(&bytes).expect("decode structural drawing");
     let text = store::ArtifactDsl::print_dsl(&snap);
     let parsed = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
-    assert_eq!(parsed.version, "AC1015");
+    assert_eq!(parsed.version, "AC1024");
     let bytes = store::ArtifactPack::encode_pack(&snap);
     let decoded = <DwgSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
@@ -45,7 +45,7 @@ async fn dwg_bit_primitives_round_trip_at_unaligned_offsets() {
     writer.write_bd(3.14159);
     writer.write_ms(70000);
     writer.write_handle(5, 0x1234);
-    writer.write_t("héllo");
+    writer.write_tu("héllo");
     writer.pad_to_byte();
 
     let mut reader = DwgBitReader::new(&writer.bytes);
@@ -64,7 +64,7 @@ async fn dwg_bit_primitives_round_trip_at_unaligned_offsets() {
     assert_eq!(reader.read_bd().unwrap(), 3.14159);
     assert_eq!(reader.read_ms().unwrap(), 70000);
     assert_eq!(reader.read_handle().unwrap(), (5, 0x1234));
-    assert_eq!(reader.read_t().unwrap(), "héllo");
+    assert_eq!(reader.read_tu().unwrap(), "héllo");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -76,10 +76,13 @@ async fn dwg_crc16_matches_seed_on_empty_input() {
 #[semio_framework_async_macros::async_test]
 async fn dwg_writer_produces_a_structurally_valid_container() {
     let bytes = dwg_to_bytes(&DwgDrawing::default()).expect("encode empty drawing");
-    assert_eq!(&bytes[0..6], b"AC1015");
-    let section_count = u32::from_le_bytes(bytes[6..10].try_into().unwrap());
-    assert_eq!(section_count, 3);
-    assert_eq!(&bytes[DWG_FILE_HEADER_LEN - 16..DWG_FILE_HEADER_LEN], &DWG_SENTINEL_FILE_HEADER_END);
+    assert_eq!(&bytes[0..6], b"AC1024");
+    let mut names: Vec<String> = decode_r2004_sections(&bytes).expect("R2004 section directory").into_iter().map(|section| section.name).collect();
+    names.sort();
+    assert_eq!(
+        names,
+        ["AcDb:AcDbObjects", "AcDb:AppInfo", "AcDb:AppInfoHistory", "AcDb:AuxHeader", "AcDb:Classes", "AcDb:FileDepList", "AcDb:Handles", "AcDb:Header", "AcDb:ObjFreeSpace", "AcDb:Preview", "AcDb:RevHistory", "AcDb:SummaryInfo", "AcDb:Template"]
+    );
 }
 
 #[semio_framework_async_macros::async_test]
@@ -107,7 +110,7 @@ async fn dwg_full_entity_set_round_trips() {
     let decoded = dwg_from_bytes(&bytes).expect("decode");
 
     assert_eq!(decoded.entities.len(), drawing.entities.len());
-    assert_eq!(decoded.layers.len(), drawing.layers.len());
+    assert_eq!(decoded.layers.iter().map(|layer| layer.name.as_str()).collect::<Vec<_>>(), ["outline", "solids", "0"], "layer 0 is mandatory in every DWG and joins the drawing's own layers");
     for (original, round_tripped) in drawing.entities.iter().zip(decoded.entities.iter()) {
         assert_eq!(original.geometry, round_tripped.geometry);
         assert_eq!(original.color, round_tripped.color);
@@ -147,41 +150,20 @@ async fn dwg_path_bridge_round_trips_cubic_control_points_exactly() {
 #[semio_framework_async_macros::async_test]
 async fn dwg_rejects_unsupported_version() {
     let mut bytes = dwg_to_bytes(&DwgDrawing::default()).expect("encode");
-    bytes[0..6].copy_from_slice(b"AC1018");
-    let err = dwg_from_bytes(&bytes).expect_err("should reject non-R2000 version");
-    assert!(err.contains("AC1018"));
+    bytes[0..6].copy_from_slice(b"AC1015");
+    let err = dwg_from_bytes(&bytes).expect_err("should reject a version this codec does not read");
+    assert!(err.contains("AC1015"));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn dwg_reader_skips_unknown_object_types_without_failing() {
-    let mut drawing = DwgDrawing::default();
-    let layer = drawing.ensure_layer("0");
-    drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Point { at: [1.0, 1.0, 1.0] } });
-    let mut bytes = dwg_to_bytes(&drawing).expect("encode");
-
-    let mut bogus_body = DwgBitWriter::new();
-    bogus_body.write_rc(0xFF);
-    let mut bogus_handles = DwgBitWriter::new();
-    let bogus_offset = bytes.len();
-    dwg_write_object(&mut bytes, 900, 0x9999, &mut bogus_body, &mut bogus_handles);
-
-    let map_locator_pos = 10 + 2 * 9;
-    let map_offset = u32::from_le_bytes(bytes[map_locator_pos + 1..map_locator_pos + 5].try_into().unwrap());
-    let map_size = u32::from_le_bytes(bytes[map_locator_pos + 5..map_locator_pos + 9].try_into().unwrap());
-    let mut new_entry = Vec::new();
-    new_entry.extend_from_slice(&0x9999u64.to_le_bytes());
-    new_entry.extend_from_slice(&((bogus_offset + 16) as u64).to_le_bytes());
-    let insert_at = map_offset as usize + 4;
-    for (i, b) in new_entry.iter().enumerate() {
-        bytes.insert(insert_at + i, *b);
-    }
-    let new_count = u32::from_le_bytes(bytes[map_offset as usize..map_offset as usize + 4].try_into().unwrap()) + 1;
-    bytes[map_offset as usize..map_offset as usize + 4].copy_from_slice(&new_count.to_le_bytes());
-    let new_size = map_size + new_entry.len() as u32;
-    bytes[map_locator_pos + 5..map_locator_pos + 9].copy_from_slice(&new_size.to_le_bytes());
-
-    let decoded = dwg_from_bytes(&bytes).expect("reader should tolerate the unknown object type");
-    assert_eq!(decoded.entities.len(), 1);
+async fn dwg_reader_skips_unmodelled_object_types_without_failing() {
+    let bytes = include_bytes!("../../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
+    let sections = decode_r2004_sections(bytes).expect("sections");
+    let handles = sections.iter().find(|section| section.name == "AcDb:Handles").expect("handles");
+    let objects = decode_r2004_handle_map(&r2004_section_data(handles).expect("handle data")).expect("handle map").len();
+    let decoded = dwg_from_bytes(bytes).expect("the reader steps over INSERT, DIMENSION, XRECORD, … records");
+    assert_eq!(decoded.entities.len(), 68);
+    assert!(objects > 600, "{objects} objects in the committed drawing");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -244,7 +226,7 @@ async fn lz_rejects_out_of_bounds_backref() {
 //#endregion 🔖️Lz77VariantUnit
 
 //#region 🔖️RealFixture
-const ARCHITECTURAL_FIXTURE: &[u8] = include_bytes!("../../../../../../../../../../../../temp/architectural_example.dwg");
+const ARCHITECTURAL_FIXTURE: &[u8] = include_bytes!("../../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
 
 /// 🧪️ D1: file header decrypts cleanly and every section+page is located by name, on the
 /// real ~145KB AC1024 fixture -- the actual regression test for "sentinel + passthrough"

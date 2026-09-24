@@ -99,13 +99,13 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "add-step/no-ops-on-a-duplicate-step-id: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared outcome holds: an `applied` status carrying one Warning `mutation.no-op`. The
+/// 🎯️ The declared outcome holds: a `no-op` status carrying one Warning `mutation.no-op`. The
 /// warning is deliberately untargeted — `MutationOutcome::warn` takes no address, unlike the
 /// Error-level rejections the rest of this vocabulary raises.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "add-step/no-ops-on-a-duplicate-step-id declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "add-step/no-ops-on-a-duplicate-step-id declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <PlaybookMutation as protocol::Mutation<PlaybookSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

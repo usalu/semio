@@ -1,0 +1,6 @@
+{
+  "zoneTimestepMinutes": 60,
+  "systemTimestepMinutes": 60,
+  "warmupDays": 7,
+  "resultField": "conductionLoss"
+}

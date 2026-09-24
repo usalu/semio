@@ -26,7 +26,7 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UnbindParame
             .unwrap_or_default()
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Unbind workflow parameter field {}", self.field_path), &format!("Arbeitsablaufparameterfeld {} lösen", self.field_path))
+        protocol::LocalizedLabel::native(&format!("Unbind workflow parameter field {}", self.field_path), &format!("Bindung des Arbeitsablaufparameterfelds {} aufheben", self.field_path))
     }
     fn target(&self) -> Vec<String> {
         vec!["parameter-bindings".into(), self.node_id.clone(), self.field_path.clone()]

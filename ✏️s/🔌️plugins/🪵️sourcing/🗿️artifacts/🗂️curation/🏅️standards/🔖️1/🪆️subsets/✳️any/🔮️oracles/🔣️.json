@@ -113,6 +113,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {

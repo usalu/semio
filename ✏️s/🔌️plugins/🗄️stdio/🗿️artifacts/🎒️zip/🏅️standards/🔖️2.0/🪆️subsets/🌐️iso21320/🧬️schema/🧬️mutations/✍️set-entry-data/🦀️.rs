@@ -23,7 +23,7 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for SetEntryData {
         agg_inverse(&ZipIso21320Mutation::SetEntryData(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-entry-data", "Eintragdaten setzen")
+        protocol::LocalizedLabel::native("Set entry data", "Daten des Eintrags setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

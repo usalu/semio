@@ -649,8 +649,7 @@ pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>,
 /// definition a second time — the single largest avoidable cost of the guest's `describe()`.
 #[cfg(feature = "full-artifact-catalog")]
 fn native_codec_factory_receipts_for(assemblies: &[ArtifactAssembly]) -> Result<Vec<NativeCodecFactoryReceipt>, PluginAssemblyError> {
-    let contributions = selected_contributions();
-    validate_catalog(&contributions)?;
+    let receipts = live_native_codec_factory_receipts()?;
     let runtime_artifacts = assemblies
         .iter()
         .filter_map(|assembly| match assembly {
@@ -658,10 +657,6 @@ fn native_codec_factory_receipts_for(assemblies: &[ArtifactAssembly]) -> Result<
             ArtifactAssembly::Definition(_) => None,
         })
         .collect::<BTreeSet<_>>();
-    let mut receipts = Vec::new();
-    for contribution in &contributions {
-        receipts.extend(artifact_native_codec_factory_receipts(contribution, "stdio", component_package_id()?, env!("CARGO_PKG_VERSION"))?);
-    }
     let factories = native_codec_factories();
     let mut factory_ids = BTreeSet::new();
     let mut descriptor_ids = BTreeSet::new();
@@ -680,6 +675,20 @@ fn native_codec_factory_receipts_for(assemblies: &[ArtifactAssembly]) -> Result<
         return Err(failure("native codec receipts and selected artifact factories are not a complete bijection"));
     }
     validate_native_openable_projection(&receipts, &factories)?;
+    Ok(receipts)
+}
+
+/// 🧬️ The live receipts the committed `📜️native-codec-factories.json` projection is GENERATED from — the same
+/// bijection as [`native_codec_factory_receipts`], but before that projection is compared against them, so the
+/// `native-codec-projection` verb can regenerate a projection a schema-hash change made stale.
+#[cfg(feature = "full-artifact-catalog")]
+pub fn live_native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>, PluginAssemblyError> {
+    let contributions = selected_contributions();
+    validate_catalog(&contributions)?;
+    let mut receipts = Vec::new();
+    for contribution in &contributions {
+        receipts.extend(artifact_native_codec_factory_receipts(contribution, "stdio", component_package_id()?, env!("CARGO_PKG_VERSION"))?);
+    }
     Ok(receipts)
 }
 //#endregion NativeCodecFactoryReceipts

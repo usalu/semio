@@ -24,15 +24,6 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
-//#region 🔖️Kinds
-/// 🏷️ The four kinds of this subset's `Ifc2x3Mutation::KINDS` that both implementations can produce.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "upsert-instance", "set-header"];
-/// ↩️ The kinds whose INVERSE both implementations can also produce. `set-snapshot` is absent
-/// because IfcOpenShell cannot read back its own two-identifier `FILE_SCHEMA` output — the defect
-/// `🐍️component.py`'s `open_model` guard names — so there is no second producer for the second half
-/// of that chain. `inverse-set-snapshot` keeps its ruststep-backed scenario in `../🧱️mutate-ifc-2x3`.
-const INVERSE_KINDS: &[&str] = &["no-mutation", "upsert-instance", "set-header"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc";
@@ -301,15 +292,10 @@ pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        for kind in KINDS {
-            built = built.subject(&format!("differential-{kind}"), subject::mutate);
-        }
-        for kind in INVERSE_KINDS {
-            built = built.subject(&format!("differential-inverse-{kind}"), subject::inverse);
-        }
+        built = built.subject("differential", subject::mutate);
+        built = built.subject("differential-inverse", subject::inverse);
         built = built.subject("differential-identity-round-trip", subject::round_trip);
     }
-    let _ = (KINDS, INVERSE_KINDS);
     built
 }
 //#endregion 🔖️Registration

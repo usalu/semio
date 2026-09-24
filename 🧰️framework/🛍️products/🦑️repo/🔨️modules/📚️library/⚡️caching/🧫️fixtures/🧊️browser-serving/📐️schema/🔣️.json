@@ -42,8 +42,7 @@
               "worker",
               "compiler",
               "modules",
-              "extensions",
-              "fonts"
+              "extensions"
             ]
           },
           "file": {

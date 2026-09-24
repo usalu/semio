@@ -14,7 +14,7 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetR
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "run_output_json", kind: "set-run-output", record: "SetRunOutput" };
     fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfig> {
         if base.run_output_json == self.json {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "The requested configuration value is already current.");
+            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "The requested configuration value is already current.");
         }
         let mut next = base.clone();
         next.run_output_json = self.json.clone();

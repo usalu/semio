@@ -28,7 +28,7 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for InsertJavascriptAction {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert JavaScript action", "JavaScriptaktion einfügen")
+        protocol::LocalizedLabel::native("Insert JavaScript action", "JavaScript-Aktion einfügen")
     }
 
     fn target(&self) -> Vec<String> {

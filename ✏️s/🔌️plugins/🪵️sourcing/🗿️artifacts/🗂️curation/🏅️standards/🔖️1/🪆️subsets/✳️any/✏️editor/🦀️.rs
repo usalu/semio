@@ -1305,8 +1305,8 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                 "curationSetCount",
                 vec![
                     ActionArgDef::text("objectId", LocalizedLabel::native("Object", "Objekt")).required(),
-                    ActionArgDef::text("delta", LocalizedLabel::native("Delta", "Delta")),
-                    ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
+                    ActionArgDef::number("delta", LocalizedLabel::native("Delta", "Delta")),
+                    ActionArgDef::number("value", LocalizedLabel::native("Value", "Wert")),
                 ],
             )
             // 🎯️ Typed channel surface — this app's typed commands are dispatched via

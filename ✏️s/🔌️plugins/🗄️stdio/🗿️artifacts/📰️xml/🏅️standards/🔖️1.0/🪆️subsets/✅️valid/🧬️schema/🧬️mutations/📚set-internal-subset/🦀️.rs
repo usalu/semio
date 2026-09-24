@@ -21,7 +21,7 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetInternalSubset
         agg_inverse(&XmlValidMutation::SetInternalSubset(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-internal-subset", "Innenteilmenge setzen")
+        protocol::LocalizedLabel::native("Set internal subset", "Interne Teilmenge setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

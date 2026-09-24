@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateRegulatoryRequirem
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create regulatory requirement \"{}\"", self.regulatory_requirement.header.name), &format!("Regulierungsanforderung \"{}\" erstellen", self.regulatory_requirement.header.name))
+        protocol::LocalizedLabel::native(&format!("Create regulatory requirement \"{}\"", self.regulatory_requirement.header.name), &format!("Regulatorische Anforderung \"{}\" erstellen", self.regulatory_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.regulatory_requirement.header.id.0.clone()]

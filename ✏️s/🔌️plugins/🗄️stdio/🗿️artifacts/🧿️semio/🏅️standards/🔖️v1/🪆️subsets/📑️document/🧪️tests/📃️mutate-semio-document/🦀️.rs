@@ -30,34 +30,6 @@
 
 use semio_repo_test_host::Adapter;
 
-//#region 🔖️Kinds
-/// 🏷️ Mirrors `SemioDocumentMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/
-/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the oracle-only build must not
-/// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
-/// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
-/// the enum.
-#[cfg_attr(not(feature = "sut"), allow(dead_code))]
-const KINDS: &[&str] = &[
-    "no-mutation",
-    "set-snapshot",
-    "insert-block",
-    "remove-block",
-    "set-block-content",
-    "set-paragraph-style",
-    "set-heading-level",
-    "set-list-ordered",
-    "set-run-text",
-    "set-run-style",
-    "set-image-block",
-    "insert-style",
-    "remove-style",
-    "set-style-name",
-    "set-style-based-on",
-    "insert-image",
-    "remove-image",
-    "set-image-bytes",
-];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
@@ -113,7 +85,7 @@ mod subject {
     /// `SetSnapshot(base.clone())` instead of failing, keeping the "nothing changes" law alive
     /// rather than deleting the scenario.
     fn declared_for(ctx: &Context, base: &SemioDocumentSnapshot) -> Result<SemioDocumentMutation, String> {
-        if ctx.scenario.id.ends_with("no-mutation") {
+        if ctx.scenario.id.starts_with("no-mutation-baseline-") {
             return Ok(SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }));
         }
         declared(ctx)
@@ -166,19 +138,18 @@ mod subject {
     /// 🧫️ The same verb on its committed `(before, mutation, after)` vector — a THIRD statement of
     /// what the verb means, independent of both implementations, kept from before this oracle
     /// existed rather than replaced by it.
-    pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| {
-            let vector = vector(ctx, kind)?;
-            let mut current = snapshot_of(&vector, "before")?;
-            let expected = snapshot_of(&vector, "after")?;
-            let mutation = if kind == "no-mutation" { SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: current.clone() }) } else { decode_semio_document_mutation_json(&member_text(&vector, "mutation")?)? };
-            run(&mut current, &mutation, ctx.scenario.id.as_str())?;
-            if current != expected {
-                return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
-            }
-            let projection = projection(&current)?;
-            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+    pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
+        let kind = ctx.row()?;
+        let vector = vector(ctx, kind)?;
+        let mut current = snapshot_of(&vector, "before")?;
+        let expected = snapshot_of(&vector, "after")?;
+        let mutation = if kind == "no-mutation" { SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: current.clone() }) } else { decode_semio_document_mutation_json(&member_text(&vector, "mutation")?)? };
+        run(&mut current, &mutation, ctx.scenario.id.as_str())?;
+        if current != expected {
+            return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
         }
+        let projection = projection(&current)?;
+        Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
     }
 
     /// 🔁️ The real memo through both of its committed encodings.
@@ -228,21 +199,21 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
-/// id, so the loop mirrors the feature's `Examples` tables exactly. Subject only — the oracle role
-/// belongs to `🐍️component.py`.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids. Subject
+/// only — the oracle role belongs to `🐍️component.py`.
 pub fn adapter() -> Adapter {
     #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        for kind in KINDS {
-            built = built
-                .subject(&format!("mutate-{kind}"), subject::mutate)
-                .subject(&format!("inverse-{kind}"), subject::inverse)
-                .subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
-        }
-        built = built.subject("identity-round-trip", subject::identity_round_trip);
+        built = built
+            .subject("mutate", subject::mutate)
+            .subject("no-mutation-baseline-mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
+            .subject("no-mutation-baseline-inverse", subject::inverse)
+            .subject("spec-vector", subject::spec_vector)
+            .subject("identity-round-trip", subject::identity_round_trip);
     }
     built
 }

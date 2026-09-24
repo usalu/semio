@@ -21,7 +21,7 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertSheet {
         agg_inverse(&XlsxMutation::InsertSheet(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-sheet", "Blatt einfügen")
+        protocol::LocalizedLabel::native("Insert sheet", "Arbeitsblatt einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -96,7 +96,8 @@
           "capability": "docx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-alternate-content",
@@ -116,7 +117,8 @@
           "capability": "docx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-vml-part",
@@ -136,7 +138,8 @@
           "capability": "docx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-alternate-content",
@@ -156,7 +159,8 @@
           "capability": "docx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-conformance-attribute",
@@ -176,7 +180,8 @@
           "capability": "docx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-vml-part",

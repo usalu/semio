@@ -183,21 +183,30 @@ class CheckUiPrimitivesScript extends BundleScript {
  * `useLabel` overloads (non-optional for known keys) and the `UiLabel` branded prop types are the
  * primary guarantee; this lint is the line-based backstop for the fallback-literal/bare-JSX-text
  * positions the type system can't see through (e.g. `foo ?? "Clear"` or bare JSX text compiles fine —
- * only this scan catches it). A listed file with zero hits is a stale entry (fails). */
-export const CHROME_I18N_ALLOWLIST: readonly string[] = [];
+ * only this scan catches it). A listed file with zero hits is a stale entry (fails).
+ *
+ * The three entries are not chrome: the scoped-presence browser HARNESS page a Playwright law mounts, the retained
+ * UI intake's internal diagnostic failure strings, and the plugin runtime's `"Interactive"` turn-lane default. */
+export const CHROME_I18N_ALLOWLIST: readonly string[] = [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/👥️presence-scope/🌐️browser/🟦️.tsx",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx",
+];
 
-/** 🌳️ Every chrome-bearing surface: this bundle itself, the OS renderer engine, the demonstrator brand
- * shell, the play grid — walked recursively (mirrors {@link collectUiPrimitivesHits}'s
+/** 🌳️ Every chrome-bearing surface: this bundle itself, the OS renderer engine (its React target AND its shell
+ * elements — `ShellHost`, `ChromePanels`, … — which the scan missed until ticket 26/09/23 S15 found the whole
+ * Marketplace and plugin-recovery chrome hard-coded in English), the demonstrator brand shell, the play grid — walked recursively (mirrors {@link collectUiPrimitivesHits}'s
  * walker) rather than a fixed file list, so a file rename or new chrome file can't silently drop out of
  * the scan the way the old hardcoded two-file list did. */
 const CHROME_I18N_SCANNED_ROOTS = [
   "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react",
   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements",
   "♻️mit-bestand/🧺️demonstrator",
   "🏢️semio-tech/🎡️play",
 ] as const;
 
-const CHROME_I18N_SKIP_DIRS = new Set(["node_modules", "dist", "dist-staging", "target", ".🧬semio", ".🧬semio", "storybook-static", ".claude", ".git"]);
+const CHROME_I18N_SKIP_DIRS = new Set(["node_modules", "dist", "dist-staging", "target", ".🧬semio", ".🧬semio", "storybook-static", ".claude", ".git", "🧪️tests", "📖️stories"]);
 
 const CHROME_I18N_FALLBACK_RE = /(\?\?|\|\|)\s*"[A-Z][^"]*"/;
 const CHROME_I18N_JSX_TEXT_RE = />[A-Z][a-zA-Z]+(?: [a-zA-Z…]+)*<\//;

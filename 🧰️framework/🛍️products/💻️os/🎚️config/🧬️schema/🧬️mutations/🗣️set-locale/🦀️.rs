@@ -12,3 +12,13 @@ pub fn set_locale(locale: Option<UiLocale>) -> UiPreferencesConfigMutation {
     UiPreferencesConfigMutation::SetLocale(SetLocale { locale })
 }
 optional_setting_impl!(SetLocale, SetLocale, locale, "set-locale", "locale", "locale", "locale");
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/✏️sets-locale/🦀️.rs"]
+mod tests_sets_locale;
+
+#[cfg(test)]
+#[path = "🧪️tests/🟰️keeps-locale/🦀️.rs"]
+mod tests_keeps_locale;
+//#endregion 🧪️Tests

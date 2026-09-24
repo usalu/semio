@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeEerAct
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change actual EER to {}", self.new_eer_actual), &format!("tatsächliche EER auf {} ändern", self.new_eer_actual))
+        protocol::LocalizedLabel::native(&format!("Change actual EER to {}", self.new_eer_actual), &format!("Tatsächliche Leistungszahl EER auf {} ändern", self.new_eer_actual))
     }
 }
 //#endregion 🔖️ChangeEerActual

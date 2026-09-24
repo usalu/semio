@@ -24,7 +24,7 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for InsertTinyElement 
         agg_inverse(&SvgTinyMutation::InsertTinyElement(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-tiny-element", "winzige Element einfügen")
+        protocol::LocalizedLabel::native("Insert tiny element", "Tiny-Element einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

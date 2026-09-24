@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceScheduleRequireme
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace schedule requirement \"{}\"", self.schedule_requirement.header.name), &format!("Zeitplananforderung \"{}\" ersetzen", self.schedule_requirement.header.name))
+        protocol::LocalizedLabel::native(&format!("Replace schedule requirement \"{}\"", self.schedule_requirement.header.name), &format!("Terminanforderung \"{}\" ersetzen", self.schedule_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.schedule_requirement.header.id.0.clone()]

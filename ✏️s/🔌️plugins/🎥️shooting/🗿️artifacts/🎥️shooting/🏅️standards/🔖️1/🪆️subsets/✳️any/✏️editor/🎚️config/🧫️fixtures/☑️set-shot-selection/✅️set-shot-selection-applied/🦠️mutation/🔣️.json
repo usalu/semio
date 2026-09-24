@@ -1,0 +1,8 @@
+{
+  "SetShotSelection": {
+    "shotIds": [
+      "shot-a",
+      "shot-b"
+    ]
+  }
+}

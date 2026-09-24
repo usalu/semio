@@ -35,11 +35,7 @@ pub mod truncate_at;
 #[mutations(snapshot = BinarySnapshot, diff = BinaryDiff, schema = "BinaryMutation")]
 pub enum BinaryMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
-    /// ✂️ Replaces `[offset, offset+remove_len)` with `insert`. The variant is named for its
-    /// approved verb (`replace`) because `#[derive(dsl::Mutations)]` asserts the leaf descriptor's
-    /// `semanticKind` equals `to_kebab(VariantIdent)` and rejects a single-word kind; the wire tag
-    /// stays `splice`, which is what the catalog, the feature file and the committed fixtures speak.
-    #[value(rename = "splice")]
+    /// ✂️ Replaces `[offset, offset+remove_len)` with `insert`.
     ReplaceByteRange(replace_byte_range::ReplaceByteRange),
     /// ➕️ Appends `data` at the end of the buffer.
     AppendBytes(append_bytes::AppendBytes),
@@ -53,7 +49,7 @@ pub enum BinaryMutation {
 /// the `binary-raw-any` mutation catalog (`../../🔣️oracle.json`) declares and the
 /// exhaustive mutate/inverse test case measures itself against. `kinds_cover_every_variant` below
 /// is what keeps this list honest against the enum it names, since the framework never parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "splice", "append-bytes", "truncate-at"];
+pub const KINDS: &[&str] = &["set-snapshot", "replace-byte-range", "append-bytes", "truncate-at"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Apply

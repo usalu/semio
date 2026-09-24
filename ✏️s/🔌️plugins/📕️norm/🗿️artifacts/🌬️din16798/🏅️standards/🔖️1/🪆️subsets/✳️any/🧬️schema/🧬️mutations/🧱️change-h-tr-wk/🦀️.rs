@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHTrWK 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change transmission heat transfer coefficient to {}", self.new_h_tr_w_k), &format!("Übertragungswärmenübertragungskoeffizient auf {} ändern", self.new_h_tr_w_k))
+        protocol::LocalizedLabel::native(&format!("Change transmission heat transfer coefficient to {}", self.new_h_tr_w_k), &format!("Transmissionswärmetransferkoeffizienten auf {} ändern", self.new_h_tr_w_k))
     }
 }
 //#endregion 🔖️ChangeHTrWK

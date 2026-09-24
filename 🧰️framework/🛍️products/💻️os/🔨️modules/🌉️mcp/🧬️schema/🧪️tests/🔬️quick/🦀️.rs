@@ -171,11 +171,11 @@ fn os_mirror_of_the_hub_approval_request_is_structurally_identical() {
     let hub: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/💡️inference/🧬️schema/🔣️.json")).expect("hub module schema parses");
     let authority = hub["$defs"].get("InferenceApprovalRequestV1").expect("hub publishes InferenceApprovalRequestV1");
     let authority = inline_local_refs(authority, &hub);
-    let mirror = gis_map_inference_approval_request_schema();
+    let mirror = hub_inference_approval_request_schema();
     for key in ["type", "additionalProperties", "required", "properties"] {
         assert_eq!(&mirror[key], &authority[key], "the os.mcp approval mirror drifted from hub on `{key}`");
     }
-    let approval = crate::inference::GisMapInferenceApprovalRequestV1::new("00112233445566778899aabbccddeeff", &"ab".repeat(32));
+    let approval = crate::inference::HubInferenceApprovalRequestV1::new("00112233445566778899aabbccddeeff", &"ab".repeat(32));
     let owned = compile_validator(&mirror).expect("the mirror compiles");
     validate(&owned, &serde_json::to_value(&approval).expect("approval serializes")).expect("the Rust type's own encoding satisfies hub's contract");
 }

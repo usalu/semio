@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteDeliveryConstraint
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete delivery constraint \"{}\"", self.id.0), &format!("Lieferungsrandbedingung \"{}\" löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete delivery constraint \"{}\"", self.id.0), &format!("Lieferrandbedingung \"{}\" löschen", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

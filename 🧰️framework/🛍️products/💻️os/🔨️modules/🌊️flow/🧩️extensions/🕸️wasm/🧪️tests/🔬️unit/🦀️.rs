@@ -55,6 +55,8 @@ fn evaluate_round_trips_dictionary() {
     let out_json = evaluate_json(&reg, "test.echo", &crate::os_pack::json::to_json_string(&input));
     let out: Dictionary = crate::os_pack::json::from_json_str(&out_json).unwrap();
     assert_eq!(out.get("x").and_then(|v| v.as_dictionary()), Some(&input));
+    neural_engine::ColdRetire::retire_cold(out);
+    neural_engine::ColdRetire::retire_cold(input);
 }
 
 // #region 🔁️ExtensionInvocationWire

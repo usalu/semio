@@ -39,7 +39,7 @@ impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for RemoveDataPr
             EntityRef::Node(id) => ("Knoten", id),
             EntityRef::Edge(id) => ("Kante", id),
         };
-        format!("{kind} \"{id}\" Eigenschaft \"{}\" entfernen", self.key)
+        format!("Eigenschaft von {kind} \"{id}\": \"{}\" entfernen", self.key)
         })
     }
     fn target(&self) -> Vec<String> {

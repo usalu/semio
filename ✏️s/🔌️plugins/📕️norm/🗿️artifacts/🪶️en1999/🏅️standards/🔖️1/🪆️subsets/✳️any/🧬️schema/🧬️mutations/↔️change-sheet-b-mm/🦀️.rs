@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeSheetBMm {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change sheet width b [mm] to {}", self.new_sheet_b_mm), &format!("Blattbreitenb [mm] auf {} ändern", self.new_sheet_b_mm))
+        protocol::LocalizedLabel::native(&format!("Change sheet width b [mm] to {}", self.new_sheet_b_mm), &format!("Blechbreite b [mm] auf {} ändern", self.new_sheet_b_mm))
     }
 }
 //#endregion 🔖️ChangeSheetBMm

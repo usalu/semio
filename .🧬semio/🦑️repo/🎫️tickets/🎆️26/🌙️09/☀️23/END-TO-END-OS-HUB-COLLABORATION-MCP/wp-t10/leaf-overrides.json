@@ -1,0 +1,141 @@
+{
+ "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🌗️set-appearance": {
+  "classes": [
+   "applied",
+   "no-op"
+  ],
+  "why": "optional_setting_impl!: equal value returns the unchanged record with mutation.no-op"
+ },
+ "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📐️set-layout": {
+  "classes": [
+   "applied",
+   "no-op"
+  ],
+  "why": "optional_setting_impl!"
+ },
+ "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📖️set-terminology": {
+  "classes": [
+   "applied",
+   "no-op"
+  ],
+  "why": "optional_setting_impl!"
+ },
+ "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🕹️set-driver": {
+  "classes": [
+   "applied",
+   "no-op"
+  ],
+  "why": "optional_setting_impl!"
+ },
+ "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🖼️set-theme": {
+  "classes": [
+   "applied",
+   "no-op"
+  ],
+  "why": "optional_setting_impl!"
+ },
+ "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗣️set-locale": {
+  "classes": [
+   "applied",
+   "no-op"
+  ],
+  "why": "optional_setting_impl!"
+ },
+ "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/⌨️set-keybinding-override": {
+  "classes": [
+   "applied",
+   "no-op"
+  ],
+  "why": "keyed_setting_impl!: equal keyed value returns the unchanged record with mutation.no-op"
+ },
+ "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️set-custom-theme": {
+  "classes": [
+   "applied",
+   "no-op"
+  ],
+  "why": "keyed_setting_impl!"
+ },
+ "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚗️set-custom-driver": {
+  "classes": [
+   "applied",
+   "no-op"
+  ],
+  "why": "keyed_setting_impl!"
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️set-version-info": {
+  "classes": [
+   "applied"
+  ],
+  "why": "no Rust in the ac1018 leaf; dispatched by the shared DwgMutation SetVersionInfo arm, read from the ac1024 leaf's agg_diff arm"
+ },
+ "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor": {
+  "classes": [
+   "applied"
+  ],
+  "why": "descriptor-only test fixture for the causal envelope; CausalAddOp always adds"
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧬️mutations/➖remove-member": {
+  "classes": [
+   "applied",
+   "rejected"
+  ],
+  "why": "i-json profile: lower() refuses (fatal) or delegates to the base JsonMutation diff of the same kind"
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧬️mutations/📤remove-array-element": {
+  "classes": [
+   "applied",
+   "rejected"
+  ],
+  "why": "i-json profile: lower() refuses (fatal) or delegates to the base JsonMutation diff of the same kind"
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧬️mutations/📥insert-array-element": {
+  "classes": [
+   "applied",
+   "rejected"
+  ],
+  "why": "i-json profile: lower() refuses (fatal) or delegates to the base JsonMutation diff of the same kind"
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧬️mutations/➕upsert-member": {
+  "classes": [
+   "applied",
+   "no-op",
+   "rejected"
+  ],
+  "why": "i-json profile: lower() refuses (fatal) or lowers to the base set-member diff"
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧬️mutations/🌳set-top-level": {
+  "classes": [
+   "applied",
+   "rejected"
+  ],
+  "why": "i-json profile: lower() refuses (fatal) or lowers to the base set-scalar diff"
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧬️mutations/🏷️rename-member": {
+  "classes": [
+   "applied",
+   "rejected"
+  ],
+  "why": "i-json profile: lower() refuses (fatal) or lowers to the base set-scalar diff"
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧬️mutations/📸️set-snapshot": {
+  "classes": [
+   "applied",
+   "rejected"
+  ],
+  "why": "i-json profile: lower() refuses (fatal) or lowers to the base set-scalar diff"
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧬️mutations/🔢set-safe-number": {
+  "classes": [
+   "applied",
+   "rejected"
+  ],
+  "why": "i-json profile: lower() refuses (fatal) or lowers to the base set-scalar diff"
+ },
+ "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧬️mutations/🔤set-string": {
+  "classes": [
+   "applied",
+   "rejected"
+  ],
+  "why": "i-json profile: lower() refuses (fatal) or lowers to the base set-scalar diff"
+ }
+}

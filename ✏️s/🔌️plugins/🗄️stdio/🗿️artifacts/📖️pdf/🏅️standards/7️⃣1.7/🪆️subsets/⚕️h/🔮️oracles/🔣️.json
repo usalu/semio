@@ -108,7 +108,8 @@
           "capability": "pdf-1-7-h-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "embed-font-file",
@@ -168,7 +169,8 @@
           "capability": "pdf-1-7-h-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-signature-field",
@@ -188,7 +190,8 @@
           "capability": "pdf-1-7-h-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-font-file",
@@ -208,7 +211,8 @@
           "capability": "pdf-1-7-h-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-javascript-action",
@@ -228,7 +232,8 @@
           "capability": "pdf-1-7-h-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-launch-action",
@@ -248,7 +253,8 @@
           "capability": "pdf-1-7-h-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-signature-field",

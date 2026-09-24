@@ -32,7 +32,7 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLayerStrokeSc
         vec![Self { layer_id: self.layer_id.clone(), value: base.layer_stroke_scale.get(&self.layer_id).copied() }.into()]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set layer stroke scale {}", self.layer_id), &format!("Ebenenstrichmaßstab {} setzen", self.layer_id))
+        protocol::LocalizedLabel::native(&format!("Set layer stroke scale {}", self.layer_id), &format!("Linienstärkenmaßstab der Ebene {} setzen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["layerStrokeScale".into(), self.layer_id.clone()]

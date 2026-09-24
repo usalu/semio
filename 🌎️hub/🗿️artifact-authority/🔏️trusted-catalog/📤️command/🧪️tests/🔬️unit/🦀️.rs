@@ -4,8 +4,9 @@ use super::*;
 fn trusted_publication_transport_matches_neutral_arguments_and_input_bounds() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📤️publication/📡️transport.json")).unwrap();
     let arguments = |value: &serde_json::Value| value.as_array().unwrap().iter().map(|value| OsString::from(value.as_str().unwrap())).collect::<Vec<_>>();
-    assert!(selected(&arguments(&fixture["command"])).unwrap());
-    assert!(!selected(&[]).unwrap());
+    assert_eq!(selected(&arguments(&fixture["command"])).unwrap(), Some(TrustedCatalogVerb::Publish));
+    assert_eq!(selected(&[OsString::from("trusted-catalog"), OsString::from("open-targets")]).unwrap(), Some(TrustedCatalogVerb::OpenTargets));
+    assert_eq!(selected(&[]).unwrap(), None);
     for row in fixture["rejectedArguments"].as_array().unwrap() {
         assert!(selected(&arguments(row)).is_err());
     }

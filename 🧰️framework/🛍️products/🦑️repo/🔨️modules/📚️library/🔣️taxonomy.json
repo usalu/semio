@@ -4963,6 +4963,110 @@
         "hub-fixtures"
       ]
     },
+    "hub-local-relay": {
+      "emoji": "🚀️",
+      "slugPattern": "^local-relay$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub"
+      ]
+    },
+    "hub-local-relay-routing": {
+      "emoji": "🧭️",
+      "slugPattern": "^routing$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-local-relay"
+      ]
+    },
+    "hub-directory-authorization": {
+      "emoji": "🔐️",
+      "slugPattern": "^authorization$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-directory"
+      ]
+    },
+    "hub-directory-socket-grant": {
+      "emoji": "🔌️",
+      "slugPattern": "^socket-grant$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-directory-authorization"
+      ]
+    },
+    "hub-directory-socket-grant-decision": {
+      "emoji": "🧭️",
+      "slugPattern": "^decision$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-directory-socket-grant"
+      ]
+    },
+    "hub-directory-socket-grant-tests": {
+      "emoji": "🧪️",
+      "slugPattern": "^tests$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-directory-socket-grant"
+      ]
+    },
+    "hub-directory-socket-grant-fixture-verification": {
+      "emoji": "🧾️",
+      "slugPattern": "^fixture-verification$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-directory-socket-grant-tests"
+      ]
+    },
+    "hub-directory-socket-grant-native-law-plan": {
+      "emoji": "📋️",
+      "slugPattern": "^native-law-plan$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-directory-socket-grant-tests"
+      ]
+    },
+    "hub-directory-socket-grant-execution": {
+      "emoji": "🏃️",
+      "slugPattern": "^execution$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-directory-socket-grant-tests"
+      ]
+    },
+    "hub-directory-socket-grant-oracles": {
+      "emoji": "🔮️",
+      "slugPattern": "^oracles$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-directory-socket-grant-tests"
+      ]
+    },
+    "hub-socket-grant-command-source-test": {
+      "emoji": "🧱️",
+      "slugPattern": "^socket-grant-command-source$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-tests"
+      ]
+    },
+    "hub-socket-grant-command-source-schema": {
+      "emoji": "🧱️",
+      "slugPattern": "^socket-grant-command-source$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-schema"
+      ]
+    },
+    "hub-socket-grant-command-source-fixture": {
+      "emoji": "🧱️",
+      "slugPattern": "^socket-grant-command-source$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "hub-fixtures"
+      ]
+    },
     "benchmarks": {
       "emoji": "🏃️",
       "slugPattern": "^benches$",
@@ -5774,22 +5878,6 @@
       "allowEmojiOnly": false,
       "parentKindIds": [
         "repo-test-discovery"
-      ]
-    },
-    "repo-test-host": {
-      "emoji": "🖥️",
-      "slugPattern": "^host$",
-      "allowEmojiOnly": false,
-      "parentKindIds": [
-        "members-of-modules"
-      ]
-    },
-    "repo-test-host-materialization": {
-      "emoji": "🏗️",
-      "slugPattern": "^materialization$",
-      "allowEmojiOnly": false,
-      "parentKindIds": [
-        "repo-test-host"
       ]
     },
     "repo-test-execution": {
@@ -8719,6 +8807,7 @@
         "🛡️mutate-os-config-merge-policy",
         "🚪️mutate-os-config-opening",
         "🎚️mutate-os-config-identity",
+        "🎨️mutate-os-config-ui-preferences",
         "♻️relay-lifecycle",
         "🪪️artifact-admission",
         "🔗️dependency-contribution",
@@ -9495,7 +9584,6 @@
         "🔓️directory-set-visibility",
         "🔗️directory-share-link",
         "👥️directory-upsert-member",
-        "📇️fold-directory-events",
         "📬️apply-directory-event-page",
         "📈️increment-counter",
         "📋copy-invite-link",
@@ -11128,6 +11216,7 @@
         "↔️undirected",
         "➡️directed",
         "🎟️admission",
+        "🎡️ordered-scroll",
         "👶️child",
         "💡️infer",
         "🔀️migrate",
@@ -11216,7 +11305,8 @@
         "🪝️webhook",
         "🦑️repo-source-ownership",
         "🚨️breaches",
-        "⏯️tool-run-trace"
+        "⏯️tool-run-trace",
+        "🏗️materialization"
       ],
       "source": "registry"
     },
@@ -22030,18 +22120,6 @@
       "verification": "@semio-tech/print:test-quick and tectonic template compilation",
       "expires": null
     },
-    "print-latex-semio-viz-axis": {
-      "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-axis.sty",
-      "authority": "LaTeX package lookup",
-      "reason": "The literal basename is the package identity declared by ProvidesPackage and resolved by RequirePackage",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-axis.sty"
-      },
-      "verification": "@semio-tech/print:test-quick and tectonic template compilation",
-      "expires": null
-    },
     "print-latex-semio-viz-chart-ai-neural": {
       "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-chart-ai-neural.sty",
       "authority": "LaTeX package lookup",
@@ -28780,6 +28858,7 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts",
@@ -28811,6 +28890,7 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🧬️schema/🔣️.json",
             "🧰️framework/🛍️products/💻️os/🟦️.ts"
@@ -28904,6 +28984,8 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs",
@@ -28962,6 +29044,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🟦️.ts",

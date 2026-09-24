@@ -21,7 +21,7 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertTopic {
         agg_inverse(&BcfMutation::InsertTopic(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-topic", "Thema einfügen")
+        protocol::LocalizedLabel::native("Insert topic", "Thema einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

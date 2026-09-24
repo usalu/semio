@@ -712,11 +712,11 @@ fn connect_ports_allows_fan_out_from_same_output() {
 fn connect_ports_replaces_existing_incoming_on_same_input() {
     let mut host = host_with_test_bridge();
     assert!(host.host_snapshot.synapses.iter().any(|s| s.from == "slider" && s.to == "add" && s.to_port == "a"));
-    let note_id = host.add_widget(r#"{"kind":"inputNote","id":"note","text":"2"}"#, -120.0, 0.0).unwrap();
-    host.connect_ports(&note_id, "text", "add", "a").unwrap();
+    let replacement_id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":2.0}"#, -120.0, 0.0).unwrap();
+    host.connect_ports(&replacement_id, "number", "add", "a").unwrap();
     let incoming_a: Vec<_> = host.host_snapshot.synapses.iter().filter(|s| s.to == "add" && s.to_port == "a").collect();
     assert_eq!(incoming_a.len(), 1);
-    assert_eq!(incoming_a[0].from, note_id);
+    assert_eq!(incoming_a[0].from, replacement_id);
     assert!(!host.host_snapshot.synapses.iter().any(|s| s.from == "slider" && s.to == "add" && s.to_port == "a"));
     host.retire_cold();
 }
@@ -1420,8 +1420,8 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
         synapses: vec![SynapseSpec { id: "dangling".into(), from: "height".into(), to: "result".into(), from_port: "out".into(), to_port: "missing".into() }],
         layout: crate::OrderedMap::new(),
     });
-    assert!(refused.dag.host_snapshot.edges.is_empty(), "a synapse to a missing port is not a workflow edge");
-    assert_eq!(refused.dag.engine.edges.len(), 0);
+    assert_eq!(refused.dag.host_snapshot.edges.iter().map(|edge| edge.target.as_str()).collect::<Vec<_>>(), ["result@missing"], "an unresolved port stays in the document, unjoined, until it can be joined");
+    assert_eq!(refused.dag.engine.edges.len(), 0, "a synapse to a missing port is not a workflow edge");
     refused.retire_cold();
 }
 
@@ -2562,6 +2562,7 @@ fn rectangle_extrude_fixture_evaluates_solid_output() {
     let solid = parsed.get("extrude").and_then(|entry| entry.get("out")).and_then(|out| out.get("solid").or_else(|| out.get("S"))).expect("extrude solid output");
     assert_eq!(solid.get("$schema").and_then(|v| v.as_str()), Some("geometry"));
     assert_eq!(solid.get("kind").and_then(|v| v.as_str()), Some("solid"));
+    host.retire_cold();
 }
 
 #[test]
@@ -2609,10 +2610,18 @@ fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
     assert_eq!(solid.get("$schema").and_then(serde_json::Value::as_str), Some("geometry"));
     assert_eq!(solid.get("kind").and_then(serde_json::Value::as_str), Some("solid"));
     let handle = solid.get("handle").and_then(serde_json::Value::as_str).expect("solid handle");
-    assert!(handle.starts_with("solid-"));
-    let mesh = crate::tessellate_geometry(handle, 0.05).expect("solid mesh");
-    assert!(!mesh.positions.is_empty());
-    assert!(mesh.indices.len() >= 3);
+    assert!(handle.len() == 64 && handle.bytes().all(|byte| byte.is_ascii_hexdigit()), "a solid handle is the kernel's Blake3 content digest: {handle}");
+    // 🧊️ The solid lives in the kernel of the extension that minted it (a packaged extension links its own copy of
+    // this crate), so its mesh is asked of that extension's own operator through the registry the evaluation used.
+    let geometry = Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String(handle.into()))).insert("kind", NeuralValue::Atom(Atom::String("solid".into())));
+    let input = Dictionary::new().insert("geometry", NeuralValue::Dictionary(geometry)).insert("deflection", NeuralValue::Dictionary(Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(0.05)))));
+    let exported = crate::flow_registry().dispatch("brep.io.exportStl", &input).expect("the evaluated solid is live in its extension's kernel");
+    let stl = crate::brep_geometry::decode_base64(exported.get("stl").and_then(NeuralValue::as_dictionary).and_then(|text| text.get("value")).and_then(NeuralValue::as_atom).and_then(Atom::as_str).expect("stl text")).expect("stl base64");
+    let triangles = u32::from_le_bytes(stl[80..84].try_into().expect("binary stl count")) as usize;
+    assert!(triangles > 0 && stl.len() == 84 + 50 * triangles, "a closed solid tessellates to a non-empty binary STL ({} bytes, {triangles} triangles)", stl.len());
+    neural::ColdRetire::retire_cold(exported);
+    neural::ColdRetire::retire_cold(input);
+    host.retire_cold();
 }
 
 #[test]

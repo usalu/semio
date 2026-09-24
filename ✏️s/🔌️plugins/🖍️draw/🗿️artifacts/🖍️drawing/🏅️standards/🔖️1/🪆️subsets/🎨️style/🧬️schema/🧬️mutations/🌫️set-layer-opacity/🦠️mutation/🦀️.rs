@@ -31,7 +31,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerOpacit
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set layer \"{}\" opacity to {}", self.layer_id, self.opacity), &format!("Ebene \"{}\" Deckkraft auf {} setzen", self.layer_id, self.opacity))
+        protocol::LocalizedLabel::native(&format!("Set layer \"{}\" opacity to {}", self.layer_id, self.opacity), &format!("Deckkraft von Ebene \"{}\" auf {} setzen", self.layer_id, self.opacity))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

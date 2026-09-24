@@ -11680,11 +11680,12 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly vie
   const scanPackagesDir = (packagesAbs: string, owner: OwnerAccumulator): void => {
     if (pathIsExcluded(repoRoot, packagesAbs, taxonomy)) return;
     for (const langEntry of catalogEntries(packagesAbs)) {
-      if (!langEntry.isDirectory() || langEntry.name.startsWith(".")) continue;
+      if (!langEntry.isDirectory() || langEntry.name.startsWith(".") || isDiscoverySkipDirectory(langEntry.name)) continue;
       const lang = langEntry.name as PackageLang;
       const ecosystem = taxonomy.ecosystems[lang];
       if (!ecosystem) {
-        problems.push({ kind: "unknown-lang", path: rel(join(packagesAbs, langEntry.name)), message: `"${langEntry.name}" is not a declared language.` });
+        const path = rel(join(packagesAbs, langEntry.name));
+        problems.push({ kind: "unknown-lang", path, message: `"${path}" is not a declared language directory.` });
         continue;
       }
       const manifestFilename = exactContractFilename(ecosystem.manifestContractId, taxonomy);
@@ -12267,7 +12268,7 @@ export function inspectMutationMetadataSource(input: MutationMetadataSourceInput
   if (declaration.length !== 1) return reject("wrapped declaration is absent, conditional, private, or ambiguous", consumerContext);
   const item = declaration[0]!;
   if (item.mutationLeaf.state !== "valid") return reject("wrapped declaration has no unconditional valid mutation_leaf contract", consumerContext);
-  const deriveRoutes = mutationMetadataResolvedRoutes(item.derives.flatMap((path) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, path, bindingCache, input.readSource).map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[2]!, bindingCache))));
+  const deriveRoutes = mutationMetadataResolvedRoutes(item.derives.flatMap((path) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, path, bindingCache, input.readSource).filter((route) => route.terminal === "MutationLeaf").map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[2]!, bindingCache))));
   if (deriveRoutes?.length !== 1) return reject("metadata derive route is unresolved, ambiguous, or not canonical", consumerContext);
   const contractRoutes = mutationMetadataResolvedRoutes(item.mutationLeaf.contracts.flatMap((path) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, path, bindingCache, input.readSource, false, "MutationLeaf").map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[0]!, bindingCache))));
   if (contractRoutes?.length !== 1) return reject("mutation_leaf contract route is unresolved, ambiguous, or not canonical", consumerContext);

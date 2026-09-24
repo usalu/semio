@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeThetaR
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change running mean outdoor temperature to {}", self.new_theta_rm_c), &format!("laufende Mittelaußentemperatur auf {} ändern", self.new_theta_rm_c))
+        protocol::LocalizedLabel::native(&format!("Change running mean outdoor temperature to {}", self.new_theta_rm_c), &format!("Gleitenden Mittelwert der Außentemperatur auf {} ändern", self.new_theta_rm_c))
     }
 }
 //#endregion 🔖️ChangeThetaRmC

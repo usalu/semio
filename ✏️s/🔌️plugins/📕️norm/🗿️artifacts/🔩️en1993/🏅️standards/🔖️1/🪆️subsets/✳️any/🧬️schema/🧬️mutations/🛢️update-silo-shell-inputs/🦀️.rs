@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateSiloShellI
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-1-6/-4-1 shell and silo wall inputs", "EN 1993-1-6/-4-1 Schale und Silowandeingaben aktualisieren")
+        protocol::LocalizedLabel::native("Update EN 1993-1-6/-4-1 shell and silo wall inputs", "EN 1993-1-6/-4-1 Eingaben für Schalen und Silowände aktualisieren")
     }
 }
 //#endregion 🔖️Payload

@@ -21,7 +21,7 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetHasHeader {
         agg_inverse(&CsvMutation::SetHasHeader(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-has-header", "Kopf setzen")
+        protocol::LocalizedLabel::native("Set has header", "Kopfzeile vorhanden setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

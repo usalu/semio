@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeNu {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Poisson's ratio nu to {}", self.new_nu), &format!("Poisson'sverhältnisnu auf {} ändern", self.new_nu))
+        protocol::LocalizedLabel::native(&format!("Change Poisson's ratio nu to {}", self.new_nu), &format!("Querdehnzahl ν auf {} ändern", self.new_nu))
     }
 }
 //#endregion 🔖️ChangeNu

@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCoolin
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change cooling gain utilization factor to {}", self.new_cooling_utilization_factor), &format!("Kühlungsgewinnausnutzungsfaktor auf {} ändern", self.new_cooling_utilization_factor))
+        protocol::LocalizedLabel::native(&format!("Change cooling gain utilization factor to {}", self.new_cooling_utilization_factor), &format!("Ausnutzungsgrad der Wärmegewinne (Kühlung) auf {} ändern", self.new_cooling_utilization_factor))
     }
 }
 //#endregion 🔖️ChangeCoolingUtilizationFactor

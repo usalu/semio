@@ -20,7 +20,10 @@ use ui_wgpu::wgpu::{
 };
 
 use crate::dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette, compute_dock_drop_zone, drop_zone_indicator_rect, parse_path};
-use crate::hub_connection::{FRAMEWORK_HUB_PANEL_ID, HubDocumentRemote, HubSessionPresence};
+use crate::hub_connection::{
+    FRAMEWORK_HUB_PANEL_ID, HUB_ARTIFACT_CREATION_DEADLINE_MS, HUB_ARTIFACT_CREATION_POLL_MS, HubArtifactCatalogPhase, HubArtifactCreation, HubArtifactCreationState, HubArtifactOpening, HubDocumentRemote, HubSessionPresence, hub_artifact_creation_intent,
+    hub_artifact_creation_terminal,
+};
 use crate::hub_sign_in::{
     HUB_CONNECTION_BOOK_STORAGE_KEY_V1, HubConnection, HubConnectionKind, HubSessionEvent, HubSessionPhase, HubSignInClientClass, HubSignInCredential, HubSignInErrorCode, hub_connection_id_for_origin, parse_hub_origin, reduce_hub_session,
     remove_hub_connection, select_hub_connection, serialize_hub_connection_book, upsert_hub_connection,
@@ -41,11 +44,10 @@ use semio_framework_os_config::opening_config::{
     mutations::{UiPreferencesConfigMutation, set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_terminology, set_theme},
 };
 use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
+use semio_framework_os_kernel::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, VecDeque};
-#[cfg(not(target_arch = "wasm32"))]
 use store_sync::PresencePeer;
-#[cfg(not(target_arch = "wasm32"))]
 use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
 use ui_contract::UiFixedList;
 use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS, UiDocumentLease, UiText};
@@ -68,14 +70,14 @@ use semio_framework_os_kernel::os_directory::{
     DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectorySessionAuthorityV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1,
     DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility,
     client::{DirectoryClient, DirectoryClientError, LocalHubCredential},
-    identity::Identity,
+    identity::{Identity, actor_id},
     mint_directory_command_request_id,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_kernel::os_directory::{
     DirectoryStreamMessage,
     client::{CanonicalDirectoryEventPageV1, DirectoryBootstrapTransition, DirectoryEventPageAckV1, DirectoryEventPageBootstrapV1, DirectoryStream, DirectoryStreamTurn, DirectoryWsConnection, TransportError},
-    identity::{IdentityOutcome, IdentityStatus, actor_id, claimed_local_hub_credential, restore_claimed},
+    identity::{IdentityOutcome, IdentityStatus, claimed_local_hub_credential, restore_claimed},
     schema::{
         DocumentExecutionTargetLeaseFieldsV1, DocumentScope, GIS_MAP_INFERENCE_SERVICE_ID, GisMapInferenceApprovalRequestV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, GisMapInferencePortEventV1, GisMapInferencePortPhaseV1,
         GisMapInferencePortStatusV1, reduce_gis_map_inference_port_v1,
@@ -399,6 +401,13 @@ fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, c
 /// for a press on the Generations window's own `Add Generation` row
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-input-hit-runtime-2026-09-13.md` §10.3).
 /// Context menus and retained window bodies share this one rule.
+/// 🪟️ The window instance a plugin action is dispatched in. A retained body stamps its own surface id
+/// as `windowId`; a PANEL body is not a window, so its action runs in the active window's context
+/// (React's rule — panel verbs are app-level), exactly like an action that names no window.
+fn action_window_instance_id(requested: Option<&str>, panel_leaves: &[&str], view_window: Option<&str>, active_window: Option<&str>, first_window_kind: &str) -> String {
+    requested.filter(|id| !panel_leaves.contains(id)).or(view_window).or(active_window).unwrap_or(first_window_kind).to_string()
+}
+
 fn scope_action_to_window(action: &mut ActionDescriptor, window_id: &str) {
     let mut args = match action.args.take() {
         Some(DslValue::Object(entries)) => entries,
@@ -503,7 +512,6 @@ pub fn semio_wgpu_set_hub_env(hub_url: String, user: String, data_dir: String) {
 /// 🎭️ contract §C0's actor grammar: `user:{userId}#{sessionId}` once an identity is minted/restored,
 /// falling back to the pre-identity local default (`wgpu-{instanceId}`) — the same default this shell
 /// used everywhere before this lane, so local-only (no hub env) behaviour is unchanged.
-#[cfg(not(target_arch = "wasm32"))]
 fn shell_actor(identity: Option<&Identity>, session_id: &str, instance_id: u32) -> String {
     match identity {
         Some(identity) => actor_id(identity, session_id),
@@ -514,7 +522,6 @@ fn shell_actor(identity: Option<&Identity>, session_id: &str, instance_id: u32) 
 /// 🔗️ ticket §2 — `attach_sync_backbone`/`open_document`'s default binding decision: `[Hub, Folder]`
 /// when an identity AND a space both exist, `[Folder]` with a data dir but no identity, `[]`
 /// otherwise. Pure and free-standing so the decision is unit-testable without a live `ShellState`.
-#[cfg(not(target_arch = "wasm32"))]
 fn default_persistence_bindings(identity: Option<&Identity>, space_id: Option<&str>, data_dir: Option<&std::path::Path>, surface: Option<&str>) -> Vec<PersistenceBinding> {
     let folder = match (space_id, data_dir) {
         (Some(space_id), Some(data_dir)) => Some(PersistenceBinding::Folder { path: data_dir.join("spaces").join(space_id) }),
@@ -528,6 +535,34 @@ fn default_persistence_bindings(identity: Option<&Identity>, space_id: Option<&s
         }
         _ => folder.into_iter().collect(),
     }
+}
+
+/// 🏛️ The persistence transports the document host this shell build links actually serves. Both
+/// builds link the kernel's `ArtifactHost`; its native actor owns the folder event log and the hub
+/// WebSocket, while its browser actor has no filesystem and dials its hub through the page's socket door.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct ShellDocumentTransports {
+    pub(crate) folder: bool,
+    pub(crate) hub: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) const SHELL_DOCUMENT_TRANSPORTS: ShellDocumentTransports = ShellDocumentTransports { folder: true, hub: true };
+#[cfg(target_arch = "wasm32")]
+pub(crate) const SHELL_DOCUMENT_TRANSPORTS: ShellDocumentTransports = ShellDocumentTransports { folder: false, hub: true };
+
+/// 🛂️ Refuses, before any actor exists, a binding the host would accept and then never serve: an
+/// unserved folder or hub binding would hand the plugin a document that silently persists nowhere.
+/// An empty binding set is the declared `EphemeralLocalOnly` class and every host serves it.
+pub(crate) fn document_bindings_admitted(transports: ShellDocumentTransports, bindings: &[PersistenceBinding]) -> Result<(), &'static str> {
+    for binding in bindings {
+        match binding {
+            PersistenceBinding::Hub { .. } if !transports.hub => return Err("document-binding.hub-transport-unavailable"),
+            PersistenceBinding::Folder { .. } if !transports.folder => return Err("document-binding.folder-unavailable"),
+            _ => {}
+        }
+    }
+    Ok(())
 }
 
 /// 📇️ ticket §C6 — maps an `os.directory.<verb>` action id + its relayed JSON args onto a
@@ -619,7 +654,6 @@ fn open_artifact_relay_target(action_id: &str, args: Option<&Value>) -> Result<O
 }
 
 /// 👥️ Projects only Hub-normalized peers for the shell's currently attached surface.
-#[cfg(not(target_arch = "wasm32"))]
 fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Option<&str>, target_surface: &str) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
     if attached_surface != Some(target_surface) {
         return Vec::new();
@@ -647,12 +681,9 @@ fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Opti
 /// the Rust source of truth (`✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs`), same as the
 /// React shell's own `S_SPACE_INDEX_DOCUMENT_SCHEMA`/`SPACE_INDEX_DIALECT` mirror
 /// (`📓️w2-c-report.md`).
-#[cfg(not(target_arch = "wasm32"))]
 const S_SPACE_INDEX_DOCUMENT_SCHEMA: &str = "s.space";
-#[cfg(not(target_arch = "wasm32"))]
 const S_SPACE_INDEX_DOCUMENT_ID: &str = "index";
 
-#[cfg(not(target_arch = "wasm32"))]
 fn space_index_dialect() -> semio_framework::ArtifactDialect {
     semio_framework::ArtifactDialect { artifact_kind: "s.space.space".to_string(), standard: "1".to_string(), subset: "*".to_string() }
 }
@@ -694,7 +725,6 @@ fn plugin_modules_root_of(programs: &[ProgramBridgeEntry]) -> Option<std::path::
     programs.iter().find_map(|entry| entry.wasm_artifact_path().and_then(|path| path.parent()).and_then(|dir| dir.parent()).map(std::path::Path::to_path_buf))
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 /// 🎯 Resolves the descriptor-bound canonical surface id this local selection may request. It is a
 /// preference, never an authority: a local WGPU selection verifies no execution-target bytes and so
 /// can never mint a `DocumentExecutionTargetLeaseFieldsV1`.
@@ -706,12 +736,51 @@ fn document_socket_surface_from_descriptor(plugin_id: &str, package_id: Option<&
     Ok(semio_framework::manifest::surface_app_id(&app.dialect, app.role))
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+/// 🌐️ The three parts a `remote://host:port/space/document` sync-card uri names.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct RemoteBackboneUri {
+    pub(crate) host_port: String,
+    pub(crate) space_id: String,
+    pub(crate) document_id: String,
+}
+
+/// 🌐️ The wgpu twin of the React shell's `parseRemoteBackboneUri` (`💻️os/🟦️.ts`): everything up to
+/// the first slash is the host, up to the second the space, the rest the document; a uri missing a
+/// part names no hub document.
+pub(crate) fn parse_remote_backbone_uri(uri: &str) -> Option<RemoteBackboneUri> {
+    let rest = uri.strip_prefix("remote://")?;
+    let first = rest.find('/').filter(|index| *index > 0)?;
+    let second = rest[first + 1..].find('/').map(|index| index + first + 1).filter(|index| *index > 0)?;
+    Some(RemoteBackboneUri { host_port: rest[..first].to_string(), space_id: rest[first + 1..second].to_string(), document_id: rest[second + 1..].to_string() })
+}
+
+/// 🪪️ Admits a hub-selected execution-target lease only for the package this shell actually mounted:
+/// the same plugin, the same package, the same component digest, the document's schema and the
+/// surface the shell requested. Anything else would lend the document actor a kind identity for
+/// code that is not running here.
+pub(crate) fn document_execution_target_admitted(lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1, plugin_id: &str, package_id: Option<&str>, component_sha256: Option<&str>, artifact_schema: &str, surface_id: &str) -> Result<(), &'static str> {
+    if lease.package.plugin_id != plugin_id {
+        return Err("document-execution-target.plugin-mismatch");
+    }
+    if package_id != Some(lease.package.package_id.as_str()) {
+        return Err("document-execution-target.package-mismatch");
+    }
+    if component_sha256 != Some(lease.component.sha256.as_str()) {
+        return Err("document-execution-target.component-mismatch");
+    }
+    if lease.artifact.schema != artifact_schema {
+        return Err("document-execution-target.schema-mismatch");
+    }
+    if lease.surface.surface_id != surface_id {
+        return Err("document-execution-target.surface-mismatch");
+    }
+    Ok(())
+}
+
 fn wgpu_document_socket_surface(program: &ProgramBridgeEntry, app: &AppDefinition, window_kind_id: &str) -> Result<String, String> {
     document_socket_surface_from_descriptor(&program.plugin_id, program.package_id.as_deref(), &program.manifest, app, window_kind_id)
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 fn bind_wgpu_document_socket_surface(host: &ArtifactHost, document_id: &str, artifact_schema: &str, bindings: &[PersistenceBinding], program: &ProgramBridgeEntry, app: &AppDefinition, window_kind_id: &str) -> Result<(), String> {
     let mut hub_spaces = bindings.iter().filter_map(|binding| match binding {
         PersistenceBinding::Hub { space_id, .. } => Some(space_id.as_str()),
@@ -1205,11 +1274,10 @@ pub struct ActiveSession {
 }
 
 //#region 🔖️NativeSyncChannel
-/// @emoji 🧵️ One open document's live `framework/sync` actor channel held by the native wgpu shell.
-/// Mirrors `os-shell.tsx`'s `openArtifactSessionsRef` entry: the shell owns the `cmd_tx`/event
+/// @emoji 🧵️ One open document's live `framework/sync` actor channel held by the wgpu shell on both
+/// targets. Mirrors `os-shell.tsx`'s `openArtifactSessionsRef` entry: the shell owns the `cmd_tx`/event
 /// receiver while the sandboxed plugin instance's store pumps through the registered
 /// `ChannelBackbone` (see `framework/product/os/core/rs`'s `ArtifactHost` canonical sequence).
-#[cfg(not(target_arch = "wasm32"))]
 pub struct ShellSyncChannel {
     pub document_id: String,
     pub document_key: ArtifactDocumentKey,
@@ -1235,12 +1303,10 @@ fn shell_sync_owner_matches(active: &ShellSyncOwner, completion: &ShellSyncOwner
     active == completion
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 fn shell_sync_channel_owner(channel: &ShellSyncChannel) -> ShellSyncOwner {
     ShellSyncOwner { plugin_id: channel.plugin_id.clone(), instance_id: channel.instance_id, binding_generation: channel.binding_generation, actor_uri: channel.actor_uri.clone(), document_key: shell_hub_document_key(&channel.document_key) }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 fn route_document_backbone_effects(actor_uri: &str, cmd_tx: &ArtifactMailboxSender, effects: Vec<semio_framework::kernel::Effect>) -> Result<Vec<semio_framework::kernel::Effect>, String> {
     let mut remaining = Vec::new();
     for effect in effects {
@@ -3431,24 +3497,18 @@ pub struct ShellState {
     pub sync_card_draft: String,
     pub sync_card_anchor: Option<(f32, f32)>,
     pub last_envelope_dsl: Option<String>,
-    /// @emoji 🏛️ Shell-lifetime document-host actor registry (native only); the browser wgpu build
-    /// has no native `ArtifactHost` — its sync flows through the React shell's `🏪️store/👷️worker/🟦️.ts`.
-    #[cfg(not(target_arch = "wasm32"))]
+    /// @emoji 🏛️ Shell-lifetime document-host actor registry, the kernel's `ArtifactHost` on both
+    /// targets ([`SHELL_DOCUMENT_TRANSPORTS`] names which transports its actor serves).
     pub document_host: ArtifactHost,
-    /// @emoji 🧵️ The currently attached document's live actor channel (native only).
-    #[cfg(not(target_arch = "wasm32"))]
+    /// @emoji 🧵️ The currently attached document's live actor channel.
     pub sync_channel: Option<ShellSyncChannel>,
-    #[cfg(not(target_arch = "wasm32"))]
     next_sync_binding_generation: u64,
-    #[cfg(not(target_arch = "wasm32"))]
     sync_terminal_fault: Option<String>,
-    /// @emoji 🚦️ Latest sync health for the active document's status badge (native only).
-    #[cfg(not(target_arch = "wasm32"))]
+    /// @emoji 🚦️ Latest sync health for the active document's status badge.
     pub sync_status: Option<ArtifactSyncStatus>,
     /// 📶️ Target-neutral remote state for every document still attached to this shell. Native actor
     /// status events and browser-host publications enter through the same bounded projection.
     pub hub_documents: BTreeMap<String, ShellHubRemoteV1>,
-    #[cfg(not(target_arch = "wasm32"))]
     pub sync_bootstrap_progress: Option<(u64, u64, u32, u32)>,
     //#region 🔖️Identity
     /// 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the restored-or-
@@ -3530,12 +3590,10 @@ pub struct ShellState {
     pub space_administration_epoch: u64,
     /// 👥️ ticket §5 — shell-LOCAL presence roster from the currently attached document's
     /// `ArtifactEvent::Presence`, deliberately NOT folded into the shared kernel `ViewModel`.
-    #[cfg(not(target_arch = "wasm32"))]
     pub presence_peers: Vec<PresencePeer>,
     /// 👥️ The canonical surface id (`surface_app_id`) the CURRENTLY attached document's hub binding
     /// used, if any — `presence_peers` is scoped to this surface; a document opened without a hub
     /// binding (local-only) carries `None` and renders no roster.
-    #[cfg(not(target_arch = "wasm32"))]
     pub presence_surface: Option<String>,
     //#endregion 🔖️Identity
     //#region 🔖️CheckIn
@@ -3567,6 +3625,12 @@ pub struct ShellState {
     /// `render_presence_bar`'s own design note) — mirrors the pre-existing `sync_card_kind`/
     /// `sync_card_draft` shell-owned keyboard-routed draft-field idiom instead of inventing a new one.
     pub checkin_dialog_draft: Option<String>,
+    /// 📌️ The one hub Check In this shell drives for its mounted hub document: requested the moment
+    /// a checkpoint this shell asked for lands, submitted once the document's sync status names an
+    /// acknowledged head, then polled to a terminal status (the React twin is the worker's
+    /// `driveDocumentCheckIn`). Its status is the footer's hub badge suffix.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub hub_check_in: Option<ShellHubCheckInV1>,
     //#endregion 🔖️CheckIn
     pub window_engagements: HashMap<String, WindowEngagement>,
     /// 🎬️ Each live window instance's projected Actions pane document — see
@@ -5522,6 +5586,7 @@ fn agent_chat_state_label(entry: &crate::agent_bridge::AgentConversationEntry, i
             (AgentApprovalState::Pending, _) => Some(shell_chrome_string("chat.approvalPending", is_de).to_string()),
             (AgentApprovalState::Resolved, Some(decision)) => Some(crate::agent_approvals::approvals_decision_label(*decision, locale)),
             (AgentApprovalState::Resolved, None) => None,
+            (AgentApprovalState::Withdrawn(reason), _) => Some(crate::agent_approvals::approvals_withdrawal_label(*reason, locale)),
         },
     }
 }
@@ -5557,6 +5622,7 @@ pub(crate) fn agent_chat_entry_state_attribute(entry: &crate::agent_bridge::Agen
         AgentConversationEntry::Approval { state, .. } => match state {
             AgentApprovalState::Pending => "pending",
             AgentApprovalState::Resolved => "resolved",
+            AgentApprovalState::Withdrawn(_) => "withdrawn",
         },
     }
 }
@@ -5995,6 +6061,12 @@ impl ShellState {
             }
             host
         };
+        #[cfg(target_arch = "wasm32")]
+        let document_host = {
+            let host = ArtifactHost::new(std::sync::Arc::new(crate::renderer_worker_pool()));
+            host.set_document_socket_dialer(std::sync::Arc::new(crate::socket_door::browser::DoorDocumentSocketDialer));
+            host
+        };
         let mut state = Self {
             plugins,
             plugin_filter,
@@ -6138,18 +6210,12 @@ impl ShellState {
             sync_card_draft: String::new(),
             sync_card_anchor: None,
             last_envelope_dsl: None,
-            #[cfg(not(target_arch = "wasm32"))]
             document_host,
-            #[cfg(not(target_arch = "wasm32"))]
             sync_channel: None,
-            #[cfg(not(target_arch = "wasm32"))]
             next_sync_binding_generation: 1,
-            #[cfg(not(target_arch = "wasm32"))]
             sync_terminal_fault: None,
-            #[cfg(not(target_arch = "wasm32"))]
             sync_status: None,
             hub_documents: BTreeMap::new(),
-            #[cfg(not(target_arch = "wasm32"))]
             sync_bootstrap_progress: None,
             identity: None,
             verified_session_authority: None,
@@ -6180,9 +6246,7 @@ impl ShellState {
             hub_workspace_open: false,
             space_administration: None,
             space_administration_epoch: 0,
-            #[cfg(not(target_arch = "wasm32"))]
             presence_peers: Vec::new(),
-            #[cfg(not(target_arch = "wasm32"))]
             presence_surface: None,
             history_cursor: 0,
             history_entries: BTreeMap::new(),
@@ -6191,6 +6255,8 @@ impl ShellState {
             auto_checkin_pending: false,
             checkpoint_dispatched: false,
             checkin_dialog_draft: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            hub_check_in: None,
             layout_save_label: String::new(),
             user_layouts: Vec::new(),
             open_conflicts: Vec::new(),
@@ -7790,7 +7856,6 @@ impl ShellState {
                         self.deferred_actions.push(descriptor);
                     }
                 }
-                #[cfg(not(target_arch = "wasm32"))]
                 semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Backbone { uri }, payload } => {
                     let outcome = self.sync_channel.as_ref().ok_or_else(|| "document-backbone effect has no active shell owner".to_string()).and_then(|channel| {
                         route_document_backbone_effects(&channel.actor_uri, &channel.cmd_tx, vec![semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Backbone { uri }, payload }])
@@ -9239,24 +9304,19 @@ mod display_conflicts_marketplace_tests;
 
 //#region ShellActions
 impl ShellState {
-    #[cfg(not(target_arch = "wasm32"))]
     fn sync_document_id(&self) -> Option<String> {
         let session = self.session.as_ref()?;
         Some(format!("{}-{}", session.plugin_id, session.instance_id))
     }
 
     //#region 🔖️NativeBackboneSync
-    /// @emoji 🧭️ Parses a shell sync-card uri into the `framework/sync` persistence bindings a
+    /// @emoji 🧭️ Parses a local sync-card uri into the `framework/sync` persistence bindings a
     /// document actor opens. `folder://` → the multi-document append-only event log; `file://x.json` → its
-    /// parent folder's store (single-blob export demoted per the plan); `remote://host:port[/space_id]`
-    /// → the semio_hub over WebSocket, studio-scoped (an omitted studio segment falls back to `"default"`).
-    /// Superseded the fetch/CRUD `shell_backbone_read`/`write` pair.
-    #[cfg(not(target_arch = "wasm32"))]
+    /// parent folder's store (single-blob export demoted per the plan). A `remote://` uri names a hub
+    /// document of its own and is read by [`parse_remote_backbone_uri`]; one missing a part is refused.
     fn parse_persistence_binding(uri: &str) -> Result<Vec<PersistenceBinding>, String> {
-        if let Some(rest) = uri.strip_prefix("remote://") {
-            let (host_port, space_id) = rest.split_once('/').unwrap_or((rest, "default"));
-            let space_id = if space_id.is_empty() { "default" } else { space_id };
-            return Ok(vec![PersistenceBinding::Hub { base_url: format!("http://{host_port}"), space_id: space_id.to_string(), surface: None }]);
+        if uri.starts_with("remote://") {
+            return Err(format!("a remote backbone names host, space and document: {uri}"));
         }
         if let Some(path) = uri.strip_prefix("folder://") {
             return Ok(vec![PersistenceBinding::Folder { path: std::path::PathBuf::from(path) }]);
@@ -9268,21 +9328,18 @@ impl ShellState {
         Err(format!("unsupported backbone uri: {uri}"))
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     fn mint_sync_binding_generation(&mut self) -> Result<u64, String> {
         let generation = self.next_sync_binding_generation;
         self.next_sync_binding_generation = generation.checked_add(1).ok_or("document-backbone binding generation exhausted")?;
         Ok(generation)
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     fn active_sync_owner(&self) -> Option<ShellSyncOwner> {
         self.sync_channel.as_ref().map(shell_sync_channel_owner)
     }
 
     /// @emoji ✂️ Retires the guest's exact generation before stopping the actor. A refusal still
     /// closes the local owner and is returned to the caller; it is never retried or hidden.
-    #[cfg(not(target_arch = "wasm32"))]
     async fn detach_sync_backbone_internal(&mut self) -> Result<(), String> {
         let owner = self.active_sync_owner();
         let retirement = if let Some(owner) = owner.as_ref() {
@@ -9316,15 +9373,17 @@ impl ShellState {
     }
 
     /// @emoji 📬️ Drains the active document actor's event stream into the plugin store and the sync
-    /// badge. Called once per native frame — the render loop already redraws continuously (winit
-    /// `ControlFlow::Poll`), so a `try_recv` poll suffices and no `EventLoopProxy` wake is needed.
+    /// badge. Called once per frame-deferred pump on both targets — the render loop already redraws
+    /// continuously, so a `try_recv` poll suffices and no `EventLoopProxy` wake is needed.
     /// `RemoteMutations` are force-applied via `apply_mutations` (idempotent by operation id), which also covers
     /// idle frames where the sandboxed store never pumps its `ChannelBackbone` on its own. Returns
     /// whether anything changed (and a re-render was issued).
-    #[cfg(not(target_arch = "wasm32"))]
     pub async fn pump_sync_events(&mut self) -> bool {
         use tokio::sync::broadcast::error::TryRecvError;
+        #[cfg(not(target_arch = "wasm32"))]
         let shell_io_changed = self.poll_shell_io();
+        #[cfg(target_arch = "wasm32")]
+        let shell_io_changed = false;
         // 📇️ ticket §1/§3 — non-blocking identity bootstrap result + directory-stream/command-queue
         // drain, folded into this same every-frame pump (glue.rs's frame loop already calls this
         // method once per tick; adding a second call site outside this lane's lease was avoidable).
@@ -9462,20 +9521,14 @@ impl ShellState {
         changed
     }
 
-    /// 👥️ The roster `#s-presence-peers` paints, scoped to the attached surface. The browser build
-    /// has no document-sync backbone (`ArtifactHost` is native-only here), so it answers an empty
-    /// roster — which is exactly the state React's own browser footer renders as
-    /// `No one else is here`, not a reason to omit the pill.
+    /// 👥️ The roster `#s-presence-peers` paints, scoped to the attached surface. A document opened
+    /// without a hub binding carries no surface and answers an empty roster — exactly the state
+    /// React's footer renders as `No one else is here`, not a reason to omit the pill.
     fn footer_presence_rows(&self) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            match self.presence_surface.as_deref() {
-                Some(surface) => presence_peer_rows_for_surface(&self.presence_peers, Some(surface), surface),
-                None => Vec::new(),
-            }
+        match self.presence_surface.as_deref() {
+            Some(surface) => presence_peer_rows_for_surface(&self.presence_peers, Some(surface), surface),
+            None => Vec::new(),
         }
-        #[cfg(target_arch = "wasm32")]
-        Vec::new()
     }
 
     /// 🚦️ The `#s-sync-status` pill's state for the CURRENT session, the wgpu twin of
@@ -9483,31 +9536,25 @@ impl ShellState {
     /// and "no status observed yet" reads as `Remote(Detached)`.
     ///
     /// Target-neutral because React's footer is: its browser shell paints `Remote: detached` from
-    /// `computeSyncPillState(null)` with no backbone attached at all. The wgpu browser build has no
-    /// `ArtifactHost` either (`store_sync` is native-only here), so it resolves to exactly the same
-    /// state instead of — as before this packet — painting no pill at all.
+    /// `computeSyncPillState(null)` with no backbone attached at all, and a document the browser
+    /// host opened local-only never reports a remote, so it resolves to that same state.
     fn sync_pill(&self) -> ShellSyncPill {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            if let Some((received_bytes, total_bytes, received_chunks, total_chunks)) = self.sync_bootstrap_progress {
-                return ShellSyncPill::Recovering { received_bytes, total_bytes, received_chunks, total_chunks };
-            }
-            let Some(status) = self.sync_status.as_ref() else { return ShellSyncPill::Remote(ShellSyncRemote::Detached) };
-            if !matches!(status.remote, RemoteState::Live { .. }) {
-                return ShellSyncPill::Remote(match &status.remote {
-                    RemoteState::Live { .. } => ShellSyncRemote::Connected,
-                    RemoteState::Connecting => ShellSyncRemote::Connecting,
-                    RemoteState::Backoff { .. } => ShellSyncRemote::Backoff,
-                    RemoteState::Detached => ShellSyncRemote::Detached,
-                });
-            }
-            if status.pending_mutations > 0 {
-                return ShellSyncPill::Pending(status.pending_mutations);
-            }
-            ShellSyncPill::Persisted
+        if let Some((received_bytes, total_bytes, received_chunks, total_chunks)) = self.sync_bootstrap_progress {
+            return ShellSyncPill::Recovering { received_bytes, total_bytes, received_chunks, total_chunks };
         }
-        #[cfg(target_arch = "wasm32")]
-        ShellSyncPill::Remote(ShellSyncRemote::Detached)
+        let Some(status) = self.sync_status.as_ref() else { return ShellSyncPill::Remote(ShellSyncRemote::Detached) };
+        if !matches!(status.remote, RemoteState::Live { .. }) {
+            return ShellSyncPill::Remote(match &status.remote {
+                RemoteState::Live { .. } => ShellSyncRemote::Connected,
+                RemoteState::Connecting => ShellSyncRemote::Connecting,
+                RemoteState::Backoff { .. } => ShellSyncRemote::Backoff,
+                RemoteState::Detached => ShellSyncRemote::Detached,
+            });
+        }
+        if status.pending_mutations > 0 {
+            return ShellSyncPill::Pending(status.pending_mutations);
+        }
+        ShellSyncPill::Persisted
     }
 
     pub(crate) fn hub_projection(&self) -> ShellHubProjectionV1 {
@@ -9534,7 +9581,6 @@ impl ShellState {
 
     /// 🎭️ ticket §1 — contract §C0's `user:{userId}#{sessionId}` once identity is minted/restored,
     /// else the pre-identity local default this shell always used (`shell_actor`'s pure decision).
-    #[cfg(not(target_arch = "wasm32"))]
     fn current_shell_actor(&self, instance_id: u32) -> String {
         shell_actor(self.identity.as_ref(), &self.shell_session_id, instance_id)
     }
@@ -9548,7 +9594,6 @@ impl ShellState {
     /// whatever was open before. Best-effort: a read failure just leaves the projection empty (the
     /// same posture every other native exchange call in this file already takes on error — logged, not
     /// propagated, since a stale/absent history must never block opening a document).
-    #[cfg(not(target_arch = "wasm32"))]
     async fn refresh_history_snapshot(&mut self) {
         self.history_cursor = 0;
         self.history_entries.clear();
@@ -9556,6 +9601,14 @@ impl ShellState {
         self.last_uncommitted_edit_at_ms = None;
         self.auto_checkin_pending = false;
         self.checkpoint_dispatched = false;
+        self.seed_history_snapshot().await;
+    }
+
+    /// 🧾️ The seeding half of [`Self::refresh_history_snapshot`]: the `ReadHistory`/`ReadConflicts`
+    /// exchange exists only on the native program bridge (the JS bridge has no `exchange` door), so
+    /// the browser projection starts empty and folds every later `history_patch` exactly as native.
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn seed_history_snapshot(&mut self) {
         let Some(session) = self.session.as_ref() else { return };
         let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) else { return };
         match plugin.read_history(session.instance_id).await {
@@ -9571,6 +9624,13 @@ impl ShellState {
         self.open_conflicts.clear();
         self.selected_conflict_id = None;
         self.seed_open_conflicts().await;
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    async fn seed_history_snapshot(&mut self) {
+        self.conflicts_seeded = false;
+        self.open_conflicts.clear();
+        self.selected_conflict_id = None;
     }
 
     /// 🧾️ ticket §C5 — folds an `InvocationResult.history_patch` (present on every `handleAction`/
@@ -9607,6 +9667,7 @@ impl ShellState {
         {
             let Some(space_id) = self.open_space_id.clone() else { return };
             let Some(document_id) = self.sync_channel.as_ref().map(|channel| channel.document_id.clone()) else { return };
+            self.request_hub_check_in(&space_id, &document_id);
             if document_id != S_SPACE_INDEX_DOCUMENT_ID {
                 self.touch_space_index_artifact(&space_id, &document_id).await;
             }
@@ -9667,7 +9728,6 @@ impl ShellState {
     /// success-detection effect" note) — `dispatch_checkpoint`/`observe_invocation_history` still run
     /// the normal detection+`TouchArtifact` path; this call site just doesn't await or fail the caller
     /// on their outcome, since a failed close-time checkpoint must never block navigating away.
-    #[cfg(not(target_arch = "wasm32"))]
     async fn checkpoint_before_detach(&mut self) {
         let Some(session) = self.session.as_ref() else { return };
         let count = uncommitted_edit_count(&self.history_entries);
@@ -9812,104 +9872,130 @@ impl ShellState {
             _ => Ok(()),
         }
     }
+
+    /// 📌️ Arms one hub Check In of the mounted hub document; a running one for the same document is
+    /// kept (its head is whatever the hub acknowledges once it is submitted).
+    #[cfg(not(target_arch = "wasm32"))]
+    fn request_hub_check_in(&mut self, space_id: &str, document_id: &str) {
+        if self.hub_check_in.as_ref().is_some_and(|current| !current.status.as_ref().is_some_and(|status| status.phase.is_terminal()) && current.space_id == space_id && current.document_id == document_id) {
+            return;
+        }
+        let now_ms = Self::directory_now_ms();
+        self.hub_check_in = Some(ShellHubCheckInV1 {
+            space_id: space_id.to_string(),
+            document_id: document_id.to_string(),
+            request_id: mint_directory_command_request_id(),
+            head: None,
+            quiescent_by_ms: now_ms.saturating_add(HUB_CHECK_IN_QUIESCENCE_MS),
+            deadline_at_ms: now_ms.saturating_add(HUB_CHECK_IN_DEADLINE_MS),
+            next_poll_at_ms: now_ms,
+            submitted: false,
+            cancel_requested: false,
+            cancel_sent: false,
+            status: None,
+        });
+    }
+
+    /// 📌️ Drives the Check In by at most one bounded hub request per frame: waits (bounded) for the
+    /// document's sync status to name an acknowledged head, submits it, then polls or cancels to a
+    /// terminal status. Answers whether the footer's status changed.
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn pump_hub_check_in(&mut self) -> bool {
+        use semio_framework_os_kernel::os_directory::{DocumentCheckInPhaseV1, DocumentCheckInRefusalV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_SCHEMA_V1};
+        let Some(operation) = self.hub_check_in.clone() else { return false };
+        if operation.status.as_ref().is_some_and(|status| status.phase.is_terminal()) {
+            return false;
+        }
+        let now_ms = Self::directory_now_ms();
+        let local_refusal = |refusal| Some(hub_check_in_local_status(&operation.request_id, DocumentCheckInPhaseV1::Failed, Some(refusal)));
+        let Some(client) = self.directory_client.clone() else {
+            self.hub_check_in.as_mut().expect("armed check-in").status = local_refusal(DocumentCheckInRefusalV1::AuthorityChanged);
+            return true;
+        };
+        if now_ms >= operation.deadline_at_ms {
+            self.hub_check_in.as_mut().expect("armed check-in").status = local_refusal(DocumentCheckInRefusalV1::Unavailable);
+            return true;
+        }
+        let mounted = self.sync_channel.as_ref().is_some_and(|channel| channel.document_id == operation.document_id) && self.open_space_id.as_deref() == Some(operation.space_id.as_str());
+        let Some(head) = operation.head.clone() else {
+            if !mounted || now_ms >= operation.quiescent_by_ms {
+                self.hub_check_in.as_mut().expect("armed check-in").status = local_refusal(DocumentCheckInRefusalV1::Unavailable);
+                return true;
+            }
+            let Some(head) = self.sync_status.as_ref().and_then(|status| status.acknowledged_head.clone()).filter(|head| head.document_id == operation.document_id) else { return false };
+            let current = self.hub_check_in.as_mut().expect("armed check-in");
+            current.head = Some(head);
+            current.status = Some(hub_check_in_local_status(&current.request_id, DocumentCheckInPhaseV1::Accepted, None));
+            return true;
+        };
+        let cancel_due = operation.cancel_requested && !operation.cancel_sent;
+        if operation.submitted && !cancel_due && now_ms < operation.next_poll_at_ms {
+            return false;
+        }
+        let context = self.directory_command_ctx();
+        let answer = if !operation.submitted {
+            let request = DocumentCheckInV1 { schema: DOCUMENT_CHECK_IN_SCHEMA_V1.to_string(), request_id: operation.request_id.clone(), head };
+            client.document_check_in(&context, &operation.space_id, &request).await
+        } else if cancel_due {
+            client.cancel_document_check_in(&context, &operation.space_id, &operation.document_id, &operation.request_id).await
+        } else {
+            client.document_check_in_status(&context, &operation.space_id, &operation.document_id, &operation.request_id).await
+        };
+        let Some(current) = self.hub_check_in.as_mut().filter(|current| current.request_id == operation.request_id) else { return false };
+        current.next_poll_at_ms = Self::directory_now_ms().saturating_add(HUB_CHECK_IN_POLL_MS);
+        current.submitted = true;
+        current.cancel_sent |= cancel_due;
+        match answer {
+            Ok(status) => current.status = Some(status),
+            Err(DirectoryClientError::Unauthorized) | Err(DirectoryClientError::Http { status: 403, .. }) => current.status = Some(hub_check_in_local_status(&current.request_id, DocumentCheckInPhaseV1::Failed, Some(DocumentCheckInRefusalV1::AuthorityChanged))),
+            Err(DirectoryClientError::Http { status, .. }) if (400..500).contains(&status) => current.status = Some(hub_check_in_local_status(&current.request_id, DocumentCheckInPhaseV1::Failed, Some(DocumentCheckInRefusalV1::Unavailable))),
+            Err(_) => {}
+        }
+        true
+    }
+
+    /// 📌️ The footer's hub badge, followed by the current Check In's status while one is shown.
+    fn hub_footer_label(&self) -> String {
+        let is_de = self.locale_id == "de";
+        let hub = self.hub_connection_state().text(is_de);
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(status) = self.hub_check_in.as_ref().and_then(|operation| operation.status.as_ref()) {
+            return format!("{hub} · {}", hub_check_in_status_text(status, is_de));
+        }
+        hub
+    }
     //#endregion 🔖️CheckIn
 
-    /// @emoji 🔗️ Opens the shell's active app document on a `framework/sync` `ArtifactHost` actor and
-    /// wires the sandboxed plugin store to it, following `framework/product/os/core/rs`'s
-    /// `ArtifactHost` canonical sequence (open → subscribe → register host channel → program
-    /// `attach-backbone`). The React shell's `openDocument` is the TS twin of this exact sequence.
+    /// @emoji 🔗️ The sync card's manual attach: parses the card's uri into bindings and opens the
+    /// session's own document through the ONE [`Self::open_document`] body, so the card and the
+    /// `os.open-artifact` relay cannot drift into two attach sequences (the React shell's
+    /// `openDocument` is the TS twin of that body).
+    ///
+    /// 🌐️ A `remote://` uri names the hub document itself — host, space AND document
+    /// ([`parse_remote_backbone_uri`]) — and binds the session app's own canonical surface, so two
+    /// shells attaching the same uri open the same hub document (the React shell's C1c fix).
     async fn attach_sync_backbone(&mut self, uri: String) -> Result<(), String> {
         let session = self.session.clone().ok_or("session missing")?;
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
-            // 🎠️ H3-wgpu-native — `wasm_runtime()`/`register_host_backbone` retired, see
-            // `detach_sync_backbone_internal`'s note; `attach_backbone` below now carries the honest
-            // "not implemented yet" error for the whole mechanism.
-            let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
-            let schema = session.app.io.artifact_schema.clone();
-            let bindings = Self::parse_persistence_binding(&uri)?;
-            let window_id = self.active_window_id.as_deref().or(session.view_state.window_id.as_deref()).unwrap_or_else(|| session.app.window_kinds.first().id.as_str());
-            let window_kind_id = self.live_window_kind_id(&session, window_id).unwrap_or_else(|| session.app.window_kinds.first().id.as_str()).to_string();
-            // 📌️ ticket §C5 item 4 — checkpoint-on-close: this shell keeps exactly one session/document
-            // mounted at a time, so "attach a different backbone" IS "close" for whatever was open —
-            // same posture the React shell's own report documents ("switch away IS close here").
-            self.checkpoint_before_detach().await;
-            self.detach_sync_backbone_internal().await?;
-            // 🔗️ The manual `remote://` sync-card override never carries a surface (§C6's
-            // auto-binding is what threads one through — see `open_document` below), so the presence
-            // roster stays empty for this path, same as before this lane.
-            self.presence_surface = None;
-            let actor_uri = format!("actor://{document_id}");
-            let actor = self.current_shell_actor(session.instance_id);
-            bind_wgpu_document_socket_surface(&self.document_host, &document_id, &schema, &bindings, &plugin, &session.app, &window_kind_id)?;
-            let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor }).await;
-            let events = self.document_host.subscribe_key(&channels.document_key).await;
-            let binding_generation = self.mint_sync_binding_generation()?;
-            let binding_effects = match plugin.bind_document_backbone(session.instance_id, binding_generation, &actor_uri).await {
-                Ok(effects) => effects,
-                Err(error) => {
-                    let _ = plugin.retire_document_backbone(session.instance_id, binding_generation, &actor_uri).await;
-                    let _ = channels.cmd_tx.send(ArtifactActorMsg::Detach);
-                    self.document_host.close_key(&channels.document_key);
-                    return Err(format!("plugin document-backbone bind: {error}"));
-                }
-            };
-            let cmd_tx = channels.cmd_tx.clone();
-            let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
-            self.sync_channel = Some(ShellSyncChannel {
-                document_id,
-                document_key: channels.document_key,
-                actor_uri,
-                instance_id: session.instance_id,
-                plugin_id: session.plugin_id.clone(),
-                binding_generation,
-                cmd_tx,
-                events,
-                connected_at_ms: chrome_now_ms() as i64,
-            });
-            let channel = self.sync_channel.as_ref().expect("new sync channel is installed");
-            let remaining = match route_document_backbone_effects(&channel.actor_uri, &channel.cmd_tx, binding_effects) {
-                Ok(remaining) => remaining,
-                Err(error) => {
-                    let _ = self.detach_sync_backbone_internal().await;
-                    return Err(error);
-                }
-            };
-            self.queue_host_effects(&session.app.controller_id, remaining);
-            if let Some(error) = self.sync_terminal_fault.take() {
-                let _ = self.detach_sync_backbone_internal().await;
-                return Err(error);
+        let (document_id, bindings, surface) = match parse_remote_backbone_uri(&uri) {
+            Some(remote) => {
+                let surface = semio_framework::manifest::surface_app_id(&session.app.dialect, session.app.role);
+                (remote.document_id, vec![PersistenceBinding::Hub { base_url: format!("http://{}", remote.host_port), space_id: remote.space_id, surface: Some(surface.clone()) }], Some(surface))
             }
-            self.sync_status = Some(ArtifactSyncStatus::default());
-            if let Some(document_key) = self.sync_channel.as_ref().map(|channel| shell_hub_document_key(&channel.document_key)) {
-                self.publish_hub_document_status(document_key, ShellHubRemoteV1::Detached);
-            }
-            self.sync_backbone_uri = Some(uri);
-            self.sync_card_kind = None;
-            Self::debug_log(&format!("[DEBUG] wgpu shell attached backbone {}", self.sync_backbone_uri.as_deref().unwrap_or_default()));
-            self.refresh_history_snapshot().await;
-            self.refresh_ui(UiDirtyScope::Full).await?;
-            Ok(())
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            let _ = &session;
-            self.sync_backbone_uri = Some(uri);
-            self.sync_card_kind = None;
-            web_sys::console::log_1(&"[DEBUG] attached backbone (browser wgpu: relayed via host-shim)".into());
-            Ok(())
-        }
+            None => (self.sync_document_id().ok_or("session missing")?, Self::parse_persistence_binding(&uri)?, None),
+        };
+        self.open_document(document_id, session.app.io.artifact_schema.clone(), bindings, surface, Some(uri)).await
     }
 
     /// 📇️ ticket §2/§C6 — opens an explicit document id/schema on the same `framework/sync`
     /// `ArtifactHost` sequence `attach_sync_backbone` uses, but with caller-supplied bindings (task
     /// 2's default-binding computation, or an explicit override) instead of parsing a manual sync-
     /// card uri — independent of `attach_sync_backbone`, which stays the untouched `remote://`
-    /// override path. Used by the `os.open-artifact{documentId}` opening relay (§4) and by the
-    /// identity-driven space-index auto-bind on the `/spaces/{id}` route (§6).
-    #[cfg(not(target_arch = "wasm32"))]
-    async fn open_document(&mut self, document_id: String, schema: String, bindings: Vec<PersistenceBinding>, surface: Option<String>) -> Result<(), String> {
+    /// override path. Used by the `os.open-artifact{documentId}` opening relay (§4), by the sync
+    /// card's manual attach (`backbone_uri` names what the card shows) and by the identity-driven
+    /// space-index auto-bind on the `/spaces/{id}` route (§6). One body on both targets: the only
+    /// platform split is [`document_bindings_admitted`], refused before any actor exists.
+    async fn open_document(&mut self, document_id: String, schema: String, bindings: Vec<PersistenceBinding>, surface: Option<String>, backbone_uri: Option<String>) -> Result<(), String> {
+        document_bindings_admitted(SHELL_DOCUMENT_TRANSPORTS, &bindings)?;
         let session = self.session.clone().ok_or("session missing")?;
         let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
         let window_id = self.active_window_id.as_deref().or(session.view_state.window_id.as_deref()).unwrap_or_else(|| session.app.window_kinds.first().id.as_str());
@@ -9924,6 +10010,7 @@ impl ShellState {
         let actor_uri = format!("actor://{document_id}");
         let actor = self.current_shell_actor(session.instance_id);
         bind_wgpu_document_socket_surface(&self.document_host, &document_id, &schema, &bindings, &plugin, &session.app, &window_kind_id)?;
+        self.bind_document_execution_target(&document_id, &schema, &bindings, &plugin, &session.app, &window_kind_id).await?;
         let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor }).await;
         let events = self.document_host.subscribe_key(&channels.document_key).await;
         let binding_generation = self.mint_sync_binding_generation()?;
@@ -9938,7 +10025,7 @@ impl ShellState {
         };
         let cmd_tx = channels.cmd_tx.clone();
         let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
-        self.sync_backbone_uri = Some(actor_uri.clone());
+        self.sync_backbone_uri = Some(backbone_uri.unwrap_or_else(|| actor_uri.clone()));
         self.sync_channel =
             Some(ShellSyncChannel { document_id, document_key: channels.document_key, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), binding_generation, cmd_tx, events, connected_at_ms: chrome_now_ms() as i64 });
         let channel = self.sync_channel.as_ref().expect("new sync channel is installed");
@@ -9963,10 +10050,42 @@ impl ShellState {
         self.refresh_ui(UiDirtyScope::Full).await
     }
 
+    /// 🪪️ The kind identity of a hub document whose schema this process resolves no codec for (neither
+    /// linked nor a mounted component's, [`store_sync::os_store::document_kind_codec`]): the
+    /// hub-selected execution target's lease for the exact scope and the surface this shell requests,
+    /// bound onto the document host only when it names the package this shell mounted
+    /// ([`document_execution_target_admitted`]). A kind with a linked codec, or a document with no hub
+    /// binding, needs none. Both targets walk this one body.
+    async fn bind_document_execution_target(&mut self, document_id: &str, schema: &str, bindings: &[PersistenceBinding], program: &ProgramBridgeEntry, app: &AppDefinition, window_kind_id: &str) -> Result<(), String> {
+        let Some(space_id) = bindings.iter().find_map(|binding| match binding {
+            PersistenceBinding::Hub { space_id, .. } => Some(space_id.clone()),
+            PersistenceBinding::Folder { .. } => None,
+        }) else {
+            return Ok(());
+        };
+        if store_sync::os_store::document_kind_codec(schema).await.map_err(|error| format!("document codec registry: {error}"))?.is_some() {
+            return Ok(());
+        }
+        let client = self.directory_client.clone().ok_or("document open requires a signed-in hub session")?;
+        let surface_id = wgpu_document_socket_surface(program, app, window_kind_id)?;
+        let intent = semio_framework_os_kernel::os_directory::DocumentOpenIntentV1 {
+            schema: "semio.hub.document-open-intent/v1".into(),
+            version: 1,
+            scope: semio_framework_os_kernel::os_directory::DocumentScope::new(space_id.as_str(), document_id),
+            requested_surface_id: Some(surface_id.clone()),
+            client_instance_id: format!("wgpu-shell-{}", self.shell_session_id),
+        };
+        let lease = client.document_execution_target_manifest(&self.directory_command_ctx(), &intent).await.map_err(|error| format!("document execution target: {error}"))?;
+        document_execution_target_admitted(&lease, &program.plugin_id, program.package_id.as_deref(), program.component_sha256.as_deref(), schema, &surface_id)?;
+        if !self.document_host.set_document_execution_target_lease(&ArtifactDocumentKey::hub(space_id, document_id), lease) {
+            return Err("document execution target is already bound for this document".into());
+        }
+        Ok(())
+    }
+
     /// 📇️ Default bindings for a document opened against the CURRENTLY mounted session's own
     /// dialect/role — `default_persistence_bindings`'s pure decision, fed the live identity/space/
     /// data-dir/surface this shell already holds.
-    #[cfg(not(target_arch = "wasm32"))]
     fn default_bindings_for_current_session(&self) -> (Vec<PersistenceBinding>, Option<String>) {
         let space_id = self.open_space_id.clone();
         let data_dir = self.identity_env.as_ref().and_then(|env| env.data_dir.as_deref());
@@ -10055,9 +10174,7 @@ impl ShellState {
             "detach" => {
                 // 📌️ ticket §C5 item 4 — the one EXPLICIT close (a user-initiated "Detach"), same
                 // checkpoint-before-detach guard as the two switch-triggered closes above.
-                #[cfg(not(target_arch = "wasm32"))]
                 self.checkpoint_before_detach().await;
-                #[cfg(not(target_arch = "wasm32"))]
                 self.detach_sync_backbone_internal().await?;
                 self.sync_backbone_uri = None;
                 self.sync_card_kind = None;
@@ -10630,7 +10747,8 @@ impl ShellState {
             }
         }
         if action.controller_id == "framework.sync" {
-            return self.handle_sync_action(action).await;
+            self.handle_sync_action(action).await?;
+            return self.republish_shell_panel_document(FRAMEWORK_SYNC_PANEL_TAB_ID);
         }
         // 📌️ ticket §C5 item 3 — explicit check-in's own dedicated controller (`#s-checkin`'s
         // open/cancel/submit dialog funnel), same shell-owned-chrome treatment as `framework.sync`
@@ -10663,7 +10781,8 @@ impl ShellState {
         };
         let program = self.plugins.iter().find(|p| p.manifest.apps.iter().any(|app| app.controller_id == action.controller_id)).or_else(|| self.plugins.iter().find(|p| p.plugin_id == session.plugin_id)).ok_or("action program missing")?;
         let requested_window_id = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str);
-        let window_instance_id = requested_window_id.map(str::to_string).or_else(|| session.view_state.window_id.clone()).or_else(|| self.active_window_id.clone()).unwrap_or_else(|| session.app.window_kinds.first().id.clone());
+        let panel_leaves: Vec<&str> = Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().map(|tab| tab.id()).collect();
+        let window_instance_id = action_window_instance_id(requested_window_id, &panel_leaves, session.view_state.window_id.as_deref(), self.active_window_id.as_deref(), &session.app.window_kinds.first().id);
         let live_view_state = self.live_view_state(&session);
         let window_kind_id = live_view_state
             .window_instances
@@ -10673,7 +10792,8 @@ impl ShellState {
             .or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_instance_id).map(|kind| kind.id.clone()))
             .ok_or_else(|| format!("action window instance {window_instance_id} has no declared kind"))?;
         let mode_id = session.view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone());
-        let arguments = action.args.as_ref().and_then(DslValue::as_object).map(|entries| entries.iter().cloned().collect()).unwrap_or_default();
+        let panel_origin = requested_window_id.is_some_and(|id| panel_leaves.contains(&id));
+        let arguments = action.args.as_ref().and_then(DslValue::as_object).map(|entries| entries.iter().filter(|(key, _)| !(panel_origin && key == "windowId")).cloned().collect()).unwrap_or_default();
         let invocation = semio_framework::manifest::ActionInvocation {
             address: semio_framework::manifest::ActionAddress { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), mode_id, window_kind_id, window_instance_id, action_id: action.action.clone() },
             arguments,
@@ -10976,12 +11096,12 @@ impl ShellState {
     pub async fn pump_directory_events(&mut self) -> bool {
         let identity_changed = self.poll_browser_identity().await;
         let administration_changed = self.pump_space_administration().await;
-        self.poll_auto_checkin().await;
         self.flush_pending_directory_commands().await;
+        let creation_changed = self.pump_hub_artifact_creation().await;
         // 🌉️ Packet W15e: the agent bridge's socket rides the SAME 100 ms slot rather than a timer of
         // its own — one pump cadence for every out-of-process conversation this shell holds.
         let bridge_changed = self.pump_agent_bridge();
-        identity_changed || administration_changed || bridge_changed
+        identity_changed || administration_changed || creation_changed || bridge_changed
     }
 
     //#endregion 📇️DirectoryLane
@@ -11055,6 +11175,7 @@ impl ShellState {
             hub_action::OPEN_SPACE => {
                 self.hub_workspace.open_space_id = (!space_id.is_empty()).then(|| space_id.clone());
                 self.reload_hub_members(&space_id).await;
+                self.open_hub_artifact_creation(&space_id).await;
                 if !space_id.is_empty() {
                     let uri = format!("/spaces/{space_id}");
                     self.push_uri(uri.clone());
@@ -11072,9 +11193,149 @@ impl ShellState {
             }
             hub_action::CREATE_INVITE => self.run_hub_create_invite_turn(&space_id).await,
             hub_action::REDEEM_INVITE => self.run_hub_redeem_turn().await,
+            hub_action::SELECT_ARTIFACT_KIND => {
+                let kind_id = args.as_ref().and_then(|args| args.get("kindId")).and_then(DslValue::as_str).unwrap_or_default();
+                let creation = &mut self.hub_workspace.creation;
+                if creation.catalog.as_ref().is_some_and(|catalog| catalog.kinds.iter().any(|kind| kind.kind_id == kind_id)) {
+                    creation.kind_id = Some(kind_id.to_string());
+                }
+            }
+            hub_action::SET_ARTIFACT_NAME => self.hub_workspace.creation.name_draft = value,
+            hub_action::CREATE_ARTIFACT => {
+                self.begin_hub_artifact_creation();
+                self.pump_hub_artifact_creation().await;
+            }
+            hub_action::CANCEL_ARTIFACT_CREATION => {
+                if let Some(operation) = self.hub_workspace.creation.operation.as_mut().filter(|operation| !hub_artifact_creation_terminal(operation.phase)) {
+                    operation.cancel_requested = true;
+                }
+                self.pump_hub_artifact_creation().await;
+            }
+            hub_action::OPEN_CREATED_ARTIFACT => {
+                self.open_created_hub_artifact().await;
+            }
             _ => {}
         }
         let _ = self.refresh_ui(UiDirtyScope::Full).await;
+    }
+
+    /// 🌱️ Opens the creation door for `space_id`: a fresh door holding a minted idempotency key, then
+    /// the space's selected current catalog. A hub with no ready catalog leaves the door
+    /// `Unavailable`, saying so in both languages; local work never waits on it.
+    async fn open_hub_artifact_creation(&mut self, space_id: &str) {
+        self.hub_workspace.creation = HubArtifactCreationState { next_request_id: mint_directory_command_request_id(), ..HubArtifactCreationState::default() };
+        let Some(client) = self.directory_client.clone().filter(|_| !space_id.is_empty()) else { return };
+        self.hub_workspace.creation.catalog_phase = HubArtifactCatalogPhase::Loading;
+        match client.space_artifact_creation_catalog(&self.directory_command_ctx(), space_id).await {
+            Ok(catalog) => {
+                self.hub_workspace.creation.catalog = Some(catalog);
+                self.hub_workspace.creation.catalog_phase = HubArtifactCatalogPhase::Ready;
+            }
+            Err(_) => self.hub_workspace.creation.catalog_phase = HubArtifactCatalogPhase::Unavailable,
+        }
+    }
+
+    /// 📥️ Seals the door's intent under its minted key and mints the next one at once, so no later
+    /// click can resubmit this request id as a second creation. The frame pump submits it.
+    fn begin_hub_artifact_creation(&mut self) {
+        let Some(space_id) = self.hub_workspace.open_space_id.clone() else { return };
+        let Some(intent) = hub_artifact_creation_intent(&self.hub_workspace) else { return };
+        let now_ms = Self::directory_now_ms();
+        let creation = &mut self.hub_workspace.creation;
+        creation.next_request_id = mint_directory_command_request_id();
+        creation.operation = Some(HubArtifactCreation {
+            intent,
+            space_id,
+            phase: SpaceArtifactCreationPhaseV1::Accepted,
+            submitted: false,
+            cancel_requested: false,
+            cancel_sent: false,
+            ready: None,
+            opening: HubArtifactOpening::Idle,
+            deadline_at_ms: now_ms.saturating_add(HUB_ARTIFACT_CREATION_DEADLINE_MS),
+            next_poll_at_ms: now_ms,
+        });
+    }
+
+    /// 🌱️ Drives the one creation by at most one bounded hub request per frame — its submission, its
+    /// cancellation, or a status poll no sooner than `HUB_ARTIFACT_CREATION_POLL_MS` after the last —
+    /// and opens the artifact once the receipt is `Ready`. Past `HUB_ARTIFACT_CREATION_DEADLINE_MS` the
+    /// outcome is `Indeterminate` (the hub may still finish it), never `Failed`. A `409` on the
+    /// submission means the catalog generation moved: the door re-reads the catalog instead of
+    /// retrying. Answers whether the door changed.
+    async fn pump_hub_artifact_creation(&mut self) -> bool {
+        let Some(operation) = self.hub_workspace.creation.operation.clone() else { return false };
+        if hub_artifact_creation_terminal(operation.phase) {
+            if operation.ready.is_some() && operation.opening == HubArtifactOpening::Idle {
+                self.open_created_hub_artifact().await;
+                return true;
+            }
+            return false;
+        }
+        let Some(client) = self.directory_client.clone() else { return false };
+        let now_ms = Self::directory_now_ms();
+        if now_ms >= operation.deadline_at_ms {
+            if let Some(current) = self.hub_workspace.creation.operation.as_mut() {
+                current.phase = SpaceArtifactCreationPhaseV1::Indeterminate;
+            }
+            return true;
+        }
+        let request_id = operation.intent.request_id.as_str();
+        let context = self.directory_command_ctx();
+        let (receipt, submission, cancellation) = if !operation.submitted {
+            (client.create_space_artifact(&context, &operation.space_id, &operation.intent).await, true, false)
+        } else if operation.cancel_requested && !operation.cancel_sent {
+            (client.cancel_space_artifact_creation(&context, &operation.space_id, request_id).await, false, true)
+        } else if now_ms >= operation.next_poll_at_ms {
+            (client.space_artifact_creation_status(&context, &operation.space_id, request_id).await, false, false)
+        } else {
+            return false;
+        };
+        let mut refresh_catalog = false;
+        {
+            let Some(current) = self.hub_workspace.creation.operation.as_mut().filter(|current| current.intent.request_id == operation.intent.request_id) else { return false };
+            current.submitted = true;
+            current.cancel_sent |= cancellation;
+            current.next_poll_at_ms = Self::directory_now_ms().saturating_add(HUB_ARTIFACT_CREATION_POLL_MS);
+            match receipt {
+                Ok(status) if status.catalog_generation_id == current.intent.expected_catalog_generation_id && status.ready.as_ref().is_none_or(|ready| ready.kind_id == current.intent.kind_id) => {
+                    current.phase = status.phase;
+                    current.ready = status.ready;
+                }
+                Ok(_) => current.phase = SpaceArtifactCreationPhaseV1::Failed,
+                Err(DirectoryClientError::Http { status: 409, .. }) if submission => {
+                    current.phase = SpaceArtifactCreationPhaseV1::Failed;
+                    refresh_catalog = true;
+                }
+                Err(DirectoryClientError::Http { status, .. }) if (400..500).contains(&status) => current.phase = SpaceArtifactCreationPhaseV1::Failed,
+                Err(DirectoryClientError::Unauthorized) => current.phase = SpaceArtifactCreationPhaseV1::Failed,
+                Err(_) => {}
+            }
+        }
+        if refresh_catalog {
+            let space_id = operation.space_id.clone();
+            let operation = self.hub_workspace.creation.operation.take();
+            self.open_hub_artifact_creation(&space_id).await;
+            self.hub_workspace.creation.operation = operation;
+        }
+        true
+    }
+
+    /// 🚪️ Opens a ready artifact through the ordinary document-open relay, bound to its space, with
+    /// the dialect and schema the hub's receipt names; the relay resolves and mounts the owning app.
+    /// The opening is `Opened` only when this shell's document binding names the created artifact.
+    async fn open_created_hub_artifact(&mut self) {
+        let Some((ready, space_id)) = self.hub_workspace.creation.operation.as_ref().and_then(|operation| operation.ready.clone().map(|ready| (ready, operation.space_id.clone()))) else { return };
+        if let Some(operation) = self.hub_workspace.creation.operation.as_mut() {
+            operation.opening = HubArtifactOpening::Opening;
+        }
+        let dialect = semio_framework::ArtifactDialect { artifact_kind: ready.parent_dialect.artifact_kind.clone(), standard: ready.parent_dialect.standard.clone(), subset: ready.parent_dialect.subset.clone() };
+        let args = serde_json::json!({ "artifactRef": dialect.to_coordinate(), "documentId": ready.artifact_id, "schema": ready.artifact_schema, "spaceId": space_id });
+        self.handle_open_artifact_relay("os.open-artifact", Some(&args)).await;
+        let opened = self.sync_channel.as_ref().is_some_and(|channel| channel.document_id == ready.artifact_id);
+        if let Some(operation) = self.hub_workspace.creation.operation.as_mut() {
+            operation.opening = if opened { HubArtifactOpening::Opened } else { HubArtifactOpening::Failed };
+        }
     }
 
     fn persist_hub_connection_book(&self) {
@@ -11133,11 +11394,8 @@ impl ShellState {
                         self.identity = Some(Identity { user_id: authority.user_id.clone(), email: authority.email.clone(), display_name: authority.display_name.clone(), hub_base_url: origin.clone(), issued_at_ms: chrome_now_ms() as i64 });
                         self.verified_session_authority = Some(authority);
                         self.directory_client = Some(client.clone());
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            self.document_host.set_local_hub_credential(credential);
-                            self.document_host.set_hub_socket_grant_source(client);
-                        }
+                        self.document_host.set_local_hub_credential(credential);
+                        self.document_host.set_hub_socket_grant_source(client);
                         let selected_id = self.hub_workspace.book.selected_id.clone();
                         if let Some(connection) = self.hub_workspace.book.connections.iter_mut().find(|connection| connection.id == selected_id) {
                             connection.last_user_id = Some(result.user_id);
@@ -11363,13 +11621,11 @@ impl ShellState {
     /// 📂️ Opens the relay's exact `documentId`/`schema` pair with `spaceId` pinning
     /// `open_space_id` first so default binding computation sees it. An app-only relay is a no-op.
     ///
-    /// 🌐️ Both targets. The relay has two halves and only the second one is native: resolving the
-    /// owner of an artifact kind, installing it on demand and switching the session to its app is
-    /// pure catalog + program-bridge work that the browser build already links, so a browser wgpu
-    /// shell opens a foreign-kind artifact exactly like the native one. Binding that opened session
-    /// to a hub document is the half that needs the `ArtifactHost` backbone
-    /// (`🏪️store/🔄️sync`), which the browser build does not link — it refuses out loud there
-    /// (`open-artifact.browser-document`) rather than dropping the caller's `documentId` silently.
+    /// 🌐️ One body on both targets: resolving the owner of an artifact kind, installing it on demand
+    /// (O2's `install_plugin`, whose progress + cancel band the chrome paints), switching the
+    /// session to its app and binding that session to its document on the shell's `ArtifactHost`.
+    /// A document the host cannot serve is refused out loud (`open-artifact.document-failed`), never
+    /// dropped: the caller's `documentId` either binds or explains itself.
     async fn handle_open_artifact_relay(&mut self, action_id: &str, args: Option<&Value>) {
         let target = match open_artifact_relay_target(action_id, args) {
             Ok(target) => target,
@@ -11404,27 +11660,21 @@ impl ShellState {
         let (Some(document_id), Some(schema)) = (target.document_id, target.schema) else {
             return;
         };
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let (bindings, surface) = self.default_bindings_for_current_session();
-            if let Err(error) = self.open_document(document_id, schema, bindings, surface).await {
-                Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact relay failed: {error}"));
-            }
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            let _ = (document_id, schema);
+        let (bindings, surface) = self.default_bindings_for_current_session();
+        if let Err(error) = self.open_document(document_id, schema, bindings, surface, None).await {
+            Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact relay failed: {error}"));
             let is_de = self.locale_id == "de";
-            self.show_transient_notice(shell_chrome_string("open-artifact.browser-document", is_de), semio_framework::Severity::Warning, Some("open-artifact.browser-document"));
+            self.show_transient_notice(shell_chrome_string("open-artifact.document-failed", is_de), semio_framework::Severity::Warning, Some("open-artifact.document-failed"));
         }
     }
 
 
-    /// 📔️ Live directory WS events fold through `foldDirectoryEvents` (browser parity) so hub
-    /// membership stays projected without waiting for a full event-page rebootstrap.
+    /// 📔️ Live directory WS events reach the mounted Space index through `foldDirectoryEvents`
+    /// (browser parity), so its membership stays projected. Home is never folded: its projection's
+    /// only writer is the sealed page lane, which the same events wake through `home.wake` below.
     #[cfg(not(target_arch = "wasm32"))]
     fn dispatch_fold_directory_events(&mut self, events: &[semio_framework_os_kernel::os_directory::DirectoryEvent]) {
-        let Some(session) = self.session.clone() else { return };
+        let Some(session) = self.session.clone().filter(|session| session.app.dialect == space_index_dialect()) else { return };
         let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };
         let events_json = dsl::os_pack::json::to_json_string(&events.to_vec());
         let live_view_state = self.live_view_state(&session);
@@ -11647,6 +11897,8 @@ impl ShellState {
         // 🏛️ One bounded administration turn per frame: the retained operation never spins, because
         // `pump_space_administration` answers `false` the moment it reaches `Idle` or a terminal phase.
         let mut changed = self.pump_space_administration().await || inference_changed || bridge_changed;
+        changed |= self.pump_hub_artifact_creation().await;
+        changed |= self.pump_hub_check_in().await;
         let runner = self.directory_home.as_ref().and_then(|home| home.stream.clone());
         if let Some(runner) = runner {
             if runner.take_terminal() {
@@ -12266,7 +12518,6 @@ impl ShellState {
             _ => (raw.clone(), false),
         };
         let space_id = space_route.0;
-        #[cfg(not(target_arch = "wasm32"))]
         if !space_route.1 {
             self.open_space_id = Some(space_id.clone());
             let host_program = self.plugins.iter().find(|program| program.plugin_id == cfg.plugin_id).cloned();
@@ -12280,7 +12531,7 @@ impl ShellState {
             };
             self.switch_to_app(cfg.plugin_id, space_app).await?;
             let (bindings, surface) = self.default_bindings_for_current_session();
-            return self.open_document(S_SPACE_INDEX_DOCUMENT_ID.to_string(), S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string(), bindings, surface).await;
+            return self.open_document(S_SPACE_INDEX_DOCUMENT_ID.to_string(), S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string(), bindings, surface, None).await;
         }
         let studio_changed = self.open_space_id.as_deref() != Some(space_id.as_str());
         // 🧭️ Pin before the async switch so a concurrent chrome sync cannot boot the demo example over
@@ -13095,8 +13346,13 @@ impl ShellState {
     }
 
     /// 🧭️ A retained panel tab owns pointer routing but is not an application window instance.
+    /// 🧭️ Whether a retained surface is shell chrome rather than a plugin window: a panel open in an
+    /// anchor, or any shell-owned leaf wherever it is shown (the `/hub` workspace overlay is the
+    /// `framework.hub` leaf with no anchor). Focusing or pressing chrome never makes it the active
+    /// window — every plugin action resolves its window kind from `active_window_id`, and a chrome id
+    /// there has none, which faulted the frame.
     fn retained_surface_is_panel(&self, surface_id: &str) -> bool {
-        self.open_anchors().into_iter().any(|anchor| self.anchor_state(anchor).active_tab() == Some(surface_id))
+        self.open_anchors().into_iter().any(|anchor| self.anchor_state(anchor).active_tab() == Some(surface_id)) || self.shell_owned_panel_leaves().iter().any(|leaf| leaf == surface_id)
     }
 
     /// 🎯️ Publishes one retained body's own registry into the host's `InputState` and remembers who
@@ -16972,7 +17228,6 @@ pub(crate) fn shell_hub_connection_summary_v1(projection: &ShellHubProjectionV1)
     ShellHubSummaryV1 { state, peer_count, document_count }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 fn shell_hub_document_key(document_key: &ArtifactDocumentKey) -> String {
     match document_key {
         ArtifactDocumentKey::Local { document_id } => format!("local:{document_id}"),
@@ -16980,7 +17235,6 @@ fn shell_hub_document_key(document_key: &ArtifactDocumentKey) -> String {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 fn shell_hub_remote(remote: &RemoteState) -> ShellHubRemoteV1 {
     match remote {
         RemoteState::Detached => ShellHubRemoteV1::Detached,
@@ -17011,6 +17265,65 @@ impl ShellHubConnectionState {
         }
     }
 }
+
+//#region 📌️HubCheckIn
+/// ⏳️ How long a requested Check In waits for the document's edits to be acknowledged.
+#[cfg(not(target_arch = "wasm32"))]
+const HUB_CHECK_IN_QUIESCENCE_MS: u64 = 15_000;
+/// ⏱️ The whole Check In, from request to a terminal status.
+#[cfg(not(target_arch = "wasm32"))]
+const HUB_CHECK_IN_DEADLINE_MS: u64 = 180_000;
+#[cfg(not(target_arch = "wasm32"))]
+const HUB_CHECK_IN_POLL_MS: u64 = 250;
+
+/// 📌️ One native hub Check In owner (see `ShellState::hub_check_in`).
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Debug)]
+pub struct ShellHubCheckInV1 {
+    pub space_id: String,
+    pub document_id: String,
+    pub request_id: String,
+    pub head: Option<semio_framework_os_kernel::os_directory::EditedArtifactFrontierV1>,
+    pub quiescent_by_ms: u64,
+    pub deadline_at_ms: u64,
+    pub next_poll_at_ms: u64,
+    pub submitted: bool,
+    pub cancel_requested: bool,
+    pub cancel_sent: bool,
+    pub status: Option<semio_framework_os_kernel::os_directory::DocumentCheckInStatusV1>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn hub_check_in_local_status(request_id: &str, phase: semio_framework_os_kernel::os_directory::DocumentCheckInPhaseV1, refusal: Option<semio_framework_os_kernel::os_directory::DocumentCheckInRefusalV1>) -> semio_framework_os_kernel::os_directory::DocumentCheckInStatusV1 {
+    semio_framework_os_kernel::os_directory::DocumentCheckInStatusV1 {
+        schema: semio_framework_os_kernel::os_directory::DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1.to_string(),
+        request_id: request_id.to_string(),
+        phase,
+        progress: semio_framework_os_kernel::os_directory::DocumentCheckInProgressV1 { completed_units: 0, total_units: 8 },
+        ready: None,
+        refusal,
+    }
+}
+
+/// 📌️ One sentence for a hub Check In status (the React twin is `checkinStatusText`).
+#[cfg(not(target_arch = "wasm32"))]
+fn hub_check_in_status_text(status: &semio_framework_os_kernel::os_directory::DocumentCheckInStatusV1, is_de: bool) -> String {
+    use semio_framework_os_kernel::os_directory::{DocumentCheckInPhaseV1 as Phase, DocumentCheckInRefusalV1 as Refusal};
+    let key = match (status.phase, status.refusal) {
+        (Phase::Ready, _) => "checkIn.ready",
+        (Phase::Cancelled, _) => "checkIn.cancelled",
+        (Phase::Failed, Some(Refusal::UnknownHead)) => "checkIn.unknownHead",
+        (Phase::Failed, Some(Refusal::StaleHead)) => "checkIn.staleHead",
+        (Phase::Failed, Some(Refusal::ActiveCheckpointChanged)) => "checkIn.activeCheckpointChanged",
+        (Phase::Failed, Some(Refusal::LedgerNotReplayable)) => "checkIn.ledgerNotReplayable",
+        (Phase::Failed, Some(Refusal::CodecRefused)) => "checkIn.codecRefused",
+        (Phase::Failed, Some(Refusal::AuthorityChanged)) => "checkIn.authorityChanged",
+        (Phase::Failed, _) => "checkIn.unavailable",
+        (Phase::Accepted | Phase::Materializing | Phase::Publishing, _) => return format!("{} {}/{}", shell_chrome_string("checkIn.running", is_de), status.progress.completed_units, status.progress.total_units),
+    };
+    shell_chrome_string(key, is_de).to_string()
+}
+//#endregion 📌️HubCheckIn
 
 #[allow(clippy::too_many_arguments, reason = "one retained footer status item")]
 fn render_footer_status_step(
@@ -23231,10 +23544,8 @@ impl ShellState {
     }
 
     /// 💓️ Coalesces one bounded presence preview page for the shared I/O lane. A shell with no sync
-    /// channel has no peer to heartbeat to, and the browser has no sync backbone at all, so the step
-    /// there would only clear its own flag.
+    /// channel has no peer to heartbeat to, so the step there would only clear its own flag.
     fn request_presence_preview(&mut self) {
-        #[cfg(not(target_arch = "wasm32"))]
         if self.sync_channel.is_some() {
             self.chrome_present.maintenance.presence_requested = true;
         }
@@ -23399,7 +23710,6 @@ impl ShellState {
         self.chrome_present.maintenance.layout_requested = false;
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     fn advance_presence_preview_step(&mut self) {
         self.chrome_present.maintenance.presence_requested = false;
         let Some(channel) = self.sync_channel.as_ref() else { return };
@@ -23416,11 +23726,6 @@ impl ShellState {
         let user_id = self.identity.as_ref().map(|identity| identity.user_id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
         let peer = PresencePeer { actor, label, presence_pack: None, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None, active_tool: None };
         self.document_host.presence_heartbeat_key(&channel.document_key, chrome_now_ms() as u64, peer);
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    fn advance_presence_preview_step(&mut self) {
-        self.chrome_present.maintenance.presence_requested = false;
     }
 
     fn advance_chrome_preferences_persist_step(&mut self) {
@@ -23575,7 +23880,7 @@ impl ShellState {
         let bottom_middle = if mobile { 0.0 } else { self.footer_band_width(atlas, theme, PanelAnchor::BottomMiddle) };
         let bottom_right = if mobile { 0.0 } else { self.footer_band_width(atlas, theme, PanelAnchor::BottomRight) };
         let hub = self.hub_connection_state();
-        let hub_label = hub.text(self.locale_id == "de");
+        let hub_label = self.hub_footer_label();
         let hub_item = ChromeGroupItem { control_id: "s-hub-connection", icon_id: Some(hub.icon_id()), label: Some(hub_label.as_str()), active: false, disabled: false, kind: HitKind::Button };
         let hub_width = retained_chrome_group_item_width(atlas, theme, &hub_item).unwrap_or(theme.control_height);
         let presence_rows = self.footer_presence_rows();
@@ -25168,7 +25473,7 @@ impl ShellState {
             4 => {
                 let layout = self.footer_chrome_layout(atlas, theme, width, btn_y, btn_h);
                 let hub = self.hub_connection_state();
-                let label = hub.text(self.locale_id == "de");
+                let label = self.hub_footer_label();
                 let actionable = hub == ShellHubConnectionState::SignedOut;
                 let control_id = if actionable { "framework.hub.signIn" } else { "s-hub-connection" };
                 match render_footer_status_step(cursor, draw, atlas, icons, input, theme, layout.hub, control_id, Some(hub.icon_id()), &label, actionable) {
@@ -26131,8 +26436,9 @@ impl ShellState {
         let locale = self.active_locale();
         let pad = theme.padding_standard;
         let line_h = theme.font_size_small * 1.6;
-        let parsed: Vec<(String, approvals::ParsedApprovalSummary)> = self.chrome_build.agent.pending_approvals.iter().map(|approval| (approval.approval_id.clone(), approvals::parse_approval_summary(&approval.summary))).collect();
-        let heights: Vec<f32> = parsed.iter().map(|(_, summary)| approvals::approval_row_height(summary, theme)).collect();
+        let now_ms = chrome_now_ms();
+        let parsed: Vec<(String, approvals::ParsedApprovalSummary, f64)> = self.chrome_build.agent.pending_approvals.iter().map(|approval| (approval.approval_id.clone(), approvals::parse_approval_summary(&approval.summary), approval.requested_at_ms)).collect();
+        let heights: Vec<f32> = parsed.iter().map(|(_, summary, _)| approvals::approval_row_height(summary, theme)).collect();
         let modal = approvals::approvals_modal_rect(width, height, &heights, theme);
         let list = approvals::approvals_list_rect(modal, theme);
         let close_label = shell_chrome_string("common.close", locale == Locale::De);
@@ -26150,25 +26456,19 @@ impl ShellState {
             ops.push(text(approvals::approvals_empty(locale), list.x, list.y + theme.font_size_small, list.w, theme.font_size_small, theme.text_muted));
         }
         let mut row_y = list.y;
-        for ((approval_id, summary), row_h) in parsed.iter().zip(heights.iter()) {
+        for ((approval_id, summary, requested_at_ms), row_h) in parsed.iter().zip(heights.iter()) {
             if row_y + row_h > list.y + list.h {
                 break;
             }
             let row = Rect::new(list.x, row_y, list.w, *row_h);
-            let mut line_y = row.y + theme.font_size_small;
-            let mut line = |ops: &mut Vec<AgentApprovalPaintOp>, value: String, color: Rgba| {
-                ops.push(AgentApprovalPaintOp::Text { value, x: row.x, y: line_y, max_w: row.w.max(1.0), size: theme.font_size_small, color });
-                line_y += line_h;
-            };
-            if let Some(capability) = summary.capability_id.as_ref() {
-                line(&mut ops, format!("{}: {capability}", approvals::approvals_capability_label(locale)), theme.text);
-            }
-            line(&mut ops, format!("{}: {}", approvals::approvals_diff_label(locale), summary.diff_summary), theme.text);
-            if let Some(requested_by) = summary.requested_by.as_ref() {
-                line(&mut ops, format!("{}: {requested_by}", approvals::approvals_requested_by_label(locale)), theme.text_muted);
-            }
-            if let Some(risk) = summary.risk {
-                line(&mut ops, format!("{}: {}", approvals::approvals_risk_label(locale), risk.label(locale)), risk.color(theme));
+            let seconds_left = approvals::approval_seconds_remaining(summary.timeout_ms, *requested_at_ms, now_ms);
+            for (index, approval_line) in approvals::approval_row_lines(summary, seconds_left, locale).into_iter().enumerate() {
+                let color = match approval_line.tone {
+                    approvals::ApprovalLineTone::Text => theme.text,
+                    approvals::ApprovalLineTone::Muted => theme.text_muted,
+                    approvals::ApprovalLineTone::Risk(risk) => risk.color(theme),
+                };
+                ops.push(AgentApprovalPaintOp::Text { value: approval_line.text, x: row.x, y: row.y + theme.font_size_small + index as f32 * line_h, max_w: row.w.max(1.0), size: theme.font_size_small, color });
             }
             for (decision, rect) in approvals::approval_decision_rects(row, theme) {
                 let label_color = if matches!(decision, crate::agent_bridge::ApprovalDecision::Deny) { theme.error } else { theme.text };
@@ -27681,8 +27981,8 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("plugin.install.failed", true) => "Plugin konnte nicht geladen werden",
         ("plugin.install.cancel", false) => "Cancel",
         ("plugin.install.cancel", true) => "Abbrechen",
-        ("open-artifact.browser-document", false) => "Opened the app, but document sync is unavailable in this browser build",
-        ("open-artifact.browser-document", true) => "App geöffnet, aber Dokumentsynchronisierung ist in diesem Browser-Build nicht verfügbar",
+        ("open-artifact.document-failed", false) => "Opened the app, but its document could not be attached here",
+        ("open-artifact.document-failed", true) => "App geöffnet, aber das Dokument konnte hier nicht angehängt werden",
         ("surface.faulted", false) => "Surface unavailable",
         ("surface.faulted", true) => "Fläche nicht verfügbar",
         ("settings.tab.theme", false) => "Theme",
@@ -28067,6 +28367,26 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("command.applyLayout", true) => "Layout anwenden",
         ("command.checkIn", false) => "Check In",
         ("command.checkIn", true) => "Einchecken",
+        ("checkIn.running", false) => "Checking in…",
+        ("checkIn.running", true) => "Wird eingecheckt…",
+        ("checkIn.ready", false) => "Checked in",
+        ("checkIn.ready", true) => "Eingecheckt",
+        ("checkIn.cancelled", false) => "Check-in cancelled",
+        ("checkIn.cancelled", true) => "Einchecken abgebrochen",
+        ("checkIn.unknownHead", false) => "Check-in refused: the hub does not know this version",
+        ("checkIn.unknownHead", true) => "Einchecken abgelehnt: Der Hub kennt diesen Stand nicht",
+        ("checkIn.staleHead", false) => "Already checked in: a newer check-in exists",
+        ("checkIn.staleHead", true) => "Bereits eingecheckt: Es gibt einen neueren Check-in",
+        ("checkIn.activeCheckpointChanged", false) => "Check-in collided with another check-in; try again",
+        ("checkIn.activeCheckpointChanged", true) => "Einchecken kollidierte mit einem anderen Check-in; bitte erneut versuchen",
+        ("checkIn.ledgerNotReplayable", false) => "Check-in refused: an approval in this range is checked in on its own",
+        ("checkIn.ledgerNotReplayable", true) => "Einchecken abgelehnt: Eine Freigabe in diesem Bereich wird separat eingecheckt",
+        ("checkIn.codecRefused", false) => "Check-in refused: the document could not be rebuilt",
+        ("checkIn.codecRefused", true) => "Einchecken abgelehnt: Das Dokument konnte nicht wiederhergestellt werden",
+        ("checkIn.authorityChanged", false) => "Check-in stopped: you can no longer edit this document",
+        ("checkIn.authorityChanged", true) => "Einchecken gestoppt: Sie dürfen dieses Dokument nicht mehr bearbeiten",
+        ("checkIn.unavailable", false) => "Check-in unavailable; try again",
+        ("checkIn.unavailable", true) => "Einchecken nicht verfügbar; bitte erneut versuchen",
         ("command.moveWindow", false) => "Move Window",
         ("command.moveWindow", true) => "Fenster verschieben",
         ("command.splitWindow", false) => "Split Window",
@@ -28773,6 +29093,10 @@ mod chrome_maintenance_pressure_tests;
 #[cfg(test)]
 #[path = "../../🧪️tests/🎬️wgpu-plugin-install/🦀️.rs"]
 mod plugin_install_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/📂️wgpu-document-relay/🦀️.rs"]
+mod document_relay_tests;
 
 //#region 🎨️ThemeDocumentModel
 /// 🎨️ The AUTHORED design-token document — the very `🔣️.json` the styling codegen turns into

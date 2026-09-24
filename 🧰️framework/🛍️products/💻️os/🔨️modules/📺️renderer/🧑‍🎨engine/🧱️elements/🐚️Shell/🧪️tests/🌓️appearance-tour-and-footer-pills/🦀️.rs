@@ -330,7 +330,8 @@ fn the_footer_pills_are_not_gated_off_the_browser_build() {
     assert!(!dock.contains("cfg(not(target_arch"), "the footer's sync leaf is no longer native-only");
     let pill = source.split("fn sync_pill(&self)").nth(1).expect("the pill projection exists");
     let pill = &pill[..pill.find("\n    /// ").unwrap_or(pill.len())];
-    assert!(pill.contains("#[cfg(target_arch = \"wasm32\")]\n        ShellSyncPill::Remote(ShellSyncRemote::Detached)"), "the browser build resolves the state React's browser shell resolves");
+    assert!(!pill.contains("cfg(target_arch") && !pill.contains("cfg(not(target_arch"), "one pill body on both builds: the browser document actor reports its remote exactly as the native one");
+    assert!(pill.contains("let Some(status) = self.sync_status.as_ref() else { return ShellSyncPill::Remote(ShellSyncRemote::Detached) };"), "no status observed yet resolves the state React's footer resolves with no backbone");
     let renderer = source.split("fn render_footer_step").nth(1).expect("the footer renderer exists");
     let renderer = &renderer[..renderer.find("\n    fn render_overlay_step").unwrap_or(renderer.len())];
     assert!(renderer.contains("\"s-presence-peers\""), "the footer paints the ambient presence badge");

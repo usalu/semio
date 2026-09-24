@@ -1,7 +1,7 @@
 # WP-G8: Plugin-Host Suite Reds (ui-patch ×3, schema-parity ×2, owned-codec ×1) (Session 10)
 
 Slice G8 · session 10 · 2026-09-24. Native only. Continues G7 §8.4.
-Status: IN PROGRESS.
+Status: all six reds fixed. Plugin-host suite green ×3 (§4); os-mcp quick and client-e2e green (§5).
 
 ## 1. ui-patch ×3 (`registered scale component path`): three stacked causes, all fixed
 
@@ -30,8 +30,17 @@ The sweep picks the **newest `wasm-release` build** of each component across the
    - Fix: each sweep row now declares `GenesisMirrorText::{Structured, CarrierRaw}`. Structured kinds (note ×2 and gis) must still print a non-empty DSL. The carrier kind (stdio) must print exactly the empty string. The law got stricter, not looser.
 - Measured: `owned_codec_answers_every_call_on_every_staged_component` **ok** (4 rows, 75 s; `generated/targeted2.txt`).
 
-## 4. plugin-host suite ×3
-pending
+## 4. plugin-host suite ×3: green
+
+External sweeps deleted the shared cargo cache twice: at 12:21 (my first three runs lost their staged components) and at 12:43 (a build was killed mid-compile). Those captures are in `generated/sweep-lost/` and `host-lib-{1,2,3}.txt`; they are not results. The final protocol, `wp-g8/g8-host-runs.sh`, builds the lib test binary once, copies it to `wp-g8/target/host-lib-bin`, restages W1's release components before each run, and runs the binary three times back to back:
+
+| run | result | wall |
+|---|---|---|
+| 1 | **244 passed, 0 failed, 1 ignored** | 2 024 s (load 134 at start) |
+| 2 | **244 passed, 0 failed, 1 ignored** | 1 467 s |
+| 3 | **244 passed, 0 failed, 1 ignored** | 919 s |
+
+Captures: `generated/host-run-{1,2,3}.txt`. G7's baseline was 238/244 with these six red.
 
 ## 5. Regression gates (os-mcp quick, client-e2e)
 
@@ -45,10 +54,33 @@ The first run (`generated/mcp-quick1.txt`) passed **440/441**. The one red was G
 | `partial_http_read_and_parser_turn_advance…` | the peer's loopback write was not yet readable when the first read grant ran (4/100 isolated) | `await_readable`: a blocking `peek` on the server stream before the grant | 300/300 isolated (`transport-loop2.txt`) |
 | `the_elicitation_deadline_is_real_wall_clock…` (1/120) | **product**: `ElicitationChannel::request_*` compared the difference of two *floored* ms readings with the budget, so a wait could end up to 1 ms **before** its budget | the deadline is now `start + budget + ELICITATION_CLOCK_TICK_MS` (one clock tick), so the wait never ends early | module loop **150/150**, 0 failures (`transport-loop4.txt`, load 18–27) |
 
-The os-mcp quick rerun is in §5.3.
+### 5.2 client-e2e
+
+`nx run @semio-tech/framework-os-mcp:client-e2e --skip-nx-cache`: **38/38** steps green, 76 PASS lines, 0 FAIL, EXIT 0. It rebuilt the dist binary from this tree. Capture: `generated/client-e2e1.txt`.
+
+### 5.3 os-mcp quick rerun (after the transport fixes)
+
+`bun 📜️script.ts test quick --no-fail-fast`: **441/441** passed, 30 skipped, EXIT 0 (`generated/mcp-quick2.txt`).
 
 ## 6. Files changed
-pending
+
+| path | change |
+|---|---|
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🪞️schema-parity/🧪️tests/🔬️unit/🦀️.rs` | the law pins the current world: `codec` export, 14 async exports |
+| `…/🖥️host/📥️ui-patch/🧪️tests/🧪️component/🦀️.rs` | registered artifact path (`SCALE_COMPONENT`) instead of an env var; current mixed-channel refusal reason |
+| `…/🖥️host/📥️ui-patch/🧬️schema/🔣️.json` | `maximumPatches` declared/required; case counts no longer capped at 2 |
+| `…/🖥️host/📦️packages/🦀️rust/📜️script.ts` | TS oracle follows the batch rule; env var dropped |
+| `…/🖥️host/📦️packages/🦀️rust/📋️project.json` | `test` dependsOn `@semio-tech/framework-os-scale-fixture:build-wasm` |
+| `…/🖥️host/🧪️tests/🔬️owned-instance-open/🦀️.rs` | `GenesisMirrorText::{Structured, CarrierRaw}` per sweep row |
+| `🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/🦀️.rs` | guest follows the current `world actor` (`stage_*` exports, two-argument `poll`, `codec` refusing) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚚️transport/🦀️.rs` | elicitation deadline + `ELICITATION_CLOCK_TICK_MS` (never ends early) |
+| `…/🌉️mcp/🚚️transport/🧪️tests/🔬️quick/🦀️.rs` | blocking accept in `replacement_connection`; `await_readable` before the first read grant |
+| ticket | `wp-g8/{g8-cargo.sh, g8-loop.sh, g8-scale-build.sh, g8-suites.sh, g8-host-runs.sh}` |
+
+Staged (not source): `.🧬semio/🦑️repo/⚡️cache/cargo/target-g8/wasm32-wasip2/wasm-release/semio_s_plugin_{stdio,note,gis}.wasm`, copies of W1's catalog-A release builds (shas in `generated/stdio-stage.txt`). Built: `⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm`.
 
 ## 7. Honest gaps
-pending
+
+1. The codec sweep takes the newest `wasm-release` component across `target*` roots, with **no freshness check**. That is how a 09-22 stdio build came to fail a fix made on 09-23. External sweeps delete these roots (12:21 and 12:43 today), so the law silently loses its inputs. Once everything is deleted it fails with `no staged plugin component`. It passes only while W1's release builds (or a restage) exist. A durable fix would pin each staged release component to a committed hash, the way `🔣️.json hashes.wasmSha256` pins the wasm-dev build. That is not done.
+2. The ui-patch component laws need the scale fixture materialized. A raw `cargo test --lib` on a fresh tree fails loudly with the nx target's name. Running through nx (`test`) builds the fixture first.
+3. Pids: none of mine are left running after §4 finishes. The gateways that os-mcp quick and client-e2e started exited with their runs.

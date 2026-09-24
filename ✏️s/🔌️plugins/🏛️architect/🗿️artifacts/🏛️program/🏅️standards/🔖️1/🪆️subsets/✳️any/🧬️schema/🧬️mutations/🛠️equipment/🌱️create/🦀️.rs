@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateEquipment {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create equipment \"{}\"", self.equipment.header.name), &format!("Anlage \"{}\" erstellen", self.equipment.header.name))
+        protocol::LocalizedLabel::native(&format!("Create equipment \"{}\"", self.equipment.header.name), &format!("Ausstattung \"{}\" erstellen", self.equipment.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.equipment.header.id.0.clone()]

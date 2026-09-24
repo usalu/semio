@@ -24,7 +24,7 @@ impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for InsertTa
         agg_inverse(&SemioAudioMutation::InsertTag(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-tag", "Tag einfügen")
+        protocol::LocalizedLabel::native("Insert tag", "Tag einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

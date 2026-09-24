@@ -47,10 +47,9 @@ semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-styling = { workspace = true, optional = true }
 
 [dev-dependencies]
-# 🔬️ Headless bundled-example export harness: the two packaged flow extensions whose operators the example's
-# `neuron-kind`s resolve to, linked in-process the way generation3d's example-geometry harness links its own. Test-only.
-semio-s-plugin-flow-extension-draw = { workspace = true, default-features = false }
-semio-s-plugin-flow-extension-math = { workspace = true, default-features = false }
+# 🔬️ Headless bundled-example export harness: the packaged `draw` flow extension the example's `neuron-kind`
+# resolves to, linked in-process the way generation3d's example-geometry harness links its own. Test-only.
+semio-s-plugin-flow-extension-draw = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-framework-async-macros = { workspace = true }
@@ -58,3 +57,10 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 # 🪪️ Third-party oracle for the preview evaluation run's node entity key (FNV-1a 64) — test-only.
 fnv = "1.0.7"
+
+# 🖼️ The bundled demo's page exports (svg, pdf, png, dxf) on its live evaluation, with the packaged
+# `draw` flow extension linked — its own binary, since a linked pack is process-wide.
+[[test]]
+name = "bundled-example-export"
+path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🖼️bundled-example-export/🦀️.rs"
+required-features = ["component-app-assembly"]

@@ -207,7 +207,9 @@ variants!(Component {
     TreeItem: TreeItemProps,
     Image: ImageProps,
     Surface: SurfaceProps,
-    Extension: ExtensionProps
+    Extension: ExtensionProps,
+    Table: TableProps,
+    TableRow: TableRowProps
 });
 variants!(LayoutSpec { Leaf: LeafLayout, Stack: StackLayout, Grid: GridLayout, Overlay: OverlayLayout, Scroll: ScrollLayout, Absolute: AbsoluteLayout });
 const _: () = assert!(<UiSnapshot as TypedCompare>::DEPTH <= COMPARE_DEPTH);

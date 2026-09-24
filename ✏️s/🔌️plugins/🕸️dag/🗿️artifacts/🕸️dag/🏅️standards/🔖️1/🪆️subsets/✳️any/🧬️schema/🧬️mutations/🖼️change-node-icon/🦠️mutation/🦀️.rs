@@ -28,7 +28,7 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeIcon {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change node \"{}\" icon to \"{}\"", self.id, self.new_icon), &format!("Knoten \"{}\" Symbol auf \"{}\" ändern", self.id, self.new_icon))
+        protocol::LocalizedLabel::native(&format!("Change node \"{}\" icon to \"{}\"", self.id, self.new_icon), &format!("Symbol von Knoten \"{}\" auf \"{}\" ändern", self.id, self.new_icon))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

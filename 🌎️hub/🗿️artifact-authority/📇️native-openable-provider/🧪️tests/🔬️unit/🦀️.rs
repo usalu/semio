@@ -77,6 +77,7 @@ mod quick {
 
     #[tokio::test]
     async fn linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog() {
+        let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
         let kind_json: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🗄️artifact-kind-formats.json")).unwrap();
         let kind: semio_framework::ArtifactKindSpec = semio_framework::from_dsl_value(kind_json.clone().into()).unwrap();

@@ -32,7 +32,7 @@ async fn renders_the_main_body_key_for_the_default_snapshot() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn fold_directory_events_command_never_touches_the_document_store() {
+async fn viewer_never_touches_the_document_store() {
     semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<HomeViewer>().await;
 }
 

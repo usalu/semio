@@ -39,7 +39,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create Pv System {} at index {}", self.id.0, self.index), &format!("Pvsystem {} an Index {} erstellen", self.id.0, self.index))
+        protocol::LocalizedLabel::native(&format!("Create Pv System {} at index {}", self.id.0, self.index), &format!("PV-Anlage {} an Index {} erstellen", self.id.0, self.index))
     }
 
     fn target(&self) -> Vec<String> {

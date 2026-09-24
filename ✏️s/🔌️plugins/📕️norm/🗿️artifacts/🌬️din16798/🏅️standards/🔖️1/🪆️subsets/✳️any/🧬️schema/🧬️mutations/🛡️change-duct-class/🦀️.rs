@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeDuctCl
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change duct leakage class to \"{}\"", self.new_duct_class), &format!("Kanalleckagenklasse auf \"{}\" ändern", self.new_duct_class))
+        protocol::LocalizedLabel::native(&format!("Change duct leakage class to \"{}\"", self.new_duct_class), &format!("Luftdichtheitsklasse der Kanäle auf \"{}\" ändern", self.new_duct_class))
     }
 }
 //#endregion 🔖️ChangeDuctClass

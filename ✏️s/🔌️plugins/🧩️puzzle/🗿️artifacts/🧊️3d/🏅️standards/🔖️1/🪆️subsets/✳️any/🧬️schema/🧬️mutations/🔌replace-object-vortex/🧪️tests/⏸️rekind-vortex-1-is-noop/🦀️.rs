@@ -80,6 +80,10 @@ fn declared_outcome_holds() {
     let applied = apply_puzzle3d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
         "applied" => assert!(applied, "replace-object-vortex/rekind-vortex-1-is-noop: declared applied but the mutation was rejected"),
+        "no-op" => {
+            assert!(applied, "replace-object-vortex/rekind-vortex-1-is-noop: declared no-op but the mutation was rejected");
+            assert_eq!(snapshot, before(), "replace-object-vortex/rekind-vortex-1-is-noop: a no-op must leave the snapshot untouched");
+        }
         "rejected" => {
             assert!(!applied, "replace-object-vortex/rekind-vortex-1-is-noop: declared rejected but the mutation applied");
             assert_eq!(snapshot, before(), "replace-object-vortex/rekind-vortex-1-is-noop: rejected mutation must leave the snapshot untouched");

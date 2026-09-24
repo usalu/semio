@@ -1,0 +1,3 @@
+semio-s-artifact-stdio-deflate
+semio-s-artifact-stdio-zip
+semio-s-artifact-stdio-mp4

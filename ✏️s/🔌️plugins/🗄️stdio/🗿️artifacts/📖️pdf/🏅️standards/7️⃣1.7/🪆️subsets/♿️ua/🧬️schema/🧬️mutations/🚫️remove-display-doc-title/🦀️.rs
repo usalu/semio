@@ -28,7 +28,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveDisplayDocTitle {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove PDF/UA title display preference", "PDF/UAtitelanzeigenpräferenz entfernen")
+        protocol::LocalizedLabel::native("Remove PDF/UA title display preference", "PDF/UA-Anzeigeeinstellung für den Titel entfernen")
     }
 
     fn target(&self) -> Vec<String> {

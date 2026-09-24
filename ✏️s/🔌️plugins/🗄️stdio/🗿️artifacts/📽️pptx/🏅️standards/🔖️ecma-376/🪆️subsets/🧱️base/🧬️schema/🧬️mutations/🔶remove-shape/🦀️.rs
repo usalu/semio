@@ -22,7 +22,7 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveShape {
         agg_inverse(&PptxMutation::RemoveShape(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-shape", "Form entfernen")
+        protocol::LocalizedLabel::native("Remove shape", "Form entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

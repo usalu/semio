@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeDhwDel
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change DHW delivery temperature to {}", self.new_dhw_delivery_c), &format!("DHWlieferungstemperatur auf {} ändern", self.new_dhw_delivery_c))
+        protocol::LocalizedLabel::native(&format!("Change DHW delivery temperature to {}", self.new_dhw_delivery_c), &format!("Trinkwarmwasser-Zapftemperatur auf {} ändern", self.new_dhw_delivery_c))
     }
 }
 //#endregion 🔖️ChangeDhwDeliveryC

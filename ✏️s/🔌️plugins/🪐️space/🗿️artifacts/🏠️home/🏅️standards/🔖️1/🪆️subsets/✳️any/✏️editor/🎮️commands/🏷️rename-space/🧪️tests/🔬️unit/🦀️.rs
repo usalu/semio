@@ -17,7 +17,8 @@ async fn empty_name_opens_the_dialog_preseeded_with_the_current_name() {
         "recordedAtMs": 1000
     })
     .to_string();
-    let config = protocol::Mutation::diff(&HomeConfigMutation::FoldDirectoryEvent { event_json }, &HomeConfig::default()).diff().clone();
+    let event = pack::from_json_str::<store::os_directory::DirectoryEvent>(&event_json).expect("fixture directory event");
+    let config = HomeConfig { directory_json: crate::editor::home::config::directory_to_json(&store::os_directory::fold(store::os_directory::DirectoryReadModel::default(), &event)), ..HomeConfig::default() };
     let emit = dispatch(RenameSpace { space_id: "sp-1".into(), name: String::new() }, &config).await;
     let (dialog_id, args) = match &emit.effects[0] {
         Effect::OpenDialog { dialog_id, args, .. } => (dialog_id.clone(), args.clone()),

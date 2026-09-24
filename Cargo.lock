@@ -3,6 +3,29 @@
 version = 4
 
 [[package]]
+name = "acadrust"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6298485f7afd00af7880f285f01ab387143a1fbb20c42f9048830c95b19dda5d"
+dependencies = [
+ "ahash",
+ "anyhow",
+ "bitflags 2.11.1",
+ "byteorder",
+ "encoding_rs",
+ "flate2",
+ "indexmap",
+ "itoa",
+ "memmap2",
+ "nom",
+ "once_cell",
+ "rayon",
+ "ryu",
+ "thiserror 1.0.69",
+ "web-time",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -24,7 +47,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a15f179cd60c4584b8a8c596927aadc462e27f2ca70c04e0071964a73ba7a75"
 dependencies = [
  "cfg-if",
+ "getrandom 0.3.4",
  "once_cell",
+ "serde",
  "version_check",
  "zerocopy",
 ]
@@ -3331,6 +3356,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
+name = "minimal-lexical"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
+
+[[package]]
 name = "miniz_oxide"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3484,6 +3515,16 @@ checksum = "53a0d57c55d2d1dc62a2b1d16a0a1079eb78d67c36bdf468d582ab4482ec7002"
 dependencies = [
  "quote",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "nom"
+version = "7.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
+dependencies = [
+ "memchr",
+ "minimal-lexical",
 ]
 
 [[package]]
@@ -5349,7 +5390,6 @@ name = "semio-framework-geometry"
 version = "0.1.0"
 dependencies = [
  "kurbo 0.13.1",
- "semio-framework-async-macros",
 ]
 
 [[package]]
@@ -5504,6 +5544,7 @@ dependencies = [
  "semio-framework-artifact-playbook-playbook",
  "semio-framework-artifact-space-collection",
  "semio-framework-artifact-space-space",
+ "semio-framework-artifact-workflow-workflow",
  "semio-framework-async-macros",
  "semio-framework-os",
  "semio-framework-os-flow",
@@ -5972,6 +6013,7 @@ dependencies = [
  "semio-framework-repo-todos",
  "semio-framework-repo-tree",
  "semio-framework-repo-workspace",
+ "semio-framework-repo-yaml",
  "serde",
  "serde_json",
 ]
@@ -6053,8 +6095,19 @@ dependencies = [
 name = "semio-framework-repo-graphql"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-repo-codebase",
+ "semio-framework-repo-contributors",
+ "semio-framework-repo-events",
+ "semio-framework-repo-goals",
  "semio-framework-repo-identity",
+ "semio-framework-repo-languages",
  "semio-framework-repo-model",
+ "semio-framework-repo-move",
+ "semio-framework-repo-providers",
+ "semio-framework-repo-statutes",
+ "semio-framework-repo-tickets",
+ "semio-framework-repo-todos",
+ "semio-framework-repo-workspace",
  "serde",
  "serde_json",
 ]
@@ -7467,7 +7520,6 @@ dependencies = [
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "semio-s-plugin-flow-extension-draw",
- "semio-s-plugin-flow-extension-math",
  "serde",
  "serde_json",
 ]
@@ -7981,6 +8033,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-deflate"
 version = "0.1.0"
 dependencies = [
+ "miniz_oxide",
  "semio-framework-async-macros",
  "semio-framework-hash",
  "semio-framework-job",
@@ -8016,6 +8069,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-dwg"
 version = "0.1.0"
 dependencies = [
+ "acadrust",
  "semio-framework-async-macros",
  "semio-framework-hash",
  "semio-framework-mesh-engine",

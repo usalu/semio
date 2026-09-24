@@ -24,7 +24,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for RemoveVlr {
         agg_inverse(&LasMutation::RemoveVlr(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-vlr", "vlr entfernen")
+        protocol::LocalizedLabel::native("Remove VLR", "VLR entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

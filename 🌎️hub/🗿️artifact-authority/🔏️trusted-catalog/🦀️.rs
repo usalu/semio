@@ -1,7 +1,7 @@
 //! 🗂️ Immutable trusted-catalog bundle verification for headless hub authority startup.
 
 use super::adapters::{bounded_message, AUTHORITY_MAX_CODEC_TEXT_BYTES, TRUSTED_CATALOG_MAX_CODECS, TRUSTED_CATALOG_MAX_PACKAGES};
-use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactGenesisCodec, TrustedArtifactIdentity};
+use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactGenesisCodec, TrustedArtifactIdentity, TrustedArtifactReplayCodec};
 use directory::os_directory::{hex_lower, DocumentDescriptor, DocumentExecutionProtocolV1, DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1};
 use directory::os_store::{self, ArtifactCodec};
 use semio_framework::{from_dsl_value, to_dsl_value, DslValue, PackageDescriptor, Version};
@@ -13,10 +13,13 @@ use std::sync::Arc;
 
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema;
-use schema::{publication_revision, TrustedBundleFileV1, TrustedBundleGrantV1, TrustedBundleIdentityV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageRole, TrustedBundlePackageV1, TrustedBundleProfileV1, TrustedBundleRendererTarget, TrustedBundleV1, TrustedCatalogCurrentPointerV1, TrustedCatalogPublicationCommandV1, TrustedCatalogPublicationReceiptV1, TRUSTED_CATALOG_PUBLICATION_MAX_BYTES, TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED, TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, TRUSTED_CATALOG_PUBLICATION_SCHEMA};
+use schema::{publication_revision, TrustedBundleFileV1, TrustedBundleGrantV1, TrustedBundleIdentityV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageRole, TrustedBundlePackageV1, TrustedBundleProfileV1, TrustedBundleRendererTarget, TrustedBundleV1, TrustedPluginModuleBundleV1, TrustedPluginModuleFileV1, TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA, TrustedCatalogCurrentPointerV1, TrustedCatalogPublicationCommandV1, TrustedCatalogPublicationReceiptV1, TRUSTED_CATALOG_PUBLICATION_MAX_BYTES, TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED, TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, TRUSTED_CATALOG_PUBLICATION_SCHEMA};
 
 #[path = "🌐️browser-actor/🦀️.rs"]
 mod browser_actor;
+#[path = "🧩️plugin-module/🦀️.rs"]
+pub mod plugin_module;
+use plugin_module::{decode_plugin_module_bundle, plugin_module_blob_path, verify_plugin_module_file, TrustedPluginModuleSourceV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES};
 #[path = "🛡️opened-root/🦀️.rs"]
 mod opened_root;
 use opened_root::{TrustedCatalogDataRoot, TrustedCatalogGenerationRoot, TrustedCatalogRelativePathV1};
@@ -26,18 +29,16 @@ use directory::os_directory::schema::{DocumentBrowserActorSourceV1, DocumentOpen
 
 /// 🧯️ Maximum accepted serialized bundle bytes.
 pub const TRUSTED_BUNDLE_MAX_BYTES: u64 = 4 * 1024 * 1024;
-/// 🧯️ Maximum accepted committed package-descriptor bytes.
-pub const TRUSTED_DESCRIPTOR_MAX_BYTES: u64 = 4 * 1024 * 1024;
+/// 🧯️ Maximum accepted committed package-descriptor bytes: the schema-declared execution-target
+/// descriptor bound the browser enforces on the same bytes.
+pub const TRUSTED_DESCRIPTOR_MAX_BYTES: u64 = directory::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES;
 /// 🧮️ Maximum logical owned storage admitted before descriptor schema/canonical projection.
 pub const TRUSTED_DESCRIPTOR_MAX_MATERIALIZATION: u64 = 32 * 1024 * 1024;
-/// 🧯️ Maximum accepted bytes for one retained component.
-pub const TRUSTED_COMPONENT_MAX_BYTES: u64 = 64 * 1024 * 1024;
-/// 🧯️ Maximum retained component bytes across one selected closure.
-pub const TRUSTED_COMPONENT_CLOSURE_MAX_BYTES: u64 = 512 * 1024 * 1024;
-/// 🧯️ Maximum retained descriptor bytes across one selected closure.
-pub const TRUSTED_DESCRIPTOR_CLOSURE_MAX_BYTES: u64 = 64 * 1024 * 1024;
-/// 🌐️ Maximum retained actor bodies across the selected package closure.
-pub const TRUSTED_BROWSER_ACTOR_CLOSURE_MAX_BYTES: u64 = 128 * 1024 * 1024;
+/// 🧯️ Maximum accepted bytes for one component: the schema-declared execution-target component bound
+/// the browser enforces on the same bytes. A closure has no byte total: components and actors are
+/// retained by identity on disk ([`TrustedCatalogAsset`]), so the catalog is bounded by storage and the
+/// hub's memory by the assets in use.
+pub const TRUSTED_COMPONENT_MAX_BYTES: u64 = directory::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES;
 /// 🧯️ Maximum UTF-8 bytes retained for one identity or version field.
 pub const TRUSTED_IDENTITY_MAX_BYTES: usize = 256;
 /// 🧯️ Maximum UTF-8 bytes accepted for one bundle-relative path.
@@ -84,17 +85,22 @@ impl TrustedCatalogPublisher {
         };
         if observed != command.expected_current_sha256 { return Err(catalog("trusted publication current token is stale")); }
         let revision = revision.checked_add(1).ok_or_else(|| catalog("trusted publication revision exhausted"))?;
-        let generation = owner.open_generation(&command.generation_id)?;
+        let generation = Arc::new(owner.open_generation(&command.generation_id)?);
         let relative = TrustedCatalogRelativePathV1::parse("trusted-catalog.json")?;
         let bundle_bytes = generation.read_regular(&relative, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
         if sha256(&bundle_bytes, context).await? != bundle_digest { return Err(catalog("trusted publication candidate bundle differs from its digest")); }
         let bundle: TrustedBundleV1 = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
         let (verified, _) = TrustedCatalogLoader::verify_selected(&generation, relative, bundle_bytes, &command.profile_id, providers, context).await?;
         if verified.generation_id() != command.generation_id { return Err(catalog("trusted publication candidate generation differs from the verified profile")); }
+        let mut published_module_files = BTreeSet::new();
         for package in &verified.packages {
             let record = bundle.packages.iter().find(|record| record.plugin_id == package.plugin_id && record.package_id == package.package.package.0 && record.version == package.version).ok_or_else(|| catalog("verified publication package lost its bundle record"))?;
             let mut files = vec![TrustedBundleFileV1 { path: record.component.path.clone(), byte_length: record.component.byte_length, sha256: record.component.sha256.clone() }, record.descriptor.clone()];
             if let Some(actor) = record.browser_actor.file() { files.push(actor); }
+            files.push(TrustedBundleFileV1 { path: record.plugin_module.path.clone(), byte_length: record.plugin_module.byte_length, sha256: record.plugin_module.sha256.clone() });
+            for file in &package.plugin_module.bundle.files {
+                if published_module_files.insert(file.sha256.clone()) { files.push(TrustedBundleFileV1 { path: plugin_module_blob_path(&file.sha256), byte_length: file.byte_length, sha256: file.sha256.clone() }); }
+            }
             for file in files {
                 let bytes = generation.read_regular(&TrustedCatalogRelativePathV1::parse(&file.path)?, file.byte_length, context).await?;
                 if bytes.len() as u64 != file.byte_length || sha256(&bytes, context).await? != decode_digest(&file.sha256, "trusted publication leaf sha256")? { return Err(catalog("trusted publication leaf changed after candidate verification")); }
@@ -177,17 +183,128 @@ pub trait NativeCodecProviderSourceV1: Sync {
     fn preview(&self, package: NativeCodecProviderPackageV1<'_>, descriptor: &PackageDescriptor, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError>;
 }
 
+/// 💾️ One hash-verified generation file retained by IDENTITY, not by bytes: the opened private
+/// generation root, the bundle-relative path and the digests the load verified. A read reopens the
+/// path beneath that root and re-verifies length and digests, and the bytes stay resident only while
+/// some reader holds them, so the hub's memory is the set of assets in use, never the catalog closure.
+struct TrustedRetainedFile {
+    root: Arc<TrustedCatalogGenerationRoot>,
+    path: TrustedCatalogRelativePathV1,
+    byte_length: u64,
+    sha256: [u8; 32],
+    blake3: Option<[u8; 32]>,
+    resident: std::sync::Mutex<std::sync::Weak<[u8]>>,
+}
+
+impl TrustedRetainedFile {
+    fn new(root: Arc<TrustedCatalogGenerationRoot>, path: TrustedCatalogRelativePathV1, byte_length: u64, sha256: [u8; 32], blake3: Option<[u8; 32]>) -> Self {
+        let resident: std::sync::Weak<[u8]> = std::sync::Weak::<[u8; 0]>::new();
+        Self { root, path, byte_length, sha256, blake3, resident: std::sync::Mutex::new(resident) }
+    }
+
+    async fn read(&self, context: &OperationContext<'_>) -> Result<Arc<[u8]>, AuthorityError> {
+        if let Some(bytes) = self.resident.lock().unwrap_or_else(std::sync::PoisonError::into_inner).upgrade() {
+            return Ok(bytes);
+        }
+        let bytes = self.root.read_regular(&self.path, self.byte_length, context).await?;
+        verify_length(self.byte_length, bytes.len())?;
+        let verified = match self.blake3 {
+            Some(blake3) => dual_hash(&bytes, context).await? == (self.sha256, blake3),
+            None => sha256(&bytes, context).await? == self.sha256,
+        };
+        if !verified {
+            return Err(catalog("retained trusted file differs from the digests its catalog verified"));
+        }
+        let bytes: Arc<[u8]> = bytes.into();
+        *self.resident.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Arc::downgrade(&bytes);
+        Ok(bytes)
+    }
+}
+
+/// 🧱️ One verified execution-target asset (a component or a closed browser actor), read on demand.
+/// Its length is known without reading; [`Self::read`] yields exactly the bytes the catalog verified.
+#[derive(Clone)]
+pub struct TrustedCatalogAsset {
+    source: TrustedCatalogAssetSource,
+}
+
+#[derive(Clone)]
+enum TrustedCatalogAssetSource {
+    Retained(Arc<TrustedRetainedFile>),
+    Resident(Arc<[u8]>),
+}
+
+impl TrustedCatalogAsset {
+    /// 🧷️ An asset whose bytes a caller already holds in memory (a fixture catalog built in-process).
+    pub fn resident(bytes: Arc<[u8]>) -> Self {
+        Self { source: TrustedCatalogAssetSource::Resident(bytes) }
+    }
+
+    fn retained(file: TrustedRetainedFile) -> Self {
+        Self { source: TrustedCatalogAssetSource::Retained(Arc::new(file)) }
+    }
+
+    /// 📏️ The verified byte length, known without reading.
+    pub fn byte_length(&self) -> u64 {
+        match &self.source {
+            TrustedCatalogAssetSource::Retained(file) => file.byte_length,
+            TrustedCatalogAssetSource::Resident(bytes) => bytes.len() as u64,
+        }
+    }
+
+    /// 📖️ The verified bytes; a retained asset is reread and re-verified unless a reader still holds it.
+    pub async fn read(&self, context: &OperationContext<'_>) -> Result<Arc<[u8]>, AuthorityError> {
+        match &self.source {
+            TrustedCatalogAssetSource::Retained(file) => file.read(context).await,
+            TrustedCatalogAssetSource::Resident(bytes) => Ok(Arc::clone(bytes)),
+        }
+    }
+}
+
+/// 🧩️ One package's verified plugin module: its canonical manifest, addressed by the manifest's SHA-256,
+/// and every file it lists, retained by identity and reread and re-verified on use.
+pub struct VerifiedPluginModule {
+    bundle_sha256: String,
+    manifest_bytes: Arc<[u8]>,
+    bundle: TrustedPluginModuleBundleV1,
+    files: BTreeMap<String, TrustedCatalogAsset>,
+}
+
+impl VerifiedPluginModule {
+    /// 🔐️ The content address: the SHA-256 of the canonical manifest bytes.
+    pub fn bundle_sha256(&self) -> &str {
+        &self.bundle_sha256
+    }
+
+    /// 📜️ The exact canonical manifest bytes the catalog verified.
+    pub fn manifest_bytes(&self) -> &[u8] {
+        &self.manifest_bytes
+    }
+
+    /// 🧩️ The decoded manifest.
+    pub fn bundle(&self) -> &TrustedPluginModuleBundleV1 {
+        &self.bundle
+    }
+
+    /// 📖️ The verified file at one module-relative path, read on demand.
+    pub fn file(&self, path: &str) -> Option<&TrustedCatalogAsset> {
+        self.files.get(path)
+    }
+}
+
 /// 🧬️ One fully verified package retained in dependency-first order.
 pub struct VerifiedTrustedPackage {
     plugin_id: String,
     package: PackageRef,
     version: String,
+    dependencies: Vec<String>,
+    plugin_module: VerifiedPluginModule,
     component_sha256: [u8; 32],
     descriptor_sha256: [u8; 32],
-    component_bytes: Arc<[u8]>,
+    component: TrustedCatalogAsset,
     descriptor_bytes: Arc<[u8]>,
     browser_actor: DocumentOpenBrowserActorV1,
-    browser_actor_bytes: Option<Arc<[u8]>>,
+    browser_actor_asset: Option<TrustedCatalogAsset>,
     descriptor: Arc<PackageDescriptor>,
 }
 
@@ -217,9 +334,9 @@ impl VerifiedTrustedPackage {
         &self.descriptor_sha256
     }
 
-    /// 🧱️ Returns the exact component bytes used to derive both retained hashes.
-    pub fn component_bytes(&self) -> &[u8] {
-        &self.component_bytes
+    /// 🧱️ Returns the verified component, read on demand.
+    pub fn component(&self) -> &TrustedCatalogAsset {
+        &self.component
     }
 
     /// 📜️ Returns the exact bytes decoded into `descriptor()`.
@@ -231,6 +348,11 @@ impl VerifiedTrustedPackage {
     pub fn descriptor(&self) -> &PackageDescriptor {
         &self.descriptor
     }
+
+    /// 🧩️ Returns the package's verified plugin module.
+    pub fn plugin_module(&self) -> &VerifiedPluginModule {
+        &self.plugin_module
+    }
 }
 
 /// ⛽️ Fuel and wall-clock ceiling for ONE guest codec call. A `codec` function is pure and bounded
@@ -240,27 +362,30 @@ impl VerifiedTrustedPackage {
 const GUEST_CODEC_BUDGET: semio_framework::kernel::Budget =
     semio_framework::kernel::Budget { fuel: 4_000_000_000, deadline_ms: 30_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
 
-/// 🗜️ One verified package's actor, compiled at most once and only when a guest codec call
-/// actually needs it. Verification hash-verifies the component bytes and keeps them; it does NOT
-/// compile them, because a package may carry no codec row at all (a pure dependency) or only rows
-/// this binary links a Rust codec for, and in neither case does anything ever enter the component.
-/// Compiling every verified package eagerly (ticket 26/09/18 slice TC3b, as landed) turned catalog
-/// verification into a wasm compile of every package in the closure.
+/// 📡️ Reports one guest codec call's consumed fuel outward. The owned interpreter calls back every
+/// 25 M fuel or 5 s, so a long `pack-schema-hash`/`genesis` inside a catalog load is visible to a
+/// readiness waiter as progress instead of silence, and the report's checkpoint keeps the no-progress bound.
+fn report_guest_codec_fuel(context: &OperationContext<'_>, fuel: u64) {
+    let _ = context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCodecExecuting, completed_units: fuel.min(GUEST_CODEC_BUDGET.fuel), total_units: GUEST_CODEC_BUDGET.fuel });
+}
+
+/// 🗜️ One verified package's actor, compiled at most once and only when a document operation
+/// actually needs it. Catalog verification compiles a guest-codec package once to pin its pack
+/// fingerprints and drops that compile again, so a hub holds compiled guests only for the kinds its
+/// documents use, never one per package in the closure.
 struct GuestArtifactComponent {
     runtime: Arc<semio_framework_plugin_host::OwnedRuntime>,
     package: PackageRef,
-    bytes: Arc<[u8]>,
+    component: TrustedCatalogAsset,
     compiled: tokio::sync::OnceCell<Arc<semio_framework_plugin_host::CompiledHandle>>,
 }
 
 impl GuestArtifactComponent {
-    async fn compiled(&self) -> Result<&Arc<semio_framework_plugin_host::CompiledHandle>, AuthorityError> {
+    async fn compiled(&self, context: &OperationContext<'_>) -> Result<&Arc<semio_framework_plugin_host::CompiledHandle>, AuthorityError> {
         self.compiled
             .get_or_try_init(|| async {
-                self.runtime
-                    .compile_component(&self.package, &self.bytes)
-                    .map(Arc::new)
-                    .map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))
+                let bytes = self.component.read(context).await?;
+                self.runtime.compile_component(&self.package, &bytes).map(Arc::new).map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))
             })
             .await
     }
@@ -284,21 +409,19 @@ impl GuestArtifactCodecBinding {
     /// from an observation, and the caller's checkpoint on the far side of this call is where a
     /// cancelled creation stops.
     async fn genesis(&self, document_id: &str, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
-        let compiled = self.component.compiled().await?;
+        let compiled = self.component.compiled(context).await?;
         let pair = self
             .component
             .runtime
             .as_ref()
-            .codec_genesis_observed(compiled, &self.artifact_schema, document_id, GUEST_CODEC_BUDGET, |_fuel, _elapsed| {
-                let _ = context.checkpoint();
-            })
+            .codec_genesis_observed(compiled, &self.artifact_schema, document_id, GUEST_CODEC_BUDGET, |fuel, _elapsed| report_guest_codec_fuel(context, fuel))
             .await
             .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: bounded_message(error) })?;
         Ok(ArtifactPair { pack: pair.pack, spr: pair.spr })
     }
 
-    async fn print_mirror(&self, pair: &ArtifactPair, stage: ArtifactValidationStage) -> Result<(), AuthorityError> {
-        let compiled = self.component.compiled().await.map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
+    async fn print_mirror(&self, pair: &ArtifactPair, stage: ArtifactValidationStage, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+        let compiled = self.component.compiled(context).await.map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
         let mirror = self
             .component
             .runtime
@@ -311,12 +434,25 @@ impl GuestArtifactCodecBinding {
         Ok(())
     }
 
-    async fn apply_ops(&self, pair: &ArtifactPair, encoded: &[u8]) -> Result<ArtifactPair, AuthorityError> {
-        let compiled = self.component.compiled().await?;
+    async fn apply_ops(&self, pair: &ArtifactPair, encoded: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        let compiled = self.component.compiled(context).await?;
         let next = self
             .component
             .runtime
             .codec_apply_ops(compiled, &self.artifact_schema, &pair.pack, &pair.spr, encoded, GUEST_CODEC_BUDGET)
+            .await
+            .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
+        Ok(ArtifactPair { pack: next.pack, spr: next.spr })
+    }
+
+    /// 📜️ The guest's own replica fold of a ledger stream; fuel progress reaches the caller's stall
+    /// bound exactly as [`Self::genesis`]'s does.
+    async fn replay_envelopes(&self, pair: &ArtifactPair, envelopes: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        let compiled = self.component.compiled(context).await?;
+        let next = self
+            .component
+            .runtime
+            .codec_replay_envelopes_observed(compiled, &self.artifact_schema, &pair.pack, &pair.spr, envelopes, GUEST_CODEC_BUDGET, |fuel, _elapsed| report_guest_codec_fuel(context, fuel))
             .await
             .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
         Ok(ArtifactPair { pack: next.pack, spr: next.spr })
@@ -341,7 +477,7 @@ impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
     async fn validate_pair(&self, pair: &ArtifactPair, stage: ArtifactValidationStage, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
         let Some(codec) = &self.codec else {
-            self.guest.print_mirror(pair, stage).await?;
+            self.guest.print_mirror(pair, stage, context).await?;
             return context.checkpoint();
         };
         let mirror = (codec.print_mirror)(&pair.pack, &pair.spr).await.map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
@@ -355,11 +491,28 @@ impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
         context.checkpoint()?;
         let encoded = directory::os_spr::encode_ops_vec(std::slice::from_ref(&operation.encoded));
         let Some(codec) = &self.codec else {
-            let next = self.guest.apply_ops(&pair, &encoded).await?;
+            let next = self.guest.apply_ops(&pair, &encoded, context).await?;
             context.checkpoint()?;
             return Ok(next);
         };
         let (pack, spr, ops) = (codec.apply_ops_binary)(&pair.pack, &pair.spr, &encoded).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
+        if ops.len() > AUTHORITY_MAX_CODEC_TEXT_BYTES {
+            return Err(AuthorityError::ResourceLimit("codec text byte"));
+        }
+        context.checkpoint()?;
+        Ok(ArtifactPair { pack, spr })
+    }
+}
+
+impl TrustedArtifactReplayCodec for VerifiedNativeArtifactCodec {
+    async fn replay_envelopes(&self, pair: ArtifactPair, envelopes: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        context.checkpoint()?;
+        let Some(codec) = &self.codec else {
+            let next = self.guest.replay_envelopes(&pair, envelopes, context).await?;
+            context.checkpoint()?;
+            return Ok(next);
+        };
+        let (pack, spr, ops) = (codec.replay_envelopes)(&pair.pack, &pair.spr, envelopes).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
         if ops.len() > AUTHORITY_MAX_CODEC_TEXT_BYTES {
             return Err(AuthorityError::ResourceLimit("codec text byte"));
         }
@@ -394,14 +547,14 @@ pub struct VerifiedTrustedCatalog {
     generation_id: String,
 }
 
-/// 🧱 The exact verified component and raw descriptor bytes bound to one current selection. It is
-/// produced only by [`VerifiedTrustedCatalog::assets_for_current_selection`] and carries no path,
-/// origin or catalog handle.
+/// 🧱 The exact verified component, raw descriptor bytes and closed actor bound to one current
+/// selection. It is produced only by [`VerifiedTrustedCatalog::assets_for_current_selection`] and
+/// carries no path, origin or catalog handle; the component and actor are read on demand.
 pub struct VerifiedExecutionTargetAssets {
     pub selection: VerifiedDocumentOpenSelectionV1,
-    pub component: Arc<[u8]>,
+    pub component: TrustedCatalogAsset,
     pub descriptor: Arc<[u8]>,
-    pub browser_actor: Option<Arc<[u8]>>,
+    pub browser_actor: Option<TrustedCatalogAsset>,
 }
 
 /// 🧬 One exact document-open choice retained only after the complete catalog verifies.
@@ -434,6 +587,35 @@ impl VerifiedTrustedCatalog {
     /// 🧬 Returns the neutral SHA-256 identity of the sorted immutable open-target projection.
     pub fn generation_id(&self) -> &str {
         &self.generation_id
+    }
+
+    /// 📇️ Every plugin module of this generation in ascending plugin order: what
+    /// `GET /trusted-catalog/plugin-modules` answers.
+    pub fn plugin_module_index(&self) -> TrustedPluginModuleIndexV1 {
+        let mut modules = self
+            .packages
+            .iter()
+            .map(|package| TrustedPluginModuleIndexEntryV1 {
+                plugin_id: package.plugin_id.clone(),
+                package_id: package.package.package.0.clone(),
+                version: package.version.clone(),
+                component_sha256: hex_lower(&package.component_sha256),
+                descriptor_byte_sha256: hex_lower(&package.descriptor_sha256),
+                dependencies: package.dependencies.clone(),
+                dialect_artifact_kinds: package.descriptor.manifest.apps.iter().map(|app| app.dialect.artifact_kind.clone()).collect::<BTreeSet<_>>().into_iter().collect(),
+                extends_plugin_id: (package.descriptor.role == semio_framework::PackageRole::Extension).then(|| package.descriptor.manifest.dependencies.first().map(|dependency| dependency.plugin_id.clone())).flatten(),
+                bundle_sha256: package.plugin_module.bundle_sha256.clone(),
+                bundle_byte_length: package.plugin_module.manifest_bytes.len() as u64,
+                entry: package.plugin_module.bundle.entry.clone(),
+            })
+            .collect::<Vec<_>>();
+        modules.sort_by(|left, right| left.plugin_id.as_bytes().cmp(right.plugin_id.as_bytes()));
+        TrustedPluginModuleIndexV1 { schema: TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA.into(), generation_id: self.generation_id.clone(), modules }
+    }
+
+    /// 🧩️ The verified plugin module whose manifest has this SHA-256, when this generation carries it.
+    pub fn plugin_module(&self, bundle_sha256: &str) -> Option<&VerifiedPluginModule> {
+        self.packages.iter().map(|package| &package.plugin_module).find(|module| module.bundle_sha256 == bundle_sha256)
     }
 
     /// 🎯 Returns the profile's sole completely verified document-open choice without reconstructing it from public plan bytes.
@@ -512,17 +694,17 @@ impl VerifiedTrustedCatalog {
                 && hex_lower(&retained.package.hash.0) == selection.package.component_blake3
                 && hex_lower(&retained.descriptor_sha256) == selection.package.descriptor_byte_sha256
         })?;
-        if package.component_bytes.is_empty() || package.descriptor_bytes.is_empty() || package.component_bytes.len() as u64 > TRUSTED_COMPONENT_MAX_BYTES || package.descriptor_bytes.len() as u64 > TRUSTED_DESCRIPTOR_MAX_BYTES {
+        if package.component.byte_length() == 0 || package.descriptor_bytes.is_empty() || package.component.byte_length() > TRUSTED_COMPONENT_MAX_BYTES || package.descriptor_bytes.len() as u64 > TRUSTED_DESCRIPTOR_MAX_BYTES {
             return None;
         }
-        let browser_actor = match (&selection.browser_actor, &package.browser_actor, &package.browser_actor_bytes) {
+        let browser_actor = match (&selection.browser_actor, &package.browser_actor, &package.browser_actor_asset) {
             (DocumentOpenBrowserActorV1::None, _, _) if !matches!(selection.surface.renderer_target, DocumentOpenRendererTargetV1::Wasm) => None,
-            (selected, retained, Some(bytes)) if selected == retained && matches!(selected, DocumentOpenBrowserActorV1::ClosedBrowserActor { .. }) && !bytes.is_empty() && bytes.len() as u64 <= DOCUMENT_BROWSER_ACTOR_MAX_BYTES => {
-                Some(Arc::clone(bytes))
+            (selected, retained, Some(asset)) if selected == retained && matches!(selected, DocumentOpenBrowserActorV1::ClosedBrowserActor { .. }) && asset.byte_length() != 0 && asset.byte_length() <= DOCUMENT_BROWSER_ACTOR_MAX_BYTES => {
+                Some(asset.clone())
             }
             _ => return None,
         };
-        Some(VerifiedExecutionTargetAssets { selection, component: Arc::clone(&package.component_bytes), descriptor: Arc::clone(&package.descriptor_bytes), browser_actor })
+        Some(VerifiedExecutionTargetAssets { selection, component: package.component.clone(), descriptor: Arc::clone(&package.descriptor_bytes), browser_actor })
     }
 
     /// 🎯 Resolves one exact descriptor, subject role, and optional surface preference without fallback.
@@ -576,7 +758,7 @@ impl TrustedCatalogLoader {
         let current_bytes = current_file.read_bounded(64 * 1024, context).await?;
         let current = TrustedCatalogCurrentPointerV1::decode(&current_bytes)?;
         let expected_bundle_sha256 = decode_digest(&current.bundle_sha256, "trusted bundle sha256")?;
-        let generation_root = data_root.open_generation(&current.generation_id)?;
+        let generation_root = Arc::new(data_root.open_generation(&current.generation_id)?);
         let bundle_path = TrustedCatalogRelativePathV1::parse("trusted-catalog.json")?;
         let bundle_bytes = generation_root.read_regular(&bundle_path, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
         if sha256(&bundle_bytes, context).await? != expected_bundle_sha256 {
@@ -593,13 +775,13 @@ impl TrustedCatalogLoader {
     pub(crate) async fn load_fixture(bundle_path: &Path, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
         let path = std::fs::canonicalize(bundle_path).map_err(catalog_error)?;
         let fixture_root = path.parent().ok_or_else(|| catalog("bundle has no containing directory"))?;
-        let generation_root = TrustedCatalogGenerationRoot::open_fixture_owned(fixture_root)?;
+        let generation_root = Arc::new(TrustedCatalogGenerationRoot::open_fixture_owned(fixture_root)?);
         let bundle_path = TrustedCatalogRelativePathV1::parse(path.file_name().and_then(|name| name.to_str()).ok_or_else(|| catalog("fixture bundle name is not UTF-8"))?)?;
         let bundle_bytes = generation_root.read_regular(&bundle_path, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
         Self::load_selected(&generation_root, bundle_path, bundle_bytes, profile_id, providers, context).await
     }
 
-    async fn load_selected(root: &TrustedCatalogGenerationRoot, bundle_path: TrustedCatalogRelativePathV1, bundle_bytes: Vec<u8>, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
+    async fn load_selected(root: &Arc<TrustedCatalogGenerationRoot>, bundle_path: TrustedCatalogRelativePathV1, bundle_bytes: Vec<u8>, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
         let (catalog, registration_codecs) = Self::verify_selected(root, bundle_path, bundle_bytes, profile_id, providers, context).await?;
         let assembly = os_store::begin_artifact_assembly().map_err(catalog_error)?;
         os_store::preflight_document_codecs_in_assembly(&assembly, &registration_codecs).map_err(catalog_error)?;
@@ -608,7 +790,7 @@ impl TrustedCatalogLoader {
         Ok(catalog)
     }
 
-    async fn verify_selected(root: &TrustedCatalogGenerationRoot, bundle_path: TrustedCatalogRelativePathV1, bundle_bytes: Vec<u8>, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<(VerifiedTrustedCatalog, Vec<ArtifactCodec>), AuthorityError> {
+    async fn verify_selected(root: &Arc<TrustedCatalogGenerationRoot>, bundle_path: TrustedCatalogRelativePathV1, bundle_bytes: Vec<u8>, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<(VerifiedTrustedCatalog, Vec<ArtifactCodec>), AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
         let guest_runtime = Arc::new(semio_framework_plugin_host::OwnedRuntime::new());
         let bundle: TrustedBundleV1 = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
@@ -629,32 +811,32 @@ impl TrustedCatalogLoader {
             .collect::<Vec<_>>();
         providers.preflight_selection(&requirements)?;
         drop(requirements);
-        let mut retained_component_bytes = 0u64;
-        let mut retained_descriptor_bytes = 0u64;
-        let mut retained_browser_actor_bytes = 0u64;
         let mut packages = Vec::with_capacity(order.len());
         let mut codecs = Vec::new();
         let mut open_targets = Vec::new();
         let mut registration_codecs = Vec::new();
         let mut resolved_paths = BTreeSet::from([bundle_path]);
 
-        /// 📦️ One selected package whose retained bytes, digests, descriptor and browser actor are
-        /// already verified, held until the whole closure is proven so no provider sees a package
-        /// belonging to a closure that is still able to be refused.
+        /// 📦️ One selected package whose files, digests, descriptor and browser actor are already
+        /// verified, held until the whole closure is proven so no provider sees a package belonging to a
+        /// closure that is still able to be refused. Component and actor bytes are not held: each was
+        /// read, hashed and dropped, and is retained by identity.
         struct StagedTrustedPackage<'a> {
             position: usize,
             record: &'a TrustedBundlePackageV1,
-            component_bytes: Vec<u8>,
+            component: TrustedCatalogAsset,
             component_sha256: [u8; 32],
             component_blake3: [u8; 32],
             descriptor_bytes: Vec<u8>,
             descriptor_sha256: [u8; 32],
             descriptor: PackageDescriptor,
             browser_actor: DocumentOpenBrowserActorV1,
-            browser_actor_bytes: Option<Arc<[u8]>>,
+            browser_actor_asset: Option<TrustedCatalogAsset>,
+            plugin_module: VerifiedPluginModule,
         }
 
         let mut staged = Vec::with_capacity(order.len());
+        let mut plugin_module_files = BTreeMap::new();
         for (position, index) in order.into_iter().enumerate() {
             context.checkpoint()?;
             let record = &bundle.packages[index];
@@ -663,14 +845,12 @@ impl TrustedCatalogLoader {
                 return Err(catalog("trusted file path is already used by the selected closure"));
             }
             let component_bytes = root.read_regular(&component_path, TRUSTED_COMPONENT_MAX_BYTES, context).await?;
-            retained_component_bytes = retained_component_bytes
-                .checked_add(u64::try_from(component_bytes.len()).map_err(catalog_error)?)
-                .filter(|bytes| *bytes <= TRUSTED_COMPONENT_CLOSURE_MAX_BYTES)
-                .ok_or_else(|| AuthorityError::ResourceLimit("trusted component closure byte"))?;
             verify_length(record.component.byte_length, component_bytes.len())?;
             let (component_sha256, component_blake3) = dual_hash(&component_bytes, context).await?;
+            drop(component_bytes);
             verify_digest(&record.component.sha256, component_sha256, "component sha256")?;
             verify_digest(&record.component.blake3, component_blake3, "component blake3")?;
+            let component = TrustedCatalogAsset::retained(TrustedRetainedFile::new(Arc::clone(root), component_path, record.component.byte_length, component_sha256, Some(component_blake3)));
             report_package_progress(context, position, 1, total_units)?;
 
             let descriptor_path = TrustedCatalogRelativePathV1::parse(&record.descriptor.path)?;
@@ -678,10 +858,6 @@ impl TrustedCatalogLoader {
                 return Err(catalog("trusted file path is already used by the selected closure"));
             }
             let descriptor_bytes = root.read_regular(&descriptor_path, TRUSTED_DESCRIPTOR_MAX_BYTES, context).await?;
-            retained_descriptor_bytes = retained_descriptor_bytes
-                .checked_add(u64::try_from(descriptor_bytes.len()).map_err(catalog_error)?)
-                .filter(|bytes| *bytes <= TRUSTED_DESCRIPTOR_CLOSURE_MAX_BYTES)
-                .ok_or_else(|| AuthorityError::ResourceLimit("trusted descriptor closure byte"))?;
             verify_length(record.descriptor.byte_length, descriptor_bytes.len())?;
             let descriptor_sha256 = sha256(&descriptor_bytes, context).await?;
             verify_digest(&record.descriptor.sha256, descriptor_sha256, "descriptor sha256")?;
@@ -691,38 +867,40 @@ impl TrustedCatalogLoader {
 
             let browser_actor = record.browser_actor.identity();
             record.browser_actor.validate(DocumentBrowserActorSourceV1 { component_sha256: &hex_lower(&component_sha256), descriptor_byte_sha256: &hex_lower(&descriptor_sha256) }, package_actor_renderer(record))?;
-            let browser_actor_bytes = if let Some(file) = record.browser_actor.file() {
-                retained_browser_actor_bytes = retained_browser_actor_bytes.checked_add(file.byte_length).filter(|bytes| *bytes <= TRUSTED_BROWSER_ACTOR_CLOSURE_MAX_BYTES).ok_or(AuthorityError::ResourceLimit("trusted browser actor closure byte"))?;
+            let browser_actor_asset = if let Some(file) = record.browser_actor.file() {
                 let actor_path = TrustedCatalogRelativePathV1::parse(&file.path)?;
                 if !resolved_paths.insert(actor_path.clone()) {
                     return Err(catalog("trusted browser actor path is already used by the selected closure"));
                 }
                 let bytes = root.read_regular(&actor_path, file.byte_length, context).await?;
                 verify_length(file.byte_length, bytes.len())?;
-                verify_digest(&file.sha256, sha256(&bytes, context).await?, "browser actor sha256")?;
-                Some(Arc::<[u8]>::from(bytes))
+                let actor_sha256 = sha256(&bytes, context).await?;
+                drop(bytes);
+                verify_digest(&file.sha256, actor_sha256, "browser actor sha256")?;
+                Some(TrustedCatalogAsset::retained(TrustedRetainedFile::new(Arc::clone(root), actor_path, file.byte_length, actor_sha256, None)))
             } else {
                 None
             };
+            let plugin_module = verify_plugin_module(root, record, &hex_lower(&component_sha256), &hex_lower(&descriptor_sha256), &mut resolved_paths, &mut plugin_module_files, context).await?;
             report_package_progress(context, position, 3, total_units)?;
-            staged.push(StagedTrustedPackage { position, record, component_bytes, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_bytes });
+            staged.push(StagedTrustedPackage { position, record, component, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_asset, plugin_module });
         }
 
         for stage in staged {
-            let StagedTrustedPackage { position, record, component_bytes, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_bytes } = stage;
+            let StagedTrustedPackage { position, record, component, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_asset, plugin_module } = stage;
             context.checkpoint()?;
             let native_bindings = providers.preview(NativeCodecProviderPackageV1 { plugin_id: &record.plugin_id, package_id: &record.package_id, version: &record.version }, &descriptor, context)?;
             context.checkpoint()?;
             let binding_map = validate_native_bindings(&native_bindings)?;
             let mut consumed_bindings = BTreeSet::new();
             let package_ref = PackageRef { package: PackageId(record.package_id.clone()), hash: PackageHash(component_blake3) };
-            let component_bytes: Arc<[u8]> = component_bytes.into();
-            let component = Arc::new(GuestArtifactComponent {
+            let guest = Arc::new(GuestArtifactComponent {
                 runtime: Arc::clone(&guest_runtime),
                 package: package_ref.clone(),
-                bytes: Arc::clone(&component_bytes),
+                component: component.clone(),
                 compiled: tokio::sync::OnceCell::new(),
             });
+            let mut verification_compile: Option<Arc<semio_framework_plugin_host::CompiledHandle>> = None;
 
             for expected in &record.native_codecs {
                 if codecs.len() >= TRUSTED_CATALOG_MAX_CODECS {
@@ -742,17 +920,24 @@ impl TrustedCatalogLoader {
                         consumed_bindings.insert(key);
                     }
                     // 🔐️ No linked codec for this package, so the carried row is pinned against the
-                    // COMPONENT's own answer instead — the component bytes are already hash-verified
-                    // above, so this binds the schema identity to those exact bytes.
+                    // COMPONENT's own answer instead, on bytes reread and re-verified against the digests
+                    // above. The compile serves this package's rows only and is dropped with them.
                     None => {
                         context.checkpoint()?;
-                        let compiled = component.compiled().await.map_err(|error| catalog_error(format!("{}: {error}", expected.artifact_schema)))?;
+                        let compiled = match &verification_compile {
+                            Some(compiled) => Arc::clone(compiled),
+                            None => {
+                                let bytes = component.read(context).await?;
+                                let compiled = Arc::new(guest_runtime.compile_component(&package_ref, &bytes).map_err(|error| catalog_error(format!("{}: {error}", expected.artifact_schema)))?);
+                                drop(bytes);
+                                verification_compile = Some(Arc::clone(&compiled));
+                                compiled
+                            }
+                        };
                         context.checkpoint()?;
                         let observed = guest_runtime
                             .as_ref()
-                            .codec_pack_schema_hash_observed(compiled, &expected.artifact_schema, GUEST_CODEC_BUDGET, |_fuel, _elapsed| {
-                                let _ = context.checkpoint();
-                            })
+                            .codec_pack_schema_hash_observed(&compiled, &expected.artifact_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| report_guest_codec_fuel(context, fuel))
                             .await
                             .map_err(|error| catalog_error(format!("{}: {error}", expected.artifact_schema)))?;
                         context.checkpoint()?;
@@ -779,7 +964,7 @@ impl TrustedCatalogLoader {
                 codecs.push(VerifiedNativeArtifactCodec {
                     identity,
                     codec: binding.map(|binding| binding.codec.clone()),
-                    guest: GuestArtifactCodecBinding { component: Arc::clone(&component), artifact_schema: expected.artifact_schema.clone() },
+                    guest: GuestArtifactCodecBinding { component: Arc::clone(&guest), artifact_schema: expected.artifact_schema.clone() },
                 });
             }
             if consumed_bindings.len() != binding_map.len() {
@@ -834,12 +1019,14 @@ impl TrustedCatalogLoader {
                 plugin_id: record.plugin_id.clone(),
                 package: package_ref,
                 version: record.version.clone(),
+                dependencies: record.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).collect(),
+                plugin_module,
                 component_sha256,
                 descriptor_sha256,
-                component_bytes,
+                component,
                 descriptor_bytes: descriptor_bytes.into(),
                 browser_actor,
-                browser_actor_bytes,
+                browser_actor_asset,
                 descriptor: Arc::new(descriptor),
             });
         }
@@ -861,6 +1048,54 @@ impl TrustedCatalogLoader {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogResolved, completed_units: total_units, total_units })?;
         Ok((catalog, registration_codecs))
     }
+}
+
+/// 🧩️ Reads, verifies and retains one package's plugin module: the manifest against its record and the
+/// package's own verified digests, then every file against the manifest. A file several modules share
+/// (the vendored imports, the fonts) is one content-addressed file, verified once per load.
+async fn verify_plugin_module(
+    root: &Arc<TrustedCatalogGenerationRoot>,
+    record: &TrustedBundlePackageV1,
+    component_sha256: &str,
+    descriptor_sha256: &str,
+    resolved_paths: &mut BTreeSet<TrustedCatalogRelativePathV1>,
+    verified_files: &mut BTreeMap<String, (TrustedPluginModuleFileV1, TrustedCatalogAsset)>,
+    context: &OperationContext<'_>,
+) -> Result<VerifiedPluginModule, AuthorityError> {
+    let manifest_path = TrustedCatalogRelativePathV1::parse(&record.plugin_module.path)?;
+    if !resolved_paths.insert(manifest_path.clone()) {
+        return Err(catalog("trusted plugin module path is already used by the selected closure"));
+    }
+    let manifest_bytes = root.read_regular(&manifest_path, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, context).await?;
+    verify_length(record.plugin_module.byte_length, manifest_bytes.len())?;
+    let (manifest_sha256, manifest_blake3) = dual_hash(&manifest_bytes, context).await?;
+    verify_digest(&record.plugin_module.sha256, manifest_sha256, "plugin module sha256")?;
+    verify_digest(&record.plugin_module.blake3, manifest_blake3, "plugin module blake3")?;
+    let source = TrustedPluginModuleSourceV1 { plugin_id: &record.plugin_id, package_id: &record.package_id, version: &record.version, component_sha256, descriptor_byte_sha256: descriptor_sha256 };
+    let bundle = decode_plugin_module_bundle(&manifest_bytes, source)?;
+    let mut files = BTreeMap::new();
+    for file in &bundle.files {
+        context.checkpoint()?;
+        let asset = match verified_files.get(&file.sha256) {
+            Some((known, asset)) if known.byte_length == file.byte_length && known.blake3 == file.blake3 => asset.clone(),
+            Some(_) => return Err(catalog("trusted plugin module files disagree about one content address")),
+            None => {
+                let path = TrustedCatalogRelativePathV1::parse(&plugin_module_blob_path(&file.sha256))?;
+                if !resolved_paths.insert(path.clone()) {
+                    return Err(catalog("trusted plugin module file path is already used by the selected closure"));
+                }
+                let bytes = root.read_regular(&path, file.byte_length, context).await?;
+                let (sha256, blake3) = dual_hash(&bytes, context).await?;
+                verify_plugin_module_file(file, bytes.len(), sha256, blake3)?;
+                drop(bytes);
+                let asset = TrustedCatalogAsset::retained(TrustedRetainedFile::new(Arc::clone(root), path, file.byte_length, sha256, Some(blake3)));
+                verified_files.insert(file.sha256.clone(), (file.clone(), asset.clone()));
+                asset
+            }
+        };
+        files.insert(file.path.clone(), asset);
+    }
+    Ok(VerifiedPluginModule { bundle_sha256: hex_lower(&manifest_sha256), manifest_bytes: manifest_bytes.into(), bundle, files })
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -893,21 +1128,87 @@ fn valid_open_identity(value: &str) -> bool {
     valid_identity(value) && !value.chars().any(char::is_control)
 }
 
+/// 🗂️ The one pairing rule between a verified descriptor's artifact kinds and its surfaces, shared by
+/// publication ([`descriptor_open_targets`]) and verification ([`validate_descriptor_open_target`]). A
+/// plugin-level kind (`PluginBuilder::artifact_kind`, the channel GIS still uses) is opened only by the
+/// surfaces whose own dialect names it, even when a sibling app lists it as an input (GIS's terrain editor
+/// lists the map). Any other kind is opened by the editor that declares it itself (where a plugin migrated
+/// onto the declaration tree, ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, stitches its spec)
+/// and by the viewers of that editor's dialect, the read-only surface of the same documents.
+fn app_opens_kind(descriptor: &PackageDescriptor, app: &semio_framework::AppDefinition, artifact_kind: &str, artifact_schema: &str) -> bool {
+    let declares = |kinds: &[semio_framework::ArtifactKindSpec]| kinds.iter().any(|kind| kind.id == artifact_kind && kind.schema == artifact_schema);
+    if declares(&descriptor.manifest.artifact_kinds) {
+        return app.dialect.artifact_kind == artifact_kind;
+    }
+    match app.role {
+        semio_framework::AppRole::Editor => declares(&app.artifact_kinds),
+        semio_framework::AppRole::Viewer => declares(&app.artifact_kinds) || descriptor.manifest.apps.iter().any(|editor| editor.role == semio_framework::AppRole::Editor && editor.dialect == app.dialect && declares(&editor.artifact_kinds)),
+    }
+}
+
+/// 🎯️ Every document-open surface one verified descriptor declares, in app then kind declaration order:
+/// each (editor or viewer, kind) pair [`app_opens_kind`] admits, in the app's first window kind, rendered by
+/// the catalog's closed wasm actor, with the grant its role fixes (a viewer reads and observes, never writes),
+/// so a read-only member opens the same document through its viewer. `os-hub trusted-catalog open-targets`
+/// answers exactly this list, so a publisher never re-derives the rule.
+pub fn descriptor_open_targets(descriptor: &PackageDescriptor) -> Vec<schema::TrustedDescriptorOpenTargetV1> {
+    if descriptor.execution != semio_framework::ExecutionMode::Isolated {
+        return Vec::new();
+    }
+    let mut targets = Vec::new();
+    for app in &descriptor.manifest.apps {
+        if app.id != semio_framework::surface_app_id(&app.dialect, app.role) {
+            continue;
+        }
+        let role = match app.role {
+            semio_framework::AppRole::Viewer => TrustedBundleOpenRole::Viewer,
+            semio_framework::AppRole::Editor => TrustedBundleOpenRole::Editor,
+        };
+        let mut seen = BTreeSet::new();
+        let editors = descriptor.manifest.apps.iter().filter(|editor| app.role == semio_framework::AppRole::Viewer && editor.role == semio_framework::AppRole::Editor && editor.dialect == app.dialect);
+        for kind in descriptor.manifest.artifact_kinds.iter().chain(app.artifact_kinds.iter()).chain(editors.flat_map(|editor| editor.artifact_kinds.iter())) {
+            if !seen.insert((kind.id.as_str(), kind.schema.as_str())) || !app_opens_kind(descriptor, app, &kind.id, &kind.schema) {
+                continue;
+            }
+            targets.push(schema::TrustedDescriptorOpenTargetV1 {
+                artifact_kind: kind.id.clone(),
+                artifact_schema: kind.schema.clone(),
+                surface_id: app.id.clone(),
+                app_id: app.id.clone(),
+                window_kind_id: app.window_kinds.first().id.clone(),
+                role,
+                renderer_target: TrustedBundleRendererTarget::Wasm,
+                parent_dialect: app.dialect.clone(),
+                grant: TrustedBundleGrantV1 { read: true, write: matches!(role, TrustedBundleOpenRole::Editor), observe: true },
+            });
+        }
+    }
+    targets
+}
+
+/// 📤️ Answers `os-hub trusted-catalog open-targets`: decodes one bounded descriptor exactly as the loader
+/// does and serializes [`descriptor_open_targets`] as `TrustedCatalogDescriptorOpenTargetsV1`.
+pub fn descriptor_open_targets_answer(descriptor_bytes: &[u8]) -> Result<Vec<u8>, AuthorityError> {
+    if descriptor_bytes.is_empty() || descriptor_bytes.len() as u64 > TRUSTED_DESCRIPTOR_MAX_BYTES {
+        return Err(catalog("descriptor bytes are empty or exceed the trusted descriptor bound"));
+    }
+    let descriptor = decode_package_descriptor(descriptor_bytes)?;
+    let targets = descriptor_open_targets(&descriptor);
+    if targets.len() > TRUSTED_CATALOG_MAX_OPEN_TARGETS {
+        return Err(AuthorityError::ResourceLimit("trusted document-open target count"));
+    }
+    let mut bytes = serde_json::to_vec(&schema::TrustedCatalogDescriptorOpenTargetsV1 { schema: schema::TRUSTED_CATALOG_DESCRIPTOR_OPEN_TARGETS_SCHEMA, targets }).map_err(catalog_error)?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
 fn validate_descriptor_open_target(descriptor: &PackageDescriptor, target: &TrustedBundleOpenTargetV1) -> Result<semio_framework::ArtifactDialect, AuthorityError> {
     let expected_role = match target.role {
         TrustedBundleOpenRole::Viewer => semio_framework::AppRole::Viewer,
         TrustedBundleOpenRole::Editor => semio_framework::AppRole::Editor,
     };
     let app = descriptor.manifest.apps.iter().find(|app| app.id == target.app_id).ok_or_else(|| catalog("document-open target app is absent from the verified descriptor"))?;
-    // 🗂️ A document kind is discoverable when the verified descriptor declares its spec — at plugin
-    // level (`PluginBuilder::artifact_kind`, the channel GIS and Stdio still use) OR on the OWNING
-    // APP itself, which is where a plugin migrated onto the declaration tree (ticket
-    // 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM) stitches it. Reading only the plugin-level
-    // list made every migrated package structurally un-openable on a hub, which is why the trusted
-    // catalog could never carry a third creatable kind.
-    let declares = |kinds: &[semio_framework::ArtifactKindSpec]| kinds.iter().any(|kind| kind.id == target.artifact_kind && kind.schema == target.artifact_schema);
-    let discoverable = declares(&descriptor.manifest.artifact_kinds) || declares(&app.artifact_kinds);
-    if !discoverable
+    if !app_opens_kind(descriptor, app, &target.artifact_kind, &target.artifact_schema)
         || app.id != target.surface_id
         || app.id != semio_framework::surface_app_id(&app.dialect, app.role)
         || app.role != expected_role
@@ -1026,6 +1327,10 @@ fn trusted_profile_generation(bundle: &TrustedBundleV1, profile: &TrustedBundleP
         }
         package.browser_actor.validate(DocumentBrowserActorSourceV1 { component_sha256: &package.component.sha256, descriptor_byte_sha256: &package.descriptor.sha256 }, package_actor_renderer(package))?;
         package.browser_actor.append_generation(&mut encoded)?;
+        append_document_open_catalog_field(&mut encoded, package.plugin_module.path.as_bytes())?;
+        encoded.extend_from_slice(&package.plugin_module.byte_length.to_be_bytes());
+        append_document_open_catalog_field(&mut encoded, decode_digest(&package.plugin_module.sha256, "profile plugin module sha256")?.as_slice())?;
+        append_document_open_catalog_field(&mut encoded, decode_digest(&package.plugin_module.blake3, "profile plugin module blake3")?.as_slice())?;
         append_trusted_profile_dependencies(&mut encoded, &package.dependencies)?;
         let mut codecs = package.native_codecs.iter().collect::<Vec<_>>();
         codecs.sort_by(|left, right| (&left.artifact_kind, &left.artifact_schema, &left.pack_schema_hash).cmp(&(&right.artifact_kind, &right.artifact_schema, &right.pack_schema_hash)));
@@ -1124,7 +1429,7 @@ fn validate_file(file: &TrustedBundleFileV1, maximum: u64) -> Result<(), Authori
 }
 
 fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<SelectedTrustedBundleV1, AuthorityError> {
-    if bundle.schema_version != 2 || bundle.packages.is_empty() || bundle.packages.len() > TRUSTED_CATALOG_MAX_PACKAGES || bundle.profiles.is_empty() || bundle.profiles.len() > TRUSTED_BUNDLE_MAX_PROFILES || !valid_identity(profile_id) {
+    if bundle.schema_version != 3 || bundle.packages.is_empty() || bundle.packages.len() > TRUSTED_CATALOG_MAX_PACKAGES || bundle.profiles.is_empty() || bundle.profiles.len() > TRUSTED_BUNDLE_MAX_PROFILES || !valid_identity(profile_id) {
         return Err(catalog("trusted bundle shape or version is invalid"));
     }
     let mut plugins = BTreeMap::new();
@@ -1151,6 +1456,15 @@ fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<Selecte
             if !paths.insert(file.path) {
                 return Err(catalog("trusted browser actor path is reused across package records"));
             }
+        }
+        let module = &package.plugin_module;
+        if module.path.is_empty() || module.path.len() > TRUSTED_RELATIVE_PATH_MAX_BYTES || !(1..=TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES).contains(&module.byte_length) {
+            return Err(catalog("trusted plugin module record is empty or exceeds its fixed boundary"));
+        }
+        decode_digest(&module.sha256, "plugin module sha256")?;
+        decode_digest(&module.blake3, "plugin module blake3")?;
+        if !paths.insert(module.path.clone()) {
+            return Err(catalog("trusted plugin module path is reused across package records"));
         }
         let mut dependencies = BTreeSet::new();
         for dependency in &package.dependencies {
@@ -1268,31 +1582,35 @@ fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<Selecte
             let target_count = bundle.packages.iter().map(|package| package.open_targets.len()).sum::<usize>();
             let gis = bundle.packages.iter().find(|package| package.plugin_id == "gis");
             let stdio = bundle.packages.iter().find(|package| package.plugin_id == "stdio");
-            let target = &profile.open_targets[0].target;
+            let map_dialect = semio_framework::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() };
+            let exact_map_surface = |target: &TrustedBundleOpenTargetV1, role: TrustedBundleOpenRole, surface: &str, window: &str| {
+                target.artifact_kind == "s.gis.gismap"
+                    && target.artifact_schema == "gis.map"
+                    && target.surface_id == surface
+                    && target.app_id == surface
+                    && target.window_kind_id == window
+                    && target.parent_dialect == map_dialect
+                    && target.role == role
+                    && target.renderer_target == TrustedBundleRendererTarget::Wasm
+                    && target.grant == (TrustedBundleGrantV1 { read: true, write: role == TrustedBundleOpenRole::Editor, observe: true })
+            };
             if identities != [("gis", "semio:gis"), ("stdio", "semio:stdio")]
                 || bundle.packages.len() != 2
-                || target_count != 1
+                || target_count != 2
                 || gis.is_none_or(|package| {
                     package.native_codecs.len() != 2
                         || package.dependencies.as_slice() != std::slice::from_ref(&profile.selected_closure[1])
-                        || package.open_targets.len() != 1
+                        || package.open_targets.len() != 2
                         || !package.native_codecs.iter().any(|codec| codec.artifact_kind == "s.gis.gismap" && codec.artifact_schema == "gis.map")
                         || !package.native_codecs.iter().any(|codec| codec.artifact_kind == "s.gis.gisterrain" && codec.artifact_schema == "gis.terrain")
                 })
                 || stdio.is_none_or(|package| package.native_codecs.len() != 26 || !package.open_targets.is_empty() || !package.dependencies.is_empty())
-                || profile.open_targets.len() != 1
-                || profile.open_targets[0].package.plugin_id != "gis"
-                || target.artifact_kind != "s.gis.gismap"
-                || target.artifact_schema != "gis.map"
-                || target.surface_id != "s.gis.gismap@1/*#editor"
-                || target.app_id != "s.gis.gismap@1/*#editor"
-                || target.window_kind_id != "gis2d-main"
-                || target.parent_dialect != (semio_framework::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() })
-                || target.role != TrustedBundleOpenRole::Editor
-                || target.renderer_target != TrustedBundleRendererTarget::Wasm
-                || target.grant != (TrustedBundleGrantV1 { read: true, write: true, observe: true })
+                || profile.open_targets.len() != 2
+                || profile.open_targets.iter().any(|selected| selected.package.plugin_id != "gis")
+                || !profile.open_targets.iter().any(|selected| exact_map_surface(&selected.target, TrustedBundleOpenRole::Editor, "s.gis.gismap@1/*#editor", "gis2d-main"))
+                || !profile.open_targets.iter().any(|selected| exact_map_surface(&selected.target, TrustedBundleOpenRole::Viewer, "s.gis.gismap@1/*#viewer", "gis2d-view-map"))
             {
-                return Err(catalog("local stdio plus GIS profile is not its exact closed two-package map-editor authority"));
+                return Err(catalog("local stdio plus GIS profile is not its exact closed two-package map editor and viewer authority"));
             }
         }
         if profile.id == profile_id {
@@ -1514,6 +1832,27 @@ fn report_package_progress(context: &OperationContext<'_>, package_position: usi
     context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogLoading, completed_units, total_units })
 }
 
+/// 🧫️ The files of a never-executed fixture plugin module: its entry, both descriptor forms (the packed one
+/// the package's own descriptor) and one vendored import shared by every fixture module.
+#[cfg(any(test, feature = "integration-fixtures"))]
+pub fn fixture_plugin_module_files(plugin_id: &str, descriptor_bytes: &[u8]) -> Vec<(String, Vec<u8>)> {
+    vec![
+        (format!("{plugin_id}/🌉️bridge.js"), b"export async function createActorApi() {}\n".to_vec()),
+        (format!("{plugin_id}/🔣️.json"), serde_json::json!({ "manifest": { "pluginId": plugin_id } }).to_string().into_bytes()),
+        (format!("{plugin_id}/🛂️.descriptor.semio"), descriptor_bytes.to_vec()),
+        ("🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js".to_owned(), b"export const streams = {};\n".to_vec()),
+    ]
+}
+
+/// 🧫️ Writes one package's fixture plugin module beneath `root` and answers the `pluginModule` record naming it.
+#[cfg(any(test, feature = "integration-fixtures"))]
+pub fn write_fixture_plugin_module(root: &Path, plugin_id: &str, package_id: &str, version: &str, component_sha256: &str, descriptor_bytes: &[u8]) -> Result<serde_json::Value, AuthorityError> {
+    let descriptor_byte_sha256 = hex_lower(&Sha256::digest(descriptor_bytes));
+    let source = TrustedPluginModuleSourceV1 { plugin_id, package_id, version, component_sha256, descriptor_byte_sha256: &descriptor_byte_sha256 };
+    let record = plugin_module::write_plugin_module_bundle(root, &format!("plugin-module-{plugin_id}.json"), source, plugin_id, &fixture_plugin_module_files(plugin_id, descriptor_bytes))?;
+    serde_json::to_value(record).map_err(catalog_error)
+}
+
 /// 🧫️ Shares headless Stdio metadata between native GIS fixtures; synthetic bytes are never executed.
 #[cfg(all(feature = "native-artifact-execution", any(test, feature = "integration-fixtures")))]
 fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, serde_json::Value), AuthorityError> {
@@ -1545,12 +1884,13 @@ fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, ser
     std::fs::write(root.join("stdio-descriptor.semio"), &bytes).map_err(catalog_error)?;
     let identity = serde_json::json!({ "pluginId": "stdio", "packageId": "semio:stdio", "version": version });
     let codecs: Vec<_> = receipts.into_iter().map(|receipt| serde_json::json!({ "artifactKind": receipt.artifact_kind, "artifactSchema": receipt.schema, "packSchemaHash": hex_lower(&receipt.pack_schema_hash) })).collect();
+    let plugin_module = write_fixture_plugin_module(root, "stdio", "semio:stdio", &version, &component_sha256, &bytes)?;
     let record = serde_json::json!({
         "pluginId": "stdio", "packageId": "semio:stdio", "version": version, "role": "plugin", "dependencies": [],
         "executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version },
         "component": { "path": "stdio-component.wasm", "byteLength": component.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
         "descriptor": { "path": "stdio-descriptor.semio", "byteLength": bytes.len(), "sha256": hex_lower(&Sha256::digest(&bytes)) },
-        "browserActor": { "kind": "none" }, "nativeCodecs": codecs, "openTargets": [],
+        "browserActor": { "kind": "none" }, "pluginModule": plugin_module, "nativeCodecs": codecs, "openTargets": [],
     });
     serde_json::from_value::<TrustedBundlePackageV1>(record.clone()).map_err(catalog_error)?;
     Ok((identity, record))

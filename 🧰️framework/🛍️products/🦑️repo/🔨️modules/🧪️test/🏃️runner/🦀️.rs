@@ -92,6 +92,13 @@ impl<'a> Context<'a> {
     pub fn seed(&self) -> u64 {
         self.scenario.seed.parse().unwrap_or(0)
     }
+
+    /// 🪆️ The Examples row id this scenario expands (`mutate-set-line` under `@id-mutate` is row
+    /// `set-line`), or an error for a plain scenario — a handler registered under an outline's base id
+    /// reads its row here instead of being registered once per row.
+    pub fn row(&self) -> Result<&str, String> {
+        self.scenario.id.strip_prefix(&self.scenario.outline_of).and_then(|rest| rest.strip_prefix('-')).filter(|_| !self.scenario.outline_of.is_empty()).ok_or_else(|| format!("scenario {} expands no Scenario Outline row", self.scenario.id))
+    }
 }
 
 type Handler = Box<dyn Fn(&Context) -> Result<Outcome, String>>;
@@ -108,7 +115,8 @@ impl Adapter {
         Adapter { implementation, handlers: BTreeMap::new() }
     }
 
-    /// 🔮️ Registers the reference-implementation handler for one scenario.
+    /// 🔮️ Registers the reference-implementation handler for one scenario id, or for a Scenario
+    /// Outline's base id (`@id-<base>`), which then serves every row the feature expands.
     pub fn oracle<F>(mut self, scenario: &str, handler: F) -> Adapter
     where
         F: Fn(&Context) -> Result<Outcome, String> + 'static,
@@ -117,7 +125,7 @@ impl Adapter {
         self
     }
 
-    /// 🎯️ Registers this repository's handler for one scenario.
+    /// 🎯️ Registers this repository's handler for one scenario id, or for a Scenario Outline's base id.
     pub fn subject<F>(mut self, scenario: &str, handler: F) -> Adapter
     where
         F: Fn(&Context) -> Result<Outcome, String> + 'static,
@@ -126,8 +134,8 @@ impl Adapter {
         self
     }
 
-    fn handler(&self, scenario: &str, role: &str) -> Option<&Handler> {
-        self.handlers.get(&(scenario.to_string(), role.to_string()))
+    fn handler(&self, scenario: &Scenario, role: &str) -> Option<&Handler> {
+        self.handlers.get(&(scenario.id.clone(), role.to_string())).or_else(|| if scenario.outline_of.is_empty() { None } else { self.handlers.get(&(scenario.outline_of.clone(), role.to_string())) })
     }
 
     /// 🧾️ Scenario ids this adapter registered, for the coordinator's registration check.
@@ -260,7 +268,7 @@ pub fn run_main(adapter: Adapter) -> std::process::ExitCode {
     for scenario in &plan.scenarios {
         let started = std::time::Instant::now();
         let context = Context { plan: &plan, scenario, role: &plan.role, repo_root: repo_root.clone(), work_dir: work_dir.clone(), artifact_dir: artifact_dir.clone() };
-        match adapter.handler(&scenario.id, &plan.role) {
+        match adapter.handler(scenario, &plan.role) {
             None => {
                 failed = true;
                 lines.push(result_json(&plan, scenario, "errored", started.elapsed().as_millis(), None, vec![("error".to_string(), format!("adapter has no {} registration for scenario {}", plan.role, scenario.id))], None, None).to_string());

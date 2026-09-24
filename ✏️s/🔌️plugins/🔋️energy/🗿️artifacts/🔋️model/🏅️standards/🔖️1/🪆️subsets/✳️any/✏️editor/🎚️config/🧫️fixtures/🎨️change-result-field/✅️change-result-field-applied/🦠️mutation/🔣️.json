@@ -1,0 +1,6 @@
+{
+  "mutation": "changeResultField",
+  "payload": {
+    "field": "solarTransmitted"
+  }
+}

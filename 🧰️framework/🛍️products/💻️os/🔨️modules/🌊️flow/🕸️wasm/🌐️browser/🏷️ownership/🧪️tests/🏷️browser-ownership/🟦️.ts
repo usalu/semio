@@ -130,7 +130,8 @@ export async function testFlowBrowserOwnership(): Promise<void> {
   const bundled = await outputs[0].text();
   assert.ok(bundled.includes('import("../flow_core.js")'));
   assert.ok(bundled.includes('from "../🖥️host/🟨️.js"'));
-  assert.equal(bundled.includes(browserOwner.path), false);
+  const bundledCode = bundled.replace(/\/\*[^]*?\*\//gu, "");
+  assert.equal(bundledCode.includes(browserOwner.path.slice(browserOwner.path.lastIndexOf("/🌐️browser/") + 1)), false);
 
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
   mkdirSync(artifactRoot, { recursive: true });
@@ -171,7 +172,7 @@ export async function testFlowBrowserOwnership(): Promise<void> {
     assert.ok(resolution, packageName);
     assert.equal(realpathSync(resolution.resolvedFileName), realpathSync(join(packageRoot, entry.types)));
   }
-  console.log(`[DEBUG] Flow browser ownership: ${fixture.owners.length} owners, ${fixture.consumers.length} consumers, ${fixture.target.inputs.length} exact Nx inputs, staged publication, pre-promotion preservation and native TypeScript/Bun projection parity PASS`);
+  console.log(`Flow browser ownership: ${fixture.owners.length} owners, ${fixture.consumers.length} consumers, ${fixture.target.inputs.length} exact Nx inputs, staged publication, pre-promotion preservation and native TypeScript/Bun projection parity PASS`);
 }
 
 if (import.meta.main) await testFlowBrowserOwnership();

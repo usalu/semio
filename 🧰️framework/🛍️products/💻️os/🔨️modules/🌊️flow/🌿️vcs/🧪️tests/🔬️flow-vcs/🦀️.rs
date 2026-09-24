@@ -881,6 +881,41 @@ fn publish_and_close(session: &mut FlowRetainedVcs, handle: FlowVcsHandle) -> Fl
     page
 }
 
+/// 🧹️ Ends a law the way a host ends a session: every operation still open is cancelled or acknowledged and
+/// closed, then the session retires to terminal-empty — every Flow owner refuses a bare drop.
+fn close_to_terminal(session: &mut FlowRetainedVcs) {
+    let grant = retained_grant();
+    for slot in 0..FLOW_VCS_MAX_OPERATIONS {
+        let Some((handle, stage, leased_sequence)) = session.operations[slot].as_ref().map(|operation| (operation.handle, operation.stage, operation.page.as_ref().filter(|_| operation.page_leased).map(|page| page.sequence))) else { continue };
+        match stage {
+            FlowVcsStage::Admitted | FlowVcsStage::Ready | FlowVcsStage::PublishReady => session.cancel(handle, grant).expect("cancel the open operation"),
+            FlowVcsStage::PageReady => {
+                let sequence = leased_sequence.unwrap_or_else(|| session.take_page(handle).expect("take the published page").sequence);
+                session.acknowledge_page(handle, sequence).expect("acknowledge the published page");
+            }
+            FlowVcsStage::Complete | FlowVcsStage::Cancelled | FlowVcsStage::Faulted | FlowVcsStage::Closing => {}
+        }
+        while !session.close_operation_step(handle, grant).expect("operation close") {}
+    }
+    session.begin_close();
+    while !session.close_retired_step(grant).expect("session close") {}
+    assert!(session.terminal_is_empty());
+}
+
+/// 🧹️ Retires a widget a law's source still holds; a widget's `Dictionary`/`OrderedSet` refuses a bare drop.
+fn retire_widget_source(source: &mut FlowVcsSource<Widget>) {
+    if let Some(widget) = source.value.take() {
+        widget.retire_cold();
+    }
+}
+
+/// 🧹️ Retires a document a law's source still holds; its widgets and layout refuse a bare drop.
+fn retire_snapshot_source(source: &mut FlowVcsSource<FlowHostSnapshot>) {
+    if let Some(snapshot) = source.value.take() {
+        snapshot.retire_cold();
+    }
+}
+
 //#region 📍️OrderedLayoutLaws
 #[test]
 fn retained_vcs_shared_snapshot_readers_retire_without_waiting_on_each_other() {
@@ -997,6 +1032,7 @@ fn retained_vcs_repeated_rejection_preserves_source_and_credits_then_valid_contr
     let handle = session.begin_add_widget(session.authority(), 2, &mut valid).expect("valid request follows repeated rejection");
     assert!(!valid.retained());
     assert!(matches!(drive_to_preview(&mut session, handle), FlowVcsPoll::Preview { .. }));
+    close_to_terminal(&mut session);
 }
 
 #[test]
@@ -1020,6 +1056,7 @@ fn retained_vcs_stale_aba_cancel_ack_and_incremental_close_are_fail_closed() {
     while !session.close_retired_step(retained_grant()).expect("retired source close") {}
     assert_eq!(session.credits(), FlowVcsCredits::default());
     assert_eq!(session.rediscover(handle.operation, handle.generation), Err(FlowVcsFault::StaleHandle));
+    close_to_terminal(&mut session);
 }
 
 #[test]
@@ -1098,7 +1135,8 @@ fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_
     }
     assert_eq!(owners.get("fixtureLedgers").and_then(|value| value.get("hostileOmissionLaws")).and_then(crate::os_pack::json::Value::as_array).expect("hostile omission laws").len(), 17);
 
-    let source = include_str!("../../🦀️.rs");
+    let laws = include_str!("🦀️.rs");
+    let source = &laws[..laws.find("fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_mutation").expect("this law's own definition")];
     for required in ["evaluate_operations", "flow_oracle_apply_operation", "flow_oracle_actual_case(feature, &session, page)", "flow_hostile_expected_state", "flow_hostile_actual_state", "flow_hostile_assert_every_scalar_is_signed"] {
         assert!(source.contains(required), "oracle extraction source law lacks {required}");
         assert!(!source.replace(required, "").contains(required), "hostile omission must fail the extraction gate for {required}");
@@ -1150,6 +1188,7 @@ fn retained_vcs_fixture_byte_vectors_execute_exact_multibyte_max_and_max_plus_on
             }
         }
         assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(crate::os_pack::json::Value::as_str).expect("byte final state")));
+        close_to_terminal(&mut session);
     }
 }
 
@@ -1202,6 +1241,7 @@ fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_resu
         session.cancel(handle, valid_grant).expect("authority cleanup cancel");
         flow_hostile_close_and_drain(&mut session, handle, valid_grant);
         assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(crate::os_pack::json::Value::as_str).expect("authority final state")));
+        close_to_terminal(&mut session);
     }
 
     for vector in lifecycle.get("malformedVectors").and_then(crate::os_pack::json::Value::as_array).expect("malformed vectors") {
@@ -1229,6 +1269,8 @@ fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_resu
         assert_eq!(id_source.retained(), sources.get("idRetained").and_then(crate::os_pack::json::Value::as_bool).expect("malformed id retained"));
         assert_eq!(widget_source.retained(), sources.get("widgetRetained").and_then(crate::os_pack::json::Value::as_bool).expect("malformed widget retained"));
         assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("atResultState").and_then(crate::os_pack::json::Value::as_str).expect("malformed result state")));
+        close_to_terminal(&mut session);
+        retire_widget_source(&mut widget_source);
     }
 
     for vector in lifecycle.get("grantVectors").and_then(crate::os_pack::json::Value::as_array).expect("grant vectors") {
@@ -1251,6 +1293,7 @@ fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_resu
         session.cancel(handle, valid_grant).expect("grant cleanup cancel");
         flow_hostile_close_and_drain(&mut session, handle, valid_grant);
         assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(crate::os_pack::json::Value::as_str).expect("grant final state")));
+        close_to_terminal(&mut session);
     }
 }
 
@@ -1286,7 +1329,12 @@ fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_
                     }
                     session.poll(handle, grant).expect("reach transfer cursor target");
                 }
-                assert!(flow_hostile_cursor_matches(&session, handle, target));
+                assert!(
+                    flow_hostile_cursor_matches(&session, handle, target),
+                    "transfer boundary {} never reached target {target:?}; cursor stopped at {:?}",
+                    boundary.get("boundary").and_then(crate::os_pack::json::Value::as_str).expect("transfer boundary"),
+                    session.operations[usize::from(handle.slot)].as_ref().map(|operation| operation.cursor)
+                );
             }
 
             let before_control = session.resource_fingerprint();
@@ -1302,7 +1350,12 @@ fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_
                 for _ in 0..steps {
                     assert!(!session.close_operation_step(handle, grant).expect("rollback boundary step"));
                 }
-                assert!(flow_hostile_cursor_matches(&session, handle, target));
+                assert!(
+                    flow_hostile_cursor_matches(&session, handle, target),
+                    "rollback boundary {} via {control_name} missed target {target:?}; cursor at {:?}",
+                    boundary.get("boundary").and_then(crate::os_pack::json::Value::as_str).expect("rollback boundary"),
+                    session.operations[usize::from(handle.slot)].as_ref().map(|operation| operation.cursor)
+                );
                 let at_boundary = expected.get("atBoundary").expect("rollback expected boundary");
                 flow_hostile_assert_rollback_boundary(&session, handle, protocol.get("operation").expect("rollback operation fixture"), target, at_boundary);
                 assert_eq!(
@@ -1331,6 +1384,7 @@ fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_
                 boundary.get("boundary").and_then(crate::os_pack::json::Value::as_str).expect("transfer boundary"),
                 control_name
             );
+            close_to_terminal(&mut session);
         }
     }
 }
@@ -1355,6 +1409,7 @@ fn retained_vcs_zero_fuel_deadline_and_interrupted_close_preserve_every_credit()
     rejected.items = 0;
     assert_eq!(session.close_operation_step(handle, rejected), Err(FlowVcsFault::InsufficientGrant));
     assert_eq!(session.credits(), before);
+    close_to_terminal(&mut session);
 }
 
 #[test]
@@ -1380,6 +1435,7 @@ fn retained_vcs_every_mutating_control_rejects_partial_grants_without_state_chan
         assert_eq!(session.close_retired_step(grant), Err(FlowVcsFault::InsufficientGrant));
         assert_eq!(session.resource_fingerprint(), before);
     }
+    close_to_terminal(&mut session);
 }
 
 #[test]
@@ -1431,6 +1487,7 @@ fn retained_vcs_malformed_sources_fail_before_transfer_with_exact_fingerprint() 
     let mut valid_id = FlowVcsSource::new("source".to_owned());
     let mut valid_patch = FlowVcsSource::new(Widget::InputNote { id: "source".into(), text: "valid".into() });
     assert!(session.begin_patch_widget(session.authority(), &mut valid_id, &mut valid_patch).is_ok());
+    close_to_terminal(&mut session);
 }
 
 #[test]
@@ -1444,6 +1501,7 @@ fn retained_vcs_panic_fault_preserves_exact_resources_and_next_close_progresses(
     assert_eq!(session.panic_fault(handle, retained_grant()), Err(FlowVcsFault::DuplicateControl));
     assert_eq!(session.resource_fingerprint(), before);
     while !session.close_operation_step(handle, retained_grant()).expect("close after panic") {}
+    close_to_terminal(&mut session);
 }
 
 #[test]
@@ -1458,6 +1516,7 @@ fn retained_vcs_cancel_around_every_transfer_has_exact_resource_fingerprints() {
         session.cancel(handle, retained_grant()).expect("cancel before publication");
         assert_eq!(session.resource_fingerprint(), before);
         while !session.close_operation_step(handle, retained_grant()).expect("cancel close") {}
+        close_to_terminal(&mut session);
     }
 
     let mut session = FlowRetainedVcs::new(retained_fixture(), 37, 1, 0);
@@ -1483,6 +1542,8 @@ fn retained_vcs_cancel_around_every_transfer_has_exact_resource_fingerprints() {
     let after_ack = session.resource_fingerprint();
     assert_eq!(session.cancel(handle, retained_grant()), Err(FlowVcsFault::Published));
     assert_eq!(session.resource_fingerprint(), after_ack);
+
+    close_to_terminal(&mut session);
 }
 
 #[test]
@@ -1499,6 +1560,7 @@ fn retained_vcs_scan_and_shift_advance_only_one_semantic_unit_per_grant() {
     session.poll(handle, retained_grant()).expect("second scan");
     assert_eq!(session.operations[slot].as_ref().expect("operation").cursor.scan, 2);
     drive_to_preview(&mut session, handle);
+    close_to_terminal(&mut session);
 }
 
 #[test]
@@ -1523,6 +1585,7 @@ fn retained_vcs_cancel_during_adjacent_transfer_rolls_back_exact_document() {
     assert_eq!(after_ids, before_ids);
     let after = session.resource_fingerprint();
     assert_eq!(after, before);
+    close_to_terminal(&mut session);
 }
 
 #[test]
@@ -1544,6 +1607,8 @@ fn retained_vcs_replace_document_uses_persistent_owner_transfer_phases() {
     drive_to_preview(&mut session, handle);
     assert_eq!(session.document.as_ref().expect("document").host_snapshot().widgets.len(), expected_widgets);
     assert_eq!(session.operations[slot].as_ref().expect("operation").stage, FlowVcsStage::PageReady);
+    close_to_terminal(&mut session);
+    retire_snapshot_source(&mut source);
 }
 
 #[test]
@@ -1568,6 +1633,7 @@ fn retained_vcs_cancel_restores_every_partially_retired_redo_owner() {
     while !session.close_retired_step(retained_grant()).expect("retire cancelled request") {}
     assert_eq!(session.resource_fingerprint(), before);
     assert_eq!(session.document.as_ref().expect("document").host_snapshot().layout.get("source"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
+    close_to_terminal(&mut session);
 }
 
 #[test]
@@ -1598,6 +1664,7 @@ fn retained_vcs_cancel_restores_each_split_publication_boundary() {
         while !session.close_retired_step(retained_grant()).expect("retire cancelled request") {}
         assert_eq!(session.resource_fingerprint(), before);
         assert_eq!(session.document.as_ref().expect("document").host_snapshot().layout.get("source"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
+        close_to_terminal(&mut session);
     }
 }
 
@@ -1638,6 +1705,8 @@ fn retained_vcs_cancel_restores_each_document_replacement_boundary() {
         }
         while !session.close_retired_step(retained_grant()).expect("replacement retirement") {}
         assert_eq!(session.resource_fingerprint(), before);
+        close_to_terminal(&mut session);
+        retire_snapshot_source(&mut source);
     }
 }
 
@@ -1659,7 +1728,6 @@ fn retained_vcs_complete_route_rejects_hidden_scans_whole_apply_combined_publish
         ".widgets.remove(",
         ".synapses.insert(",
         ".synapses.remove(",
-        "mem::replace",
         ".iter()",
         ".position(",
         ".find(",
@@ -1672,6 +1740,10 @@ fn retained_vcs_complete_route_rejects_hidden_scans_whole_apply_combined_publish
         "while ",
         "serde_json",
     ];
+    for swap in cursor.split("std::mem::replace(").skip(1) {
+        let target = &swap[..swap.find(", layout)").expect("a retained replace may only publish the persistent layout root the bounded `LayoutUpdate` cursor built")];
+        assert!(target.ends_with(".layout") && !target.contains('\n'), "a retained replace may only publish the persistent layout root the bounded `LayoutUpdate` cursor built: {target}");
+    }
     for token in forbidden {
         assert!(!cursor.contains(token), "retained cursor admits forbidden whole-action mutation: {token}");
         let mutation = format!("{cursor}\n{token}");
@@ -1808,8 +1880,9 @@ fn flow_fixture_dsl_round_trips_including_cluster_widget() {
         flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: crate::OrderedMap::new(), previews: Vec::new() },
     });
     host_snapshot.widgets.push(Widget::OutputPreview { id: "preview2".into(), preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))), expanded: crate::OrderedSet::from(["a".to_string(), "b".to_string()]) });
-    crate::os_store::test_support::assert_dsl_round_trip(&host_snapshot);
-    crate::os_store::test_support::assert_dsl_pack_equivalence(&host_snapshot);
+    crate::os_store::test_support::assert_dsl_round_trip_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
+    crate::os_store::test_support::assert_dsl_pack_equivalence_cold(&host_snapshot, FlowHostSnapshot::retire_cold);
+    host_snapshot.retire_cold();
 }
 
 /// 📜️ Exercises `crate::os_store::OpText` for every `FlowMutation` variant — the ground-truth proof for the
@@ -1859,11 +1932,13 @@ fn flow_fixture_default_pack_uses_canonical_envelope_and_round_trips() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let envelope = create_document_envelope("test/v1", "test", FlowHostSnapshot::default(), None);
     let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    store.install_document_store_owners_exact(<FlowHostSnapshot as crate::os_store::MemberStoreOwner<FlowMutation>>::member_store_owners());
     let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
     store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<FlowMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     crate::os_store::test_support::assert_command_envelope_round_trip::<FlowHostSnapshot, FlowMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()));
+    semio_framework_artifact_flow_flow::retire_flow_store_cold(store);
 }
 
 /// 📜️ The handcrafted default Flow DSL preserves typed slider content, both synapses, and canonical pack parity.

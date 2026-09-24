@@ -19,12 +19,14 @@
       "expected": [
         {
           "kind": "hub",
+          "dataClass": "persistedShared",
           "baseUrl": "https://hub.invalid",
           "spaceId": "space-a",
           "requestedSurfaceId": "s.gis.map@1/*#editor"
         },
         {
           "kind": "folder",
+          "dataClass": "persistedLocalOnly",
           "path": "workspace/spaces/space-a"
         }
       ]
@@ -77,6 +79,7 @@
       "expected": [
         {
           "kind": "hub",
+          "dataClass": "persistedShared",
           "baseUrl": "https://hub.invalid",
           "spaceId": "space-c",
           "requestedSurfaceId": "s.gis.map@1/*#viewer"

@@ -32,6 +32,9 @@ if (typeof globalThis.Path2D === "undefined") {
   (globalThis as { Path2D?: typeof Path2D }).Path2D = class Path2D {} as unknown as typeof Path2D;
 }
 
+Object.defineProperty(HTMLMediaElement.prototype, "play", { configurable: true, writable: true, value: () => Promise.resolve() });
+Object.defineProperty(HTMLMediaElement.prototype, "pause", { configurable: true, writable: true, value: () => undefined });
+
 function stubFetchBody(url: string): { body: string; contentType: string } {
   const path = url.split("?")[0]?.split("#")[0] ?? url;
   if (path.endsWith(".ops") || path.endsWith(".dsl") || path.endsWith(".spk")) {

@@ -31,7 +31,7 @@ impl protocol::MutationKind<WiresSnapshot, WiresMutation> for SetNodeRoot {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set node \"{}\" root to {}", self.node_id, self.new_root), &format!("Knoten \"{}\" Wurzel auf {} setzen", self.node_id, self.new_root))
+        protocol::LocalizedLabel::native(&format!("Set node \"{}\" root to {}", self.node_id, self.new_root), &format!("Wurzel von Knoten \"{}\" auf {} setzen", self.node_id, self.new_root))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]

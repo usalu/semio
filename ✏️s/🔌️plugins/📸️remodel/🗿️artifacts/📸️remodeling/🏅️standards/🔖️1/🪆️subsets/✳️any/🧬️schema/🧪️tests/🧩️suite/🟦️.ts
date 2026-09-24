@@ -9,7 +9,7 @@
  *  an APPLIED vector ships a `🔺️diff/🔣️.json` and an `applied` outcome; a REFUSED vector ships
  *  `🔺️diff/🚫️.absent` (the repository-wide marker for a file that is deliberately not there) and a
  *  `rejected` outcome naming the code and target its guard raises; a WARNED no-op ships an all-null
- *  diff, an `applied` outcome and a `mutation.no-op` message, and its after-document is its
+ *  diff, a `no-op` outcome and a `mutation.no-op` message, and its after-document is its
  *  before-document. All three are asserted here.
  */
 
@@ -29,7 +29,7 @@ const mutationsRoot = join(subset, "🧬️schema/🧬️mutations");
 const vectorsRoot = join(subset, "🧫️fixtures/🧬️mutations");
 
 interface Outcome {
-  status: "applied" | "rejected";
+  status: "applied" | "no-op" | "rejected";
   code?: string;
   path?: string[];
   messages?: { level: string; code: string }[];
@@ -124,7 +124,7 @@ describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vect
   it("declares the committed outcome status and every diagnostic it names", () => {
     const produced = remodelingMutationOutcome(before(), mutation());
     const isRefusal = produced.messages.some((message) => message.severity === "error" || message.severity === "fatal");
-    expect(isRefusal ? "rejected" : "applied").toBe(vector.outcome.status);
+    expect(isRefusal ? "rejected" : remodelingDiffLanes(produced.diff).length === 0 ? "no-op" : "applied").toBe(vector.outcome.status);
     if (isRefusal) {
       expect(produced.messages.map((message) => message.code)).toEqual([vector.outcome.code]);
       expect(produced.messages[0].target).toEqual(vector.outcome.path ?? []);

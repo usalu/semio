@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeDuctLe
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change duct leakage rate to {}", self.new_duct_leakage_m3_s_m2), &format!("Kanalleckagenrate auf {} ändern", self.new_duct_leakage_m3_s_m2))
+        protocol::LocalizedLabel::native(&format!("Change duct leakage rate to {}", self.new_duct_leakage_m3_s_m2), &format!("Leckagerate der Kanäle auf {} ändern", self.new_duct_leakage_m3_s_m2))
     }
 }
 //#endregion 🔖️ChangeDuctLeakageM3SM2

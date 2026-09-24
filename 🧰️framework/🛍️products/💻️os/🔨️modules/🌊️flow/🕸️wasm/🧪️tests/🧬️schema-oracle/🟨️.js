@@ -35,7 +35,7 @@ const thirdParty = new AjvFlowSchemaOracle().summarize(abi);
 if (JSON.stringify(owned) !== JSON.stringify(expected)) throw new Error("Flow owned schema summary drift");
 if (JSON.stringify(thirdParty) !== JSON.stringify(expected)) throw new Error("Flow third-party oracle parity drift");
 for (let code = 2_500; code <= 2_610; code += 1) {
-  const supported = ![2_603, 2_604, 2_608].includes(code);
+  const supported = ![2_603, 2_604].includes(code);
   if (Object.values(abi.operations).includes(code) !== supported) throw new Error(`Flow operation ${code} admission drift`);
 }
 if (JSON.stringify(FlowOperation) !== JSON.stringify(abi.operations)) throw new Error("Flow JavaScript operation ledger drift");

@@ -20,7 +20,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeBb2Detai
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change bb2 details conform to {}", self.new_bb2_details_conform), &format!("bb2 konforme Details auf {} ändern", self.new_bb2_details_conform))
+        protocol::LocalizedLabel::native(&format!("Change Supplement 2 detail conformity to {}", self.new_bb2_details_conform), &format!("Beiblatt-2-Konformität der Details auf {} ändern", self.new_bb2_details_conform))
     }
 }
 //#endregion 🔖️Payload

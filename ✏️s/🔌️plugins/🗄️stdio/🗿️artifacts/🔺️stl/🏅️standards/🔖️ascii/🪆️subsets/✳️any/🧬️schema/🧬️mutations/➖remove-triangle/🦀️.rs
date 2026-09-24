@@ -22,7 +22,7 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for RemoveTriangle {
         agg_inverse(&StlMutation::RemoveTriangle(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-triangle", "Dreieck entfernen")
+        protocol::LocalizedLabel::native("Remove triangle", "Dreieck entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change plant loop {} return temperature to {:?}", self.id.0, self.new_return_temperature_c), &format!("Anlagenkreis {} Rücklufttemperatur auf {:?} ändern", self.id.0, self.new_return_temperature_c))
+        protocol::LocalizedLabel::native(&format!("Change plant loop {} return temperature to {:?}", self.id.0, self.new_return_temperature_c), &format!("Rücklauftemperatur von Anlagenkreislauf {} auf {:?} ändern", self.id.0, self.new_return_temperature_c))
     }
 
     fn target(&self) -> Vec<String> {

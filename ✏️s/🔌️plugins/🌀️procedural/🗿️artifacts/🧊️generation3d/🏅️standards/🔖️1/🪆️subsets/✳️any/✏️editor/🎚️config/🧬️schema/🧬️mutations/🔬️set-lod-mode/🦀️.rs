@@ -24,7 +24,7 @@ impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Lod Mode", "Lodmodus setzen")
+        protocol::LocalizedLabel::native("Set Lod Mode", "Detailstufenmodus setzen")
     }
 
     fn target(&self) -> Vec<String> {

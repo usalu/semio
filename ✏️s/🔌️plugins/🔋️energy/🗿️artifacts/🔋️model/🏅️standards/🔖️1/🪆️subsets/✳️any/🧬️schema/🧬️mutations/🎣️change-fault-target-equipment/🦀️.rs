@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Fault Target Equipment of fault {}", self.id.0), &format!("Fehlerzielanlage von Fehler {} ändern", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Change Fault Target Equipment of fault {}", self.id.0), &format!("Betroffene Anlage von Fehler {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

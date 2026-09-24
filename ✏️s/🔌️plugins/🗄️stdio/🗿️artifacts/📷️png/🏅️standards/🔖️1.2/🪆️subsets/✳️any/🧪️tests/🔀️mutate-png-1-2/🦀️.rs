@@ -18,14 +18,6 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::{oracle_apply_mutation, oracle_arrange, oracle_undo_mutation, project_png_mutation};
 use semio_s_plugin_stdio_test_oracle::law;
 
-//#region 🔖️Kinds
-/// 📇️ Mirrors `../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s own
-/// `KINDS` and `../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔣️oracle.json`'s
-/// `mutationCatalogs[0].kinds` — kept in the SAME declaration order in all three; a mismatch is
-/// caught loudly (either by the contract phase, or by the runner's own "no registration for
-/// scenario" error) rather than silently.
-const KINDS: &[&str] = &["change-header", "replace-palette", "change-transparency", "change-gamma", "change-chromaticities", "change-srgb-intent", "change-physical-dims", "change-timestamp", "change-background", "insert-text-chunk", "remove-text-chunk", "replace-text-chunk", "replace-pixels", "insert-unknown-chunk", "remove-unknown-chunk"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏛️rathaus-ahlen-grundriss/🖼️.png";
@@ -270,18 +262,16 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. One `mutate-<kind>`/`inverse-<kind>`
-/// pair per declared kind, plus the standalone `identity-round-trip` scenario.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for &kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle);
-        built = built.oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate);
-            built = built.subject(&format!("inverse-{kind}"), subject::undo);
-        }
+    built = built.oracle("mutate", mutate_oracle);
+    built = built.oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate);
+        built = built.subject("inverse", subject::undo);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

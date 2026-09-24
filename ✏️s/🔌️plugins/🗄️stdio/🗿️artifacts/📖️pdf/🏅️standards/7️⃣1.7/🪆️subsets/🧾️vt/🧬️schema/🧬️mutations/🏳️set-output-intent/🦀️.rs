@@ -34,7 +34,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for SetOutputIntent {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set PDF/VT output intent \"{}\"", self.identifier), &format!("PDF/VTausgabenabsicht \"{}\" setzen", self.identifier))
+        protocol::LocalizedLabel::native(&format!("Set PDF/VT output intent \"{}\"", self.identifier), &format!("PDF/VT-Ausgabebedingung \"{}\" setzen", self.identifier))
     }
 
     fn target(&self) -> Vec<String> {

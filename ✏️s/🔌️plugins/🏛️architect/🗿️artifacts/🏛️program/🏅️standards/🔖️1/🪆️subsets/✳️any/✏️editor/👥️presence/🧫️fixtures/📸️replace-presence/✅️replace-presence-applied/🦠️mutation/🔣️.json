@@ -1,0 +1,11 @@
+{
+  "ReplacePresence": {
+    "presence": {
+      "activeRegister": "risks",
+      "graphCameraX": 10.0,
+      "graphCameraY": -5.0,
+      "graphCameraZoom": 3.0,
+      "adjacencyKindFilter": "prohibited"
+    }
+  }
+}

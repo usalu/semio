@@ -25,7 +25,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveOutputIntent {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove PDF/A output intent", "PDF/ Ausgabenabsicht entfernen")
+        protocol::LocalizedLabel::native("Remove PDF/A output intent", "PDF/A-Ausgabebedingung entfernen")
     }
 
     fn target(&self) -> Vec<String> {

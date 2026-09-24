@@ -1,0 +1,93 @@
+{
+  "why": "A spawned program owns every window its manifest declares: one instance per window kind AND every named instance its own default layout declares. The shell namespaces all of them under `${spawnedId}::`, renames its default layout onto them, refreshes them under the guest's own ids and hands the guest the declared instances in `windowInstances`.",
+  "liveDefect": "Ticket 26/09/23 S15, measured inside `s` on 2026-09-25: the demonstrator's puzzle3d program (default layout = the named views `puzzle3d-main-top` and `puzzle3d-main-perspective` of kind `puzzle3d-main`) opened with every leaf pruned (`Drag windows from Display in the navbar, or restore a saved layout.`), and its seeded active window stayed the raw `puzzle3d-main-top`, so every later window-scoped shell note was refused with the notice `That window is no longer open.`",
+  "spawnedId": "demonstrator-4",
+  "windowKinds": [
+    {
+      "id": "puzzle3d-main",
+      "bodyKey": "puzzle3d.world"
+    },
+    {
+      "id": "puzzle3d-catalogue",
+      "bodyKey": "puzzle3d.catalogue"
+    }
+  ],
+  "layout": {
+    "root": {
+      "kind": "row",
+      "children": [
+        {
+          "kind": "stack",
+          "size": 70,
+          "children": [
+            {
+              "kind": "window",
+              "windowKindId": "puzzle3d-main",
+              "instanceId": "puzzle3d-main-perspective",
+              "title": "Perspective"
+            },
+            {
+              "kind": "window",
+              "windowKindId": "puzzle3d-main",
+              "instanceId": "puzzle3d-main-top",
+              "title": "Top"
+            }
+          ]
+        },
+        {
+          "kind": "stack",
+          "size": 30,
+          "children": [
+            {
+              "kind": "window",
+              "windowKindId": "puzzle3d-catalogue"
+            },
+            {
+              "kind": "window",
+              "windowKindId": "not-a-declared-kind",
+              "instanceId": "stray-view"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "declaredInstances": [
+    {
+      "id": "puzzle3d-main-perspective",
+      "windowKindId": "puzzle3d-main"
+    },
+    {
+      "id": "puzzle3d-main-top",
+      "windowKindId": "puzzle3d-main"
+    }
+  ],
+  "guestInstances": [
+    {
+      "id": "puzzle3d-main",
+      "bodyKey": "puzzle3d.world",
+      "windowKindId": "puzzle3d-main"
+    },
+    {
+      "id": "puzzle3d-catalogue",
+      "bodyKey": "puzzle3d.catalogue",
+      "windowKindId": "puzzle3d-catalogue"
+    },
+    {
+      "id": "puzzle3d-main-perspective",
+      "bodyKey": "puzzle3d.world",
+      "windowKindId": "puzzle3d-main"
+    },
+    {
+      "id": "puzzle3d-main-top",
+      "bodyKey": "puzzle3d.world",
+      "windowKindId": "puzzle3d-main"
+    }
+  ],
+  "renamedLayoutWindowIds": [
+    "demonstrator-4::puzzle3d-main-perspective",
+    "demonstrator-4::puzzle3d-main-top",
+    "demonstrator-4::puzzle3d-catalogue",
+    "stray-view"
+  ]
+}

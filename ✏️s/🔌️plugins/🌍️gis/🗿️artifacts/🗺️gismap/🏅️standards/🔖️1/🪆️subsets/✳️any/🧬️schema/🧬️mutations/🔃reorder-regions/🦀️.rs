@@ -35,7 +35,7 @@ impl MutationKind<GisMapSnapshot, GisMapMutation> for ReorderRegions {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder region \"{}\" to {}", self.id, self.to_index), &format!("Region \"{}\" zu {} umordnen", self.id, self.to_index))
+        protocol::LocalizedLabel::native(&format!("Reorder region \"{}\" to {}", self.id, self.to_index), &format!("Region \"{}\" an Stelle {} verschieben", self.id, self.to_index))
     }
 }
 //#endregion 🔹Payload

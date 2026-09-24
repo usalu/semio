@@ -22,7 +22,7 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UnbindOutput
         base.output_bindings.iter().find(|binding| binding.node_id == self.node_id && binding.port_id == self.port_id).map(|binding| vec![WorkflowMutation::BindOutput(BindOutput { binding: binding.clone() })]).unwrap_or_default()
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Unbind workflow output {}", self.node_id), &format!("Arbeitsablaufausgabe {} lösen", self.node_id))
+        protocol::LocalizedLabel::native(&format!("Unbind workflow output {}", self.node_id), &format!("Bindung der Arbeitsablaufausgabe {} aufheben", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["output-bindings".into(), self.node_id.clone(), self.port_id.clone()]

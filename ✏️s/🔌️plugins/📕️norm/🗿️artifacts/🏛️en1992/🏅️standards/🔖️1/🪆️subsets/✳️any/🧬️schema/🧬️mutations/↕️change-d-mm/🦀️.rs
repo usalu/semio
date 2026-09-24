@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeDMm {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change d mm to {:?}", self.new_d_mm), &format!("Dmm auf {:?} ändern", self.new_d_mm))
+        protocol::LocalizedLabel::native(&format!("Change effective depth d [mm] to {:?}", self.new_d_mm), &format!("Statische Nutzhöhe d [mm] auf {:?} ändern", self.new_d_mm))
     }
 }
 //#endregion 🔖️ChangeDMm

@@ -11,9 +11,9 @@
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "info",
-    "error",
-    "applied"
+    "applied",
+    "no-op",
+    "rejected"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

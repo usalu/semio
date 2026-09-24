@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeHdOverH {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change hd over h to {:?}", self.new_hd_over_h), &format!("hd über h auf {:?} ändern", self.new_hd_over_h))
+        protocol::LocalizedLabel::native(&format!("Change ratio h_d/h to {:?}", self.new_hd_over_h), &format!("Verhältnis h_d/h auf {:?} ändern", self.new_hd_over_h))
     }
 }
 //#endregion 🔖️ChangeHdOverH

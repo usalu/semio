@@ -1,0 +1,48 @@
+{
+  "why": "The ONE keyboard law of every node-graph surface (🕸️Diagram's React Flow canvas and the dag/flow canvas hosts in 🕸️NodeGraph): each row is a graph, a key sequence, and the step `diagramKeyboardStep` must return for every press plus the reading-order position a live region speaks. Language-agnostic so a wgpu twin (G8 WG-11) replays the same rows.",
+  "nodes": [
+    { "id": "a", "position": { "x": 0, "y": 0 } },
+    { "id": "b", "position": { "x": 200, "y": 0 } },
+    { "id": "c", "position": { "x": 0, "y": 200 } },
+    { "id": "d", "position": { "x": 200, "y": 200 } }
+  ],
+  "sequences": [
+    {
+      "name": "arrow walk around a 2x2 grid, entering opposite the pressed direction",
+      "editable": true,
+      "presses": [
+        { "key": "ArrowRight", "step": { "kind": "focus", "focusedId": "a" }, "position": 1 },
+        { "key": "ArrowRight", "step": { "kind": "focus", "focusedId": "b" }, "position": 2 },
+        { "key": "ArrowDown", "step": { "kind": "focus", "focusedId": "d" }, "position": 4 },
+        { "key": "ArrowLeft", "step": { "kind": "focus", "focusedId": "c" }, "position": 3 },
+        { "key": "ArrowLeft", "step": null },
+        { "key": "ArrowUp", "step": { "kind": "focus", "focusedId": "a" }, "position": 1 }
+      ]
+    },
+    {
+      "name": "Enter replaces, Shift+Enter toggles, Escape clears",
+      "editable": true,
+      "presses": [
+        { "key": "Enter", "step": null },
+        { "key": "ArrowRight", "step": { "kind": "focus", "focusedId": "a" }, "position": 1 },
+        { "key": "Enter", "step": { "kind": "select", "focusedId": "a", "selectedIds": ["a"], "added": true } },
+        { "key": "ArrowRight", "step": { "kind": "focus", "focusedId": "b" }, "position": 2 },
+        { "key": "Enter", "shift": true, "step": { "kind": "select", "focusedId": "b", "selectedIds": ["a", "b"], "added": true } },
+        { "key": "Enter", "shift": true, "step": { "kind": "select", "focusedId": "b", "selectedIds": ["a"], "added": false } },
+        { "key": " ", "step": { "kind": "select", "focusedId": "b", "selectedIds": ["b"], "added": true } },
+        { "key": "Escape", "step": { "kind": "clear" } },
+        { "key": "Escape", "step": null }
+      ]
+    },
+    {
+      "name": "a read-only graph navigates but never selects",
+      "editable": false,
+      "presses": [
+        { "key": "ArrowDown", "step": { "kind": "focus", "focusedId": "a" }, "position": 1 },
+        { "key": "Enter", "step": null },
+        { "key": "Escape", "step": null },
+        { "key": "Tab", "step": null }
+      ]
+    }
+  ]
+}

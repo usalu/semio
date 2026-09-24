@@ -25,12 +25,6 @@ use semio_repo_test_host::Adapter;
 use semio_repo_test_host::{Context, Json};
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `SemioBrepMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/
-/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because registration happens before the
-/// subject crate is necessarily linked. `kinds_match_the_enum_and_the_catalog` in that production
-/// file keeps the list honest against the enum, and the contract's mutation-coverage gate keeps it
-/// honest against the catalog and this feature.
-const KINDS: &[&str] = &["create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
 
 /// 🌲️ The document every mutation row runs on: the real "hexagonal cut concrete forest" structure,
 /// 167 vertices / 270 B-spline edges / 127 loops / 127 planar faces / 12 shells / 12 solids, derived
@@ -252,25 +246,20 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls, by FULL expanded scenario id — the loop
-/// mirrors the feature's `Examples` tables exactly. Subject only: the reference answer comes from
-/// the Python adapter, in the oracle role, and nothing here may answer for it.
+/// 🧭️ Registration entry point the generated host calls. Subject only: the reference answer comes from the
+/// Python adapter, in the oracle role, and nothing here may answer for it. Handlers are registered under the
+/// Scenario Outline base ids, which the host resolves for every Examples row, and plain scenarios under their
+/// own ids.
 pub fn adapter() -> Adapter {
     #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        for kind in KINDS {
-            built = built
-                .subject(&format!("mutate-{kind}"), subject::mutate)
-                .subject(&format!("inverse-{kind}"), subject::inverse)
-                .subject(&format!("spec-vector-{kind}"), subject::spec_vector);
-        }
+        built = built
+            .subject("mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
+            .subject("spec-vector", subject::spec_vector);
         built = built.subject("identity-round-trip", subject::round_trip);
-    }
-    #[cfg(not(feature = "sut"))]
-    {
-        let _ = KINDS;
     }
     built
 }

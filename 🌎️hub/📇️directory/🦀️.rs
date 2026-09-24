@@ -1162,6 +1162,9 @@ pub trait LocalBootstrapTransport: Send + Sync + 'static {
     fn reject<'a>(&'a self, request_id: &'a str, code: LocalBootstrapRejectCode, context: &'a IdentityVerificationContext<'a>) -> LocalBootstrapTerminalFuture<'a>;
     fn cancel<'a>(&'a self, request_id: &'a str) -> LocalBootstrapTerminalFuture<'a>;
     fn shutdown<'a>(&'a self) -> LocalBootstrapTerminalFuture<'a>;
+    /// 🚪️ Resolves once the launcher's end of the pipe is gone, in every phase of the hub — also
+    /// while it is still loading its catalog and nobody is accepting requests yet.
+    fn closed<'a>(&'a self) -> LocalBootstrapTerminalFuture<'a>;
 }
 
 pub trait NativeCredentialEnvelopeDelivery: Send + Sync + 'static {

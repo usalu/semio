@@ -47,7 +47,12 @@ fn row<'a>(root: &'a semio_framework_plugin::BuiltNode, key: &str) -> &'a semio_
 }
 
 fn buttons(node: &semio_framework_plugin::BuiltNode) -> Vec<&semio_framework_ui_contract::ActionBinding> {
-    node.children.iter().filter(|child| matches!(&child.component, semio_framework_ui_contract::Component::Button(_))).map(|child| child.bindings.get(0).expect("Home button carries an action binding")).collect()
+    let semio_framework_ui_contract::Component::TableRow(props) = &node.component else { panic!("a Home row is one TableRow record") };
+    props.row_actions.iter().map(|action| &action.action).collect()
+}
+
+fn rows(windows: &TreeWindows<'_>, rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    render_rows(rows, table, actions, windows)
 }
 
 fn text_arg(binding: &semio_framework_ui_contract::ActionBinding, key: &str) -> String {
@@ -78,14 +83,14 @@ fn unbound_hub_row() -> crate::HomeSpaceRow {
 
 #[semio_framework_async_macros::async_test]
 async fn empty_rows_render_the_empty_message_not_a_zero_row_table() {
-    let json = project(render_rows(&[], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("empty Home rows"));
+    let json = project(rows(&TreeWindows::unhosted(), &[], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("empty Home rows"));
     assert!(json.contains("No studios yet"), "empty rows render the empty message, not a zero-row table: {json}");
     assert!(!json.contains("framework.window.table"), "empty rows must not render the table scene at all: {json}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_local_row_renders_with_open_only_actions() {
-    let json = project(render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("local Home row"));
+    let json = project(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("local Home row"));
     assert!(json.contains("Fixture Studio"));
     assert!(json.contains("local"));
     assert!(!json.contains("rename"), "local-only rows offer open only, no rename/share/delete: {json}");
@@ -93,7 +98,7 @@ async fn a_local_row_renders_with_open_only_actions() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_hub_row_renders_with_the_full_action_set() {
-    let json = project(render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("Hub Home row"));
+    let json = project(rows(&TreeWindows::unhosted(), &[one_hub_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("Hub Home row"));
     assert!(json.contains("Fabrication"));
     assert!(json.contains("hub"));
     assert!(json.contains("rename") && json.contains("share") && json.contains("delete"), "hub rows offer the full lifecycle action set: {json}");
@@ -104,7 +109,7 @@ async fn a_hub_row_renders_with_the_full_action_set() {
 /// arg) — not text, per ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 3-F.
 #[semio_framework_async_macros::async_test]
 async fn a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions() {
-    observe(render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("Hub Home row"), |root| {
+    observe(rows(&TreeWindows::unhosted(), &[one_hub_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("Hub Home row"), |root| {
         let row = row(root, "space:sp-hub");
         let buttons = buttons(row);
         assert_eq!(buttons.len(), 5, "open + rename + share + delete + manage");
@@ -119,7 +124,7 @@ async fn a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions(
 #[semio_framework_async_macros::async_test]
 async fn spectator_and_unbound_hub_rows_only_carry_open() {
     for row in [spectator_hub_row(), unbound_hub_row()] {
-        observe(render_rows(&[row], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("restricted Hub Home row"), |root| {
+        observe(rows(&TreeWindows::unhosted(), &[row], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("restricted Hub Home row"), |root| {
             let buttons = buttons(root.children.iter().find(|node| node.key.as_str().starts_with("space:")).expect("restricted Home row present"));
             assert_eq!(buttons.len(), 1, "a stale or absent author identity cannot expose lifecycle administration");
             assert_eq!(buttons[0].action.name.as_str(), "openSpace");
@@ -129,7 +134,7 @@ async fn spectator_and_unbound_hub_rows_only_carry_open() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_local_row_only_carries_an_open_action_button() {
-    observe(render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("local Home row"), |root| {
+    observe(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("local Home row"), |root| {
         let buttons = buttons(row(root, "space:sp-local"));
         assert_eq!(buttons.len(), 1, "local-only rows offer open only");
         assert_eq!(buttons[0].action.name.as_str(), "openSpace");
@@ -151,7 +156,7 @@ async fn seeded_local_studio_renders_a_table_row() {
 
 #[semio_framework_async_macros::async_test]
 async fn german_locale_labels_resolve_in_the_rendered_table() {
-    let json = project(render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German Home row"));
+    let json = project(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German Home row"));
     assert!(json.contains("Aktualisiert"), "German column header must resolve: {json}");
     assert!(json.contains("Herkunft"), "German column header must resolve: {json}");
     assert!(json.contains("lokal"), "German origin label must resolve for a local-only row: {json}");
@@ -161,7 +166,7 @@ async fn german_locale_labels_resolve_in_the_rendered_table() {
 async fn render_resolves_labels_from_host_view() {
     let cfg = HomeConfig { ..HomeConfig::default() };
     let view_state = host_view(semio_framework_plugin::Locale::De);
-    let json = project(render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German Home row"));
+    let json = project(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German Home row"));
     assert!(json.contains("Aktualisiert"));
     let _ = render(&cfg, &view_state).expect("localized Home rows");
 }
@@ -215,13 +220,13 @@ async fn the_signed_in_window_body_survives_the_component_tree_producer() {
 /// 🧪️ `render`'s own composition, isolated from `crate::list_all_space_catalog_entries()`'s
 /// process-global singleton — mirrors `render_rows`'s own isolation rationale above.
 async fn render_rows_wrapped_for_test(rows: &[crate::HomeSpaceRow]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    render_rows_wrapped(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)
+    render_rows_wrapped(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN, &TreeWindows::unhosted())
 }
 
 
 #[semio_framework_async_macros::async_test]
 async fn ephemeral_row_offers_promote_and_persist_not_share() {
-    observe(render_rows(&[one_ephemeral_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("ephemeral Home row"), |root| {
+    observe(rows(&TreeWindows::unhosted(), &[one_ephemeral_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("ephemeral Home row"), |root| {
         let buttons = buttons(row(root, "space:sp-draft"));
         assert_eq!(buttons.len(), 3, "ephemeral rows offer open + promote + persist");
         let names: Vec<&str> = buttons.iter().map(|binding| binding.action.name.as_str()).collect();
@@ -232,6 +237,6 @@ async fn ephemeral_row_offers_promote_and_persist_not_share() {
 
 #[semio_framework_async_macros::async_test]
 async fn ephemeral_row_german_promote_label_resolves() {
-    let json = project(render_rows(&[one_ephemeral_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German ephemeral Home row"));
+    let json = project(rows(&TreeWindows::unhosted(), &[one_ephemeral_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German ephemeral Home row"));
     assert!(json.contains("Zum Hub hochstufen") && json.contains("Lokal speichern"), "German ephemeral actions must resolve: {json}");
 }

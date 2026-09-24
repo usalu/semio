@@ -407,7 +407,12 @@ async function spawnProgram(page, pluginId) {
  * rail read 16 rows in one run and 0 in the very next one — on the same build, minutes apart, under
  * a fleet load that moved between 20 and 290 (ticket 26/09/18 S11 §6.1). Polling until the pane
  * actually has rows costs nothing when the machine is idle and is the difference between a number
- * and a coin flip when it is not. */
+ * and a coin flip when it is not.
+ *
+ * 🫥️ Each chip is pressed THROUGH {@link clickUncovered}: a docked panel over the chip swallows a forced
+ * click and still reports `ok`. Measured inside `s` on 2026-09-24: spawned `block2d`'s board chip sits
+ * under the open Artifact panel, so every press answered the panel and the rail read `railRows: 0` on a
+ * program whose single-plugin serve offers 22 rows (b3a §16.1 point 3; ticket 26/09/18 session-10 S3). */
 async function unfoldActionsRail(page, budgetMs = 25_000) {
   // 🔁️ The toggle set is RE-DISCOVERED each round, not counted once. A spawned window mounts its
   // engagement toggle after its first paint, so a single `locator.count()` taken right after the
@@ -454,7 +459,7 @@ async function unfoldActionsRail(page, budgetMs = 25_000) {
     if (ids.length === 0) ids = (await allToggleIds()).filter((id) => !clicked.has(id));
     for (const id of ids) {
       clicked.add(id);
-      await page.locator(`[id="${id}"]`).first().click({ force: true }).catch(() => undefined);
+      await clickUncovered(page, `[id="${id}"]`);
     }
     await page.waitForTimeout(700);
     rows = await railRowCount();
@@ -808,85 +813,91 @@ async function closeWindows(page, ids) {
   await page.waitForTimeout(1_000);
 }
 
-const browser = await chromium.launch({ headless: process.env.S6_HEADED !== "1", args: ["--use-angle=metal"] });
-const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-page.setDefaultNavigationTimeout(180_000);
-const faults = [];
-const refusals = [];
-page.on("pageerror", (error) => faults.push(`pageerror: ${String(error)}`.slice(0, 260)));
-page.on("console", (message) => {
-  const text = message.text();
-  if (/refused:|dropped action|rejected/iu.test(text)) refusals.push(text.slice(0, 240));
-  if (FAULT.test(text) && !NOISE.test(text)) faults.push(`${message.type()}: ${text}`.slice(0, 260));
-});
+/** 🧰️ The journey and witness helpers, shared with the probes that drive ONE named journey inside `s`
+ * rather than the whole sweep (`🐍️s3-foreign-kind-in-s.mjs`, ticket 26/09/18 session 10). */
+export { DEFAULT_APPS, DEFAULT_ARGS, DEFAULT_VERBS, FAULT, LIVE_ID, NOISE, awaitBeacon, click, clickUncovered, closeWindows, dismissIntroduction, enterStudio, fillStagedArgument, mutateUndoRedo, neutralDispatch, openPalette, readProbe, readShell, seatLocale, signIn, spawnProgram, submitStagedVerb, unfoldActionsRail, windowIds, witness };
 
-const result = { baseUrl, tag, locale, beacon: null, signIn: null, studio: null, programs: [], rows: [] };
-try {
-  await page.goto(baseUrl, { waitUntil: "commit", timeout: 300_000 });
-  result.beacon = await awaitBeacon(page, Date.now() + 300_000);
-  log(`beacon ${result.beacon ?? "none"}`);
-  if (result.beacon === null) throw new Error("shell never set a readiness beacon");
-  if (process.env.S6_SIGN_IN_EMAIL) {
-    result.signIn = await signIn(page, process.env.S6_SIGN_IN_EMAIL, process.env.S6_SIGN_IN_PASSWORD ?? "");
-    log(`sign-in ${result.signIn ?? "ok"}`);
-  }
-  result.studio = await enterStudio(page);
-  log(`studio ${JSON.stringify(result.studio)}`);
-  result.locale = await seatLocale(page, locale);
-  log(`locale ${result.locale}`);
-  // 🧾️ The ledger lives in the framework History panel; its rows are absent from the DOM while the
-  // panel is closed, and the edit count comes from the space shell's own check-in button.
-  result.historyPanel = await click(page, '[data-slot="panel-tab-button"][id="framework.panel.history"], [id="framework.panel.history"]');
-  await page.waitForTimeout(1_500);
-  const boot = await readShell(page);
-  result.checkin = boot.checkin;
-  result.ledgerAtBoot = boot.ledger.length;
-  log(`history panel ${result.historyPanel}; checkin ${JSON.stringify(boot.checkin)}; ledger ${boot.ledger.length}`);
-  const probe = await readProbe(page);
-  if (probe === null) throw new Error("shell exposed no window.__semioOsCatalogProbe");
-  result.shellPluginId = probe.shellPluginId;
-  result.programs = probe.programs.map((entry) => ({ pluginId: entry.pluginId, appId: entry.appId }));
-  result.registryRows = probe.plugins.length;
-  result.loaded = probe.plugins.filter((row) => row.status === "loaded").map((row) => row.pluginId);
-  log(`registry ${probe.plugins.length} rows, ${result.loaded.length} loaded, ${probe.programs.length} spawnable programs`);
-  if (!census) {
-    for (const pluginId of wanted) {
-      const started = Date.now();
-      const faultCursor = faults.length;
-      const loadedBefore = result.loaded.includes(pluginId);
-      const spawned = await spawnProgram(page, pluginId);
-      const after = await readProbe(page);
-      const status = after?.plugins.find((row) => row.pluginId === pluginId)?.status ?? "absent";
-      const row = {
-        pluginId,
-        loadedBeforeOpen: loadedBefore,
-        lazyInstalled: !loadedBefore && status === "loaded",
-        statusAfterOpen: status,
-        windowIds: spawned.windowIds,
-        openDetail: spawned.detail,
-        openMs: Date.now() - started,
-      };
-      if (spawned.windowIds.length > 0) Object.assign(row, await mutateUndoRedo(page, refusals, pluginId));
-      row.faultLines = faults.slice(faultCursor).slice(0, 3);
-      row.faultCount = faults.length - faultCursor;
-      row.pass = spawned.windowIds.length > 0 && (row.railRows ?? 0) > 0 && row.mutated === true && row.redoDiffersFromUndo === true && row.faultCount === 0;
-      row.totalMs = Date.now() - started;
-      result.rows.push(row);
-      log(JSON.stringify({ ...row, ledger: undefined, before: undefined, afterInvoke: undefined }));
-      if (spawned.windowIds.length > 0) await closeWindows(page, spawned.windowIds);
+if (import.meta.main) {
+  const browser = await chromium.launch({ headless: process.env.S6_HEADED !== "1", args: ["--use-angle=metal"] });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  page.setDefaultNavigationTimeout(180_000);
+  const faults = [];
+  const refusals = [];
+  page.on("pageerror", (error) => faults.push(`pageerror: ${String(error)}`.slice(0, 260)));
+  page.on("console", (message) => {
+    const text = message.text();
+    if (/refused:|dropped action|rejected/iu.test(text)) refusals.push(text.slice(0, 240));
+    if (FAULT.test(text) && !NOISE.test(text)) faults.push(`${message.type()}: ${text}`.slice(0, 260));
+  });
+
+  const result = { baseUrl, tag, locale, beacon: null, signIn: null, studio: null, programs: [], rows: [] };
+  try {
+    await page.goto(baseUrl, { waitUntil: "commit", timeout: 300_000 });
+    result.beacon = await awaitBeacon(page, Date.now() + 300_000);
+    log(`beacon ${result.beacon ?? "none"}`);
+    if (result.beacon === null) throw new Error("shell never set a readiness beacon");
+    if (process.env.S6_SIGN_IN_EMAIL) {
+      result.signIn = await signIn(page, process.env.S6_SIGN_IN_EMAIL, process.env.S6_SIGN_IN_PASSWORD ?? "");
+      log(`sign-in ${result.signIn ?? "ok"}`);
     }
+    result.studio = await enterStudio(page);
+    log(`studio ${JSON.stringify(result.studio)}`);
+    result.locale = await seatLocale(page, locale);
+    log(`locale ${result.locale}`);
+    // 🧾️ The ledger lives in the framework History panel; its rows are absent from the DOM while the
+    // panel is closed, and the edit count comes from the space shell's own check-in button.
+    result.historyPanel = await click(page, '[data-slot="panel-tab-button"][id="framework.panel.history"], [id="framework.panel.history"]');
+    await page.waitForTimeout(1_500);
+    const boot = await readShell(page);
+    result.checkin = boot.checkin;
+    result.ledgerAtBoot = boot.ledger.length;
+    log(`history panel ${result.historyPanel}; checkin ${JSON.stringify(boot.checkin)}; ledger ${boot.ledger.length}`);
+    const probe = await readProbe(page);
+    if (probe === null) throw new Error("shell exposed no window.__semioOsCatalogProbe");
+    result.shellPluginId = probe.shellPluginId;
+    result.programs = probe.programs.map((entry) => ({ pluginId: entry.pluginId, appId: entry.appId }));
+    result.registryRows = probe.plugins.length;
+    result.loaded = probe.plugins.filter((row) => row.status === "loaded").map((row) => row.pluginId);
+    log(`registry ${probe.plugins.length} rows, ${result.loaded.length} loaded, ${probe.programs.length} spawnable programs`);
+    if (!census) {
+      for (const pluginId of wanted) {
+        const started = Date.now();
+        const faultCursor = faults.length;
+        const loadedBefore = result.loaded.includes(pluginId);
+        const spawned = await spawnProgram(page, pluginId);
+        const after = await readProbe(page);
+        const status = after?.plugins.find((row) => row.pluginId === pluginId)?.status ?? "absent";
+        const row = {
+          pluginId,
+          loadedBeforeOpen: loadedBefore,
+          lazyInstalled: !loadedBefore && status === "loaded",
+          statusAfterOpen: status,
+          windowIds: spawned.windowIds,
+          openDetail: spawned.detail,
+          openMs: Date.now() - started,
+        };
+        if (spawned.windowIds.length > 0) Object.assign(row, await mutateUndoRedo(page, refusals, pluginId));
+        row.faultLines = faults.slice(faultCursor).slice(0, 3);
+        row.faultCount = faults.length - faultCursor;
+        row.pass = spawned.windowIds.length > 0 && (row.railRows ?? 0) > 0 && row.mutated === true && row.redoDiffersFromUndo === true && row.faultCount === 0;
+        row.totalMs = Date.now() - started;
+        result.rows.push(row);
+        log(JSON.stringify({ ...row, ledger: undefined, before: undefined, afterInvoke: undefined }));
+        if (spawned.windowIds.length > 0) await closeWindows(page, spawned.windowIds);
+      }
+    }
+  } catch (error) {
+    result.fatal = String(error);
+    log(`FATAL ${result.fatal}`);
+  } finally {
+    result.faults = faults.slice(0, 40);
+    result.refusals = [...new Set(refusals)].slice(0, 30);
+    await browser.close();
   }
-} catch (error) {
-  result.fatal = String(error);
-  log(`FATAL ${result.fatal}`);
-} finally {
-  result.faults = faults.slice(0, 40);
-  result.refusals = [...new Set(refusals)].slice(0, 30);
-  await browser.close();
-}
 
-const out = `${generated}s6-sweep-${tag}.txt`;
-writeFileSync(out, JSON.stringify(result, null, 2));
-log(`=== S6 SWEEP ${tag} → ${out} ===`);
-log(`PASS ${result.rows.filter((row) => row.pass).length}/${result.rows.length}`);
-process.exit(result.fatal ? 1 : 0);
+  const out = `${generated}s6-sweep-${tag}.txt`;
+  writeFileSync(out, JSON.stringify(result, null, 2));
+  log(`=== S6 SWEEP ${tag} → ${out} ===`);
+  log(`PASS ${result.rows.filter((row) => row.pass).length}/${result.rows.length}`);
+  process.exit(result.fatal ? 1 : 0);
+}

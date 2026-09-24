@@ -1,31 +1,16 @@
-//! 🦀️ Rust subject for the `mcp` verb handshake. Gated behind the `sut` feature like every
-//! subject, so the oracle role never links the crate under test.
+//! 🦀️ Rust subject for the `mcp` verb handshake: the recorded conversation is served in process by
+//! the server the verb builds. Gated behind the `sut` feature like every subject, so the oracle role
+//! never links the crate under test.
 
 #[cfg(feature = "sut")]
 mod subject {
     use semio_framework_repo_cli::repo_cli;
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use std::io::Write;
-    use std::path::PathBuf;
-    use std::process::{Command, Stdio};
 
     //#region 🔖️Helpers
     /// 📥️ The committed conversation every scenario reads.
     fn conversation(ctx: &Context) -> Result<Json, String> {
         ctx.fixture_json("shared://🔌️mcp-verb-handshake/🤝️handshake.json")
-    }
-
-    /// 🔎️ The built `semio` binary, release first, then debug.
-    fn binary() -> Result<PathBuf, String> {
-        let name = if cfg!(windows) { "semio.exe" } else { "semio" };
-        let root = std::env::current_dir().map_err(|error| error.to_string())?;
-        for profile in ["release", "debug"] {
-            let candidate = root.join("target").join(profile).join(name);
-            if candidate.is_file() {
-                return Ok(candidate);
-            }
-        }
-        Err(format!("neither target/release/{name} nor target/debug/{name} exists — build the `semio` binary before running this case"))
     }
 
     /// 📃️ The string members of an array.
@@ -40,31 +25,15 @@ mod subject {
             .collect()
     }
 
-    /// ▶️ Runs the stated conversation against `semio mcp` and returns its response lines.
+    /// ▶️ Serves the stated conversation with the server the `mcp` verb builds and returns its
+    /// response lines.
     fn run_conversation(document: &Json) -> Result<Vec<Json>, String> {
-        let binary = binary()?;
-        let mut child = Command::new(&binary)
-            .arg("mcp")
-            .env(document.str("profileEnvironment"), document.str("profile"))
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .map_err(|error| format!("{}: {error}", binary.display()))?;
-        {
-            let stdin = child.stdin.as_mut().ok_or("the server accepted no standard input")?;
-            for request in strings(document, "requests") {
-                writeln!(stdin, "{request}").map_err(|error| error.to_string())?;
-            }
-        }
-        let output = child.wait_with_output().map_err(|error| error.to_string())?;
-        let body = String::from_utf8_lossy(&output.stdout).to_string();
         let mut responses = Vec::new();
-        for line in body.lines().filter(|line| !line.trim().is_empty()) {
-            responses.push(parse_json(line)?);
+        for line in repo_cli::mcp_conversation(&document.str("profile"), &strings(document, "requests"))? {
+            responses.push(parse_json(&line)?);
         }
         if responses.is_empty() {
-            return Err(format!("the server answered nothing; its standard error was {:?}", String::from_utf8_lossy(&output.stderr)));
+            return Err("the server answered nothing".to_string());
         }
         Ok(responses)
     }

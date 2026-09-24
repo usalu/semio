@@ -161,7 +161,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "insert-block",
         "remove-block",
@@ -474,50 +473,13 @@
       "subsetDirectoryName": "📑️document",
       "mutations": [
         {
-          "id": "no-mutation",
-          "capability": "semio-v1-document-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#NoMutation",
-          "outcomes": [
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "no-mutation",
-            "bridgeVersion": 1,
-            "variant": "NoMutation"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-document-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "jszip-xmldom-docx-carrier"
-            },
-            {
-              "capability": "semio-v1-document-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "mdast-to-markdown-md-carrier"
-            }
-          ],
-          "carriers": [
-            "docx",
-            "md"
-          ],
-          "invariants": {
-            "local": [
-              "block-text-is-read-back-from-the-carrier"
-            ],
-            "enclosing": [
-              "document-text-agrees-across-every-carrier"
-            ]
-          },
-          "notes": "Its diff arm is the unconditional `SemioDocumentDiff::default()`, so a no-op is its only reachable outcome; the evidence is that two independent readers recover an unchanged block-text sequence."
-        },
-        {
           "id": "set-snapshot",
           "capability": "semio-v1-document-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -555,7 +517,9 @@
           "capability": "semio-v1-document-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertBlock",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-block",
@@ -593,7 +557,9 @@
           "capability": "semio-v1-document-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveBlock",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-block",
@@ -632,7 +598,8 @@
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetBlockContent",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-block-content",
@@ -671,7 +638,8 @@
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetParagraphStyle",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-paragraph-style",
@@ -704,7 +672,8 @@
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetHeadingLevel",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-heading-level",
@@ -743,7 +712,8 @@
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetListOrdered",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-list-ordered",
@@ -776,7 +746,8 @@
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetRunText",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-run-text",
@@ -815,7 +786,8 @@
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetRunStyle",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-run-style",
@@ -854,7 +826,8 @@
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetImageBlock",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-image-block",
@@ -892,7 +865,9 @@
           "capability": "semio-v1-document-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertStyle",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-style",
@@ -924,7 +899,9 @@
           "capability": "semio-v1-document-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveStyle",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-style",
@@ -957,7 +934,8 @@
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetStyleName",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-style-name",
@@ -990,7 +968,8 @@
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetStyleBasedOn",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-style-based-on",
@@ -1022,7 +1001,9 @@
           "capability": "semio-v1-document-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertImage",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-image",
@@ -1052,7 +1033,9 @@
           "capability": "semio-v1-document-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveImage",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-image",
@@ -1083,7 +1066,8 @@
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetImageBytes",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-image-bytes",
@@ -1280,8 +1264,6 @@
         "standard": "v1",
         "subset": "document"
       },
-      "mutation": "no-mutation",
-      "outcome": "no-op",
       "units": {
         "length": "unitless",
         "angle": "radian"
@@ -1333,8 +1315,6 @@
         "standard": "v1",
         "subset": "document"
       },
-      "mutation": "no-mutation",
-      "outcome": "no-op",
       "units": {
         "length": "unitless",
         "angle": "radian"

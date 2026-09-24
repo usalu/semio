@@ -36,7 +36,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Update
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Update run period to {}-{} .. {}-{}", self.start_month, self.start_day, self.end_month, self.end_day), &format!("Laufperiode auf {}-{} .. {}-{} aktualisieren", self.start_month, self.start_day, self.end_month, self.end_day))
+        protocol::LocalizedLabel::native(&format!("Update run period to {}-{} .. {}-{}", self.start_month, self.start_day, self.end_month, self.end_day), &format!("Simulationszeitraum auf {}-{} .. {}-{} aktualisieren", self.start_month, self.start_day, self.end_month, self.end_day))
     }
 }
 //#endregion 🔖️Mutation

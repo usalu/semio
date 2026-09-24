@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/.tmp-ticket-0918/📓️hc1-fresh-component-genesis-and-creation.md

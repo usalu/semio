@@ -1,17 +1,19 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🤖️AgentApprovals/component.tsx
-/** @emoji ✅️ `🤖️AgentApprovals` — the `os.agent.approvals` human-in-the-loop dialog: lists parked
- * approval requests (capability, change summary, risk) delivered by `AgentBridge`'s
- * `approvalRequested` frames and sends the human's `Approval{decision}` back over the bridge via
- * `resolveApproval`. Ticket `26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY` packet P10.
+/** @emoji ✅️ `🤖️AgentApprovals` — the human-in-the-loop approval affordance: one live, keyboard-reachable
+ * surface per approval request `AgentBridge`'s `approvalRequested` frames deliver (verb, target, change
+ * summary, risk, countdown, three decisions), rendered in the agent conversation, plus the footer notice
+ * that points at waiting requests. The decision goes back over the bridge through `resolveApproval`.
+ * Ticket `26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY` packet P10; unified (modal dialog retired)
+ * in ticket 26/09/18 session 11 slice U5.
  */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
 import { useEffect, useState, type ReactElement } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, useLabel } from "@semio-tech/ui-react";
+import { Button, useLabel } from "@semio-tech/ui-react";
 import { agentUiLabel, type PendingAgentApproval } from "../🔗️AgentBridge/🟦️.tsx";
-import { type ApprovalDecision } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
+import { type ApprovalDecision, type ApprovalWithdrawal } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️ParseSummary
@@ -76,9 +78,31 @@ export function approvalSecondsRemaining(timeoutMs: number | null, requestedAtMs
 //#endregion 🔖️ParseSummary
 
 //#region 🔖️AgentApprovals
-export type AgentApprovalsProps = {
-  readonly approvals: readonly PendingAgentApproval[];
-  readonly onDecision: (approvalId: string, decision: ApprovalDecision, note?: string) => void;
+/** 🏷️ The DOM address of one approval's affordance — the target a reveal moves focus to. */
+export function agentApprovalElementId(approvalId: string): string {
+  return `framework.approvals.${approvalId}`;
+}
+
+/** 🎯️ Moves keyboard focus onto one approval's affordance (the group, not a decision: nothing is decided
+ * by a stray Enter). `false` when that affordance is not rendered. */
+export function focusAgentApprovalV1(approvalId: string, root: Pick<Document, "getElementById"> = document): boolean {
+  const element = root.getElementById(agentApprovalElementId(approvalId));
+  if (!(element instanceof HTMLElement)) return false;
+  element.focus();
+  return true;
+}
+
+export type AgentApprovalAffordanceProps = {
+  readonly approvalId: string;
+  /** 🧾️ The gateway's one wire string (`ApprovalRequested.summary`), parsed by {@link parseApprovalSummary}. */
+  readonly summary: string;
+  readonly requestedAtMs: number;
+  readonly state: "pending" | "resolved" | "withdrawn";
+  readonly decision: ApprovalDecision | null;
+  /** 🪦️ Why the gateway withdrew the request; set exactly when `state` is `withdrawn`. */
+  readonly withdrawal?: ApprovalWithdrawal | null;
+  /** ⛩️ Absent means no decision path is attached, and no control is offered that would do nothing. */
+  readonly onDecision?: (approvalId: string, decision: ApprovalDecision, note?: string) => void;
 };
 
 function RiskBadge({ risk }: { readonly risk: ApprovalRisk | null }): ReactElement | null {
@@ -95,118 +119,120 @@ function RiskBadge({ risk }: { readonly risk: ApprovalRisk | null }): ReactEleme
   );
 }
 
-function ApprovalRow({ approval, onDecision }: { readonly approval: PendingAgentApproval; readonly onDecision: AgentApprovalsProps["onDecision"] }): ReactElement {
+/** @emoji ⛩️ THE approval affordance — the one live, keyboard-reachable place a human decides what the agent
+ * may do. It renders inside the agent conversation where the request arrived; the shell never opens a
+ * second, modal copy of it (ticket 26/09/18 AP1 §6.5: the modal's veil made the inline decision unreachable
+ * until dismissed). WHAT happens (verb, description), WHAT it applies to, WHO asked, the change summary, the
+ * risk and a polite live countdown; then the three decisions, each a real button whose accessible name
+ * carries the capability it decides. A resolved request keeps its record and says how it was decided. */
+export function AgentApprovalAffordance({ approvalId, summary, requestedAtMs, state, decision, withdrawal = null, onDecision }: AgentApprovalAffordanceProps): ReactElement {
+  const roleLabel = useLabel(agentUiLabel("os.agent.chat.approvalRole"));
+  const verbLabel = useLabel(agentUiLabel("os.agent.chat.approvalVerb"));
   const capabilityLabel = useLabel(agentUiLabel("os.agent.approvals.capability"));
   const diffLabel = useLabel(agentUiLabel("os.agent.approvals.diffSummary"));
   const requestedByLabel = useLabel(agentUiLabel("os.agent.approvals.requestedBy"));
   const riskLabel = useLabel(agentUiLabel("os.agent.approvals.riskLabel"));
+  const targetLabel = useLabel(agentUiLabel("os.agent.chat.approvalTarget"));
+  const expiredLabel = useLabel(agentUiLabel("os.agent.chat.approvalExpired"));
+  const pendingLabel = useLabel(agentUiLabel("os.agent.chat.approvalPending"));
+  const actionsLabel = useLabel(agentUiLabel("os.agent.chat.approvalActionsLabel"));
   const denyLabel = useLabel(agentUiLabel("os.agent.approvals.decisionDeny"));
   const onceLabel = useLabel(agentUiLabel("os.agent.approvals.decisionOnce"));
   const sessionLabel = useLabel(agentUiLabel("os.agent.approvals.decisionSession"));
-  const targetLabel = useLabel(agentUiLabel("os.agent.chat.approvalTarget"));
-  const expiredLabel = useLabel(agentUiLabel("os.agent.chat.approvalExpired"));
-  const parsed = parseApprovalSummary(approval.summary);
+  const decidedLabels: Readonly<Record<ApprovalDecision, string>> = {
+    deny: useLabel(agentUiLabel("os.agent.approvals.decidedDeny")),
+    once: useLabel(agentUiLabel("os.agent.approvals.decidedOnce")),
+    session: useLabel(agentUiLabel("os.agent.approvals.decidedSession")),
+  };
+  const withdrawnLabels: Readonly<Record<ApprovalWithdrawal, string>> = {
+    cancelled: useLabel(agentUiLabel("os.agent.approvals.withdrawnCancelled")),
+    timed_out: useLabel(agentUiLabel("os.agent.approvals.withdrawnTimedOut")),
+    superseded: useLabel(agentUiLabel("os.agent.approvals.withdrawnSuperseded")),
+  };
+  const parsed = parseApprovalSummary(summary);
+  const pending = state === "pending";
   const [nowMs, setNowMs] = useState(() => Date.now());
   useEffect(() => {
-    if (parsed.timeoutMs === null) return;
+    if (!pending || parsed.timeoutMs === null) return;
     const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(ticker);
-  }, [parsed.timeoutMs]);
-  const secondsLeft = approvalSecondsRemaining(parsed.timeoutMs, approval.requestedAtMs, nowMs);
+  }, [pending, parsed.timeoutMs]);
+  const secondsLeft = pending ? approvalSecondsRemaining(parsed.timeoutMs, requestedAtMs, nowMs) : null;
   const countdownLabel = useLabel(agentUiLabel("os.agent.chat.approvalCountdown"), { seconds: String(secondsLeft ?? 0) });
+  const subject = parsed.capabilityTitle ?? parsed.capabilityId ?? parsed.diffSummary;
+  const titleId = `${agentApprovalElementId(approvalId)}.title`;
+  const decidable = pending && onDecision !== undefined;
 
   return (
-    <li className="space-y-2 border-b py-3 last:border-b-0" data-semio-agent-approval-id={approval.approvalId}>
-      <div className="space-y-1 text-sm">
-        {parsed.capabilityTitle ? <p className="font-medium">{parsed.capabilityTitle}</p> : null}
-        {parsed.capabilityId ? (
-          <p>
-            <span className="text-muted-foreground">{capabilityLabel}: </span>
-            <span className="font-medium">{parsed.capabilityId}</span>
-          </p>
-        ) : null}
-        {parsed.description ? <p className="text-muted-foreground">{parsed.description}</p> : null}
-        {parsed.artifactKind ? (
-          <p className="text-muted-foreground" data-semio-agent-approval-target={parsed.artifactKind}>
-            <span>{targetLabel}: </span>
-            {parsed.artifactKind}
-          </p>
-        ) : null}
-        <p>
-          <span className="text-muted-foreground">{diffLabel}: </span>
-          {parsed.diffSummary}
+    <section id={agentApprovalElementId(approvalId)} tabIndex={-1} aria-labelledby={titleId} data-semio-agent-approval-id={approvalId} data-semio-agent-approval-state={pending ? "pending" : state === "withdrawn" ? "withdrawn" : (decision ?? "resolved")} data-semio-agent-approval-withdrawal={withdrawal ?? ""} className="flex min-w-0 flex-col gap-single rounded-sm text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-emphasized">
+      <p id={titleId} className="min-w-0 break-words" data-semio-agent-approval-verb={parsed.capabilityId ?? ""}>
+        <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{parsed.capabilityTitle ? `${verbLabel}: ` : `${roleLabel}: `}</span>
+        <span className="font-medium">{subject}</span>
+      </p>
+      {parsed.capabilityId && parsed.capabilityTitle ? (
+        <p className="min-w-0 break-words text-muted-foreground">
+          {capabilityLabel}: <span className="font-mono">{parsed.capabilityId}</span>
         </p>
-        {secondsLeft !== null ? (
-          <p role="status" aria-live="polite" data-semio-agent-approval-countdown={String(secondsLeft)} className="text-muted-foreground">
-            {secondsLeft > 0 ? countdownLabel : expiredLabel}
-          </p>
-        ) : null}
-        {parsed.requestedBy ? (
-          <p className="text-muted-foreground">
-            <span>{requestedByLabel}: </span>
-            <span>{parsed.requestedBy}</span>
-          </p>
-        ) : null}
-        {parsed.risk ? (
-          <p className="flex items-center gap-1.5 text-muted-foreground">
-            <span>{riskLabel}: </span>
-            <RiskBadge risk={parsed.risk} />
-          </p>
-        ) : null}
-      </div>
-      {/* ⌨️ Wraps at phone width, and every control carries the same `framework.approvals.<decision>.<id>`
-          address its React and wgpu twins use, so a keyboard, a screen reader and a gate all reach the
-          same three decisions by name rather than by position. */}
-      <div className="flex flex-wrap gap-2">
-        <button type="button" id={`framework.approvals.deny.${approval.approvalId}`} className="rounded-sm border px-double py-1 text-sm text-red-400" aria-label={`${denyLabel}: ${parsed.capabilityId ?? parsed.diffSummary}`} onClick={() => onDecision(approval.approvalId, "deny")}>
-          {denyLabel}
-        </button>
-        <button type="button" id={`framework.approvals.once.${approval.approvalId}`} className="rounded-sm border px-double py-1 text-sm" aria-label={`${onceLabel}: ${parsed.capabilityId ?? parsed.diffSummary}`} onClick={() => onDecision(approval.approvalId, "once")}>
-          {onceLabel}
-        </button>
-        <button type="button" id={`framework.approvals.session.${approval.approvalId}`} className="rounded-sm border px-double py-1 text-sm font-medium" aria-label={`${sessionLabel}: ${parsed.capabilityId ?? parsed.diffSummary}`} onClick={() => onDecision(approval.approvalId, "session")}>
-          {sessionLabel}
-        </button>
-      </div>
-    </li>
+      ) : null}
+      {parsed.description ? <p className="min-w-0 whitespace-pre-wrap break-words text-muted-foreground">{parsed.description}</p> : null}
+      {parsed.artifactKind ? (
+        <p className="min-w-0 break-words text-muted-foreground" data-semio-agent-approval-target={parsed.artifactKind}>
+          {targetLabel}: {parsed.artifactKind}
+        </p>
+      ) : null}
+      <p className="min-w-0 whitespace-pre-wrap break-words">
+        <span className="text-muted-foreground">{diffLabel}: </span>
+        {parsed.diffSummary}
+      </p>
+      {parsed.requestedBy ? (
+        <p className="min-w-0 break-words text-2xs text-muted-foreground">
+          {requestedByLabel}: {parsed.requestedBy}
+        </p>
+      ) : null}
+      {parsed.risk ? (
+        <p className="flex items-center gap-single text-muted-foreground">
+          <span>{riskLabel}: </span>
+          <RiskBadge risk={parsed.risk} />
+        </p>
+      ) : null}
+      {pending ? (
+        <p role="status" aria-live="polite" data-semio-agent-approval-countdown={secondsLeft === null ? "" : String(secondsLeft)} className="min-w-0 break-words text-2xs text-muted-foreground">
+          {secondsLeft === null ? pendingLabel : secondsLeft > 0 ? countdownLabel : expiredLabel}
+        </p>
+      ) : (
+        <p role={state === "withdrawn" ? "status" : undefined} data-semio-agent-approval-decision={decision ?? ""} className="text-2xs font-medium text-muted-foreground">
+          {state === "withdrawn" && withdrawal ? withdrawnLabels[withdrawal] : decision ? decidedLabels[decision] : ""}
+        </p>
+      )}
+      {decidable ? (
+        <div role="group" aria-label={actionsLabel} className="flex flex-wrap items-center gap-single">
+          <Button type="button" variant="ghost" icon="x" id={`framework.approvals.deny.${approvalId}`} text={denyLabel} aria-label={`${denyLabel}: ${subject}`} onClick={() => onDecision?.(approvalId, "deny")} />
+          <Button type="button" icon="check" id={`framework.approvals.once.${approvalId}`} text={onceLabel} aria-label={`${onceLabel}: ${subject}`} onClick={() => onDecision?.(approvalId, "once")} />
+          <Button type="button" variant="ghost" icon="check" id={`framework.approvals.session.${approvalId}`} text={sessionLabel} aria-label={`${sessionLabel}: ${subject}`} onClick={() => onDecision?.(approvalId, "session")} />
+        </div>
+      ) : null}
+    </section>
   );
 }
 
-/** ✅️ Self-contained dialog: pops open whenever `approvals` is non-empty (and pops back open on a
- * newly arrived approval even if the human dismissed a prior, now-empty state), listing every
- * pending request with its capability/diff/risk and three decision buttons wired straight to
- * `onDecision` (the caller passes `useAgentBridge().resolveApproval`). */
-export function AgentApprovals({ approvals, onDecision }: AgentApprovalsProps): ReactElement {
-  const [dismissed, setDismissed] = useState(false);
-  useEffect(() => {
-    if (approvals.length > 0) setDismissed(false);
-  }, [approvals.length]);
-
-  const titleLabel = useLabel(agentUiLabel("os.agent.approvals.title"));
-  const descriptionLabel = useLabel(agentUiLabel("os.agent.approvals.description"));
-  const emptyLabel = useLabel(agentUiLabel("os.agent.approvals.empty"));
-
-  const open = approvals.length > 0 && !dismissed;
-
+/** @emoji 📣️ The always-visible pointer to waiting approvals, in the shell footer: it decides nothing itself —
+ * it says how many requests wait and takes the human (and keyboard focus) to the first one. Announces a new
+ * request politely through its live region. Renders nothing while nothing waits. */
+export function AgentApprovalsNotice({ approvals, onReview }: { readonly approvals: readonly PendingAgentApproval[]; readonly onReview: (approvalId: string) => void }): ReactElement | null {
+  const title = useLabel(agentUiLabel("os.agent.approvals.title"));
+  const one = useLabel(agentUiLabel("os.agent.approvals.waitingOne"));
+  const many = useLabel(agentUiLabel("os.agent.approvals.waitingMany"), { count: String(approvals.length) });
+  const reviewLabel = useLabel(agentUiLabel("os.agent.approvals.review"));
+  const newest = approvals.at(-1);
+  const announcement = useLabel(agentUiLabel("os.agent.approvals.requested"), { title: newest ? (parseApprovalSummary(newest.summary).capabilityTitle ?? parseApprovalSummary(newest.summary).capabilityId ?? "") : "" });
+  if (!newest) return null;
+  const text = approvals.length === 1 ? one : many;
   return (
-    <Dialog open={open} onOpenChange={(next) => setDismissed(!next)}>
-      <DialogContent showCloseButton className="max-w-lg" aria-label={titleLabel}>
-        <DialogHeader>
-          <DialogTitle>{titleLabel}</DialogTitle>
-          <DialogDescription>{descriptionLabel}</DialogDescription>
-        </DialogHeader>
-        {approvals.length === 0 ? (
-          <p className="py-4 text-sm text-muted-foreground">{emptyLabel}</p>
-        ) : (
-          <ul className="max-h-96 overflow-y-auto">
-            {approvals.map((approval) => (
-              <ApprovalRow key={approval.approvalId} approval={approval} onDecision={onDecision} />
-            ))}
-          </ul>
-        )}
-        <DialogFooter />
-      </DialogContent>
-    </Dialog>
+    <div role="status" aria-live="polite" aria-label={`${title}: ${text}`} data-semio-agent-approvals-waiting={approvals.length} className="flex items-center gap-single px-single text-2xs text-amber-400">
+      <span className="sr-only">{announcement}</span>
+      <span aria-hidden="true">{text}</span>
+      <Button type="button" variant="ghost" icon="hand" id="framework.approvals.review" data-semio-agent-approvals-review={approvals[0]!.approvalId} text={reviewLabel} aria-label={`${reviewLabel}: ${text}`} onClick={() => onReview(approvals[0]!.approvalId)} />
+    </div>
   );
 }
 //#endregion 🔖️AgentApprovals

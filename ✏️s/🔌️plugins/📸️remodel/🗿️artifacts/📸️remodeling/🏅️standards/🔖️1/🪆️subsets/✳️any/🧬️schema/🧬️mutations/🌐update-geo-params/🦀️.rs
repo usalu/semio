@@ -34,7 +34,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for UpdateGe
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update geo params", "Geoparameter aktualisieren")
+        protocol::LocalizedLabel::native("Update geo params", "Georeferenzierungsparameter aktualisieren")
     }
 }
 //#endregion 🔖️Mutation

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeRetrofitED
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change retrofit demand E_d [kN] to {}", self.new_retrofit_e_d_kn), &format!("Sanierungsbedarfe_d [kN] auf {} ändern", self.new_retrofit_e_d_kn))
+        protocol::LocalizedLabel::native(&format!("Change retrofit demand E_d [kN] to {}", self.new_retrofit_e_d_kn), &format!("Beanspruchung der Ertüchtigung E_d [kN] auf {} ändern", self.new_retrofit_e_d_kn))
     }
 }
 //#endregion 🔖️ChangeRetrofitEDKn

@@ -22,7 +22,7 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetTrailingNewline {
         agg_inverse(&TsvMutation::SetTrailingNewline(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-trailing-newline", "nachlaufende Zeilenumbruch setzen")
+        protocol::LocalizedLabel::native("Set trailing newline", "Abschließenden Zeilenumbruch setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -69,6 +69,7 @@ pub const GRID3D_INFERENCE_CONTRACT: semio_framework_plugin::ArtifactInferencePa
     output_schema: include_str!("🔣️.json"),
     progress_unit: "cells",
     artifact_binding: Some(semio_framework_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
+    commit: None,
 };
 
 /// 🧭️ Stable host roster identity for the ActionBus-owned cold solve route.

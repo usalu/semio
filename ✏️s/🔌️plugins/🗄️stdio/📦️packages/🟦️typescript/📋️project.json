@@ -1,13 +1,114 @@
 {
   "name": "@semio-tech/stdio-js",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "stdioCompositionBuild": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🕸️graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🛂️contract/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧩️composition-consumption/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧬️schema/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
+    ],
+    "stdioArtifactContract": [
+      "{workspaceRoot}/.vscode/launch.json",
+      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📜️artifact-definition.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🕸️graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🛂️contract/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧩️composition-consumption/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/📦️artifact-package/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧬️schema/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
+    ],
+    "stdioArtifactGraph": [
+      "{workspaceRoot}/.vscode/launch.json",
+      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📜️artifact-definition.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🕸️graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🛂️contract/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏃️commands/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧩️composition-consumption/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/📦️artifact-package/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧬️schema/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
+    ]
+  },
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["production", "^production"],
-      "outputs": ["{projectRoot}/dist"],
-      "dependsOn": ["^build"],
+      "inputs": [
+        "stdioCompositionBuild",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
+      "dependsOn": [
+        "^build"
+      ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
@@ -16,7 +117,13 @@
     },
     "check": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build"],
+      "inputs": [
+        "stdioCompositionBuild",
+        "^production"
+      ],
+      "dependsOn": [
+        "^build"
+      ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check",
@@ -25,6 +132,9 @@
     },
     "package-contract": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "stdioArtifactContract"
+      ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts package-contract",
@@ -33,6 +143,9 @@
     },
     "package-graph": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "stdioArtifactGraph"
+      ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts package-graph",
@@ -42,7 +155,13 @@
     },
     "test": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build"],
+      "inputs": [
+        "stdioCompositionBuild",
+        "^production"
+      ],
+      "dependsOn": [
+        "^build"
+      ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

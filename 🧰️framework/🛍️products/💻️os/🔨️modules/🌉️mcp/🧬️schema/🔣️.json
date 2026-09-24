@@ -900,32 +900,6 @@
       ],
       "type": "string"
     },
-    "GisMapInferenceApprovalRequestV1": {
-      "additionalProperties": false,
-      "properties": {
-        "jobId": {
-          "pattern": "^[0-9a-f]{32}$",
-          "type": "string"
-        },
-        "proposalHash": {
-          "pattern": "^[0-9a-f]{64}$",
-          "type": "string"
-        },
-        "schema": {
-          "const": "semio.hub.inference-approval/v1"
-        },
-        "version": {
-          "const": 1
-        }
-      },
-      "required": [
-        "schema",
-        "version",
-        "jobId",
-        "proposalHash"
-      ],
-      "type": "object"
-    },
     "HandleInput": {
       "oneOf": [
         {
@@ -964,6 +938,32 @@
           ],
           "type": "object"
         }
+      ],
+      "type": "object"
+    },
+    "HubInferenceApprovalRequestV1": {
+      "additionalProperties": false,
+      "properties": {
+        "jobId": {
+          "pattern": "^[0-9a-f]{32}$",
+          "type": "string"
+        },
+        "proposalHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema": {
+          "const": "semio.hub.inference-approval/v1"
+        },
+        "version": {
+          "const": 1
+        }
+      },
+      "required": [
+        "schema",
+        "version",
+        "jobId",
+        "proposalHash"
       ],
       "type": "object"
     },
@@ -1270,10 +1270,11 @@
       "type": "object"
     },
     "JobState": {
-      "description": "🏃️ Lifecycle state of a `job_`-prefixed handle (long-running `action.invoke`/background work).",
+      "description": "🏃️ Lifecycle state of a `job_`-prefixed handle (long-running `action.invoke`/background work). `AwaitingApproval` is a job whose work is done and whose effect waits on an explicit approval.",
       "enum": [
         "PENDING",
         "RUNNING",
+        "AWAITING_APPROVAL",
         "SUCCEEDED",
         "FAILED",
         "CANCELLED"

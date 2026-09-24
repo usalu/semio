@@ -43,7 +43,7 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for RemovePaletteEntryMuta
         }
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove palette entry", "Paletteneintrag entfernen")
+        protocol::LocalizedLabel::native("Remove palette entry", "Paletteneintrag entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-palette-entry".into()]

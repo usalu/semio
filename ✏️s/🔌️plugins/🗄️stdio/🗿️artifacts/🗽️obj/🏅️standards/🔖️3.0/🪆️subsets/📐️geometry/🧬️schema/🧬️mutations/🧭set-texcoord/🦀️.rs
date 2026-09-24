@@ -30,7 +30,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetTexcoord {
         agg_inverse(&ObjMutation::SetTexcoord(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-texcoord", "Texturkoordinate setzen")
+        protocol::LocalizedLabel::native("Set texcoord", "Texturkoordinate setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

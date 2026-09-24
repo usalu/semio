@@ -10,7 +10,7 @@ fn project_note_dxf_reads_the_line_entity_note_would_have_written() {
     let projected = project_note_dxf(DXF_ONE_LINE.as_bytes()).expect("dxf crate parses a minimal ENTITIES section");
     let entities = projected.array("entities");
     assert_eq!(entities.len(), 1, "expected exactly the one LINE entity");
-    assert_eq!(entities[0].str("kind"), "line");
+    assert_eq!(entities[0].str("entityKind"), "line");
 }
 
 /// 🎨️ The exact `<g transform="matrix(a,b,c,d,e,f)"><path d="…"/></g>` shape

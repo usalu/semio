@@ -490,12 +490,13 @@ mod args_bridge {
         text(args, keys).ok_or_else(|| invalid(action, format!("missing {}", keys[0])))
     }
 
-    /// 🔡️ `nodeIds` arrives as a list, a JSON-array string (text form fields) or one bare id.
+    /// 🔡️ `nodeIds` arrives as a list, a JSON-array string, or the rail's text field listing ids
+    /// separated by commas or whitespace. An empty field means "the current node selection".
     fn ids(args: Option<&DslValue>) -> Vec<String> {
         match field(args, &["nodeIds", "node_ids", "ids"]) {
             Some(DslValue::Array(items)) => items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect(),
             Some(DslValue::String(text)) if text.trim_start().starts_with('[') => pack::from_json_str::<Vec<String>>(text).unwrap_or_default(),
-            Some(DslValue::String(text)) if !text.trim().is_empty() => vec![text.trim().to_string()],
+            Some(DslValue::String(text)) => text.split(|character: char| character == ',' || character.is_whitespace()).filter(|id| !id.is_empty()).map(str::to_string).collect(),
             _ => Vec::new(),
         }
     }
@@ -579,7 +580,7 @@ fn rewriting_document_reduce(
         TrinityRewritingCommand::AddRuleClause { kind } => commands::add_rule_clause_command(state, kind),
         TrinityRewritingCommand::ResetRule => commands::reset_rule(state),
         TrinityRewritingCommand::SetActiveExample { example_id } => commands::set_active_example(example_id),
-        TrinityRewritingCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(state, node_ids, field, value),
+        TrinityRewritingCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(state, node_ids, interaction.selection.get("graph").map_or(&[][..], |selection| selection.ids.as_slice()), field, value)?,
         TrinityRewritingCommand::Reorganize => commands::reorganize(state),
         _ => return Err(Fault::from("rewriting-document-command-route-mismatch")),
     })
@@ -903,7 +904,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TrinityRewritingCommand::AddRuleClause { kind } => crate::editor::rewriting::commands::add_rule_clause_command(state, kind),
             TrinityRewritingCommand::ResetRule => crate::editor::rewriting::commands::reset_rule(state),
             TrinityRewritingCommand::SetActiveExample { example_id } => crate::editor::rewriting::commands::set_active_example(example_id),
-            TrinityRewritingCommand::PatchNodes { node_ids, field, value } => crate::editor::rewriting::commands::patch_nodes(state, node_ids, field, value),
+            TrinityRewritingCommand::PatchNodes { node_ids, field, value } => crate::editor::rewriting::commands::patch_nodes(state, node_ids, &interaction.selection("graph").ids, field, value)?,
             TrinityRewritingCommand::SetViewport { surface_id, viewport } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport, view_state)?,
             TrinityRewritingCommand::Reorganize => crate::editor::rewriting::commands::reorganize(state),
             TrinityRewritingCommand::SetLodMode { value } => crate::editor::rewriting::commands::set_lod_mode(value, view_state)?,
@@ -944,15 +945,11 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         // so the request's own surface-carried selection groups are the only source; no config fallback.
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
 
-        // 🩹️ `nodeGraphEdit` folds into the `transform` group alongside `patchNodes` (both are
-        // mechanical graph-mutation actions, not primary verbs) — keeping it top-level alongside
-        // `addRuleClause`/`setParameter`/`reorganize` plus all four groups plus the separator plus the
-        // destructive row exceeds the 9-row top-level budget `organize_context_menu` enforces.
         let mut menu = Menu::of(registry)
             .action("addRuleClause")
             .action("setParameter")
             .action("reorganize")
-            .group("transform", |m| m.action("patchNodes").action("nodeGraphEdit"))
+            .group("transform", |m| m.action("patchNodes"))
             .group("history", |m| m.action("resetRule"))
             .group("mode", |m| m.action("setLodMode").action("setActiveExample"))
             .group("tools", |m| m.action("setLhsJson").action("setRhsJson"));
@@ -1024,6 +1021,11 @@ use crate::editor::rewriting::modes::edit;
 /// 🎯️ `create_rewriting_app` → `Editor::builder(TRINITY_REWRITING_DIALECT)…build_definition()` (contract
 /// §2.4). The old `.example("label-core", …)`/`.workflow("trinity-rewriting", …)` calls are DROPPED,
 /// not ported — same SDK gap `jack`'s `create_trinity_jack_app` doc comment records.
+///
+/// 🕸️ `nodeGraphEdit` is the node-graph host's gesture verb: every canvas edit carries the edited
+/// graph's `surfaceId` and an `operations` list, neither of which a rail, palette or context-menu press
+/// can supply (it was refused `missing operationsJson`), so it stays out of all three. `patchNodes`'
+/// `nodeIds` is optional: left empty, the verb patches the selected nodes.
 pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TRINITY_REWRITING_DIALECT).document(["semio", "trinity", "rewriting"])
             .icon_id("trinity-rewriting")
@@ -1072,7 +1074,7 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .action_destructive("setActiveExample")
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setParameter", LocalizedLabel::native("Set Parameter", "Parameter festlegen"), ActionKind::Mutation).with_category("settings"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"), ActionKind::Mutation).with_category("transform"))
-            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation).with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation).with_category("transform") })
             // 🛠️ Dev-only raw rule editors — kept out of the command palette.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setLhsJson", LocalizedLabel::native("Set LHS Json", "LHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setRhsJson", LocalizedLabel::native("Set RHS Json", "RHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
@@ -1086,6 +1088,7 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("addRuleClause", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("resetRule", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_destructive("resetRule")
             .action_interactive_job("setParameter", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("patchNodes", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -1128,7 +1131,7 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
                 ]).required(),
             ])
             .action_args("patchNodes", vec![
-                ActionArgDef::text("nodeIds", LocalizedLabel::native("Nodes", "Knoten")).required(),
+                ActionArgDef::text("nodeIds", LocalizedLabel::native("Nodes (empty: selection)", "Knoten (leer: Auswahl)")),
                 ActionArgDef::select("field", LocalizedLabel::native("Field", "Feld"), vec![
                     ActionArgOption::new("name", LocalizedLabel::native("Name", "Name")),
                     ActionArgOption::new("kind", LocalizedLabel::native("Kind", "Art")),

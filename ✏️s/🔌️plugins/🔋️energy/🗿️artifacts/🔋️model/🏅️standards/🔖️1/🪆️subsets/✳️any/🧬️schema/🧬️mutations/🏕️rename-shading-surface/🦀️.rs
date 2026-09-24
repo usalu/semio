@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Rename
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename shading surface {} to \"{}\"", self.id.0, self.new_name), &format!("Verschattungsoberfläche {} in \"{}\" umbenennen", self.id.0, self.new_name))
+        protocol::LocalizedLabel::native(&format!("Rename shading surface {} to \"{}\"", self.id.0, self.new_name), &format!("Verschattungsfläche {} in \"{}\" umbenennen", self.id.0, self.new_name))
     }
 
     fn target(&self) -> Vec<String> {

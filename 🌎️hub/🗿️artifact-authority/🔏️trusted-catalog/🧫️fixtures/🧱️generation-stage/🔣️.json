@@ -34,6 +34,11 @@
     { "change": "bundle-dependency", "accepted": false },
     { "change": "wrong-package", "accepted": false },
     { "change": "nonexact-dependency", "accepted": false },
-    { "change": "duplicate-dependency", "accepted": false }
+    { "change": "duplicate-dependency", "accepted": false },
+    { "change": "plugin-module-file", "accepted": false },
+    { "change": "plugin-module-manifest", "accepted": false },
+    { "change": "plugin-module-missing-file", "accepted": false },
+    { "change": "plugin-module-extra-file", "accepted": false },
+    { "change": "post-read-plugin-module-file", "accepted": false }
   ]
 }

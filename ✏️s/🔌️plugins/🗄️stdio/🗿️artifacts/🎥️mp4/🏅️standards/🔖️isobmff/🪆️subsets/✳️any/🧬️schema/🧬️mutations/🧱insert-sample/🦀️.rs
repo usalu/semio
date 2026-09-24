@@ -24,7 +24,7 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for InsertSample {
         agg_inverse(&Mp4Mutation::InsertSample(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-sample", "Probe einfügen")
+        protocol::LocalizedLabel::native("Insert sample", "Sample einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -98,11 +98,11 @@ async fn committed_json_is_canonical() {
     assert!(original.get("block").and_then(|block| block.get("placeholder")).is_none(), "unset block fields are omitted, never null");
 }
 
-/// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op`.
+/// 🎯️ The declared outcome holds: `no-op`, with one untargeted Warning `mutation.no-op`.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "replace-block/no-ops-when-the-block-is-already-identical declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "replace-block/no-ops-when-the-block-is-already-identical declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <PlaybookMutation as protocol::Mutation<PlaybookSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

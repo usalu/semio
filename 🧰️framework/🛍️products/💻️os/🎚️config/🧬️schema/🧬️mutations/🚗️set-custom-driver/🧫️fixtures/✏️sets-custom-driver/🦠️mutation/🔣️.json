@@ -1,0 +1,11 @@
+{
+  "mutation": "setCustomDriver",
+  "driverId": "studio",
+  "driver": {
+    "driverId": "studio",
+    "label": "Studio",
+    "config": {
+      "scale": 1.25
+    }
+  }
+}

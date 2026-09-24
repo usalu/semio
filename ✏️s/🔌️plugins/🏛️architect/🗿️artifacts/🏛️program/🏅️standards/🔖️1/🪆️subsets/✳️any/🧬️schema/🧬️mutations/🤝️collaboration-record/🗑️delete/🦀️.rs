@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteCollaborationRecor
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete collaboration record \"{}\"", self.id.0), &format!("Zusammenarbeitdatensatz \"{}\" löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete collaboration record \"{}\"", self.id.0), &format!("Zusammenarbeitsdatensatz \"{}\" löschen", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

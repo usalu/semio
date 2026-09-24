@@ -151,6 +151,8 @@ fn component_text_bytes(component: &crate::Component) -> usize {
         Image(props) => label_bytes(&props.alt),
         Progress(props) => props.value_text.0.len(),
         Extension(props) => props.extension.len(),
+        Table(props) => props.label.0.len() + props.columns.iter().map(|column| column.0.len()).sum::<usize>() + label_bytes(&props.actions_label),
+        TableRow(props) => props.cells.iter().map(|cell| cell.len()).sum(),
         Separator(_) | Slider(_) | NumberStepper(_) | Ring(_) | IconSelect(_) | Tree(_) | Surface(_) => 0,
     }
 }

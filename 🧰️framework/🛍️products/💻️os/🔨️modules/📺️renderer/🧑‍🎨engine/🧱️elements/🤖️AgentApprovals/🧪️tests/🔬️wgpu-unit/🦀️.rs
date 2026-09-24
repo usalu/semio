@@ -134,7 +134,7 @@ fn a_simulated_frame_through_the_bridge_produces_a_modal_whose_buttons_resolve_i
     assert!(model.is_open(&bridge.pending_approvals));
 
     let parsed = parse_approval_summary(&bridge.pending_approvals[0].summary);
-    assert_eq!(approval_row_line_count(&parsed), 4, "capability + diff + requestedBy + risk");
+    assert_eq!(approval_row_line_count(&parsed), 5, "subject + diff + requestedBy + risk + countdown");
 
     let theme = Theme::dark();
     let heights = vec![approval_row_height(&parsed, &theme)];
@@ -175,4 +175,22 @@ fn risk_badges_take_three_distinct_theme_tokens_and_both_locales() {
     assert_eq!(ApprovalRisk::High.label(Locale::En), "High");
     assert_eq!(ApprovalRisk::High.label(Locale::De), "Hoch");
     assert_eq!(approvals_decision_label(ApprovalDecision::Session, Locale::De), "Für Sitzung genehmigen");
+}
+
+/// 📝️ The affordance lines of every shared-fixture row, in both locales, are exactly what the React
+/// `AgentApprovalAffordance` renders for it — and the painted row reserves exactly that many lines.
+#[test]
+fn the_affordance_lines_match_the_shared_fixture_in_both_locales() {
+    let fixture: serde_json::Value = serde_json::from_str(SUMMARY_FIXTURE).expect("the shared summary fixture is JSON");
+    for case in fixture["affordance"].as_array().expect("affordance rows") {
+        let row = case["row"].as_str().expect("row name");
+        let parsed = parse_approval_summary(fixture[row]["summary"].as_str().expect("wire summary"));
+        let seconds_left = case["secondsLeft"].as_u64();
+        for (locale, key) in [(Locale::En, "en"), (Locale::De, "de")] {
+            let expected: Vec<&str> = case[key].as_array().expect("locale lines").iter().map(|line| line.as_str().expect("line")).collect();
+            let lines = approval_row_lines(&parsed, seconds_left, locale);
+            assert_eq!(lines.iter().map(|line| line.text.as_str()).collect::<Vec<_>>(), expected, "{row} {key} at {seconds_left:?}");
+            assert_eq!(lines.len(), approval_row_line_count(&parsed), "{row}: the row reserves every line it paints");
+        }
+    }
 }

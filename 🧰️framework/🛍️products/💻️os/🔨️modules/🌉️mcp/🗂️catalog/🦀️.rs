@@ -1001,27 +1001,23 @@ pub const GESTURE_ROUTE_WORDS: &[&str] = &[
     "applyevents",
 ];
 
-/// ⚠️ Verb-id word runs that NAME the delete/clear/replace-the-whole-document class — the verbs a
-/// human wants to be asked about before an agent commits them. Same contract as
-/// [`GESTURE_ROUTE_WORDS`]: the lexicon asks the question, the declaration
-/// (`ActionDefinition::destructive` / `AppBuilder::action_destructive`) answers it.
-pub const DESTRUCTIVE_VERB_WORDS: &[&str] = &[
-    "delete",
-    "remove",
-    "clear",
-    "discard",
-    "purge",
-    "wipe",
-    "erase",
-    "truncate",
-    "setactiveexample",
-    "setfixturejson",
-    "setspecjson",
-    "setsnapshot",
-    "loaddocument",
-    "setdocument",
-    "replacedocument",
-];
+/// ⚠️ Verb-id word runs that NAME the delete/clear/reset class — the verbs a human wants to be asked
+/// about before an agent commits them. Same contract as [`GESTURE_ROUTE_WORDS`]: the lexicon asks the
+/// question, the declaration (`ActionDefinition::destructive` / `AppBuilder::action_destructive`)
+/// answers it. Asked of document mutations and of shell verbs, whose side effects (a deleted space, a
+/// removed member) live outside the document history entirely.
+pub const DESTRUCTIVE_VERB_WORDS: &[&str] = &["delete", "remove", "clear", "discard", "purge", "wipe", "erase", "truncate", "reset", "replace", "overwrite"];
+
+/// 📄️ Verb-id word runs that NAME a replacement of the whole document by supplied or example content.
+/// Only a `Mutation` replaces the document — a shell verb of the same name navigates elsewhere — so
+/// this lexicon is asked of mutations alone.
+pub const DOCUMENT_REPLACE_WORDS: &[&str] = &["setactiveexample", "setfixturejson", "setspecjson", "setsnapshot", "commitdocument", "loaddocument", "setdocument"];
+
+/// 💾️ Verb-id word runs that NAME a write to a path the user owns — an export, a download, a save.
+/// Such a verb creates or overwrites a file outside the artifact's own history, so no undo reaches it;
+/// published to an agent it must ask first. Asked of shell verbs and of palette view verbs (a
+/// `View`-kind `exportDocument` renders and hands the file to the host just the same).
+pub const USER_PATH_WRITE_WORDS: &[&str] = &["export", "download", "save"];
 
 /// ✂️ Splits a verb id into its lowercase words at camel-case and separator boundaries —
 /// `canvasPointerDown` → `["canvas", "pointer", "down"]`.
@@ -1070,17 +1066,21 @@ pub enum CatalogAuditFinding {
     /// declaration: `ActionDefinition::input_event()` or `AppBuilder::action_audience(id, Input)`,
     /// or declare `Agent` explicitly if the name lies and it really is an intent verb.
     UndeclaredGestureRoute { capability_id: String, matched: &'static str },
-    /// ⚠️ A `Mutation` published to agents whose id names the delete/clear/replace class but whose
+    /// ⚠️ A `Mutation` or `Shell` verb published to agents whose id names the delete/clear/replace class but whose
     /// `effects.destructive` is false — so `ApprovalMode::WhenDestructive` never fires and an agent
     /// can discard the user's content without anyone being asked. Fix at the declaration:
     /// `ActionDefinition::destructive()` or `AppBuilder::action_destructive(id)`.
     UnmarkedDestructiveVerb { capability_id: String, matched: &'static str },
+    /// 💾️ A shell or view verb published to agents whose id names an export/download/save but whose
+    /// `effects.destructive` is false — so an agent writes to the user's disk without anyone being
+    /// asked. Fix at the declaration: `AppBuilder::action_destructive(id)`.
+    UnmarkedUserPathWrite { capability_id: String, matched: &'static str },
 }
 
 impl CatalogAuditFinding {
     pub fn capability_id(&self) -> &str {
         match self {
-            CatalogAuditFinding::UndeclaredGestureRoute { capability_id, .. } | CatalogAuditFinding::UnmarkedDestructiveVerb { capability_id, .. } => capability_id,
+            CatalogAuditFinding::UndeclaredGestureRoute { capability_id, .. } | CatalogAuditFinding::UnmarkedDestructiveVerb { capability_id, .. } | CatalogAuditFinding::UnmarkedUserPathWrite { capability_id, .. } => capability_id,
         }
     }
 
@@ -1090,7 +1090,10 @@ impl CatalogAuditFinding {
                 format!("{capability_id} reads as a `{matched}` gesture route but declares no audience — derive_audience published it to agents unreviewed")
             }
             CatalogAuditFinding::UnmarkedDestructiveVerb { capability_id, matched } => {
-                format!("{capability_id} is a `{matched}`-class mutation published to agents with effects.destructive = false — WhenDestructive never fires")
+                format!("{capability_id} is a `{matched}`-class verb published to agents with effects.destructive = false — WhenDestructive never fires")
+            }
+            CatalogAuditFinding::UnmarkedUserPathWrite { capability_id, matched } => {
+                format!("{capability_id} is a `{matched}` write to a user path published to agents with effects.destructive = false — no human is asked before the file is written")
             }
         }
     }
@@ -1106,9 +1109,18 @@ fn audit_declaration(capability_id: String, verb_id: &str, audience: manifest::C
             findings.push(CatalogAuditFinding::UndeclaredGestureRoute { capability_id: capability_id.clone(), matched });
         }
     }
-    if kind == manifest::ActionKind::Mutation && !destructive {
-        if let Some(matched) = matching_lexicon_word(verb_id, DESTRUCTIVE_VERB_WORDS) {
-            findings.push(CatalogAuditFinding::UnmarkedDestructiveVerb { capability_id, matched });
+    if destructive {
+        return;
+    }
+    let replaces_document = if kind == manifest::ActionKind::Mutation { matching_lexicon_word(verb_id, DOCUMENT_REPLACE_WORDS) } else { None };
+    let discards = if matches!(kind, manifest::ActionKind::Mutation | manifest::ActionKind::Shell) { matching_lexicon_word(verb_id, DESTRUCTIVE_VERB_WORDS) } else { None };
+    if let Some(matched) = replaces_document.or(discards) {
+        findings.push(CatalogAuditFinding::UnmarkedDestructiveVerb { capability_id, matched });
+        return;
+    }
+    if matches!(kind, manifest::ActionKind::Shell | manifest::ActionKind::View) {
+        if let Some(matched) = matching_lexicon_word(verb_id, USER_PATH_WRITE_WORDS) {
+            findings.push(CatalogAuditFinding::UnmarkedUserPathWrite { capability_id, matched });
         }
     }
 }

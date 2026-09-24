@@ -200,3 +200,100 @@ fn the_counter_table_is_bounded_and_says_how_much_it_dropped() {
     assert_eq!(tracer.dropped_event_count(), 8);
 }
 //#endregion 📊️Counters
+
+//#region 🧬️Schema
+fn record_schema() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧬️schema/🔣️.json")).unwrap()
+}
+
+fn record_vectors() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
+}
+
+fn vector_record(value: &serde_json::Value) -> TraceRecord {
+    let text = |key: &str| value[key].as_str().map(str::to_string);
+    TraceRecord {
+        level: TraceLevel::parse(value["level"].as_str().unwrap()).unwrap(),
+        event: text("event").unwrap(),
+        outcome: TRACE_OUTCOMES.into_iter().find(|outcome| outcome.as_str() == value["outcome"].as_str().unwrap()).unwrap(),
+        request_id: text("requestId"),
+        principal: text("principal"),
+        space: text("space"),
+        artifact: text("artifact"),
+        duration_us: value["durationUs"].as_u64(),
+        detail: text("detail"),
+    }
+}
+
+#[test]
+fn every_record_vector_renders_to_its_declared_line() {
+    for vector in record_vectors()["valid"].as_array().unwrap() {
+        assert_eq!(vector_record(&vector["record"]).to_json_line(), vector["line"].as_str().unwrap());
+    }
+}
+
+#[test]
+fn the_record_schema_declares_exactly_the_rendered_fields_and_the_vocabulary_enums() {
+    let schema = record_schema();
+    let properties: Vec<&str> = schema["properties"].as_object().unwrap().keys().map(String::as_str).collect();
+    let full = vector_record(&record_vectors()["valid"][1]["record"]).to_json_line();
+    let rendered: serde_json::Value = serde_json::from_str(&full).unwrap();
+    let mut rendered_keys: Vec<&str> = rendered.as_object().unwrap().keys().map(String::as_str).collect();
+    let mut declared = properties.clone();
+    rendered_keys.sort_unstable();
+    declared.sort_unstable();
+    assert_eq!(rendered_keys, declared);
+    let outcomes: Vec<&str> = schema["properties"]["outcome"]["enum"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect();
+    assert_eq!(outcomes, TRACE_OUTCOMES.iter().map(|outcome| outcome.as_str()).collect::<Vec<_>>());
+    let levels: Vec<&str> = schema["properties"]["level"]["enum"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect();
+    assert_eq!(levels, [TraceLevel::Error, TraceLevel::Warn, TraceLevel::Info, TraceLevel::Debug].iter().map(|level| level.as_str()).collect::<Vec<_>>());
+    let tracer = Tracer::capturing(TraceLevel::Info).0;
+    let id = tracer.allocate_request_id();
+    assert!(id.len() >= 13 && id.starts_with('r') && id[1..].chars().all(|character| character.is_ascii_hexdigit() && !character.is_ascii_uppercase()), "{id}");
+}
+//#endregion 🧬️Schema
+
+//#region 🗃️FileSink
+#[test]
+fn a_file_sink_appends_one_line_per_record_across_reopens() {
+    let path = std::env::temp_dir().join(format!("semio-trace-file-sink-{}-{}.jsonl", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+    let first = Tracer::from_lookup(|key| match key {
+        TRACE_SINK_ENV => Some(format!("file:{}", path.display())),
+        _ => None,
+    });
+    first.span("server.boot").ok();
+    drop(first);
+    let second = Tracer::from_lookup(|key| (key == TRACE_SINK_ENV).then(|| format!("file:{}", path.display())));
+    second.span("server.shutdown").ok();
+    drop(second);
+    let text = std::fs::read_to_string(&path).unwrap();
+    let _ = std::fs::remove_file(&path);
+    let events: Vec<String> = text.lines().map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap()["event"].as_str().unwrap().to_string()).collect();
+    assert_eq!(events, vec!["server.boot".to_string(), "server.shutdown".to_string()]);
+}
+
+#[test]
+fn an_unopenable_file_sink_reports_its_refusal_as_the_first_record() {
+    let tracer = Tracer::from_lookup(|key| (key == TRACE_SINK_ENV).then(|| "file:/nonexistent-semio-dir/x/y.jsonl".to_string()));
+    assert_eq!(tracer.level(), TraceLevel::Info);
+    let row = tracer.counters().into_iter().find(|row| row.event == TRACE_SINK_EVENT).unwrap();
+    assert_eq!(row.counters.refused, 1);
+}
+//#endregion 🗃️FileSink
+
+//#region 🧬️Fork
+#[test]
+fn a_forked_span_shares_the_request_id_and_identity_of_its_admission() {
+    let (tracer, sink) = Tracer::capturing(TraceLevel::Info);
+    let admission = tracer.span("server.document.socket").request(tracer.allocate_request_id()).principal("user:ada").space("s").artifact("d");
+    let session = admission.fork();
+    admission.finish(TraceOutcome::Ok, Some("upgrade".to_string()));
+    session.cancelled("closed");
+    let records = sink.records_for("server.document.socket");
+    assert_eq!(records.len(), 2);
+    assert_eq!(records[0].request_id, records[1].request_id);
+    assert_eq!((records[0].outcome, records[1].outcome), (TraceOutcome::Ok, TraceOutcome::Cancelled));
+    assert_eq!(records[1].principal.as_deref(), Some("user:ada"));
+    assert_eq!(records[1].artifact.as_deref(), Some("d"));
+}
+//#endregion 🧬️Fork

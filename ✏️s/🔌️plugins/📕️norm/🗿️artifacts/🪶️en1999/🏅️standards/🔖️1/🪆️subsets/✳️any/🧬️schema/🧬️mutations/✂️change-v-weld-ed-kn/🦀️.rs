@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeVWeldEdKn 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change design weld shear force V_Ed [kN] to {}", self.new_v_weld_ed_kn), &format!("Bemessungsschweißnahtschubkraftv_Ed [kN] auf {} ändern", self.new_v_weld_ed_kn))
+        protocol::LocalizedLabel::native(&format!("Change design weld shear force V_Ed [kN] to {}", self.new_v_weld_ed_kn), &format!("Bemessungsquerkraft der Schweißnaht V_Ed [kN] auf {} ändern", self.new_v_weld_ed_kn))
     }
 }
 //#endregion 🔖️ChangeVWeldEdKn

@@ -1745,11 +1745,10 @@ impl JobPayloadProjection {
             self.page = self.page.saturating_add(1);
             return (false, false);
         };
-        let length = page.len();
         self.bytes.extend_from_slice(page);
         self.page = self.page.saturating_add(1);
-        let step = owner.close_step(1, length);
-        assert!(matches!(step, job::JobPayloadCloseStep::Pending { released_items: 1, released_bytes } if released_bytes == length));
+        let step = owner.close_step(1, job::JOB_PAYLOAD_PAGE_BYTES);
+        assert!(matches!(step, job::JobPayloadCloseStep::Pending { released_items: 1, released_bytes } if released_bytes == job::JOB_PAYLOAD_PAGE_BYTES));
         let complete = owner.terminal_is_empty();
         if complete {
             drop(self.owner.take());

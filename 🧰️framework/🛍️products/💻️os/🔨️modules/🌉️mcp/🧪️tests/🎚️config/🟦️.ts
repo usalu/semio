@@ -1,4 +1,6 @@
-import { dirname, resolve } from "node:path";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
@@ -7,6 +9,12 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(root, "../../../../../../..");
+
+/** 🛰️ The agent-bridge rendezvous every gateway these suites spawn meets shells in — a fresh one per
+ * run. The per-user default is where a developer's live `dev s` sessions wait, and a test gateway
+ * offered there is dialled by them: `ui_focus` then succeeds against a real shell and the tier-2 law
+ * measures a stranger's browser instead of the binary. */
+const SUITE_AGENT_BRIDGE_DIR = mkdtempSync(join(tmpdir(), "semio-mcp-suite-bridge-"));
 
 /** @emoji 🧪️ Vitest for `@semio-tech/framework-os-mcp` — in-source tests (`import.meta.vitest`) on
  * the pure surface in `../../🟦️.ts`, plus three real-process integration suites that spawn
@@ -43,6 +51,7 @@ export default defineConfig({
       resolve(root, "../../🧪️tests/🤖️hub-agent-participant/🟦️.ts"),
       resolve(root, "../../🧪️tests/🤝️hub-edit-durability/🟦️.ts"),
     ],
+    env: { S_AGENT_BRIDGE_DIR: SUITE_AGENT_BRIDGE_DIR },
     coverage: { include: ["../../🟦️.ts"] },
     includeSource: ["../../🟦️.ts"],
     testTimeout: 30_000,

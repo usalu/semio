@@ -36,7 +36,7 @@ use semio_repo_test_host::Json;
 /// production-side `kinds_matches_enum_variants_and_manifest` proves enum, constant and manifest
 /// never drift apart. Declared here rather than in the case adapter so the adapter, this module's
 /// own law tests and the manifest all read ONE list.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position"];
+pub const KINDS: &[&str] = &["set-snapshot", "insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position"];
 //#endregion 🔖️Vocabulary
 
 #[cfg(feature = "oracles")]

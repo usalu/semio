@@ -24,7 +24,7 @@ impl protocol::MutationKind<Generation3dViewPresence, Generation3dViewPresenceMu
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Show Mode", "Anzeigenmodus setzen")
+        protocol::LocalizedLabel::native("Set Show Mode", "Anzeigemodus setzen")
     }
 
     fn target(&self) -> Vec<String> {

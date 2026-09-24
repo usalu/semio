@@ -37,7 +37,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Replac
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace setpoint manager {} control law with {}", self.id.0, self.new_kind), &format!("Sollwertverwalter {} Regelungsgesetz mit {} ersetzen", self.id.0, self.new_kind))
+        protocol::LocalizedLabel::native(&format!("Replace setpoint manager {} control law with {}", self.id.0, self.new_kind), &format!("Regelgesetz von Sollwertmanager {} durch {} ersetzen", self.id.0, self.new_kind))
     }
 
     fn target(&self) -> Vec<String> {

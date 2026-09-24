@@ -59,11 +59,13 @@ import {
   ActivationRegistry,
   type ActivationReason,
   activationReasonForAppId,
+  ON_EXTENSION_REQUEST_ACTIVATION_PREFIX,
   appCommandIdsV1,
   hostEffectInvocationV1,
   type HostEffectDispatchScope,
   createTurnOutcomeBroadcast,
   fetchDescriptorManifest,
+  fetchPackageDescriptor,
   reachableKindsFromUnknown,
   scopeContributionsJson,
   type BuiltNode,
@@ -80,7 +82,9 @@ import {
   type SpawnedJobCompletion,
   type TurnOutcome,
 } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeDocumentArchiveBytes, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
+import { decodeCausalEnvelopeBatch } from "@semio-tech/framework-replication";
+import { DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
@@ -226,6 +230,12 @@ let sharedActivationRegistry: ActivationRegistry | null = null;
 function getActivationRegistry(): ActivationRegistry {
   sharedActivationRegistry ??= new ActivationRegistry({ shardClient: getShardClient(), defaultBudget: DEFAULT_SHARD_BUDGET });
   return sharedActivationRegistry;
+}
+
+/** 🧲️ The {@link ActivationReason} a request actor activates with: the WIT `on-extension-request`
+ * event carrying the capability (the extension point) whose inbound request pulled it up. */
+export function extensionRequestActivationReason(capability: string): ActivationReason {
+  return `${ON_EXTENSION_REQUEST_ACTIVATION_PREFIX}${capability}`;
 }
 //#endregion 🔖️PooledSingletons
 
@@ -816,6 +826,23 @@ function jsonEffects(effects: readonly Effect[]): unknown[] {
   return JSON.parse(JSON.stringify(effects, (_key, value) => (typeof value === "bigint" ? Number(value) : value))) as unknown[];
 }
 
+/** 📡️ A guest's `send-message` to its bound document backbone, projected onto the host `Effect` the
+ * wgpu shell routes — `SendMessage { target: Backbone { uri }, payload }`, byte for byte. React's
+ * document port consumes these at this layer; the wgpu shell owns its document actor itself
+ * (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` `route_document_backbone_effects`), so the bridge hands them over
+ * instead of dropping them. Any other effect answers `null`. */
+export function wgpuBackboneMessageEffect(effect: WireVariant): Effect | null {
+  const value = effect.val as { readonly target?: WireVariant; readonly payload?: unknown } | undefined;
+  if (effect.tag !== "send-message" || value?.target?.tag !== "backbone" || typeof value.target.val !== "string") return null;
+  return { sendMessage: { target: { backbone: { uri: value.target.val } }, payload: Array.from(coerceWireBytes(value.payload)) } };
+}
+
+/** 🔀️ The ONE wire→host effect projection of this bridge: document-backbone messages cross as
+ * {@link wgpuBackboneMessageEffect}, everything else through the shared `wireEffectToFriendly`. */
+function wgpuHostEffect(effect: WireVariant): Effect | null {
+  return wgpuBackboneMessageEffect(effect) ?? wireEffectToFriendly(effect, decodePackWire);
+}
+
 function leftoverFriendlyEffects(instanceId: number, turns: readonly WireTurnResult[]): Effect[] {
   const leftover: WireVariant[] = [];
   for (const turn of turns) {
@@ -824,7 +851,7 @@ function leftoverFriendlyEffects(instanceId: number, turns: readonly WireTurnRes
       if (!shellFrameBytes(effect, instanceId)) leftover.push(effect);
     }
   }
-  return leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
+  return leftover.map((effect) => wgpuHostEffect(effect)).filter((effect): effect is Effect => effect !== null);
 }
 
 /** 🧩️ Appends every non-`SendMessage{Shell}` effect of `turns` to this instance's leftover ledger.
@@ -1103,7 +1130,7 @@ export function wgpuInvocationFromFrames(frames: readonly AppFrameValue[], lefto
   for (const frame of leftoverShellInvocationFrames<AppFrameValue>(leftover, decodeAppFrame)) {
     if ("Invocation" in frame) applyInvocationFrame(frame.Invocation);
   }
-  const requestedEffects = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
+  const requestedEffects = leftover.map((effect) => wgpuHostEffect(effect)).filter((effect): effect is Effect => effect !== null);
   return { output, mutations, inverseGroup, diagnostics, requestedEffects, events: [], uiScope, historyPatch };
 }
 
@@ -1130,6 +1157,10 @@ export interface WgpuPluginInvokeContext {
 export interface WgpuPluginHandle {
   readonly pluginId: string;
   readonly manifest: PluginManifest;
+  /** 🪪️ The package this module was admitted as, off its served descriptor — the identity a hub
+   * execution-target lease must name before the shell binds a hub document to this program. */
+  readonly packageId: string;
+  readonly componentSha256: string;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
   /** 🎯️ `dispatch` (`PluginDispatchHintV1`, kernel) is the input ledger's causal `order` for this one
@@ -1148,6 +1179,18 @@ export interface WgpuPluginHandle {
   readonly invoke: (capability: string, request: Uint8Array | string, context?: WgpuPluginInvokeContext) => Promise<Uint8Array>;
   readonly dispatchInvokeExtension: (instanceId: number, extensionId: string, capability: string, requestJson: string, req: bigint) => Promise<InvocationResponse>;
   readonly pushScopedContributions: (instanceId: number, appId: string, reachabilityJson: string, viewStateJson: string) => Promise<InvocationResponse>;
+  /** 📡️ Binds or retires this instance's document backbone at `uri` for `bindingGeneration` — the
+   * browser twin of the native `DocumentBackboneBindingCommandV1` exchange. Resolves the host effects
+   * the guest left beside its verified receipt; a refusal rejects with the guest's own code. */
+  readonly documentBackbone: (instanceId: number, operation: "bind" | "retire", bindingGeneration: bigint, uri: string) => Promise<InvocationResponse>;
+  /** 📥️ Delivers one hot backbone message from the document actor at `uri` to this instance. */
+  readonly receiveDocumentBackbone: (instanceId: number, uri: string, payload: Uint8Array) => Promise<InvocationResponse>;
+  /** 📥️ Force-applies one `protocol::encode_envelopes` causal batch (`AppCommand::ApplyEnvelopes`). */
+  readonly applyMutations: (instanceId: number, operations: Uint8Array) => Promise<void>;
+  /** 🗃️ Restores one encoded document archive (`AppCommand::LoadDocumentArchive`). */
+  readonly loadAppDocumentArchive: (instanceId: number, archive: Uint8Array) => Promise<void>;
+  /** 🗃️ Restores one `(pack, spr)` pair (`AppCommand::LoadDocument`). */
+  readonly loadAppDocumentPack: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   readonly dispose: () => Promise<void>;
 }
 
@@ -1157,7 +1200,7 @@ export interface WgpuPluginHandle {
  * `ShardClient.dispose` — no shared module lease to refcount any more, one actor belongs to exactly
  * one instance. */
 export async function loadPluginModule(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<WgpuPluginHandle> {
-  const manifest = await fetchDescriptorManifest(pluginId, moduleUrl, signal);
+  const { manifest, packageId, componentSha256 } = await fetchPackageDescriptor(pluginId, moduleUrl, signal);
   contributionManifests.set(pluginId, manifest);
   const registry = getActivationRegistry();
   registry.registerManifest({ pluginId, moduleUrl, caps: [] });
@@ -1213,7 +1256,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     // 🧾️ Claim whatever the instance's leftover ledger still owes the host. A typed-operation drain
     // poll that ran between two host calls parks its effects there, and a render is the next door
     // they can reach the shell through — `performInvocation` is the other.
-    const carried = (pendingTurnEffects.get(instanceId) ?? []).map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
+    const carried = (pendingTurnEffects.get(instanceId) ?? []).map((effect) => wgpuHostEffect(effect)).filter((effect): effect is Effect => effect !== null);
     pendingTurnEffects.delete(instanceId);
     try {
       let current = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: surfaceId }, bodyKey, viewState: encodePackValue(viewState) } }]);
@@ -1379,7 +1422,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const jobDrain = await drainSpawnedJobs(instanceId, actorId);
       outFrames.push(...jobDrain.frames);
       const leftover = pendingTurnEffects.get(instanceId) ?? [];
-      const leftoverFriendly = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
+      const leftoverFriendly = leftover.map((effect) => wgpuHostEffect(effect)).filter((effect): effect is Effect => effect !== null);
       drive.report("command");
       turnOutcomes.push({ instanceId, frames: outFrames });
       // 🔁️ The status that decides whether to keep polling is the LAST turn this call drove — a
@@ -1486,7 +1529,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       // 🧾️ The answer turn is a host call like any other: it must hold the actor against the standing
       // drain, acknowledge the result pages the resumed operation publishes, and hand the shell BOTH
       // its own leftovers and anything the ledger still owed.
-      const carried = (pendingTurnEffects.get(instanceId) ?? []).map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
+      const carried = (pendingTurnEffects.get(instanceId) ?? []).map((effect) => wgpuHostEffect(effect)).filter((effect): effect is Effect => effect !== null);
       pendingTurnEffects.delete(instanceId);
       const drive = new WgpuTypedOperationDrive(instanceId);
       const frames: Uint8Array[] = [];
@@ -1521,21 +1564,22 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       drive.report(`completion req=${req}`);
       if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
       if (wireTurnStatusTag(settled.at(-1)?.status) === "more-work") void drainTypedOperations(instanceId);
-      return emptyInvocation([...carried, ...leftoverWire.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null)]);
+      return emptyInvocation([...carried, ...leftoverWire.map((effect) => wgpuHostEffect(effect)).filter((effect): effect is Effect => effect !== null)]);
     };
     return Object.freeze({ instanceId, req, assertActive, complete });
   };
 
   /** 📥️ See {@link WgpuPluginHandle.invoke}. One request actor per handle, activated lazily and
    * retired with it — an extension program declares no app, so it never gets a `createApp` instance
-   * and `Event::Request` needs none. */
+   * and `Event::Request` needs none. The actor activates `on-extension-request:<capability>` with the
+   * capability whose request pulled it up — the declared extension point, not the host's `manual`. */
   let requestActor: Promise<string> | null = null;
   let inboundRequestSeq = 0n;
-  const ensureRequestActor = (): Promise<string> => {
+  const ensureRequestActor = (capability: string): Promise<string> => {
     if (disposing) return Promise.reject(new Error("wgpu-plugin-handle.closed"));
     requestActor ??= (async () => {
       const actorId = `${pluginId}#request`;
-      await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
+      await registry.activate(pluginId, actorId, extensionRequestActivationReason(capability));
       return actorId;
     })().catch((error: unknown) => {
       requestActor = null;
@@ -1559,7 +1603,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     const refuse = (code: string, message: string): SemioFaultError =>
       new SemioFaultError({ origin: "os", code, severity: "error", message, scope: { pluginId }, retryable: false });
     if (payload.byteLength > GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES) throw refuse("extension.request-too-large", `${capability} request of ${payload.byteLength} B for ${pluginId} exceeds the ${GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES}-byte contiguous guest-request ceiling`);
-    const actorId = await ensureRequestActor();
+    const actorId = await ensureRequestActor(capability);
     inboundRequestSeq += 1n;
     const req = inboundRequestSeq;
     const answer = await driveInboundRequest({
@@ -1648,9 +1692,66 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     return { ...ticks[ticks.length - 1]!, requestedEffects: [...(result.requestedEffects ?? []), ...ticks.flatMap((tick) => tick.requestedEffects ?? [])] };
   };
 
+  /** 📡️ One document-backbone turn — a bind/retire control or a hot backbone payload — held on the
+   * actor like every other host call: the typed-operation settle, the UI patch intake and the spawned
+   * job drain all run inside ONE serialized body. Answers the `Shell{instance}` frames the turn
+   * produced (the receipt lane) apart from the host effects left for the shell. */
+  const settleDocumentBackboneTurn = (instanceId: number, events: readonly ShardEventEnvelope[]): Promise<{ readonly frames: readonly Uint8Array[]; readonly effects: readonly Effect[] }> => {
+    const actorId = requireActorId(instanceId);
+    return serializeWgpuActorCall(actorId, async () => {
+      const route = requireUiRoute(instanceId);
+      const execute = executeFor(actorId);
+      const drive = new WgpuTypedOperationDrive(instanceId);
+      const turn = await submitTurn(actorId, events);
+      const accepted = [turn, ...await route.accept(turn, execute)];
+      drive.observe(accepted);
+      for (let settle = 0; drive.owesASettle(accepted.at(-1)) && settle < WGPU_TYPED_OPERATION_SETTLE_LIMIT; settle += 1) {
+        const next = await submitTurn(actorId, drive.takeAcknowledgements());
+        const more = [next, ...await route.accept(next, execute)];
+        accepted.push(...more);
+        drive.observe(more);
+        if (!drive.progressed(more)) break;
+        await yieldWgpuUi();
+      }
+      const frames: Uint8Array[] = [];
+      const effects: Effect[] = [];
+      for (const effect of drive.hostEffects(accepted)) {
+        if (admitSpawnedJob(instanceId, effect)) continue;
+        const frame = shellFrameBytes(effect, instanceId);
+        if (frame) frames.push(frame);
+        else {
+          const host = wgpuHostEffect(effect);
+          if (host) effects.push(host);
+        }
+      }
+      const jobDrain = await drainSpawnedJobs(instanceId, actorId);
+      if (jobDrain.frames.length > 0) turnOutcomes.push({ instanceId, frames: [...jobDrain.frames] });
+      drive.report("document-backbone");
+      return { frames, effects };
+    });
+  };
+
+  const documentBackbone = async (instanceId: number, operation: "bind" | "retire", bindingGeneration: bigint, uri: string): Promise<InvocationResponse> => {
+    const command = { schema: DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, operation, instanceId, bindingGeneration, uri };
+    const control = encodeDocumentBackboneControlV1(command);
+    const settled = await settleDocumentBackboneTurn(instanceId, [{ kind: "message", payload: { source: { tag: "shell", val: String(instanceId) }, payload: Array.from(control) } }]);
+    if (settled.frames.length !== 1) throw new Error(`actor-document-control.receipt-count:${settled.frames.length}`);
+    requireDocumentBackboneReceiptV1(settled.frames[0]!, command);
+    return emptyInvocation(settled.effects);
+  };
+
+  const receiveDocumentBackbone = async (instanceId: number, uri: string, payload: Uint8Array): Promise<InvocationResponse> => {
+    const settled = await settleDocumentBackboneTurn(instanceId, [{ kind: "message", payload: { source: { tag: "backbone", val: uri }, payload: Array.from(payload) } }]);
+    const failed = settled.frames.map(decodeAppFrame).find((frame) => "Error" in frame);
+    if (failed && "Error" in failed) throw new Error(faultDisplayMessage(failed.Error.fault, decodePackValue));
+    return emptyInvocation(settled.effects);
+  };
+
   const handle: WgpuPluginHandle = {
     pluginId,
     manifest,
+    packageId,
+    componentSha256,
     createApp: (appId) => {
       if (disposing) return Promise.reject(new Error("wgpu-plugin-handle.closed"));
       const instanceId = nextGlobalInstanceId;
@@ -1734,6 +1835,19 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
     readWindowConfigPacks: (instanceId) => requireChannel(instanceId).readWindowConfigs(),
     loadWindowConfigPack: (instanceId, entry) => requireChannel(instanceId).loadWindowConfig(entry),
+    documentBackbone,
+    receiveDocumentBackbone,
+    applyMutations: async (instanceId, operations) => {
+      const frames = await requireChannel(instanceId).applyEnvelopes(decodeCausalEnvelopeBatch(Array.from(operations), { encode: encodePackValue, decode: decodePackValue }));
+      const failed = frames.find((frame) => "Error" in frame);
+      if (failed && "Error" in failed) throw new Error(faultDisplayMessage(failed.Error.fault, decodePackValue));
+    },
+    loadAppDocumentArchive: (instanceId, archive) => requireChannel(instanceId).loadDocumentArchive(decodeDocumentArchiveBytes(archive)),
+    loadAppDocumentPack: async (instanceId, pack, spr) => {
+      const frames = await requireChannel(instanceId).loadDocument(pack, spr);
+      const failed = frames.find((frame) => "Error" in frame);
+      if (failed && "Error" in failed) throw new Error(faultDisplayMessage(failed.Error.fault, decodePackValue));
+    },
     dispose: () => {
       if (disposal) return disposal;
       disposing = true;
@@ -1760,6 +1874,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
  * of those fallbacks trigger). */
 export interface WgpuJsBridge {
   readonly manifest: () => string;
+  /** 🪪️ `{"packageId","componentSha256"}` JSON — `ProgramBridgeEntry::from_js` reads it as a hard requirement. */
+  readonly packageIdentity: () => string;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
   /** 🎯️ `order` is the flat (wasm-bindgen-friendly) spelling of `PluginDispatchHintV1.order` — the
@@ -1771,6 +1887,13 @@ export interface WgpuJsBridge {
   readonly contextMenu: (instanceId: number, requestJson: string) => Promise<string>;
   readonly dispatchInvokeExtension: (instanceId: number, extensionId: string, capability: string, requestJson: string, req: number) => Promise<string>;
   readonly pushScopedContributions: (instanceId: number, appId: string, reachabilityJson: string, viewStateJson: string) => Promise<string>;
+  /** 📡️ `bindingGeneration` crosses as a decimal string: it is a `u64`, which a JS `number` cannot
+   * carry exactly. Resolves the `InvocationResponse` JSON whose `requestedEffects` the shell routes. */
+  readonly documentBackbone: (instanceId: number, operation: string, bindingGeneration: string, uri: string) => Promise<string>;
+  readonly receiveDocumentBackbone: (instanceId: number, uri: string, payload: Uint8Array) => Promise<string>;
+  readonly applyMutations: (instanceId: number, operations: Uint8Array) => Promise<void>;
+  readonly loadAppDocumentArchive: (instanceId: number, archive: Uint8Array) => Promise<void>;
+  readonly loadAppArtifactPack: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
 }
 
 /** 📦️ `handle_action_js`/`handle_command_js` pass the INVOCATION as `pk:`-prefixed pack too, for the
@@ -1810,6 +1933,7 @@ function bridgeDispatchHint(order: number | undefined): PluginDispatchHintV1 | u
 export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
   return {
     manifest: () => JSON.stringify(handle.manifest),
+    packageIdentity: () => JSON.stringify({ packageId: handle.packageId, componentSha256: handle.componentSha256 }),
     createApp: (appId) => handle.createApp(appId),
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
     handleAction: (instanceId, invocationPack, contextJson, order) => handle.handleAction(instanceId, packValueFromBase64(invocationPack), viewStateFromContextJson(contextJson), bridgeDispatchHint(order)).then(invocationResponseJson),
@@ -1819,6 +1943,14 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     contextMenu: (instanceId, requestJson) => handle.contextMenu(instanceId, JSON.parse(requestJson)).then((items) => JSON.stringify(items)),
     dispatchInvokeExtension: (instanceId, extensionId, capability, requestJson, req) => handle.dispatchInvokeExtension(instanceId, extensionId, capability, requestJson, BigInt(req)).then(invocationResponseJson),
     pushScopedContributions: (instanceId, appId, reachabilityJson, viewStateJson) => handle.pushScopedContributions(instanceId, appId, reachabilityJson, viewStateJson).then(invocationResponseJson),
+    documentBackbone: (instanceId, operation, bindingGeneration, uri) => {
+      if (operation !== "bind" && operation !== "retire") return Promise.reject(new Error(`actor-document-control.operation:${operation}`));
+      return handle.documentBackbone(instanceId, operation, BigInt(bindingGeneration), uri).then(invocationResponseJson);
+    },
+    receiveDocumentBackbone: (instanceId, uri, payload) => handle.receiveDocumentBackbone(instanceId, uri, payload).then(invocationResponseJson),
+    applyMutations: (instanceId, operations) => handle.applyMutations(instanceId, operations),
+    loadAppDocumentArchive: (instanceId, archive) => handle.loadAppDocumentArchive(instanceId, archive),
+    loadAppArtifactPack: (instanceId, pack, spr) => handle.loadAppDocumentPack(instanceId, pack, spr),
   };
 }
 

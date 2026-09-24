@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeEnSKKnM2 {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change characteristic snow load to {:?}", self.new_en_s_k_kn_m2), &format!("Charakteristischschneenlast auf {:?} ändern", self.new_en_s_k_kn_m2))
+        protocol::LocalizedLabel::native(&format!("Change characteristic snow load to {:?}", self.new_en_s_k_kn_m2), &format!("Charakteristische Schneelast auf {:?} ändern", self.new_en_s_k_kn_m2))
     }
 }
 //#endregion 🔖️Payload

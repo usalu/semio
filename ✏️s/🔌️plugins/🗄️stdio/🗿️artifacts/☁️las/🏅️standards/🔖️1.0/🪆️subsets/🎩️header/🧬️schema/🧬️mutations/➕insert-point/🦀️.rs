@@ -25,7 +25,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for InsertPoint {
         agg_inverse(&LasMutation::InsertPoint(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-point", "Punkt einfügen")
+        protocol::LocalizedLabel::native("Insert point", "Punkt einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -7,6 +7,7 @@ import type { ShardBudget, ShardClient, ShardEventEnvelope, ShardInstanceLifecyc
 import type { PluginManifest } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import type { PluginRuntimeTestDependenciesV1, PluginWasmHandle, RetainedSurface, WireTurnResult, WireVariant } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
+import { cancelSpawnedJobV1, resetSpawnedJobsForTestsV1, spawnedJobsSnapshotV1 } from "../../🧱️elements/🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
 
 /** 🧩️ One packed text leaf of a paged text carrier: slice 0 in `value`, slices 1..32 as
  * `dataAttributes` keyed `01`..`32` — the exact node shape `section_text_chunks`
@@ -598,6 +599,57 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
               budgets.add(`${budget.fuel}/${budget.deadlineMs}`);
               return stepped < slicesBeforeTerminal ? { status: "running" } : { status: "done", value: new Uint8Array([9]) };
             },
+            cancel: (job) => { cancelled.push(job); },
+          },
+        });
+      });
+
+      // 🧵️ Ticket 26/09/18 session 11 U5: the task manager lists what the runtime is stepping. A driven job is in
+      // the ledger for exactly the lifetime of its drive, its row counts the admitted steps, and a human's cancel
+      // reaches the guest's OWN `cancel-job` once — the guest then answers `job.unknown`, which the drive delivers
+      // as the job's `job-completed` failure, and the row leaves with the drive.
+      it("lists a driven job in the task-manager ledger and routes a cancel to the guest's own cancel-job", async () => {
+        const { encodeAppFrame } = await import("@semio-tech/framework-os");
+        const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
+        const bytes = (value: unknown) => Array.from(encodePackValue(value));
+        resetSpawnedJobsForTestsV1();
+        const cancelled: bigint[] = [];
+        const submitted: ShardEventEnvelope[][] = [];
+        let instance = 0;
+        let released = false;
+        await withRequester(async (_actor, events) => {
+          submitted.push([...events]);
+          if (submitted.length > 1) return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+          return {
+            uiPatches: [],
+            effects: [
+              { tag: "spawn-job", val: { job: 13n, kind: "semio.puzzle3d.fill", input: new Uint8Array([2]), placement: { tag: "isolated" } } },
+              { tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: 0, output: bytes(fixture.response), diagnostics: bytes([]), ui_scope: bytes(fixture.completion.uiScope), history_patch: bytes(fixture.completion.historyPatch), messages: [], mutations: [], inverse_group: [] } })) } },
+            ],
+            nextWake: null,
+            status: { tag: "idle" },
+          };
+        }, async (handle, opened) => {
+          instance = opened;
+          await handle.captureExtensionCompletion!(instance, BigInt(fixture.requestIds[2]!)).complete({ ok: encodePackValue(fixture.response) });
+          for (let turn = 0; turn < 256 && (spawnedJobsSnapshotV1()[0]?.steps ?? 0) === 0; turn += 1) await new Promise(resolve => setTimeout(resolve, 5));
+          const [row] = spawnedJobsSnapshotV1();
+          expect(row).toMatchObject({ kind: "semio.puzzle3d.fill", job: 13n, cancelling: false });
+          expect(row!.steps).toBeGreaterThan(0);
+          expect(cancelSpawnedJobV1(row!.key)).toBe(true);
+          expect(spawnedJobsSnapshotV1()[0]?.cancelling).toBe(true);
+          for (let turn = 0; turn < 256 && cancelled.length === 0; turn += 1) await new Promise(resolve => setTimeout(resolve, 0));
+          expect(cancelled).toEqual([13n]);
+          released = true;
+          for (let turn = 0; turn < 1_024 && !submitted.some(events => events.some(event => event.kind === "job-completed")); turn += 1) await new Promise(resolve => setTimeout(resolve, 0));
+          const completion = submitted.flat().find(event => event.kind === "job-completed");
+          expect(completion?.payload).toMatchObject({ job: 13n, outcome: { tag: "fault" } });
+          for (let turn = 0; turn < 256 && spawnedJobsSnapshotV1().length > 0; turn += 1) await new Promise(resolve => setTimeout(resolve, 0));
+          expect(spawnedJobsSnapshotV1()).toEqual([]);
+          expect(cancelSpawnedJobV1(row!.key)).toBe(false);
+        }, {
+          jobs: {
+            step: () => (released ? { status: "failed", value: new TextEncoder().encode("job.unknown") } : { status: "running" }),
             cancel: (job) => { cancelled.push(job); },
           },
         });
@@ -3250,7 +3302,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       push({ instanceId, frames: [encodeAppFrame({ OperationCompleted: { operation: 9, revision: 3n, ui_scope: [], history_patch: Array.from(encodePackValue({ cursor: 2, upserts: [] })) } })] });
       for (let tick = 0; tick < 8 && seen.length === 0; tick += 1) await Promise.resolve();
       expect(seen).toHaveLength(1);
-      expect(seen[0]).toMatchObject({ instanceId, operation: 9, revision: 3, requestedEffects: [{ notify: { message: "done" } }] });
+      expect(seen[0]).toMatchObject({ instanceId, operation: 9, revision: 3n, requestedEffects: [{ notify: { message: "done" } }] });
       // 🧾️ The terminal value the operation published is the completion's own carrier — a job-routed
       // verb never drains it inside a host call, so without this field it was decoded and then dropped.
       expect(seen[0]).toMatchObject({ terminalOutput: { schema: "semio.space.home.directory-projection-receipt.v1", throughSeqInclusive: 8 } });

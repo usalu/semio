@@ -228,7 +228,7 @@ def rejected(code: str) -> Outcome:
 
 
 def no_op(code: str = "mutation.no-op") -> Outcome:
-    return Outcome("rejected", [{"level": "warning", "code": code}], diff())
+    return Outcome("no-op", [{"level": "warning", "code": code}], diff())
 
 
 def _find(items: list[dict], key: str, value: str) -> dict | None:

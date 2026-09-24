@@ -37,7 +37,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceS
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace stream \"{}\" source", self.id), &format!("Strom \"{}\" Quelle ersetzen", self.id))
+        protocol::LocalizedLabel::native(&format!("Replace stream \"{}\" source", self.id), &format!("Quelle von Datenstrom \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

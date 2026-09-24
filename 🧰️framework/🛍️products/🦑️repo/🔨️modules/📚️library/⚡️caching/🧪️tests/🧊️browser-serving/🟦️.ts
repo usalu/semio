@@ -29,7 +29,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string):
   try {
     for (const profile of fixture.profiles) {
       const app = join(root, profile), publicRoot = join(app, "public"), config = join(app, "⚙️vite.config.ts");
-      const roots = Object.fromEntries(["boot", "worker", "compiler", "modules", "extensions", "fonts"].map(name => [name, join(app, name)]));
+      const roots = Object.fromEntries(["boot", "worker", "compiler", "modules", "extensions"].map(name => [name, join(app, name)]));
       const reloadFile = join(roots.modules, "reload.json");
       for (const route of fixture.routes) { put(join(roots[route.root], route.file), route.content); put(join(publicRoot, decodeURI(route.url)), route.content); }
       const wasm = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);

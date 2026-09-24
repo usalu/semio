@@ -63,6 +63,6 @@ impl MutationKind<PublicationTransient, PublicationTransientMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change publication transient to {}", self.revision), &format!("transiente Veröffentlichung auf {} ändern", self.revision))
+        protocol::LocalizedLabel::native(&format!("Change publication transient to {}", self.revision), &format!("Transiente Veröffentlichung auf {} ändern", self.revision))
     }
 }

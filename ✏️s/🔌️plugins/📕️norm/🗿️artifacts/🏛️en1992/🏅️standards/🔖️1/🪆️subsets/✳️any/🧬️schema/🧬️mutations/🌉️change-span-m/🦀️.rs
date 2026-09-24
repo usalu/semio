@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeSpanM {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change span m to {:?}", self.new_span_m), &format!("Spannweitenm auf {:?} ändern", self.new_span_m))
+        protocol::LocalizedLabel::native(&format!("Change span [m] to {:?}", self.new_span_m), &format!("Stützweite [m] auf {:?} ändern", self.new_span_m))
     }
 }
 //#endregion 🔖️ChangeSpanM

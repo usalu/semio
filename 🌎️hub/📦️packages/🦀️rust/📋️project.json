@@ -9,6 +9,37 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/{🟦️.ts,🏗️staging/🟦️.ts}",
       "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
     ],
+    "hubSocketGrantCommandSources": [
+      "{workspaceRoot}/🌎️hub/🚀️local-relay/🧭️routing/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧭️decision/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/📋️native-law-plan/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs",
+      "{workspaceRoot}/🌎️hub/🧬️schema/🧱️socket-grant-command-source/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧫️fixtures/🧱️socket-grant-command-source/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📇️directory/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🌎️hub/📇️directory/🧫️fixtures/🔌️scoped-socket-revocation-v1/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🤝️integration-harness/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/🦀️.rs",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "{workspaceRoot}/🌎️hub/📇️directory/🧪️tests/🔬️unit/🦀️.rs",
+      "{workspaceRoot}/🌎️hub/📇️directory/🪶️sqlite/🧪️tests/🔬️unit/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️unit/🦀️.rs",
+      "{workspaceRoot}/🌎️hub/🏗️bootstrap/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
+      "{workspaceRoot}/.vscode/launch.json"
+    ],
     "hubFoundationSources": [
       "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🧬️schema/🛂️fixture-expectation/{🟦️.ts,🔣️.json}",
@@ -136,6 +167,7 @@
     },
     "test-all-features": {
       "executor": "nx:run-commands",
+      "dependsOn": [{ "projects": ["@semio-tech/gis-plugin"], "target": "component-release" }],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test all-features",
@@ -159,8 +191,23 @@
       },
       "outputs": []
     },
+    "socket-grant-command-source-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "hubSocketGrantCommandSources"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts socket-grant-command-source-check"
+      },
+      "outputs": []
+    },
     "socket-grant-check": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "hubSocketGrantCommandSources"
+      ],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts socket-grant-check"
@@ -760,12 +807,12 @@
       },
       "outputs": []
     },
-    "checkpoint-publication-check": {
+    "check-in-check": {
       "executor": "nx:run-commands",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts checkpoint-publication-check source"
+        "command": "bun ./📜️script.ts check-in-check source"
       },
       "outputs": []
     },
@@ -814,21 +861,21 @@
       },
       "outputs": []
     },
-    "checkpoint-publication-native-check": {
+    "check-in-native-check": {
       "executor": "nx:run-commands",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts checkpoint-publication-check native"
+        "command": "bun ./📜️script.ts check-in-check native"
       },
       "outputs": []
     },
-    "checkpoint-publication-process-check": {
+    "check-in-process-check": {
       "executor": "nx:run-commands",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts checkpoint-publication-check process"
+        "command": "bun ./📜️script.ts check-in-check process"
       },
       "outputs": []
     },

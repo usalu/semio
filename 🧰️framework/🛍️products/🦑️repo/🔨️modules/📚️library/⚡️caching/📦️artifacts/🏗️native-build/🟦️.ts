@@ -77,8 +77,76 @@ export function packageNativeRelease(options: { readonly binary: string; readonl
   return tarball;
 }
 
-/** 📦️ Captures Cargo's declared deliverables, including link dependencies, without copying compiler state. */
-export async function buildCargoArtifacts(manifest: string, args: string[] = [], repoRoot = getWorkspaceRoot(), options: { command?: "build" | "rustc"; output?: string; validate?: (files: ReadonlyMap<string, string>) => void } = {}): Promise<void> {
+/** 🪢️ The process a Cargo build belongs to, by pid. A launcher that builds on someone's behalf (the
+ * MCP gateway staging its own binary inside a client's `initialize`) names itself here, and the build
+ * stops the moment that owner is gone — killed by its client, timed out by a gate — instead of
+ * outliving it as an orphan that holds the shared build-dir locks. */
+export const CARGO_BUILD_OWNER_PID_ENV = "SEMIO_BUILD_OWNER_PID";
+
+/** 🪢️ Whether the owner named by {@link CARGO_BUILD_OWNER_PID_ENV} is still alive; `true` when none is named. */
+export function cargoBuildOwnerAliveV1(env: NodeJS.ProcessEnv = process.env): boolean {
+  const owner = Number(env[CARGO_BUILD_OWNER_PID_ENV] ?? "");
+  if (!Number.isSafeInteger(owner) || owner <= 0) return true;
+  try {
+    process.kill(owner, 0);
+    return true;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "EPERM";
+  }
+}
+
+/** 🧾️ Schema id of the sources record a staged Cargo executable can carry: every source file Cargo
+ * compiled it from (its own dep-info) and when the build that produced it started. */
+export const CARGO_BINARY_SOURCES_SCHEMA_V1 = "semio.cargo.binary-sources/v1";
+
+/** 🧾️ One staged executable's sources record. */
+export interface CargoBinarySourcesV1 {
+  readonly schema: typeof CARGO_BINARY_SOURCES_SCHEMA_V1;
+  readonly builtAtMs: number;
+  readonly sources: readonly string[];
+}
+
+/** 📜️ The source files a Cargo dep-info file (`<artifact>.d`) names for its target, with Cargo's
+ * `\ ` space escape undone. Only the first `target: deps` rule counts; the empty per-dependency
+ * rules Cargo appends after it carry nothing. */
+export function cargoDepInfoSourcesV1(text: string): readonly string[] {
+  const rule = text.split(/\r?\n/u).find((line) => line.includes(": ")) ?? "";
+  return rule
+    .slice(rule.indexOf(": ") + 2)
+    .split(/(?<!\\) /u)
+    .filter((entry) => entry.length > 0)
+    .map((entry) => entry.replace(/\\ /gu, " "));
+}
+
+/** 🧾️ Reads a sources record, answering `null` for anything that is not exactly one. */
+export function parseCargoBinarySourcesV1(text: string): CargoBinarySourcesV1 | null {
+  try {
+    const value = JSON.parse(text) as { schema?: unknown; builtAtMs?: unknown; sources?: unknown };
+    if (value.schema !== CARGO_BINARY_SOURCES_SCHEMA_V1 || typeof value.builtAtMs !== "number" || !Number.isFinite(value.builtAtMs) || !Array.isArray(value.sources) || value.sources.length === 0 || !value.sources.every((source) => typeof source === "string" && source.length > 0)) return null;
+    return { schema: CARGO_BINARY_SOURCES_SCHEMA_V1, builtAtMs: value.builtAtMs, sources: value.sources as string[] };
+  } catch {
+    return null;
+  }
+}
+
+/** 🕰️ Whether a staged executable is still what its sources build: every source it was compiled from
+ * still exists and none was modified after its build started — Cargo's own freshness rule, over the
+ * whole dependency closure rather than one crate. `modifiedAtMs` answers `null` for a missing file. A
+ * touched but unchanged file reads as `changed`, which costs a no-op Cargo build and never serves a
+ * stale binary. */
+export function cargoBinarySourcesFreshnessV1(record: CargoBinarySourcesV1, modifiedAtMs: (path: string) => number | null): { readonly fresh: boolean; readonly changed: string | null } {
+  for (const source of record.sources) {
+    const modified = modifiedAtMs(source);
+    if (modified === null || modified > record.builtAtMs) return { fresh: false, changed: source };
+  }
+  return { fresh: true, changed: null };
+}
+
+/** 📦️ Captures Cargo's declared deliverables, including link dependencies, without copying compiler state.
+ * `sourcesRecord` names a {@link CargoBinarySourcesV1} file staged beside the selected executable, in
+ * the same atomic publication, so a consumer can tell a stale executable from a fresh one without
+ * running Cargo. */
+export async function buildCargoArtifacts(manifest: string, args: string[] = [], repoRoot = getWorkspaceRoot(), options: { command?: "build" | "rustc"; output?: string; sourcesRecord?: string; validate?: (files: ReadonlyMap<string, string>) => void } = {}): Promise<void> {
   const path = resolve(repoRoot, manifest);
   const sourceRoot = dirname(path);
   const staging = resolve(sourceRoot, options.output ?? "dist/build");
@@ -90,11 +158,13 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
   const files = new Map<string, string>();
   const dependencies = new Map<string, string>();
   let hasLibrary = false;
+  let primaryExecutable: string | undefined;
   let cancelled = false;
   let forceKill: ReturnType<typeof setTimeout> | undefined;
   const delimiter = args.indexOf("--"),
     compilerArgs = delimiter < 0 ? [] : args.slice(delimiter),
     cargoArgs = delimiter < 0 ? args : args.slice(0, delimiter);
+  const builtAtMs = Date.now();
   const child = spawn("cargo", [options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], {
     cwd: repoRoot,
     env: { ...process.env, CARGO_TARGET_DIR: join(capture, "target") },
@@ -118,6 +188,12 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
     }
   };
   process.once("SIGINT", cancel);
+  const ownerWatch = setInterval(() => {
+    if (!cargoBuildOwnerAliveV1()) {
+      console.error(`[nx-native] the process this build belongs to (pid ${process.env[CARGO_BUILD_OWNER_PID_ENV]}) is gone — cancelling ${owner}`);
+      cancel();
+    }
+  }, 1_000);
   process.once("SIGTERM", cancel);
   const stopProgress = startNativeProgress(`artifact-rust:${owner}:build`);
   const status = new Promise<number>((accept) => {
@@ -151,6 +227,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
                   ? message.target?.kind?.includes("bin")
                   : true;
           const primary = selected && packageUrl !== undefined && packageUrl.startsWith("file:") && resolve(fileURLToPath(packageUrl)) === sourceRoot;
+          if (primary && typeof message.executable === "string") primaryExecutable = message.executable;
           for (const file of message.filenames ?? []) {
             if (file.endsWith(".d")) continue;
             const library = primary && file.endsWith(".rmeta") ? message.filenames.find((candidate: string) => candidate.endsWith(".rlib")) : undefined;
@@ -178,6 +255,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
     } finally {
       stopProgress();
       if (forceKill) clearTimeout(forceKill);
+      clearInterval(ownerWatch);
       process.removeListener("SIGINT", cancel);
       process.removeListener("SIGTERM", cancel);
     }
@@ -190,6 +268,14 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
         chmodSync(captured, lstatSync(file).mode & 0o777);
         files.set(name, captured);
       }
+    if (options.sourcesRecord !== undefined) {
+      if (primaryExecutable === undefined) throw new Error(`Cargo emitted no executable to record the sources of: ${owner}`);
+      const record: CargoBinarySourcesV1 = { schema: CARGO_BINARY_SOURCES_SCHEMA_V1, builtAtMs, sources: cargoDepInfoSourcesV1(readFileSync(`${primaryExecutable.replace(/\.exe$/u, "")}.d`, "utf8")) };
+      if (record.sources.length === 0) throw new Error(`Cargo dep-info names no sources for ${owner}`);
+      const captured = join(capture, options.sourcesRecord);
+      writeFileSync(captured, `${JSON.stringify(record)}\n`);
+      files.set(options.sourcesRecord, captured);
+    }
     options.validate?.(files);
     await stageArtifacts(staging, owner, files);
     console.log(`[nx-native] staged ${files.size} deliverables in ${relative(repoRoot, staging).split(sep).join("/")}`);

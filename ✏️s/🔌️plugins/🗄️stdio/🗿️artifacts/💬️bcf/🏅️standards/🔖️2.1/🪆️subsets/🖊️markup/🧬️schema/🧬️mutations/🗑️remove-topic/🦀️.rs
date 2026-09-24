@@ -21,7 +21,7 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for RemoveTopic {
         agg_inverse(&BcfMutation::RemoveTopic(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-topic", "Thema entfernen")
+        protocol::LocalizedLabel::native("Remove topic", "Thema entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

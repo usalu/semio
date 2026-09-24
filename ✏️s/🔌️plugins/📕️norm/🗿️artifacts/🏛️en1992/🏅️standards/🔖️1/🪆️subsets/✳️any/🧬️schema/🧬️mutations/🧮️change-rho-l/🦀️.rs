@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeRhoL {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change rho l to {:?}", self.new_rho_l), &format!("Rhol auf {:?} ändern", self.new_rho_l))
+        protocol::LocalizedLabel::native(&format!("Change longitudinal reinforcement ratio ρ_l to {:?}", self.new_rho_l), &format!("Längsbewehrungsgrad ρ_l auf {:?} ändern", self.new_rho_l))
     }
 }
 //#endregion 🔖️ChangeRhoL

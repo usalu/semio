@@ -22,7 +22,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetStyleBasedOn {
         agg_inverse(&DocxMutation::SetStyleBasedOn(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-style-based-on", "basierte Stil auf setzen")
+        protocol::LocalizedLabel::native("Set style based on", "Basis der Formatvorlage setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

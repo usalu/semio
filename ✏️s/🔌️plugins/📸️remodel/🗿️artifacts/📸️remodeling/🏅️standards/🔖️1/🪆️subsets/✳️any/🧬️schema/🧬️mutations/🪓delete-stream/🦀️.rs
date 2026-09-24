@@ -32,7 +32,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for DeleteSt
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete stream \"{}\"", self.id), &format!("Strom \"{}\" löschen", self.id))
+        protocol::LocalizedLabel::native(&format!("Delete stream \"{}\"", self.id), &format!("Datenstrom \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -31,7 +31,7 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for CreateSlot {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Create Slot", "Platz erstellen")
+        protocol::LocalizedLabel::native("Create Slot", "Slot erstellen")
     }
 }
 //#endregion 🔖️CreateSlot

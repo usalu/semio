@@ -12,6 +12,7 @@
     "test": "bun nx run @semio-tech/infinite-canvas-react-renderer:test"
   },
   "dependencies": {
+    "@semio-tech/framework": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"

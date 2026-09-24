@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeNCycles {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change number of fatigue cycles to {}", self.new_n_cycles), &format!("Nummer von Ermüdungszyklen auf {} ändern", self.new_n_cycles))
+        protocol::LocalizedLabel::native(&format!("Change number of fatigue cycles to {}", self.new_n_cycles), &format!("Anzahl der Lastwechsel auf {} ändern", self.new_n_cycles))
     }
 }
 //#endregion 🔖️ChangeNCycles

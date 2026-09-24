@@ -69,7 +69,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMeshExt
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Mesh Extra Data", "zusätzliche Netzdaten ändern")
+        protocol::LocalizedLabel::native("Change Mesh Extra Data", "Zusatzdaten des Netzes ändern")
     }
 
     fn target(&self) -> Vec<String> {

@@ -325,7 +325,7 @@ function generatorFixture(name: string): Fixture {
 //#region 💥️ChildControl
 const CHILD_SOURCE = `const [modulePath,planPath,repoRoot,ticketDir,baseline,resumeJournal,phase,marker,inject]=process.argv.slice(1);const {applyTaxonomyPlan}=await import(modulePath);const plan=JSON.parse(await Bun.file(planPath).text());applyTaxonomyPlan(plan,{repoRoot,ticketDir,expectedBaselineCommit:baseline,resumeJournal:resumeJournal||undefined,injectFailureAt:inject||undefined,progress:(row)=>{if(row.phase===phase){require("node:fs").writeFileSync(marker,"ready\\n");Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,30000);}}});`;
 
-function child(row: Fixture, value: TaxonomyPlan, phase: string, marker: string, resumeJournal = "", inject = "", env: NodeJS.ProcessEnv = {}): ChildProcess {
+function child(row: Fixture, value: TaxonomyPlan, phase: string, marker: string, resumeJournal = "", inject = "", env: Partial<NodeJS.ProcessEnv> = {}): ChildProcess {
   const planPath = writePlan(row, value);
   return registerChild(spawn(process.execPath, ["-e", CHILD_SOURCE, NORMALIZATION_MODULE, planPath, row.repoRoot, row.ticketDir, row.baselineCommit, resumeJournal, phase, marker, inject], { detached: process.platform !== "win32", env: { ...process.env, ...env }, stdio: ["ignore", "pipe", "pipe"] }));
 }

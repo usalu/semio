@@ -225,7 +225,14 @@ dyn_enum_close! {
     }
 }
 
-/// 🕳️ Hub's workflow set, while nothing drains its outbox into further commands.
+/// 🕳️ Hub's workflow set is empty by decision (ticket 26/09/23, slice H9), and the drain supervisor
+/// that runs over it stays: every event committed through the instance's `/commands` bus enqueues an
+/// outbox row in the same write, and the drain is that row's only retirement, so removing it would
+/// leave an ever-pending queue. The hub's cross-aggregate reactions — a removed member's live
+/// document, directory and presence sockets closing, a revoked author's Check In ending
+/// `authority-changed` — are deliberately NOT sagas: they must complete before the removal is
+/// acknowledged (under the directory's membership fence), and an eventually consistent saga would
+/// leave a revoked principal writing in the window between commit and drain.
 pub enum HubSagas {}
 
 impl server::authority::Saga for HubSagas {

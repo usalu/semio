@@ -155,7 +155,8 @@
           "capability": "pdf-1-7-vt-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "embed-font-file",
@@ -255,7 +256,8 @@
           "capability": "pdf-1-7-vt-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-dpart-metadata",
@@ -275,7 +277,8 @@
           "capability": "pdf-1-7-vt-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-dpart-root",
@@ -295,7 +298,8 @@
           "capability": "pdf-1-7-vt-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-encryption-dictionary",
@@ -315,7 +319,8 @@
           "capability": "pdf-1-7-vt-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-font-file",
@@ -335,7 +340,8 @@
           "capability": "pdf-1-7-vt-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-javascript-action",
@@ -355,7 +361,8 @@
           "capability": "pdf-1-7-vt-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-launch-action",
@@ -375,7 +382,8 @@
           "capability": "pdf-1-7-vt-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-media-annotation",
@@ -395,7 +403,8 @@
           "capability": "pdf-1-7-vt-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-output-intent",
@@ -415,7 +424,8 @@
           "capability": "pdf-1-7-vt-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-trim-box",
@@ -495,7 +505,8 @@
           "capability": "pdf-1-7-vt-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-trim-box",

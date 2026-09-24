@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAccidental
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change accidental impact speed to {:?}", self.new_accidental_speed_km_h), &format!("außergewöhnliche Anprallgeschwindigkeit auf {:?} ändern", self.new_accidental_speed_km_h))
+        protocol::LocalizedLabel::native(&format!("Change accidental impact speed to {:?}", self.new_accidental_speed_km_h), &format!("Geschwindigkeit beim außergewöhnlichen Anprall auf {:?} ändern", self.new_accidental_speed_km_h))
     }
 }
 //#endregion 🔖️Payload

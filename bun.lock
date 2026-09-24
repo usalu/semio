@@ -1086,6 +1086,7 @@
       "dependencies": {
         "@react-three/drei": "^10.7.7",
         "@react-three/fiber": "^9.4.2",
+        "@semio-tech/framework": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
         "react": "^19.2.3",
@@ -1106,6 +1107,7 @@
       "name": "@semio-tech/infinite-canvas-react-renderer",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/framework": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",

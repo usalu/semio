@@ -13,7 +13,7 @@
     "codecCountMaxPlusOne": 16385
   },
   "bundle": {
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "profiles": [
       {
         "id": "fixture",
@@ -58,6 +58,7 @@
           "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
           "blake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"
         },
+        "pluginModule": { "path": "plugin-module-fixture.editor.json", "byteLength": 1, "sha256": "5151515151515151515151515151515151515151515151515151515151515151", "blake3": "6161616161616161616161616161616161616161616161616161616161616161" },
         "descriptor": {
           "path": "descriptors/editor.descriptor.semio",
           "byteLength": 1,
@@ -119,6 +120,7 @@
           "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
           "blake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"
         },
+        "pluginModule": { "path": "plugin-module-fixture.base.json", "byteLength": 1, "sha256": "5252525252525252525252525252525252525252525252525252525252525252", "blake3": "6262626262626262626262626262626262626262626262626262626262626262" },
         "descriptor": {
           "path": "descriptors/base.descriptor.semio",
           "byteLength": 1,

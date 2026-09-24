@@ -9,7 +9,7 @@
  * per wasm module per worker — one-worker-per-plugin capped the browser at ~20 plugins; this is the
  * change that lifts that ceiling. */
 import { spawn } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
 import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
@@ -88,6 +88,25 @@ export type PluginWebMaterializeContext = {
   readonly optimize?: boolean;
   readonly wasmOptBin?: string;
 };
+
+/** 🔤️ The staged typst font seed `semio-framework-os-infinite:fonts` publishes — the one source of the
+ * `🪞️vendor` font asset every plugin-module root (dev and release) serves. */
+export function guestSlimTypstFontSeed(repoRoot: string): string {
+  return join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "♾️infinite", "📦️packages", "🦀️rust", "dist", "fonts", "🔤️guestslim-typst-fonts.bin");
+}
+
+/** 🫙️ Places `🪞️vendor/🔤️guestslim-typst-fonts.bin` in one plugin-module root from the staged seed — the
+ * asset plugin workers' typst text path and the wgpu serve's readiness check read, for either profile.
+ * `false` when no seed is staged yet; the caller decides whether it can build one. */
+export function ensureGuestSlimTypstFontsAt(moduleRoot: string, repoRoot: string): boolean {
+  const out = join(moduleRoot, GUESTSLIM_FONT_RELATIVE);
+  if (existsSync(out) && statSync(out).size > 0) return true;
+  const seed = guestSlimTypstFontSeed(repoRoot);
+  if (!existsSync(seed) || statSync(seed).size === 0) return false;
+  mkdirSync(dirname(out), { recursive: true });
+  copyFileSync(seed, out);
+  return true;
+}
 
 export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: string): void {
   const distDir = join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser");

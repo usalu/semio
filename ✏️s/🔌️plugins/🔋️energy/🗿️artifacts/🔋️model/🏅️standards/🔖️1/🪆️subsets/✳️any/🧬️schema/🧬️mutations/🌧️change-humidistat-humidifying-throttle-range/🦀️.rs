@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change humidistat {} humidifying throttle range to {:?}", self.id.0, self.new_humidifying_throttle_range), &format!("Feuchteregler {} befeuchtende Drosselbereich auf {:?} ändern", self.id.0, self.new_humidifying_throttle_range))
+        protocol::LocalizedLabel::native(&format!("Change humidistat {} humidifying throttle range to {:?}", self.id.0, self.new_humidifying_throttle_range), &format!("Befeuchtungs-Proportionalbereich von Feuchteregler {} auf {:?} ändern", self.id.0, self.new_humidifying_throttle_range))
     }
 
     fn target(&self) -> Vec<String> {

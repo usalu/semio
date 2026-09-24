@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceStorageRequiremen
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace storage requirement \"{}\"", self.storage_requirement.header.name), &format!("Speicheranforderung \"{}\" ersetzen", self.storage_requirement.header.name))
+        protocol::LocalizedLabel::native(&format!("Replace storage requirement \"{}\"", self.storage_requirement.header.name), &format!("Stauraumanforderung \"{}\" ersetzen", self.storage_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.storage_requirement.header.id.0.clone()]

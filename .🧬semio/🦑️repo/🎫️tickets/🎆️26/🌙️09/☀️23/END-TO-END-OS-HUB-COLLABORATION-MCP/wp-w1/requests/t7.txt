@@ -1,0 +1,10 @@
+T7 request 1 (2026-09-24): describe + guest rebuild (native tests green, see .tmp-ticket/📓️wp-t7.md):
+  stdio      — new subset s.stdio.json@rfc8259/geojson (composer + subset validator; artifact-definition runtime rows added),
+               svg writer now writes a layer root group's transform, dwg geometry→path mapping gained LINE/ARC/ELLIPSE/POLYLINE3D + OCS mirror.
+  gis        — gismap GeoJSON import/export leaves + composer row + capability "s.gis.gismap.composer.geojson"; artifact_kind() now reads the io kind lists.
+  procedural — generation2d bundled demo is now a draw.shape.rect → draw.style.stroke program; depends-on gained "flow-extension-draw"
+               (the served guest needs the draw extension staged); output-drawing selection for drawing:out and page exports.
+  raster     — dwg import goes through stdio's shared drawing←dwg bridge (all decode_dwg versions).
+  draw       — editor/viewer declare child_restore_projection; mutation-arena borrow yields on NotReady/Contended.
+  framework  — 🔌️plugin: a cancelled Ready envelope decode polls Cancelled; 🌊️flow bridge: live drawing handles by draw.drawing schema.
+  Every guest linking semio-framework-plugin / semio-framework-os-flow is affected by the two framework edits.

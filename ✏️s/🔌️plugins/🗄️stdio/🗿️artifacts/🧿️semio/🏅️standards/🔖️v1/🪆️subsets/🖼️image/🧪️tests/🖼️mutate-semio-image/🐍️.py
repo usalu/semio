@@ -63,22 +63,6 @@ COLORSPACE_ORDER = ("rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed")
 COLORSPACE_LETTER = {"rgb": "r", "rgba": "a", "grayscale": "g", "grayscaleAlpha": "y", "indexed": "i"}
 LETTER_COLORSPACE = {letter: name for name, letter in COLORSPACE_LETTER.items()}
 
-KINDS = (
-    "no-mutation",
-    "set-snapshot",
-    "set-dimensions",
-    "set-colorspace",
-    "set-bit-depth",
-    "set-icc",
-    "insert-frame",
-    "remove-frame",
-    "move-frame",
-    "set-frame-delay",
-    "set-frame-pixels",
-    "set-metadata-entry",
-    "remove-metadata-entry",
-)
-
 ARTIFACT_DSL = "shared://🖼️mutate-semio-image/🗣️.dsl.semio"
 ARTIFACT_PACK = "shared://🖼️mutate-semio-image/🎒️.pack.semio"
 
@@ -667,11 +651,10 @@ def identity_round_trip(ctx: Context) -> Outcome:
 
 # region 🔖️Registration
 def adapter() -> Adapter:
-    """🧭️ Registration entry point the Python host calls, keyed by FULL expanded scenario id."""
-    built = Adapter("python")
-    for kind in KINDS:
-        built = built.oracle("mutate-%s" % kind, mutate).oracle("inverse-%s" % kind, inverse).oracle("spec-vector-%s" % kind, spec_vector)
-    return built.oracle("identity-round-trip", identity_round_trip)
+    """🧭️ Registration entry point the Python host calls. Handlers are registered under the Scenario
+    Outline base ids, which the host resolves for every Examples row, and plain scenarios under their
+    own ids."""
+    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

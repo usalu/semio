@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateColdFormed
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-1-3 cold-formed section inputs", "EN 1993-1-3 kalt-geformte Abschnitteingaben aktualisieren")
+        protocol::LocalizedLabel::native("Update EN 1993-1-3 cold-formed section inputs", "EN 1993-1-3 Eingaben für kaltgeformte Querschnitte aktualisieren")
     }
 }
 //#endregion 🔖️Payload

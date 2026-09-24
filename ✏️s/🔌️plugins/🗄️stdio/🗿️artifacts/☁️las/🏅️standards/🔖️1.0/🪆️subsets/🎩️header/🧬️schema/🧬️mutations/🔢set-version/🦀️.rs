@@ -25,7 +25,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetVersion {
         agg_inverse(&LasMutation::SetVersion(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-version", "Version setzen")
+        protocol::LocalizedLabel::native("Set version", "Version setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

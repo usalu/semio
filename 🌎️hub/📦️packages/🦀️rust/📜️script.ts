@@ -2,7 +2,7 @@
 import { createHash, randomBytes, timingSafeEqual, webcrypto } from "node:crypto";
 import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, writeSync, type Stats , cpSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import type { Duplex } from "node:stream";
 import Ajv from "ajv";
 import { requireMcpBinary } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
@@ -35,8 +35,10 @@ import {
   DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1,
   type DocumentExecutionProtocolV1,
   type ArtifactFrontier,
-  CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES,
-  parseCheckpointPublicationCommandV1,
+  documentCheckInCanonicalJson,
+  parseDocumentCheckInStatusV1,
+  parseDocumentCheckInV1,
+  type DocumentCheckInStatusV1,
   parseDocumentOpenIntentV1,
   parseDocumentOpenPlanV1,
   parseDocumentPlanSocketGrantIntentV1,
@@ -70,6 +72,9 @@ import { produceFreshComponentV1, testFreshComponentStagingV1, testFreshComponen
 import { type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
 import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
 import { buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
+import { ensureGuestSlimTypstFontsAt, ensurePreview2ShimVendorAt, hostShimSource, PLUGIN_HOST_SHIM_FILE, PREVIEW2_VENDOR_RELATIVE, pluginComponentBridgeSource, transpilePluginComponentAsync } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
+import { MODULE_BRIDGE_FILE, moduleDirectoryName } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { decodeTrustedPluginModuleBundleV1, encodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_SCHEMA, utf8OrderV1, type TrustedPluginModuleBundleV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
 import { proveGisComponentColdMapPatch } from "../../../✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
 /** 🌎️ `os-hub` router: `bun ./📜️script.ts <setup|build|test|dev>`. */
 import {
@@ -85,6 +90,7 @@ import {
   runCmd,
   runProbe,
   spawnDaemon,
+  terminateOwnedChildTree,
   buildBudgetMs,
   orchestratorBudgetOpts,
   resolveTestLevel,
@@ -103,10 +109,10 @@ import { LocalRelayRoutingScript } from "../../🚀️local-relay/🧭️routing
 import { proveScopedDirectorySocketRevocationFixture } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts";
 import { SocketGrantCheckScript } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts";
 import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelaySpaceArtifactCreationPath, localRelayUpstreamPath } from "../../🚀️local-relay/🧭️routing/🟦️.ts";
-import { issueLocalCredential } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
+import { issueLocalCredential, type LocalSessionBrokerV1, parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1, startLocalSessionBroker } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type LocalProfile, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
-import { finishLocalHub, freeLoopbackPort, HUB_DEV_BINARY_TARGET, hubBinaryPath, hubDevBinaryPath, hubDevPostgresBinaryPath, LOCAL_READINESS_STALL_BOUND_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { finishLocalHub, freeLoopbackPort, HUB_DEV_BINARY_TARGET, hubBinaryPath, hubDevBinaryPath, hubDevPostgresBinaryPath, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, LOCAL_HUB_DEVELOPMENT_PROFILES, LOCAL_READINESS_STALL_BOUND_MS, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 
 //#region 🧱️SourceGateRunners
@@ -708,57 +714,50 @@ async function startMcpWorkspaceChild(
   return { child, spaceId, documentId };
 }
 
-type CheckpointPublicationProcessFixtureV1 = {
-  readonly schema: "semio.hub.checkpoint-publication-process-fixture/v1";
+/** 🧫️ One real GIS Map ledger edit as the native fixture emitted it: the envelopes a replica's store
+ * produced for that edit, in causal order, with their operation payloads. */
+type CheckInProcessEnvelopeV1 = {
+  readonly mutationId: string;
+  readonly dependencies: readonly string[];
+  readonly diffSchema: string;
+  readonly diff: string;
+  readonly inverseSchema: string;
+  readonly inverse: string;
+};
+
+type CheckInProcessFixtureV1 = {
+  readonly schema: "semio.hub.check-in-process-fixture/v1";
   readonly profileId: string;
   readonly generationId: string;
   readonly documentId: string;
-  readonly mutationId: string;
   readonly package: { readonly pluginId: string; readonly packageId: string; readonly version: string; readonly componentSha256: string };
   readonly artifact: { readonly kind: "s.gis.gismap"; readonly schema: "gis.map"; readonly packSchemaHash: string };
   readonly surfaceId: string;
-  readonly payload: {
-    readonly pack: { readonly path: string; readonly byteLength: number; readonly sha256: string };
-    readonly spr: { readonly path: string; readonly byteLength: number; readonly sha256: string };
-    readonly diff: { readonly path: string; readonly schema: "db.pathmap.v1" };
-    readonly inverse: { readonly path: string; readonly schema: "db.pathmap.v1" };
-  };
+  readonly payload: { readonly envelopes: { readonly path: string; readonly count: number; readonly sha256: string } };
 };
 
-function checkpointPublicationProcessFixture(): { readonly root: string; readonly fixture: CheckpointPublicationProcessFixtureV1; readonly pack: Buffer<ArrayBuffer>; readonly spr: Buffer<ArrayBuffer>; readonly diff: Buffer<ArrayBuffer>; readonly inverse: Buffer<ArrayBuffer> } {
+function checkInProcessFixture(): { readonly root: string; readonly fixture: CheckInProcessFixtureV1; readonly envelopes: readonly CheckInProcessEnvelopeV1[] } {
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  if (!artifactRoot) throw new Error("checkpoint publication process requires its ticket-owned artifact root");
-  const root = join(resolve(artifactRoot), "checkpoint-publication-process-fixture");
-  const fixture = JSON.parse(readFileSync(join(root, "fixture.json"), "utf8")) as CheckpointPublicationProcessFixtureV1;
+  if (!artifactRoot) throw new Error("check-in process requires its ticket-owned artifact root");
+  const root = join(resolve(artifactRoot), "check-in-process-fixture");
+  const fixture = JSON.parse(readFileSync(join(root, "fixture.json"), "utf8")) as CheckInProcessFixtureV1;
   if (
-    fixture.schema !== "semio.hub.checkpoint-publication-process-fixture/v1" ||
+    fixture.schema !== "semio.hub.check-in-process-fixture/v1" ||
     fixture.profileId !== "gis-map-integration-fixtures" ||
     !/^[0-9a-f]{64}$/u.test(fixture.generationId) ||
     fixture.artifact.kind !== "s.gis.gismap" ||
     fixture.artifact.schema !== "gis.map" ||
-    !/^[0-9a-f]{64}$/u.test(fixture.artifact.packSchemaHash) ||
-    fixture.payload.diff.schema !== "db.pathmap.v1" ||
-    fixture.payload.inverse.schema !== "db.pathmap.v1"
+    !/^[0-9a-f]{64}$/u.test(fixture.artifact.packSchemaHash)
   )
-    throw new Error("checkpoint publication process fixture identity is invalid");
-  const readPayload = (part: "pack" | "spr" | "diff" | "inverse"): Buffer<ArrayBuffer> => {
-    const record = fixture.payload[part];
-    const path = resolve(root, record.path);
-    if (relative(root, path).startsWith("..")) throw new Error(`checkpoint publication ${part} escaped its fixture root`);
-    return Buffer.from(readFileSync(path));
-  };
-  const pack = readPayload("pack");
-  const spr = readPayload("spr");
-  const diff = readPayload("diff");
-  const inverse = readPayload("inverse");
-  for (const [name, bytes, record] of [
-    ["pack", pack, fixture.payload.pack],
-    ["spr", spr, fixture.payload.spr],
-  ] as const) {
-    if (bytes.byteLength !== record.byteLength || createHash("sha256").update(bytes).digest("hex") !== record.sha256) throw new Error(`checkpoint publication ${name} fixture bytes differ from their native receipt`);
-  }
-  if (pack.byteLength + spr.byteLength > CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES) throw new Error("checkpoint publication process fixture pair exceeds the public command bound");
-  return { root, fixture, pack, spr, diff, inverse };
+    throw new Error("check-in process fixture identity is invalid");
+  const path = resolve(root, fixture.payload.envelopes.path);
+  if (relative(root, path).startsWith("..")) throw new Error("check-in process envelopes escaped their fixture root");
+  const bytes = readFileSync(path);
+  if (createHash("sha256").update(bytes).digest("hex") !== fixture.payload.envelopes.sha256) throw new Error("check-in process envelopes differ from their native receipt");
+  const envelopes = JSON.parse(bytes.toString("utf8")) as CheckInProcessEnvelopeV1[];
+  if (!Array.isArray(envelopes) || envelopes.length !== fixture.payload.envelopes.count || envelopes.some((envelope) => envelope.diffSchema !== fixture.artifact.schema || envelope.inverseSchema !== fixture.artifact.schema))
+    throw new Error("check-in process envelopes are not the fixture's GIS Map ledger edit");
+  return { root, fixture, envelopes: Object.freeze(envelopes) };
 }
 
 async function startMcpBoundWorkspaceChild(repoRoot: string, run: LocalHubRun, envelope: Record<string, any>, spaceId: string, environmentSource: NodeJS.ProcessEnv): Promise<ChildProcess> {
@@ -767,21 +766,21 @@ async function startMcpBoundWorkspaceChild(repoRoot: string, run: LocalHubRun, e
   return deliverCredentialEnvelopeToChild(executable, ["stdio", "--hub", `http://127.0.0.1:${run.port}`, "--space", spaceId], structuredClone(envelope), "mcp", `http://127.0.0.1:${run.port}`, environmentSource);
 }
 
-async function waitForCheckpointSocketFrame<T>(socket: WebSocket, frames: readonly Record<string, any>[], select: (frame: Record<string, any>) => T | undefined, label: string, after = 0): Promise<T> {
+async function waitForDocumentSocketFrame<T>(socket: WebSocket, frames: readonly Record<string, any>[], select: (frame: Record<string, any>) => T | undefined, label: string, after = 0): Promise<T> {
   const deadline = Date.now() + 10_000;
   for (;;) {
     for (let index = after; index < frames.length; index++) {
       const selected = select(frames[index]!);
       if (selected !== undefined) return selected;
     }
-    if (socket.readyState >= WebSocket.CLOSING) throw new Error(`checkpoint publication socket closed before ${label}`);
-    if (Date.now() >= deadline) throw new Error(`checkpoint publication socket ${label} deadline exceeded`);
+    if (socket.readyState >= WebSocket.CLOSING) throw new Error(`document socket closed before ${label}`);
+    if (Date.now() >= deadline) throw new Error(`document socket ${label} deadline exceeded`);
     await Bun.sleep(20);
   }
 }
 
 /** 🌱️ Creates the initial canonical pair through the retained server-owned creation transaction. */
-async function createCheckpointPublicationProcessGenesis(run: LocalHubRun, capability: string, spaceId: string, fixture: CheckpointPublicationProcessFixtureV1): Promise<CheckpointPublicationProcessFixtureV1> {
+async function createCheckInProcessGenesis(run: LocalHubRun, capability: string, spaceId: string, fixture: CheckInProcessFixtureV1): Promise<CheckInProcessFixtureV1> {
   const request = sealSpaceArtifactCreateV1({
     requestId: randomBytes(16).toString("hex"),
     expectedCatalogGenerationId: fixture.generationId,
@@ -801,42 +800,43 @@ async function createCheckpointPublicationProcessGenesis(run: LocalHubRun, capab
     status.requestId !== request.requestId ||
     status.spaceId !== spaceId ||
     status.catalogGenerationId !== request.expectedCatalogGenerationId
-  ) throw new Error(`checkpoint process genesis was not durably accepted: ${accepted.status}`);
+  ) throw new Error(`check-in process genesis was not durably accepted: ${accepted.status}`);
   const deadline = Date.now() + 120_000;
   while (status.phase !== "ready") {
-    if (!["accepted", "preparing", "indeterminate"].includes(status.phase) || Date.now() >= deadline) throw new Error(`checkpoint process genesis reached ${status.phase} before Ready`);
+    if (!["accepted", "preparing", "indeterminate"].includes(status.phase) || Date.now() >= deadline) throw new Error(`check-in process genesis reached ${status.phase} before Ready`);
     await Bun.sleep(10);
     const response = await fetch(`http://127.0.0.1:${run.port}${route}/${encodeURIComponent(request.requestId)}`, { headers: { authorization: `Bearer ${capability}` }, signal: AbortSignal.timeout(5_000) });
     status = parseSpaceArtifactCreationStatusJsonV1(await response.text());
-    if (response.status !== 200 && response.status !== 202) throw new Error(`checkpoint process genesis status failed: ${response.status}`);
-    if (status.catalogGenerationId !== request.expectedCatalogGenerationId) throw new Error("checkpoint process genesis status crossed its selected catalog generation");
+    if (response.status !== 200 && response.status !== 202) throw new Error(`check-in process genesis status failed: ${response.status}`);
+    if (status.catalogGenerationId !== request.expectedCatalogGenerationId) throw new Error("check-in process genesis status crossed its selected catalog generation");
   }
   if (
     status.ready?.kindId !== fixture.artifact.kind ||
     status.ready.artifactSchema !== fixture.artifact.schema ||
     status.ready.parentDialect.artifactKind !== fixture.artifact.kind ||
     !/^artifact-[0-9a-f]{32}$/u.test(status.ready.artifactId)
-  ) throw new Error("checkpoint process genesis Ready coordinates differ from the selected GIS target");
+  ) throw new Error("check-in process genesis Ready coordinates differ from the selected GIS target");
   return Object.freeze({ ...fixture, documentId: status.ready.artifactId });
 }
 
-async function commitCheckpointPublicationProcessMutation(
+/** ✍️ Commits the fixture's real GIS Map ledger edit through an authenticated document socket and
+ * returns the committed head the hub acknowledged — the head a Check In then names. */
+async function commitCheckInProcessEdit(
   run: LocalHubRun,
   capability: string,
   spaceId: string,
-  fixture: CheckpointPublicationProcessFixtureV1,
-  diff: Buffer,
-  inverse: Buffer,
+  fixture: CheckInProcessFixtureV1,
+  envelopes: readonly CheckInProcessEnvelopeV1[],
 ): Promise<{ readonly plan: ReturnType<typeof parseDocumentOpenPlanV1>; readonly frontier: WireFrontierSummary }> {
   const documentRoot = `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(fixture.documentId)}`;
   const planResponse = await fetch(`http://127.0.0.1:${run.port}${documentRoot}/open-plan`, {
     method: "POST",
     headers: { authorization: `Bearer ${capability}`, "content-type": "application/json" },
-    body: JSON.stringify({ schema: "semio.hub.document-open-intent/v1", version: 1, scope: { spaceId, documentId: fixture.documentId }, requestedSurfaceId: fixture.surfaceId, clientInstanceId: "checkpoint-publication-process" }),
+    body: JSON.stringify({ schema: "semio.hub.document-open-intent/v1", version: 1, scope: { spaceId, documentId: fixture.documentId }, requestedSurfaceId: fixture.surfaceId, clientInstanceId: "check-in-process" }),
     signal: AbortSignal.timeout(5_000),
   });
   const plan = parseDocumentOpenPlanV1(await planResponse.json().catch(() => undefined), Date.now());
-  if (!planResponse.ok || plan.scope.spaceId !== spaceId || plan.scope.documentId !== fixture.documentId || plan.catalog.generationId !== fixture.generationId) throw new Error("checkpoint publication process received a substituted GIS Map plan");
+  if (!planResponse.ok || plan.scope.spaceId !== spaceId || plan.scope.documentId !== fixture.documentId || plan.catalog.generationId !== fixture.generationId) throw new Error("check-in process received a substituted GIS Map plan");
   const grantIntent = parseDocumentPlanSocketGrantIntentV1({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: plan.receipt });
   const grantResponse = await fetch(`http://127.0.0.1:${run.port}${documentRoot}/socket-grants`, {
     method: "POST",
@@ -845,7 +845,7 @@ async function commitCheckpointPublicationProcessMutation(
     signal: AbortSignal.timeout(5_000),
   });
   const grant = parseDocumentSocketGrantReceiptV1(await grantResponse.json().catch(() => undefined));
-  if (!grantResponse.ok) throw new Error(`checkpoint publication socket grant failed: ${grantResponse.status}`);
+  if (!grantResponse.ok) throw new Error(`check-in process socket grant failed: ${grantResponse.status}`);
   const scope = `${spaceId}/${fixture.documentId}`;
   const socket = new WebSocket(`ws://127.0.0.1:${run.port}/scopes/${encodeURIComponent(scope)}/document/ws?surface=${encodeURIComponent(fixture.surfaceId)}`, ["semio.session.v1", capability]);
   socket.binaryType = "arraybuffer";
@@ -863,36 +863,38 @@ async function commitCheckpointPublicationProcessMutation(
   };
   try {
     await new Promise<void>((resolveOpen, rejectOpen) => {
-      const timer = setTimeout(() => rejectOpen(new Error("checkpoint publication socket open deadline exceeded")), 5_000);
+      const timer = setTimeout(() => rejectOpen(new Error("check-in process socket open deadline exceeded")), 5_000);
       socket.onopen = () => {
         clearTimeout(timer);
         resolveOpen();
       };
     });
-    if (socket.protocol !== grant.protocol) throw new Error("checkpoint publication socket did not negotiate its exact protocol");
+    if (socket.protocol !== grant.protocol) throw new Error("check-in process socket did not negotiate its exact protocol");
     const packSchemaHash = Buffer.from(fixture.artifact.packSchemaHash, "hex");
     socket.send(encodeClientFrame({ SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: fixture.artifact.schema, pack_schema_hash: Array.from(packSchemaHash), resume_token: null, frontier: null } }, "command"));
-    await waitForCheckpointSocketFrame(socket, frames, (frame) => ("Welcome" in frame ? frame.Welcome : undefined), "Welcome");
-    await waitForCheckpointSocketFrame(socket, frames, (frame) => ("Session" in frame && frame.Session.actor === grant.actorId ? frame.Session : undefined), "verified Session actor");
+    await waitForDocumentSocketFrame(socket, frames, (frame) => ("Welcome" in frame ? frame.Welcome : undefined), "Welcome");
+    await waitForDocumentSocketFrame(socket, frames, (frame) => ("Session" in frame && frame.Session.actor === grant.actorId ? frame.Session : undefined), "verified Session actor");
     if (socketError) throw socketError;
     const documentId = `v1:${Buffer.byteLength(spaceId)}:${Buffer.byteLength(fixture.documentId)}:${spaceId}${fixture.documentId}`;
-    const envelope: WireMutationEnvelope = {
-      mutation_id: fixture.mutationId,
+    const physicalMs = Date.now();
+    const wire: WireMutationEnvelope[] = envelopes.map((envelope, index) => ({
+      mutation_id: envelope.mutationId,
       document_id: documentId,
       actor: grant.actorId,
-      dependencies: [],
-      diff: { schema: fixture.payload.diff.schema, payload: Array.from(diff) },
-      inverse: { schema: fixture.payload.inverse.schema, payload: Array.from(inverse) },
-      timestamp: { actor: 1, physical_ms: Date.now(), logical: 1 },
-    };
-    socket.send(encodeClientFrame({ Commands: { batch_id: 1, envelopes: [envelope] } }, "command"));
-    const ack = await waitForCheckpointSocketFrame(socket, frames, (frame) => ("Ack" in frame && frame.Ack.batch_id === 1 ? frame.Ack : undefined), "persisted command acknowledgement");
+      dependencies: [...envelope.dependencies],
+      diff: { schema: envelope.diffSchema, payload: Array.from(Buffer.from(envelope.diff, "base64")) },
+      inverse: { schema: envelope.inverseSchema, payload: Array.from(Buffer.from(envelope.inverse, "base64")) },
+      timestamp: { actor: 1, physical_ms: physicalMs, logical: index + 1 },
+    }));
+    socket.send(encodeClientFrame({ Commands: { batch_id: 1, envelopes: wire } }, "command"));
+    const ack = await waitForDocumentSocketFrame(socket, frames, (frame) => ("Ack" in frame && frame.Ack.batch_id === 1 ? frame.Ack : undefined), "persisted command acknowledgement");
     const accepted = ack.stages.some((stage: any) => stage === "Persisted") && ack.stages.some((stage: any) => stage?.Applied?.outcome === "Accepted");
-    if (!accepted || ack.frontier.head_edit_id !== fixture.mutationId || ack.frontier.head_edit_ordinal !== 1 || ack.frontier.last_commit_seq !== 1)
-      throw new Error("checkpoint publication process mutation was not durably accepted at its exact first frontier");
+    const tip = envelopes[envelopes.length - 1]!.mutationId;
+    if (!accepted || ack.frontier.head_edit_id !== tip || ack.frontier.head_edit_ordinal !== envelopes.length || ack.frontier.last_commit_seq !== 1)
+      throw new Error("check-in process edit was not durably accepted at its exact first frontier");
     return { plan, frontier: ack.frontier as WireFrontierSummary };
   } finally {
-    if (socket.readyState < WebSocket.CLOSING) socket.close(1000, "checkpoint published from durable frontier");
+    if (socket.readyState < WebSocket.CLOSING) socket.close(1000, "edit committed");
   }
 }
 
@@ -914,79 +916,39 @@ async function waitForJsonRpcResponse(child: ChildProcess, chunks: readonly Buff
   }
 }
 
-type CheckpointPublicationProcessResultV1 = Readonly<{ command: ReturnType<typeof parseCheckpointPublicationCommandV1>; receipt: Record<string, any> }>;
-
-/** 📦️ Uploads and publishes one receipt-bound pair through the public Hub command, including exact lost-response replay. */
-async function publishCheckpointPublicationProcessPairV1(
-  run: LocalHubRun,
-  capability: string,
-  spaceId: string,
-  fixture: CheckpointPublicationProcessFixtureV1,
-  plan: ReturnType<typeof parseDocumentOpenPlanV1>,
-  frontier: WireFrontierSummary,
-  pack: Buffer<ArrayBuffer>,
-  spr: Buffer<ArrayBuffer>,
-): Promise<CheckpointPublicationProcessResultV1> {
+/** 📌️ Checks in one acknowledged head through the hub's Check In command and follows its status to
+ * `ready`, then proves a lost-response retry of the same request answers the identical checkpoint. */
+async function checkInProcessHeadV1(run: LocalHubRun, capability: string, spaceId: string, documentId: string, frontier: WireFrontierSummary): Promise<DocumentCheckInStatusV1> {
   const chainSha256 = Buffer.from(frontier.chain_hash).toString("hex");
-  if (!/^[0-9a-f]{64}$/u.test(chainSha256)) throw new Error("checkpoint publication process actor returned an invalid chain hash");
-  const current = plan.checkpoint;
-  if (!current) throw new Error("checkpoint publication process requires the current verified checkpoint");
-  const expectedCurrent = artifactFrontierIsGenesisForV1(plan.scope, current.baselineFrontier)
-    ? { state: "genesis" as const, checkpointId: current.checkpointId }
-    : { state: "active" as const, checkpointId: current.checkpointId, baselineFrontier: structuredClone(current.baselineFrontier) };
-  for (const [bytes, record] of [
-    [pack, fixture.payload.pack],
-    [spr, fixture.payload.spr],
-  ] as const) {
-    const response = await fetch(`http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/blobs/${blake3Hex(new Uint8Array(bytes))}`, {
-      method: "PUT",
-      headers: { authorization: `Bearer ${capability}`, "content-type": "application/octet-stream" },
-      body: bytes,
-      signal: AbortSignal.timeout(5_000),
-    });
-    if (!response.ok) throw new Error(`checkpoint publication process blob upload failed: ${response.status}`);
-  }
-  const command = parseCheckpointPublicationCommandV1(
-    JSON.stringify({
-      schema: "semio.hub.checkpoint-publication-command/v1",
-      correlationId: randomBytes(16).toString("hex"),
-      descriptorDigestV1: plan.descriptorDigestV1,
-      expectedDocumentFrontier: { headSeq: frontier.head_edit_ordinal, commitSeq: frontier.last_commit_seq, epoch: 0 },
-      expectedCurrent,
-      baselineFrontier: { documentId: fixture.documentId, headEditOrdinal: frontier.head_edit_ordinal, headEditId: frontier.head_edit_id, lastCommitSeq: frontier.last_commit_seq, chainSha256 },
-      pack: { sha256: fixture.payload.pack.sha256, blake3: blake3Hex(new Uint8Array(pack)), byteLength: pack.byteLength },
-      spr: { sha256: fixture.payload.spr.sha256, blake3: blake3Hex(new Uint8Array(spr)), byteLength: spr.byteLength },
+  const request = parseDocumentCheckInV1(
+    documentCheckInCanonicalJson({
+      schema: "semio.hub.document-check-in/v1",
+      requestId: randomBytes(16).toString("hex"),
+      head: { documentId, headEditOrdinal: frontier.head_edit_ordinal, headEditId: frontier.head_edit_id, lastCommitSeq: frontier.last_commit_seq, chainSha256 },
     }),
   );
-  const url = `http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(fixture.documentId)}/checkpoint-publications`;
-  const publication = await fetch(url, {
-    method: "POST",
-    headers: { authorization: `Bearer ${capability}`, "content-type": "application/json" },
-    body: JSON.stringify(command),
-    signal: AbortSignal.timeout(30_000),
-  });
-  const receipt = (await publication.json().catch(() => undefined)) as Record<string, any> | undefined;
-  if (
-    publication.status !== 200 ||
-    receipt?.schema !== "semio.hub.checkpoint-publication-receipt/v1" ||
-    receipt?.correlationId !== command.correlationId ||
-    receipt?.checkpoint?.scope?.spaceId !== spaceId ||
-    receipt?.checkpoint?.scope?.documentId !== fixture.documentId ||
-    receipt?.checkpoint?.descriptorDigestV1 !== command.descriptorDigestV1 ||
-    receipt?.checkpoint?.pack?.sha256 !== command.pack.sha256 ||
-    receipt?.checkpoint?.spr?.sha256 !== command.spr.sha256
-  ) {
-    throw new Error(`checkpoint publication public route did not return its exact receipt: ${publication.status}`);
+  if (!request) throw new Error("check-in process could not seal its canonical request");
+  const route = `http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/check-ins`;
+  const post = async (): Promise<DocumentCheckInStatusV1> => {
+    const response = await fetch(route, { method: "POST", headers: { authorization: `Bearer ${capability}`, "content-type": "application/json" }, body: documentCheckInCanonicalJson(request), signal: AbortSignal.timeout(10_000) });
+    const status = parseDocumentCheckInStatusV1(await response.text());
+    if (![200, 202].includes(response.status) || !status || status.requestId !== request.requestId) throw new Error(`check-in process command was not accepted: ${response.status}`);
+    return status;
+  };
+  let status = await post();
+  const deadline = Date.now() + 120_000;
+  while (status.phase !== "ready") {
+    if (status.phase === "failed" || status.phase === "cancelled" || Date.now() >= deadline) throw new Error(`check-in process ended ${status.phase}${status.refusal ? ` (${status.refusal})` : ""}`);
+    await Bun.sleep(20);
+    const response = await fetch(`${route}/${request.requestId}`, { headers: { authorization: `Bearer ${capability}` }, signal: AbortSignal.timeout(5_000) });
+    const next = parseDocumentCheckInStatusV1(await response.text());
+    if (![200, 202].includes(response.status) || !next || next.requestId !== request.requestId || next.progress.completedUnits < status.progress.completedUnits) throw new Error(`check-in process status regressed: ${response.status}`);
+    status = next;
   }
-  const replay = await fetch(url, {
-    method: "POST",
-    headers: { authorization: `Bearer ${capability}`, "content-type": "application/json" },
-    body: JSON.stringify(command),
-    signal: AbortSignal.timeout(5_000),
-  });
-  const replayBody = await replay.text();
-  if (replay.status !== 200 || replayBody !== JSON.stringify(receipt)) throw new Error("checkpoint publication lost-response retry did not return its identical durable receipt");
-  return Object.freeze({ command, receipt });
+  if (JSON.stringify(status.ready?.baseline) !== JSON.stringify(request.head)) throw new Error("check-in process checkpoint baseline is not the named head");
+  const replay = await post();
+  if (replay.phase !== "ready" || JSON.stringify(replay.ready) !== JSON.stringify(status.ready)) throw new Error("check-in lost-response retry did not answer its identical checkpoint");
+  return status;
 }
 
 async function activeMcpDocumentConnections(run: LocalHubRun, adminEnvelope: Record<string, any>, spaceId: string, documentId: string): Promise<Record<string, any>[]> {
@@ -1143,17 +1105,16 @@ async function proveMcpWorkspaceProcess(repoRoot: string, run: LocalHubRun, enve
   } finally {
     stdout.forEach((bytes) => bytes.fill(0));
     stderr.forEach((bytes) => bytes.fill(0));
-    if (child.exitCode === null) child.kill();
+    terminateOwnedChildTree(child);
   }
 }
 
-async function proveCheckpointPublicationMcpProcess(repoRoot: string, root: string): Promise<void> {
-  const { root: fixtureRoot, fixture: loadedFixture, pack, spr, diff, inverse } = checkpointPublicationProcessFixture();
+async function proveCheckInMcpProcess(repoRoot: string, root: string): Promise<void> {
+  const { root: fixtureRoot, fixture: loadedFixture, envelopes } = checkInProcessFixture();
   let fixture = loadedFixture;
-  const profile: LocalProfile = { profileId: "checkpoint-publication-process", subject: "checkpoint-publication-process-author", displayName: "Checkpoint Publication Author", allowedClientClasses: ["native", "mcp"] };
+  const profile: LocalProfile = { profileId: "check-in-process", subject: "check-in-process-author", displayName: "Check In Author", allowedClientClasses: ["native", "mcp"] };
   const run = await startLocalHub(repoRoot, root, [profile], { capture: true, isolatedSecuritySmoke: true, dataDir: join(fixtureRoot, "data") });
   let child: ChildProcess | undefined;
-  const retained: Buffer[] = [pack, spr, diff, inverse];
   try {
     const readiness = await waitForReadiness(run);
     if (readiness.artifactAuthority?.ready !== true || readiness.features?.openPlan !== true || readiness.features?.openPlanExchange !== true) throw new Error("checkpoint publication process Hub did not load its verified GIS Map authority");
@@ -1162,15 +1123,15 @@ async function proveCheckpointPublicationMcpProcess(repoRoot: string, root: stri
     const createdBody = created.status === 202 ? (JSON.parse(created.text) as Record<string, any>) : undefined;
     const spaceId = createdBody?.events?.find((event: any) => event?.body?.kind === "space.created")?.body?.spaceId;
     if (typeof spaceId !== "string" || spaceId.length === 0) throw new Error("checkpoint publication process could not create its private space");
-    fixture = await createCheckpointPublicationProcessGenesis(run, author.capability, spaceId, fixture);
-    const { plan, frontier } = await commitCheckpointPublicationProcessMutation(run, author.capability, spaceId, fixture, diff, inverse);
-    const { command, receipt } = await publishCheckpointPublicationProcessPairV1(run, author.capability, spaceId, fixture, plan, frontier, pack, spr);
+    fixture = await createCheckInProcessGenesis(run, author.capability, spaceId, fixture);
+    const { plan, frontier } = await commitCheckInProcessEdit(run, author.capability, spaceId, fixture, envelopes);
+    const checkedIn = await checkInProcessHeadV1(run, author.capability, spaceId, fixture.documentId, frontier);
 
     const otherCreated = await postLiveDirectoryCommand(run, author.capability, liveDirectoryCommandRequestId(), { kind: "create-space", name: "MCP Cross-Scope GIS Map", spaceKind: "studio", visibility: "private" });
     const otherBody = otherCreated.status === 202 ? (JSON.parse(otherCreated.text) as Record<string, any>) : undefined;
     const otherSpaceId = otherBody?.events?.find((event: any) => event?.body?.kind === "space.created")?.body?.spaceId;
     if (typeof otherSpaceId !== "string" || otherSpaceId.length === 0) throw new Error("checkpoint publication process could not create its cross-scope space");
-    const otherFixture = await createCheckpointPublicationProcessGenesis(run, author.capability, otherSpaceId, fixture);
+    const otherFixture = await createCheckInProcessGenesis(run, author.capability, otherSpaceId, fixture);
     if (otherFixture.documentId === fixture.documentId) throw new Error("checkpoint publication process creation reused a server-minted document id across spaces");
 
     const mcpEnvelope = await issueLocalCredential(run, profile.profileId, "mcp", 2);
@@ -1207,7 +1168,7 @@ async function proveCheckpointPublicationMcpProcess(repoRoot: string, root: stri
         if (Date.now() >= boundDeadline) throw new Error("checkpoint publication MCP child workspace binding deadline exceeded");
         await Bun.sleep(20);
       }
-      writeRequest(1, "initialize", { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "semio-checkpoint-publication-oracle", version: "1" } });
+      writeRequest(1, "initialize", { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "semio-check-in-oracle", version: "1" } });
       const initialized = await waitForJsonRpcResponse(child, stdout, 1);
       if (initialized.result?.protocolVersion !== "2025-11-25") throw new Error("checkpoint publication MCP child initialization failed");
       child.stdin?.write(`${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`);
@@ -1228,15 +1189,17 @@ async function proveCheckpointPublicationMcpProcess(repoRoot: string, root: stri
         resource?.schema !== "semio.mcp.canonical-checkpoint-resource/v1" ||
         resource?.scope?.spaceId !== spaceId ||
         resource?.scope?.documentId !== fixture.documentId ||
-        resource?.descriptorDigestV1 !== command.descriptorDigestV1 ||
-        resource?.activeCheckpointId !== receipt.checkpoint.checkpointId ||
-        JSON.stringify(resource?.frontier) !== JSON.stringify(receipt.checkpoint.baselineFrontier) ||
-        !decodedPack.equals(pack) ||
-        !decodedSpr.equals(spr) ||
+        resource?.descriptorDigestV1 !== plan.descriptorDigestV1 ||
+        resource?.activeCheckpointId !== checkedIn.ready?.checkpointId ||
+        resource?.frontier?.headEditOrdinal !== checkedIn.ready?.baseline.headEditOrdinal ||
+        resource?.frontier?.headEditId !== checkedIn.ready?.baseline.headEditId ||
+        resource?.frontier?.lastCommitSeq !== checkedIn.ready?.baseline.lastCommitSeq ||
+        decodedPack.byteLength === 0 ||
+        decodedSpr.byteLength === 0 ||
         createHash("sha256").update(decodedPack).digest("hex") !== resource?.pack?.sha256 ||
         createHash("sha256").update(decodedSpr).digest("hex") !== resource?.spr?.sha256
       )
-        throw new Error("checkpoint publication MCP resource did not project the exact independently verified GIS Map pair");
+        throw new Error("check-in MCP resource did not project the hub-materialized GIS Map checkpoint");
       decodedPack.fill(0);
       decodedSpr.fill(0);
 
@@ -1287,8 +1250,7 @@ async function proveCheckpointPublicationMcpProcess(repoRoot: string, root: stri
       stderr.forEach((bytes) => bytes.fill(0));
     }
   } finally {
-    retained.forEach((bytes) => bytes.fill(0));
-    if (child?.exitCode === null) child.kill();
+    if (child) terminateOwnedChildTree(child);
     await finishLocalHub(run);
   }
 }
@@ -4872,7 +4834,7 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
             "linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog",
             "linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure",
             "trusted_descriptor_wire_materialization_matches_neutral_boundaries",
-            "local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_one_map_target",
+            "local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_one_map_editor_and_viewer",
             "trusted_profile_generation_binds_zero_target_package_and_every_codec_row",
           ],
         },
@@ -4920,7 +4882,7 @@ class NativeCatalogSelectionCheckScript extends BundleScript {
             "linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog",
             "linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure",
             "trusted_descriptor_wire_materialization_matches_neutral_boundaries",
-            "local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_one_map_target",
+            "local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_one_map_editor_and_viewer",
             "trusted_profile_generation_binds_zero_target_package_and_every_codec_row",
           ],
         },
@@ -5342,7 +5304,7 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
   if (!/^(?:[0-9a-f]{2})+$/u.test(fixture.componentHex) || !/^(?:[0-9a-f]{2})+$/u.test(fixture.descriptorHex)) throw new Error("execution target lease corpus asset bytes are not canonical hex");
   if (!hubSchemaExport(repoRoot, "schema://hub.directory/DocumentOpenIntentV1")(fixture.intent)) throw new Error("execution target lease corpus intent is not the owned document-open-intent contract");
   if (!hubSchemaExport(repoRoot, "schema://os.directory/DocumentSocketGrantReceiptV1")(fixture.socketGrant)) throw new Error("execution target lease corpus socket grant is not the owned document-socket-grant contract");
-  const leaseStatusKeys = ["verifying", "integrity-failed", "stale", "cancelled", "renderer-unavailable"];
+  const leaseStatusKeys = ["verifying", "integrity-failed", "stale", "cancelled", "renderer-unavailable", "link-expired", "access-revoked"];
   const localizedText = hubSchemaExport(repoRoot, "schema://hub.directory/LocalizedTextV1");
   const expected = fixture.expected as Record<string, any>;
   if (Object.keys(expected).sort().join(",") !== "assetBody,assetMethod,assetPaths,componentMaxBytes,descriptorMaxBytes,forbiddenStatusFragments,manifestMaxBytes,openPlanPath,progressStages,progressUnitBytes,rendererClaims,rendererState,rotation,socketGrantPath,status,statusRoles,viewerWriteRejectedLocally")
@@ -5472,7 +5434,7 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
   }
   if (manifestFields < 30) throw new Error(`execution target lease corpus lost single-field substitutions: ${manifestFields}`);
   const statusCodes = Object.keys(fixture.expected.status).sort();
-  if (JSON.stringify(statusCodes) !== JSON.stringify(["cancelled", "integrity-failed", "renderer-unavailable", "stale", "verifying"])) throw new Error("execution target lease corpus status vocabulary drifted");
+  if (JSON.stringify(statusCodes) !== JSON.stringify(["access-revoked", "cancelled", "integrity-failed", "link-expired", "renderer-unavailable", "stale", "verifying"])) throw new Error("execution target lease corpus status vocabulary drifted");
   for (const [code, text] of Object.entries<{ en: string; de: string }>(fixture.expected.status)) {
     if (!text.en || !text.de || text.en === text.de) throw new Error(`execution target lease corpus status ${code} is not explicitly bilingual`);
     for (const fragment of fixture.expected.forbiddenStatusFragments) if (text.en.includes(fragment) || text.de.includes(fragment)) throw new Error(`execution target lease corpus status ${code} leaked ${fragment}`);
@@ -7246,7 +7208,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     const materialize = source.indexOf("await materializeTrustedCatalogBundle(");
     const validate = source.indexOf("await validateAndPublishTrustedStdioGisCandidate(");
     const current = source.indexOf("const current = trustedBootstrapCurrent(dataRoot)");
-    const publication = source.indexOf("await publishCheckpointPublicationProcessPairV1(");
+    const publication = source.indexOf("await checkInProcessHeadV1(");
     const peerSubmit = source.indexOf('name: "inference_submit"');
     const checkpointEntered = source.indexOf("await waitForGisInferenceCheckpointControl(");
     const persistedProgress = source.indexOf("const observedB = await callGisMapProcessMcp(", checkpointEntered);
@@ -7977,6 +7939,7 @@ function trustedBootstrapProfileEncoding(profile: any, codecs: TrustedBootstrapC
     pieces.push(
       trustedBootstrapBrowserActorEncoding(selected.browserActor, { componentSha256: selected.componentSha256, descriptorByteSha256: selected.descriptorSha256 }, trustedBootstrapPackageRenderer(profile, selected.pluginId)),
     );
+    pieces.push(trustedBootstrapPluginModuleEncoding(trustedBootstrapPluginModuleRecordV1(selected.pluginModule, selected.pluginId)));
     pieces.push(trustedBootstrapDependencyEncoding(selected.dependencies));
     const declared = codecs[selected.pluginId as string];
     if (!declared) throw new Error("trusted bootstrap selected package declares no codec closure");
@@ -8411,7 +8374,7 @@ async function proveTrustedGisMapCollaborationContractFixture(repoRoot: string):
       sessions: "distinct-authenticated-react-relay-profiles",
       capabilities: "host-only-never-page-worker-or-report",
       createDocument: "production-directory-command",
-      initialCheckpoint: "normal-checkpoint-publication",
+      initialCheckpoint: "hub-materialized-check-in",
       open: "production-plan-asset-grant-session",
       pair: "actual-terminal-pack-spr-receipt",
       load: "genuine-plugin-load-document-pack",
@@ -8625,7 +8588,10 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   const changedDescriptor = createHash("sha256").update(trustedBootstrapProfileEncoding(changed, codecs)).digest("hex");
   const changedCodecs = { ...codecs, stdio: codecs.stdio.map((row, index) => (index === 0 ? { ...row, packSchemaHash: "33".repeat(32) } : row)) };
   const changedCodec = createHash("sha256").update(trustedBootstrapProfileEncoding(profile, changedCodecs)).digest("hex");
-  if ([changedComponent, changedDescriptor, changedCodec].some((digest) => digest === generationNode)) throw new Error("trusted bootstrap generation omits zero-target stdio authority");
+  changed.packages[1].descriptorSha256 = profile.packages[1].descriptorSha256;
+  changed.packages[1].pluginModule = { ...profile.packages[1].pluginModule, blake3: "38".repeat(32) };
+  const changedPluginModule = createHash("sha256").update(trustedBootstrapProfileEncoding(changed, codecs)).digest("hex");
+  if ([changedComponent, changedDescriptor, changedCodec, changedPluginModule].some((digest) => digest === generationNode)) throw new Error("trusted bootstrap generation omits zero-target stdio authority");
   const target = profile.openTargets[0];
   if (
     target.pluginId !== "gis" ||
@@ -8708,9 +8674,10 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateIdentity = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleIdentityV1");
-  assert.deepEqual(Object.keys(fixture), ["schema", "publicationFiles", "descriptorPreviewCases", "selectedClosure", "cases", "consumerCatalogCases", "atomicCases", "nativeCases", "rawCases", "encodingCases", "ordering"]);
+  assert.deepEqual(Object.keys(fixture), ["schema", "publicationFiles", "publicationDirectories", "descriptorPreviewCases", "selectedClosure", "cases", "consumerCatalogCases", "atomicCases", "nativeCases", "rawCases", "encodingCases", "ordering"]);
   assert.equal(fixture.schema, "semio.hub.compiled-stdio-dependencies/v1");
-  assert.deepEqual(fixture.publicationFiles, ["component.wasm", "descriptor.semio", "closed-actor.mjs", "stdio-component.wasm", "stdio-descriptor.semio", "trusted-catalog.json"]);
+  assert.deepEqual(fixture.publicationFiles, ["component.wasm", "descriptor.semio", "closed-actor.mjs", "plugin-module-gis.json", "stdio-component.wasm", "stdio-descriptor.semio", "plugin-module-stdio.json", "trusted-catalog.json"]);
+  assert.deepEqual(fixture.publicationDirectories, ["plugin-modules"]);
   assert.deepEqual(fixture.descriptorPreviewCases, [
     { id: "first-selected-descriptor-invalid", packageIndex: 1, previews: [] },
     { id: "second-selected-descriptor-invalid", packageIndex: 0, previews: [] },
@@ -8756,10 +8723,12 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
   const readinessFixture = hubSource.slice(hubSource.indexOf("fn native_openable_stdio_bundle("), hubSource.indexOf("async fn native_openable_stdio_provider_is_the_only_atomic_readiness_transition("));
   assert(readinessFixture.includes('"executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version }'), "readiness fixture must carry its actual descriptor protocol");
   const runnerSource = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📜️script.ts"), "utf8");
-  const fixtureCopy = hubSource.slice(hubSource.indexOf("async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog"));
+  const fixtureCopy = hubSource.slice(hubSource.indexOf("async fn check_in_process_fixture_emits_verified_gis_ledger_and_catalog"));
   const cliCopy = runnerSource.slice(runnerSource.indexOf("\nasync function proveTrustedPublicationCli("));
   assert.deepEqual(JSON.parse(fixtureCopy.match(/for name in (\[[^\]\n]+\])/u)?.[1] ?? "null"), fixture.publicationFiles, "native process fixture must retain every dependency file");
   assert.deepEqual(JSON.parse(cliCopy.match(/for \(const file of (\[[^\]\n]+\])/u)?.[1] ?? "null"), fixture.publicationFiles, "publication CLI must retain every dependency file");
+  assert.deepEqual(JSON.parse(fixtureCopy.match(/for directory in (\[[^\]\n]+\])/u)?.[1] ?? "null"), fixture.publicationDirectories, "native process fixture must retain every plugin module file");
+  assert.deepEqual(JSON.parse(cliCopy.match(/for \(const directory of (\[[^\]\n]+\])/u)?.[1] ?? "null"), fixture.publicationDirectories, "publication CLI must retain every plugin module file");
   for (const row of fixture.nativeCases) assert.equal(row.dependencies.length === 1 && row.dependencies[0].pluginId === "stdio" && row.dependencies[0].version === "=0.1.0", row.accepted, row.id);
   assert.deepEqual(fixture.cases.map((row: any) => `${row.owner}:${row.change}`), ["gis:exact", "stdio:exact", "gis:selected-order", "gis:missing", "gis:duplicate", "gis:self", "gis:unknown", "gis:any", "gis:caret", "gis:wrong-version", "gis:noncanonical-version", "gis:overflow-version", "gis:foreign-package", "gis:duplicate-selected", "gis:missing-selected", "gis:extra-field", "gis:missing-manifest", "gis:oversized-claim", "stdio:stdio-dependent", "gis:owner-plugin", "gis:owner-package", "gis:owner-version", "gis:selected-version", "gis:missing-protocol", "gis:unsupported-protocol"]);
   assert.deepEqual(fixture.rawCases.map((row: any) => row.name), ["canonical-gis-descriptor", "duplicate-top-level-packageId-earlier-null-overwritten", "duplicate-manifest-earlier-null-overwritten", "canonical-descriptor-with-trailing-zero"]);
@@ -8877,20 +8846,6 @@ function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly
   };
   const identity = (value: unknown): value is string => typeof value === "string" && value.length > 0 && value.length <= 256 && !/[\u0000-\u001f\u007f]/u.test(value);
   const digest = (value: unknown): value is string => typeof value === "string" && /^(?!0{64}$)[0-9a-f]{64}$/u.test(value);
-  const packSchemaHash = (value: unknown, keyword: string, expected: readonly (readonly [number, string, boolean, number])[]): string => {
-    const pack = record(value, ["keyword", "fields"]);
-    if (pack.keyword !== keyword || !Array.isArray(pack.fields) || pack.fields.length !== expected.length) return fail();
-    const bytes: Buffer[] = [];
-    for (let index = 0; index < expected.length; index++) {
-      const field = record(pack.fields[index], ["id", "key", "optional"]);
-      const [id, key, optional, shapeTag] = expected[index];
-      if (field.id !== id || field.key !== key || field.optional !== optional) return fail();
-      const keyBytes = Buffer.from(key, "utf8");
-      if (id > 127 || keyBytes.byteLength > 127) return fail();
-      bytes.push(Buffer.from([id, keyBytes.byteLength]), keyBytes, Buffer.from([shapeTag]));
-    }
-    return blake3Hex(Buffer.concat(bytes));
-  };
   const s = record(stdio, ["schema", "provider_id", "plugin_id", "package_id", "receipts"]);
   const g = record(gis, ["schema", "pluginId", "packageId", "packageVersion", "receipts", "hostile"]);
   if (s.schema !== "semio.stdio.native-openable-catalog-provider/v1" || s.provider_id !== "stdio/native-codecs/v1" || s.plugin_id !== "stdio" || s.package_id !== "semio:stdio" || !Array.isArray(s.receipts) || s.receipts.length !== 26) return fail();
@@ -8914,34 +8869,8 @@ function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly
     return Object.freeze({ artifactKind: row.artifact_kind as string, artifactSchema: row.artifact_schema as string, packSchemaHash: row.pack_schema_sha256 });
   });
   const gisRows = g.receipts.map((value: unknown) => {
-    const row = record(value, ["factoryId", "kind", "schema", "extension", "capability", "packRecord", "protocolPath", "protocolBytes", "protocolSha256"]);
-    const family =
-      row.kind === "s.gis.gismap"
-        ? {
-            id: "gismap",
-            schema: "map",
-            owner: "🗺️gismap",
-            fields: [
-              [1, "positions", false, 9],
-              [2, "routes", false, 9],
-              [3, "regions", false, 9],
-              [4, "drawing", false, 10],
-              [5, "image", true, 10],
-              [6, "value", false, 10],
-            ] as const,
-          }
-        : row.kind === "s.gis.gisterrain"
-          ? {
-              id: "gisterrain",
-              schema: "terrain",
-              owner: "🏔️gisterrain",
-              fields: [
-                [1, "exaggeration", false, 4],
-                [2, "importedFeaturesJson", false, 5],
-                [3, "mesh", true, 10],
-              ] as const,
-            }
-          : fail();
+    const row = record(value, ["factoryId", "kind", "schema", "extension", "capability", "packRecord", "protocolPath", "protocolBytes", "protocolSha256", "packSchemaSha256"]);
+    const family = row.kind === "s.gis.gismap" ? { id: "gismap", schema: "map", owner: "🗺️gismap" } : row.kind === "s.gis.gisterrain" ? { id: "gisterrain", schema: "terrain", owner: "🏔️gisterrain" } : fail();
     if (
       row.factoryId !== `gis.${family.id}.v1` ||
       row.schema !== `gis.${family.schema}` ||
@@ -8951,10 +8880,11 @@ function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly
       !Number.isSafeInteger(row.protocolBytes) ||
       row.protocolBytes < 1 ||
       row.protocolBytes > 65536 ||
-      !digest(row.protocolSha256)
+      !digest(row.protocolSha256) ||
+      !digest(row.packSchemaSha256)
     )
       return fail();
-    return Object.freeze({ artifactKind: row.kind as string, artifactSchema: row.schema as string, packSchemaHash: packSchemaHash(row.packRecord, family.id, family.fields) });
+    return Object.freeze({ artifactKind: row.kind as string, artifactSchema: row.schema as string, packSchemaHash: row.packSchemaSha256 as string });
   });
   for (const rows of [stdioRows, gisRows]) if (new Set(rows.map((row: TrustedBootstrapCodec) => JSON.stringify([row.artifactKind, row.artifactSchema]))).size !== rows.length) return fail();
   return Object.freeze({ gisVersion: g.packageVersion as string, codecs: Object.freeze({ stdio: Object.freeze(stdioRows.sort(trustedBootstrapCodecOrder)), gis: Object.freeze(gisRows.sort(trustedBootstrapCodecOrder)) }) });
@@ -8990,7 +8920,7 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
   assert.equal(fixture.maximumTotalBytes, 131_072);
   assert.deepEqual(fixture.cases.map((row: any) => row.change), [
     "none", "permuted", "replaced-source", "invalid-hash", "zero-hash", "duplicate-stdio", "duplicate-gis", "unknown-root", "unknown-row",
-    "foreign-package", "crossed-gis-schema", "changed-pack-record", "foreign-version", "invalid-utf8", "oversize", "cancelled",
+    "foreign-package", "crossed-gis-schema", "zero-pack-schema-hash", "foreign-version", "invalid-utf8", "oversize", "cancelled",
   ]);
   for (const row of fixture.cases) assert.deepEqual(Object.keys(row), ["change", "accepted", "schemaAccepted"]);
   assert.equal(new Set(fixture.cases.map((row: any) => row.change)).size, fixture.cases.length);
@@ -9020,7 +8950,7 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
     if (test.change === "unknown-row") input.gis.receipts[0].extra = true;
     if (test.change === "foreign-package") input.stdio.package_id = "semio:foreign";
     if (test.change === "crossed-gis-schema") input.gis.receipts[0].schema = "gis.terrain";
-    if (test.change === "changed-pack-record") input.gis.receipts[0].packRecord.fields[0].optional = true;
+    if (test.change === "zero-pack-schema-hash") input.gis.receipts[0].packSchemaSha256 = "00".repeat(32);
     if (test.change === "foreign-version") input.gis.packageVersion = "99.0.0";
     assert.equal(Boolean(schemas.stdio(input.stdio) && schemas.gis(input.gis)), test.schemaAccepted, test.change);
     const testRoot = join(evidence, test.change);
@@ -9071,7 +9001,149 @@ type TrustedBootstrapGenerationReceiptV1 = Readonly<{
   descriptor: Readonly<{ byteLength: number; sha256: string }>;
   executionProtocol: Readonly<DocumentExecutionProtocolV1>;
   browserActor: TrustedBootstrapBrowserActorV1;
+  pluginModule: TrustedBootstrapPluginModuleRecordV1;
 }>;
+
+/** 🧩️ Where a package record finds its plugin module manifest: `TrustedBundlePluginModuleV1`. */
+type TrustedBootstrapPluginModuleRecordV1 = Readonly<{ path: string; byteLength: number; sha256: string; blake3: string }>;
+
+/** 🧩️ Admits one `TrustedBundlePluginModuleV1` record at its own package's fixed manifest path. */
+function trustedBootstrapPluginModuleRecordV1(candidate: unknown, pluginId: string): TrustedBootstrapPluginModuleRecordV1 {
+  const row = documentOpenNeutralObject(candidate, ["path", "byteLength", "sha256", "blake3"]);
+  if (row.path !== trustedBootstrapPluginModuleManifestPath(pluginId) || !Number.isSafeInteger(row.byteLength) || (row.byteLength as number) <= 0 || (row.byteLength as number) > TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES || !/^[0-9a-f]{64}$/u.test(String(row.sha256)) || !/^[0-9a-f]{64}$/u.test(String(row.blake3)))
+    throw new Error("trusted plugin module record is not its package's exact manifest");
+  return Object.freeze({ path: row.path as string, byteLength: row.byteLength as number, sha256: row.sha256 as string, blake3: row.blake3 as string });
+}
+
+/** 🧩️ The generation-relative manifest path of one package's plugin module. */
+function trustedBootstrapPluginModuleManifestPath(pluginId: string): string {
+  return `packages/${pluginId}/plugin-module.json`;
+}
+
+/** 🗃️ The generation-relative content-addressed path of one plugin module file. */
+function trustedBootstrapPluginModuleBlobPath(sha256: string): string {
+  return `plugin-modules/${sha256}`;
+}
+
+/** 🧬️ Frames one plugin module record into the generation exactly as `trusted_profile_generation` does. */
+function trustedBootstrapPluginModuleEncoding(record: TrustedBootstrapPluginModuleRecordV1): Buffer {
+  const length = Buffer.alloc(8);
+  length.writeBigUInt64BE(BigInt(record.byteLength));
+  return Buffer.concat([trustedBootstrapField(record.path), length, trustedBootstrapField(Buffer.from(record.sha256, "hex")), trustedBootstrapField(Buffer.from(record.blake3, "hex"))]);
+}
+
+/** 🧩️ Reads one generation's plugin module manifest, bound to its record and its package's digests. */
+function trustedBootstrapReadPluginModule(root: string, receipt: TrustedBootstrapGenerationReceiptV1, check: () => void): TrustedPluginModuleBundleV1 {
+  const bytes = readStableBuildFile(join(root, receipt.pluginModule.path), TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, { remaining: TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES }, check);
+  if (bytes.byteLength !== receipt.pluginModule.byteLength || createHash("sha256").update(bytes).digest("hex") !== receipt.pluginModule.sha256 || blake3Hex(bytes) !== receipt.pluginModule.blake3) throw new Error("generation plugin module manifest differs from its record");
+  return decodeTrustedPluginModuleBundleV1(bytes, { ...receipt.identity, componentSha256: receipt.component.sha256, descriptorByteSha256: receipt.descriptor.sha256 });
+}
+
+/**
+ * 🧳️ Carries one package's plugin module from a verified source generation into a new stage: every file is
+ * reread and checked against its manifest, and the packed and JSON descriptors are replaced by the package's
+ * (possibly rewritten) `descriptor`, so the carried module is derived from exactly the package it ships with.
+ */
+function trustedBootstrapCarryPluginModule(sourceRoot: string, stageRoot: string, sourceReceipt: TrustedBootstrapGenerationReceiptV1, record: any, descriptor: Uint8Array, check: () => void): TrustedBootstrapPluginModuleRecordV1 {
+  const source = trustedBootstrapReadPluginModule(sourceRoot, sourceReceipt, check);
+  const replacements = new Map<string, Uint8Array>([
+    [`${source.moduleDirectory}/${TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE}`, descriptor],
+    [`${source.moduleDirectory}/${TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE}`, Buffer.from(`${JSON.stringify(packValueToExactJson(decodePackValue(descriptor)), null, 2)}\n`, "utf8")],
+  ]);
+  const blobs = join(stageRoot, "plugin-modules");
+  mkdirSync(blobs, { recursive: true, mode: 0o700 });
+  const files = source.files.map((file) => {
+    const bytes = replacements.get(file.path) ?? readStableBuildFile(join(sourceRoot, trustedBootstrapPluginModuleBlobPath(file.sha256)), file.byteLength, { remaining: file.byteLength }, check);
+    const carried = { path: file.path, byteLength: bytes.byteLength, sha256: createHash("sha256").update(bytes).digest("hex"), blake3: blake3Hex(bytes) };
+    if (!replacements.has(file.path) && (carried.sha256 !== file.sha256 || carried.blake3 !== file.blake3)) throw new Error("trusted rotation plugin module file differs from its manifest");
+    if (!existsSync(join(blobs, carried.sha256))) trustedBootstrapWriteNew(join(blobs, carried.sha256), bytes, check);
+    return carried;
+  });
+  const descriptorByteSha256 = createHash("sha256").update(descriptor).digest("hex");
+  const manifest = encodeTrustedPluginModuleBundleV1({ ...source, sourceComponentSha256: record.component.sha256, sourceDescriptorByteSha256: descriptorByteSha256, files });
+  decodeTrustedPluginModuleBundleV1(manifest, { pluginId: record.pluginId, packageId: record.packageId, version: record.version, componentSha256: record.component.sha256, descriptorByteSha256 });
+  trustedBootstrapWriteNew(join(stageRoot, trustedBootstrapPluginModuleManifestPath(record.pluginId)), manifest, check);
+  return Object.freeze({ path: trustedBootstrapPluginModuleManifestPath(record.pluginId), byteLength: manifest.byteLength, sha256: createHash("sha256").update(manifest).digest("hex"), blake3: blake3Hex(manifest) });
+}
+
+/** 🛑️ An abort signal for one child process that follows the bootstrap's own cancellation and deadline. */
+function trustedBootstrapAbortSignal(control: FreshBuildControlV1): { readonly signal: AbortSignal; close(): void } {
+  const abort = new AbortController();
+  const poll = setInterval(() => {
+    if (control.cancelled() || control.remainingMs() <= 0) abort.abort(new Error("trusted catalog build cancelled"));
+  }, 250);
+  return { signal: abort.signal, close: () => clearInterval(poll) };
+}
+
+/**
+ * 🧩️ Materializes one package's browser plugin module from its own fresh component and staged descriptor —
+ * host shim, jco component module, core Wasm (never re-optimized, so it stays the exact module the
+ * descriptor's `coreWasmSha256` names), bridge, both descriptor forms and the vendored imports — and stages
+ * it content-addressed in the generation: every file once under `plugin-modules/<sha256>` (shared across
+ * packages), the canonical manifest at `packages/<plugin>/plugin-module.json`.
+ */
+async function trustedBootstrapPluginModuleV1(repoRoot: string, request: Readonly<{ pluginId: string; outputName: string }>, stage: string, stageRoot: string, work: string, receipt: FreshComponentReceiptV1, control: FreshBuildControlV1, check: () => void): Promise<TrustedBootstrapPluginModuleRecordV1> {
+  const moduleRoot = join(work, "plugin-module");
+  const directory = moduleDirectoryName(request.pluginId);
+  const moduleDir = join(moduleRoot, directory);
+  const vendor = join(moduleRoot, PREVIEW2_VENDOR_RELATIVE);
+  mkdirSync(moduleDir, { recursive: true, mode: 0o700 });
+  ensurePreview2ShimVendorAt(vendor, repoRoot);
+  if (!ensureGuestSlimTypstFontsAt(moduleRoot, repoRoot)) throw new Error("trusted plugin module needs the staged guestslim typst font seed");
+  const descriptor = trustedBootstrapReadRegular(join(stage, "descriptor.semio"), DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, `fresh ${request.pluginId} descriptor for its plugin module`, check);
+  if (descriptor.byteLength !== receipt.descriptor.byteLength || createHash("sha256").update(descriptor).digest("hex") !== receipt.descriptor.sha256) throw new Error("fresh descriptor differs from its receipt before plugin module materialization");
+  const componentBase = `${request.outputName.slice(0, -".wasm".length)}_component`;
+  writeFileSync(join(moduleDir, PLUGIN_HOST_SHIM_FILE), hostShimSource());
+  const abort = trustedBootstrapAbortSignal(control);
+  try {
+    await transpilePluginComponentAsync(join(stage, "component.wasm"), moduleDir, componentBase, { repoRoot, preview2VendorDir: vendor, signal: abort.signal, optimize: false });
+  } finally {
+    abort.close();
+  }
+  check();
+  writeFileSync(join(moduleDir, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, request.outputName));
+  writeFileSync(join(moduleDir, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE), `${JSON.stringify(packValueToExactJson(decodePackValue(descriptor)), null, 2)}\n`);
+  writeFileSync(join(moduleDir, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE), descriptor);
+  rmSync(join(moduleDir, `${componentBase}.d.ts`), { force: true });
+  rmSync(join(moduleDir, "interfaces"), { recursive: true, force: true });
+  const core = readStableBuildFile(join(moduleDir, `${componentBase}.core.wasm`), TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, { remaining: TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES }, check);
+  if (createHash("sha256").update(core).digest("hex") !== receipt.coreSha256) throw new Error(`trusted ${request.pluginId} plugin module core differs from the core its descriptor names`);
+  const walk = (relative: string): string[] =>
+    readdirSync(join(moduleRoot, relative), { withFileTypes: true }).flatMap((entry) => {
+      const path = relative ? `${relative}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) return walk(path);
+      if (!entry.isFile() || entry.name.startsWith(".")) throw new Error(`trusted plugin module carries a non-file ${path}`);
+      return [path];
+    });
+  const blobs = join(stageRoot, "plugin-modules");
+  mkdirSync(blobs, { recursive: true, mode: 0o700 });
+  const files = walk("")
+    .sort(utf8OrderV1)
+    .map((path) => {
+      check();
+      const bytes = readStableBuildFile(join(moduleRoot, path), TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, { remaining: TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES }, check);
+      const file = { path, byteLength: bytes.byteLength, sha256: createHash("sha256").update(bytes).digest("hex"), blake3: blake3Hex(bytes) };
+      if (!existsSync(join(blobs, file.sha256))) trustedBootstrapWriteNew(join(blobs, file.sha256), bytes, check);
+      return file;
+    });
+  const bundle = {
+    schema: TRUSTED_PLUGIN_MODULE_SCHEMA,
+    pluginId: request.pluginId,
+    packageId: receipt.packageId,
+    version: receipt.version,
+    sourceComponentSha256: receipt.component.sha256,
+    sourceDescriptorByteSha256: receipt.descriptor.sha256,
+    moduleDirectory: directory,
+    entry: `${directory}/${MODULE_BRIDGE_FILE}`,
+    files,
+  };
+  const manifest = encodeTrustedPluginModuleBundleV1(bundle);
+  decodeTrustedPluginModuleBundleV1(manifest, { pluginId: request.pluginId, packageId: receipt.packageId, version: receipt.version, componentSha256: receipt.component.sha256, descriptorByteSha256: receipt.descriptor.sha256 });
+  trustedBootstrapWriteNew(join(stage, "plugin-module.json"), manifest, check);
+  trustedBootstrapFsyncDirectory(blobs);
+  rmSync(moduleRoot, { recursive: true, force: true });
+  return Object.freeze({ path: trustedBootstrapPluginModuleManifestPath(request.pluginId), byteLength: manifest.byteLength, sha256: createHash("sha256").update(manifest).digest("hex"), blake3: blake3Hex(manifest) });
+}
 
 /** 🧷️ Retains the exact metadata needed to rebind every staged descriptor to its bundle. */
 function trustedBootstrapGenerationReceipt(record: any): TrustedBootstrapGenerationReceiptV1 {
@@ -9087,6 +9159,7 @@ function trustedBootstrapGenerationReceipt(record: any): TrustedBootstrapGenerat
     // wasm actor at all is enforced where the target list IS in hand —
     // `trustedBootstrapProfileEncoding`, through `trustedBootstrapPackageRenderer`.
     browserActor: trustedBootstrapBrowserActorV1(record.browserActor, { componentSha256: record.component.sha256, descriptorByteSha256: record.descriptor.sha256 }, record.browserActor?.kind === "closed-browser-actor" ? "wasm" : "react"),
+    pluginModule: trustedBootstrapPluginModuleRecordV1(record.pluginModule, identity.pluginId),
   });
 }
 
@@ -9110,12 +9183,21 @@ function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Array, rece
     // the first two (ticket 26/09/18 slice TC3c).
     const plugins = [...bundleReceipts.keys()].sort();
     const carriesActor = (plugin: string): boolean => bundleReceipts.get(plugin)!.browserActor.kind === "closed-browser-actor";
+    const moduleFiles = new Map<string, Readonly<{ byteLength: number; sha256: string }>>();
+    for (const plugin of plugins) {
+      for (const file of trustedBootstrapReadPluginModule(root, receipts.get(plugin)!, check).files) {
+        const known = moduleFiles.get(file.sha256);
+        if (known && known.byteLength !== file.byteLength) throw new Error("generation plugin modules disagree about one content address");
+        moduleFiles.set(file.sha256, { byteLength: file.byteLength, sha256: file.sha256 });
+      }
+    }
     const directories: (readonly [string, readonly string[]])[] = [
-      [root, ["packages", "trusted-catalog.json"]],
+      [root, ["packages", "plugin-modules", "trusted-catalog.json"]],
       [join(root, "packages"), plugins],
+      [join(root, "plugin-modules"), [...moduleFiles.keys()]],
     ];
     for (const plugin of plugins) {
-      directories.push([join(root, "packages", plugin), carriesActor(plugin) ? ["browser", "component.wasm", "descriptor.semio"] : ["component.wasm", "descriptor.semio"]]);
+      directories.push([join(root, "packages", plugin), carriesActor(plugin) ? ["browser", "component.wasm", "descriptor.semio", "plugin-module.json"] : ["component.wasm", "descriptor.semio", "plugin-module.json"]]);
       if (carriesActor(plugin)) directories.push([join(root, "packages", plugin, "browser"), ["closed-actor.mjs"]]);
     }
     const identities = new Map<string, Stats>();
@@ -9132,12 +9214,14 @@ function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Array, rece
       descriptorReceipts.set(join(root, "packages", plugin, "descriptor.semio"), receipt);
       files.push({ path: join(root, "packages", plugin, "component.wasm"), byteLength: receipt.component.byteLength, sha256: receipt.component.sha256, maximum: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES });
       files.push({ path: join(root, "packages", plugin, "descriptor.semio"), byteLength: receipt.descriptor.byteLength, sha256: receipt.descriptor.sha256, maximum: DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES });
+      files.push({ path: join(root, receipt.pluginModule.path), byteLength: receipt.pluginModule.byteLength, sha256: receipt.pluginModule.sha256, maximum: TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES });
       const actor = trustedBootstrapBrowserActorV1(receipt.browserActor, { componentSha256: receipt.component.sha256, descriptorByteSha256: receipt.descriptor.sha256 }, carriesActor(plugin) ? "wasm" : "react");
       if (actor.kind === "closed-browser-actor") {
         if (actor.path !== `packages/${plugin}/browser/closed-actor.mjs`) throw new Error("generation actor path differs from its own package closure");
         files.push({ path: join(root, "packages", plugin, "browser", "closed-actor.mjs"), byteLength: actor.byteLength, sha256: actor.sha256, maximum: 67_108_864 });
       }
     }
+    for (const file of moduleFiles.values()) files.push({ path: join(root, trustedBootstrapPluginModuleBlobPath(file.sha256)), byteLength: file.byteLength, sha256: file.sha256, maximum: TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES });
     const admission = { remaining: files.reduce((sum, file) => sum + file.maximum, 0) };
     for (const file of files) {
       if (!Number.isSafeInteger(file.byteLength) || file.byteLength <= 0 || file.byteLength > file.maximum || !/^[0-9a-f]{64}$/u.test(file.sha256)) throw new Error("generation file receipt is not bounded");
@@ -9166,11 +9250,45 @@ function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Array, rece
   }
 }
 
+/** 🧩️ One never-executed fixture plugin module: its entry, both descriptor forms (the packed one the package's
+ * own descriptor) and one vendored import — the TS twin of the hub's `fixture_plugin_module_files`. */
+type TrustedBootstrapFixturePluginModuleV1 = Readonly<{ record: TrustedBootstrapPluginModuleRecordV1; manifest: Uint8Array; blobs: ReadonlyMap<string, Uint8Array> }>;
+
+function trustedBootstrapFixturePluginModule(identity: Readonly<{ pluginId: string; packageId: string; version: string }>, componentSha256: string, descriptor: Uint8Array): TrustedBootstrapFixturePluginModuleV1 {
+  const utf8 = (text: string) => Buffer.from(text, "utf8");
+  const contents: [string, Uint8Array][] = [
+    [`${identity.pluginId}/${MODULE_BRIDGE_FILE}`, utf8("export async function createActorApi() {}\n")],
+    [`${identity.pluginId}/${TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE}`, utf8(JSON.stringify({ manifest: { pluginId: identity.pluginId } }))],
+    [`${identity.pluginId}/${TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE}`, descriptor],
+    [`${PREVIEW2_VENDOR_RELATIVE}/io.js`, utf8("export const streams = {};\n")],
+  ];
+  const blobs = new Map<string, Uint8Array>();
+  const files = contents
+    .sort(([left], [right]) => utf8OrderV1(left, right))
+    .map(([path, bytes]) => {
+      const sha256 = createHash("sha256").update(bytes).digest("hex");
+      blobs.set(sha256, bytes);
+      return { path, byteLength: bytes.byteLength, sha256, blake3: blake3Hex(bytes) };
+    });
+  const descriptorByteSha256 = createHash("sha256").update(descriptor).digest("hex");
+  const manifest = encodeTrustedPluginModuleBundleV1({ schema: TRUSTED_PLUGIN_MODULE_SCHEMA, ...identity, sourceComponentSha256: componentSha256, sourceDescriptorByteSha256: descriptorByteSha256, moduleDirectory: identity.pluginId, entry: `${identity.pluginId}/${MODULE_BRIDGE_FILE}`, files });
+  decodeTrustedPluginModuleBundleV1(manifest, { ...identity, componentSha256, descriptorByteSha256 });
+  return Object.freeze({ record: Object.freeze({ path: trustedBootstrapPluginModuleManifestPath(identity.pluginId), byteLength: manifest.byteLength, sha256: createHash("sha256").update(manifest).digest("hex"), blake3: blake3Hex(manifest) }), manifest, blobs });
+}
+
+/** 🧩️ Writes one fixture plugin module beneath a generation root, replacing an earlier one's manifest. */
+function trustedBootstrapWriteFixturePluginModule(root: string, module: TrustedBootstrapFixturePluginModuleV1): void {
+  mkdirSync(join(root, "plugin-modules"), { recursive: true });
+  mkdirSync(dirname(join(root, module.record.path)), { recursive: true });
+  writeFileSync(join(root, module.record.path), module.manifest);
+  for (const [sha256, bytes] of module.blobs) writeFileSync(join(root, trustedBootstrapPluginModuleBlobPath(sha256)), bytes);
+}
+
 /** 🧫️ Constructs only neutral descriptor projections for physical publication-fence laws. */
-function trustedBootstrapStageFixturePackages(fixture: any, actor: any, component: Uint8Array): { packages: any[]; descriptors: Map<string, Buffer> } {
+function trustedBootstrapStageFixturePackages(fixture: any, actor: any, component: Uint8Array): { packages: any[]; descriptors: Map<string, Buffer>; modules: Map<string, TrustedBootstrapFixturePluginModuleV1> } {
   const descriptors = new Map(["gis", "stdio"].map((plugin) => [plugin, Buffer.from(encodePackValue(fixture.descriptors[plugin]))]));
   const identity = (bytes: Uint8Array) => ({ byteLength: bytes.byteLength, sha256: createHash("sha256").update(bytes).digest("hex") });
-  const packages = ["gis", "stdio"].map((pluginId) => {
+  const records = ["gis", "stdio"].map((pluginId) => {
     const source = { component: identity(component), descriptor: identity(descriptors.get(pluginId)!) };
     return {
       pluginId, packageId: `semio:${pluginId}`, version: "0.1.0", ...source,
@@ -9179,7 +9297,9 @@ function trustedBootstrapStageFixturePackages(fixture: any, actor: any, componen
       browserActor: pluginId === "gis" ? { ...actor, path: "packages/gis/browser/closed-actor.mjs", sourceComponentSha256: source.component.sha256, sourceDescriptorByteSha256: source.descriptor.sha256 } : { kind: "none" },
     };
   });
-  return { packages, descriptors };
+  const modules = new Map(records.map((record) => [record.pluginId, trustedBootstrapFixturePluginModule(record, record.component.sha256, descriptors.get(record.pluginId)!)]));
+  const packages = records.map((record) => ({ ...record, pluginModule: modules.get(record.pluginId)!.record }));
+  return { packages, descriptors, modules };
 }
 
 /** 🧪️ Exercises the actual pre-publication file fence against independent digest oracles. */
@@ -9202,7 +9322,8 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
     "none", "component", "descriptor", "bundle", "extra-file", "missing-file", "symlink-file", "symlink-directory", "post-read-component",
     "oversize-component", "cancelled", "receipt-path", "actor", "actor-source", "actor-path", "missing-actor", "oversize-actor", "post-read-actor",
     "actor-symlink", "missing-protocol", "unsupported-protocol", "receipt-protocol", "missing-dependency", "receipt-dependency", "bundle-dependency",
-    "wrong-package", "nonexact-dependency", "duplicate-dependency",
+    "wrong-package", "nonexact-dependency", "duplicate-dependency", "plugin-module-file", "plugin-module-manifest", "plugin-module-missing-file",
+    "plugin-module-extra-file", "post-read-plugin-module-file",
   ]);
   assert.deepEqual(fixture.cases.filter((row: any) => row.accepted).map((row: any) => row.change), ["none", "receipt-path"]);
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -9214,6 +9335,10 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
   const actorFixture = JSON.parse(readFileSync(join(root, "../🌐️browser-actor/🔣️.json"), "utf8"));
   const { packages, descriptors } = trustedBootstrapStageFixturePackages(fixture, actorFixture.closed, component);
   const receipts = new Map(packages.map((record) => [record.pluginId, trustedBootstrapGenerationReceipt(record)]));
+  const moduleBlob = (stage: string, plugin: string, suffix: string) => {
+    const manifest = JSON.parse(readFileSync(join(stage, "packages", plugin, "plugin-module.json"), "utf8"));
+    return join(stage, "plugin-modules", manifest.files.find((file: any) => file.path.endsWith(suffix)).sha256);
+  };
   for (const record of packages) {
     assert.deepEqual(record.component, await identity(component));
     assert.deepEqual(record.descriptor, await identity(descriptors.get(record.pluginId)!));
@@ -9221,6 +9346,7 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
   for (const test of fixture.cases) {
     const caseReceipts = structuredClone(receipts);
     const casePackages = structuredClone(packages);
+    const caseDescriptors = new Map(descriptors);
     const stage = join(evidence, test.change);
     for (const plugin of ["gis", "stdio"]) {
       mkdirSync(join(stage, "packages", plugin), { recursive: true });
@@ -9256,6 +9382,7 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
       if (test.change === "duplicate-dependency") changed.manifest.dependencies.push({ ...changed.manifest.dependencies[0] });
       const bytes = Buffer.from(encodePackValue(changed));
       const digest = await identity(bytes);
+      caseDescriptors.set("gis", bytes);
       writeFileSync(join(stage, "packages/gis/descriptor.semio"), bytes);
       Object.assign(casePackages[0], { descriptor: digest, browserActor: { ...casePackages[0].browserActor, sourceDescriptorByteSha256: digest.sha256 } });
       caseReceipts.set("gis", trustedBootstrapGenerationReceipt(casePackages[0]));
@@ -9263,6 +9390,7 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
     if (test.change === "missing-protocol" || test.change === "unsupported-protocol") {
       const changed = Buffer.from(encodePackValue(test.change === "missing-protocol" ? {} : { executionProtocol: { appChannelVersion: 13 } }));
       writeFileSync(join(stage, "packages/stdio/descriptor.semio"), changed);
+      caseDescriptors.set("stdio", changed);
       Object.assign(caseReceipts.get("stdio")!, { descriptor: await identity(changed) });
       casePackages[1].descriptor = await identity(changed);
     }
@@ -9275,6 +9403,18 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
       rmSync(actorPath);
       symlinkSync(join(stage, process.platform === "win32" ? "packages/stdio" : "packages/stdio/component.wasm"), actorPath, process.platform === "win32" ? "junction" : "file");
     }
+    for (const [index, plugin] of ["gis", "stdio"].entries()) {
+      if (!existsSync(join(stage, "packages", plugin))) continue;
+      const module = trustedBootstrapFixturePluginModule(casePackages[index], casePackages[index].component.sha256, caseDescriptors.get(plugin)!);
+      trustedBootstrapWriteFixturePluginModule(stage, module);
+      casePackages[index].pluginModule = module.record;
+      caseReceipts.set(plugin, { ...caseReceipts.get(plugin)!, pluginModule: module.record });
+    }
+    if (test.change === "plugin-module-file") writeFileSync(moduleBlob(stage, "gis", "bridge.js"), "export {};\n");
+    if (test.change === "plugin-module-manifest") writeFileSync(join(stage, "packages/stdio/plugin-module.json"), "{}\n");
+    if (test.change === "plugin-module-missing-file") rmSync(moduleBlob(stage, "stdio", "io.js"));
+    if (test.change === "plugin-module-extra-file") writeFileSync(join(stage, "plugin-modules", "ab".repeat(32)), "unlisted");
+    const pluginModuleFile = moduleBlob(stage, "gis", ".json");
     const bundle = Buffer.from(JSON.stringify({ neutral: true, packages: casePackages }) + "\n");
     writeFileSync(join(stage, "trusted-catalog.json"), test.change === "bundle" ? '{"neutral":false}' : bundle);
     let replaced = false,
@@ -9289,6 +9429,10 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
       }
       if (test.change === "post-read-actor" && phase === "identity" && !replaced) {
         writeFileSync(actorPath, "xbc");
+        replaced = true;
+      }
+      if (test.change === "post-read-plugin-module-file" && phase === "identity" && !replaced) {
+        writeFileSync(pluginModuleFile, "{}");
         replaced = true;
       }
     };
@@ -9312,7 +9456,7 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
   assert.equal(fixture.profileId, "publication-fixture");
   assert.deepEqual(fixture.cases, [
     { change: "none", accepted: true }, { change: "component", accepted: false }, { change: "descriptor", accepted: false },
-    { change: "actor", accepted: false }, { change: "bundle", accepted: false },
+    { change: "actor", accepted: false }, { change: "plugin-module", accepted: false }, { change: "bundle", accepted: false },
   ]);
   const command = JSON.parse(readFileSync(join(root, "📬️command.json"), "utf8"));
   const validateCommand = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedCatalogPublicationCommandV1");
@@ -9460,12 +9604,13 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
   const component = Buffer.from("abc");
   const digest = async (bytes: Uint8Array) => await webSha256Hex(bytes);
   const actorFixture = JSON.parse(readFileSync(join(root, "../🌐️browser-actor/🔣️.json"), "utf8"));
-  const { packages, descriptors } = trustedBootstrapStageFixturePackages(stageFixture, actorFixture.closed, component);
+  const { packages, descriptors, modules } = trustedBootstrapStageFixturePackages(stageFixture, actorFixture.closed, component);
   for (const record of packages) {
     assert.equal(record.component.sha256, await digest(component));
     assert.equal(record.descriptor.sha256, await digest(descriptors.get(record.pluginId)!));
+    assert.equal(record.pluginModule.sha256, await digest(modules.get(record.pluginId)!.manifest));
   }
-  const bundle = Buffer.from(JSON.stringify({ schemaVersion: 2, profiles: [{ id: fixture.profileId, generationId: fixture.generationId }], packages }) + "\n");
+  const bundle = Buffer.from(JSON.stringify({ schemaVersion: 3, profiles: [{ id: fixture.profileId, generationId: fixture.generationId }], packages }) + "\n");
   for (const row of fixture.cases) {
     const dataRoot = join(evidence, row.change), trustedRoot = join(dataRoot, "trusted-catalog"), generationRoot = join(trustedRoot, "generations", fixture.generationId);
     mkdirSync(join(generationRoot, "packages/gis/browser"), { recursive: true });
@@ -9473,6 +9618,7 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
     for (const plugin of ["gis", "stdio"]) {
       writeFileSync(join(generationRoot, "packages", plugin, "component.wasm"), component);
       writeFileSync(join(generationRoot, "packages", plugin, "descriptor.semio"), descriptors.get(plugin)!);
+      trustedBootstrapWriteFixturePluginModule(generationRoot, modules.get(plugin)!);
     }
     const actorPath = join(generationRoot, "packages/gis/browser/closed-actor.mjs"), bundlePath = join(generationRoot, "trusted-catalog.json");
     writeFileSync(actorPath, component); writeFileSync(bundlePath, bundle);
@@ -9480,7 +9626,7 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
     trustedBootstrapVerifyGeneration(generationRoot, bundle, new Map(packages.map((record) => [record.pluginId, trustedBootstrapGenerationReceipt(record)])), () => {});
     const pointerPath = join(trustedRoot, "current.json"), previous = Buffer.from(JSON.stringify({ profileId: fixture.profileId, generationId: "dd".repeat(32), bundleSha256: "ee".repeat(32), publicationRevision: "1" }) + "\n");
     writeFileSync(pointerPath, previous);
-    const changes: Readonly<Record<string, string>> = { component: join(generationRoot, "packages/gis/component.wasm"), descriptor: join(generationRoot, "packages/stdio/descriptor.semio"), actor: actorPath, bundle: bundlePath };
+    const changes: Readonly<Record<string, string>> = { component: join(generationRoot, "packages/gis/component.wasm"), descriptor: join(generationRoot, "packages/stdio/descriptor.semio"), actor: actorPath, "plugin-module": join(generationRoot, "packages/stdio/plugin-module.json"), bundle: bundlePath };
     const changed = changes[row.change];
     if (changed) writeFileSync(changed, "substituted-after-candidate-proof");
     if (row.accepted) {
@@ -9612,27 +9758,27 @@ export function trustedBootstrapSelectPackages(list: string): readonly TrustedBo
  * the schema are the package's own published identities, and only the 32-byte fingerprint — the one
  * thing a manifest cannot state — comes from the component, on the exact bytes about to be
  * published. So a package the hub links no Rust codec for transcribes nothing. */
-function trustedBootstrapComponentCodecRowsV1(repoRoot: string, emitter: string, componentPath: string, outPath: string, pairs: readonly (readonly [string, string])[]): readonly TrustedBootstrapCodec[] {
+function trustedBootstrapComponentCodecRowsV1(repoRoot: string, emitter: string, componentPath: string, outPath: string, pairs: readonly (readonly [string, string])[]): Readonly<{ rows: readonly TrustedBootstrapCodec[]; unowned: ReadonlySet<string> }> {
   if (pairs.length === 0) throw new Error("component codec probe requires at least one declared artifact kind");
   const probe = runProbe(emitter, ["codecs", componentPath, "--kinds", pairs.map(([kind, schema]) => `${kind}=${schema}`).join(","), "--out", outPath], { cwd: repoRoot, ...orchestratorBudgetOpts() });
   if (probe.status !== 0) throw new Error(`component codec probe failed (${probe.status}): ${probe.stderr.trim() || probe.stdout.trim()}`);
   const document = JSON.parse(readFileSync(outPath, "utf8"));
-  if (document?.schema !== "semio.plugin.component-codec-rows/v1" || !Array.isArray(document.rows) || document.rows.length !== pairs.length) throw new Error("component codec probe answered outside its exact declared closure");
+  if (document?.schema !== "semio.plugin.component-codec-rows/v1" || !Array.isArray(document.rows) || !Array.isArray(document.unowned) || document.rows.length + document.unowned.length !== pairs.length) throw new Error("component codec probe answered outside its exact declared closure");
+  const unowned = new Set<string>(document.unowned.map((value: unknown) => {
+    const row = documentOpenNeutralObject(value, ["artifactKind", "artifactSchema"]);
+    if (!pairs.some(([kind, schema]) => kind === row.artifactKind && schema === row.artifactSchema)) throw new Error("component codec probe reported an unowned kind the descriptor does not declare");
+    return String(row.artifactKind);
+  }));
   const rows = document.rows.map((value: unknown) => {
     const row = documentOpenNeutralObject(value, ["artifactKind", "artifactSchema", "packSchemaHash"]);
     if (!pairs.some(([kind, schema]) => kind === row.artifactKind && schema === row.artifactSchema) || !/^(?!0{64}$)[0-9a-f]{64}$/u.test(String(row.packSchemaHash)))
       throw new Error("component codec row is not a bounded nonzero identity the descriptor declares");
     return Object.freeze({ artifactKind: row.artifactKind as string, artifactSchema: row.artifactSchema as string, packSchemaHash: row.packSchemaHash as string });
   });
-  if (new Set(rows.map((row: TrustedBootstrapCodec) => row.artifactKind)).size !== rows.length) throw new Error("component codec probe repeated an artifact kind");
-  return Object.freeze(rows.sort(trustedBootstrapCodecOrder));
+  if (new Set(rows.map((row: TrustedBootstrapCodec) => row.artifactKind)).size !== rows.length || rows.some((row: TrustedBootstrapCodec) => unowned.has(row.artifactKind))) throw new Error("component codec probe repeated an artifact kind");
+  return Object.freeze({ rows: Object.freeze(rows.sort(trustedBootstrapCodecOrder)), unowned });
 }
 
-/** 🎯️ Derives one package's creatable document kinds from its own verified descriptor. A kind is
- * creatable exactly when the manifest both LISTS it (`artifactKinds`, which is what
- * `validate_descriptor_open_target`'s discoverability fence reads) and binds an EDITOR app to its
- * dialect; the surface, app and window ids are then the app's own. Nothing about the target is
- * named by this builder, so a package becomes openable by declaring itself openable. */
 /** 🗂️ Every `ArtifactKindSpec` one verified descriptor declares, deduplicated by kind id and in
  * declaration order. This is `validate_descriptor_open_target`'s own discoverability union: a spec
  * declared at PLUGIN level (`PluginBuilder::artifact_kind`, the channel GIS and Stdio still use) or
@@ -9645,34 +9791,38 @@ function trustedBootstrapDescriptorKindsV1(descriptor: Record<string, any>): rea
   return Object.freeze(declared.filter((kind) => !seen.has(String(kind.id)) && seen.add(String(kind.id))));
 }
 
-function trustedBootstrapDescriptorOpenTargetsV1(pluginId: string, descriptor: Record<string, any>, codecs: readonly TrustedBootstrapCodec[]): readonly TrustedBootstrapOpenTargetV1[] {
-  const manifest = descriptor.manifest as Record<string, any>;
-  const apps = (manifest.apps ?? []) as Record<string, any>[];
-  const targets: TrustedBootstrapOpenTargetV1[] = [];
-  for (const kind of trustedBootstrapDescriptorKindsV1(descriptor)) {
-    const app = apps.find((candidate) => candidate.role === "editor" && candidate.dialect?.artifactKind === kind.id);
-    if (!app) continue;
-    const codec = codecs.find((row) => row.artifactKind === kind.id && row.artifactSchema === kind.schema);
-    if (!codec) throw new Error(`trusted bootstrap open target ${kind.id} has no verified codec row`);
-    const windowKindId = (app.windowKinds ?? [])[0]?.id;
-    if (typeof windowKindId !== "string" || windowKindId.length === 0) throw new Error(`trusted bootstrap open target ${kind.id} declares no window kind`);
-    targets.push(
-      Object.freeze({
+/** 🎯️ The document-open targets one package's exact compiled descriptor declares, answered by the hub
+ * binary that validates this generation (`os-hub trusted-catalog open-targets`, the Rust pairing rule
+ * `descriptor_open_targets` in `🔏️trusted-catalog/🦀️.rs` that `validate_descriptor_open_target` also
+ * applies), each bound to the package's own verified codec row. The rule has one implementation; this is
+ * its caller. */
+function trustedBootstrapHubOpenTargetsV1(hubBinary: string, pluginId: string, descriptor: Uint8Array, codecs: readonly TrustedBootstrapCodec[], unowned: ReadonlySet<string>): readonly TrustedBootstrapOpenTargetV1[] {
+  const answer = spawnSync(hubBinary, ["trusted-catalog", "open-targets"], { input: descriptor, maxBuffer: 4 * 1024 * 1024, timeout: 120_000, killSignal: "SIGKILL", env: { PATH: process.env.PATH ?? "" } });
+  if (answer.error || answer.status !== 0) throw new Error(`hub open-target answer for ${pluginId} failed (${answer.status ?? answer.signal ?? answer.error?.message}): ${String(answer.stderr ?? "").trim().slice(0, 512)}`);
+  const document = documentOpenNeutralObject(JSON.parse(String(answer.stdout)), ["schema", "targets"]);
+  if (document.schema !== "semio.hub.trusted-catalog-descriptor-open-targets/v1" || !Array.isArray(document.targets)) throw new Error(`hub open-target answer for ${pluginId} is outside its schema`);
+  return Object.freeze(
+    document.targets.filter((value: any) => !unowned.has(String(value?.artifactKind))).map((value: unknown) => {
+      const row = documentOpenNeutralObject(value, ["artifactKind", "artifactSchema", "surfaceId", "appId", "windowKindId", "role", "rendererTarget", "parentDialect", "grant"]);
+      const codec = codecs.find((candidate) => candidate.artifactKind === row.artifactKind && candidate.artifactSchema === row.artifactSchema);
+      if (!codec) throw new Error(`trusted bootstrap open target ${row.artifactKind} has no verified codec row`);
+      const dialect = documentOpenNeutralObject(row.parentDialect, ["artifactKind", "standard", "subset"]);
+      const grant = documentOpenNeutralObject(row.grant, ["read", "write", "observe"]);
+      return Object.freeze({
         pluginId,
-        artifactKind: kind.id as string,
-        artifactSchema: kind.schema as string,
+        artifactKind: String(row.artifactKind),
+        artifactSchema: String(row.artifactSchema),
         packSchemaHash: codec.packSchemaHash,
-        surfaceId: app.id as string,
-        appId: app.id as string,
-        windowKindId,
-        role: "editor" as const,
+        surfaceId: String(row.surfaceId),
+        appId: String(row.appId),
+        windowKindId: String(row.windowKindId),
+        role: row.role === "viewer" ? ("viewer" as const) : ("editor" as const),
         rendererTarget: "wasm" as const,
-        parentDialect: Object.freeze({ artifactKind: app.dialect.artifactKind as string, standard: app.dialect.standard as string, subset: app.dialect.subset as string }),
-        grant: Object.freeze({ read: true, write: true, observe: true }),
-      }),
-    );
-  }
-  return Object.freeze(targets);
+        parentDialect: Object.freeze({ artifactKind: String(dialect.artifactKind), standard: String(dialect.standard), subset: String(dialect.subset) }),
+        grant: Object.freeze({ read: grant.read === true, write: grant.write === true, observe: grant.observe === true }),
+      });
+    }),
+  );
 }
 
 /** 🏗️ Produces one immutable closed N-package generation without loading or registering codecs. */
@@ -9735,7 +9885,7 @@ function bindTrustedCatalogFromPublished(dataRoot: string, sourceTrustedRoot: st
   return Object.freeze({ profileId: published.profileId, generationId: published.generationId, bundleSha256: published.bundleSha256, bundlePath });
 }
 
-export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): Promise<TrustedBootstrapMaterializationV1> {
+export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[], hubBinary: string): Promise<TrustedBootstrapMaterializationV1> {
   const bindSource = resolveTrustedCatalogBindSource();
   if (bindSource) {
     const bound = bindTrustedCatalogFromPublished(dataRoot, bindSource, selection);
@@ -9765,9 +9915,12 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
     const receipts = new Map<string, FreshComponentReceiptV1>();
     const descriptorClaims = new Map<string, TrustedBootstrapDescriptorClaimsV1>();
     const browserActors = new Map<string, TrustedBootstrapBrowserActorV1>();
+    const pluginModules = new Map<string, TrustedBootstrapPluginModuleRecordV1>();
     const descriptorJson = new Map<string, Record<string, any>>();
     const codecs: Record<string, readonly TrustedBootstrapCodec[]> = {};
     const openTargets: TrustedBootstrapOpenTargetV1[] = [];
+    const declaredOpenTargets = new Map<string, (codecs: readonly TrustedBootstrapCodec[], unowned: ReadonlySet<string>) => readonly TrustedBootstrapOpenTargetV1[]>();
+    const unownedKinds = new Map<string, ReadonlySet<string>>();
     for (const request of requests) {
       const spec = selection.find((candidate) => candidate.pluginId === request.pluginId)!;
       const target = join(buildRoot, `${request.pluginId}-target`);
@@ -9786,6 +9939,14 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
           if (descriptor.byteLength !== receipt.descriptor.byteLength || createHash("sha256").update(descriptor).digest("hex") !== receipt.descriptor.sha256) throw new Error("fresh descriptor protocol bytes differ from the producer receipt");
           descriptorClaims.set(request.pluginId, trustedBootstrapDescriptorClaims(descriptor));
           descriptorJson.set(request.pluginId, packValueToExactJson(decodePackValue(descriptor)) as Record<string, any>);
+          const descriptorCopy = Uint8Array.from(descriptor);
+          declaredOpenTargets.set(request.pluginId, (rows, unowned) => {
+            try {
+              return trustedBootstrapHubOpenTargetsV1(hubBinary, request.pluginId, descriptorCopy, rows, unowned);
+            } finally {
+              descriptorCopy.fill(0);
+            }
+          });
         } finally {
           descriptor.fill(0);
         }
@@ -9800,9 +9961,11 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
           codecs[request.pluginId] = linked;
         } else {
           const emitter = join(target, "debug", process.platform === "win32" ? "semio-framework-plugin-describe.exe" : "semio-framework-plugin-describe");
-          codecs[request.pluginId] = trustedBootstrapComponentCodecRowsV1(repoRoot, emitter, join(stage, "component.wasm"), join(target, "component-codecs.json"), manifestKinds);
+          const answered = trustedBootstrapComponentCodecRowsV1(repoRoot, emitter, join(stage, "component.wasm"), join(target, "component-codecs.json"), manifestKinds);
+          codecs[request.pluginId] = answered.rows;
+          unownedKinds.set(request.pluginId, answered.unowned);
         }
-        for (const declared of trustedBootstrapDescriptorOpenTargetsV1(request.pluginId, descriptorJson.get(request.pluginId)!, codecs[request.pluginId]!)) openTargets.push(declared);
+        for (const declared of declaredOpenTargets.get(request.pluginId)!(codecs[request.pluginId]!, unownedKinds.get(request.pluginId) ?? new Set())) openTargets.push(declared);
         const pluginOpensDocuments = openTargets.some((declared) => declared.pluginId === request.pluginId);
         if (pluginOpensDocuments) {
           const componentBytes = trustedBootstrapReadRegular(join(stage, "component.wasm"), DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, `fresh ${request.pluginId} component for closed actor`, checkBuild);
@@ -9837,6 +10000,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
           trustedBootstrapFsyncDirectory(join(stage, "browser"));
         }
         browserActors.set(request.pluginId, actor);
+        pluginModules.set(request.pluginId, await trustedBootstrapPluginModuleV1(repoRoot, request, stage, stageRoot, target, receipt, control, checkBuild));
         receipts.set(request.pluginId, receipt);
       } finally {
         derivedActor?.bytes.fill(0);
@@ -9869,6 +10033,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
         dependencies: dependencies.get(identity.pluginId)!,
         executionProtocol: descriptorClaims.get(identity.pluginId)!.executionProtocol,
         browserActor: browserActors.get(identity.pluginId)!,
+        pluginModule: pluginModules.get(identity.pluginId)!,
         codecCount: codecs[identity.pluginId]!.length,
         targetCount: openTargets.filter((declared) => declared.pluginId === identity.pluginId).length,
       };
@@ -9886,11 +10051,12 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
       descriptor: { path: `packages/${plugin}/descriptor.semio`, byteLength: receipt.descriptor.byteLength, sha256: receipt.descriptor.sha256 },
       executionProtocol: descriptorClaims.get(plugin)!.executionProtocol,
       browserActor: browserActors.get(plugin)!,
+      pluginModule: pluginModules.get(plugin)!,
       nativeCodecs: codecs[plugin],
       openTargets: openTargets.filter((declared) => declared.pluginId === plugin).map(({ pluginId: _owner, ...target }) => target),
     });
     const bundle = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       profiles: [
         {
           id: profileSummary.id,
@@ -9908,6 +10074,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
     trustedBootstrapWriteNew(bundlePath, bundleBytes, checkBuild);
     for (const identity of selectedClosure) trustedBootstrapFsyncDirectory(join(stageRoot, "packages", identity.pluginId));
     trustedBootstrapFsyncDirectory(join(stageRoot, "packages"));
+    trustedBootstrapFsyncDirectory(join(stageRoot, "plugin-modules"));
     trustedBootstrapFsyncDirectory(stageRoot);
     if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted catalog bootstrap cancelled before publication");
     const generations = join(trustedRoot, "generations");
@@ -9954,7 +10121,7 @@ function trustedBootstrapReadCurrentBundle(current: TrustedBootstrapMaterializat
   try {
     if (createHash("sha256").update(bytes).digest("hex") !== current.bundleSha256) throw new Error("trusted rotation source bundle differs from its retained digest");
     const bundle = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-    if (bundle.schemaVersion !== 2 || bundle.profiles?.length !== 1 || !Array.isArray(bundle.packages) || bundle.packages.length === 0 || bundle.profiles[0]?.id !== current.profileId || bundle.profiles[0]?.generationId !== current.generationId)
+    if (bundle.schemaVersion !== 3 || bundle.profiles?.length !== 1 || !Array.isArray(bundle.packages) || bundle.packages.length === 0 || bundle.profiles[0]?.id !== current.profileId || bundle.profiles[0]?.generationId !== current.generationId)
       throw new Error("trusted rotation source differs from the exact retained profile generation");
     return bundle;
   } finally {
@@ -10148,12 +10315,15 @@ function stageTrustedBootstrapCandidateCurrent(candidateDataRoot: string, curren
       const stagedPlugins = [...receipts.keys()].sort();
       const stagedCarriesActor = (plugin: string): boolean => receipts.get(plugin)!.browserActor.kind === "closed-browser-actor";
       const files: { relative: string; maximum: number }[] = [];
+      mkdirSync(join(stageRoot, "plugin-modules"), { recursive: true, mode: 0o700 });
       for (const plugin of stagedPlugins) {
         mkdirSync(stagedCarriesActor(plugin) ? join(stageRoot, "packages", plugin, "browser") : join(stageRoot, "packages", plugin), { recursive: true, mode: 0o700 });
         files.push({ relative: `packages/${plugin}/component.wasm`, maximum: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES });
         files.push({ relative: `packages/${plugin}/descriptor.semio`, maximum: DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES });
+        files.push({ relative: receipts.get(plugin)!.pluginModule.path, maximum: TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES });
         if (stagedCarriesActor(plugin)) files.push({ relative: `packages/${plugin}/browser/closed-actor.mjs`, maximum: DOCUMENT_BROWSER_ACTOR_MAX_BYTES });
       }
+      for (const blob of readdirSync(join(sourceRoot, "plugin-modules")).sort()) files.push({ relative: trustedBootstrapPluginModuleBlobPath(blob), maximum: TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES });
       trustedBootstrapWriteNew(join(stageRoot, "trusted-catalog.json"), bundleBytes, check);
       for (const file of files) {
         const bytes = trustedBootstrapReadRegular(join(sourceRoot, file.relative), file.maximum, `trusted candidate ${file.relative}`, check);
@@ -10167,6 +10337,7 @@ function stageTrustedBootstrapCandidateCurrent(candidateDataRoot: string, curren
         if (stagedCarriesActor(plugin)) trustedBootstrapFsyncDirectory(join(stageRoot, "packages", plugin, "browser"));
         trustedBootstrapFsyncDirectory(join(stageRoot, "packages", plugin));
       }
+      trustedBootstrapFsyncDirectory(join(stageRoot, "plugin-modules"));
       trustedBootstrapFsyncDirectory(join(stageRoot, "packages"));
       trustedBootstrapFsyncDirectory(stageRoot);
       trustedBootstrapVerifyGeneration(stageRoot, bundleBytes, receipts, check);
@@ -10192,7 +10363,7 @@ async function proveTrustedRotationSourceFixture(fixture: Record<string, any>): 
   const evidence = mkdtempSync(join(artifactRoot, "rotation-source-"));
   for (const law of fixture.rotation.sourceCases) {
     const path = join(evidence, `${law.change}.json`);
-    const bundle = { schemaVersion: 2, profiles: [{ id: fixture.profile.id, generationId: fixture.profile.generationId }], packages: [{}, {}] };
+    const bundle = { schemaVersion: 3, profiles: [{ id: fixture.profile.id, generationId: fixture.profile.generationId }], packages: [{}, {}] };
     const bytes = Buffer.from(JSON.stringify(bundle));
     const sha256 = await webSha256Hex(bytes);
     writeFileSync(path, bytes, { flag: "wx" });
@@ -10264,6 +10435,7 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
       const sourceRoot = join(generationsRoot, current.generationId, "packages", plugin);
       const destinationRoot = join(stageRoot, "packages", plugin);
       mkdirSync(destinationRoot, { recursive: true, mode: 0o700 });
+      const sourceReceipt = trustedBootstrapGenerationReceipt(record);
       const component = trustedBootstrapReadRegular(join(sourceRoot, "component.wasm"), 64 * 1024 * 1024, `${plugin} rotation component`, checkGeneration);
       let descriptor = trustedBootstrapReadRegular(join(sourceRoot, "descriptor.semio"), 4 * 1024 * 1024, `${plugin} rotation descriptor`, checkGeneration);
       let actorBytes: Uint8Array | undefined;
@@ -10326,6 +10498,7 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
         }
         trustedBootstrapWriteNew(join(destinationRoot, "component.wasm"), component, checkGeneration);
         trustedBootstrapWriteNew(join(destinationRoot, "descriptor.semio"), descriptor, checkGeneration);
+        record.pluginModule = trustedBootstrapCarryPluginModule(join(generationsRoot, current.generationId), stageRoot, sourceReceipt, record, descriptor, checkGeneration);
         trustedBootstrapFsyncDirectory(destinationRoot);
       } finally {
         component.fill(0);
@@ -10344,11 +10517,12 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
       dependencies: record.dependencies,
       executionProtocol: record.executionProtocol,
       browserActor: record.browserActor,
+      pluginModule: record.pluginModule,
       codecCount: record.nativeCodecs.length,
       targetCount: record.openTargets.length,
     }));
     if (!Array.isArray(profile.openTargets) || profile.openTargets.length !== 1) throw new Error("trusted rotation source profile does not declare exactly one open target");
-    const profileSummary = { id: profile.id, selectedClosure: profile.selectedClosure, packages: packageSummary, openTarget: { pluginId: profile.openTargets[0].package.pluginId, ...profile.openTargets[0].target } };
+    const profileSummary = { id: profile.id, selectedClosure: profile.selectedClosure, packages: packageSummary, openTargets: profile.openTargets.map((selection: any) => ({ pluginId: selection.package.pluginId, ...selection.target })) };
     const generationId = createHash("sha256").update(trustedBootstrapProfileEncoding(profileSummary, codecs)).digest("hex");
     if (generationId === current.generationId) throw new Error("trusted rotation did not change the full profile generation");
     profile.generationId = generationId;
@@ -10356,6 +10530,7 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
     if (bundleBytes.byteLength > 4 * 1024 * 1024) throw new Error("trusted rotation bundle exceeds 4 MiB");
     trustedBootstrapWriteNew(join(stageRoot, "trusted-catalog.json"), bundleBytes, checkGeneration);
     trustedBootstrapFsyncDirectory(join(stageRoot, "packages"));
+    trustedBootstrapFsyncDirectory(join(stageRoot, "plugin-modules"));
     trustedBootstrapFsyncDirectory(stageRoot);
     const generationRoot = join(generationsRoot, generationId);
     if (existsSync(generationRoot)) throw new Error("trusted rotation generation already exists");
@@ -10462,7 +10637,7 @@ class TrustedBootstrapPublicationUnconfirmed extends Error {
 type TrustedPublicationChildResultV1 = Readonly<{ bytes: Buffer; status: number | null; signal: NodeJS.Signals | null; failed: string }>;
 
 /** 👶️ Retains one direct publication child until close with bounded evidence and cancellation. */
-async function runTrustedPublicationChild(binaryPath: string, args: readonly string[], input: Uint8Array, dataRoot: string, evidenceRoot: string, control: Pick<FreshBuildControlV1, "cancelled" | "remainingMs">): Promise<TrustedPublicationChildResultV1> {
+async function runTrustedPublicationChild(binaryPath: string, args: readonly string[], input: Uint8Array, dataRoot: string, evidenceRoot: string, control: Pick<FreshBuildControlV1, "cancelled" | "remainingMs"> & { progressed?: () => void }): Promise<TrustedPublicationChildResultV1> {
   if (!isAbsolute(binaryPath) || !isAbsolute(dataRoot) || !isAbsolute(evidenceRoot) || input.byteLength === 0 || input.byteLength > 4096) throw new Error("publication child authority exceeds its boundary");
   return await new Promise((resolveOutput, rejectOutput) => {
     let stdout: number | undefined, stderr: number | undefined;
@@ -10478,12 +10653,13 @@ async function runTrustedPublicationChild(binaryPath: string, args: readonly str
     }
     let outputBytes = 0, diagnosticBytes = 0, failed = "";
     const chunks: Buffer[] = [];
-    const terminate = (reason: string): void => { if (!failed) failed = reason; child.kill("SIGKILL"); };
+    const terminate = (reason: string): void => { if (!failed) failed = reason; terminateOwnedChildTree(child); };
     const timer = setInterval(() => {
       if (control.cancelled()) terminate("publication cancelled");
       else if (control.remainingMs() <= 0) terminate("publication timed out");
     }, 100);
     child.stdout!.on("data", (chunk: Buffer) => {
+      control.progressed?.();
       const retained = Buffer.from(chunk.subarray(0, Math.max(0, 4096 - outputBytes)));
       if (retained.length) {
         try { writeSync(stdout!, retained); chunks.push(retained); }
@@ -10493,6 +10669,7 @@ async function runTrustedPublicationChild(binaryPath: string, args: readonly str
       if (outputBytes > 4096) terminate("publication stdout exceeded its receipt bound");
     });
     child.stderr!.on("data", (chunk: Buffer) => {
+      control.progressed?.();
       const retained = chunk.subarray(0, Math.max(0, 65536 - diagnosticBytes));
       if (retained.length) { try { writeSync(stderr!, retained); } catch { terminate("publication diagnostic evidence write failed"); } }
       diagnosticBytes += chunk.length;
@@ -10527,10 +10704,16 @@ async function publishTrustedBootstrapCurrent(dataRoot: string, receipt: Trusted
   const command = Object.freeze({ schema: "semio.hub.trusted-catalog-publication/v1", requestId: randomBytes(16).toString("hex"), profileId: receipt.profileId, generationId: receipt.generationId, bundleSha256: receipt.bundleSha256, expectedCurrentSha256: expected?.sha256 ?? null });
   const input = Buffer.from(JSON.stringify(command) + "\n");
   if (!isAbsolute(dataRoot) || !isAbsolute(binaryPath) || input.length > 4096) throw new Error("trusted publication transport requires exact bounded authority");
-  const owner = trustedBootstrapBuildControl(40_000);
+  // ⏳️ The native publisher re-verifies the whole catalog (it interprets every non-linked guest's codec) before
+  // its compare-and-swap, so a calendar wall refused a correct publication on a busy machine (40 s against a
+  // multi-minute verification, ticket 26/09/23 W1 §4.9). It is bounded by NO PROGRESS instead, with the same
+  // span the hub's own startup loader uses; every stderr progress record restamps it.
+  const owner = trustedBootstrapBuildControl(0);
+  let lastProgressMs = Date.now();
+  const control = { cancelled: () => owner.control.cancelled(), remainingMs: () => TRUSTED_CATALOG_READINESS_STALL_BOUND_MS - (Date.now() - lastProgressMs), progressed: () => { lastProgressMs = Date.now(); } };
   let processResult: TrustedPublicationChildResultV1 | undefined;
   try {
-    processResult = await runTrustedPublicationChild(binaryPath, ["trusted-catalog", "publish"], input, dataRoot, evidenceRoot, owner.control);
+    processResult = await runTrustedPublicationChild(binaryPath, ["trusted-catalog", "publish"], input, dataRoot, evidenceRoot, control);
     const published = trustedPublicationChildReceipt(processResult, command, publicationRevision, evidenceRoot);
     const current = trustedBootstrapCurrent(dataRoot);
     if (!current || current.currentSha256 !== published.currentSha256) throw new Error("trusted current changed after native publication; do not activate the candidate plan");
@@ -10548,7 +10731,7 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
   const selected = bundle.packages?.find((candidate: any) => candidate.pluginId === "gis");
   // 🎯️ The GIS target is selected by its OWNER, not by index: a generation's open targets are a SET
   // now (ticket 26/09/18), so `[0]` would silently probe whichever package happens to sort first.
-  const target = profile?.openTargets?.find((row: any) => row?.package?.pluginId === "gis")?.target;
+  const target = profile?.openTargets?.find((row: any) => row?.package?.pluginId === "gis" && row?.target?.role === "editor")?.target;
   if (!profile || !selected || !target) throw new Error("trusted stdio+GIS candidate bundle lost its exact GIS target");
   const headers = { authorization: `Bearer ${envelope.capability}`, "content-type": "application/json" };
   const created = await postLiveDirectoryCommand(run, envelope.capability, liveDirectoryCommandRequestId(), { kind: "create-space", name: "Trusted GIS Bootstrap Probe", spaceKind: "studio", visibility: "private" });
@@ -10556,7 +10739,7 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
   const spaceId = createdBody?.events?.find((candidate: any) => candidate?.body?.kind === "space.created")?.body?.spaceId;
   if (typeof spaceId !== "string" || spaceId.length === 0) throw new Error("trusted stdio+GIS candidate could not create its private probe space");
   // 🌱️ The probe document is created through the Hub's OWN server-owned creation transaction, the
-  // same one `createCheckpointPublicationProcessGenesis` drives. A bare `announce-document` registers
+  // same one `createCheckInProcessGenesis` drives. A bare `announce-document` registers
   // a descriptor and nothing else: the open-plan issuer also requires an ACTIVE ARTIFACT CHECKPOINT
   // (`🏗️bootstrap/🦀️.rs:3099-3104`), so it answered `404 not-found` for every announced-only document
   // and this proof could never have passed. The creation transaction establishes the genesis
@@ -10564,9 +10747,11 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
   const creationRoute = `/spaces/${encodeURIComponent(spaceId)}/artifact-creations`;
   const creationRequest = sealSpaceArtifactCreateV1({ requestId: randomBytes(16).toString("hex"), expectedCatalogGenerationId: receipt.generationId, kindId: target.artifactKind, name: "Trusted GIS Bootstrap Probe Map" });
   const accepted = await fetch(`http://127.0.0.1:${run.port}${creationRoute}`, { method: "POST", headers, signal: AbortSignal.timeout(5_000), body: JSON.stringify(creationRequest) });
-  let creation = parseSpaceArtifactCreationStatusJsonV1(await accepted.text());
-  if (![200, 202].includes(accepted.status) || creation.requestId !== creationRequest.requestId || creation.spaceId !== spaceId || creation.catalogGenerationId !== creationRequest.expectedCatalogGenerationId)
-    throw new Error(`trusted stdio+GIS candidate could not create its GIS Map probe: ${accepted.status}`);
+  const acceptedText = await accepted.text();
+  if (![200, 202].includes(accepted.status)) throw new Error(`trusted stdio+GIS candidate could not create its GIS Map probe: HTTP ${accepted.status} ${JSON.stringify(acceptedText.slice(0, 512))}`);
+  let creation = parseSpaceArtifactCreationStatusJsonV1(acceptedText);
+  if (creation.requestId !== creationRequest.requestId || creation.spaceId !== spaceId || creation.catalogGenerationId !== creationRequest.expectedCatalogGenerationId)
+    throw new Error(`trusted stdio+GIS candidate GIS Map probe answered another creation: ${JSON.stringify(acceptedText.slice(0, 512))}`);
   const creationDeadline = Date.now() + 120_000;
   while (creation.phase !== "ready") {
     if (!["accepted", "preparing", "indeterminate"].includes(creation.phase) || Date.now() >= creationDeadline) throw new Error(`trusted stdio+GIS candidate creation reached ${creation.phase} before Ready`);
@@ -10642,22 +10827,29 @@ async function proveTrustedPublicationCli(repoRoot: string, hubRoot: string): Pr
     cwd: repoRoot, ...exactCargoStageEnvironments(), artifactDir: artifactRoot,
     groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--features", "integration-fixtures"], laws: [
       "trusted_catalog_command::tests::trusted_publication_transport_matches_neutral_arguments_and_input_bounds",
-      "tests::checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog",
+      "tests::check_in_process_fixture_emits_verified_gis_ledger_and_catalog",
     ] }],
     buildBudgetMs: buildBudgetMs(), listBudgetMs: 120_000, lawBudgetMs: 180_000,
     progress(event) { console.log(`trusted-publication-cli-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
   });
   await runCargo(["build", "--manifest-path", "Cargo.toml", "--features", "integration-fixtures", "--bin", "os-hub"], hubRoot);
   const binaryPath = join(cargoTargetDir, "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-  const fixtureData = join(artifactRoot, "checkpoint-publication-process-fixture", "data");
+  const fixtureData = join(artifactRoot, "check-in-process-fixture", "data");
   const fixtureCurrent = trustedBootstrapReadCurrentPointer(fixtureData);
   assert(fixtureCurrent);
   const evidence = mkdtempSync(join(artifactRoot, "publication-cli-"));
   const dataRoot = join(evidence, "data"), generationRoot = join(dataRoot, "trusted-catalog/generations", fixtureCurrent.pointer.generationId);
   mkdirSync(generationRoot, { recursive: true, mode: 0o700 });
-  for (const file of ["component.wasm", "descriptor.semio", "closed-actor.mjs", "stdio-component.wasm", "stdio-descriptor.semio", "trusted-catalog.json"]) {
+  for (const file of ["component.wasm", "descriptor.semio", "closed-actor.mjs", "plugin-module-gis.json", "stdio-component.wasm", "stdio-descriptor.semio", "plugin-module-stdio.json", "trusted-catalog.json"]) {
     const bytes = trustedBootstrapReadRegular(join(fixtureData, "trusted-catalog/generations", fixtureCurrent.pointer.generationId, file), file.endsWith(".wasm") ? DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES : 4 * 1024 * 1024, `publication CLI fixture ${file}`, () => {});
     try { trustedBootstrapWriteNew(join(generationRoot, file), bytes, () => {}); } finally { bytes.fill(0); }
+  }
+  for (const directory of ["plugin-modules"]) {
+    mkdirSync(join(generationRoot, directory), { recursive: true });
+    for (const name of readdirSync(join(fixtureData, "trusted-catalog/generations", fixtureCurrent.pointer.generationId, directory))) {
+      const bytes = trustedBootstrapReadRegular(join(fixtureData, "trusted-catalog/generations", fixtureCurrent.pointer.generationId, directory, name), TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, `publication CLI fixture ${directory}/${name}`, () => {});
+      try { trustedBootstrapWriteNew(join(generationRoot, directory, name), bytes, () => {}); } finally { bytes.fill(0); }
+    }
   }
   const command = { schema: "semio.hub.trusted-catalog-publication/v1", requestId: "12".repeat(16), profileId: fixtureCurrent.pointer.profileId, generationId: fixtureCurrent.pointer.generationId, bundleSha256: fixtureCurrent.pointer.bundleSha256, expectedCurrentSha256: null as string | null };
   const run = async (name: string, value: Record<string, unknown>): Promise<TrustedPublicationChildResultV1> => {
@@ -10721,7 +10913,7 @@ async function validateAndPublishTrustedStdioGisCandidate(repoRoot: string, hubR
   const candidate = await startLocalHub(repoRoot, hubRoot, [profile], { capture: true, dataDir: candidateDataRoot, binaryPath: validation.binaryPath });
   let envelope: Record<string, any> | undefined;
   try {
-    const readiness = await waitForReadiness(candidate);
+    const readiness = await waitForReadiness(candidate, false, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS);
     if (readiness.artifactAuthority?.ready !== true || readiness.features?.openPlan !== true || readiness.features?.openPlanExchange !== true) throw new Error("trusted stdio+GIS candidate did not expose one verified document-open authority");
     envelope = await issueLocalCredential(candidate, profile.profileId, "native");
     if (stalePlan) await proveTrustedStdioGisStalePlanRejected(candidate, stalePlan, envelope);
@@ -11021,7 +11213,7 @@ class GisMapFrozenBindingCheckScript extends BundleScript {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
-        groups: [{ package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: ["gis_map_verified_binding_freezes_catalog_selection_and_native_executable", "gis_map_binding_constructs_from_loaded_catalog_and_retains_verified_bytes"] }],
+        groups: [{ package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: ["gis_map_verified_binding_freezes_catalog_selection_and_native_executable", "gis_map_binding_constructs_from_loaded_catalog_and_refuses_tampered_retained_bytes"] }],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
         listBudgetMs: 60_000,
@@ -11042,7 +11234,7 @@ type GisMapProcessDocumentSocketV1 = {
   error: unknown;
 };
 
-type GisMapDocumentOpenFixtureV1 = Pick<CheckpointPublicationProcessFixtureV1, "generationId" | "documentId" | "package" | "artifact" | "surfaceId">;
+type GisMapDocumentOpenFixtureV1 = Pick<CheckInProcessFixtureV1, "generationId" | "documentId" | "package" | "artifact" | "surfaceId">;
 
 type GisMapProcessMcpClientV1 = {
   readonly child: ChildProcess;
@@ -11137,8 +11329,8 @@ async function openGisMapProcessDocumentSocket(
         "command",
       ),
     );
-    await waitForCheckpointSocketFrame(socket, live.frames, (frame) => ("Welcome" in frame ? frame.Welcome : undefined), `${clientInstanceId} Welcome`);
-    await waitForCheckpointSocketFrame(socket, live.frames, (frame) => ("Session" in frame && frame.Session.actor === grant.actorId ? frame.Session : undefined), `${clientInstanceId} Session`);
+    await waitForDocumentSocketFrame(socket, live.frames, (frame) => ("Welcome" in frame ? frame.Welcome : undefined), `${clientInstanceId} Welcome`);
+    await waitForDocumentSocketFrame(socket, live.frames, (frame) => ("Session" in frame && frame.Session.actor === grant.actorId ? frame.Session : undefined), `${clientInstanceId} Session`);
     if (live.error) throw live.error;
     return live;
   } catch (error) {
@@ -11215,7 +11407,7 @@ async function startGisMapProcessMcpClient(repoRoot: string, run: LocalHubRun, e
     return client;
   } catch (error) {
     child.stdin?.end();
-    if (child.exitCode === null) child.kill("SIGKILL");
+    terminateOwnedChildTree(child);
     await waitForChildExit(child, 5_000).catch(() => {});
     client.capability = "";
     client.stdout.forEach((bytes) => bytes.fill(0));
@@ -11287,6 +11479,9 @@ async function releaseGisInferenceCheckpointControl(run: LocalHubRun, jobId: str
 }
 
 /** 📥️ Reads, bounds, hashes, and immediately wipes one MCP-projected canonical pair. */
+/** 🧯️ The hub authority's own canonical pair ceiling (`AUTHORITY_MAX_PAIR_BYTES`). */
+const GIS_MAP_PROCESS_PAIR_MAX_BYTES = 64 * 1024 * 1024;
+
 async function readGisMapProcessCheckpoint(client: GisMapProcessMcpClientV1, spaceId: string, documentId: string): Promise<GisMapCheckpointProjectionV1> {
   const uri = `semio://workspace/scopes/${encodeURIComponent(spaceId)}/${encodeURIComponent(documentId)}/checkpoint`;
   const response = await callGisMapProcessMcp(client, "resources/read", { uri });
@@ -11309,7 +11504,7 @@ async function readGisMapProcessCheckpoint(client: GisMapProcessMcpClientV1, spa
       spr.byteLength === 0 ||
       pack.byteLength !== resource?.pack?.byteLength ||
       spr.byteLength !== resource?.spr?.byteLength ||
-      pack.byteLength + spr.byteLength > CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES ||
+      pack.byteLength + spr.byteLength > GIS_MAP_PROCESS_PAIR_MAX_BYTES ||
       createHash("sha256").update(pack).digest("hex") !== resource?.pack?.sha256 ||
       createHash("sha256").update(spr).digest("hex") !== resource?.spr?.sha256 ||
       JSON.stringify(frontierKeys) !== JSON.stringify(["chainHash", "documentId", "headEditId", "headEditOrdinal", "lastCommitSeq"]) ||
@@ -11339,7 +11534,7 @@ async function finishGisMapProcessMcpClient(client: GisMapProcessMcpClientV1 | u
   let timedOut = false;
   await waitForChildExit(client.child, 5_000).catch(() => {
     timedOut = true;
-    if (client.child.exitCode === null) client.child.kill();
+    terminateOwnedChildTree(client.child);
   });
   if (timedOut) await waitForChildExit(client.child, 5_000).catch(() => {});
   const stdout = Buffer.concat(client.stdout);
@@ -11794,7 +11989,7 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
   const bundle = trustedBootstrapReadCurrentBundle(prepared.current, () => {});
   const selected = bundle.packages.find((row: any) => row.pluginId === "gis");
   const profile = bundle.profiles.find((row: any) => row.id === prepared.current.profileId);
-  const target = profile?.openTargets?.[0]?.target;
+  const target = profile?.openTargets?.find((row: any) => row?.target?.role === "editor")?.target;
   assert.deepEqual(bundle.packages.map((row: any) => row.pluginId).sort(), ["gis", "stdio"]);
   assert.equal(selected?.executionProtocol?.appChannelVersion, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1);
   assert.equal(target?.surfaceId, "s.gis.gismap@1/*#editor");
@@ -11846,7 +12041,7 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
     browser = await chromium.launch({ headless: true });
     run = await startLocalHub(repoRoot, hubRoot, profiles, { capture: true, isolatedSecuritySmoke: true, dataDir: prepared.dataRoot, binaryPath: prepared.binaryPath, inferenceCheckpointControl: true });
     const ready = await waitForReadiness(run);
-    assert.equal(ready.features?.inference, true);
+    assert.deepEqual(ready.features?.inferenceServices, [{ serviceId: "s.gis.gismap.inference", route: "inference/gis-map" }]);
     assert.equal(ready.artifactAuthority?.ready, true);
     for (const profile of profiles) authors.push(await issueLocalCredential(run, profile.profileId, "native", nonce++));
     const userB = await liveDirectoryEventPageUser(run, authors[1]!);
@@ -11920,7 +12115,7 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
       throw new Error("two actual acknowledged Shell maps did not reach the exact scoped regions");
     };
     const changedPair = async (before: GisMapCheckpointProjectionV1, offsets: readonly number[]): Promise<GisMapCheckpointProjectionV1> => {
-      const controls = await Promise.all(sockets.map((socket, index) => waitForCheckpointSocketFrame(socket.socket, socket.frames, (frame) => frame.RebootstrapRequired?.control, `Shell peer ${index} durable change`, offsets[index])));
+      const controls = await Promise.all(sockets.map((socket, index) => waitForDocumentSocketFrame(socket.socket, socket.frames, (frame) => frame.RebootstrapRequired?.control, `Shell peer ${index} durable change`, offsets[index])));
       assert.deepEqual(controls[0], controls[1]);
       for (const socket of sockets) if (socket.error) throw socket.error;
       assert.equal(controls[0].space_id, scope.spaceId); assert.equal(controls[0].document_id, scope.documentId);
@@ -12004,11 +12199,11 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
     throw new Error("GIS Map proposal process requires an absolute ticket-owned SEMIO_TEST_ARTIFACT_DIR");
   }
   mkdirSync(artifactPath, { recursive: true, mode: 0o700 });
-  const payload = checkpointPublicationProcessFixture();
+  const payload = checkInProcessFixture();
   const dataRoot = join(artifactPath, `gis-map-proposal-process-${randomBytes(8).toString("hex")}`);
   mkdirSync(dataRoot, { mode: 0o700 });
-  const materialized = await materializeTrustedCatalogBundle(repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES));
   const binaryPath = hubBinaryPath(repoRoot);
+  const materialized = await materializeTrustedCatalogBundle(repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES), binaryPath);
   const validation = { binaryPath, cargoTargetDir: dirname(dirname(binaryPath)) };
   await validateAndPublishTrustedStdioGisCandidate(repoRoot, hubRoot, dataRoot, materialized, validation);
   const current = trustedBootstrapCurrent(dataRoot);
@@ -12016,7 +12211,7 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
   const bundle = trustedBootstrapReadCurrentBundle(current, () => {});
   const profile = bundle.profiles?.find((row: any) => row?.id === current.profileId);
   const selected = bundle.packages?.find((row: any) => row?.pluginId === "gis");
-  const target = profile?.openTargets?.[0]?.target;
+  const target = profile?.openTargets?.find((row: any) => row?.target?.role === "editor")?.target;
   if (
     !profile ||
     !selected ||
@@ -12029,12 +12224,11 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
   ) {
     throw new Error("GIS Map proposal process current does not select the exact compiled v14 Map target");
   }
-  let fixture: CheckpointPublicationProcessFixtureV1 = Object.freeze({
+  let fixture: CheckInProcessFixtureV1 = Object.freeze({
     ...payload.fixture,
     profileId: current.profileId,
     generationId: current.generationId,
     documentId: `gis-map-collaboration-${randomBytes(8).toString("hex")}`,
-    mutationId: `gis-map-base-${randomBytes(8).toString("hex")}`,
     package: { pluginId: selected.pluginId, packageId: selected.packageId, version: selected.version, componentSha256: selected.component.sha256 },
     artifact: { kind: target.artifactKind, schema: target.artifactSchema, packSchemaHash: target.packSchemaHash },
     surfaceId: target.surfaceId,
@@ -12044,7 +12238,6 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
     { profileId: "gis-map-author-b", subject: "gis-map-process-author-b", displayName: "GIS Map Author B", allowedClientClasses: ["native", "mcp"] },
   ];
   const run = await startLocalHub(repoRoot, hubRoot, profiles, { capture: true, isolatedSecuritySmoke: true, dataDir: dataRoot, binaryPath, inferenceCheckpointControl: true });
-  const retained = [payload.pack, payload.spr, payload.diff, payload.inverse];
   let authorA: Record<string, any> | undefined;
   let authorB: Record<string, any> | undefined;
   let mcpA: GisMapProcessMcpClientV1 | undefined;
@@ -12053,7 +12246,7 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
   let socketB: GisMapProcessDocumentSocketV1 | undefined;
   try {
     const readiness = await waitForReadiness(run);
-    if (readiness.features?.inference !== true || readiness.artifactAuthority?.ready !== true) throw new Error("GIS Map proposal process Hub did not publish its verified inference authority");
+    if (!readiness.features?.inferenceServices?.some((service: { serviceId: string }) => service.serviceId === "s.gis.gismap.inference") || readiness.artifactAuthority?.ready !== true) throw new Error("GIS Map proposal process Hub did not publish its verified inference authority");
     authorA = await issueLocalCredential(run, profiles[0]!.profileId, "native", 2);
     authorB = await issueLocalCredential(run, profiles[1]!.profileId, "native", 3);
     const userB = await liveDirectoryEventPageUser(run, authorB);
@@ -12063,9 +12256,9 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
     if (typeof spaceId !== "string" || spaceId.length === 0 || typeof userB.email !== "string") throw new Error("GIS Map proposal process could not create its private two-Author space");
     const promoted = await postLiveDirectoryCommand(run, authorA.capability, liveDirectoryCommandRequestId(), { kind: "upsert-member", spaceId, email: userB.email, role: "author" });
     if (promoted.status !== 202) throw new Error(`GIS Map proposal process could not admit Author B: ${promoted.status}`);
-    fixture = await createCheckpointPublicationProcessGenesis(run, authorA.capability, spaceId, fixture);
-    const { plan, frontier } = await commitCheckpointPublicationProcessMutation(run, authorA.capability, spaceId, fixture, payload.diff, payload.inverse);
-    const initialPublication = await publishCheckpointPublicationProcessPairV1(run, authorA.capability, spaceId, fixture, plan, frontier, payload.pack, payload.spr);
+    fixture = await createCheckInProcessGenesis(run, authorA.capability, spaceId, fixture);
+    const { frontier } = await commitCheckInProcessEdit(run, authorA.capability, spaceId, fixture, payload.envelopes);
+    const initialCheckIn = await checkInProcessHeadV1(run, authorA.capability, spaceId, fixture.documentId, frontier);
 
     const mcpEnvelopeA = await issueLocalCredential(run, profiles[0]!.profileId, "mcp", 4);
     const mcpEnvelopeB = await issueLocalCredential(run, profiles[1]!.profileId, "mcp", 5);
@@ -12075,7 +12268,7 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
     socketB = await openGisMapProcessDocumentSocket(run, authorB.capability, spaceId, fixture, "gis-map-author-b");
     const initialA = await readGisMapProcessCheckpoint(mcpA, spaceId, fixture.documentId);
     const initialB = await readGisMapProcessCheckpoint(mcpB, spaceId, fixture.documentId);
-    if (JSON.stringify(initialA) !== JSON.stringify(initialB) || initialA.activeCheckpointId !== initialPublication.receipt.checkpoint.checkpointId) {
+    if (JSON.stringify(initialA) !== JSON.stringify(initialB) || initialA.activeCheckpointId !== initialCheckIn.ready?.checkpointId) {
       throw new Error("GIS Map process Authors did not open the exact same initial canonical pair");
     }
 
@@ -12124,8 +12317,8 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
     ) {
       throw new Error(`GIS Map Author A approval did not reach a committed public checkpoint: ${approved.status}`);
     }
-    const controlA = await waitForCheckpointSocketFrame(socketA.socket, socketA.frames, (frame) => frame.RebootstrapRequired?.control, "Author A RebootstrapRequired");
-    const controlB = await waitForCheckpointSocketFrame(socketB.socket, socketB.frames, (frame) => frame.RebootstrapRequired?.control, "Author B RebootstrapRequired");
+    const controlA = await waitForDocumentSocketFrame(socketA.socket, socketA.frames, (frame) => frame.RebootstrapRequired?.control, "Author A RebootstrapRequired");
+    const controlB = await waitForDocumentSocketFrame(socketB.socket, socketB.frames, (frame) => frame.RebootstrapRequired?.control, "Author B RebootstrapRequired");
     if (socketA.error || socketB.error) throw socketA.error ?? socketB.error;
     if (
       JSON.stringify(controlA) !== JSON.stringify(controlB) ||
@@ -12184,8 +12377,8 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
     ) {
       throw new Error(`GIS Map owner durable undo did not reach its second committed publication: ${undone.status}`);
     }
-    const undoControlA = await waitForCheckpointSocketFrame(socketA.socket, socketA.frames, (frame) => frame.RebootstrapRequired?.control, "Author A undo RebootstrapRequired", undoFrameStartA);
-    const undoControlB = await waitForCheckpointSocketFrame(socketB.socket, socketB.frames, (frame) => frame.RebootstrapRequired?.control, "Author B undo RebootstrapRequired", undoFrameStartB);
+    const undoControlA = await waitForDocumentSocketFrame(socketA.socket, socketA.frames, (frame) => frame.RebootstrapRequired?.control, "Author A undo RebootstrapRequired", undoFrameStartA);
+    const undoControlB = await waitForDocumentSocketFrame(socketB.socket, socketB.frames, (frame) => frame.RebootstrapRequired?.control, "Author B undo RebootstrapRequired", undoFrameStartB);
     if (
       socketA.error ||
       socketB.error ||
@@ -12254,7 +12447,6 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
     await finishGisMapProcessMcpClient(mcpB).catch((error) => cleanupErrors.push(error));
     if (authorA) authorA.capability = "";
     if (authorB) authorB.capability = "";
-    retained.forEach((bytes) => bytes.fill(0));
     await finishLocalHub(run).catch((error) => cleanupErrors.push(error));
     if (cleanupErrors.length) throw new AggregateError(cleanupErrors, "GIS Map proposal process cleanup failed");
   }
@@ -12288,7 +12480,7 @@ class GisMapProposalCheckScript extends BundleScript {
         "gis_map_approval_stamps_one_create_region_and_rejects_every_frozen_drift",
         "gis_map_approval_is_idempotent_across_duplicate_requests_and_restart",
       ];
-      if (mode === "--process") routeLaws.push("checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog");
+      if (mode === "--process") routeLaws.push("check_in_process_fixture_emits_verified_gis_ledger_and_catalog");
       const laws = [...libraryLaws, ...routeLaws];
       const receipts = await runExactCargoLaws({
         cwd: this.root,
@@ -12434,11 +12626,30 @@ class LocalBootstrapLaunchCheckScript extends BundleScript {
       );
       assert.equal(attempts, 3);
       assert.equal(hubDevBinaryPath(stagingRoot, { stage: () => (attempts += 1) && 0 }), staged);
-      assert.equal(attempts, 3);
+      assert.equal(attempts, 4);
+      assert.throws(
+        () => hubDevBinaryPath(stagingRoot, { stage: () => (attempts += 1) && 1 }),
+        (error: Error) => error.message.includes(HUB_DEV_BINARY_TARGET) && error.message.includes("status 1"),
+      );
+      assert.equal(attempts, 5);
     } finally {
       rmSync(stagingRoot, { recursive: true, force: true });
     }
-    console.log("local-bootstrap-launch: unlimited-budget=1 opted-budget=1 negative-budget=1 staging-cases=4 passed");
+    const brokerCases = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub/🚀️local-bootstrap/🧫️fixtures/🎫️session-broker-v1/🔣️.json"), "utf8")) as { readonly cases: readonly { readonly id: string; readonly def: "LocalSessionBrokerRecordV1" | "LocalSessionRequestV1" | "LocalSessionV1"; readonly value: unknown; readonly valid: boolean }[] };
+    const brokerParsers = { LocalSessionBrokerRecordV1: parseLocalSessionBrokerRecordV1, LocalSessionRequestV1: parseLocalSessionRequestV1, LocalSessionV1: parseLocalSessionV1 } as const;
+    for (const row of brokerCases.cases) {
+      const ajv = hubSchemaExport(this.repoRoot, `schema://hub.local-bootstrap/${row.def}`)(row.value) === true;
+      let parsed = true;
+      try {
+        brokerParsers[row.def](row.value);
+      } catch {
+        parsed = false;
+      }
+      assert.equal(ajv, row.valid, `session broker case ${row.id}: Ajv disagrees with the fixture`);
+      assert.equal(parsed, row.valid, `session broker case ${row.id}: TypeScript parser disagrees with the fixture`);
+    }
+    assert(brokerCases.cases.some((row) => row.valid) && brokerCases.cases.some((row) => !row.valid));
+    console.log(`local-bootstrap-launch: unlimited-budget=1 opted-budget=1 negative-budget=1 staging-cases=5 session-broker-cases=${brokerCases.cases.length} (ajv+parser agree) passed`);
   }
 }
 
@@ -12533,15 +12744,15 @@ class DevScript extends BundleScript {
     process.env.OS_HUB_CREDENTIAL_SIGN_IN = process.env.OS_HUB_CREDENTIAL_SIGN_IN ?? "1";
     process.env.OS_HUB_ADMIN_TOKEN = process.env.OS_HUB_ADMIN_TOKEN ?? "dev-local-hub-admin";
     const profiles: readonly LocalProfile[] = [
-      { profileId: "developer", subject: "local-developer-01", displayName: "Local Developer", allowedClientClasses: ["native", "mcp", "react-relay"] },
+      ...LOCAL_HUB_DEVELOPMENT_PROFILES,
       ...(secureAdmin ? [{ profileId: "administrator", subject: "local-administrator-01", displayName: "Local Administrator", allowedClientClasses: ["admin-relay"] as const }] : []),
     ];
     const dataRoot = resolve(process.env.OS_HUB_DATA ?? join(this.repoRoot, ".🧬semio", "🌐hub", "hub-dev"));
     let trustedCatalog = trustedBootstrapCurrent(dataRoot);
     if (!trustedCatalog) {
-      const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES));
       runCargo(["build", "--manifest-path", "Cargo.toml"], this.root);
       const validationBinaryPath = hubBinaryPath(this.repoRoot);
+      const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, trustedBootstrapSelectPackages(LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES), validationBinaryPath);
       const validation = { binaryPath: validationBinaryPath, cargoTargetDir: dirname(dirname(validationBinaryPath)) };
       await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, receipt, validation);
       trustedCatalog = trustedBootstrapCurrent(dataRoot);
@@ -12557,15 +12768,15 @@ class DevScript extends BundleScript {
     });
     let relay: LocalBrowserRelay | undefined;
     let adminRelay: LocalAdminRelay | undefined;
+    let broker: LocalSessionBrokerV1 | undefined;
     let ui: ChildProcess | undefined;
     let native: ChildProcess | undefined;
     let mcp: ChildProcess | undefined;
     const stop = (): void => {
+      broker?.stop();
       void relay?.stop();
       void adminRelay?.stop();
-      if (ui?.exitCode === null) ui.kill();
-      if (native?.exitCode === null) native.kill();
-      if (mcp?.exitCode === null) mcp.kill();
+      for (const child of [ui, native, mcp]) if (child) terminateOwnedChildTree(child);
       void finishLocalHub(run);
     };
     process.once("SIGINT", stop);
@@ -12614,6 +12825,8 @@ class DevScript extends BundleScript {
         openExternalBrowser(`${uiOrigin}/#semio-broker=${browserProofHex}`);
         console.log(`[INFO] secure local OS profile starting at ${uiOrigin}`);
       }
+      broker = startLocalSessionBroker(run, dataRoot, profiles, 2 + [secureNative, secureMcp, secureSuite, secureAdmin].filter(Boolean).length);
+      console.log(`[INFO] local session broker for ${broker.record.profiles.join(",")} — every \`dev s\` row signs in through it`);
       await new Promise<void>((resolveExit, rejectExit) => {
         run.child.once("exit", (code) => (code === 0 ? resolveExit() : rejectExit(new Error(`hub child exited with status ${code}`))));
         ui?.once("exit", (code) => (code === 0 ? resolveExit() : rejectExit(new Error(`secure local UI child exited with status ${code}`))));
@@ -12623,11 +12836,10 @@ class DevScript extends BundleScript {
     } finally {
       process.off("SIGINT", stop);
       process.off("SIGTERM", stop);
+      broker?.stop();
       await relay?.stop();
       await adminRelay?.stop();
-      if (ui?.exitCode === null) ui.kill();
-      if (native?.exitCode === null) native.kill();
-      if (mcp?.exitCode === null) mcp.kill();
+      for (const child of [ui, native, mcp]) if (child) terminateOwnedChildTree(child);
       await finishLocalHub(run);
     }
   }
@@ -12858,7 +13070,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     const receiptResolution = runtimeCompact.indexOf(".authority_for_authenticated_exchange(&intent.plan_receipt");
     const targetResolution = runtimeCompact.indexOf("catalog.resolve_document_open(&authority.descriptor", receiptResolution);
     if (
-      !catalogSource.includes("bundle.schema_version != 2") ||
+      !catalogSource.includes("bundle.schema_version != 3") ||
       !catalogSource.includes("trusted_profile_generation(&bundle, &profile)") ||
       !catalogSource.includes("selected profile must resolve exactly one document-open target") ||
       !providerSource.includes("NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 29") ||
@@ -12897,7 +13109,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       ["development publication", !dev.includes("publishTrustedBootstrapCurrent")],
       ["writer cleanup", ordered(writer, "closeSync(output)", "if (!complete) rmSync(path")],
       ["native publisher authority", publisher.includes('["trusted-catalog", "publish"]') && publisher.includes("expectedCurrentSha256: expected?.sha256 ?? null") && publisher.includes("trustedPublicationChildReceipt(processResult") && !publisher.includes("renameSync(")],
-      ["candidate readiness", ordered(candidate, "await waitForReadiness(candidate)", "const plan = await proveTrustedStdioGisCandidatePlan(candidate, receipt, envelope)")],
+      ["candidate readiness", ordered(candidate, "await waitForReadiness(candidate, false, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS)", "const plan = await proveTrustedStdioGisCandidatePlan(candidate, receipt, envelope)")],
       ["candidate publication", ordered(candidate, "const plan = await proveTrustedStdioGisCandidatePlan(candidate, receipt, envelope)", "await publishTrustedBootstrapCurrent(dataRoot, receipt, validation.binaryPath, validationRoot, expectedCurrent)")],
       ["candidate compare-current snapshot", ordered(candidate, "const expectedCurrent = trustedBootstrapReadCurrentPointer(dataRoot)", "await proveTrustedGisColdMapComponentV1")],
       ["candidate stale plan", ordered(candidate, "if (stalePlan) await proveTrustedStdioGisStalePlanRejected", "const plan = await proveTrustedStdioGisCandidatePlan")],
@@ -12978,13 +13190,13 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       }
       if (segments[0] === "--two-author-shell") await runExactCargoLaws({
         cwd: this.root, env: hubEnv, nativeEnv: { RUST_MIN_STACK: "268435456" }, artifactDir: artifactPath,
-        groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], laws: ["checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog"] }],
+        groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], laws: ["check_in_process_fixture_emits_verified_gis_ledger_and_catalog"] }],
         buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 120_000,
         progress(event) { console.log(`[DEBUG] two-author Shell seed ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
       });
       const dataRoot = join(resolve(artifactRoot), "server-owned-data");
-      const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES));
       const binary = join(hubTarget, "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
+      const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES), binary);
       const validation = { binaryPath: binary, cargoTargetDir: hubTarget };
       const initialPlan = await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, receipt, validation);
       if (segments[0] === "--browser" || segments[0] === "--two-author-shell") await proveTrustedGisClosedActorV1(this.repoRoot, dataRoot, receipt, artifactPath);
@@ -13035,8 +13247,8 @@ class TrustedCatalogBootstrapScript extends BundleScript {
     const selection = trustedBootstrapSelectPackages(list);
     const dataRoot = process.env.OS_HUB_DATA ? resolve(process.env.OS_HUB_DATA) : resolve(this.repoRoot, ".🧬semio", "🌐hub");
     runCargo(["build", "--manifest-path", "Cargo.toml", "--bin", "os-hub"], this.root);
-    const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, selection);
     const binaryPath = hubBinaryPath(this.repoRoot);
+    const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, selection, binaryPath);
     const validation = { binaryPath, cargoTargetDir: dirname(dirname(binaryPath)) };
     await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, receipt, validation);
     console.log(`trusted-catalog-bootstrap-receipt: ${JSON.stringify(receipt)}`);
@@ -14822,94 +15034,54 @@ class DirectoryCommandReceiptCheckScript extends BundleScript {
   }
 }
 
-async function proveCheckpointPublicationCommandV1(repoRoot: string): Promise<number> {
-  const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📣️checkpoint-publication-command-v1");
-  const source = readFileSync(join(fixtureRoot, "🔣️.json"), "utf8").trimEnd();
-  const validate = hubSchemaExport(repoRoot, "schema://os.directory/CheckpointPublicationCommandV1");
-  const fixture = JSON.parse(source) as Record<string, unknown>;
-  const semanticOracle = (value: unknown, canonical: string): boolean => {
-    if (!validate(value) || JSON.stringify(value) !== canonical || Buffer.byteLength(canonical, "utf8") > 8 * 1024 || value === null || typeof value !== "object" || Array.isArray(value)) return false;
-    const command = value as {
-      expectedDocumentFrontier: { headSeq: number; commitSeq: number };
-      pack: { byteLength: number };
-      spr: { byteLength: number };
-    };
-    return command.expectedDocumentFrontier.commitSeq <= command.expectedDocumentFrontier.headSeq && command.pack.byteLength + command.spr.byteLength <= CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES;
-  };
-  const ownAccepts = (candidate: string): boolean => {
+/** 📌️ Check In contract oracle: every language-neutral vector through Ajv (third party) and the
+ * TypeScript twin, then the source boundary the command depends on end to end. */
+async function proveDocumentCheckInV1(repoRoot: string): Promise<number> {
+  const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🧫️fixtures/🔣️.json"), "utf8"));
+  const validateRequest = hubSchemaExport(repoRoot, "schema://os.directory/DocumentCheckInV1");
+  const validateStatus = hubSchemaExport(repoRoot, "schema://os.directory/DocumentCheckInStatusV1");
+  let checks = 0;
+  const parseJson = (source: string): unknown => {
     try {
-      parseCheckpointPublicationCommandV1(candidate);
-      return true;
+      return JSON.parse(source);
     } catch {
-      return false;
+      return undefined;
     }
   };
-  if (!semanticOracle(fixture, source) || !ownAccepts(source)) throw new Error("checkpoint publication neutral fixture was rejected");
-
-  const active = structuredClone(fixture) as Record<string, unknown>;
-  active.expectedCurrent = { state: "active", checkpointId: "5".repeat(64), baselineFrontier: structuredClone(active.baselineFrontier) };
-  const activeSource = JSON.stringify(active);
-  if (!semanticOracle(active, activeSource) || !ownAccepts(activeSource)) throw new Error("checkpoint publication active expectation was rejected");
-
-  const mutate = (change: (candidate: Record<string, any>) => void): string => {
-    const candidate = structuredClone(fixture) as Record<string, any>;
-    change(candidate);
-    return JSON.stringify(candidate);
-  };
-  const rejected = [
-    mutate((candidate) => delete candidate.expectedCurrent),
-    mutate((candidate) => (candidate.expectedCurrent = { state: "none" })),
-    mutate((candidate) => (candidate.expectedCurrent = { state: "active", checkpointId: "5".repeat(64) })),
-    mutate((candidate) => (candidate.spaceId = "caller-owned-scope")),
-    mutate((candidate) => (candidate.backend = "filesystem")),
-    mutate((candidate) => (candidate.pack.storageKey = "/private/caller-path")),
-    mutate((candidate) => (candidate.pack.sha256 = "A".repeat(64))),
-    mutate((candidate) => delete candidate.pack.blake3),
-    mutate((candidate) => (candidate.pack.blake3 = "0".repeat(64))),
-    mutate((candidate) => (candidate.pack.sha256 = "0".repeat(64))),
-    mutate((candidate) => (candidate.expectedDocumentFrontier.commitSeq = candidate.expectedDocumentFrontier.headSeq + 1)),
-    mutate((candidate) => (candidate.expectedDocumentFrontier.epoch = Number.MAX_SAFE_INTEGER + 1)),
-    mutate((candidate) => {
-      candidate.pack.byteLength = CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES;
-      candidate.spr.byteLength = 1;
-    }),
-    `${source}\n`,
-  ];
-  for (const candidate of rejected) {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(candidate);
-    } catch {
-      parsed = null;
-    }
-    if (semanticOracle(parsed, candidate) || ownAccepts(candidate)) throw new Error(`checkpoint publication hostile accepted: ${candidate.slice(0, 96)}`);
+  for (const row of fixture.valid.requests) {
+    if (!validateRequest(parseJson(row.source)) || parseDocumentCheckInV1(row.source) === null) throw new Error(`check-in valid request refused: ${row.name}`);
+    checks++;
   }
-
-  const bytes = new TextEncoder().encode(source);
-  const nodeDigest = createHash("sha256").update(bytes).digest("hex");
-  const webDigest = Buffer.from(await webcrypto.subtle.digest("SHA-256", bytes)).toString("hex");
-  if (nodeDigest !== webDigest) throw new Error("checkpoint publication independent SHA-256 oracles disagree");
-
+  for (const row of fixture.valid.statuses) {
+    if (!validateStatus(parseJson(row.source)) || parseDocumentCheckInStatusV1(row.source) === null) throw new Error(`check-in valid status refused: ${row.name}`);
+    checks++;
+  }
+  for (const row of fixture.invalid.requests) {
+    if (Boolean(validateRequest(parseJson(row.source))) !== row.schemaValid || parseDocumentCheckInV1(row.source) !== null) throw new Error(`check-in invalid request differs: ${row.name}`);
+    checks++;
+  }
+  for (const row of fixture.invalid.statuses) {
+    if (Boolean(validateStatus(parseJson(row.source))) !== row.schemaValid || parseDocumentCheckInStatusV1(row.source) !== null) throw new Error(`check-in invalid status differs: ${row.name}`);
+    checks++;
+  }
   const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
-  const actor = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs"), "utf8");
-  const engine = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs"), "utf8");
-  const directory = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🦀️.rs"), "utf8");
-  const runner = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📜️script.ts"), "utf8");
+  const job = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📌️check-in/🦀️.rs"), "utf8");
+  const ledger = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs"), "utf8");
+  const store = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
+  const wit = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit"), "utf8");
   for (const [name, body, markers] of [
-    [
-      "hub",
-      hub,
-      ["/spaces/{space_id}/documents/{document_id}/checkpoint-publications", "SocketBindingKeyV1::DocumentWrite", "checkpoint_publication_snapshot", "FencedCheckpointPublisherV1", "materialize_checkpoint", "claim_or_read_checkpoint_publication"],
-    ],
-    ["actor", actor, ["CheckpointPublicationSnapshot", "head_edit_id", "ArtifactMessage::CheckpointPublicationSnapshot"]],
-    ["engine", engine, ["pub struct CheckpointPublicationSnapshot", "authority_generation", "checkpoint_publication_snapshot"]],
-    ["directory", directory, ["NewCheckpointPublicationClaimV1", "complete_checkpoint_publication", "checkpoint_id"]],
-    ["process", runner, ["checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog", "commitCheckpointPublicationProcessMutation", "proveCheckpointPublicationMcpProcess", "resources/list", "resources/read"]],
+    ["hub", hub, ["/spaces/{space_id}/documents/{document_id}/check-ins", "/spaces/{space_id}/documents/{document_id}/check-ins/{request_id}/cancel", "artifact_ledger_tail", "claim_or_read_checkpoint_publication"]],
+    ["job", job, ["TrustedArtifactReplayCodec", "materialize_check_in", "DocumentCheckInRefusalV1"]],
+    ["ledger", ledger, ["pub async fn artifact_ledger_tail"]],
+    ["store", store, ["pub async fn replay_envelopes_onto_pair", "ingest_remote"]],
+    ["wit", wit, ["replay-envelopes: async func"]],
   ] as const) {
-    for (const marker of markers) if (!body.includes(marker)) throw new Error(`checkpoint publication ${name} boundary is missing ${marker}`);
+    for (const marker of markers) if (!body.includes(marker)) throw new Error(`check-in ${name} boundary is missing ${marker}`);
+    checks++;
   }
-  console.log(`checkpoint-publication-command-oracle: valid=2 rejected=${rejected.length} ajv=1 typescript=1 sha256=2 actor-snapshot=1 final-writer-fence=1 durable-idempotency=1 process-route=1`);
-  return rejected.length + 10;
+  if (hub.includes("checkpoint-publications")) throw new Error("the client upload route must stay deleted");
+  console.log(`document-check-in-oracle: requests=${fixture.valid.requests.length}+${fixture.invalid.requests.length} statuses=${fixture.valid.statuses.length}+${fixture.invalid.statuses.length} ajv=2 typescript=2 boundaries=5`);
+  return checks;
 }
 
 function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
@@ -15035,14 +15207,6 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     if (opens !== (row.genesis || row.edited)) throw new Error(`genesis open plan/lease differs: ${row.id}`);
   }
   const hash = (bytes: Uint8Array): number[] => Array.from(createHash("sha256").update(bytes).digest());
-  const current = JSON.parse(readFileSync(join(base, "../🌱️artifact-genesis-v1/📤️current.json"), "utf8"));
-  const validateCurrent = hubSchemaExport(repoRoot, "schema://os.directory/CheckpointPublicationCommandV1");
-  for (const row of current.cases) {
-    let accepted = false;
-    try { parseCheckpointPublicationCommandV1(JSON.stringify(row.command)); accepted = true; } catch {}
-    if (accepted !== row.accepted || Boolean(validateCurrent(row.command)) !== row.accepted) throw new Error(`genesis publication current differs: ${row.id}`);
-  }
-  console.log(`[DEBUG] genesis publication current: TypeScript=${current.cases.length} AJV=1; no Directory lineage or backend transaction executed`);
   const operationRoot = join(repoRoot, "🌎️hub/🗿️artifact-authority/🌱️creation/🧫️fixtures/📚️operation-v1");
   const transactionRoot = join(operationRoot, "../🧪️transaction-v1");
   const transactions = JSON.parse(readFileSync(join(transactionRoot, "🔣️.json"), "utf8"));
@@ -15128,14 +15292,19 @@ class SpaceArtifactCreationCheckScript extends BundleScript {
   }
 }
 
-class CheckpointPublicationCheckScript extends BundleScript {
+/** 📌️ `check-in-check source|native|process`: contract oracle, in-process hub laws, and the MCP process. */
+class CheckInCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const phase = segments[0] ?? "source";
-    if (segments.length > 1 || !["source", "native", "process"].includes(phase)) throw new Error("checkpoint-publication-check accepts source, native, or process");
-    const checks = await proveCheckpointPublicationCommandV1(this.repoRoot);
+    if (segments.length > 1 || !["source", "native", "process"].includes(phase)) throw new Error("check-in-check accepts source, native, or process");
+    const checks = await proveDocumentCheckInV1(this.repoRoot);
     if (phase === "native" || phase === "process") {
-      const laws = ["tests::checkpoint_publication_route_is_author_owned_actor_fenced_idempotent_and_cancellation_safe", "tests::checkpoint_publication_route_rejects_stale_or_cross_scope_inputs_before_publication"];
-      if (phase === "process") laws.push("tests::checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog");
+      const laws = [
+        "check_in_advances_the_active_checkpoint_to_the_named_head_and_cold_opens_from_it",
+        "check_in_refuses_stale_unknown_and_foreign_heads_and_is_author_owned",
+        "check_in_is_idempotent_per_request_cancellable_and_revoked_with_the_author",
+      ];
+      if (phase === "process") laws.push("check_in_process_fixture_emits_verified_gis_ledger_and_catalog");
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
@@ -15143,7 +15312,7 @@ class CheckpointPublicationCheckScript extends BundleScript {
           {
             package: "semio-hub",
             target: { kind: "bin", name: "os-hub" },
-            cargoArgs: ["--no-default-features", "--features", phase === "process" ? "sqlite,integration-fixtures" : "sqlite,native-artifact-execution"],
+            cargoArgs: ["--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"],
             laws,
           },
         ],
@@ -15152,19 +15321,19 @@ class CheckpointPublicationCheckScript extends BundleScript {
         listBudgetMs: 60_000,
         lawBudgetMs: 180_000,
         progress(event) {
-          console.log(`checkpoint-publication-${phase} ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+          console.log(`check-in-${phase} ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         },
       });
-      for (const receipt of receipts) console.log(`checkpoint-publication-${phase}-receipt: ${JSON.stringify(receipt)}`);
+      for (const receipt of receipts) console.log(`check-in-${phase}-receipt: ${JSON.stringify(receipt)}`);
     }
     if (phase === "process") {
       const nativeEnv = { ...process.env, RUST_MIN_STACK: "268435456" };
       runCargo(["build", "--manifest-path", "Cargo.toml", "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,native-artifact-execution"], this.repoRoot, nativeEnv);
       runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
-      await proveCheckpointPublicationMcpProcess(this.repoRoot, this.root);
-      console.log("checkpoint-publication-process: real GIS Pack/SPR -> authenticated public Hub publication -> credential-FD MCP scoped resource passed; no GIS actor execution, inference, rendering, or commit claim");
+      await proveCheckInMcpProcess(this.repoRoot, this.root);
+      console.log("check-in-process: real GIS Map ledger edit -> hub-materialized Check In -> credential-FD MCP scoped checkpoint resource passed");
     }
-    console.log(`checkpoint-publication-check: checks=${checks} phase=${phase}`);
+    console.log(`check-in-check: checks=${checks} phase=${phase}`);
   }
 }
 
@@ -17120,7 +17289,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("directory-event-page-v1-check", DirectoryEventPageV1CheckScript)
   .register("space-administration-check", SpaceAdministrationCheckScript)
   .register("directory-command-receipt-check", DirectoryCommandReceiptCheckScript)
-  .register("checkpoint-publication-check", CheckpointPublicationCheckScript)
+  .register("check-in-check", CheckInCheckScript)
   .register("space-artifact-creation-check", SpaceArtifactCreationCheckScript)
   .register("space-journey-check", SpaceJourneyCheckScript)
   .register("directory-home-browser-process-check", DirectoryHomeBrowserProcessCheckScript)

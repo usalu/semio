@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeBridgeDelt
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change bridge delta sigma s mpa to {:?}", self.new_bridge_delta_sigma_s_mpa), &format!("Brückendeltasigmasmpa auf {:?} ändern", self.new_bridge_delta_sigma_s_mpa))
+        protocol::LocalizedLabel::native(&format!("Change bridge reinforcement stress range Δσ_s [MPa] to {:?}", self.new_bridge_delta_sigma_s_mpa), &format!("Spannungsschwingbreite der Bewehrung Δσ_s [MPa] (Brücke) auf {:?} ändern", self.new_bridge_delta_sigma_s_mpa))
     }
 }
 //#endregion 🔖️ChangeBridgeDeltaSigmaSMpa

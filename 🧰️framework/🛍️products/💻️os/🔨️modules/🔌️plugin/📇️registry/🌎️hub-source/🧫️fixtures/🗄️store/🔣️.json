@@ -1,0 +1,383 @@
+{
+  "schema": "semio.os.plugin-module-store-fixture/v1",
+  "origin": "http://semio.test",
+  "generations": {
+    "a": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+    "b": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+    "c": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3"
+  },
+  "bundles": {
+    "noteA": {
+      "entry": {
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "componentSha256": "e94bfc624efabf63e6ccadffe7b9f9b29eb3744443a6455d2d9b5bcab9fb2426",
+        "descriptorByteSha256": "c55575ab62f4fd61819493ee02232ebcfac371b3d792c6db9ae67cc232e3f326",
+        "dependencies": [],
+        "dialectArtifactKinds": [
+          "s.note.note"
+        ],
+        "extendsPluginId": null,
+        "bundleSha256": "0c4f1b6a1e9a0228ed3f4ee5498131270fc7700f7f1ab72ad1252c38d3f44309",
+        "bundleByteLength": 1705,
+        "entry": "🗒️note/🌉️bridge.js"
+      },
+      "manifestUtf8": "{\"schema\":\"semio.hub.trusted-plugin-module/v1\",\"pluginId\":\"note\",\"packageId\":\"semio:note\",\"version\":\"0.1.0\",\"sourceComponentSha256\":\"e94bfc624efabf63e6ccadffe7b9f9b29eb3744443a6455d2d9b5bcab9fb2426\",\"sourceDescriptorByteSha256\":\"c55575ab62f4fd61819493ee02232ebcfac371b3d792c6db9ae67cc232e3f326\",\"moduleDirectory\":\"🗒️note\",\"entry\":\"🗒️note/🌉️bridge.js\",\"files\":[{\"path\":\"🗒️note/semio_s_plugin_note_component.core.wasm\",\"byteLength\":8,\"sha256\":\"93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476\",\"blake3\":\"0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4\"},{\"path\":\"🗒️note/🌉️bridge.js\",\"byteLength\":53,\"sha256\":\"82af34b4c0c69c98a2cd2fe5e5531fa1a80ebc51020cc8f592abcb272c8d1de3\",\"blake3\":\"7ca032c5b22fb71dc32a6029debc6cd02444cef6842478c10fa4e5eb1b54bf5d\"},{\"path\":\"🗒️note/🔣️.json\",\"byteLength\":32,\"sha256\":\"199216a93e803193890ba0392a415cf54634ac11a5218a85ed4565750b0cac0f\",\"blake3\":\"d7fa682b0b4eb8c8e9fefd208956bc69c48d2542b1ed4ae172a1a2bab64e85f6\"},{\"path\":\"🗒️note/🛂️.descriptor.semio\",\"byteLength\":15,\"sha256\":\"c55575ab62f4fd61819493ee02232ebcfac371b3d792c6db9ae67cc232e3f326\",\"blake3\":\"a5db30f6f1a0411817d6a05aefcbb2e0ff0b9a21eb09e8115db1bb7ddd44bdb6\"},{\"path\":\"🪞️vendor/🔤️guestslim-typst-fonts.bin\",\"byteLength\":5,\"sha256\":\"8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14\",\"blake3\":\"36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc\"},{\"path\":\"🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js\",\"byteLength\":27,\"sha256\":\"57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae\",\"blake3\":\"b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0\"}]}\n",
+      "contents": {
+        "🪞️vendor/🔤️guestslim-typst-fonts.bin": "666f6e7473",
+        "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js": "6578706f727420636f6e73742073747265616d73203d207b7d3b0a",
+        "🗒️note/semio_s_plugin_note_component.core.wasm": "0061736d01000000",
+        "🗒️note/🌉️bridge.js": "6578706f7274206173796e632066756e6374696f6e206372656174654163746f724170692829207b2072657475726e20313b207d0a",
+        "🗒️note/🔣️.json": "7b226d616e6966657374223a7b22706c7567696e4964223a226e6f7465227d7d",
+        "🗒️note/🛂️.descriptor.semio": "64657363726970746f72206e6f7465"
+      }
+    },
+    "noteB": {
+      "entry": {
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "componentSha256": "cb78e68c6eeb7146a3f893c86e71282c7e7af04715fa6125b20a1635249cc01c",
+        "descriptorByteSha256": "c55575ab62f4fd61819493ee02232ebcfac371b3d792c6db9ae67cc232e3f326",
+        "dependencies": [],
+        "dialectArtifactKinds": [
+          "s.note.note"
+        ],
+        "extendsPluginId": null,
+        "bundleSha256": "ea6832c4ee997475d8ac3de68b37031e0e1a14a0824dca1b45ca3ccfd4180157",
+        "bundleByteLength": 1705,
+        "entry": "🗒️note/🌉️bridge.js"
+      },
+      "manifestUtf8": "{\"schema\":\"semio.hub.trusted-plugin-module/v1\",\"pluginId\":\"note\",\"packageId\":\"semio:note\",\"version\":\"0.1.0\",\"sourceComponentSha256\":\"cb78e68c6eeb7146a3f893c86e71282c7e7af04715fa6125b20a1635249cc01c\",\"sourceDescriptorByteSha256\":\"c55575ab62f4fd61819493ee02232ebcfac371b3d792c6db9ae67cc232e3f326\",\"moduleDirectory\":\"🗒️note\",\"entry\":\"🗒️note/🌉️bridge.js\",\"files\":[{\"path\":\"🗒️note/semio_s_plugin_note_component.core.wasm\",\"byteLength\":8,\"sha256\":\"93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476\",\"blake3\":\"0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4\"},{\"path\":\"🗒️note/🌉️bridge.js\",\"byteLength\":53,\"sha256\":\"f0c574233ace6d13104db925da172c776173ce4de3cc894d9ebdc384b42342e9\",\"blake3\":\"f9070b0414c53d6ad4425b931394b0405b31bc58941c281babcedd5337e0eddc\"},{\"path\":\"🗒️note/🔣️.json\",\"byteLength\":32,\"sha256\":\"199216a93e803193890ba0392a415cf54634ac11a5218a85ed4565750b0cac0f\",\"blake3\":\"d7fa682b0b4eb8c8e9fefd208956bc69c48d2542b1ed4ae172a1a2bab64e85f6\"},{\"path\":\"🗒️note/🛂️.descriptor.semio\",\"byteLength\":15,\"sha256\":\"c55575ab62f4fd61819493ee02232ebcfac371b3d792c6db9ae67cc232e3f326\",\"blake3\":\"a5db30f6f1a0411817d6a05aefcbb2e0ff0b9a21eb09e8115db1bb7ddd44bdb6\"},{\"path\":\"🪞️vendor/🔤️guestslim-typst-fonts.bin\",\"byteLength\":5,\"sha256\":\"8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14\",\"blake3\":\"36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc\"},{\"path\":\"🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js\",\"byteLength\":27,\"sha256\":\"57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae\",\"blake3\":\"b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0\"}]}\n",
+      "contents": {
+        "🪞️vendor/🔤️guestslim-typst-fonts.bin": "666f6e7473",
+        "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js": "6578706f727420636f6e73742073747265616d73203d207b7d3b0a",
+        "🗒️note/semio_s_plugin_note_component.core.wasm": "0061736d01000000",
+        "🗒️note/🌉️bridge.js": "6578706f7274206173796e632066756e6374696f6e206372656174654163746f724170692829207b2072657475726e20323b207d0a",
+        "🗒️note/🔣️.json": "7b226d616e6966657374223a7b22706c7567696e4964223a226e6f7465227d7d",
+        "🗒️note/🛂️.descriptor.semio": "64657363726970746f72206e6f7465"
+      }
+    },
+    "drawB": {
+      "entry": {
+        "pluginId": "draw",
+        "packageId": "semio:draw",
+        "version": "0.1.0",
+        "componentSha256": "d8a186bedd774ed9cba1433d53e6f9f649cae60f0243665d9ea2ed55c6090640",
+        "descriptorByteSha256": "796e8e1678a108d4f8c26adf0d508e5136493b9b15b094d4a0a9e5ecca4fa23f",
+        "dependencies": [],
+        "dialectArtifactKinds": [
+          "s.draw.drawing"
+        ],
+        "extendsPluginId": null,
+        "bundleSha256": "bf1ac8ea1f8926440322c1dc1dec95c58e7cf00cff4fa7ff0dcd6828daaa96f6",
+        "bundleByteLength": 1705,
+        "entry": "🖍️draw/🌉️bridge.js"
+      },
+      "manifestUtf8": "{\"schema\":\"semio.hub.trusted-plugin-module/v1\",\"pluginId\":\"draw\",\"packageId\":\"semio:draw\",\"version\":\"0.1.0\",\"sourceComponentSha256\":\"d8a186bedd774ed9cba1433d53e6f9f649cae60f0243665d9ea2ed55c6090640\",\"sourceDescriptorByteSha256\":\"796e8e1678a108d4f8c26adf0d508e5136493b9b15b094d4a0a9e5ecca4fa23f\",\"moduleDirectory\":\"🖍️draw\",\"entry\":\"🖍️draw/🌉️bridge.js\",\"files\":[{\"path\":\"🖍️draw/semio_s_plugin_draw_component.core.wasm\",\"byteLength\":8,\"sha256\":\"93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476\",\"blake3\":\"0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4\"},{\"path\":\"🖍️draw/🌉️bridge.js\",\"byteLength\":53,\"sha256\":\"4a4d5a0ac5827a9166f9d7f0265aec1db081e4421ef778628ad436b8efe38b24\",\"blake3\":\"f6ae6bad5692180715b83be491f685165c5f21e07f6ebc2aa8cd496c93b9db33\"},{\"path\":\"🖍️draw/🔣️.json\",\"byteLength\":32,\"sha256\":\"b56805d0057a76d77e83bdaa95f1b3321e990317332ef55dd651802930ff3400\",\"blake3\":\"12e913403966b71d9521c179c2c04ce014ee4ff42989425eeccb526dd6ab394a\"},{\"path\":\"🖍️draw/🛂️.descriptor.semio\",\"byteLength\":15,\"sha256\":\"796e8e1678a108d4f8c26adf0d508e5136493b9b15b094d4a0a9e5ecca4fa23f\",\"blake3\":\"0bd1f11a7359c6f6abb62828fabc1cfcf3ab3c86c73b0cfb8ffaa3348ccfc1ee\"},{\"path\":\"🪞️vendor/🔤️guestslim-typst-fonts.bin\",\"byteLength\":5,\"sha256\":\"8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14\",\"blake3\":\"36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc\"},{\"path\":\"🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js\",\"byteLength\":27,\"sha256\":\"57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae\",\"blake3\":\"b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0\"}]}\n",
+      "contents": {
+        "🪞️vendor/🔤️guestslim-typst-fonts.bin": "666f6e7473",
+        "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js": "6578706f727420636f6e73742073747265616d73203d207b7d3b0a",
+        "🖍️draw/semio_s_plugin_draw_component.core.wasm": "0061736d01000000",
+        "🖍️draw/🌉️bridge.js": "6578706f7274206173796e632066756e6374696f6e206372656174654163746f724170692829207b2072657475726e20333b207d0a",
+        "🖍️draw/🔣️.json": "7b226d616e6966657374223a7b22706c7567696e4964223a2264726177227d7d",
+        "🖍️draw/🛂️.descriptor.semio": "64657363726970746f722064726177"
+      }
+    }
+  },
+  "records": {
+    "noteA": {
+      "schema": "semio.os.plugin-module-store-record/v1",
+      "generationId": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "entry": {
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "componentSha256": "e94bfc624efabf63e6ccadffe7b9f9b29eb3744443a6455d2d9b5bcab9fb2426",
+        "descriptorByteSha256": "c55575ab62f4fd61819493ee02232ebcfac371b3d792c6db9ae67cc232e3f326",
+        "dependencies": [],
+        "dialectArtifactKinds": [
+          "s.note.note"
+        ],
+        "extendsPluginId": null,
+        "bundleSha256": "0c4f1b6a1e9a0228ed3f4ee5498131270fc7700f7f1ab72ad1252c38d3f44309",
+        "bundleByteLength": 1705,
+        "entry": "🗒️note/🌉️bridge.js"
+      },
+      "installedAtMs": 1790000000000
+    },
+    "noteB": {
+      "schema": "semio.os.plugin-module-store-record/v1",
+      "generationId": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "entry": {
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "componentSha256": "cb78e68c6eeb7146a3f893c86e71282c7e7af04715fa6125b20a1635249cc01c",
+        "descriptorByteSha256": "c55575ab62f4fd61819493ee02232ebcfac371b3d792c6db9ae67cc232e3f326",
+        "dependencies": [],
+        "dialectArtifactKinds": [
+          "s.note.note"
+        ],
+        "extendsPluginId": null,
+        "bundleSha256": "ea6832c4ee997475d8ac3de68b37031e0e1a14a0824dca1b45ca3ccfd4180157",
+        "bundleByteLength": 1705,
+        "entry": "🗒️note/🌉️bridge.js"
+      },
+      "installedAtMs": 1790000000000
+    },
+    "drawB": {
+      "schema": "semio.os.plugin-module-store-record/v1",
+      "generationId": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "entry": {
+        "pluginId": "draw",
+        "packageId": "semio:draw",
+        "version": "0.1.0",
+        "componentSha256": "d8a186bedd774ed9cba1433d53e6f9f649cae60f0243665d9ea2ed55c6090640",
+        "descriptorByteSha256": "796e8e1678a108d4f8c26adf0d508e5136493b9b15b094d4a0a9e5ecca4fa23f",
+        "dependencies": [],
+        "dialectArtifactKinds": [
+          "s.draw.drawing"
+        ],
+        "extendsPluginId": null,
+        "bundleSha256": "bf1ac8ea1f8926440322c1dc1dec95c58e7cf00cff4fa7ff0dcd6828daaa96f6",
+        "bundleByteLength": 1705,
+        "entry": "🖍️draw/🌉️bridge.js"
+      },
+      "installedAtMs": 1790000000000
+    }
+  },
+  "urls": [
+    {
+      "bundle": "noteB",
+      "generationId": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "path": "🗒️note/🌉️bridge.js",
+      "url": "/_semio/plugin-modules/b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2/ea6832c4ee997475d8ac3de68b37031e0e1a14a0824dca1b45ca3ccfd4180157/%F0%9F%97%92%EF%B8%8Fnote/%F0%9F%8C%89%EF%B8%8Fbridge.js"
+    },
+    {
+      "bundle": "drawB",
+      "generationId": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+      "url": "/_semio/plugin-modules/b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2/bf1ac8ea1f8926440322c1dc1dec95c58e7cf00cff4fa7ff0dcd6828daaa96f6/%F0%9F%AA%9E%EF%B8%8Fvendor/%F0%9F%A4%9D%EF%B8%8Fbytecode-alliance/%F0%9F%AA%9F%EF%B8%8Fpreview2-shim/io.js"
+    }
+  ],
+  "hostilePaths": [
+    "/_semio/plugin-modules/",
+    "/_semio/plugin-modules/b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+    "/_semio/plugin-modules/b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2/ea6832c4ee997475d8ac3de68b37031e0e1a14a0824dca1b45ca3ccfd4180157",
+    "/_semio/plugin-modules/b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2/ea6832c4ee997475d8ac3de68b37031e0e1a14a0824dca1b45ca3ccfd4180157/%F0%9F%97%92%EF%B8%8Fnote/..%2F..%2Fx.js",
+    "/_semio/plugin-modules/b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2/ea6832c4ee997475d8ac3de68b37031e0e1a14a0824dca1b45ca3ccfd4180157/a//b.js",
+    "/_semio/plugin-modules/B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2/ea6832c4ee997475d8ac3de68b37031e0e1a14a0824dca1b45ca3ccfd4180157/x.js",
+    "/_semio/plugin-modules/b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2/nothex/x.js",
+    "/_semio/plugin-modules/b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2/ea6832c4ee997475d8ac3de68b37031e0e1a14a0824dca1b45ca3ccfd4180157/%E0%A4%A.js",
+    "/_semio/other/b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2/ea6832c4ee997475d8ac3de68b37031e0e1a14a0824dca1b45ca3ccfd4180157/x.js"
+  ],
+  "serveCases": [
+    {
+      "id": "every-file",
+      "store": [
+        "noteB"
+      ],
+      "change": "none",
+      "paths": [
+        "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+        "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+        "🗒️note/semio_s_plugin_note_component.core.wasm",
+        "🗒️note/🌉️bridge.js",
+        "🗒️note/🔣️.json",
+        "🗒️note/🛂️.descriptor.semio"
+      ],
+      "status": 200,
+      "remove": []
+    },
+    {
+      "id": "media-types",
+      "store": [
+        "noteB"
+      ],
+      "change": "none",
+      "paths": [
+        "🗒️note/🌉️bridge.js",
+        "🗒️note/semio_s_plugin_note_component.core.wasm",
+        "🗒️note/🔣️.json",
+        "🗒️note/🛂️.descriptor.semio"
+      ],
+      "contentTypes": [
+        "text/javascript; charset=utf-8",
+        "application/wasm",
+        "application/json",
+        "application/octet-stream"
+      ],
+      "status": 200,
+      "remove": []
+    },
+    {
+      "id": "tampered-file",
+      "store": [
+        "noteB"
+      ],
+      "change": "tamper:🗒️note/🌉️bridge.js",
+      "paths": [
+        "🗒️note/🌉️bridge.js"
+      ],
+      "status": 404,
+      "problem": "plugin-module-store.corrupt",
+      "remove": [
+        "record:noteB",
+        "blob:noteB:🗒️note/🌉️bridge.js"
+      ]
+    },
+    {
+      "id": "missing-file",
+      "store": [
+        "noteB"
+      ],
+      "change": "drop:🗒️note/semio_s_plugin_note_component.core.wasm",
+      "paths": [
+        "🗒️note/🔣️.json"
+      ],
+      "status": 200,
+      "remove": []
+    },
+    {
+      "id": "missing-served-file",
+      "store": [
+        "noteB"
+      ],
+      "change": "drop:🗒️note/🔣️.json",
+      "paths": [
+        "🗒️note/🔣️.json"
+      ],
+      "status": 404,
+      "problem": "plugin-module-store.corrupt",
+      "remove": [
+        "record:noteB"
+      ]
+    },
+    {
+      "id": "tampered-manifest",
+      "store": [
+        "noteB"
+      ],
+      "change": "tamper-manifest:noteB",
+      "paths": [
+        "🗒️note/🌉️bridge.js"
+      ],
+      "status": 404,
+      "problem": "plugin-module-store.corrupt",
+      "remove": [
+        "record:noteB",
+        "manifest:noteB"
+      ]
+    },
+    {
+      "id": "other-generation",
+      "store": [
+        "noteB"
+      ],
+      "change": "none",
+      "generationId": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "paths": [
+        "🗒️note/🌉️bridge.js"
+      ],
+      "status": 404,
+      "problem": "plugin-module-store.missing",
+      "remove": []
+    },
+    {
+      "id": "unlisted-path",
+      "store": [
+        "noteB"
+      ],
+      "change": "none",
+      "paths": [
+        "🗒️note/unlisted.js"
+      ],
+      "status": 404,
+      "problem": "plugin-module-store.missing",
+      "remove": []
+    }
+  ],
+  "collectCases": [
+    {
+      "id": "superseded-generation-released",
+      "store": [
+        "noteA",
+        "noteB",
+        "drawB"
+      ],
+      "current": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "held": [],
+      "removedRecords": [
+        "noteA"
+      ],
+      "keptRecords": [
+        "noteB",
+        "drawB"
+      ]
+    },
+    {
+      "id": "superseded-generation-still-running",
+      "store": [
+        "noteA",
+        "noteB",
+        "drawB"
+      ],
+      "current": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "held": [
+        "noteA"
+      ],
+      "removedRecords": [],
+      "keptRecords": [
+        "noteA",
+        "noteB",
+        "drawB"
+      ]
+    },
+    {
+      "id": "everything-superseded",
+      "store": [
+        "noteA",
+        "noteB",
+        "drawB"
+      ],
+      "current": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+      "held": [],
+      "removedRecords": [
+        "noteA",
+        "noteB",
+        "drawB"
+      ],
+      "keptRecords": []
+    },
+    {
+      "id": "nothing-superseded",
+      "store": [
+        "noteB",
+        "drawB"
+      ],
+      "current": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "held": [],
+      "removedRecords": [],
+      "keptRecords": [
+        "noteB",
+        "drawB"
+      ]
+    }
+  ],
+  "stored": {
+    "noteA": {
+      "generationId": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "bundle": "noteA"
+    },
+    "noteB": {
+      "generationId": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "bundle": "noteB"
+    },
+    "drawB": {
+      "generationId": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "bundle": "drawB"
+    }
+  }
+}

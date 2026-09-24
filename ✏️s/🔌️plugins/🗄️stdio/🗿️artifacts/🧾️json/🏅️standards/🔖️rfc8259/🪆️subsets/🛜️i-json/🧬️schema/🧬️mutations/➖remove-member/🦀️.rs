@@ -22,7 +22,7 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RemoveMember {
         agg_inverse(&JsonIJsonMutation::RemoveMember(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-member", "Glied entfernen")
+        protocol::LocalizedLabel::native("Remove member", "Eigenschaft entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

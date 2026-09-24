@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetStripOffsets {
-    pub(crate) offsets: Vec<u32>,
+    pub offsets: Vec<u32>,
 }
 
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetStripOffsets {
@@ -21,7 +21,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetStripOffs
         agg_inverse(&TiffBaselineMutation::SetStripOffsets(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-strip-offsets", "Streifenversätze setzen")
+        protocol::LocalizedLabel::native("Set strip offsets", "Streifen-Offsets setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

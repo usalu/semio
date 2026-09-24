@@ -10,13 +10,6 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::ply::standards::v1_0::subsets::any::{oracle_apply_mutation, project_ply};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
-//#region 🔖️Kinds
-/// 🏷️ Mirrors this subset's own `PlyMutation::KINDS` (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/
-/// 🧬️schema/🧬️mutations/🦀️.rs`). Kept as a plain literal here rather than imported since
-/// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
-/// coverage against the `ply-1-0-any` catalog) is what keeps the two lists honest against each other.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-format", "insert-comment", "remove-comment", "add-element", "remove-element", "insert-row", "remove-row", "set-row-property"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Profile
 /// 📏️ `semantic-ply-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/
@@ -422,12 +415,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

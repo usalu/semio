@@ -119,9 +119,9 @@ pub(crate) fn directory_projection_state_is_valid(directory_json: &str, session_
 #[dsl(extension = "homecfg")]
 #[dsl(layout = "lines")]
 pub struct HomeConfig {
-    /// 📇️ JSON-serialized `DirectoryReadModel` (see `🔖️DirectoryJson` above) — folded here by
-    /// `HomeConfigMutation::FoldDirectoryEvent` as `/directory/ws` events arrive; read via `directory()`.
-    /// No optimistic mutation (contract §C6): the ONLY writer is the fold over hub-confirmed events.
+    /// 📇️ JSON-serialized `DirectoryReadModel` (see `🔖️DirectoryJson` above), read via `directory()`.
+    /// No optimistic mutation (contract §C6): the ONLY writer is `HomeConfigMutation::ReplaceDirectoryProjection`,
+    /// sealed from one authenticated `DirectoryEventPageV1` together with the three receipt fields below.
     pub directory_json: String,
     /// 🔐️ Opaque digest binding the accepted page frontier to one authenticated hub session.
     pub directory_session_binding_sha256: String,
@@ -251,10 +251,6 @@ pub enum HomeConfigMutation {
         #[dsl(block)]
         config: HomeConfig,
     },
-    /// 📇️ Folds one hub-confirmed `DirectoryEvent` (JSON-encoded, contract §C1) into `directory_json`
-    /// — the SOLE writer of the directory read model (contract §C6: no optimistic mutation).
-    #[dsl(key = "fold-directory-event")]
-    FoldDirectoryEvent { event_json: String },
     /// 📄️ Atomically replaces the page-derived projection and its authenticated resume authority.
     #[dsl(key = "replace-directory-projection")]
     ReplaceDirectoryProjection {
@@ -327,15 +323,13 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     /// variant below has an authored leaf directory on disk yet.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "⚙️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️fold-directory-event", semantic_kind: "fold-directory-event", display_name: "Fold Directory Event", emoji: "⚙️", aggregate_variant: "FoldDirectoryEvent", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️replace-directory-projection", semantic_kind: "replace-directory-projection", display_name: "Replace Directory Projection", emoji: "📄️", aggregate_variant: "ReplaceDirectoryProjection", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
             HomeConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            HomeConfigMutation::FoldDirectoryEvent { .. } => &Self::DESCRIPTORS[1],
-            HomeConfigMutation::ReplaceDirectoryProjection { .. } => &Self::DESCRIPTORS[2],
+            HomeConfigMutation::ReplaceDirectoryProjection { .. } => &Self::DESCRIPTORS[1],
         }
     }
 
@@ -345,11 +339,6 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
         let mut next = base.clone();
         match self {
             HomeConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            HomeConfigMutation::FoldDirectoryEvent { event_json } => {
-                if let (Ok(event), Ok(directory)) = (pack::from_json_str::<store::os_directory::DirectoryEvent>(event_json), next.directory()) {
-                    next.directory_json = directory_to_json(&store::os_directory::fold(directory, &event));
-                }
-            }
             HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 } => {
                 if directory_projection_state_is_valid(directory_json, session_binding_sha256, *authorization_generation, receipt_sha256) {
                     next.directory_json = directory_json.clone();

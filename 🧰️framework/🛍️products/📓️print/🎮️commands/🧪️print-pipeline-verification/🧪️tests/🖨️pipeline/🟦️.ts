@@ -316,7 +316,7 @@ export async function verifyPrintCommandBoundaries(): Promise<void> {
     const files = Object.keys(result.metafile!.inputs);
     for (const forbidden of contract.forbidden) assert.equal(files.some(path => path.includes(forbidden)), false, `${entry} loads ${forbidden}`);
     assert.ok(files.length <= contract.maxSourceFiles, `${entry}: ${files.length} source files`);
-    const external = [...new Set(Object.values(result.metafile!.outputs).flatMap(output => output.imports).filter(item => item.external && !item.path.startsWith("node:") && item.path !== "bun").map(item => item.path.startsWith("@") ? item.path.split("/").slice(0, 2).join("/") : item.path.split("/")[0]))].sort();
+    const external = [...new Set(Object.values(result.metafile!.outputs).flatMap(output => output.imports).filter(item => item.external && !/^(node|bun):/u.test(item.path) && item.path !== "bun").map(item => item.path.startsWith("@") ? item.path.split("/").slice(0, 2).join("/") : item.path.split("/")[0]))].sort();
     assert.deepEqual(external, contract.externalDependencies[entry], `${entry}: external imports`);
   }
   console.log("[DEBUG] Print production command boundaries: esbuild source graph PASS");

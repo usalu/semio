@@ -20,7 +20,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for RemoveLayer {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove layer #{}", self.index), &format!("Ebene #{} entfernen", self.index))
+        protocol::LocalizedLabel::native(&format!("Remove layer #{}", self.index), &format!("Schicht #{} entfernen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

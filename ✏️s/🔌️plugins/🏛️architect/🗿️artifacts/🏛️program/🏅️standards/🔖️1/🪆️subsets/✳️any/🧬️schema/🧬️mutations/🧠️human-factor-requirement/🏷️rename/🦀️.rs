@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameHumanFactorRequire
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename human factor requirement to \"{}\"", self.new_name), &format!("Personenfaktoranforderung in \"{}\" umbenennen", self.new_name))
+        protocol::LocalizedLabel::native(&format!("Rename human factor requirement to \"{}\"", self.new_name), &format!("Ergonomieanforderung in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

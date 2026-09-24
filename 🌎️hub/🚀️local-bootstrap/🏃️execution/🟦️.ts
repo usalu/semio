@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Duplex } from "node:stream";
 import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { getWorkspaceRoot } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalProfile, verifyAuthenticatedFrame } from "../🛂authentication/🟦️.ts";
@@ -17,6 +18,14 @@ import { LOCAL_BOOTSTRAP_DEADLINE_MS, LocalFrameReader, writeLocalFrame } from "
  * (measured 2026-09-21 by CE2 — two of three 7621 starts, while 17 rustc ran). The number is
  * unchanged from the total deadline it replaces: nothing here is a lengthened timeout. */
 export const LOCAL_READINESS_STALL_BOUND_MS = 30_000;
+
+/** ⏳ The no-progress span of a readiness wait over a hub that LOADS a trusted catalog at startup: the
+ * hub's own startup loader declares its load stalled only after `TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS`
+ * (`🌎️hub/🏗️bootstrap/🦀️.rs`, 300 s) without a checkpoint, and a single unit (compiling or interpreting one
+ * package's component) legitimately runs silent longer than {@link LOCAL_READINESS_STALL_BOUND_MS} on a busy
+ * machine — measured 90 s for one unit (ticket 26/09/23 W1 §4.6). A waiter stricter than the hub's own bound
+ * abandons a hub that is still loading. */
+export const TRUSTED_CATALOG_READINESS_STALL_BOUND_MS = 300_000;
 
 export type LocalHubRunAllocationOperations = Readonly<{
   platform: NodeJS.Platform;
@@ -91,6 +100,19 @@ export function hubBinaryPath(repoRoot: string): string {
   return join(cargoTargetDirectory(repoRoot), "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
 }
 
+/** 🔏️ The one trusted-catalog package list every loopback DEVELOPMENT hub publishes into a data root that holds none —
+ * the hub's own bootstrap closure (stdio, gis) plus the collaboration editors — shared by `os-hub:dev` and the `dev s`
+ * local hub owner so whichever launch row reaches a clean `hub-dev` root first publishes the same catalog. */
+export const LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES = "stdio,gis,note,writer,draw,puzzle";
+
+/** 👥️ The local-bootstrap profiles a development hub declares: the developer every single-user row signs in as, and the
+ * two humans the two-user rows (`👤️1`, `👤️2`) sign in as — each a distinct hub user reached through the session broker. */
+export const LOCAL_HUB_DEVELOPMENT_PROFILES: readonly LocalProfile[] = Object.freeze([
+  Object.freeze({ profileId: "developer", subject: "local-developer-01", displayName: "Local Developer", allowedClientClasses: Object.freeze(["native", "mcp", "react-relay"] as const) }),
+  Object.freeze({ profileId: "user-1", subject: "local-user-01", displayName: "Local User One", allowedClientClasses: Object.freeze(["react-relay"] as const) }),
+  Object.freeze({ profileId: "user-2", subject: "local-user-02", displayName: "Local User Two", allowedClientClasses: Object.freeze(["react-relay"] as const) }),
+]);
+
 /** 🎯 The single Nx target that stages the development executable every launch route reads. */
 export const HUB_DEV_BINARY_TARGET = "os-hub:build-dev";
 
@@ -110,21 +132,21 @@ const nativeHubDevPostgresBinaryStaging: HubDevBinaryStaging = {
   stage: () => spawnSync("bun", ["nx", "run", HUB_DEV_POSTGRES_BINARY_TARGET], { cwd: getWorkspaceRoot(), stdio: "inherit", shell: false }).status ?? -1,
 };
 
-/** 📦 Reads the Nx-staged development executable, staging it through its own Nx target when absent instead of
- * failing a launch route with a missing file, and naming that target when the staging itself fails. */
+/** 📦 Stages the development executable through its own Nx target on EVERY launch and returns its path. The Nx
+ * hash over the hub's native sources decides freshness (a cache hit restores or keeps the matching binary), so a
+ * launch route never boots a binary left behind by an older tree; a failed staging names the target.
+ * @see ../../📦️packages/🦀️rust/📋️project.json `build-dev` */
 export function hubDevBinaryPath(root: string, staging: HubDevBinaryStaging = nativeHubDevBinaryStaging): string {
   const path = join(root, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-  if (existsSync(path)) return path;
   const status = staging.stage();
   if (status !== 0 || !existsSync(path)) throw new Error(`Missing Nx-staged os-hub dev binary: ${path}; staging it through \`bun nx run ${HUB_DEV_BINARY_TARGET}\` exited with status ${status}`);
   return path;
 }
 
-/** 🐘️ The same read for the PostgreSQL-capable executable, staged into its own directory so the two
+/** 🐘️ The same staging for the PostgreSQL-capable executable, staged into its own directory so the two
  * feature sets never overwrite one another (and a running hub is never replaced in place). */
 export function hubDevPostgresBinaryPath(root: string, staging: HubDevBinaryStaging = nativeHubDevPostgresBinaryStaging): string {
   const path = join(root, "dist", "build-dev-postgres", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-  if (existsSync(path)) return path;
   const status = staging.stage();
   if (status !== 0 || !existsSync(path)) throw new Error(`Missing Nx-staged PostgreSQL os-hub dev binary: ${path}; staging it through \`bun nx run ${HUB_DEV_POSTGRES_BINARY_TARGET}\` exited with status ${status}`);
   return path;
@@ -185,7 +207,7 @@ export async function startLocalHub(repoRoot: string, root: string, profiles: re
   const inferenceCheckpointPipe = options.inferenceCheckpointControl ? (child.stdio[4] as Duplex) : undefined;
   if (!pipe || (options.inferenceCheckpointControl && !inferenceCheckpointPipe)) {
     channelKey.fill(0);
-    child.kill();
+    terminateOwnedChildTree(child);
     await waitForChildExit(child, 2_000).catch(() => undefined);
     allocation.remove();
     throw new Error("local bootstrap inherited endpoint was not created");
@@ -305,7 +327,7 @@ export async function finishLocalHub(run: LocalHubRun): Promise<void> {
         await waitForChildExit(run.child, 2_000);
       } catch {
         run.child.kill();
-        await waitForChildExit(run.child, 2_000).catch(() => undefined);
+        await waitForChildExit(run.child, 2_000).catch(() => terminateOwnedChildTree(run.child));
       }
     }
     run.removeRunRoot();

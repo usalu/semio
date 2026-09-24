@@ -1227,7 +1227,7 @@
                   "config:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
@@ -1235,7 +1235,7 @@
                   "artifacts.read",
                   "shell.observe"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -1344,7 +1344,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -4726,10 +4726,7 @@
               "stdio.svg",
               "stdio.png"
             ],
-            "importStdioKinds": [
-              "stdio.svg",
-              "stdio.png"
-            ]
+            "importStdioKinds": []
           }
         ],
         "config": {
@@ -6034,8 +6031,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "1e2767e133f7822985e2258129d9e64a28d5badfeb8f44ce66db1573eae77f63",
-    "coreWasmSha256": "5d09e5f5b27a92cf8c157921eb9271c4fd58632bd4b31e889afc4596f059e140",
-    "descriptorSha256": "2b07c3a9e207cd704483e27834e853b6190019a8c47c411f9f816a47d2121f06"
+    "wasmSha256": "f95d2d6a3ea0cb3173b0950242f2c40c37e6315e33df2c379079a1fceb1b6a12",
+    "coreWasmSha256": "3daacaea0ed4f5694678088ac0f78fde68f17758088767185e2f62972ffe6533",
+    "descriptorSha256": "c11e93f1df6d178060be355f25eeac662b69fa8c4314b40dc7db4890ab74f501"
   }
 }

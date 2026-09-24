@@ -1,0 +1,150 @@
+{
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The config state lane of `s.trinity.jack`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🎚️config): its mutation vocabulary `JackEditorWindowConfigMutation` over `JackEditorWindowConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-trinity-jack-1-any-editor-edit-editor-config` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "trinity-jack-1-any-editor-edit-editor-config-state-lane-semantics",
+      "capabilities": [
+        "trinity-jack-1-any-editor-edit-editor-config-mutate"
+      ],
+      "rationale": "`JackEditorWindowConfigMutation` is the config state lane of `s.trinity.jack`'s ✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🎚️config surface: it holds one query editor window's jack query text. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-query`) changes exactly its own part of `JackEditorWindowConfig`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A persisted key-value store for desktop settings; it has no model of this surface's typed state record, its per-kind setters or the inverse each kind computes."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it defines no typed state mutations and neither their no-op nor their inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "`JackEditorWindowConfig` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "trinity-jack-1-any-editor-edit-editor-config",
+      "capability": "trinity-jack-1-any-editor-edit-editor-config-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-query"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.trinity.jack",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🎚️config",
+      "mutations": [
+        {
+          "id": "set-query",
+          "capability": "trinity-jack-1-any-editor-edit-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-query",
+            "bridgeVersion": 1,
+            "variant": "SetQuery"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "trinity-jack-1-any-editor-edit-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-query-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.trinity.jack",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🎚️config"
+      },
+      "mutation": "set-query",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔎️set-query/✅️set-query-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2350657f4fb7c6745696bc460fd6432aac24d407a264f0dad1547276e86ad9f1",
+          "bytes": 46
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🔎️set-query/✅️set-query-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:18cadaaad82ff8f51d5b550fdd87cefc7ab7655ecc00ba9ae8cf4d353b31a3d9",
+          "bytes": 89
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔎️set-query/✅️set-query-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fc9c80fd6fd34d46a91e6cc8912044e42770d828fd94cfd3a0208e87331fac98",
+          "bytes": 70
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🔎️set-query/✅️set-query-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fc9c80fd6fd34d46a91e6cc8912044e42770d828fd94cfd3a0208e87331fac98",
+          "bytes": 70
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🔎️set-query/✅️set-query-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "Typing a new query replaces the editor window's query text."
+    }
+  ]
+}

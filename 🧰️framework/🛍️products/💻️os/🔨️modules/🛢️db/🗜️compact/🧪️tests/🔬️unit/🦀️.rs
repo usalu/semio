@@ -127,7 +127,7 @@ fn held_compaction_worker_pool() -> (Arc<WorkerPool>, Arc<std::sync::atomic::Ato
     let held = Arc::new(std::sync::atomic::AtomicBool::new(true));
     let worker_entered = entered.clone();
     let worker_held = held.clone();
-    pool.try_submit(
+    pool.submit(
         Lane::Maintenance,
         Box::new(move || {
             worker_entered.store(true, std::sync::atomic::Ordering::Release);
@@ -135,9 +135,7 @@ fn held_compaction_worker_pool() -> (Arc<WorkerPool>, Arc<std::sync::atomic::Ato
                 std::thread::yield_now();
             }
         }),
-    )
-    .ok()
-    .expect("compaction blocker admission");
+    );
     while !entered.load(std::sync::atomic::Ordering::Acquire) {
         std::thread::yield_now();
     }
@@ -420,8 +418,11 @@ async fn retained_compaction_perpetual_release_error_keeps_fence_fault_admission
     let original = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).future.replace(injected).unwrap();
     drop(original);
     held.store(false, std::sync::atomic::Ordering::Release);
-    std::thread::sleep(std::time::Duration::from_millis(20));
-    assert!(state.lease_recovery.release_attempts.load(std::sync::atomic::Ordering::Acquire) >= 2);
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while state.lease_recovery.release_attempts.load(std::sync::atomic::Ordering::Acquire) < 2 {
+        assert!(std::time::Instant::now() < deadline, "perpetual release error was not retried through the worker loop");
+        std::thread::yield_now();
+    }
     assert!(!state.lease_recovery.released.load(std::sync::atomic::Ordering::Acquire));
     assert_eq!(*state.lease_recovery.fence.lock().unwrap_or_else(std::sync::PoisonError::into_inner), Some(fence));
     let core = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);

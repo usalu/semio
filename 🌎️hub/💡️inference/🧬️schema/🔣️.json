@@ -171,7 +171,7 @@
       "required": ["requestMaxBytes", "inputMaxBytes", "resultMaxBytes", "proposalMaxBytes", "commandMaxBytes", "identityJsonMaxBytes", "jobCapacity", "operationCapacity", "documentGateCapacity", "progressMaxCursor", "eventPageMaxItems", "claimLeaseMaxMs", "jobMaxLifetimeMs", "workUnitLimit", "recursionDepth", "allocationBytes", "approvalMaxRecords"],
       "properties": {
         "requestMaxBytes": { "const": 1024 },
-        "inputMaxBytes": { "const": 65536 },
+        "inputMaxBytes": { "const": 1048576 },
         "resultMaxBytes": { "const": 16384 },
         "proposalMaxBytes": { "const": 4096 },
         "commandMaxBytes": { "const": 8192 },

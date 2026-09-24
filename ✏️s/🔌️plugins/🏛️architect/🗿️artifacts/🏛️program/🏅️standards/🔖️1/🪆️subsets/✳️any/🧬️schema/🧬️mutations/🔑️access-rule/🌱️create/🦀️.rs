@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateAccessRule {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create access rule \"{}\"", self.access_rule.header.name), &format!("Zugangregel \"{}\" erstellen", self.access_rule.header.name))
+        protocol::LocalizedLabel::native(&format!("Create access rule \"{}\"", self.access_rule.header.name), &format!("Zugangsregel \"{}\" erstellen", self.access_rule.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.access_rule.header.id.0.clone()]

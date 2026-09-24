@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/trace-record/schema.json",
+  "title": "TraceRecordLine",
+  "description": "One structured observation as `semio-framework-trace`'s `TraceRecord::to_json_line` writes it: one JSON object per line on the configured sink (`SEMIO_TRACE_SINK` = `stderr` | `stdout` | `none` | `file:<path>`), admitted by `SEMIO_TRACE_LEVEL`. `requestId` is the span id: the admission record of a long-lived span (a socket) and the record that ends it carry the same id. Absent identity fields are omitted, never written as null. The event vocabulary an operator may alert on is `⏱️trace/🧫️fixtures/🛰️span-vocabulary/🔣️.json`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["level", "event", "outcome"],
+  "properties": {
+    "level": { "enum": ["error", "warn", "info", "debug"], "description": "Level the record was emitted at; `off` never reaches a sink." },
+    "event": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$", "maxLength": 128, "description": "Dotted event name, e.g. `server.document.socket`." },
+    "outcome": { "enum": ["started", "ok", "refused", "failed", "cancelled"], "description": "How the span ended; `started` is the optional opening record." },
+    "requestId": { "type": "string", "pattern": "^r[0-9a-f]{12,}$", "description": "Span id, unique within one tracer." },
+    "principal": { "type": "string", "minLength": 1, "description": "Who acted, e.g. `user:<id>`." },
+    "space": { "type": "string", "minLength": 1, "description": "Space the span acted in." },
+    "artifact": { "type": "string", "minLength": 1, "description": "Artifact/document the span acted on." },
+    "durationUs": { "type": "integer", "minimum": 0, "description": "Microseconds between span open and close, when a clock was installed." },
+    "detail": { "type": "string", "description": "Stable short reason code or bounded progress text, never a user message or payload." }
+  }
+}

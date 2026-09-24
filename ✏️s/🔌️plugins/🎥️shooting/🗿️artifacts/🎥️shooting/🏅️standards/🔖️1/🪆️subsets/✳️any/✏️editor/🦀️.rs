@@ -1024,6 +1024,7 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("addAsset", InteractiveJobClassification::Migrated)
             .action_interactive_job("importAsset", InteractiveJobClassification::Migrated)
             .action_interactive_job("resetFixture", InteractiveJobClassification::Migrated)
+            .action_destructive("resetFixture")
             .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
@@ -1035,10 +1036,13 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("worldPointerMove", InteractiveJobClassification::Migrated)
             .action_interactive_job("saveDownload", InteractiveJobClassification::Migrated)
+            .action_destructive("saveDownload")
             .action_interactive_job("loadRequest", InteractiveJobClassification::Migrated)
             .action_interactive_job("importAssetRequest", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportActiveShot", InteractiveJobClassification::Migrated)
+            .action_destructive("exportActiveShot")
             .action_interactive_job("exportAllShots", InteractiveJobClassification::Migrated)
+            .action_destructive("exportAllShots")
             // 📝️ Staged argument forms for the panel-visible create actions (defaults materialized host-side).
             .action_args("addShot", vec![
                 ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("svg", LocalizedLabel::native("SVG", "SVG")), ActionArgOption::new("png", LocalizedLabel::native("PNG", "PNG"))]).default_value(&"png"),

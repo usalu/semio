@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeFireResist
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fire resistance requirement [min] to {}", self.new_fire_resistance_min), &format!("Brandwiderstandanforderung [min] auf {} ändern", self.new_fire_resistance_min))
+        protocol::LocalizedLabel::native(&format!("Change fire resistance requirement [min] to {}", self.new_fire_resistance_min), &format!("Anforderung an den Feuerwiderstand [min] auf {} ändern", self.new_fire_resistance_min))
     }
 }
 //#endregion 🔖️ChangeFireResistanceMin

@@ -29,7 +29,7 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetSnapshot {
         agg_inverse(&XlsxMutation::SetSnapshot(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
+        protocol::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

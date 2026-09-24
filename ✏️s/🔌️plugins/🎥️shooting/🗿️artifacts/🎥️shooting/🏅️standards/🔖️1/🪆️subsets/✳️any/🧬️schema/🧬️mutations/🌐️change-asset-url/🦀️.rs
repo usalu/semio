@@ -22,7 +22,7 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeAssetUrl {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change asset \"{}\" url", self.id), &format!("Asset \"{}\" url ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change asset \"{}\" url", self.id), &format!("URL von Asset \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

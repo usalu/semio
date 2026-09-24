@@ -4,7 +4,7 @@
  * consumer that only spawns a tool (the plugin package's jco/wasm-opt steps, and through them the
  * extension store and `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery` taxonomy
  * walk into its module graph. */
-import { spawnSync } from "node:child_process";
+import { spawnSync, type ChildProcess } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
@@ -117,13 +117,19 @@ export function terminateOwnedProcessTree(rootPid: number): void {
   }
 }
 
+/** 🪓️ Terminates one still-running spawned child with its whole descendant tree — POSIX groups and `taskkill /T`
+ * on Windows through [[terminateOwnedProcessTree]] — and never signals a pid its exited child no longer owns. */
+export function terminateOwnedChildTree(child: Pick<ChildProcess, "pid" | "exitCode" | "signalCode">): void {
+  if (child.exitCode === null && child.signalCode === null && child.pid) terminateOwnedProcessTree(child.pid);
+}
+
 /** ⏱️[[RunCmdOpts]] preset for nx/script orchestrators — [[orchestratorBudgetMs]] and full CPU [[devToolingEnv]]. */
-export function orchestratorBudgetOpts(extra: NodeJS.ProcessEnv = {}): RunCmdOpts {
+export function orchestratorBudgetOpts(extra: Partial<NodeJS.ProcessEnv> = {}): RunCmdOpts {
   return { budgetMs: orchestratorBudgetMs(), env: devToolingEnv(extra) };
 }
 
 /** ⏱️[[RunCmdOpts]] preset for dev servers and long-lived daemons — [[daemonBudgetMs]] and [[devToolingEnv]]. */
-export function daemonBudgetOpts(extra: NodeJS.ProcessEnv = {}): RunCmdOpts {
+export function daemonBudgetOpts(extra: Partial<NodeJS.ProcessEnv> = {}): RunCmdOpts {
   return { budgetMs: daemonBudgetMs(), env: devToolingEnv(extra) };
 }
 

@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceApprovalRecord {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace approval record \"{}\"", self.approval_record.header.name), &format!("Freigabendatensatz \"{}\" ersetzen", self.approval_record.header.name))
+        protocol::LocalizedLabel::native(&format!("Replace approval record \"{}\"", self.approval_record.header.name), &format!("Freigabedatensatz \"{}\" ersetzen", self.approval_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.approval_record.header.id.0.clone()]

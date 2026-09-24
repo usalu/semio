@@ -610,11 +610,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -1964,11 +1964,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -3314,11 +3314,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -5416,14 +5416,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -9954,7 +9954,7 @@
               "class": "twoD",
               "form": "design"
             },
-            "schema": "puzzle.2d",
+            "schema": "puzzle.2d.fixture",
             "exportFormats": [],
             "importFormats": [],
             "exportStdioKinds": [
@@ -11431,11 +11431,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -12854,14 +12854,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -18247,24 +18247,10 @@
             "exportFormats": [],
             "importFormats": [],
             "exportStdioKinds": [
-              "stdio.dwg",
-              "stdio.gltf",
-              "stdio.json",
-              "stdio.las",
-              "stdio.obj",
-              "stdio.ply",
-              "stdio.png",
-              "stdio.stl"
+              "stdio.json"
             ],
             "importStdioKinds": [
-              "stdio.dwg",
-              "stdio.gltf",
-              "stdio.json",
-              "stdio.las",
-              "stdio.obj",
-              "stdio.ply",
-              "stdio.png",
-              "stdio.stl"
+              "stdio.json"
             ]
           }
         ],
@@ -20156,11 +20142,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -22401,11 +22387,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -23400,14 +23386,14 @@
             "semantics": {
               "effects": {
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": false
               },
               "policy": {
                 "scopes": [
                   "shell.navigate"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
                 "preview": "none",
@@ -29136,16 +29122,11 @@
             "importFormats": [],
             "exportStdioKinds": [
               "stdio.json",
-              "stdio.obj",
               "stdio.png",
-              "stdio.stl",
               "stdio.zip"
             ],
             "importStdioKinds": [
               "stdio.json",
-              "stdio.obj",
-              "stdio.png",
-              "stdio.stl",
               "stdio.zip"
             ]
           }
@@ -30993,8 +30974,8 @@
     }
   ],
   "hashes": {
-    "wasmSha256": "44a1aa9af9fb0b51930ea37611a76f19bf8ac7612876676e950da1ace24d77fc",
-    "coreWasmSha256": "3ce6e205a7eea56a1f35f83bc7e4964517b680d0310971da5f58c425b9c6314d",
-    "descriptorSha256": "d522daa51a858eae9200e66fa3e34d7239b22e529a7a6ed6096f75981472613e"
+    "wasmSha256": "4533c4af36896a2b09a7de79a3e856e92f51f3c9fbd6b5db1c7073b3cf7a55dd",
+    "coreWasmSha256": "03100e08f6d9d548134aee950f3c7973d4323f2725c8b102281848b09a131b21",
+    "descriptorSha256": "446fbe9a01b432c00f12a0e7af977f763086fcd784cde3838bc8a389cd82ca6b"
   }
 }

@@ -32,7 +32,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveTrimBox {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove PDF/VT trim box on page {}", self.page_index), &format!("PDF/VTbeschnittkasten auf Seite {} entfernen", self.page_index))
+        protocol::LocalizedLabel::native(&format!("Remove PDF/VT trim box on page {}", self.page_index), &format!("PDF/VT-TrimBox auf Seite {} entfernen", self.page_index))
     }
 
     fn target(&self) -> Vec<String> {

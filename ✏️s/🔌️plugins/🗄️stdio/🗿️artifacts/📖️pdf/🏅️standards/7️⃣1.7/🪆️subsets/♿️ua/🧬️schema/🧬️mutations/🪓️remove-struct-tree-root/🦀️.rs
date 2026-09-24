@@ -28,7 +28,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveStructTreeRoot {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove PDF/UA structure tree root", "PDF/UAstrukturbaumwurzel entfernen")
+        protocol::LocalizedLabel::native("Remove PDF/UA structure tree root", "PDF/UA-Strukturbaumwurzel entfernen")
     }
 
     fn target(&self) -> Vec<String> {

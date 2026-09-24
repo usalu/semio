@@ -29,7 +29,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetGroup {
         agg_inverse(&ObjMutation::SetGroup(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-group", "Gruppe setzen")
+        protocol::LocalizedLabel::native("Set group", "Gruppe setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1,0 +1,150 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The presence state lane of `s.shooting.shooting`'s editor (✏️editor/👥️presence): its mutation vocabulary `ShootingPresenceMutation` over `ShootingPresence`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/👥️mutate-shooting-shooting-1-any-editor-presence` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "shooting-shooting-1-any-editor-presence-state-lane-semantics",
+      "capabilities": [
+        "shooting-shooting-1-any-editor-presence-mutate"
+      ],
+      "rationale": "`ShootingPresenceMutation` is the presence state lane of `s.shooting.shooting`'s ✏️editor/👥️presence surface: it holds the shot selection and live camera this collaborator broadcasts to peers. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`replace-presence`) changes exactly its own part of `ShootingPresence`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "y-protocols (awareness)",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Broadcasts an opaque per-client awareness object; it has no typed presence record, no replace-presence mutation and no inverse to compare against."
+          },
+          {
+            "package": "liveblocks (presence)",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Hosted per-user presence objects merged by key; it neither models this surface's presence record nor defines a mutation vocabulary with inverses, and it is a cloud service this local-first repository does not depend on."
+          }
+        ],
+        "whyNoneQualifies": "`ShootingPresence` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "shooting-shooting-1-any-editor-presence",
+      "capability": "shooting-shooting-1-any-editor-presence-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "replace-presence"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.shooting.shooting",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/👥️presence",
+      "mutations": [
+        {
+          "id": "replace-presence",
+          "capability": "shooting-shooting-1-any-editor-presence-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-presence",
+            "bridgeVersion": 1,
+            "variant": "ReplacePresence"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-shooting-1-any-editor-presence-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-presence-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.shooting.shooting",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/👥️presence"
+      },
+      "mutation": "replace-presence",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fe9b7f8898927226c168b4b881f95c76bc7f8159d1cdcf164edb4be41c9877b5",
+          "bytes": 200
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c122b5cdf21b1aa42d5990c821df20e153a0d166b67a2ffb9b4a53a217867889",
+          "bytes": 468
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c98d0b5aceeab9b747fe567439327a119c87601629a49503c15ebd66876038e3",
+          "bytes": 321
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:c98d0b5aceeab9b747fe567439327a119c87601629a49503c15ebd66876038e3",
+          "bytes": 321
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "presence-state-lane",
+      "notes": "The owner's committed contract vector for `replace-presence` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    }
+  ]
+}

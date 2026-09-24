@@ -71,24 +71,6 @@ LETTER_PLACEHOLDER = {letter: kind for kind, letter in PLACEHOLDER_LETTER.items(
 BLOCK_LETTER = {"paragraph": "P", "heading": "H", "list": "L", "table": "T", "code": "C", "quote": "Q", "image": "I", "pageBreak": "B"}
 LETTER_BLOCK = {letter: kind for kind, letter in BLOCK_LETTER.items()}
 
-KINDS = (
-    "no-mutation",
-    "set-snapshot",
-    "insert-slide",
-    "remove-slide",
-    "set-slide-layout",
-    "set-slide-notes",
-    "insert-shape",
-    "remove-shape",
-    "set-shape-frame",
-    "set-text-box-blocks",
-    "insert-master",
-    "remove-master",
-    "insert-layout",
-    "remove-layout",
-    "set-layout-master",
-)
-
 TALK_DSL = "shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio"
 TALK_PACK = "shared://📽️mutate-semio-presentation/🎒️.pack.semio"
 DECK_DSL = "asset://📽️deck/🗣️.dsl.semio"
@@ -1012,11 +994,10 @@ def identity_round_trip(ctx: Context) -> Outcome:
 
 # region 🔖️Registration
 def adapter() -> Adapter:
-    """🧭️ Registration entry point the Python host calls, keyed by FULL expanded scenario id."""
-    built = Adapter("python")
-    for kind in KINDS:
-        built = built.oracle("mutate-%s" % kind, mutate).oracle("inverse-%s" % kind, inverse).oracle("spec-vector-%s" % kind, spec_vector)
-    return built.oracle("identity-round-trip", identity_round_trip)
+    """🧭️ Registration entry point the Python host calls. Handlers are registered under the Scenario
+    Outline base ids, which the host resolves for every Examples row, and plain scenarios under their
+    own ids."""
+    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

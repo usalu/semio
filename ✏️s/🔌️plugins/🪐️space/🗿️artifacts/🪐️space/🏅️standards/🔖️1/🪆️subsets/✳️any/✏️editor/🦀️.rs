@@ -385,7 +385,7 @@ impl ArtifactEditor for SpaceIndexEditor {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => Ok(built_to_component_tree(main::render(doc.snapshot, cfg.snapshot)?)),
+            main::BODY_KEY => Ok(built_to_component_tree(main::render(doc.snapshot, cfg.snapshot, view_state)?)),
             members_panel::SPACE_INDEX_BODY_MEMBERS => Ok(built_to_component_tree(members_panel::render(cfg.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, members_panel::SPACE_INDEX_BODY_MEMBERS))?)),
             _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -438,11 +438,13 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("renameArtifact", InteractiveJobClassification::Migrated)
         .action_interactive_job("touchArtifact", InteractiveJobClassification::Migrated)
         .action_interactive_job("requestDeleteArtifact", InteractiveJobClassification::Migrated)
+        .action_destructive("requestDeleteArtifact")
         .action_interactive_job("openArtifact", InteractiveJobClassification::Migrated)
         .action_interactive_job("openArtifactWith", InteractiveJobClassification::Migrated)
         .action_interactive_job("inviteMember", InteractiveJobClassification::Migrated)
         .action_interactive_job("requestInviteMember", InteractiveJobClassification::Migrated)
         .action_interactive_job("removeMember", InteractiveJobClassification::Migrated)
+        .action_destructive("removeMember")
         .action_interactive_job("setVisibility", InteractiveJobClassification::Migrated)
         .action_interactive_job("copyInviteLink", InteractiveJobClassification::Migrated)
         .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::Migrated)

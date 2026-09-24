@@ -184,7 +184,7 @@ def attached_to(document, ports):
 
 # region 🔖️Verbs
 def apply_mutation(document, kind, payload):
-    """🦠️ Applies one kind. Every committed vector of this subset declares `status: applied`, so an
+    """🦠️ Applies one kind. Every committed vector of this subset is accepted (`applied` or `no-op`), so an
     address the scene does not hold is an error rather than a rejection outcome."""
     if kind in UNDERDETERMINED:
         raise AssertionError("mutate-%s: %s" % (kind, UNDERDETERMINED_REASON))

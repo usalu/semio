@@ -32,7 +32,7 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ResizeTileCrop
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Resize tile \"{}\" crop", self.id), &format!("Kachel \"{}\" Zuschnitt skalieren", self.id))
+        protocol::LocalizedLabel::native(&format!("Resize tile \"{}\" crop", self.id), &format!("Zuschnitt von Kachel \"{}\" ändern", self.id))
     }
 
     fn target(&self) -> Vec<String> {

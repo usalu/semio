@@ -37,7 +37,7 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeCurs
         }, &{
         match self.new_resolved_up_to {
             Some(cursor) => format!("Cursor nach Schritt {cursor} verschieben"),
-            None => "Cursor leeren".to_string(),
+            None => "Cursor entfernen".to_string(),
         }
         })
     }

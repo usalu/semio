@@ -619,6 +619,55 @@ impl TreeItemProps {
     }
 }
 
+/// 📊️ Props for `Component::Table` — a column-headed data table. The header lives HERE, as props, and
+/// every [`TableRowProps`] child is one row, so a table costs one node record plus one per MATERIALISED
+/// row however many columns and row actions it has. `window` is the same [`TreeWindow`] contract a tree
+/// section carries: the children are the rows `[offset, offset + children.len())` of a logically
+/// `total`-long row list, a renderer pitches the unmaterialised rows as spacers and asks for the rows its
+/// viewport shows through `ViewModel::tree_windows` — one windowing mechanism and one body-wide node
+/// ledger ([`TREE_WINDOW_BODY_NODE_BUDGET`]) for trees and tables alike.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub struct TableProps {
+    /// 🏷️ The table's accessible name — what assistive technology announces on entering it.
+    pub label: Label,
+    /// 🗂️ The column headers, in cell order.
+    pub columns: crate::UiFixedList<Label>,
+    /// 🎬️ Header of the trailing actions column a renderer adds when any row carries row actions.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub actions_label: Option<Label>,
+    /// 🪟️ The materialised slice of the logical row list — see [`TreeWindow`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub window: Option<TreeWindow>,
+}
+
+/// 📊️ Props for `Component::TableRow` — one row of a [`TableProps`] table: its cells in column order and
+/// its row-scoped actions, both as props, so a row is ONE node record. The row's primary activation (open,
+/// select) is the record's own `Trigger::Activate` binding. No `ToValue`/`FromValue`: [`RowAction`] embeds
+/// `UiValue`, the same deliberate exception [`TreeItemProps`] documents.
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TableRowProps {
+    /// 📝️ The row's cells, positional to the table's `columns`.
+    pub cells: crate::UiFixedList<crate::UiText>,
+    /// 🎬️ Row-scoped actions, rendered in the table's trailing actions column.
+    #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    pub row_actions: crate::UiFixedList<RowAction>,
+}
+
+impl TableRowProps {
+    fn credited_clone(&self) -> Option<Self> {
+        let mut row_actions = crate::UiFixedList::default();
+        for action in self.row_actions.iter() {
+            row_actions.try_push(action.credited_clone()?).ok()?;
+        }
+        Some(Self { cells: self.cells.clone(), row_actions })
+    }
+}
+
 /// 🖼️ Props for `Component::Image`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -684,6 +733,8 @@ pub enum Component {
     Image(ImageProps),
     Surface(crate::SurfaceProps),
     Extension(ExtensionProps),
+    Table(TableProps),
+    TableRow(TableRowProps),
 }
 
 impl Component {
@@ -708,6 +759,8 @@ impl Component {
             Self::Image(value) => Self::Image(value.clone()),
             Self::Surface(value) => Self::Surface(value.credited_clone()?),
             Self::Extension(value) => Self::Extension(ExtensionProps { extension: value.extension.clone(), props: value.props.credited_clone()? }),
+            Self::Table(value) => Self::Table(value.clone()),
+            Self::TableRow(value) => Self::TableRow(value.credited_clone()?),
         })
     }
 }

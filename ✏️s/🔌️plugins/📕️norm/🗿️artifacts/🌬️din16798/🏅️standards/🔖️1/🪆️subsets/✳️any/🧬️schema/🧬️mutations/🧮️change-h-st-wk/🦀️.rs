@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHStWK 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change storage heat transfer coefficient to {}", self.new_h_st_w_k), &format!("Speicherwärmenübertragungskoeffizient auf {} ändern", self.new_h_st_w_k))
+        protocol::LocalizedLabel::native(&format!("Change storage heat transfer coefficient to {}", self.new_h_st_w_k), &format!("Wärmeverlustkoeffizienten des Speichers auf {} ändern", self.new_h_st_w_k))
     }
 }
 //#endregion 🔖️ChangeHStWK

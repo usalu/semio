@@ -27,7 +27,7 @@
           "const": "semio:vcs"
         },
         "artifactKind": {
-          "const": "vcs.vcs"
+          "const": "s.vcs.vcs"
         },
         "artifactSchema": {
           "const": "vcs.vcs"

@@ -1391,7 +1391,7 @@ pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefiniti
             ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).required(),
             ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).required(),
         ]),
-        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction, "eye") }.with_args([
+        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Darüberfahren"), ActionKind::Interaction, "eye") }.with_args([
             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
             ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).required(),
             ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
@@ -4433,6 +4433,20 @@ pub struct InferencePayloadContract {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub artifact_binding: Option<InferenceArtifactBinding>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub commit: Option<InferenceCommitBinding>,
+}
+
+/// 📌️ How one inference's result becomes a document edit: the artifact action that commits it. The
+/// action receives the result's fields it declares as arguments, and runs through the ordinary edit
+/// path — its own policy, undo and ledger — so a committed result is an edit like any other.
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct InferenceCommitBinding {
+    pub action: String,
 }
 
 /// 🔗️ How one inference's canonical request is BOUND to an artifact document. An inference over an

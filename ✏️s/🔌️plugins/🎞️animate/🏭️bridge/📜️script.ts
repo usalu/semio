@@ -8,10 +8,11 @@
 // 🏭️ Language-neutral production mutation bridge for every subset under `✏️s/🔌️plugins/🎞️animate`.
 //
 // The test platform asks an owner what production dispatch offers without knowing its language: this
-// process answers `list-mutations <artifact> <standard> <subset>` with a RuntimeMutationInventory on
-// stdout, by running the sibling Rust binary that reads the production aggregates' DESCRIPTORS.
+// process answers `list-mutations <artifact> <standard> <subset> [<surface>]` with a RuntimeMutationInventory on
+// stdout, by running the sibling Rust binary that reads the production aggregates' DESCRIPTORS; a surface names a
+// state lane (config, presence, transient) of the subset's editor or viewer.
 //
-//   bun 📜️script.ts list-mutations <artifact> <standard> <subset>
+//   bun 📜️script.ts list-mutations <artifact> <standard> <subset> [<surface>]
 //
 // @see 🦀️.rs — the binary that reads the dispatch aggregates
 // @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — RuntimeMutationInventory
@@ -26,12 +27,12 @@ import { spawnSync } from "node:child_process";
 const BRIDGE_VERSION = 1;
 
 function main(argv: readonly string[]): number {
-  const [command = "", artifact = "", standard = "", subset = ""] = argv;
+  const [command = "", artifact = "", standard = "", subset = "", ...surface] = argv;
   if (command !== "list-mutations") {
-    console.error(`[bridge] unknown command ${JSON.stringify(command)} — expected list-mutations <artifact> <standard> <subset>`);
+    console.error(`[bridge] unknown command ${JSON.stringify(command)} — expected list-mutations <artifact> <standard> <subset> [<surface>]`);
     return 2;
   }
-  const built = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", "semio-animate-mutation-bridge", "--", command, artifact, standard, subset], {
+  const built = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", "semio-animate-mutation-bridge", "--", command, artifact, standard, subset, ...surface], {
     cwd: import.meta.dir,
     encoding: "utf8",
   });

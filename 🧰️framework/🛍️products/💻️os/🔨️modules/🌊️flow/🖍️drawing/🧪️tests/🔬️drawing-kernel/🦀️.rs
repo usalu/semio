@@ -372,7 +372,7 @@ fn derive_twice_same_node_is_same_handle() {
     let first = store.rect(1.0, 2.0, 3.0, 4.0).unwrap();
     let second = store.rect(1.0, 2.0, 3.0, 4.0).unwrap();
     assert_eq!(first.as_str(), second.as_str());
-    assert_eq!(store.registry_len(), 2);
+    assert_eq!(store.registry_len(), 1);
 }
 
 #[test]

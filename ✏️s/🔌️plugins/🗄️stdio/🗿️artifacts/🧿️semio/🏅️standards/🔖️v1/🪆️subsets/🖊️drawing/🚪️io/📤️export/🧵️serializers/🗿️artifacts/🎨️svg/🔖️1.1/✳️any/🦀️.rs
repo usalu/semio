@@ -1,7 +1,7 @@
 //! 📤️ `s.stdio.semio/v1/drawing` → `svg` (1.1) — mirrors the import leaf: `DrawNode::Path`
 //! always lowers to an SVG `<path>` (absolute commands only — a documented normal form, see the
 //! import leaf's module doc), `Group` composes its `SemioTransform` back into one SVG
-//! `matrix(...)`, `Text` becomes a `<text>` with one child text node, and `Image` becomes this
+//! `matrix(...)` (a layer's root group writes its transform on the layer's own `<g>`), `Text` becomes a `<text>` with one child text node, and `Image` becomes this
 //! bridge's own `Unknown{name:"image", href: data URI}` convention (round-trips with the import
 //! leaf, real bytes embedded, not a placeholder).
 //!
@@ -136,12 +136,13 @@ impl ArtifactSerializer for SemioDrawingToSvg {
         let layer_groups: Vec<SvgElement> = from
             .layers
             .iter()
-            .map(|layer| SvgElement::Group {
-                common: CommonAttrs { id: Some(format!("layer-{}", layer.id)), ..Default::default() },
-                children: match &layer.root {
-                    DrawNode::Group { children, .. } => children.iter().map(|c| svg_element_from_draw_node(c, &from.styles)).collect(),
-                    other => vec![svg_element_from_draw_node(other, &from.styles)],
-                },
+            .map(|layer| {
+                let (transform, children) = match &layer.root {
+                    DrawNode::Group { transform, children } => ((*transform != SemioTransform::identity()).then(|| semio_transform_to_matrix(transform)), children.iter().map(|c| svg_element_from_draw_node(c, &from.styles)).collect()),
+                    other => (None, vec![svg_element_from_draw_node(other, &from.styles)]),
+                };
+                let transform = transform.map(|m| vec![TransformOp::Matrix { a: m.a, b: m.b, c: m.c, d: m.d, e: m.e, f: m.f }]);
+                SvgElement::Group { common: CommonAttrs { id: Some(format!("layer-{}", layer.id)), transform, ..Default::default() }, children }
             })
             .collect();
         let root = SvgElement::Svg {

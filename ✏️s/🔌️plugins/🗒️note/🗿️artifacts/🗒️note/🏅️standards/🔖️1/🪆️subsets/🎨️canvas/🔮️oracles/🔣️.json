@@ -104,7 +104,9 @@
           "capability": "note-1-canvas-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-grid-opacity",
@@ -123,7 +125,9 @@
           "capability": "note-1-canvas-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-grid-spacing",
@@ -142,7 +146,9 @@
           "capability": "note-1-canvas-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-grid-subdivisions",
@@ -161,7 +167,8 @@
           "capability": "note-1-canvas-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-grid-visible",
@@ -180,7 +187,8 @@
           "capability": "note-1-canvas-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-snap-enabled",
@@ -199,7 +207,9 @@
           "capability": "note-1-canvas-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-snap-grid-spacing",

@@ -16,15 +16,6 @@
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::x::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, project_conformance};
 
-//#region 🔖️Kinds
-/// 🧾️ Test-case-local mirror of the `pdf-1-7-x` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that module
-/// lives in the SUBJECT crate, and the oracle role must not link the subject crate at all, while
-/// this loop registers handlers for both roles from one list. A mismatch is caught structurally: the
-/// contract phase fails with `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits
-/// or invents a kind, and the runner fails every unregistered scenario id outright.
-const KINDS: &[&str] = &["insert-encryption-dictionary", "remove-encryption-dictionary", "set-output-intent", "remove-output-intent", "set-trim-box", "remove-trim-box", "embed-font-file", "remove-font-file", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-media-annotation", "remove-media-annotation"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "asset://🧬️conformance-seed/🧬️conformance-seed.pdf";
@@ -251,12 +242,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

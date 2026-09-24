@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeT1S {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fundamental period T1 [s] to {}", self.new_t1_s), &format!("grundlegende Periodent1 [s] auf {} ändern", self.new_t1_s))
+        protocol::LocalizedLabel::native(&format!("Change fundamental period T1 [s] to {}", self.new_t1_s), &format!("Grundschwingzeit T1 [s] auf {} ändern", self.new_t1_s))
     }
 }
 //#endregion 🔖️ChangeT1S

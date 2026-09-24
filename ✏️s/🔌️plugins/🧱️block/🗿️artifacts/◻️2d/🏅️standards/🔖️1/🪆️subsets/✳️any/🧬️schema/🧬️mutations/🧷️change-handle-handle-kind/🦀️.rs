@@ -32,7 +32,7 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeHandleHa
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change handle \"{}\" handle kind to \"{}\"", self.id, self.new_handle_kind), &format!("Griff \"{}\" Griffart auf \"{}\" ändern", self.id, self.new_handle_kind))
+        protocol::LocalizedLabel::native(&format!("Change handle \"{}\" handle kind to \"{}\"", self.id, self.new_handle_kind), &format!("Griffart von Griff \"{}\" auf \"{}\" ändern", self.id, self.new_handle_kind))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

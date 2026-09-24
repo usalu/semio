@@ -25,7 +25,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetVlrData {
         agg_inverse(&LasMutation::SetVlrData(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-vlr-data", "Vlrdaten setzen")
+        protocol::LocalizedLabel::native("Set VLR data", "VLR-Daten setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -7,3 +7,5 @@ Why: collab STEP 14 (peer cursors in writer, draw, puzzle3d) needs hub-bound doc
 No guest source change needed from C7: the browser-actor host now reads WIT command-ingress-status {kind:u8} and treats a
   pack-null Invocation.history_patch as absent (store worker + action-handoff publication, TS only).
 Please append the data-root path here when published.
+
+[w2 2026-09-25 12:3x] catalog B published from the post-landing tree: /Users/ueli/Documents/semio/.🧬semio/🌐hub/w2-catalog-b (generation e8167ce8ed3e61f0a4252661df9f2e3043aabb258e474b797fc3f0612c9ecc53, 9 packages stdio,gis,note,animate,block,writer,draw,puzzle,wfc; 12 editor open targets, compressed closed actors, S15 plugin modules). Hub 7800 runs it since 11:50 with binary .tmp-ticket/wp-w2/generated/bin/os-hub-hub-7800-b (Hub Handoff in 📓️wp-w2.md). Open-plan probe 12/12 (wp-w2/generated/open-plan-probe-7800-b.txt). The full --packages all catalog follows.

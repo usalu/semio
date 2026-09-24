@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ReplaceTex
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace texture \"{}\" bytes", self.id), &format!("Textur \"{}\" Bytes ersetzen", self.id))
+        protocol::LocalizedLabel::native(&format!("Replace texture \"{}\" bytes", self.id), &format!("Bytes von Textur \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

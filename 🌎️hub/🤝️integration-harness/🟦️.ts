@@ -17,6 +17,7 @@ import { createServer } from "node:net";
 import { join } from "node:path";
 import type { Readable } from "node:stream";
 import { cargoTargetDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { isDiscoverySkipDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 export { getWorkspaceRoot } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
@@ -36,7 +37,7 @@ function hubSchemaModuleDirectories(repoRoot: string): readonly string[] {
   while (pending.length > 0) {
     const relative = pending.pop()!;
     for (const entry of readdirSync(join(repoRoot, relative), { withFileTypes: true })) {
-      if (!entry.isDirectory() || entry.name === "node_modules" || entry.name === "target") continue;
+      if (!entry.isDirectory() || isDiscoverySkipDirectory(entry.name)) continue;
       if (entry.name === "🧬️schema" && existsSync(join(repoRoot, relative, entry.name, "🔣️.json"))) found.push(`${relative}/${entry.name}`);
       else pending.push(`${relative}/${entry.name}`);
     }

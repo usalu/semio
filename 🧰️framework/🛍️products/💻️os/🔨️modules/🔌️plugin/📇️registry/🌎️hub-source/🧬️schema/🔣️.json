@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/registry/hub-source/component.json",
+  "title": "Semio OS Hub Plugin Module Store",
+  "$defs": {
+    "PluginModuleStoreV1": {
+      "description": "The one persisted local-only store of hub-installed plugin modules: a Cache Storage cache whose entries are addressed under storeRoot, served to the page and its workers under serveRoute by the store's service worker.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "storeRoot", "serveRoute", "lockPrefix", "storeLock", "programSeparator"],
+      "properties": {
+        "name": { "const": "semio-plugin-module-store-v1" },
+        "storeRoot": { "const": "/_semio/plugin-module-store/v1" },
+        "serveRoute": { "const": "/_semio/plugin-modules" },
+        "lockPrefix": { "const": "semio.plugin-module:" },
+        "storeLock": { "const": "semio.plugin-module-store" },
+        "programSeparator": { "const": "@" }
+      }
+    },
+    "HubProgramIdV1": {
+      "description": "The program a hub document runs on: the plugin id and the SHA-256 of the catalog generation's module bundle, joined by programSeparator. It never names a locally staged program, so a device runs a hub document on the hub's version beside its own.",
+      "type": "string",
+      "maxLength": 321,
+      "pattern": "^\\S(?:.*\\S)?@[0-9a-f]{64}$"
+    },
+    "PluginModuleSourceV1": {
+      "description": "Where a hub program's verified bytes came from: store (this device already holds the generation's bundle complete), local (every file of the bundle is byte-identical in this device's staged module), hub (installed from the hub).",
+      "enum": ["store", "local", "hub"]
+    },
+    "PluginModuleStoreRecordV1": {
+      "description": "One installed plugin module of one catalog generation, written last, after its manifest and every file, so a record always names a complete bundle.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "generationId", "entry", "installedAtMs"],
+      "properties": {
+        "schema": { "const": "semio.os.plugin-module-store-record/v1" },
+        "generationId": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "entry": { "$ref": "https://json.schemas.assets.semio-tech.com/hub/artifact-authority/trusted-catalog/schema.json#/$defs/TrustedPluginModuleIndexEntryV1" },
+        "installedAtMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+      }
+    }
+  },
+  "x-semio-constants": {
+    "name": "semio-plugin-module-store-v1",
+    "storeRoot": "/_semio/plugin-module-store/v1",
+    "serveRoute": "/_semio/plugin-modules",
+    "lockPrefix": "semio.plugin-module:",
+    "storeLock": "semio.plugin-module-store",
+    "programSeparator": "@"
+  }
+}

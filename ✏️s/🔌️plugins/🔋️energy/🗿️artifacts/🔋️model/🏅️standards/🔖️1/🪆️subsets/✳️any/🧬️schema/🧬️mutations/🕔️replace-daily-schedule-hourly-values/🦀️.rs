@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Replac
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace Daily Schedule Hourly Values of daily schedule {}", self.id.0), &format!("Tageszeitplanstundenwerte von Tageszeitplan {} ersetzen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Replace Daily Schedule Hourly Values of daily schedule {}", self.id.0), &format!("Stundenwerte von Tageszeitplan {} ersetzen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,0 +1,432 @@
+    //#region 🌳️CommandTree
+
+    /// ⏱️ The wall-clock budget of one invocation when `--timeout` is not given: five minutes.
+    pub const DEFAULT_TIMEOUT_NANOSECONDS: i64 = 300_000_000_000;
+
+    /// 🌳️ The whole declared repo command tree, twin of `NewRootWithConfig`.
+    pub fn root() -> Command {
+        Command::new("repo", "Monorepo CLI for Compose")
+            .persistent(Flag::text("format", "md", "Output format: md, text, json"))
+            .persistent(Flag::boolean("md", "Shorthand for --format md"))
+            .persistent(Flag::boolean("text", "Shorthand for --format text"))
+            .persistent(Flag::boolean("json", "Shorthand for --format json"))
+            .persistent(Flag::boolean("verbose", "Verbose output"))
+            .persistent(Flag::text("repo", "", "Repo root path"))
+            .persistent(Flag::duration("timeout", DEFAULT_TIMEOUT_NANOSECONDS, "Timeout for command execution"))
+            .children(vec![
+                Command::new("mcp [kind]", "Run MCP server (optional kind: client, cursor, copilot, claude, codex, kiro)").args(Arity::AtMost(1)).flag(Flag::boolean("dry-run", "Initialize and exit without starting server")).run(verbs::mcp),
+                Command::new("graphql [query]", "Execute a GraphQL query").args(Arity::AtMost(1)).flag(Flag::text("query", "", "GraphQL query")).flag(Flag::text("vars", "", "GraphQL variables JSON").short("v")).run(verbs::graphql),
+                Command::new("test [testable-id-or-uri]...", "Run tests for given entities").run(verbs::test),
+                ticket_command(),
+                todo_command(),
+                goal_command(),
+                contributor_command(),
+                folder_command(),
+                file_command(),
+                section_command(),
+                Command::new("move <source> <target>", "Move an artifact from source to target").args(Arity::Exact(2)).run(verbs::move_artifact),
+                Command::new("integrate [source] [target]", "Integrate source code into a target file section")
+                    .args(Arity::AtMost(2))
+                    .flags(vec![Flag::text("file", "", "Source file path"), Flag::text("target-file", "", "Target file path"), Flag::text("target-section", "", "Target section name"), Flag::text("parent-section", "", "Parent section name")])
+                    .run(verbs::integrate),
+                Command::new("extract [source] [target]", "Extract a section from a source file into a target file")
+                    .args(Arity::AtMost(2))
+                    .flags(vec![Flag::text("file", "", "Source file path"), Flag::text("section", "", "Section name"), Flag::text("parent-section", "", "Parent section name"), Flag::text("target-file", "", "Target file path")])
+                    .run(verbs::extract),
+                Command::new("rename <old> <new> [scope]", "Rename a token across non-gitignored files (all case variants)").args(Arity::Between(2, 3)).run(verbs::rename),
+                Command::new("sync", "Synchronize monorepo artifacts").run(verbs::sync).children(vec![
+                    Command::new("github", "Synchronize local state with GitHub").run(verbs::sync_management),
+                    Command::new("management", "Synchronize local state with management provider").run(verbs::sync_management),
+                ]),
+                Command::new("search [query]", "Search monorepo tree").args(Arity::AtMost(1)).flags(tree_flags()).run(verbs::search),
+                Command::new("list [query]", "Stream a flat list of monorepo items").args(Arity::AtMost(1)).flag(Flag::int("limit", 0, "Maximum number of items to output (0 = unlimited)")).flags(tree_flags()).flag(Flag::boolean("sorted", "Collect all results and sort by ID before output")).run(verbs::list),
+                Command::new("query [keywords]", "Keyword search across monorepo resources").run(verbs::query),
+                Command::new("tree", "Show a repository tree").children(vec![
+                    Command::new("monorepo [query]", "Show the monorepo tree").args(Arity::AtMost(1)).flag(Flag::text("scope", "", "Restrict the projection to this repository-relative path")).flags(tree_flags()).run(verbs::tree_monorepo),
+                    Command::new("goal", "Show the goal and ticket tree").args(Arity::None).run(verbs::tree_goal),
+                    Command::new("statute", "Show the statute tree").args(Arity::None).run(verbs::tree_statute),
+                    Command::new("territory", "Show the territory tree").args(Arity::None).run(verbs::tree_territory),
+                ]),
+                Command::new("export [output]", "Export repo data to an event log").args(Arity::AtMost(1)).run(verbs::export),
+                Command::new("hook <event> <client>", "Run a lifecycle hook (git or agent)")
+                    .args(Arity::Between(1, 2))
+                    .flags(vec![Flag::text("tool-name", "", "Tool name for tool-related events"), Flag::text("tool-args", "", "Tool arguments for tool-related events"), Flag::text("file", "", "File path for code events"), Flag::text("parent", "", "Parent agent info for agent events")])
+                    .run(verbs::hook),
+                Command::new("mermaid <visualization>", "Generate mermaid diagram strings").children(vec![
+                    Command::new("loc-by-technologies-bundles-folders-files", "LOC treemap grouped by technology, bundle, folder, file").args(Arity::None).run(verbs::mermaid_technologies),
+                    Command::new("loc-by-contributors", "LOC treemap grouped by contributor (via git blame)").args(Arity::None).run(verbs::mermaid_contributors),
+                    Command::new("loc-by-language", "LOC treemap grouped by programming language").args(Arity::None).run(verbs::mermaid_languages),
+                ]),
+                Command::new("loc", "Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)")
+                    .args(Arity::None)
+                    .flags(vec![
+                        Flag::boolean("history", &format!("Per-commit time series; walks --branch (default: {}) without checkout", semio_framework_repo_metrics::DEFAULT_BRANCH)),
+                        Flag::boolean("by-contributors", "Break down cumulative line deltas by first author (FindAndUpdateContributor alias)"),
+                        Flag::text("by-contributor", "", "Restrict git deltas and history rows to this contributor alias (case-insensitive)"),
+                        Flag::text("branch", semio_framework_repo_metrics::DEFAULT_BRANCH, "With --history: git ref to log (default dev branch). Ignored when --history is false"),
+                        Flag::texts("languages", &semio_framework_repo_metrics::DEFAULT_CODE_LANGUAGES, "Limits which programming-language buckets are counted; markup/data always included when matched"),
+                    ])
+                    .run(verbs::loc),
+                Command::new("technology", "Manage technologies").run(verbs::technology).children(vec![
+                    Command::new("list", "List technologies").flags(stream_flags()).run(verbs::technology_list),
+                    Command::new("tree", "Show technology tree Structure").flags(stream_flags()).run(verbs::technology_tree),
+                ]),
+                Command::new("bundle", "Bundle management commands").children(vec![
+                    Command::new("list", "List bundles").flags(stream_flags()).flags(status_flags()).run(verbs::bundle_list),
+                    Command::new("tree", "Show bundle tree").flags(stream_flags()).flags(status_flags()).run(verbs::bundle_tree),
+                ]),
+                Command::new("analyze [scope]", "Analyze codebase for breachs").args(Arity::AtMost(1)).run(verbs::analyze),
+                Command::new("entity-emojis", "List all entity-identifying emojis").args(Arity::None).run(verbs::entity_emojis),
+                Command::new("configure", "Remove blocking git hooks; repo config files are edited manually").run(verbs::configure),
+                Command::new("micro-commit [subcommand] [args...]", "Micro-commit workflow (reset, prepare-commit-msg, stage, diff, prepare)").raw().run(verbs::micro_commit),
+                Command::new("benchmark", "Run benchmarks for all ecosystems").flag(Flag::boolean("dry-run", "Initialize and exit without running benchmarks")).run(verbs::benchmark),
+                Command::new("update [target]", "Update dependencies (npm, python, rust, go, dotnet)")
+                    .flag(Flag::boolean("dry-run", "Show what would be updated without making changes"))
+                    .flag(Flag::boolean("apply", "Apply updates (default is dry-run)"))
+                    .run(verbs::update),
+                Command::new("auth", "Server authentication").children(vec![
+                    Command::new("whoami", "Show current authenticated developer").run(verbs::auth_whoami),
+                    Command::new("status", "Show server connection status").run(verbs::auth_status),
+                ]),
+                Command::new("autofix [scope]", "Apply autofixes for breachs").args(Arity::AtMost(1)).run(verbs::autofix),
+                Command::new("statute", "Statute management commands").children(vec![
+                    Command::new("list", "List statutes").flags(stream_flags()).run(verbs::statute_list),
+                    Command::new("tree", "Show statute tree").flags(stream_flags()).run(verbs::statute_tree),
+                ]),
+                Command::new("checkpoint", "Checkpoint management commands").children(vec![Command::new("list", "List checkpoints").flag(Flag::int("limit", 100, "Maximum number of checkpoints to show")).flags(stream_flags()).run(verbs::checkpoint_list)]),
+                Command::new("interaction", "Interaction management commands").children(vec![
+                    Command::new("list", "List all interactions").flag(Flag::boolean("sorted", "Sort interactions by date instead of streaming")).flags(stream_flags()).run(verbs::interaction_list),
+                    Command::new("tree", "Show interactions within goal/ticket tree").flags(stream_flags()).run(verbs::interaction_tree),
+                ]),
+                Command::new("draft", "Draft management commands").children(vec![
+                    Command::new("create [title]", "Create a new draft").flag(Flag::texts("files", &[], "Files to include in the draft")).run(verbs::draft_create),
+                    Command::new("delete [slug]", "Delete a draft").run(verbs::draft_delete),
+                    list_command("List drafts", verbs::draft_list),
+                ]),
+                Command::new("definition", "Definition management commands").children(vec![Command::new("list", "List definitions").alias("tree").args(Arity::AtMost(1)).flag(Flag::text("file", "", "File path")).flags(stream_flags()).run(verbs::definition_list)]),
+            ])
+    }
+
+    /// 📃️ A `list` subcommand fronting one read document.
+    fn list_command(short: &str, action: Action) -> Command {
+        Command::new("list", short).args(Arity::None).run(action)
+    }
+
+    /// 🔘️ Paired `--only-*` / `--no-*` switches.
+    fn only_no(pairs: &[(&str, &str, &str)]) -> Vec<Flag> {
+        pairs.iter().flat_map(|(name, only, no)| [Flag::boolean(&format!("only-{name}"), only), Flag::boolean(&format!("no-{name}"), no)]).collect()
+    }
+
+    /// 🌳️ The monorepo-tree filter vocabulary, twin of `bindTreeFlags`.
+    fn tree_flags() -> Vec<Flag> {
+        let mut flags = only_no(&[
+            ("technology", "Only show technologies", "Exclude technologies"),
+            ("bundle", "Only show bundles", "Exclude bundles"),
+            ("folder", "Only show folders", "Exclude folders"),
+            ("file", "Only show files", "Exclude files"),
+            ("section", "Only show sections", "Exclude sections"),
+            ("definition", "Only show definitions", "Exclude definitions"),
+            ("goal", "Only show goals", "Exclude goals"),
+            ("ticket", "Only show tickets", "Exclude tickets"),
+            ("draft", "Only show drafts", "Exclude drafts"),
+            ("policy", "Only show policies", "Exclude policies"),
+            ("contributor", "Only show contributors", "Exclude contributors"),
+            ("checkpoint", "Only show checkpoints", "Exclude checkpoints"),
+            ("statute", "Only show statutes", "Exclude statutes"),
+            ("todo", "Only show todos", "Exclude todos"),
+            ("breach", "Only show breaches", "Exclude breaches"),
+            ("library", "Only show library bundles", "Exclude library bundles"),
+            ("schema", "Only show schema bundles", "Exclude schema bundles"),
+            ("binary", "Only show binary bundles", "Exclude binary bundles"),
+            ("client", "Only show client bundles", "Exclude client bundles"),
+            ("site", "Only show site bundles", "Exclude site bundles"),
+            ("assets", "Only show asset bundles", "Exclude asset bundles"),
+            ("organization", "Only show organization folders", "Exclude organization folders"),
+            ("required", "Only show required folders", "Exclude required folders"),
+            ("code", "Only show code files", "Exclude code files"),
+            ("script", "Only show script files", "Exclude script files"),
+            ("config", "Only show config files", "Exclude config files"),
+            ("lab", "Only show lab files", "Exclude lab files"),
+            ("docs", "Only show docs files", "Exclude docs files"),
+            ("resource", "Only show resource files", "Exclude resource files"),
+            ("template", "Only show template files", "Exclude template files"),
+            ("license", "Only show license files", "Exclude license files"),
+            ("implementation", "Only show implementation definitions", "Exclude implementation definitions"),
+            ("interface", "Only show interface definitions", "Exclude interface definitions"),
+            ("constant", "Only show constant definitions", "Exclude constant definitions"),
+        ]);
+        flags.extend([
+            Flag::boolean("only-open", "Only show open items"),
+            Flag::boolean("only-closed", "Only show closed items"),
+            Flag::boolean("open", "Only show open items"),
+            Flag::boolean("closed", "Only show closed items"),
+            Flag::ints("only-year", "Only show years"),
+            Flag::ints("no-year", "Exclude years"),
+            Flag::ints("only-month", "Only show months"),
+            Flag::ints("no-month", "Exclude months"),
+            Flag::ints("only-day", "Only show days"),
+            Flag::ints("no-day", "Exclude days"),
+            Flag::texts("only-contributor-name", &[], "Only show specific contributors"),
+            Flag::texts("no-contributor-name", &[], "Exclude specific contributors"),
+            Flag::texts("only-policy-name", &[], "Only show specific policies"),
+            Flag::texts("no-policy-name", &[], "Exclude specific policies"),
+            Flag::text("query", "", "Full-text search query"),
+        ]);
+        flags
+    }
+
+    /// 📡️ The stream filter vocabulary, twin of `bindStreamFlags`.
+    fn stream_flags() -> Vec<Flag> {
+        let mut flags = vec![Flag::boolean("show-ignored", "Show ignored folders and files"), Flag::boolean("show-generated", "Show generated folders and files")];
+        flags.extend(only_no(&[
+            ("code", "Only show code files", "Exclude code files"),
+            ("script", "Only show script files", "Exclude script files"),
+            ("config", "Only show config files", "Exclude config files"),
+            ("lab", "Only show lab files", "Exclude lab files"),
+            ("docs", "Only show docs files", "Exclude docs files"),
+            ("resource", "Only show resource files", "Exclude resource files"),
+            ("template", "Only show template files", "Exclude template files"),
+            ("license", "Only show license files", "Exclude license files"),
+            ("library", "Only show library bundles", "Exclude library bundles"),
+            ("schema", "Only show schema bundles", "Exclude schema bundles"),
+            ("binary", "Only show binary bundles", "Exclude binary bundles"),
+            ("client", "Only show client bundles", "Exclude client bundles"),
+            ("site", "Only show site bundles", "Exclude site bundles"),
+            ("assets", "Only show asset bundles", "Exclude asset bundles"),
+            ("organization", "Only show organization folders", "Exclude organization folders"),
+            ("required", "Only show required folders", "Exclude required folders"),
+            ("implementation", "Only show implementation definitions", "Exclude implementation definitions"),
+            ("interface", "Only show interface definitions", "Exclude interface definitions"),
+            ("constant", "Only show constant definitions", "Exclude constant definitions"),
+        ]));
+        flags.extend([
+            Flag::ints("no-year", "Exclude years"),
+            Flag::ints("only-year", "Only show years"),
+            Flag::ints("no-month", "Exclude months"),
+            Flag::ints("only-month", "Only show months"),
+            Flag::ints("no-day", "Exclude days"),
+            Flag::ints("only-day", "Only show days"),
+            Flag::texts("no-contributor", &[], "Exclude contributors"),
+            Flag::texts("only-contributor", &[], "Only show contributors"),
+            Flag::texts("no-policy", &[], "Exclude policies"),
+            Flag::texts("only-policy", &[], "Only show policies"),
+            Flag::texts("no-breach", &[], "Exclude statutes"),
+            Flag::texts("only-breach", &[], "Only show statutes"),
+            Flag::text("filter", "", "Filter string"),
+            Flag::text("query", "", "Full-text search query"),
+            Flag::boolean("regex", "Use regex for filter"),
+            Flag::boolean("match-case", "Match case for filter"),
+            Flag::boolean("match-whole-word", "Match whole word for filter"),
+        ]);
+        flags
+    }
+
+    /// 🔲️ The status vocabulary, twin of `bindStatusFlags`.
+    fn status_flags() -> Vec<Flag> {
+        vec![Flag::boolean("open", "Show only open items"), Flag::boolean("closed", "Show only closed items"), Flag::text("status", "", "Filter by status (open or closed)")]
+    }
+
+    /// 🤖️ One switch per allowed LLM, effort and client slug, twin of `addLLMFlags` and friends.
+    fn vocabulary_flags(llm: bool, effort: bool, client: bool) -> Vec<Flag> {
+        let mut flags = Vec::new();
+        if llm {
+            flags.extend(semio_framework_repo_model::allowed_llms().iter().map(|slug| Flag::boolean(slug, &format!("Use {slug} as LLM"))));
+        }
+        if effort {
+            flags.extend(semio_framework_repo_model::allowed_efforts().iter().map(|slug| Flag::boolean(slug, &format!("Use {slug} as LLM reasoning effort"))));
+        }
+        if client {
+            flags.extend(semio_framework_repo_model::allowed_clients().iter().map(|slug| Flag::boolean(slug, &format!("Use {slug} as Client"))));
+        }
+        flags
+    }
+
+    fn ticket_command() -> Command {
+        Command::new("ticket", "Ticket management commands").children(vec![
+            Command::new("change <path>", "Change a ticket")
+                .args(Arity::Exact(1))
+                .flags(vec![
+                    Flag::text("parent", "", "New parent ticket slug"),
+                    Flag::text("title", "", "New title"),
+                    Flag::text("prompt", "", "New prompt"),
+                    Flag::text("goal", "", "New goal ID"),
+                    Flag::text("effort", "", "LLM reasoning effort (low, medium, high, max)"),
+                    Flag::boolean("no-management", "Skip management provider sync"),
+                ])
+                .flags(vocabulary_flags(true, true, true))
+                .run(verbs::ticket_change),
+            Command::new("open [emoji] [goal] [title] [prompt] [client] [llm]", "Open a new ticket")
+                .flags(vec![
+                    Flag::text("emoji", "", "Ticket emoji"),
+                    Flag::text("title", "", "Ticket title"),
+                    Flag::text("prompt", "", "Ticket prompt"),
+                    Flag::text("llm", "", "LLM"),
+                    Flag::text("effort", "", "LLM reasoning effort (low, medium, high, max)"),
+                    Flag::text("client", "", "Client"),
+                    Flag::boolean("no-issue", "Skip management provider issue"),
+                    Flag::text("draft", "", "Draft ID"),
+                    Flag::text("goal", "", "Goal ID"),
+                    Flag::boolean("no-management", "Skip management provider operations"),
+                    Flag::text("parent", "", "Parent ticket slug"),
+                    Flag::text("issue", "", "Link to existing GitHub issue URL instead of creating new one"),
+                ])
+                .flags(vocabulary_flags(true, true, true))
+                .run(verbs::ticket_open),
+            Command::new("close [path] [summary] [files...]", "Close a ticket")
+                .flags(vec![
+                    Flag::boolean("all", "Close all open tickets"),
+                    Flag::int("year", 0, "Ticket year"),
+                    Flag::int("month", 0, "Ticket month"),
+                    Flag::int("day", 0, "Ticket day"),
+                    Flag::text("slug", "", "Ticket slug"),
+                    Flag::boolean("no-management", "Skip management provider operations"),
+                    Flag::text("summary", "", "Summary"),
+                    Flag::texts("files", &[], "Files"),
+                    Flag::text("title", "", "Title"),
+                ])
+                .run(verbs::ticket_close),
+            Command::new("reopen [path] [prompt] [client] [llm]", "Reopen a ticket")
+                .flags(vec![
+                    Flag::boolean("no-management", "Skip management provider operations"),
+                    Flag::int("year", 0, "Ticket year"),
+                    Flag::int("month", 0, "Ticket month"),
+                    Flag::int("day", 0, "Ticket day"),
+                    Flag::text("slug", "", "Ticket slug"),
+                    Flag::text("prompt", "", "Prompt"),
+                    Flag::text("llm", "", "LLM"),
+                    Flag::text("effort", "", "LLM reasoning effort (low, medium, high, max)"),
+                    Flag::text("client", "", "Client"),
+                    Flag::text("title", "", "Title"),
+                    Flag::text("draft", "", "Draft ID"),
+                    Flag::text("goal", "", "Goal ID"),
+                    Flag::text("parent", "", "Parent ticket slug"),
+                ])
+                .flags(vocabulary_flags(true, true, true))
+                .run(verbs::ticket_reopen),
+            Command::new("purge-artifacts [path]", "Delete ticket-folder files above 5 MiB and subfolders above 10 MiB").flag(Flag::boolean("all", "Purge oversized artifacts in every ticket folder")).run(verbs::ticket_purge_artifacts),
+            Command::new("list", "List tickets")
+                .args(Arity::None)
+                .flags(vec![Flag::text("status", "", "Filter by status (open or closed)"), Flag::int("year", 0, "Ticket year"), Flag::int("month", 0, "Ticket month"), Flag::int("day", 0, "Ticket day")])
+                .run(verbs::ticket_list),
+            single_ticket_command("show", "Show one ticket", verbs::ticket_show),
+            single_ticket_command("files", "List the files of one ticket", verbs::ticket_files),
+        ])
+    }
+
+    /// 🎫️ A ticket verb whose operand or `--slug` flag names one ticket.
+    fn single_ticket_command(name: &str, short: &str, action: Action) -> Command {
+        Command::new(&format!("{name} [path]"), short)
+            .args(Arity::AtMost(1))
+            .flags(vec![Flag::int("year", 0, "Ticket year"), Flag::int("month", 0, "Ticket month"), Flag::int("day", 0, "Ticket day"), Flag::text("slug", "", "Ticket slug")])
+            .run(action)
+    }
+
+    fn todo_command() -> Command {
+        Command::new("todo", "Todo management commands").children(vec![
+            Command::new("create [parent-id] [name] [description]", "Create a todo").args(Arity::AtMost(3)).flags(vec![Flag::text("parent", "", "Parent ID"), Flag::text("name", "", "Todo name"), Flag::text("description", "", "Todo description")]).run(verbs::todo_create),
+            Command::new("change [id] --name <new-name> --description <new-description>", "Change a todo")
+                .args(Arity::AtMost(1))
+                .flags(vec![Flag::text("id", "", "Todo ID"), Flag::text("name", "", "New name"), Flag::text("description", "", "New description")])
+                .run(verbs::todo_change),
+            Command::new("delete [id]", "Delete a todo").args(Arity::AtMost(1)).flag(Flag::text("id", "", "Todo ID")).run(verbs::todo_delete),
+            Command::new("search [search-string]", "Search todos").args(Arity::AtMost(1)).run(verbs::todo_search),
+            list_command("List todos", verbs::todo_list),
+        ])
+    }
+
+    fn goal_command() -> Command {
+        Command::new("goal", "Goal management commands").children(vec![
+            Command::new("change <SLUG>", "Change a goal")
+                .args(Arity::Exact(1))
+                .flags(vec![
+                    Flag::text("title", "", "New title"),
+                    Flag::text("description", "", "New description"),
+                    Flag::text("due-date", "", "New due date (YYYY-MM-DD)"),
+                    Flag::text("parent", "", "New parent goal ID"),
+                    Flag::text("llm", "", "New LLM"),
+                    Flag::text("effort", "", "New LLM reasoning effort (low, medium, high, max)"),
+                    Flag::boolean("no-management", "Skip management provider sync"),
+                ])
+                .flags(vocabulary_flags(true, true, false))
+                .run(verbs::goal_change),
+            Command::new("open [title] [description] [prompt] [client] [llm]", "Open a new goal")
+                .flags(vec![
+                    Flag::text("title", "", "Goal title"),
+                    Flag::text("description", "", "Goal description"),
+                    Flag::text("prompt", "", "Goal prompt"),
+                    Flag::text("due-date", "", "Goal due date (e.g., 2026-02-15)"),
+                    Flag::text("llm", "", "LLM"),
+                    Flag::text("effort", "", "LLM reasoning effort (low, medium, high, max)"),
+                    Flag::text("client", "", "Client"),
+                    Flag::boolean("no-management", "Skip management provider synchronization"),
+                    Flag::text("parent", "", "Parent goal ID"),
+                    Flag::text("bundle", "", "Bundle name associated with this goal"),
+                    Flag::text("milestone", "", "Link to existing GitHub milestone URL instead of creating new one"),
+                ])
+                .flags(vocabulary_flags(true, true, true))
+                .run(verbs::goal_open),
+            Command::new("close [id] [summary]", "Close a goal").flag(Flag::boolean("no-management", "Skip management provider synchronization")).run(verbs::goal_close),
+            Command::new("reopen [id] [prompt] [client] [llm]", "Reopen a goal")
+                .flags(vec![
+                    Flag::boolean("no-management", "Skip management provider synchronization"),
+                    Flag::text("prompt", "", "Prompt"),
+                    Flag::text("title", "", "New title"),
+                    Flag::text("description", "", "New description"),
+                    Flag::text("due-date", "", "New due date"),
+                    Flag::text("parent", "", "New parent goal"),
+                    Flag::text("llm", "", "LLM"),
+                    Flag::text("effort", "", "LLM reasoning effort (low, medium, high, max)"),
+                    Flag::text("client", "", "Client"),
+                ])
+                .flags(vocabulary_flags(true, true, true))
+                .run(verbs::goal_reopen),
+            list_command("List goals", verbs::goal_list),
+            Command::new("tree", "Show the goal and ticket tree").args(Arity::None).run(verbs::goal_tree),
+        ])
+    }
+
+    fn contributor_command() -> Command {
+        Command::new("contributor", "Contributor management commands").children(vec![
+            Command::new("add", "Add a contributor").args(Arity::AtMost(3)).flags(vec![Flag::text("github", "", "GitHub username"), Flag::text("name", "", "Contributor name"), Flag::texts("email", &[], "Contributor emails")]).run(verbs::contributor_add),
+            Command::new("remove", "Remove a contributor").args(Arity::AtMost(1)).flag(Flag::text("github", "", "GitHub username")).run(verbs::contributor_remove),
+            list_command("List contributors", verbs::contributor_list),
+        ])
+    }
+
+    fn folder_command() -> Command {
+        Command::new("folder", "Folder management commands").children(vec![
+            Command::new("create", "Create a folder").args(Arity::AtMost(1)).flag(Flag::text("path", "", "Folder path")).run(verbs::folder_create),
+            Command::new("move", "Move a folder").args(Arity::AtMost(2)).flags(vec![Flag::text("source", "", "Source path"), Flag::text("target", "", "Target path")]).run(verbs::folder_move),
+            Command::new("delete", "Delete a folder").args(Arity::AtMost(1)).flag(Flag::text("path", "", "Folder path")).run(verbs::folder_delete),
+            list_command("List folders", verbs::folder_list),
+        ])
+    }
+
+    fn file_command() -> Command {
+        Command::new("file", "File management commands").children(vec![
+            Command::new("create", "Create a file").args(Arity::AtMost(1)).flag(Flag::text("path", "", "File path")).run(verbs::file_create),
+            Command::new("move", "Move a file").args(Arity::AtMost(2)).flags(vec![Flag::text("source", "", "Source path"), Flag::text("target", "", "Target path")]).run(verbs::file_move),
+            Command::new("delete", "Delete a file").args(Arity::AtMost(1)).flag(Flag::text("path", "", "File path")).run(verbs::file_delete),
+            list_command("List files", verbs::file_list),
+        ])
+    }
+
+    fn section_command() -> Command {
+        Command::new("section", "Section management commands").children(vec![
+            Command::new("create", "Create a section").args(Arity::AtMost(3)).flags(vec![Flag::text("file", "", "File path"), Flag::text("name", "", "Section name"), Flag::text("parent", "", "Parent section")]).run(verbs::section_create),
+            Command::new("move", "Move a section").args(Arity::AtMost(3)).flags(vec![Flag::text("file", "", "File path"), Flag::text("old", "", "Old section name"), Flag::text("new", "", "New section name")]).run(verbs::section_move),
+            Command::new("delete", "Delete a section").args(Arity::AtMost(2)).flags(vec![Flag::text("file", "", "File path"), Flag::text("name", "", "Section name")]).run(verbs::section_delete),
+            Command::new("integrate", "Integrate source code into a target file section")
+                .args(Arity::AtMost(4))
+                .flags(vec![Flag::text("source", "", "Source file path"), Flag::text("target-section", "", "Target section name"), Flag::text("target-file", "", "Target file path"), Flag::text("target-parent", "", "Target parent section name")])
+                .run(verbs::section_integrate),
+            Command::new("extract", "Extract a section from a source file into a target file")
+                .args(Arity::AtMost(3))
+                .flags(vec![Flag::text("source-file", "", "Source file path"), Flag::text("source-section", "", "Source section name"), Flag::text("target-file", "", "Target file path")])
+                .run(verbs::section_extract),
+            Command::new("list", "List the sections of a file").args(Arity::AtMost(1)).flag(Flag::text("file", "", "File path")).run(verbs::section_list),
+        ])
+    }
+
+    //#endregion 🌳️CommandTree
+

@@ -2744,6 +2744,7 @@ export const uiChromeTranslationBundles = {
               aa: { label: { normal: "AA", beginner: "Gut lesbar" } },
               aaLarge: { label: { normal: "AA nur für grossen Text", beginner: "Nur für grosse Schrift lesbar" } },
               fail: { label: { normal: "Unter AA — zu geringer Kontrast", beginner: "Zu schwacher Kontrast, schwer lesbar" } },
+              warning: { label: { normal: "Geringer Kontrast {{ratio}}:1 zu {{counterpart}} — WCAG AA verlangt mindestens {{minimum}}:1", beginner: "Schwer lesbar zusammen mit {{counterpart}} ({{ratio}}:1, nötig sind {{minimum}}:1)" } },
             },
           },
           unavailable: { label: { normal: "Einstellungen nicht verfügbar", beginner: "Einstellungen nicht verfügbar" } },
@@ -2765,6 +2766,27 @@ export const uiChromeTranslationBundles = {
           waitingForHost: { label: { normal: "Warte auf Host-Programm…", beginner: "Warte auf Host-Programm…" } },
           unavailable: { label: { normal: "Plugins nicht verfügbar", beginner: "Plugins nicht verfügbar" } },
           source: { label: { normal: "Quelle", beginner: "Quelle" } },
+          marketplace: { label: { normal: "Marktplatz", beginner: "Marktplatz" } },
+          marketplaceUnavailable: { label: { normal: "Marktplatz nicht verfügbar", beginner: "Marktplatz nicht verfügbar" } },
+          extension: {
+            enabled: { label: { normal: "aktiviert", beginner: "an" } },
+            disabled: { label: { normal: "deaktiviert", beginner: "aus" } },
+            enable: { label: { normal: "Aktivieren", beginner: "Einschalten" } },
+            disable: { label: { normal: "Deaktivieren", beginner: "Ausschalten" } },
+            install: { label: { normal: "Erweiterung installieren", beginner: "Erweiterung hinzufügen" } },
+            fromUrl: { label: { normal: "Von URL", beginner: "Aus dem Internet" } },
+            installFromUrl: { label: { normal: "Von URL installieren", beginner: "Aus dem Internet hinzufügen" } },
+            urlPrompt: { label: { normal: "URL des Erweiterungspakets", beginner: "Adresse der Erweiterung" } },
+            fromFile: { label: { normal: "Aus Datei", beginner: "Aus einer Datei" } },
+            installFromFile: { label: { normal: "Aus Datei installieren", beginner: "Aus einer Datei hinzufügen" } },
+          },
+          recovery: {
+            title: { label: { normal: "Plugin-Wiederherstellung", beginner: "Programm reparieren" } },
+            crashed: { label: { normal: "Dieses Programm ist abgestürzt.", beginner: "Dieses Programm ist abgestürzt." } },
+            quarantined: { label: { normal: "Dieses Programm wurde nach wiederholten Abstürzen isoliert.", beginner: "Dieses Programm ist mehrmals abgestürzt und wurde angehalten." } },
+            restartApp: { label: { normal: "App neu starten", beginner: "Neu starten" } },
+            disablePlugin: { label: { normal: "Plugin deaktivieren", beginner: "Programm ausschalten" } },
+          },
         },
         command: {
           introduceApp: { label: { normal: "App vorstellen", beginner: "App vorstellen" } },
@@ -2821,6 +2843,7 @@ export const uiChromeTranslationBundles = {
           unknown: { label: { normal: "Unbekannte Fehlerursache", beginner: "Die Ursache ist unbekannt" } },
         },
         common: {
+          routeNotFound: { label: { normal: "Route nicht gefunden: {{path}}", beginner: "Diese Seite gibt es nicht: {{path}}" } },
           mixedValues: {
             label: {
               normal: "Gemischt",
@@ -2917,11 +2940,14 @@ export const uiChromeTranslationBundles = {
           nodes: { label: { normal: "Knoten", beginner: "Knoten" } },
           edges: { label: { normal: "Verbindungen", beginner: "Verbindungen" } },
           empty: { label: { normal: "Leerer Graph", beginner: "Noch keine Knoten vorhanden" } },
-          focusedNode: { label: { normal: "Fokussierter Knoten", beginner: "Aktuell angesteuerter Knoten" } },
-          selectedNode: { label: { normal: "Ausgewählter Knoten", beginner: "Ausgewählter Knoten" } },
+          focusedNode: { label: { normal: "{{node}}, {{position}} von {{count}}", beginner: "Knoten {{node}}, Nummer {{position}} von {{count}}" } },
+          selectedNode: { label: { normal: "{{node}} ausgewählt, {{count}} in der Auswahl", beginner: "{{node}} ist jetzt ausgewählt ({{count}} ausgewählt)" } },
+          deselectedNode: { label: { normal: "{{node}} aus der Auswahl entfernt, {{count}} in der Auswahl", beginner: "{{node}} ist nicht mehr ausgewählt ({{count}} ausgewählt)" } },
+          selectionCleared: { label: { normal: "Auswahl aufgehoben", beginner: "Nichts mehr ausgewählt" } },
         },
         host: {
           emptyScene: { label: { normal: "Keine Szene", beginner: "Keine Szene" } },
+          tableRowRange: { label: { normal: "Zeilen {{from}}–{{to}} von {{total}}", beginner: "Zeilen {{from}} bis {{to}} von {{total}}" } },
           preview: { label: { normal: "Vorschau", beginner: "Vorschau" } },
           sourceAvailable: { label: { normal: "Quelle verfügbar", beginner: "Quelle verfügbar" } },
           blockImage: { label: { normal: "Bild", beginner: "Bild" } },
@@ -3075,6 +3101,11 @@ export const uiChromeTranslationBundles = {
           pending: { label: { normal: "{{count}} ausstehend", beginner: "{{count}} ausstehend" } },
           hubLabel: { label: { normal: "Hub-Verbindung", beginner: "Hub-Verbindung" } },
           hubSignIn: { label: { normal: "Anmelden", beginner: "Anmelden" } },
+          online: { label: { normal: "online", beginner: "mit dem Hub verbunden" } },
+          localOnly: { label: { normal: "nur lokal", beginner: "nur auf diesem Gerät" } },
+          backboneFile: { label: { normal: "Dateisynchronisierung", beginner: "Mit einer Datei synchronisieren" } },
+          backboneFolder: { label: { normal: "Ordnersynchronisierung", beginner: "Mit einem Ordner synchronisieren" } },
+          backboneRemote: { label: { normal: "Hub-Synchronisierung", beginner: "Mit dem Hub synchronisieren" } },
         },
         ink: {
           link: { label: { normal: "Link", beginner: "Link" } },
@@ -3161,6 +3192,8 @@ export const uiChromeTranslationBundles = {
           discard: { label: { normal: "Verwerfen", beginner: "Verwerfen" } },
           quarantined: { label: { normal: "Zurückgehalten", beginner: "Eingehende Änderungen werden zurückgehalten, bis du entscheidest." } },
           degraded: { label: { normal: "Beeinträchtigt", beginner: "Übernommen, aber mit Warnungen." } },
+          hubRejected: { label: { normal: "Änderung vom Hub abgelehnt", beginner: "Der Hub hat deine Änderung nicht angenommen; sie wurde zurückgenommen." } },
+          hubTransformed: { label: { normal: "Änderung angepasst", beginner: "Eine gleichzeitige Änderung hatte Vorrang; deine Änderung wurde angepasst übernommen." } },
         },
         presence: {
           roster: { label: { normal: "Anwesende", beginner: "Anwesende" } },
@@ -3630,6 +3663,7 @@ export const uiChromeTranslationBundles = {
               aa: { label: { normal: "AA", beginner: "Easy to read" } },
               aaLarge: { label: { normal: "AA for large text only", beginner: "Readable at large sizes only" } },
               fail: { label: { normal: "Below AA — contrast too low", beginner: "Contrast too low, hard to read" } },
+              warning: { label: { normal: "Low contrast {{ratio}}:1 with {{counterpart}} — WCAG AA needs at least {{minimum}}:1", beginner: "Hard to read together with {{counterpart}} ({{ratio}}:1, needs {{minimum}}:1)" } },
             },
           },
           unavailable: { label: { normal: "Settings unavailable", beginner: "Settings unavailable" } },
@@ -3651,6 +3685,27 @@ export const uiChromeTranslationBundles = {
           waitingForHost: { label: { normal: "Waiting for host program…", beginner: "Waiting for host program…" } },
           unavailable: { label: { normal: "Plugins unavailable", beginner: "Plugins unavailable" } },
           source: { label: { normal: "Source", beginner: "Source" } },
+          marketplace: { label: { normal: "Marketplace", beginner: "Marketplace" } },
+          marketplaceUnavailable: { label: { normal: "Marketplace unavailable", beginner: "Marketplace unavailable" } },
+          extension: {
+            enabled: { label: { normal: "enabled", beginner: "on" } },
+            disabled: { label: { normal: "disabled", beginner: "off" } },
+            enable: { label: { normal: "Enable", beginner: "Turn on" } },
+            disable: { label: { normal: "Disable", beginner: "Turn off" } },
+            install: { label: { normal: "Install extension", beginner: "Add an extension" } },
+            fromUrl: { label: { normal: "From URL", beginner: "From the web" } },
+            installFromUrl: { label: { normal: "Install from URL", beginner: "Add from the web" } },
+            urlPrompt: { label: { normal: "Extension package URL", beginner: "Address of the extension" } },
+            fromFile: { label: { normal: "From file", beginner: "From a file" } },
+            installFromFile: { label: { normal: "Install from file", beginner: "Add from a file" } },
+          },
+          recovery: {
+            title: { label: { normal: "Plugin Recovery", beginner: "Repair program" } },
+            crashed: { label: { normal: "This program crashed.", beginner: "This program crashed." } },
+            quarantined: { label: { normal: "This program was quarantined after repeated crashes.", beginner: "This program crashed several times and was stopped." } },
+            restartApp: { label: { normal: "Restart App", beginner: "Restart" } },
+            disablePlugin: { label: { normal: "Disable Plugin", beginner: "Turn program off" } },
+          },
         },
         command: {
           introduceApp: { label: { normal: "Introduce App", beginner: "Introduce App" } },
@@ -3707,6 +3762,7 @@ export const uiChromeTranslationBundles = {
           unknown: { label: { normal: "Unknown fault cause", beginner: "The cause is unknown" } },
         },
         common: {
+          routeNotFound: { label: { normal: "Route not found: {{path}}", beginner: "This page does not exist: {{path}}" } },
           mixedValues: {
             label: {
               normal: "Mixed",
@@ -3803,11 +3859,14 @@ export const uiChromeTranslationBundles = {
           nodes: { label: { normal: "Nodes", beginner: "Nodes" } },
           edges: { label: { normal: "Connections", beginner: "Connections" } },
           empty: { label: { normal: "Empty graph", beginner: "No nodes yet" } },
-          focusedNode: { label: { normal: "Focused node", beginner: "The node you are on" } },
-          selectedNode: { label: { normal: "Selected node", beginner: "Selected node" } },
+          focusedNode: { label: { normal: "{{node}}, {{position}} of {{count}}", beginner: "Node {{node}}, number {{position}} of {{count}}" } },
+          selectedNode: { label: { normal: "{{node}} selected, {{count}} in selection", beginner: "{{node}} is now selected ({{count}} selected)" } },
+          deselectedNode: { label: { normal: "{{node}} removed from selection, {{count}} in selection", beginner: "{{node}} is no longer selected ({{count}} selected)" } },
+          selectionCleared: { label: { normal: "Selection cleared", beginner: "Nothing is selected any more" } },
         },
         host: {
           emptyScene: { label: { normal: "No scene", beginner: "No scene" } },
+          tableRowRange: { label: { normal: "Rows {{from}}–{{to}} of {{total}}", beginner: "Rows {{from}} to {{to}} of {{total}}" } },
           preview: { label: { normal: "Preview", beginner: "Preview" } },
           sourceAvailable: { label: { normal: "Source available", beginner: "Source available" } },
           blockImage: { label: { normal: "Image", beginner: "Image" } },
@@ -3961,6 +4020,11 @@ export const uiChromeTranslationBundles = {
           pending: { label: { normal: "{{count}} pending", beginner: "{{count}} pending" } },
           hubLabel: { label: { normal: "Hub connection", beginner: "Hub connection" } },
           hubSignIn: { label: { normal: "Sign in", beginner: "Sign in" } },
+          online: { label: { normal: "online", beginner: "connected to the hub" } },
+          localOnly: { label: { normal: "local only", beginner: "only on this device" } },
+          backboneFile: { label: { normal: "File sync", beginner: "Sync with a file" } },
+          backboneFolder: { label: { normal: "Folder sync", beginner: "Sync with a folder" } },
+          backboneRemote: { label: { normal: "Hub sync", beginner: "Sync with the hub" } },
         },
         ink: {
           link: { label: { normal: "Link", beginner: "Link" } },
@@ -4047,6 +4111,8 @@ export const uiChromeTranslationBundles = {
           discard: { label: { normal: "Discard", beginner: "Discard" } },
           quarantined: { label: { normal: "Held back", beginner: "Incoming changes are held back until you decide." } },
           degraded: { label: { normal: "Degraded", beginner: "Applied, but with warnings." } },
+          hubRejected: { label: { normal: "Change refused by the hub", beginner: "The hub did not accept your change; it was rolled back." } },
+          hubTransformed: { label: { normal: "Change adjusted", beginner: "A concurrent change won; your change was applied in adjusted form." } },
         },
         presence: {
           roster: { label: { normal: "People here", beginner: "People here" } },
@@ -7495,6 +7561,8 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
 export interface PanelChromeTabBarProps extends PanelTabSelectionOptions {
   readonly anchor: Anchor;
   readonly className?: string;
+  /** @emoji 🗜️ Icon-only chips — see `PanelTabBarProps.compactLabels`. */
+  readonly compactLabels?: boolean;
 }
 
 /**
@@ -7507,7 +7575,7 @@ export interface PanelChromeTabBarProps extends PanelTabSelectionOptions {
  * behavior. Pair with `Panel`'s `tabBarHost="chrome"` for the matching anchor, and pass the SAME controlled
  * selection props to both — chrome hosting requires controlled state so the two hosts never fork.
  **/
-export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, className = "", ...selection }) => {
+export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, className = "", compactLabels = false, ...selection }) => {
   const dock = usePanelDockContext();
   const { resolvedPath, handlePathChange } = usePanelTabSelection(selection);
   const { tabs, visible } = selection;
@@ -7559,7 +7627,7 @@ export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, cl
           chipOnly
           level="panel"
           stackSlot="window-chrome-stack"
-          titleChips={<PanelTabBar variant="panel" anchor={anchor} tabs={tabs} activePath={resolvedPath} onActivePathChange={handlePathChange} maxRows={1} direction={flowFromAnchor(anchor).block} showActiveColor={visible} />}
+          titleChips={<PanelTabBar variant="panel" anchor={anchor} tabs={tabs} activePath={resolvedPath} onActivePathChange={handlePathChange} maxRows={1} direction={flowFromAnchor(anchor).block} showActiveColor={visible} compactLabels={compactLabels} />}
         />
       </GhostRegionShell>
     </LevelProvider>
@@ -9943,7 +10011,13 @@ export interface PaneHostProps {
  * space to drag between and one DOM parent to measure drag drops against.
  *
  * Children live as siblings of the portal mount (not inside the `pointer-events-none` overlay) so window canvas
- * content keeps normal hit-testing while still receiving {@link PaneHostContext}. */
+ * content keeps normal hit-testing while still receiving {@link PaneHostContext}.
+ *
+ * The root is its own stacking context (`isolate`): body content's layer numbers stay inside it and can never
+ * out-stack the window chrome panes (`Actions`, `Utilities`, `Window Options`, search) that sit beside it at
+ * `--z-pane`. A canvas host's full-bleed pointer overlay at `z-30` (raster's `Paint2dHost`) otherwise hit-tested
+ * above both `Actions` chips of every raster window inside `s`, so the rail could not be opened by a pointer
+ * (ticket 26/09/23 S15; same law as `NODE_GRAPH_HOST_CLASS`). */
 export const PaneHost: React.FC<PaneHostProps> = ({ className, children }) => {
   const containerRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [container, setContainer] = reactHostPort.useState<HTMLDivElement | null>(null);
@@ -9954,7 +10028,7 @@ export const PaneHost: React.FC<PaneHostProps> = ({ className, children }) => {
   const contextValue = reactHostPort.useMemo((): PaneHostContextValue => ({ containerRef, container }), [container]);
   return (
     <PaneHostContext.Provider value={contextValue}>
-      <div data-slot="pane-host-root" className={cn("relative h-full min-h-0 min-w-0 w-full", className)}>
+      <div data-slot="pane-host-root" className={cn("relative isolate h-full min-h-0 min-w-0 w-full", className)}>
         {children}
         <div ref={setRef} data-slot="pane-host" className="pointer-events-none absolute inset-0" />
       </div>
@@ -10552,17 +10626,16 @@ export function isUiTypingTarget(t: EventTarget | null): boolean {
   return Boolean(t.closest('[data-slot="search"] input, [data-slot="search"] textarea'));
 }
 
-/** @emoji 🚫️ Capture-phase listeners: native context menu off everywhere; Tab focus traversal off outside {@link isUiTypingTarget}; form-control browser defaults on focus. */
+/** @emoji 🚫️ Capture-phase listeners: native context menu off everywhere; form-control browser defaults on focus.
+ *
+ * ⌨️ Tab focus traversal stays the browser's. It used to be suppressed everywhere outside a typing target, which left
+ * every chrome control of the shell — navbar, Home, footer, panels, window chips — unreachable without a mouse
+ * (measured inside `s`: 30 Tab presses from Home never left `mode-dock-panel-root`; WCAG 2.2 SC 2.1.1, ticket
+ * 26/09/23 S15). A program that binds `tab` as a chord still owns it: the shell's keybinding loop calls
+ * `preventDefault` on every chord it resolves. */
 export function installElementsSurfaceBrowserDefaultSuppression(bindings: ReturnType<typeof createDOMEventBinding>): void {
   if (typeof document === "undefined") return;
   const onContextMenu = (event: Event): void => {
-    event.preventDefault();
-  };
-  const onKeyDown = (event: KeyboardEvent): void => {
-    if (event.key !== "Tab") return;
-    if (isUiTypingTarget(event.target)) return;
-    const active = document.activeElement;
-    if (active instanceof HTMLElement && isUiTypingTarget(active)) return;
     event.preventDefault();
   };
   const onFocusIn = (event: FocusEvent): void => {
@@ -10572,7 +10645,6 @@ export function installElementsSurfaceBrowserDefaultSuppression(bindings: Return
     }
   };
   bindings.listen(document, "contextmenu", onContextMenu as EventListener, true);
-  bindings.listen(document, "keydown", onKeyDown as EventListener, true);
   bindings.listen(document, "focusin", onFocusIn as EventListener, true);
 }
 
@@ -11219,8 +11291,18 @@ import {
   Diagram,
   useDiagramLayout,
   DiagramSkeleton,
+  DIAGRAM_KEYBOARD_FOCUS_CLASS,
+  DiagramLiveRegion,
+  diagramKeyboardAnnouncement,
+  diagramKeyboardStep,
+  diagramReadingOrderPosition,
+  useDiagramTranslate,
+  type DiagramKeyboardStep,
+  type DiagramNavigableNode,
+  type DiagramTranslate,
 } from "../../🧱️elements/🕸️Diagram/🟦️.tsx";
 export { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton };
+export { DIAGRAM_KEYBOARD_FOCUS_CLASS, DiagramLiveRegion, diagramKeyboardAnnouncement, diagramKeyboardStep, diagramReadingOrderPosition, useDiagramTranslate, type DiagramKeyboardStep, type DiagramNavigableNode, type DiagramTranslate };
 // #endregion 🧫️Diagram
 
 // #region 📍️Scene

@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Rename
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change setpoint manager {} name to {:?}", self.id.0, self.new_name), &format!("Sollwertverwalter {} Name auf {:?} ändern", self.id.0, self.new_name))
+        protocol::LocalizedLabel::native(&format!("Change setpoint manager {} name to {:?}", self.id.0, self.new_name), &format!("Name von Sollwertmanager {} auf {:?} ändern", self.id.0, self.new_name))
     }
 
     fn target(&self) -> Vec<String> {

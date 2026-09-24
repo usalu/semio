@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/.tmp-wp-o3/links/ticket/📓️plan.md

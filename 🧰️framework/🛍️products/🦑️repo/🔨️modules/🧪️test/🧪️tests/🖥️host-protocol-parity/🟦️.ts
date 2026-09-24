@@ -48,6 +48,9 @@ export default defineTestAdapter({
         },
       }),
     },
+    "outline-registration": {
+      subject: (ctx) => ({ projection: { scenario: ctx.scenario.id, row: ctx.row() } }),
+    },
   },
 });
 //#endregion 🧭️Adapter

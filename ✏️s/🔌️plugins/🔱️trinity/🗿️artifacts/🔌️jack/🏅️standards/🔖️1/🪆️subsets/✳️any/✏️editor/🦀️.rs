@@ -329,12 +329,13 @@ mod args_bridge {
         }
     }
 
-    /// 🔡️ `nodeIds` arrives as a list, a JSON-array string (text form fields) or one bare id.
+    /// 🔡️ `nodeIds` arrives as a list, a JSON-array string, or the rail's text field listing ids
+    /// separated by commas or whitespace. An empty field means "the current node selection".
     fn ids(args: Option<&DslValue>) -> Vec<String> {
         match field(args, &["nodeIds", "node_ids", "ids"]) {
             Some(DslValue::Array(items)) => items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect(),
             Some(DslValue::String(text)) if text.trim_start().starts_with('[') => pack::from_json_str::<Vec<String>>(text).unwrap_or_default(),
-            Some(DslValue::String(text)) if !text.trim().is_empty() => vec![text.trim().to_string()],
+            Some(DslValue::String(text)) => text.split(|character: char| character == ',' || character.is_whitespace()).filter(|id| !id.is_empty()).map(str::to_string).collect(),
             _ => Vec::new(),
         }
     }
@@ -598,7 +599,7 @@ fn jack_retained_document_reduce(
     _operation: &AppOperationContext,
 ) -> Result<Emit<TrinityGraphMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     Ok(match command {
-        TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(snapshot, node_ids, field, value),
+        TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(snapshot, node_ids, interaction.selection.get("ast").map_or(&[][..], |selection| selection.ids.as_slice()), field, value)?,
         TrinityJackCommand::DeleteSelection => commands::delete_selection(snapshot, interaction.selection.get("ast").map_or(&[][..], |selection| selection.ids.as_slice())),
         TrinityJackCommand::SetActiveExample { example_id } => commands::set_active_example(example_id),
         TrinityJackCommand::SetFixtureJson { json } => commands::set_fixture_json(json),
@@ -944,7 +945,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         Ok(match command {
             TrinityJackCommand::SetFixtureJson { json } => commands::set_fixture_json(json),
             TrinityJackCommand::DeleteSelection => commands::delete_selection(snapshot, &interaction.selection("ast").ids),
-            TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(snapshot, node_ids, field, value),
+            TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(snapshot, node_ids, &interaction.selection("ast").ids, field, value)?,
             TrinityJackCommand::RunQuery { .. } | TrinityJackCommand::LoadExampleQuery { .. } => return Err(Fault::from("query execution requires its retained operation owner")),
             TrinityJackCommand::SetActiveExample { example_id } => commands::set_active_example(example_id),
             TrinityJackCommand::SetViewport { viewport, .. } => return commands::set_viewport(viewport, view_state),
@@ -1050,6 +1051,11 @@ use crate::editor::jack::modes::edit;
 /// not ported — `EditorBuilder::build_definition()` returns a bare `AppDefinition`, discarding
 /// `App.examples` entirely (SDK gap, see this packet's notes file; the subset's own
 /// `📚️examples/🎬️demo` facet is the likely intended replacement mechanism).
+///
+/// ⌨️ `textEdit`/`textSelect` are the query editor's own gesture verbs — the text host sends each
+/// keystroke's buffer and caret range — so they stay out of the palette and the Actions rail, where a
+/// press carries neither (`textSelect` was refused `missing start`, `textEdit` would have emptied the
+/// query). `patchNodes`' `nodeIds` is optional: left empty, the verb renames the selected nodes.
 pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TRINITY_JACK_DIALECT).document(["semio", "trinity", "jack"])
             .artifact_kind(ArtifactKindSpec {
@@ -1103,8 +1109,8 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
             .action_destructive("setFixtureJson")
             .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"), ActionKind::View, "typography"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"), ActionKind::View, "text-cursor"))
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"), ActionKind::View, "typography") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"), ActionKind::View, "text-cursor") })
             .action_with(semio_framework_plugin::ActionDefinition::new("formatDocument", LocalizedLabel::native("Format Jack Query", "Jack-Abfrage formatieren"), ActionKind::View, "typography").with_category("utilities"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
             .action_interactive_job("runQuery", InteractiveJobClassification::Migrated)
@@ -1147,7 +1153,7 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
                 ]).required(),
             ])
             .action_args("patchNodes", vec![
-                ActionArgDef::text("nodeIds", LocalizedLabel::native("Nodes", "Knoten")).required(),
+                ActionArgDef::text("nodeIds", LocalizedLabel::native("Nodes (empty: selection)", "Knoten (leer: Auswahl)")),
                 ActionArgDef::select("field", LocalizedLabel::native("Field", "Feld"), vec![ActionArgOption::new("name", LocalizedLabel::native("Name", "Name"))]).required(),
                 ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
             ])

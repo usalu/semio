@@ -31,7 +31,7 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for PinSlot {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Pin Slot", "Platz anheften")
+        protocol::LocalizedLabel::native("Pin Slot", "Slot fixieren")
     }
 }
 //#endregion 🔖️PinSlot

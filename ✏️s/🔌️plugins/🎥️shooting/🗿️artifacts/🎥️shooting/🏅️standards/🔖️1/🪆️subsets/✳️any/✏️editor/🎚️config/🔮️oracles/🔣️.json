@@ -1,0 +1,660 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The config state lane of `s.shooting.shooting`'s editor (✏️editor/🎚️config): its mutation vocabulary `ShootingConfigMutation` over `ShootingConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-shooting-shooting-1-any-editor-config` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "shooting-shooting-1-any-editor-config-state-lane-semantics",
+      "capabilities": [
+        "shooting-shooting-1-any-editor-config-mutate"
+      ],
+      "rationale": "`ShootingConfigMutation` is the config state lane of `s.shooting.shooting`'s ✏️editor/🎚️config surface: it holds the default shot and asset formats, the shot selection, the centre-model toggle, the viewport fit revision, the camera-label draft and the live camera. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-shot-selection`, `set-camera`, `set-center-model`, `set-camera-draft-label`, `replace-config`, `set-fit-revision`, `set-defaults`) changes exactly its own part of `ShootingConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A persisted key-value store for desktop settings; it has no model of this surface's typed config record, its per-kind setters, their no-op guard or the inverse each kind computes."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it defines no typed config mutations and neither their no-op nor their inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "`ShootingConfig` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "shooting-shooting-1-any-editor-config",
+      "capability": "shooting-shooting-1-any-editor-config-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "set-shot-selection",
+        "set-camera",
+        "set-center-model",
+        "set-camera-draft-label",
+        "replace-config",
+        "set-fit-revision",
+        "set-defaults"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.shooting.shooting",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎚️config",
+      "mutations": [
+        {
+          "id": "set-shot-selection",
+          "capability": "shooting-shooting-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-shot-selection",
+            "bridgeVersion": 1,
+            "variant": "SetShotSelection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-shooting-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-camera",
+          "capability": "shooting-shooting-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-camera",
+            "bridgeVersion": 1,
+            "variant": "SetCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-shooting-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-center-model",
+          "capability": "shooting-shooting-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-center-model",
+            "bridgeVersion": 1,
+            "variant": "SetCenterModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-shooting-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-camera-draft-label",
+          "capability": "shooting-shooting-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-camera-draft-label",
+            "bridgeVersion": 1,
+            "variant": "SetCameraDraftLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-shooting-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-config",
+          "capability": "shooting-shooting-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-config",
+            "bridgeVersion": 1,
+            "variant": "ReplaceConfig"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-shooting-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-fit-revision",
+          "capability": "shooting-shooting-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-fit-revision",
+            "bridgeVersion": 1,
+            "variant": "SetFitRevision"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-shooting-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-defaults",
+          "capability": "shooting-shooting-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-defaults",
+            "bridgeVersion": 1,
+            "variant": "SetDefaults"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-shooting-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-config-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.shooting.shooting",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "replace-config",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:804d679ec08805d75879e67dd9308a7b148da825e87685d3432d7cd669e75b18",
+          "bytes": 365
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7def7fcdb5ec33abde214b303beb131d889f33bda23f12b0c714162ed2630b04",
+          "bytes": 506
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6f05671e52d90a00e8229987e3d55a163d3211b62af3aa7dd10170c9eaced3a2",
+          "bytes": 375
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6f05671e52d90a00e8229987e3d55a163d3211b62af3aa7dd10170c9eaced3a2",
+          "bytes": 375
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📸️replace-config/✅️replace-config-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-shot-selection-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.shooting.shooting",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-shot-selection",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/☑️set-shot-selection/✅️set-shot-selection-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:804d679ec08805d75879e67dd9308a7b148da825e87685d3432d7cd669e75b18",
+          "bytes": 365
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/☑️set-shot-selection/✅️set-shot-selection-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:eed8c3ca41c170f10f70d699d8f83afc6e3cf321ee9442048af384c6a26191d7",
+          "bytes": 86
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/☑️set-shot-selection/✅️set-shot-selection-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ab099e73315fc48762bf9410a109a8fd03dbb814ddd945c44a24f504e6d9261d",
+          "bytes": 395
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/☑️set-shot-selection/✅️set-shot-selection-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ab099e73315fc48762bf9410a109a8fd03dbb814ddd945c44a24f504e6d9261d",
+          "bytes": 395
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/☑️set-shot-selection/✅️set-shot-selection-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `set-shot-selection` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-center-model-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.shooting.shooting",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-center-model",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎯️set-center-model/✅️set-center-model-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:804d679ec08805d75879e67dd9308a7b148da825e87685d3432d7cd669e75b18",
+          "bytes": 365
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎯️set-center-model/✅️set-center-model-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a49481c5a529c38dfa03b442b8f5086c22be1413a9da134f4b929d8ff97b12d9",
+          "bytes": 49
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎯️set-center-model/✅️set-center-model-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1a7bf85cac6811f1b13aba35297aea2070e56ca542eb555b763b85706c43c00a",
+          "bytes": 366
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎯️set-center-model/✅️set-center-model-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1a7bf85cac6811f1b13aba35297aea2070e56ca542eb555b763b85706c43c00a",
+          "bytes": 366
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎯️set-center-model/✅️set-center-model-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `set-center-model` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-fit-revision-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.shooting.shooting",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-fit-revision",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔢️set-fit-revision/✅️set-fit-revision-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:804d679ec08805d75879e67dd9308a7b148da825e87685d3432d7cd669e75b18",
+          "bytes": 365
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🔢️set-fit-revision/✅️set-fit-revision-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:bb6647b50e80f2241a34c51e15fac660bfd04487f873b0d2297a10eb933d096e",
+          "bytes": 54
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔢️set-fit-revision/✅️set-fit-revision-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:8db20492ae2f4b9e3b08cf1a13fbc01195f4aff6ef880fcb011cf936ac579da4",
+          "bytes": 374
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🔢️set-fit-revision/✅️set-fit-revision-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:8db20492ae2f4b9e3b08cf1a13fbc01195f4aff6ef880fcb011cf936ac579da4",
+          "bytes": 374
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🔢️set-fit-revision/✅️set-fit-revision-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `set-fit-revision` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-camera-draft-label-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.shooting.shooting",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-camera-draft-label",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🏷️set-camera-draft-label/✅️set-camera-draft-label-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:804d679ec08805d75879e67dd9308a7b148da825e87685d3432d7cd669e75b18",
+          "bytes": 365
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🏷️set-camera-draft-label/✅️set-camera-draft-label-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fdd226ffc9755ecfeba5195dfb1baefc6d394e6b82cff8053afe7d7fb18ba011",
+          "bytes": 61
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🏷️set-camera-draft-label/✅️set-camera-draft-label-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6f05671e52d90a00e8229987e3d55a163d3211b62af3aa7dd10170c9eaced3a2",
+          "bytes": 375
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🏷️set-camera-draft-label/✅️set-camera-draft-label-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6f05671e52d90a00e8229987e3d55a163d3211b62af3aa7dd10170c9eaced3a2",
+          "bytes": 375
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🏷️set-camera-draft-label/✅️set-camera-draft-label-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `set-camera-draft-label` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-camera-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.shooting.shooting",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-camera",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:804d679ec08805d75879e67dd9308a7b148da825e87685d3432d7cd669e75b18",
+          "bytes": 365
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4f04a84e2885d362923c0adb9eae88590fc8d0ac32eaff7ec9a4746bbd5391ac",
+          "bytes": 313
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a1724f13afccdee5de386ac30548a788f93816ea1f830ef714290d96af16d211",
+          "bytes": 442
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a1724f13afccdee5de386ac30548a788f93816ea1f830ef714290d96af16d211",
+          "bytes": 442
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `set-camera` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-defaults-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.shooting.shooting",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "set-defaults",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🔧️set-defaults/✅️set-defaults-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:804d679ec08805d75879e67dd9308a7b148da825e87685d3432d7cd669e75b18",
+          "bytes": 365
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🔧️set-defaults/✅️set-defaults-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a5e4ba6133caca8b1f1d7e65af924d24e8d7b792aa2f694e6759529995ff2716",
+          "bytes": 105
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🔧️set-defaults/✅️set-defaults-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e3ac70359a62b2b7e9dadc6086d446f7337adb78a3abf098969f33ec0d222b8b",
+          "bytes": 363
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🔧️set-defaults/✅️set-defaults-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e3ac70359a62b2b7e9dadc6086d446f7337adb78a3abf098969f33ec0d222b8b",
+          "bytes": 363
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🔧️set-defaults/✅️set-defaults-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `set-defaults` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
+    }
+  ]
+}

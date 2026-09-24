@@ -803,6 +803,7 @@ pub fn create_note_app() -> AppDefinition {
             .action_destructive("deleteBlock")
             .action_destructive("setActiveExample")
             .action_destructive("setFixtureJson")
+            .action_destructive("saveDownload")
             // 🖱️ Raw input plumbing — the surface and the keyboard feed these, agents never do.
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)

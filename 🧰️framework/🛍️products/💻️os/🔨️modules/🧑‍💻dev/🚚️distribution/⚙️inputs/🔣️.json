@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "environmentPrefixes": [
+    "VITE_"
+  ],
+  "environmentVariables": [
+    "S_HUB_URL",
+    "S_DATA_DIR",
+    "GIS_MAP_TILE_SERVE_MODE"
+  ],
+  "files": [
+    ".env",
+    ".env.local",
+    ".env.production",
+    ".env.production.local"
+  ]
+}

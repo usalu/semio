@@ -89,7 +89,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   //#region CorpusConformance
-  /** 🧪️ Consumes the shared conformance corpus (`🧬️contract/🧫️fixtures/🧪️conformance/`, 63 cases) —
+  /** 🧪️ Consumes the shared conformance corpus (`🧬️contract/🧫️fixtures/🧪️conformance/`, 64 cases) —
    * the load-bearing proof that this React store agrees with the Rust `apply_patch`/`validate_snapshot`
    * the GPU renderer also builds on. For each accept case: loads the snapshot (+ patch, if present)
    * into a real `📃️UiDocumentStore` and asserts the retained tree shape, every node's accessibility
@@ -146,8 +146,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     const cases = loadCorpus();
-    it("loads all 63 corpus fixtures", () => {
-      expect(cases.length).toBe(63);
+    it("loads all 64 corpus fixtures", () => {
+      expect(cases.length).toBe(64);
     });
 
     for (const testCase of cases) {

@@ -29,7 +29,7 @@ impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for RenameVcs {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename vcs to \"{}\"", self.new_title), &format!("vcs in \"{}\" umbenennen", self.new_title))
+        protocol::LocalizedLabel::native(&format!("Rename vcs to \"{}\"", self.new_title), &format!("VCS in \"{}\" umbenennen", self.new_title))
     }
 }
 //#endregion 🔖️Mutation

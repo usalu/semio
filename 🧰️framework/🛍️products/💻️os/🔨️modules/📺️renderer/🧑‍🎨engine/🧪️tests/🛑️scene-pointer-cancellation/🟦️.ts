@@ -73,7 +73,7 @@ describe("scene pointer cancellation contract", () => {
 
   it("records the current React producer boundary exactly", () => {
     const explicit = (source: string): boolean => source.includes("const onPointerCancel") || source.includes("onPointerCancel={");
-    const graphPointerSurface = nodeGraphSource.slice(nodeGraphSource.indexOf('className="absolute inset-0 z-30"'), nodeGraphSource.indexOf("onWheel=", nodeGraphSource.indexOf('className="absolute inset-0 z-30"')));
+    const graphPointerSurface = nodeGraphSource.slice(nodeGraphSource.indexOf('className="absolute inset-0 z-30 touch-none"'), nodeGraphSource.indexOf("onWheel=", nodeGraphSource.indexOf('className="absolute inset-0 z-30 touch-none"')));
     const actual = {
       nodeGraph: explicit(graphPointerSurface) ? "reference" : "missing",
       board2d: explicit(boardSource) ? "reference" : "missing",

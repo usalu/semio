@@ -619,13 +619,14 @@
       }
     },
     "DocumentOpeningTargetV1": {
-      "description": "📍️ The exact scope a document reference resolves to. A hub target always carries the requested surface; a folder target never invents one.",
+      "description": "📍️ The exact scope a document reference resolves to. A hub target always carries the requested surface and is persistedShared; a folder target never invents one and is persistedLocalOnly.",
       "oneOf": [
         {
           "type": "object",
           "additionalProperties": false,
           "required": [
             "kind",
+            "dataClass",
             "baseUrl",
             "spaceId",
             "requestedSurfaceId"
@@ -633,6 +634,9 @@
           "properties": {
             "kind": {
               "const": "hub"
+            },
+            "dataClass": {
+              "const": "persistedShared"
             },
             "baseUrl": {
               "type": "string",
@@ -656,11 +660,15 @@
           "additionalProperties": false,
           "required": [
             "kind",
+            "dataClass",
             "path"
           ],
           "properties": {
             "kind": {
               "const": "folder"
+            },
+            "dataClass": {
+              "const": "persistedLocalOnly"
             },
             "path": {
               "type": "string",

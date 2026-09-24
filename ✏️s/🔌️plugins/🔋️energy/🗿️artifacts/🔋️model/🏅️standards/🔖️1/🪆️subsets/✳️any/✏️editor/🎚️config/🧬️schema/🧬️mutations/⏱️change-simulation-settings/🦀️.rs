@@ -43,7 +43,7 @@ impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for Ch
         vec![EnergyModelConfigMutation::ChangeSimulationSettings(Self::of(base))]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change simulation settings to {} / {} min, {} warmup days", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days), &format!("Simulationseinstellungen auf {} / {} min, {} Aufwärmungstage ändern", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days))
+        protocol::LocalizedLabel::native(&format!("Change simulation settings to {} / {} min, {} warmup days", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days), &format!("Simulationseinstellungen auf {} / {} min, {} Einschwingtage ändern", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days))
     }
     fn target(&self) -> Vec<String> {
         vec!["simulation-settings".into()]

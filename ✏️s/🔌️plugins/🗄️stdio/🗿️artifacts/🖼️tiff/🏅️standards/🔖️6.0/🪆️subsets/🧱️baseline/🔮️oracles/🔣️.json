@@ -22,21 +22,21 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://github.com/image-rs/image-tiff",
-      "rationale": "📖️ A READER. This subset carries no reimplementation oracle of its own (no `oracles` entry existed in this file before this registration). `tiff` 0.11 is the SAME crate already verified and registered for the sibling 🧾️document subset's `image-tiff-6-0-mutate-reader` (that entry's own rationale documents the full investigation: `image` 0.25's public TIFF surface is single-IFD-only with no tag/byte-order accessors, while `tiff` 0.11's `Decoder::{tag_iter,byte_order}` gives full IFD tag enumeration including an `unknown(u16)` variant for non-baseline tags). This baseline subset's own vocabulary — `set-bits-per-sample`, `set-compression`, `set-photometric-interpretation`, `set-strip-offsets`/`remove-strip-offsets`, `insert-tile-tags`/`remove-tile-tags`, `set-snapshot` — is exactly the baseline IFD tag set (`BitsPerSample`, `Compression`, `PhotometricInterpretation`, `StripOffsets`, `TileOffsets`/`TileByteCounts`) that `Decoder::tag_iter` enumerates directly, independent of this repository's own TIFF decoder or its `image`-crate-based encoder.",
+      "rationale": "📖️ The case's oracle role: `tiff` 0.11's `Decoder::find_tag` reads the real scan's five Baseline axes out of IFD 0 — Compression (259), PhotometricInterpretation (262), BitsPerSample (258), TileWidth/TileLength (322/323), StripOffsets (273) — its raster decodes through `read_image`, and its IFD count comes from walking `more_images`/`next_image`. `../🦀️.rs` applies each kind to those axes as Adobe TIFF 6.0 Part 1 defines the field and reads the class off the specification's own tables, never consulting this repository's decoder, snapshot or checker. The comparison is on the conformance projection (`ordered-json-v1`), because this repository's encoder regenerates every strip tag and four of the kinds are therefore not byte-observable. The same crate is verified and registered for the sibling 🧾️document subset.",
       "comparisonProfiles": [
-        "semantic-raster-v1"
+        "semantic-raster-v1",
+        "ordered-json-v1"
       ]
     }
   ],
   "noOracleDecisions": [
     {
-      "id": "tiff-6-0-baseline-conformance-class-semantics",
+      "id": "tiff-6-0-baseline-round-trip-normalization",
       "capabilities": [
-        "tiff-6-0-baseline-mutate"
+        "tiff-6-0-baseline-round-trip"
       ],
-      "rationale": "Two independent reasons. (1) THE QUESTION IS NOT ONE A PACKAGE ANSWERS. This vocabulary asks whether a decoded document is inside Adobe TIFF 6.0 Part 1's Baseline class, read on five specific fields of IFD 0 — `Compression` (259) restricted to {1, 2, 32773}, `PhotometricInterpretation` (262) to 0..=3, `BitsPerSample` (258) to {1, 4, 8}, `TileWidth`/`TileLength` (322/323) absent because Baseline is strip-organized, and `StripOffsets` (273) present when it is not tiled. `image` 0.25's TIFF surface is a single-IFD raster codec: it decodes pixels and re-encodes them under its own choice of those very tags, and exposes no API to set an arbitrary compression, an out-of-range photometric or a tile-organized IFD. It could not perform any row of this vocabulary, and it holds no opinion about class membership to be compared against. (2) FOUR OF SIX KINDS ARE NOT BYTE-OBSERVABLE THROUGH THIS REPOSITORY'S OWN ENCODER EITHER: `encode_tiff` regenerates every one of `CORE_STRIP_TAGS` from the raster it is about to write, so `set-compression`, `set-photometric-interpretation`, `set-bits-per-sample` and `set-strip-offsets` are normalized away on re-serialization — a documented property of the codec, stated in the vocabulary's own module docstring, and the same constraint PNG's IHDR is under. Only the two tile kinds survive, because `TileWidth`/`TileLength` sit outside `CORE_STRIP_TAGS` and are carried verbatim. The substitutes are therefore TIFF 6.0's own tag-value tables read against `check_tiff_baseline_conformance`, which is where the class verdict lives, plus the inverse law as a metamorphic property over the decoded snapshot. `mutate-tiff-6-0-baseline` measures the vocabulary there and says in as many words that it makes no byte-level claim for those four kinds; its `identity-round-trip` does re-encode, and reads both sides through the independent IFD reader the ✳️any subset registers. [Narrowed 2026-09-02, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION shard D2: capabilities emptied because a real mutationManifest now requires a qualifying third-party oracle for this exact capability, and noOracleMisuseBreaches correctly refuses to let a recorded decision paper over a real runtime requirement (per shard A10's precedent for mathematical/sequence/draw) -- the honest state is a visible missing-external-oracle gap, not a hidden one. Rationale above is kept for the record: it still explains why no third-party library is credible for this domain, which is exactly why the gap is expected to stay open rather than be filled.]",
+      "rationale": "The decode/re-encode law of the Baseline subset is a statement about THIS repository's encoder: `encode_tiff` regenerates every `CORE_STRIP_TAGS` entry from the raster it writes, so the bytes it produces are defined by its own strip layout and no third-party writer can be asked to reproduce them. The case judges the round trip by laws instead — byte equality with the reference writer's committed file, a flipped decoded byte changing the output, Baseline membership after the round trip — and by the independent `image` reader registered for the 🧾️document subset, which must read the same geometry on both sides.",
       "substitutes": [
-        "specification-vectors",
         "metamorphic-laws"
       ]
     }
@@ -74,7 +74,8 @@
           "capability": "tiff-6-0-baseline-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "insert-tile-tags",
@@ -94,7 +95,8 @@
           "capability": "tiff-6-0-baseline-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-strip-offsets",
@@ -114,7 +116,8 @@
           "capability": "tiff-6-0-baseline-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-tile-tags",

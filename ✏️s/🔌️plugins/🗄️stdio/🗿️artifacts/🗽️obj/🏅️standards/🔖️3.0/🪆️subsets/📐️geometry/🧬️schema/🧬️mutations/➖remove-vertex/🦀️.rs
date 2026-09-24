@@ -28,7 +28,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveVertex {
         agg_inverse(&ObjMutation::RemoveVertex(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-vertex", "Vertex entfernen")
+        protocol::LocalizedLabel::native("Remove vertex", "Vertex entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -109,7 +109,8 @@
           "capability": "pdf-1-7-ua-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "embed-font-file",
@@ -129,7 +130,8 @@
           "capability": "pdf-1-7-ua-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-display-doc-title",
@@ -149,7 +151,8 @@
           "capability": "pdf-1-7-ua-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-font-file",
@@ -169,7 +172,8 @@
           "capability": "pdf-1-7-ua-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-lang",
@@ -189,7 +193,8 @@
           "capability": "pdf-1-7-ua-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-mark-info",
@@ -209,7 +214,8 @@
           "capability": "pdf-1-7-ua-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-struct-tree-root",

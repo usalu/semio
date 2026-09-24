@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change thermostat {} cooling setpoint schedule to {}", self.id.0, self.new_cooling_setpoint_schedule_id.0), &format!("Thermostat {} Kühlungssollwertzeitplan auf {} ändern", self.id.0, self.new_cooling_setpoint_schedule_id.0))
+        protocol::LocalizedLabel::native(&format!("Change thermostat {} cooling setpoint schedule to {}", self.id.0, self.new_cooling_setpoint_schedule_id.0), &format!("Kühl-Sollwertzeitplan von Thermostat {} auf {} ändern", self.id.0, self.new_cooling_setpoint_schedule_id.0))
     }
 
     fn target(&self) -> Vec<String> {

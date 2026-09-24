@@ -197,8 +197,9 @@
           "capability": "flow-1-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "connect-widgets",
@@ -217,7 +218,8 @@
           "capability": "flow-1-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "create-widget",
@@ -276,6 +278,7 @@
           "capability": "flow-1-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
+            "applied",
             "rejected"
           ],
           "productionDispatch": {
@@ -295,8 +298,9 @@
           "capability": "flow-1-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "move-widgets",
@@ -315,8 +319,9 @@
           "capability": "flow-1-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-synapses",
@@ -335,8 +340,9 @@
           "capability": "flow-1-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "reorder-widgets",
@@ -355,8 +361,9 @@
           "capability": "flow-1-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "replace-widget",
@@ -375,8 +382,9 @@
           "capability": "flow-1-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "update-synapse-endpoints",

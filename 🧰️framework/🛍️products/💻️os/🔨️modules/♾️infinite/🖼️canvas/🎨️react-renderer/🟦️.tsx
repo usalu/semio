@@ -5,6 +5,7 @@
 // #region 🔌️Adapters
 import { ContextMenuController, decodeIcon, encodeIcon, resolveIconUrlsInBoardJson, reactHostPort, type ContextMenuItem, type Icon, type IconSelectorMode } from "@semio-tech/ui-react";
 import React from "react";
+import { GestureRecognizer, type PinchStep } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
 
 export {
@@ -94,6 +95,9 @@ export interface GraphWasmSession {
   pointerCancel?(): void;
   doubleClick?(x: number, y: number): void;
   wheel?(x: number, y: number, deltaY: number): void;
+  /** 🤏️ One two-finger step from the shared `👆️gesture` recognizer (surface pixels). A session without it
+   * still gets the recognizer's suppression: its single-pointer lane never sees a pinch's contacts. */
+  pinch?(step: PinchStep): void;
 }
 
 export interface GraphWasmCanvasProps {
@@ -134,19 +138,39 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
       meta: ev.metaKey,
       alt: ev.altKey,
     });
+    const gestures = new GestureRecognizer();
+    const gesturePoint = (ev: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      return { pointerId: ev.pointerId, x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+    };
     const onPointerDown = (ev: PointerEvent) => {
       if (enablePointer) canvas.setPointerCapture(ev.pointerId);
+      const verdict = gestures.down(gesturePoint(ev));
+      if (verdict.kind === "pinchBegin") {
+        session.pointerCancel?.();
+        renderFrame();
+        return;
+      }
+      if (verdict.kind !== "single") return;
       const rect = canvas.getBoundingClientRect();
       session.pointerDown?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.button, ev.shiftKey, modifiersOf(ev));
       renderFrame();
     };
     const onPointerMove = (ev: PointerEvent) => {
+      const verdict = gestures.move(gesturePoint(ev));
+      if (verdict.kind === "pinch") {
+        session.pinch?.(verdict.step);
+        renderFrame();
+        return;
+      }
+      if (verdict.kind !== "single") return;
       const rect = canvas.getBoundingClientRect();
       session.pointerMove?.(ev.clientX - rect.left, ev.clientY - rect.top);
       renderFrame();
     };
     const onPointerUp = (ev: PointerEvent) => {
       if (canvas.hasPointerCapture(ev.pointerId)) canvas.releasePointerCapture(ev.pointerId);
+      if (gestures.up(ev.pointerId).kind !== "single") return;
       const rect = canvas.getBoundingClientRect();
       session.pointerUp?.(ev.clientX - rect.left, ev.clientY - rect.top, modifiersOf(ev));
       renderFrame();
@@ -157,6 +181,8 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
     // browser reclaims for scrolling) reaches the session as a cancel.
     const onPointerCancel = (ev: PointerEvent) => {
       if (ev.type !== "lostpointercapture" && canvas.hasPointerCapture(ev.pointerId)) canvas.releasePointerCapture(ev.pointerId);
+      if (ev.type !== "pointerleave" && gestures.up(ev.pointerId).kind !== "single") return;
+      if (gestures.latched) return;
       session.pointerCancel?.();
       renderFrame();
     };

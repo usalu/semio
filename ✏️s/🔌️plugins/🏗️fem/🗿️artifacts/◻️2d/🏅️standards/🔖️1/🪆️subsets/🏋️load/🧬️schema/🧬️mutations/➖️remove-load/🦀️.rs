@@ -27,7 +27,7 @@ impl MutationKind<Fem2dSnapshot, Fem2dMutation> for RemoveLoad {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove load \"{}\" from case \"{}\"", self.load_id, self.case_id), &format!("Last \"{}\" aus Fall \"{}\" entfernen", self.load_id, self.case_id))
+        protocol::LocalizedLabel::native(&format!("Remove load \"{}\" from case \"{}\"", self.load_id, self.case_id), &format!("Last \"{}\" aus Lastfall \"{}\" entfernen", self.load_id, self.case_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]

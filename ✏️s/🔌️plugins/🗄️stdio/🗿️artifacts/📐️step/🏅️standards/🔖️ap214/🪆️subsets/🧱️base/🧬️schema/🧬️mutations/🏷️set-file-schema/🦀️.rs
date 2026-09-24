@@ -22,7 +22,7 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileSchema {
         agg_inverse(&StepMutation::SetFileSchema(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-file-schema", "Dateischema setzen")
+        protocol::LocalizedLabel::native("Set file schema", "Dateischema setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

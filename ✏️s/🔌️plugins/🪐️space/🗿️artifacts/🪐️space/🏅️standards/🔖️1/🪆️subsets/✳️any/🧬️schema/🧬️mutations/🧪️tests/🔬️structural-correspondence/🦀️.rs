@@ -20,7 +20,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let variant = "CreateArtifact";
         let directory = "🌱create-artifact";
         let tag = 0;
-        let outcomes = &["applied", "fatal"][..];
+        let outcomes = &["applied", "rejected"][..];
         let owner = mutation_root.join("🌱create-artifact");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");
@@ -54,7 +54,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let variant = "DeleteArtifact";
         let directory = "🗑️delete-artifact";
         let tag = 1;
-        let outcomes = &["applied", "error"][..];
+        let outcomes = &["applied", "rejected"][..];
         let owner = mutation_root.join("🗑️delete-artifact");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");
@@ -88,7 +88,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let variant = "RenameArtifact";
         let directory = "🏷️rename-artifact";
         let tag = 2;
-        let outcomes = &["applied", "warning", "error", "fatal"][..];
+        let outcomes = &["applied", "no-op", "rejected"][..];
         let owner = mutation_root.join("🏷️rename-artifact");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");
@@ -122,7 +122,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let variant = "TouchArtifact";
         let directory = "🕒touch-artifact";
         let tag = 3;
-        let outcomes = &["applied", "error"][..];
+        let outcomes = &["applied", "rejected"][..];
         let owner = mutation_root.join("🕒touch-artifact");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");

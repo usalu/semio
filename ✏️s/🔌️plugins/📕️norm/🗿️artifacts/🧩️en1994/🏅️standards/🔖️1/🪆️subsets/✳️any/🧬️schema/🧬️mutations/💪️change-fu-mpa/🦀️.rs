@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeFUMpa {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change stud ultimate strength f_u to {}", self.new_f_u_mpa), &format!("Ständergrenzfestigkeitsf_u auf {} ändern", self.new_f_u_mpa))
+        protocol::LocalizedLabel::native(&format!("Change stud ultimate strength f_u to {}", self.new_f_u_mpa), &format!("Zugfestigkeit des Dübels f_u auf {} ändern", self.new_f_u_mpa))
     }
 }
 //#endregion 🔖️Payload

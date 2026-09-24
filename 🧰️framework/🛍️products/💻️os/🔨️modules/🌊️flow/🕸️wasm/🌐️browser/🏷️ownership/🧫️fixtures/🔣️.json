@@ -26,6 +26,7 @@
         "attachFlowSurface",
         "createFlowFeatures",
         "createFlowHost",
+        "createFlowPumpScheduler",
         "decodeFlowMessage",
         "decodeFlowVcsPage",
         "isFlowSessionOpenRejected",

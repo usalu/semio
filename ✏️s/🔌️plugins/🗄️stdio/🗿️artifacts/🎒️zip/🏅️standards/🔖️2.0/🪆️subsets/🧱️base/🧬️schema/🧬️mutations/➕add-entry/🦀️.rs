@@ -24,7 +24,7 @@ impl protocol::MutationKind<ZipSnapshot, ZipMutation> for AddEntry {
         agg_inverse(&ZipMutation::AddEntry(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("add-entry", "Eintrag hinzufügen")
+        protocol::LocalizedLabel::native("Add entry", "Eintrag hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

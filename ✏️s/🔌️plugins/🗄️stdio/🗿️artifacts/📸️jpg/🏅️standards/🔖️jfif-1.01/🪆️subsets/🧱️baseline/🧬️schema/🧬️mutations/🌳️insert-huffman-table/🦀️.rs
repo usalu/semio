@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertHuffmanTable {
-    pub(crate) index: usize,
-    pub(crate) table: JpgHuffmanTable,
+    pub index: usize,
+    pub table: JpgHuffmanTable,
 }
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for InsertHuffmanTable {
@@ -22,7 +22,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for InsertHuffmanT
         agg_inverse(&JpgBaselineMutation::InsertHuffmanTable(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-huffman-table", "Huffmantabelle einfügen")
+        protocol::LocalizedLabel::native("Insert huffman table", "Huffman-Tabelle einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

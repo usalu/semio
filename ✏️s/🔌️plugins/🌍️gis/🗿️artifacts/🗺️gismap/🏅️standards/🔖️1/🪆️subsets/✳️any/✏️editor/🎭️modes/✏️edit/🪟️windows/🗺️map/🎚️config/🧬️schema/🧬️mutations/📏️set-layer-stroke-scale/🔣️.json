@@ -10,7 +10,7 @@
   "binaryTag": 5,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",
-  "outcomeClasses": ["applied", "warning", "fatal"],
+  "outcomeClasses": ["applied", "no-op", "rejected"],
   "composition": "atomic",
   "requiredLanguageSurfaces": ["rust", "json-schema", "text", "binary"]
 }

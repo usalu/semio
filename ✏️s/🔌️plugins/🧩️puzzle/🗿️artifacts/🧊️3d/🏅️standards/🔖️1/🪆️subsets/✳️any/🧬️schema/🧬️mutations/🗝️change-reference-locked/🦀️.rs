@@ -26,7 +26,7 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ChangeRefere
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change reference \"{}\" locked", self.id), &format!("Referenz \"{}\" gesperrt ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change reference \"{}\" locked", self.id), &format!("Sperre von Referenz \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

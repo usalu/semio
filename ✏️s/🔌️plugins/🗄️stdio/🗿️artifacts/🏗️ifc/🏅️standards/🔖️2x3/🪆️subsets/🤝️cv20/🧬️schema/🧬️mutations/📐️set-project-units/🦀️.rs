@@ -22,7 +22,7 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProjectUn
         agg_inverse(&Ifc2x3Cv20Mutation::SetProjectUnits(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-project-units", "Projekteinheiten setzen")
+        protocol::LocalizedLabel::native("Set project units", "Projekteinheiten setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

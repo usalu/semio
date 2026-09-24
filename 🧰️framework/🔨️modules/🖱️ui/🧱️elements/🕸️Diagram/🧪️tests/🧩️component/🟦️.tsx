@@ -3,9 +3,10 @@ import * as React from "react";
 import { act, render } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DIAGRAM_ARROW_KEYS, Diagram, createDiagramForceSimulation, diagramActivateSelection, diagramArrowNavigationTarget, useDiagramLayout, type DiagramForceConfig, type DiagramForceNode, type DiagramHandoffStatus, type Node } from "../../🟦️.tsx";
+import { DIAGRAM_ARROW_KEYS, DIAGRAM_KEYBOARD_FOCUS_CLASS, Diagram, createDiagramForceSimulation, diagramActivateSelection, diagramArrowNavigationTarget, diagramKeyboardAnnouncement, diagramKeyboardStep, diagramReadingOrderPosition, useDiagramLayout, type DiagramKeyboardStep, type DiagramNavigableNode, type DiagramForceConfig, type DiagramForceNode, type DiagramHandoffStatus, type Node } from "../../🟦️.tsx";
 import { DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_MAX_EDGE_BYTES, DIAGRAM_LAYOUT_MAX_NODE_BYTES, calculateDiagramLayoutForBatchTest, createDiagramLayoutBatchTestJob, createDiagramLayoutPublication, createDiagramLayoutWorkerJob, diagramLayoutCredits, diagramLayoutEdgeWireBytes, diagramLayoutNodeWireBytes, diagramLayoutUtf8Bytes, type DiagramLayoutDescriptor, type DiagramLayoutDirection, type DiagramLayoutEdgeWire, type DiagramLayoutNodeWire } from "../../📐️layout/🟦️.ts";
 import { setInteractiveJobPort, type InteractiveJobPort } from "../../../🔌️Ports/📡️interactive-jobs/🟦️.ts";
+import keyboardFixture from "../../🧫️fixtures/⌨️keyboard.json";
 // #endregion 🔌️Adapters
 
 const flowCapture = vi.hoisted(() => ({ props: undefined as Record<string, any> | undefined }));
@@ -1444,21 +1445,31 @@ describe("♿️ diagram keyboard and ARIA affordances", () => {
     expect(help?.textContent ?? "").toMatch(/Arrow keys|Pfeiltasten/u);
   });
 
-  it("walks nodes with the arrow keys and publishes the cursor as aria-activedescendant", () => {
+  const announcementOf = (container: HTMLElement) => container.querySelector("[data-diagram-announcement]") as HTMLElement;
+
+  it("walks nodes with the arrow keys, rings the focused node and speaks it through a polite live region", () => {
     const view = render(<Diagram nodeTypes={{}} initialNodes={grid} initialEdges={[]} forceConfig={{ enabled: false }} />);
     const surface = surfaceOf(view.container);
-    expect(surface.getAttribute("aria-activedescendant")).toBeNull();
+    const live = announcementOf(view.container);
+    expect(live.getAttribute("role")).toBe("status");
+    expect(live.getAttribute("aria-live")).toBe("polite");
+    expect(surface.getAttribute("data-diagram-focused-node")).toBeNull();
+    expect(surface.hasAttribute("aria-activedescendant")).toBe(false);
     press(surface, "ArrowRight");
-    // 🚪️ The first arrow enters at the extreme node OPPOSITE the direction — leftmost for ArrowRight.
-    expect(surface.getAttribute("aria-activedescendant")).toBe("a");
+    expect(surface.getAttribute("data-diagram-focused-node")).toBe("a");
+    expect(live.textContent).toMatch(/^a, 1 (of|von) 4$/u);
+    const ringed = (node: Node) => DIAGRAM_KEYBOARD_FOCUS_CLASS.split(" ").every((token) => (node.className ?? "").split(" ").includes(token));
+    expect(ringed(flowCapture.props?.nodes.find((node: Node) => node.id === "a"))).toBe(true);
     press(surface, "ArrowRight");
-    expect(surface.getAttribute("aria-activedescendant")).toBe("b");
+    expect(surface.getAttribute("data-diagram-focused-node")).toBe("b");
     press(surface, "ArrowDown");
-    expect(surface.getAttribute("aria-activedescendant")).toBe("d");
+    expect(surface.getAttribute("data-diagram-focused-node")).toBe("d");
+    expect(live.textContent).toMatch(/^d, 4 (of|von) 4$/u);
     press(surface, "ArrowLeft");
-    expect(surface.getAttribute("aria-activedescendant")).toBe("c");
+    expect(surface.getAttribute("data-diagram-focused-node")).toBe("c");
     press(surface, "ArrowUp");
-    expect(surface.getAttribute("aria-activedescendant")).toBe("a");
+    expect(surface.getAttribute("data-diagram-focused-node")).toBe("a");
+    expect(flowCapture.props?.nodes.filter(ringed).map((node: Node) => node.id)).toEqual(["a"]);
   });
 
   it("selects through the SAME node-change lane a mouse pick uses, and Shift+Enter accumulates", () => {
@@ -1471,9 +1482,11 @@ describe("♿️ diagram keyboard and ARIA affordances", () => {
     press(surface, "ArrowRight");
     press(surface, "Enter", { shiftKey: true });
     expect(changes.at(-1)).toEqual([{ id: "b", type: "select", selected: true }]);
+    expect(announcementOf(view.container).textContent).toMatch(/^b (selected|ausgewählt)/u);
     press(surface, "Escape");
     expect(changes.at(-1)!.every((change: any) => change.selected === false)).toBe(true);
-    expect(surface.getAttribute("aria-activedescendant")).toBeNull();
+    expect(surface.getAttribute("data-diagram-focused-node")).toBeNull();
+    expect(announcementOf(view.container).textContent).toMatch(/^(Selection cleared|Auswahl aufgehoben)$/u);
   });
 
   it("stays out of the way of text entry inside the canvas", () => {
@@ -1488,7 +1501,47 @@ describe("♿️ diagram keyboard and ARIA affordances", () => {
       input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
     });
     expect(changes.length).toBe(before);
-    expect(surface.getAttribute("aria-activedescendant")).toBeNull();
+    expect(surface.getAttribute("data-diagram-focused-node")).toBeNull();
+  });
+});
+
+describe("♿️ diagram keyboard law — 🧫️fixtures/⌨️keyboard.json", () => {
+  const fixture = keyboardFixture as unknown as {
+    readonly nodes: readonly DiagramNavigableNode[];
+    readonly sequences: readonly { readonly name: string; readonly editable: boolean; readonly presses: readonly { readonly key: string; readonly shift?: boolean; readonly step: DiagramKeyboardStep; readonly position?: number }[] }[];
+  };
+  for (const sequence of fixture.sequences) {
+    it(sequence.name, () => {
+      let focusedId: string | null = null;
+      let selectedIds: readonly string[] = [];
+      sequence.presses.forEach((press, index) => {
+        const step = diagramKeyboardStep(fixture.nodes, focusedId, selectedIds, press.key, press.shift ?? false, sequence.editable);
+        expect(step, `${sequence.name} press ${index} (${JSON.stringify(press.key)})`).toEqual(press.step);
+        if (step?.kind === "focus") {
+          focusedId = step.focusedId;
+          expect(diagramReadingOrderPosition(fixture.nodes, step.focusedId)).toBe(press.position);
+        } else if (step?.kind === "select") {
+          selectedIds = step.selectedIds;
+        } else if (step?.kind === "clear") {
+          focusedId = null;
+          selectedIds = [];
+        }
+      });
+    });
+  }
+
+  it("announces through the caller's translator only — no language is baked in", () => {
+    const calls: [string, Record<string, unknown> | undefined][] = [];
+    const translate = (key: string, options?: Record<string, unknown>) => {
+      calls.push([key, options]);
+      return `${key}|${JSON.stringify(options ?? {})}`;
+    };
+    const labelOf = (id: string) => `node ${id}`;
+    expect(diagramKeyboardAnnouncement({ kind: "focus", focusedId: "d" }, fixture.nodes, labelOf, translate)).toBe('ui.diagram.focusedNode|{"node":"node d","position":4,"count":4}');
+    expect(diagramKeyboardAnnouncement({ kind: "select", focusedId: "b", selectedIds: ["a", "b"], added: true }, fixture.nodes, labelOf, translate)).toBe('ui.diagram.selectedNode|{"node":"node b","count":2}');
+    expect(diagramKeyboardAnnouncement({ kind: "select", focusedId: "b", selectedIds: ["a"], added: false }, fixture.nodes, labelOf, translate)).toBe('ui.diagram.deselectedNode|{"node":"node b","count":1}');
+    expect(diagramKeyboardAnnouncement({ kind: "clear" }, fixture.nodes, labelOf, translate)).toBe("ui.diagram.selectionCleared|{}");
+    expect(calls).toHaveLength(4);
   });
 });
 

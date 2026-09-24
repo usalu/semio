@@ -22,7 +22,7 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateStainlessI
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-1-4 stainless steel inputs", "EN 1993-1-4 rostfreie Stahleingaben aktualisieren")
+        protocol::LocalizedLabel::native("Update EN 1993-1-4 stainless steel inputs", "EN 1993-1-4 Eingaben für nichtrostenden Stahl aktualisieren")
     }
 }
 //#endregion 🔖️Payload

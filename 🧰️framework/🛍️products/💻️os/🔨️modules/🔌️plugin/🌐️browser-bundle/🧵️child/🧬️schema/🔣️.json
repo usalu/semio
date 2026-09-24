@@ -14,7 +14,8 @@
         "modules",
         "laws",
         "wireRows",
-        "ownerFaults"
+        "ownerFaults",
+        "valueAdmission"
       ],
       "properties": {
         "schema": {
@@ -154,6 +155,13 @@
               "child-rehash-after-transfer"
             ]
           }
+        },
+        "valueAdmission": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "$ref": "#/definitions/valueAdmissionRow"
+          }
         }
       }
     }
@@ -278,6 +286,55 @@
           }
         }
       ]
+    },
+    "valueAdmissionRow": {
+      "description": "One lifted WIT value crossing the child boundary (`measureChildValue`): the typed arrays jco lifts WIT numeric lists into cross as one exclusive transferable buffer; any other view is refused by name.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "lift",
+        "length",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lift": {
+          "enum": [
+            "Uint8Array",
+            "Int8Array",
+            "Uint16Array",
+            "Int16Array",
+            "Uint32Array",
+            "Int32Array",
+            "BigUint64Array",
+            "BigInt64Array",
+            "Float32Array",
+            "Float64Array",
+            "DataView",
+            "Uint8ClampedArray"
+          ]
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "offsetElements": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "repeat": {
+          "const": true
+        },
+        "expected": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     }
   }
 }

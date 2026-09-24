@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateAuditEvent {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create audit event \"{}\"", self.audit_event.header.name), &format!("Prüfungsereignis \"{}\" erstellen", self.audit_event.header.name))
+        protocol::LocalizedLabel::native(&format!("Create audit event \"{}\"", self.audit_event.header.name), &format!("Audit-Ereignis \"{}\" erstellen", self.audit_event.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.audit_event.header.id.0.clone()]

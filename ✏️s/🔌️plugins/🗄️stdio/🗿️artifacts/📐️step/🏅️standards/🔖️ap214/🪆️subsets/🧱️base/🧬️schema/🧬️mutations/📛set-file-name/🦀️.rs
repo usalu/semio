@@ -22,7 +22,7 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileName {
         agg_inverse(&StepMutation::SetFileName(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-file-name", "Dateiname setzen")
+        protocol::LocalizedLabel::native("Set file name", "Dateiname setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

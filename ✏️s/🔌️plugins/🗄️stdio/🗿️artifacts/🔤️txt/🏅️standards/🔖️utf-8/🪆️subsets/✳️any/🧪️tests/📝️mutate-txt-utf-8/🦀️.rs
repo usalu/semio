@@ -1,36 +1,21 @@
 //! 🦀️ UTF-8 text-line exhaustive mutation round-trip case — Rust adapter.
 //!
-//! No differential oracle is registered for this subset (see `../../🏅️standards/🔖️utf-8/
-//! 🪆️subsets/✳️any/🔣️oracle.json`'s `noOracleDecisions`), so the "oracle" role handlers
-//! below are never dispatched by the repository test platform for a `@no-oracle-` feature (it has
-//! no `@oracle-<id>` tag to resolve an implementation for). They are still registered, matching
-//! every other stdio case's shape, and they still compute a REAL, independently-derived answer
-//! (`oracle_apply_mutation`/`independent_split`/`independent_render` from this subset's own
-//! `🦀️oracle.rs`, which never calls this repository's production `TxtSnapshot`/
-//! `TxtMutation` code) — genuinely useful once the subject phase compiles again, and exercised
-//! directly by that module's own `cargo test --features oracles --lib` unit tests today.
+//! The oracle role reads every document with the registered third-party reader
+//! (`bstr-txt-utf-8-mutate-reader`, `bstr_split` in `../../🔮️oracles/🦀️.rs`) and applies each kind to
+//! the lines bstr read; it never calls this repository's production `TxtSnapshot`/`TxtMutation`
+//! code. The `@id-spec-vector` rows pin the format's own split rule (a bare LF inside a CRLF document
+//! is line content, which bstr reads as a boundary), so they stay on the hand-written re-derivation.
 //!
 //! Every scenario copies the immutable real fixture into the case work directory first; the
 //! committed file is never written to. The subject half is gated behind the generated host's `sut`
-//! feature so the oracle-only run never compiles the local implementation — see §5.3 of the fleet
-//! brief. The Rust SUBJECT phase RUNS (`semio-s-plugin-stdio` builds; the os-kernel blocker earlier
-//! waves reported is cleared), and for a `@no-oracle-` case like this one it is the only phase that
-//! ever executes — which is why every subject handler below asserts its law in role rather than
-//! deferring to a comparison that will never happen.
+//! feature so the oracle-only run never compiles the local implementation. Both roles assert their
+//! laws in role rather than deferring every check to the comparison.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::{independent_render, independent_split, oracle_apply_mutation, oracle_inverse_spec, project_txt};
+use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::{bstr_split, independent_render, independent_split, oracle_apply_mutation, oracle_inverse_spec, project_txt};
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
 //#region 🔖️Kinds
-/// 🧾️ Test-case-local mirror of the `txt-utf-8-any` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that
-/// module lives in the SUBJECT crate, and the oracle role must not link the subject crate at all
-/// (fleet brief §5.3). That other `KINDS` carries its own test proving it matches the enum AND the
-/// catalog manifest; a mismatch HERE against either one is caught structurally instead — the
-/// contract phase fails with `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list
-/// omits or invents a kind, and the runner fails every unregistered scenario id outright.
-const KINDS: &[&str] = &["set-trailing-newline", "set-line-ending", "insert-line", "remove-line", "set-line"];
 
 /// 🧾️ The `@id-spec-vector` Examples table's row ids, in declaration order — registration only,
 /// same reasoning as `KINDS` (these ids are not catalog kinds, so the completeness gate does not
@@ -72,8 +57,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// ↩️ The inverse law, asserted HERE by the independent implementation against its own pre-mutation
 /// reading rather than deferred to a comparison: `apply(m)` followed by `apply(inverse(m))` has to
 /// land back on the ORIGINAL document's semantic projection — every line, the trailing-terminator
-/// flag and the whole-document line ending. This subset carries a recorded no-oracle decision, so
-/// nothing else will ever check it.
+/// flag and the whole-document line ending.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -96,8 +80,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// loudly if the split or the render ever drifts.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let body = std::str::from_utf8(&input).map_err(|error| format!("input is not UTF-8: {error}"))?;
-    let (lines, trailing, crlf) = independent_split(body);
+    let (lines, trailing, crlf) = bstr_split(&input)?;
     let output = independent_render(&lines, trailing, crlf).into_bytes();
     carrier_is_exact(&output, &input)?;
     let projection = project_txt(&output)?;
@@ -125,7 +108,7 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_txt::standards::v_utf_8::subsets::any::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetTrailingNewlineMutation, apply_txt_mutation};
     use semio_s_artifact_stdio_txt::standards::v_utf_8::subsets::any::schema::snapshot::LineEnding;
-    use crate::{STDIO_TXT_DOCUMENT_SCHEMA, TxtMutation, TxtSnapshot};
+    use semio_s_artifact_stdio_txt::{STDIO_TXT_DOCUMENT_SCHEMA, TxtMutation, TxtSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::project_txt;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
@@ -174,10 +157,8 @@ mod subject {
         Ok(TxtSnapshot::from_body(&text))
     }
 
-    /// 👁️ The forward mutation, with the OBSERVABILITY law asserted IN ROLE. This case records a
-    /// no-oracle decision, so the subject handler is the ONLY place any of its `mutate-<kind>` rows
-    /// can be checked at all — an un-asserting handler here means 7 scenarios reporting green while
-    /// proving nothing. Two outcomes are admissible and they are told apart, never merged: the
+    /// 👁️ The forward mutation, with the OBSERVABILITY law asserted IN ROLE — an un-asserting handler
+    /// here would report green while proving nothing. Two outcomes are admissible and they are told apart, never merged: the
     /// subset ACCEPTS the mutation, in which case the named semantic operation must move the
     /// projection; or it REFUSES it with `stdio.txt.mutation-not-representable`, in which case the
     /// bytes must be exactly the input's (see the feature's 🔒️ note — `set-trailing-newline false`
@@ -256,12 +237,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

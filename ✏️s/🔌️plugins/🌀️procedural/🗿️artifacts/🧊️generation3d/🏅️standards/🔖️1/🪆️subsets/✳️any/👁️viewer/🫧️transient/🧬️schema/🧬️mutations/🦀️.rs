@@ -52,3 +52,13 @@ impl store::retirement::RetireOwned for Generation3dViewTransientMutation {
         store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(eval_text)])
     }
 }
+
+//#region 🌉️TestBridge
+/// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
+/// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Generation3dViewTransient`.
+///
+/// @see store::os_store::test_support::mutation_report_json
+pub fn generation3d_view_transient_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
+    store::os_store::test_support::mutation_report_json::<Generation3dViewTransient, Generation3dViewTransientMutation>(base_json, mutation_json, after_json)
+}
+//#endregion 🌉️TestBridge

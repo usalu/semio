@@ -621,6 +621,60 @@ pub mod browser {
             self.close();
         }
     }
+
+    /// ☎️ The browser document actor's dialer: every hub document socket is one page-owned door socket,
+    /// the same lane the directory stream and the agent bridge ride.
+    #[derive(Clone, Copy, Debug, Default)]
+    pub struct DoorDocumentSocketDialer;
+
+    impl store_sync::sync::DocumentSocketDialer for DoorDocumentSocketDialer {
+        fn dial(&self, url: &str, protocols: &[String]) -> Result<Box<dyn store_sync::sync::DocumentSocket>, String> {
+            BrowserDoorSocket::open(url, protocols).map(|socket| Box::new(DoorDocumentSocket { socket }) as Box<dyn store_sync::sync::DocumentSocket>)
+        }
+    }
+
+    /// 🔌️ One hub document socket read through the duplex door. Its wire is binary frames only; a text
+    /// frame is off-contract and skipped, and a loss the lane counted is reported, never swallowed.
+    struct DoorDocumentSocket {
+        socket: BrowserDoorSocket,
+    }
+
+    impl store_sync::sync::DocumentSocket for DoorDocumentSocket {
+        fn is_open(&self) -> bool {
+            self.socket.lane().is_open()
+        }
+
+        fn max_frame_bytes(&self) -> usize {
+            super::SOCKET_DOOR_SEND_MAX_BYTES
+        }
+
+        fn send_binary(&mut self, bytes: Vec<u8>) -> Result<(), String> {
+            self.socket.send(SocketMessage::Binary(bytes))
+        }
+
+        fn poll(&mut self) -> store_sync::sync::DocumentSocketPoll {
+            let dropped = self.socket.lane().dropped();
+            if dropped > 0 {
+                return store_sync::sync::DocumentSocketPoll::Lost(dropped);
+            }
+            loop {
+                match self.socket.try_recv() {
+                    Some(SocketMessage::Binary(bytes)) => return store_sync::sync::DocumentSocketPoll::Frame(bytes),
+                    Some(SocketMessage::Text(_)) => continue,
+                    None => break,
+                }
+            }
+            let lane = self.socket.lane();
+            if lane.is_closed() {
+                return store_sync::sync::DocumentSocketPoll::Closed(lane.close_code());
+            }
+            store_sync::sync::DocumentSocketPoll::Pending
+        }
+
+        fn close(&mut self) {
+            self.socket.close();
+        }
+    }
 }
 //#endregion 🔖️BrowserDoor
 

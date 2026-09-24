@@ -5286,6 +5286,50 @@ async fn loaded_envelope_with_stale_backbone_ref_never_auto_attaches() {
     assert!(!store.tick().await.expect("tick after set_state with no live backbone is a no-operation"), "set_state must not resurrect IO from a stale backbone descriptor either");
 }
 
+/// 🧬️ A component codec that answers `codec.print-mirror` with the pair's byte counts, so a law can
+/// see the pair it was handed.
+struct EchoComponentCodec {
+    schema: &'static str,
+}
+
+impl ComponentDocumentCodec for EchoComponentCodec {
+    fn schema(&self) -> &str {
+        self.schema
+    }
+
+    fn pack_schema_hash(&self) -> ComponentDocumentCodecFuture<'_, [u8; 32]> {
+        Box::pin(async move { Ok([9; 32]) })
+    }
+
+    fn print_mirror<'a>(&'a self, pack: &'a [u8], spr: &'a [u8]) -> ComponentDocumentCodecFuture<'a, ArtifactTextFiles> {
+        Box::pin(async move { Ok(ArtifactTextFiles { dsl: pack.len().to_string(), ops: spr.len().to_string() }) })
+    }
+}
+
+/// 🧭️ One resolution per schema, in the hub's trusted-catalog order: the linked Rust codec whenever
+/// this binary links one — a mounted component owning the same kind never displaces it — and the
+/// mounted component's codec for a kind nothing links, answering identity and the validation mirror
+/// itself; a kind neither owns resolves to nothing (ticket 26/09/23 slice WG8, B2).
+#[semio_framework_async_macros::async_test]
+async fn a_kind_resolves_to_its_linked_codec_before_its_mounted_component() {
+    let linked = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.kind-codec-linked/v1");
+    let linked_hash = linked.pack_schema_hash;
+    register_document_codec(linked).expect("linked codec registers");
+    register_component_document_codec(Arc::new(EchoComponentCodec { schema: "test.kind-codec-linked/v1" })).expect("component codec registers");
+    register_component_document_codec(Arc::new(EchoComponentCodec { schema: "test.kind-codec-component/v1" })).expect("component codec registers");
+
+    let resolved = document_kind_codec("test.kind-codec-linked/v1").await.expect("registry").expect("linked kind resolves");
+    assert!(matches!(resolved, DocumentKindCodec::Linked(_)), "a linked codec outranks a mounted component");
+    assert_eq!(resolved.pack_schema_hash().await.expect("linked identity"), linked_hash);
+
+    let resolved = document_kind_codec("test.kind-codec-component/v1").await.expect("registry").expect("component kind resolves");
+    assert!(matches!(resolved, DocumentKindCodec::Component(_)));
+    assert_eq!(resolved.pack_schema_hash().await.expect("component identity"), [9; 32]);
+    assert_eq!(resolved.print_mirror(&[1, 2, 3], &[4]).await.expect("component mirror"), ArtifactTextFiles { dsl: "3".into(), ops: "1".into() }, "the mirror is the component's answer for exactly the pair handed over");
+
+    assert!(document_kind_codec("test.kind-codec-unowned/v1").await.expect("registry").is_none());
+}
+
 #[semio_framework_async_macros::async_test]
 async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
     let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.document-codec-roundtrip/v1");
@@ -5366,6 +5410,56 @@ async fn document_codec_apply_ops_binary_reduces_a_nonempty_batch_and_closes_its
     assert_eq!(history.doc_id, "demo-apply-ops");
     assert_eq!(history.schema, "test.document-codec-apply-ops/v1");
     assert_eq!(history.edits.len(), 1, "one op in the batch must land exactly one edit, got {}", history.edits.len());
+}
+
+/// 📜️ The hub's Check In fold is a replica's own fold: replaying an author's whole ledger (two
+/// edits, an undo, a checkpoint) onto the genesis pair prints exactly the pair of a replica that
+/// ingested the same ledger remotely (the author's own pair differs only in author-local edit
+/// timestamps no envelope carries), keeps the author's edit identity and snapshot, a ledger prefix
+/// plus its tail equals the whole fold, and a corrupt stream or a stream missing a causal dependency
+/// is refused while the reduction store still closes.
+#[semio_framework_async_macros::async_test]
+async fn replay_envelopes_onto_pair_equals_the_replica_that_folded_the_same_ledger() {
+    let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1");
+    let genesis = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
+    let genesis_pair = print_document_pack(&genesis).await;
+    drop(genesis.into_owners());
+    let genesis_pair = genesis_pair.expect("genesis pair");
+
+    let mut author = fresh_demo_store().await;
+    author.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], description: None }).await.expect("first edit");
+    author.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], description: None }).await.expect("second edit");
+    let prefix_events = author.event_log().expect("prefix ledger");
+    author.dispatch(ArtifactCommand::Undo).await.expect("undo the second edit");
+    author.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("check in".into()), authors: Vec::new() }).await.expect("checkpoint");
+    let events = author.event_log().expect("whole ledger");
+    let author_pair = print_document_pack(author.envelope()).await.expect("author pair");
+    let author_history = crate::os_spr::decode_history(&author_pair.spr, &crate::os_spr::DecodeOptions::default()).await.expect("author history");
+
+    let mut replica = fresh_demo_store().await;
+    for event in events.clone() {
+        replica.ingest_remote(event).await.expect("the replica ingests the author's ledger");
+    }
+    let replica_pair = print_document_pack(replica.envelope()).await.expect("replica pair");
+
+    let replayed = (codec.replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &crate::os_spr::encode_envelopes(&events)).await.expect("the whole ledger folds");
+    assert_eq!((replayed.0.as_slice(), replayed.1.as_slice()), (replica_pair.pack.as_slice(), replica_pair.spr.as_slice()), "the fold prints the remote replica's exact pair");
+    assert_eq!(replayed.0, author_pair.pack, "the fold keeps the author's snapshot container");
+    let history = crate::os_spr::decode_history(&replayed.1, &crate::os_spr::DecodeOptions::default()).await.expect("replayed history");
+    assert_eq!(history.edits.iter().map(|edit| edit.id.clone()).collect::<Vec<_>>(), author_history.edits.iter().map(|edit| edit.id.clone()).collect::<Vec<_>>(), "both edits keep the author's identity");
+    assert_eq!(history.transitions.len(), 2, "the undo and the checkpoint transitions both fold");
+    assert_eq!(replica.snapshot().expect("replica snapshot"), author.snapshot().expect("author snapshot"), "the fold converges on the author's content");
+
+    let prefix = (codec.replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &crate::os_spr::encode_envelopes(&prefix_events)).await.expect("a ledger prefix folds");
+    let resumed = (codec.replay_envelopes)(&prefix.0, &prefix.1, &crate::os_spr::encode_envelopes(&events[prefix_events.len()..])).await.expect("the tail folds onto the prefix pair");
+    assert_eq!((resumed.0.as_slice(), resumed.1.as_slice()), (replica_pair.pack.as_slice(), replica_pair.spr.as_slice()), "prefix pair + tail equals the whole fold");
+
+    assert!((codec.replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &[0xff, 0x01, 0x02]).await.is_err(), "a corrupt stream is refused");
+    let missing_dependency = crate::os_spr::encode_envelopes(&events[prefix_events.len()..]);
+    assert!((codec.replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &missing_dependency).await.is_err(), "transitions naming edits the pair never held are refused");
+    assert!((codec.replay_envelopes)(&[], &[], &crate::os_spr::encode_envelopes(&events)).await.is_err(), "no baseline is refused");
+    close_test_store(&mut replica);
+    close_test_store(&mut author);
 }
 
 #[semio_framework_async_macros::async_test]

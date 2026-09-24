@@ -9,16 +9,9 @@
 //! `sut` feature so the oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::las::standards::v1_0::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_las};
+use semio_s_plugin_stdio_test_oracle::artifacts::las::standards::v1_0::subsets::header::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_las};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, round_trip_preserves_within};
 
-//#region 🔖️Kinds
-/// 🧾️ Mirrors `LasMutation::KINDS`
-/// (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️.rs`) — kept in sync by
-/// the contract phase's `mutation-kind-uncovered`/`mutation-kind-undeclared` gates, which fail loudly
-/// if this list and the catalog ever drift apart.
-const KINDS: [&str; 15] = ["no-mutation", "set-snapshot", "set-version", "set-system-identifier", "set-software-info", "set-creation-date", "set-scale-and-offset", "set-bounds", "set-points-by-return", "insert-vlr", "remove-vlr", "set-vlr-data", "insert-point", "remove-point", "set-point"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Profile
 /// 📏️ `semantic-las-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/
@@ -91,7 +84,7 @@ mod subject {
         apply_las_mutation, insert_point, insert_vlr, remove_point, remove_vlr, set_bounds, set_creation_date, set_point, set_points_by_return, set_scale_and_offset, set_snapshot, set_software_info, set_system_identifier, set_version, set_vlr_data, LasMutation,
     };
     use semio_s_artifact_stdio_las::standards::v1_0::subsets::any::schema::snapshot::{LasHeader, LasPoint, LasSnapshot, LasVlr};
-    use semio_s_plugin_stdio_test_oracle::artifacts::las::standards::v1_0::subsets::any::project_las;
+    use semio_s_plugin_stdio_test_oracle::artifacts::las::standards::v1_0::subsets::header::project_las;
 
     //#region 🔖️SpecReaders
     fn params_of(spec: &Json) -> Json {
@@ -344,12 +337,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

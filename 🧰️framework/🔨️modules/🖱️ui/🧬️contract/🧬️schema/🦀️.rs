@@ -260,7 +260,7 @@ icon: string, label: Label, };"####,
  * `crate::SurfaceProps` (a single pack-encoded payload keyed by a `doc_schema` id), so the variants
  * are all comparably small.
  */
-export type Component = { "type": "container" } & ContainerProps | { "type": "text" } & TextProps | { "type": "button" } & ButtonProps | { "type": "separator" } & SeparatorProps | { "type": "input" } & InputProps | { "type": "select" } & SelectProps | { "type": "toggle" } & ToggleProps | { "type": "keyValueList" } & KeyValueListProps | { "type": "slider" } & SliderProps | { "type": "numberStepper" } & NumberStepperProps | { "type": "ring" } & RingProps | { "type": "iconSelect" } & IconSelectProps | { "type": "progress" } & ProgressProps | { "type": "tree" } & TreeProps | { "type": "treeSection" } & TreeSectionProps | { "type": "treeItem" } & TreeItemProps | { "type": "image" } & ImageProps | { "type": "surface" } & SurfaceProps | { "type": "extension" } & ExtensionProps;"####,
+export type Component = { "type": "container" } & ContainerProps | { "type": "text" } & TextProps | { "type": "button" } & ButtonProps | { "type": "separator" } & SeparatorProps | { "type": "input" } & InputProps | { "type": "select" } & SelectProps | { "type": "toggle" } & ToggleProps | { "type": "keyValueList" } & KeyValueListProps | { "type": "slider" } & SliderProps | { "type": "numberStepper" } & NumberStepperProps | { "type": "ring" } & RingProps | { "type": "iconSelect" } & IconSelectProps | { "type": "progress" } & ProgressProps | { "type": "tree" } & TreeProps | { "type": "treeSection" } & TreeSectionProps | { "type": "treeItem" } & TreeItemProps | { "type": "image" } & ImageProps | { "type": "surface" } & SurfaceProps | { "type": "extension" } & ExtensionProps | { "type": "table" } & TableProps | { "type": "tableRow" } & TableRowProps;"####,
     },
     SchemaMetadata {
         name: "ContainerProps",
@@ -754,6 +754,54 @@ docSchema: string, doc: SurfaceDoc,
  * embedded content's own scene graph interprets internally via `doc`'s opaque bytes.
  */
 bindings: Array<ActionBinding>, };"####,
+    },
+    SchemaMetadata {
+        name: "TableProps",
+        version: 1,
+        typescript: r####"/**
+ * 📊️ Props for `Component::Table` — a column-headed data table. The header lives HERE, as props, and
+ * every [`TableRowProps`] child is one row, so a table costs one node record plus one per MATERIALISED
+ * row however many columns and row actions it has. `window` is the same [`TreeWindow`] contract a tree
+ * section carries: the children are the rows `[offset, offset + children.len())` of a logically
+ * `total`-long row list, a renderer pitches the unmaterialised rows as spacers and asks for the rows its
+ * viewport shows through `ViewModel::tree_windows` — one windowing mechanism and one body-wide node
+ * ledger ([`TREE_WINDOW_BODY_NODE_BUDGET`]) for trees and tables alike.
+ */
+export type TableProps = {
+/**
+ * 🏷️ The table's accessible name — what assistive technology announces on entering it.
+ */
+label: Label,
+/**
+ * 🗂️ The column headers, in cell order.
+ */
+columns: Array<Label>,
+/**
+ * 🎬️ Header of the trailing actions column a renderer adds when any row carries row actions.
+ */
+actionsLabel: Label | null,
+/**
+ * 🪟️ The materialised slice of the logical row list — see [`TreeWindow`].
+ */
+window: TreeWindow | null, };"####,
+    },
+    SchemaMetadata {
+        name: "TableRowProps",
+        version: 1,
+        typescript: r####"/**
+ * 📊️ Props for `Component::TableRow` — one row of a [`TableProps`] table: its cells in column order and
+ * its row-scoped actions, both as props, so a row is ONE node record. The row's primary activation (open,
+ * select) is the record's own `Trigger::Activate` binding.
+ */
+export type TableRowProps = {
+/**
+ * 📝️ The row's cells, positional to the table's `columns`.
+ */
+cells: Array<string>,
+/**
+ * 🎬️ Row-scoped actions, rendered in the table's trailing actions column.
+ */
+rowActions: Array<RowAction>, };"####,
     },
     SchemaMetadata {
         name: "TextProps",

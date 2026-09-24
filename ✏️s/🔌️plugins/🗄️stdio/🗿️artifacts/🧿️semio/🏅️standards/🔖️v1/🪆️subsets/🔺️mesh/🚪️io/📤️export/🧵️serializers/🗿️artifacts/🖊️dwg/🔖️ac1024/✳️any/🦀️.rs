@@ -14,14 +14,12 @@
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use semio_s_artifact_stdio_dwg::schema::snapshot::DwgLogicalDrawing;
 use semio_s_artifact_stdio_dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };
 
 /// 📐 The logical drawing bridge's version identifier.
-const DWG_CODEC_VERSION: &str = "AC1015";
 
 //#region 🔖️Serializer
 pub struct SemioMeshToDwg;
@@ -68,7 +66,7 @@ impl ArtifactSerializer for SemioMeshToDwg {
             drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices, faces } });
         }
 
-        let snapshot = DwgSnapshot { version: DWG_CODEC_VERSION.into(), drawing: DwgLogicalDrawing::from_native(&drawing).map_err(store::PackError::Schema)?, ..DwgSnapshot::default() };
+        let snapshot = DwgSnapshot::from_drawing(&drawing).map_err(store::PackError::Schema)?;
         Ok(snapshot)
     }
 }

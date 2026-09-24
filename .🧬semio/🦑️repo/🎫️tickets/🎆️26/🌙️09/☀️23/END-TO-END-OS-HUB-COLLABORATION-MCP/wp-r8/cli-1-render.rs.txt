@@ -1,0 +1,818 @@
+    //#region 🔑️Events
+
+    /// 🏷️ The start event kind.
+    pub const KIND_START: &str = "start";
+    /// 🏷️ The log event kind.
+    pub const KIND_LOG: &str = "log";
+    /// 🏷️ The progress event kind.
+    pub const KIND_PROGRESS: &str = "progress";
+    /// 🏷️ The result event kind.
+    pub const KIND_RESULT: &str = "result";
+    /// 🏷️ The error event kind.
+    pub const KIND_ERROR: &str = "error";
+    /// 🏷️ The done event kind.
+    pub const KIND_DONE: &str = "done";
+
+    /// ⏳️ How far a long operation has come.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    pub struct Progress {
+        #[serde(default, skip_serializing_if = "is_zero")]
+        pub current: i64,
+        #[serde(default, skip_serializing_if = "is_zero")]
+        pub total: i64,
+        #[serde(default, skip_serializing_if = "is_zero")]
+        pub percent: i64,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        pub step: String,
+    }
+
+    /// 🏺️ A produced artifact an event points at.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    pub struct Artifact {
+        #[serde(rename = "type", default)]
+        pub kind: String,
+        #[serde(default)]
+        pub uri: String,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        pub note: String,
+    }
+
+    /// ❌️ The failure an error event carries.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    pub struct ErrPayload {
+        #[serde(default)]
+        pub code: String,
+        #[serde(default)]
+        pub message: String,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        pub detail: String,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        pub fatal: bool,
+    }
+
+    /// 🏁️ The terminal payload of a stream.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    pub struct DonePayload {
+        #[serde(rename = "exit_code", default)]
+        pub exit_code: i32,
+        #[serde(default)]
+        pub status: String,
+    }
+
+    /// 📡️ One event of the stream every verb produces and every renderer consumes.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    pub struct Event {
+        #[serde(default)]
+        pub kind: String,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        pub command: String,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        pub id: String,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        pub message: String,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        pub level: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub progress: Option<Progress>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub data: Option<Json>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub artifact: Option<Artifact>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub error: Option<ErrPayload>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub done: Option<DonePayload>,
+    }
+
+    impl Event {
+        /// 🟢️ The event that opens a stream.
+        pub fn start(command: &str) -> Event {
+            Event { kind: KIND_START.to_string(), command: command.to_string(), ..Event::default() }
+        }
+
+        /// 📦️ One result payload.
+        pub fn result(command: &str, data: Json) -> Event {
+            Event { kind: KIND_RESULT.to_string(), command: command.to_string(), data: Some(data), ..Event::default() }
+        }
+
+        /// 📝️ One informational line.
+        pub fn log(command: &str, message: impl Into<String>) -> Event {
+            Event { kind: KIND_LOG.to_string(), command: command.to_string(), message: message.into(), level: "info".to_string(), ..Event::default() }
+        }
+
+        /// ❌️ One failure.
+        pub fn failure(command: &str, code: &str, message: impl Into<String>, detail: impl Into<String>) -> Event {
+            Event { kind: KIND_ERROR.to_string(), command: command.to_string(), error: Some(ErrPayload { code: code.to_string(), message: message.into(), detail: detail.into(), fatal: true }), ..Event::default() }
+        }
+
+        /// 🏁️ The event that closes a stream.
+        pub fn finish(exit_code: i32, status: &str) -> Event {
+            Event { kind: KIND_DONE.to_string(), done: Some(DonePayload { exit_code, status: status.to_string() }), ..Event::default() }
+        }
+    }
+
+    fn is_zero(value: &i64) -> bool {
+        *value == 0
+    }
+
+    /// 🧯️ The error code of an internal failure.
+    pub const ERR_INTERNAL: &str = "E_INTERNAL";
+    /// 🧯️ The error code of an unreadable request.
+    pub const ERR_PARSE: &str = "E_PARSE";
+    /// 🧯️ The error code of a cancelled request.
+    pub const ERR_CANCELED: &str = "E_CANCELED";
+
+    /// 🚦️ The exit code of a successful stream.
+    pub const EXIT_OK: i32 = 0;
+    /// 🚦️ The exit code of a failed stream.
+    pub const EXIT_ERROR: i32 = 1;
+    /// 🚦️ The exit code of a misused command.
+    pub const EXIT_USAGE: i32 = 2;
+    /// 🚦️ The exit code of a cancelled stream.
+    pub const EXIT_CANCELED: i32 = 130;
+
+    /// 🕸️ Executes one GraphQL document as the `graphql` engine command: start, the result or the
+    /// failure, done. Twin of `Engine.Run` with `CmdGraphQL`.
+    pub fn graphql_events(context: &dyn RepoContext, query: &str, variables: &Map<String, Json>) -> Vec<Event> {
+        let executor = Executor::new(context);
+        let mut events = vec![Event::start("graphql")];
+        match executor.execute(query, variables) {
+            Ok(data) => {
+                events.push(Event::result("graphql", data));
+                events.push(Event::finish(EXIT_OK, "ok"));
+            }
+            Err(error) => {
+                events.push(Event::failure("graphql", ERR_INTERNAL, error.message, ""));
+                events.push(Event::finish(EXIT_ERROR, "error"));
+            }
+        }
+        events
+    }
+
+    //#endregion 🔑️Events
+
+    //#region 🐹️GoFormatting
+
+    /// 🔢️ A float the way Go's `encoding/json` writes it.
+    fn go_json_float(value: f64) -> String {
+        let magnitude = value.abs();
+        if magnitude != 0.0 && !(1e-6..1e21).contains(&magnitude) {
+            let rendered = format!("{value:e}");
+            return match rendered.split_once('e') {
+                Some((mantissa, exponent)) if !exponent.starts_with('-') => format!("{mantissa}e+{exponent}"),
+                _ => rendered,
+            };
+        }
+        format!("{value}")
+    }
+
+    /// 🔢️ A float the way Go's `%v` verb prints it: shortest digits, exponent form outside `1e-4..1e6`.
+    fn go_float_v(value: f64) -> String {
+        if value == 0.0 {
+            return "0".to_string();
+        }
+        let rendered = format!("{value:e}");
+        let Some((mantissa, exponent)) = rendered.split_once('e') else { return rendered };
+        let exponent: i32 = exponent.parse().unwrap_or_default();
+        if !(-4..6).contains(&exponent) {
+            let sign = if exponent < 0 { '-' } else { '+' };
+            return format!("{mantissa}e{sign}{:02}", exponent.abs());
+        }
+        format!("{value}")
+    }
+
+    /// 🔤️ A string literal the way Go's `encoding/json` writes it with HTML escaping switched off.
+    fn go_json_string(text: &str, out: &mut String) {
+        out.push('"');
+        for character in text.chars() {
+            match character {
+                '"' => out.push_str("\\\""),
+                '\\' => out.push_str("\\\\"),
+                '\n' => out.push_str("\\n"),
+                '\r' => out.push_str("\\r"),
+                '\t' => out.push_str("\\t"),
+                '\u{2028}' => out.push_str("\\u2028"),
+                '\u{2029}' => out.push_str("\\u2029"),
+                control if (control as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", control as u32)),
+                other => out.push(other),
+            }
+        }
+        out.push('"');
+    }
+
+    /// 🧾️ A value as compact JSON the way Go's `encoding/json` writes it: members sorted, no HTML
+    /// escaping, Go's float spelling.
+    pub fn go_json(value: &Json) -> String {
+        let mut out = String::new();
+        write_go_json(value, &mut out);
+        out
+    }
+
+    fn write_go_json(value: &Json, out: &mut String) {
+        match value {
+            Json::Null => out.push_str("null"),
+            Json::Bool(flag) => out.push_str(if *flag { "true" } else { "false" }),
+            Json::Number(number) => match (number.as_i64(), number.as_u64(), number.as_f64()) {
+                (Some(integer), _, _) => out.push_str(&integer.to_string()),
+                (_, Some(integer), _) => out.push_str(&integer.to_string()),
+                (_, _, Some(float)) => out.push_str(&go_json_float(float)),
+                _ => out.push_str("null"),
+            },
+            Json::String(text) => go_json_string(text, out),
+            Json::Array(items) => {
+                out.push('[');
+                for (index, item) in items.iter().enumerate() {
+                    if index > 0 {
+                        out.push(',');
+                    }
+                    write_go_json(item, out);
+                }
+                out.push(']');
+            }
+            Json::Object(members) => {
+                out.push('{');
+                for (index, (key, member)) in members.iter().enumerate() {
+                    if index > 0 {
+                        out.push(',');
+                    }
+                    go_json_string(key, out);
+                    out.push(':');
+                    write_go_json(member, out);
+                }
+                out.push('}');
+            }
+        }
+    }
+
+    /// 🧾️ An ordered record as compact JSON, members in the stated order.
+    fn go_json_ordered(members: &[(&str, Json)]) -> String {
+        let mut out = String::from("{");
+        for (index, (key, member)) in members.iter().enumerate() {
+            if index > 0 {
+                out.push(',');
+            }
+            go_json_string(key, &mut out);
+            out.push(':');
+            write_go_json(member, &mut out);
+        }
+        out.push('}');
+        out
+    }
+
+    /// 🖨️ A decoded JSON value the way Go's `%v` verb prints it.
+    fn go_sprint(value: &Json) -> String {
+        match value {
+            Json::Null => "<nil>".to_string(),
+            Json::Bool(flag) => flag.to_string(),
+            Json::Number(number) => go_float_v(number.as_f64().unwrap_or_default()),
+            Json::String(text) => text.clone(),
+            Json::Array(items) => format!("[{}]", items.iter().map(go_sprint).collect::<Vec<String>>().join(" ")),
+            Json::Object(members) => format!("map[{}]", members.iter().map(|(key, member)| format!("{key}:{}", go_sprint(member))).collect::<Vec<String>>().join(" ")),
+        }
+    }
+
+    /// 🖨️ A template field the way `text/template` prints it: `<no value>` for a missing member.
+    fn go_field(value: Option<&Json>) -> String {
+        match value {
+            None | Some(Json::Null) => "<no value>".to_string(),
+            Some(value) => go_sprint(value),
+        }
+    }
+
+    /// ☑️ Whether `text/template`'s `if` takes a decoded JSON value as true.
+    fn go_truthy(value: Option<&Json>) -> bool {
+        match value {
+            None | Some(Json::Null) => false,
+            Some(Json::Bool(flag)) => *flag,
+            Some(Json::Number(number)) => number.as_f64().unwrap_or_default() != 0.0,
+            Some(Json::String(text)) => !text.is_empty(),
+            Some(Json::Array(items)) => !items.is_empty(),
+            Some(Json::Object(members)) => !members.is_empty(),
+        }
+    }
+
+    /// ⏱️ A millisecond duration the way Go's `time.Duration.String` spells it.
+    pub fn go_duration(milliseconds: i64) -> String {
+        if milliseconds == 0 {
+            return "0s".to_string();
+        }
+        let sign = if milliseconds < 0 { "-" } else { "" };
+        let total = milliseconds.unsigned_abs();
+        if total < 1000 {
+            return format!("{sign}{total}ms");
+        }
+        let hours = total / 3_600_000;
+        let minutes = (total % 3_600_000) / 60_000;
+        let seconds = (total % 60_000) / 1000;
+        let fraction = total % 1000;
+        let mut out = sign.to_string();
+        if hours > 0 {
+            out.push_str(&format!("{hours}h"));
+        }
+        if hours > 0 || minutes > 0 {
+            out.push_str(&format!("{minutes}m"));
+        }
+        out.push_str(&seconds.to_string());
+        if fraction > 0 {
+            out.push_str(format!(".{fraction:03}").trim_end_matches('0'));
+        }
+        out.push('s');
+        out
+    }
+
+    //#endregion 🐹️GoFormatting
+
+    //#region 🌩️Renderers
+
+    /// 🖌️ `colorize` of the text templates.
+    fn paint(text: &str, colour: &str, is_tty: bool) -> String {
+        ansi::colorize(text, colour, is_tty)
+    }
+
+    /// 🖨️ The three renderings a stream can take.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Format {
+        Json,
+        Markdown,
+        Text,
+    }
+
+    impl Format {
+        /// 🔤️ The format a `--format` value names, the human text for anything unknown.
+        pub fn parse(raw: &str) -> Format {
+            match raw {
+                "json" => Format::Json,
+                "md" => Format::Markdown,
+                _ => Format::Text,
+            }
+        }
+    }
+
+    /// 🖨️ What a renderer wrote and the exit code the terminal event carried.
+    #[derive(Clone, Debug, Default, PartialEq, Eq)]
+    pub struct Rendered {
+        pub out: String,
+        pub err: String,
+        pub exit_code: i32,
+    }
+
+    /// 🖨️ Renders one stream in one format. The human renderer takes the terminal decision and the
+    /// elapsed time from the caller, so a recorded stream renders the same bytes on every host.
+    pub fn render(events: &[Event], format: Format, is_tty: bool, verbose: bool, elapsed_ms: i64) -> Rendered {
+        match format {
+            Format::Json => render_ndjson(events),
+            Format::Markdown => render_markdown_stream(events),
+            Format::Text => render_human(events, is_tty, verbose, elapsed_ms),
+        }
+    }
+
+    fn render_ndjson(events: &[Event]) -> Rendered {
+        let mut rendered = Rendered::default();
+        for event in events {
+            if event.kind == KIND_DONE {
+                if let Some(done) = &event.done {
+                    rendered.exit_code = done.exit_code;
+                }
+            }
+            if event.kind == KIND_RESULT {
+                if let Some(data) = &event.data {
+                    rendered.out.push_str(&go_json(data));
+                    rendered.out.push('\n');
+                }
+            }
+            if event.kind == KIND_ERROR {
+                if let Some(error) = &event.error {
+                    let mut members: Vec<(&str, Json)> = vec![("code", Json::String(error.code.clone())), ("message", Json::String(error.message.clone()))];
+                    if !error.detail.is_empty() {
+                        members.push(("detail", Json::String(error.detail.clone())));
+                    }
+                    if error.fatal {
+                        members.push(("fatal", Json::Bool(true)));
+                    }
+                    rendered.err.push_str(&go_json_ordered(&members));
+                    rendered.err.push('\n');
+                }
+            }
+        }
+        rendered
+    }
+
+    fn render_human(events: &[Event], is_tty: bool, verbose: bool, elapsed_ms: i64) -> Rendered {
+        let mut rendered = Rendered::default();
+        let clear = if is_tty { "\r\u{1b}[K" } else { "" };
+        for event in events {
+            if event.kind == KIND_DONE {
+                if let Some(done) = &event.done {
+                    rendered.exit_code = done.exit_code;
+                    let duration = go_duration(elapsed_ms);
+                    let summary = if done.exit_code != 0 {
+                        format!("{} failed {}  {duration} (exit: {})", paint("failed", "red", is_tty), event.command, done.exit_code)
+                    } else {
+                        format!("{} done  {}  {duration}", paint("ok", "green", is_tty), event.command)
+                    };
+                    rendered.out.push_str(clear);
+                    rendered.out.push_str(&summary);
+                    rendered.out.push('\n');
+                    continue;
+                }
+            }
+            if event.kind == KIND_ERROR {
+                if let Some(error) = &event.error {
+                    rendered.out.push_str(clear);
+                    rendered.err.push_str(&format!("{} error: {}\n", paint("error", "red", is_tty), error.message));
+                    if verbose && !error.detail.is_empty() {
+                        rendered.err.push_str(&error.detail);
+                        rendered.err.push('\n');
+                    }
+                    continue;
+                }
+            }
+            if event.kind == KIND_LOG && !event.message.is_empty() {
+                rendered.out.push_str(clear);
+                rendered.err.push_str(&format!("{} {}\n", paint("-", "dim", is_tty), event.message));
+                continue;
+            }
+            if event.kind == KIND_RESULT {
+                if let Some(data) = &event.data {
+                    rendered.out.push_str(clear);
+                    rendered.out.push_str(&format_result(&event.command, data, is_tty));
+                }
+            }
+            if event.kind == KIND_PROGRESS {
+                if let Some(progress) = &event.progress {
+                    if is_tty {
+                        rendered.out.push_str(&format!("\r{} {}% ({}/{}) {}", paint("...", "blue", true), progress.percent, progress.current, progress.total, progress.step));
+                    } else if progress.percent % 10 == 0 && progress.percent > 0 {
+                        rendered.out.push_str(&format!("progress: {}% {}\n", progress.percent, progress.step));
+                    }
+                }
+            }
+        }
+        rendered
+    }
+
+    fn render_markdown_stream(events: &[Event]) -> Rendered {
+        let mut rendered = Rendered::default();
+        for event in events {
+            if event.kind == KIND_DONE {
+                if let Some(done) = &event.done {
+                    rendered.exit_code = done.exit_code;
+                    continue;
+                }
+            }
+            if event.kind == KIND_RESULT {
+                if let Some(data) = &event.data {
+                    rendered.out.push_str(&format_markdown_result(&event.command, data));
+                }
+            }
+            if event.kind == KIND_ERROR {
+                if let Some(error) = &event.error {
+                    rendered.err.push_str(&format!("**Error: {}**\n", error.message));
+                    if !error.detail.is_empty() {
+                        rendered.err.push_str(&format!("> {}\n", error.detail));
+                    }
+                }
+            }
+        }
+        rendered
+    }
+
+    /// 📡️ The markdown a tool result carries for a stream: every result, every failure.
+    pub fn events_to_markdown(events: &[Event]) -> String {
+        let mut out = String::new();
+        for event in events {
+            if event.kind == KIND_RESULT {
+                if let Some(data) = &event.data {
+                    out.push_str(&format_markdown_result(&event.command, data));
+                }
+            }
+            if event.kind == KIND_ERROR {
+                if let Some(error) = &event.error {
+                    out.push_str(&format!("**Error: {}**\n", error.message));
+                }
+            }
+        }
+        out
+    }
+
+    /// 🔍️ The payload a result renders: its `data` member when it wraps one, else itself.
+    fn payload_of(data: &Json) -> Option<&Map<String, Json>> {
+        let raw = data.as_object()?;
+        Some(raw.get("data").and_then(Json::as_object).unwrap_or(raw))
+    }
+
+    /// 🔤️ The statute id a breach record names, whether its kind is a record or a bare id.
+    fn breach_kind(breach: &Map<String, Json>) -> String {
+        match breach.get("kind") {
+            Some(Json::Object(kind)) => go_field(kind.get("id")),
+            Some(Json::String(kind)) => kind.clone(),
+            _ => String::new(),
+        }
+    }
+
+    /// 📜️ The array members of a map member, empty when it is not an array.
+    fn array_of<'a>(members: &'a Map<String, Json>, key: &str) -> Option<&'a Vec<Json>> {
+        members.get(key).and_then(Json::as_array)
+    }
+
+    /// 🎯️ Renders a goal list with its tickets as the goal tree, twin of `RenderGoalTree`.
+    pub fn render_goal_tree(goals: &[Json], tickets: &[Json], markdown: bool) -> String {
+        let text = |value: &Map<String, Json>, key: &str| value.get(key).and_then(Json::as_str).unwrap_or_default().to_string();
+        let goal_records: Vec<semio_framework_repo_tree::GoalRecord> = goals
+            .iter()
+            .filter_map(Json::as_object)
+            .map(|goal| semio_framework_repo_tree::GoalRecord {
+                id: text(goal, "id"),
+                title: text(goal, "title"),
+                status: text(goal, "status"),
+                due_date: text(goal, "dueDate"),
+                created_at: text(goal, "createdAt"),
+                description: text(goal, "description"),
+                ..Default::default()
+            })
+            .collect();
+        let ticket_records: Vec<semio_framework_repo_tree::TicketRecord> = tickets
+            .iter()
+            .filter_map(Json::as_object)
+            .map(|ticket| {
+                let dates = ticket.get("date").and_then(Json::as_object);
+                let created = dates.map(|dates| text(dates, "created")).filter(|created| !created.is_empty()).unwrap_or_else(|| text(ticket, "createdAt"));
+                semio_framework_repo_tree::TicketRecord {
+                    id: text(ticket, "id"),
+                    slug: text(ticket, "slug"),
+                    title: text(ticket, "title"),
+                    description: text(ticket, "prompt"),
+                    summary: text(ticket, "summary"),
+                    goal: text(ticket, "goal"),
+                    parent: text(ticket, "parent"),
+                    status: text(ticket, "status"),
+                    started: created,
+                    finished: dates.map(|dates| text(dates, "finished")).unwrap_or_default(),
+                    ..Default::default()
+                }
+            })
+            .collect();
+        let roots = semio_framework_repo_tree::build_goal_tree(&goal_records, &ticket_records);
+        let format = if markdown { semio_framework_repo_tree::TreeRenderFormat::Markdown } else { semio_framework_repo_tree::TreeRenderFormat::Text };
+        semio_framework_repo_tree::render_goal_tree_nodes(&roots, format, &semio_framework_repo_tree::DefaultEntityRenderer)
+    }
+
+    /// 📑️ Renders one section and its children as the section tree, twin of `RenderSectionTree`.
+    pub fn render_section_tree(section: &Map<String, Json>, markdown: bool) -> String {
+        fn walk(out: &mut String, section: &Map<String, Json>, prefix: &str, is_last: bool, is_root: bool, markdown: bool) {
+            let mut data = Map::new();
+            data.insert("path".to_string(), section.get("path").cloned().filter(Json::is_string).unwrap_or(Json::String(String::new())));
+            data.insert("name".to_string(), section.get("name").cloned().filter(Json::is_string).unwrap_or(Json::String(String::new())));
+            for key in ["startLine", "endLine"] {
+                data.insert(key.to_string(), Json::from(section.get(key).and_then(Json::as_f64).unwrap_or_default()));
+            }
+            let children: Vec<&Map<String, Json>> = section.get("children").and_then(Json::as_array).map(|children| children.iter().filter_map(Json::as_object).collect()).unwrap_or_default();
+            let last = children.len().saturating_sub(1);
+            if markdown {
+                out.push_str(&format!("{prefix}{}\n", entity::render_markdown("section", &data)));
+                for (index, child) in children.iter().enumerate() {
+                    walk(out, child, &format!("{prefix}  "), index == last, false, markdown);
+                }
+                return;
+            }
+            let connector = match (is_root, is_last) {
+                (true, _) => "",
+                (false, true) => "└️─️─️ ",
+                (false, false) => "├️─️─️ ",
+            };
+            out.push_str(&format!("{prefix}{connector}{}\n", entity::render_human("section", &data, false)));
+            let next = match (is_root, is_last) {
+                (true, _) => prefix.to_string(),
+                (false, true) => format!("{prefix}    "),
+                (false, false) => format!("{prefix}│️   "),
+            };
+            for (index, child) in children.iter().enumerate() {
+                walk(out, child, &next, index == last, false, markdown);
+            }
+        }
+        let mut out = String::new();
+        walk(&mut out, section, "", true, true, markdown);
+        out
+    }
+
+    /// 🖥️ One result payload as the human lines it prints, twin of `formatResult`.
+    pub fn format_result(_command: &str, data: &Json, is_tty: bool) -> String {
+        let Some(payload) = payload_of(data) else { return format!("{} {}\n", paint("->", "blue", is_tty), go_json(data)) };
+        if let Some(markdown) = payload.get("markdown").and_then(Json::as_str) {
+            return markdown.to_string();
+        }
+        let mut out = String::new();
+        if let Some(analyze) = payload.get("analyze").and_then(Json::as_object) {
+            if let Some(metrics) = analyze.get("metrics").and_then(Json::as_object) {
+                let autofixable = if go_truthy(metrics.get("autofixable")) { format!(" ({} autofixable)", go_field(metrics.get("autofixable"))) } else { String::new() };
+                out.push_str(&format!("{} found {} breachs{autofixable}\n", paint("->", "blue", is_tty), go_field(metrics.get("total"))));
+            }
+            if let Some(breachs) = array_of(analyze, "breachs") {
+                for breach in breachs.iter().filter_map(Json::as_object) {
+                    let location = format!("{}:{}", go_sprint(breach.get("scope").unwrap_or(&Json::Null)), go_sprint(breach.get("line").unwrap_or(&Json::Null)));
+                    out.push_str(&format!("  {} {} {} {}\n", paint("breach", "red", is_tty), breach_kind(breach), paint(&location, "dim", is_tty), go_sprint(breach.get("summary").unwrap_or(&Json::Null))));
+                }
+            }
+            if !out.is_empty() {
+                return out;
+            }
+        }
+        if let Some(fix) = payload.get("fix").and_then(Json::as_object) {
+            return format!("{} fixed {} breachs ({} remaining)\n", paint("->", "blue", is_tty), go_field(fix.get("fixed")), go_field(fix.get("remaining")));
+        }
+        if let Some(repo) = payload.get("repo").and_then(Json::as_object) {
+            if let Some(goals) = array_of(repo, "goals") {
+                return render_goal_tree(goals, array_of(repo, "tickets").map(Vec::as_slice).unwrap_or_default(), false);
+            }
+        }
+        let width = if is_tty { ansi::terminal_width() } else { 0 };
+        let line = |kind: &str, entity_data: &Map<String, Json>| {
+            let rendered = entity::render_human(kind, entity_data, is_tty);
+            if width > 0 {
+                ansi::truncate(&rendered, width)
+            } else {
+                rendered
+            }
+        };
+        let list = |kind: &str, items: &[Json]| items.iter().filter_map(Json::as_object).map(|item| format!("{}\n", line(kind, item))).collect::<String>();
+        if let Some(repo) = payload.get("repo").and_then(Json::as_object) {
+            for (key, kind) in [("tickets", "ticket"), ("goals", "goal"), ("bundles", "bundle"), ("technologies", "technology"), ("folders", "folder"), ("files", "file"), ("contributors", "contributor"), ("policies", "policy"), ("statutes", "statute")] {
+                if let Some(items) = array_of(repo, key) {
+                    return list(kind, items);
+                }
+            }
+        }
+        for (key, kind) in [("todos", "todo"), ("sections", "section"), ("definitions", "definition"), ("drafts", "draft")] {
+            if let Some(items) = array_of(payload, key) {
+                return list(kind, items);
+            }
+        }
+        for key in ["ticket", "goal", "bundle", "folder", "policy", "contributor", "draft", "todo", "technology", "definition"] {
+            if let Some(found) = payload.get(key).and_then(Json::as_object) {
+                let mut found = found.clone();
+                if let Some(id) = payload.get("id").filter(|id| id.is_string()) {
+                    found.entry("id".to_string()).or_insert_with(|| id.clone());
+                }
+                return format!("{}\n", entity::render_human(key, &found, is_tty));
+            }
+        }
+        if let Some(file) = payload.get("file").and_then(Json::as_object) {
+            out.push_str(&format!("{}\n", line("file", file)));
+            fn sections(out: &mut String, items: &[Json], indent: &str, line: &dyn Fn(&str, &Map<String, Json>) -> String) {
+                for section in items.iter().filter_map(Json::as_object) {
+                    out.push_str(&format!("{indent}{}\n", line("section", section)));
+                    if let Some(children) = section.get("children").and_then(Json::as_array).filter(|children| !children.is_empty()) {
+                        sections(out, children, &format!("{indent}  "), line);
+                    }
+                }
+            }
+            if let Some(items) = array_of(file, "sections") {
+                sections(&mut out, items, "  ", &line);
+            }
+            if let Some(definitions) = array_of(file, "definitions") {
+                for definition in definitions.iter().filter_map(Json::as_object) {
+                    out.push_str(&format!("  {}\n", line("definition", definition)));
+                }
+            }
+            return out;
+        }
+        if let Some(section) = payload.get("section").and_then(Json::as_object) {
+            return render_section_tree(section, false);
+        }
+        for (key, value) in payload {
+            if let Some(found) = value.as_object() {
+                let kind = entity::infer_kind(key);
+                if !kind.is_empty() {
+                    return format!("{}\n", entity::render_human(kind, found, is_tty));
+                }
+            }
+        }
+        if let Some(id) = payload.get("id").and_then(Json::as_str) {
+            if let Some(path) = payload.get("path").and_then(Json::as_str) {
+                return format!("{} {id} {path}\n", paint("->", "blue", is_tty));
+            }
+            return format!("{} item {id}\n", paint("->", "blue", is_tty));
+        }
+        format!("{}\n", entity::render_human("root", payload, is_tty))
+    }
+
+    /// 📰️ One result payload as the markdown it prints, twin of `formatMarkdownResult`.
+    pub fn format_markdown_result(command: &str, data: &Json) -> String {
+        let Some(payload) = payload_of(data) else {
+            let mut root = Map::new();
+            root.insert("name".to_string(), Json::String(go_json(data)));
+            return format!("{}\n", entity::render_markdown_link("root", &root));
+        };
+        if let Some(markdown) = payload.get("markdown").and_then(Json::as_str) {
+            return markdown.to_string();
+        }
+        let mut out = String::new();
+        if let Some(analyze) = payload.get("analyze").and_then(Json::as_object) {
+            if let Some(metrics) = analyze.get("metrics").and_then(Json::as_object) {
+                out.push_str(&format!("- **Total Breachs**: {}\n", go_field(metrics.get("total"))));
+                if metrics.get("autofixable").is_some_and(|value| !value.is_null()) {
+                    out.push_str(&format!("- **Autofixable**: {}\n", go_field(metrics.get("autofixable"))));
+                }
+            }
+            if let Some(breachs) = array_of(analyze, "breachs") {
+                for breach in breachs.iter().filter_map(Json::as_object) {
+                    let kind = breach_kind(breach);
+                    out.push_str(&format!(
+                        "- [{kind}](repo://statute/{}) - {}:{} - {}\n",
+                        entity::path_to_uri_path(&kind),
+                        go_sprint(breach.get("scope").unwrap_or(&Json::Null)),
+                        go_sprint(breach.get("line").unwrap_or(&Json::Null)),
+                        go_sprint(breach.get("summary").unwrap_or(&Json::Null))
+                    ));
+                }
+            }
+            return out;
+        }
+        if let Some(repo) = payload.get("repo").and_then(Json::as_object) {
+            if let Some(goals) = array_of(repo, "goals") {
+                return render_goal_tree(goals, array_of(repo, "tickets").map(Vec::as_slice).unwrap_or_default(), true);
+            }
+        }
+        let wrapped = payload.get("repo").and_then(Json::as_object);
+        for (in_repo, key, kind) in [
+            (true, "tickets", "ticket"),
+            (true, "goals", "goal"),
+            (true, "bundles", "bundle"),
+            (true, "technologies", "technology"),
+            (true, "folders", "folder"),
+            (true, "files", "file"),
+            (true, "contributors", "contributor"),
+            (true, "policies", "policy"),
+            (true, "statutes", "statute"),
+            (false, "todos", "todo"),
+            (false, "sections", "section"),
+            (false, "definitions", "definition"),
+            (false, "drafts", "draft"),
+        ] {
+            let container = if in_repo { wrapped } else { Some(payload) };
+            if let Some(items) = container.and_then(|container| array_of(container, key)) {
+                return items.iter().filter_map(Json::as_object).map(|item| format!("{}\n", entity::render_markdown(kind, item))).collect();
+            }
+        }
+        let is_list = command.ends_with(" list") || command.ends_with(" tree");
+        for key in ["ticket", "goal", "bundle", "folder", "file", "definition", "contributor", "policy", "technology", "draft", "todo", "checkpoint"] {
+            if let Some(found) = payload.get(key).and_then(Json::as_object) {
+                let mut found = found.clone();
+                if let Some(id) = payload.get("id").filter(|id| id.is_string()) {
+                    found.entry("id".to_string()).or_insert_with(|| id.clone());
+                }
+                if key == "file" && !is_list {
+                    return format_markdown_file(&found);
+                }
+                if is_list {
+                    return format!("{}\n", entity::render_markdown(key, &found));
+                }
+                return format!("{}\n", entity::render_markdown_link(key, &found));
+            }
+        }
+        if let Some(section) = payload.get("section").and_then(Json::as_object) {
+            return render_section_tree(section, true);
+        }
+        for (key, value) in payload {
+            if let Some(found) = value.as_object() {
+                let kind = entity::infer_kind(key);
+                if !kind.is_empty() {
+                    return format!("{}\n", entity::render_markdown_link(kind, found));
+                }
+            }
+        }
+        format!("{}\n", entity::render_markdown_link("root", payload))
+    }
+
+    /// 📄️ One file with its sections and definitions as markdown, twin of `formatMarkdownFile`.
+    fn format_markdown_file(file: &Map<String, Json>) -> String {
+        let mut out = format!("{}\n", entity::render_markdown_link("file", file));
+        let owner = match file.get("id").and_then(Json::as_str).filter(|id| !id.is_empty()) {
+            Some(id) => id.to_string(),
+            None => file.get("path").and_then(Json::as_str).unwrap_or_default().to_string(),
+        };
+        fn sections(out: &mut String, items: &[Json], indent: &str, owner: &str) {
+            for section in items.iter().filter_map(Json::as_object) {
+                let mut section = section.clone();
+                section.entry("filePath".to_string()).or_insert_with(|| Json::String(owner.to_string()));
+                out.push_str(&format!("{indent}{}\n", entity::render_markdown("section", &section)));
+                if let Some(children) = section.get("children").and_then(Json::as_array).filter(|children| !children.is_empty()) {
+                    sections(out, children, &format!("{indent}  "), owner);
+                }
+            }
+        }
+        if let Some(items) = array_of(file, "sections") {
+            sections(&mut out, items, "  ", &owner);
+        }
+        if let Some(definitions) = array_of(file, "definitions") {
+            for definition in definitions.iter().filter_map(Json::as_object) {
+                let mut definition = definition.clone();
+                definition.entry("filePath".to_string()).or_insert_with(|| Json::String(owner.clone()));
+                out.push_str(&format!("  {}\n", entity::render_markdown("definition", &definition)));
+            }
+        }
+        out
+    }
+
+    //#endregion 🌩️Renderers
+

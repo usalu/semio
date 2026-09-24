@@ -18,7 +18,7 @@ import protocolSchema from "../../🧬️schema/🔣️.json";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, parseFeature, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, validateAllContracts, validateResult, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, parseFeature, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, repositoryContractBreaches, validateResult, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
@@ -36,6 +36,16 @@ const repoRoot = repoRootFromHere();
  */
 const repoContributions = discoverTestContributions(repoRoot);
 const repoRegistry = loadOracleRegistry(repoRoot);
+
+/**
+ * 🧩️ The repository's discovered cases, its oracle-purity scan and its repository-wide contract breaches, taken ONCE
+ * for this file for the same reason as the contribution scan above: each is a full walk or read of the repository, and
+ * several laws below each paid for them again inside their own time budget. A law now measures its assertion over
+ * these outcomes; a budget no longer measures how loaded the machine is.
+ */
+const repoCases = discoverTestCases(repoRoot);
+const repoOracleHits = oracleImportsInProduction(repoRoot, repoRegistry, repoCases);
+const repoWideBreaches = repositoryContractBreaches(repoRoot, repoRegistry, repoCases, repoOracleHits);
 
 /** 🖥️ This module's own committed case — the one discovery must always find, named as it sits on disk. */
 const HOST_PROTOCOL_PARITY_CASE_DIR = `${testTaxonomy(repoRoot).testDomainPath}/${testTaxonomy(repoRoot).testsDirName}/🖥️host-protocol-parity`;
@@ -253,35 +263,24 @@ describe("🔍️ discovery and contract", () => {
   });
 
   test("discovery finds the committed cases and never returns a compose path", () => {
-    const cases = discoverTestCases(repoRoot);
+    const cases = repoCases;
     expect(cases.length).toBeGreaterThan(0);
     for (const area of exemptAreas()) expect(cases.every((entry) => !entry.owner.startsWith(`${area}/`) && !entry.caseDir.includes(`${area}/`)), `an exempt area leaked into discovery: ${area}`).toBe(true);
     expect(cases.some((entry) => entry.case === basename(HOST_PROTOCOL_PARITY_CASE_DIR))).toBe(true);
   });
 
-  // ⏱️ Two FULL repository discoveries back to back, and discovery now walks 164 cases and 157
-  // vocabulary directories where it walked ~99 and ~88 a wave ago. At that size the pair lands around
-  // 5.1 s and was observed timing out at 5130.40 ms against bun's 5 s default under concurrent load,
-  // so this test gets the same explicit repo-walking budget as its siblings below rather than a 2.6%
-  // margin left to chance. Raising the budget does not hide a regression: cost here is proportional
-  // to the committed case count, and the contract phase is what fails if that count is wrong.
+  // ⏱️ One fresh repository walk compared with the file's own discovery: the second walk the law needs, not three.
   test(
     "discovery is idempotent",
     () => {
-      expect(JSON.stringify(discoverTestCases(repoRoot))).toBe(JSON.stringify(discoverTestCases(repoRoot)));
+      expect(JSON.stringify(discoverTestCases(repoRoot))).toBe(JSON.stringify(repoCases));
     },
     30_000,
   );
 
-  // ⏱️ Repo-wide: also runs the oracle-purity scan over every non-excluded path, so it needs the
-  // quick-level budget rather than bun's 5 s default.
-  test(
-    "every committed case satisfies the frozen contract",
-    () => {
-      expect(validateAllContracts(repoRoot).map((breach) => `${breach.kind}:${breach.scope}:${breach.summary}`)).toEqual([]);
-    },
-    30_000,
-  );
+  test("every committed case satisfies the frozen contract", () => {
+    expect([...caseContractBreaches(repoRoot, repoCases, repoRegistry), ...repoWideBreaches].map((breach) => `${breach.kind}:${breach.scope}:${breach.summary}`)).toEqual([]);
+  }, 30_000);
 
 });
 
@@ -393,7 +392,7 @@ describe("🔒️ dependency ratchet", () => {
 });
 
 describe("📈️ non-aggregate metrics", () => {
-  const cases = discoverTestCases(repoRoot);
+  const cases = repoCases;
   const results = [
     { testId: "o::c::s1::typescript::subject", owner: "o", case: "c", scenario: "s1", implementation: "typescript" as const, role: "subject" as const, level: "quick" as const, status: "passed" as const, durationMs: 1, output: { rawHash: "", projectionHash: "" }, diagnostics: [] },
     { testId: "o::c::s1::rust::subject", owner: "o", case: "c", scenario: "s1", implementation: "rust" as const, role: "subject" as const, level: "quick" as const, status: "passed" as const, durationMs: 1, output: { rawHash: "", projectionHash: "" }, diagnostics: [] },
@@ -688,7 +687,7 @@ describe("🪆️ case above subset", () => {
   // `🗽️obj/…/🎨️material/🧪️tests/`, so no live case may sit above the subset its catalog names.
   test("no live case sits above the subset its mutation catalog names", () => {
     const liveRegistry = repoRegistry;
-    const scopes = discoverTestCases(repoRoot)
+    const scopes = repoCases
       .flatMap((discovered) => caseAboveSubsetBreaches(discovered, parseFeature(readFileSync(join(repoRoot, discovered.featurePath), "utf8")), liveRegistry))
       .map((entry) => entry.scope);
     expect(scopes).toEqual([]);
@@ -756,6 +755,14 @@ describe("🧫️ mutation without fixture", () => {
     expect(breaches[0]!.summary).toContain("change-b");
   });
 
+  test("a kind the capability's catalog lists in deferredKinds is left to mutation-kinds-deferred, and only that kind", () => {
+    const manifest = manifestWith([mutation("change-a", "test-fixture-1-mutate"), mutation("change-b", "test-fixture-1-mutate")]);
+    const deferring = { ...catalog("test-fixture-1-mutate", []), kinds: ["change-b"], deferredKinds: ["change-a"] } as unknown as Catalog;
+    expect(mutationFixtureBreaches(registryWith([manifest], [], [deferring])).map((row) => row.summary)).toEqual([expect.stringContaining("change-b")]);
+    const elsewhere = { ...catalog("unrelated-capability", []), kinds: ["change-b"], deferredKinds: ["change-a"] } as unknown as Catalog;
+    expect(mutationFixtureBreaches(registryWith([manifest], [], [elsewhere])).length).toBe(2);
+  });
+
   test("a vector registered under a DIFFERENT catalog's capability does not discharge it — capability is the only correlation this rule trusts", () => {
     const manifest = manifestWith([mutation("change-a", "test-fixture-1-mutate")]);
     expect(mutationFixtureBreaches(registryWith([manifest], [], [catalog("unrelated-capability", ["change-a"])])).length).toBe(1);
@@ -811,23 +818,22 @@ describe("🧫️ mutation without fixture", () => {
 
 describe("🚫️ oracle purity", () => {
   test("no production source imports a registered oracle", () => {
-    expect(oracleImportsInProduction(repoRoot).map((hit) => `${hit.path} → ${hit.oracle}`)).toEqual([]);
-  }, 60_000);
+    expect(repoOracleHits.map((hit) => `${hit.path} → ${hit.oracle}`)).toEqual([]);
+  });
 
   test("narrowing a run to one case must not make other cases' adapters look like production source", () => {
     // 🧭️Regression: the exclusion set was once derived from the CALLER's selected cases, so
     // `contract --case X` reported every other case's adapter as a production oracle import.
-    const all = discoverTestCases(repoRoot);
-    expect(all.length).toBeGreaterThan(1);
-    const single = all.slice(0, 1);
-    expect(validateAllContracts(repoRoot, single).filter((breach) => breach.id === "oracle-in-production")).toEqual([]);
-  }, 60_000);
+    expect(repoCases.length).toBeGreaterThan(1);
+    expect(caseContractBreaches(repoRoot, repoCases.slice(0, 1), repoRegistry).filter((breach) => breach.id === "oracle-in-production")).toEqual([]);
+    expect(repoWideBreaches.filter((breach) => breach.id === "oracle-in-production").map((breach) => breach.scope)).toEqual(repoOracleHits.map((hit) => hit.path));
+  });
 });
 
 describe("🧩️ cross-language oracle hosts", () => {
   test("a contributed host package is selected for whichever implementation declares it, not for Rust alone", () => {
     const registry = repoRegistry;
-    const owners = new Set(discoverTestCases(repoRoot).map((entry) => entry.owner));
+    const owners = new Set(repoCases.map((entry) => entry.owner));
     const selected = [...owners].flatMap((owner) => (["rust", "typescript", "python", "go", "dotnet"] as const).flatMap((implementation) => oracleHostPackagesFor(registry, owner, implementation).map((entry) => entry.implementation)));
     // 🧩️Every implementation an owner declared must be reachable through the selector; a value that
     // parses, merges and is then discarded is a manifest field that silently does nothing.
@@ -911,7 +917,7 @@ describe("🔒️ recorded production debt", () => {
 
   test("only the recorded paths are excused — any other production import is still a breach", () => {
     const recorded = new Set(repoRegistry.oracles.flatMap((oracle) => oracle.productionDebt?.reachableFrom ?? []));
-    for (const hit of oracleImportsInProduction(repoRoot)) expect(recorded.has(hit.path), `unrecorded oracle import at ${hit.path}`).toBe(true);
+    for (const hit of repoOracleHits) expect(recorded.has(hit.path), `unrecorded oracle import at ${hit.path}`).toBe(true);
   }, 60_000);
 
   test("every registered oracle names its capabilities, comparison profiles and a rationale that scopes it", () => {
@@ -1390,7 +1396,7 @@ describe("🧪️ projected vector storage", () => {
 describe("🔬️ subject selection", () => {
   test("an oracle implemented in the case's own adapter is never also dispatched as that case's subject", async () => {
     const { oracleDecision, subjectImplementations } = await import("../../⚖️parity/📋️orchestration/🟦️.ts");
-    const cases = new Map(discoverTestCases(repoRoot).map((entry) => [entry.caseDir, entry] as const));
+    const cases = new Map(repoCases.map((entry) => [entry.caseDir, entry] as const));
     const hosting = repoRegistry.oracles.filter((oracle) => oracle.hostPath !== undefined && cases.has(oracle.hostPath));
     expect(hosting.length).toBeGreaterThan(0);
     for (const oracle of hosting) {
@@ -1405,7 +1411,7 @@ describe("🔬️ subject selection", () => {
   test("a package of an enclosing framework never makes a nested product's reference adapter a subject", async () => {
     const { oracleDecision, subjectImplementations } = await import("../../⚖️parity/📋️orchestration/🟦️.ts");
     const product = "🧰️framework/🛍️products/🦑️repo";
-    const hosted = discoverTestCases(repoRoot).filter((entry) => entry.owner.startsWith(`${product}/`) && entry.adapters.typescript !== undefined && entry.adapters.rust !== undefined);
+    const hosted = repoCases.filter((entry) => entry.owner.startsWith(`${product}/`) && entry.adapters.typescript !== undefined && entry.adapters.rust !== undefined);
     let referenceOnly = 0;
     for (const discovered of hosted) {
       const decision = oracleDecision(repoRoot, discovered, "exhaustive");

@@ -24,7 +24,7 @@ impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for 
         agg_inverse(&SemioAnimationMutation::InsertTimeline(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-timeline", "Zeitleiste einfügen")
+        protocol::LocalizedLabel::native("Insert timeline", "Zeitleiste einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

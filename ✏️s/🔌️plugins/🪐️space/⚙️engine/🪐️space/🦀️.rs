@@ -1145,10 +1145,13 @@ pub async fn create_space_app() -> App {
         .action_interactive_job("compiledDagEngagementInput", InteractiveJobClassification::Migrated).await
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated).await
         .action_interactive_job("exportMedia", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_destructive("exportMedia").await
         .action_interactive_job("importMedia", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("importMediaPayload", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("exportStudioPack", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_destructive("exportStudioPack").await
         .action_interactive_job("exportStudioDsl", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_destructive("exportStudioDsl").await
         .action_interactive_job("importSpacePack", InteractiveJobClassification::Migrated).await
         .action_interactive_job("importSpacePackPayload", InteractiveJobClassification::Migrated).await
         .action_interactive_job("openSpace", InteractiveJobClassification::Migrated).await

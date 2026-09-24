@@ -10,6 +10,23 @@ fn repository_root_is_refused_as_a_workspace_folder() {
     assert!(HeadlessWorkspace::reject_repository_root_workspace(&std::env::temp_dir()).is_ok());
 }
 
+/// 🤖️ An agent session beats presence on every hub connection and on nothing else, and its beat
+/// claims no admitted identity: the hub stamps label, user and principal kind for the socket.
+#[test]
+fn an_agent_session_beats_presence_once_per_hub_connection_and_claims_no_identity() {
+    use store::sync::{ArtifactEvent, ArtifactSyncStatus, RemoteState};
+    let status = |remote| ArtifactEvent::Status(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote, acknowledged_head: None });
+    assert!(agent_presence_moment(&ArtifactEvent::Session { actor: "hub.v1.agent".to_string(), color: 3 }));
+    assert!(agent_presence_moment(&status(RemoteState::Live { peer_count: 1 })));
+    for quiet in [status(RemoteState::Connecting), status(RemoteState::Detached), status(RemoteState::Backoff { retry_in_ms: 500 }), ArtifactEvent::Presence { peers: Vec::new() }, ArtifactEvent::DocumentBackbone { message: Vec::new() }] {
+        assert!(!agent_presence_moment(&quiet), "{quiet:?}");
+    }
+    let peer = agent_presence_peer("agent:local#sess_1");
+    assert_eq!(peer.actor, "agent:local#sess_1");
+    assert_eq!((peer.label, peer.user_id, peer.role, peer.color, peer.principal_kind), (None, None, None, None, None));
+    assert!(peer.presence_pack.is_none() && peer.interaction.is_none() && peer.views.is_empty() && peer.tool_run.is_none());
+}
+
 #[test]
 fn probe_pack_schema_hash_matches_the_cross_process_descriptor_contract() {
     let actual = store::os_pack::schema_hash(&probe_record_spec()).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
@@ -28,16 +45,6 @@ fn mcp_probe_document_transport_binds_full_scope_and_exact_surface_authority() {
         store::sync::PersistenceBinding::Folder { .. } => panic!("hub origin must bind a hub persistence binding"),
     }
     assert!(!include_str!("../../🦀️.rs").contains("probe_document_socket_surface"));
-}
-
-#[test]
-fn gis_map_inference_selector_requires_the_exact_kind_and_schema_pair() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔐️canonical-checkpoint-resource/🔣️.json")).unwrap();
-    let selector = &fixture["selector"];
-    assert!(is_gis_map_descriptor(selector["artifactKind"].as_str().unwrap(), selector["artifactSchema"].as_str().unwrap()));
-    for hostile in selector["hostile"].as_array().unwrap() {
-        assert!(!is_gis_map_descriptor(hostile["artifactKind"].as_str().unwrap(), hostile["artifactSchema"].as_str().unwrap()), "partial GIS identity {} must fail closed", hostile["name"].as_str().unwrap());
-    }
 }
 
 fn empty_catalog() -> Arc<Catalog> {
@@ -61,7 +68,8 @@ fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
     binding.install_snapshot_for_test(snapshot);
     let repo_root = find_repo_root().expect("repo root");
     let corpus: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repo_root.join("🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus")).expect("execution-target corpus json");
-    let lease: semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 = semio_framework_os_kernel::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap()).expect("manifest");
+    let mut lease: semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 = semio_framework_os_kernel::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap()).expect("manifest");
+    lease.scope = DocumentScope::new("space-a", "shared-doc");
     let descriptor = load_package_descriptor(&repo_root.join("✏️s/🔌️plugins/🌍️gis")).expect("installed GIS descriptor test input");
     binding.install_catalog_for_test(vec![remote::AuthorizedPackageSelection { scope: lease.scope.clone(), descriptor_digest_v1: lease.descriptor_digest_v1.clone(), lease, descriptor }]);
     let mut workspace = HeadlessWorkspace::new(WorkspaceOrigin::Hub { base_url: "https://hub.invalid".to_string(), space_id: "space-a".to_string() }, "forged-local-principal".to_string(), vec!["admin".to_string()], empty_catalog());
@@ -74,7 +82,7 @@ fn authenticated_hub_workspace_resources_are_snapshot_only_scoped_and_fail_close
     let workspace = authenticated_hub_workspace_fixture();
     let resources = workspace.list_resources().unwrap();
     let uris: Vec<_> = resources.iter().map(|resource| resource.uri.as_str()).collect();
-    assert_eq!(uris, vec!["semio://workspace", "semio://workspace/artifacts", "semio://workspace/scopes/space-a/shared-doc/descriptor", "semio://workspace/scopes/space-a/shared-doc/checkpoint",]);
+    assert_eq!(uris, vec!["semio://workspace/scopes/space-a/shared-doc/descriptor", "semio://workspace/scopes/space-a/shared-doc/checkpoint",]);
     let workspace_body = workspace.read_resource("semio://workspace").unwrap()[0].text.clone().unwrap();
     assert!(workspace_body.contains("user-a"));
     assert!(!workspace_body.contains("forged-local-principal"));
@@ -90,7 +98,8 @@ fn authenticated_hub_workspace_resources_are_snapshot_only_scoped_and_fail_close
     let schema: serde_json::Value = serde_json::from_str(&schema_body).unwrap();
     assert_eq!(schema["artifactId"], "shared-doc");
     assert_eq!(schema["spaceId"], "space-a");
-    assert!(schema["schema"].is_string() && schema["artifactKind"].is_string(), "{schema_body}");
+    assert!(schema["schema"].is_string(), "{schema_body}");
+    assert_eq!(schema["artifactKind"], "s.gis.gismap", "a hub document's artifact kind is the dialect its own lease names (`parentDialect`), never the descriptor's manifest kind `note.document`: {schema_body}");
     for uri in ["semio://artifact/shared-doc", "semio://artifact/shared-doc/validation"] {
         let error = workspace.read_resource(uri).unwrap_err();
         assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
@@ -557,7 +566,7 @@ async fn a_guest_backed_codec_with_no_registered_route_refuses_and_counts_its_ca
 async fn a_guest_backed_codec_refuses_the_two_operations_the_wit_does_not_export() {
     let compiled = guest_compile_dsl("", "").await.expect_err("there is no codec.compile-dsl");
     let store::VcsError::Deserialize(message) = &compiled else { panic!("compile-dsl must refuse by decode, got {compiled:?}") };
-    assert!(message.contains("has no `compile-dsl`") && message.contains("pack-schema-hash, genesis, print-mirror and apply-ops"), "{message}");
+    assert!(message.contains("has no `compile-dsl`") && message.contains("pack-schema-hash, genesis, print-mirror, apply-ops and replay-envelopes"), "{message}");
 
     let envelope = store::os_spr::MutationEnvelope {
         mutation_id: store::os_spr::MutationId("m1".to_string()),
@@ -596,6 +605,7 @@ fn bound_inference_row(required: bool, encoding: &str) -> semio_framework::Contr
             output_schema: "{\"type\":\"object\"}".into(),
             progress_unit: "cells".into(),
             artifact_binding: Some(semio_framework::InferenceArtifactBinding { field: "document".into(), encoding: encoding.into(), required }),
+            commit: None,
         }),
     }
 }

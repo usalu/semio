@@ -25,7 +25,7 @@ impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for CreateCo
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create column {}", self.name), &format!("Stütze {} erstellen", self.name))
+        protocol::LocalizedLabel::native(&format!("Create column {}", self.name), &format!("Spalte {} erstellen", self.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.name.clone()]

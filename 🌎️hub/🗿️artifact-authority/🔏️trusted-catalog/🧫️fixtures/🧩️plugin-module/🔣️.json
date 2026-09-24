@@ -1,0 +1,2121 @@
+{
+  "schema": "semio.hub.trusted-plugin-module-fixture/v1",
+  "record": {
+    "pluginId": "note",
+    "packageId": "semio:note",
+    "version": "0.1.0",
+    "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f"
+  },
+  "contents": {
+    "🗒️note/semio_s_plugin_note_component.core.wasm": "0061736d01000000",
+    "🗒️note/semio_s_plugin_note_component.js": "6578706f727420636f6e73742072656163746f72203d207b7d3b0a",
+    "🗒️note/🌉️bridge.js": "6578706f7274206173796e632066756e6374696f6e206372656174654163746f724170692829207b7d0a",
+    "🗒️note/🔣️.json": "7b226d616e6966657374223a7b22706c7567696e4964223a226e6f7465227d7d0a",
+    "🗒️note/🛂️.descriptor.semio": "73656d696f2d64657363726970746f722d66697874757265",
+    "🗒️note/🟨️.js": "6578706f72742066756e6374696f6e206c6f672829207b7d0a",
+    "🪞️vendor/🔤️guestslim-typst-fonts.bin": "666f6e7473",
+    "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js": "6578706f727420636f6e73742073747265616d73203d207b7d3b0a"
+  },
+  "canonical": {
+    "bytesUtf8": "{\"schema\":\"semio.hub.trusted-plugin-module/v1\",\"pluginId\":\"note\",\"packageId\":\"semio:note\",\"version\":\"0.1.0\",\"sourceComponentSha256\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"sourceDescriptorByteSha256\":\"480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f\",\"moduleDirectory\":\"🗒️note\",\"entry\":\"🗒️note/🌉️bridge.js\",\"files\":[{\"path\":\"🗒️note/semio_s_plugin_note_component.core.wasm\",\"byteLength\":8,\"sha256\":\"93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476\",\"blake3\":\"0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4\"},{\"path\":\"🗒️note/semio_s_plugin_note_component.js\",\"byteLength\":27,\"sha256\":\"8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648\",\"blake3\":\"102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911\"},{\"path\":\"🗒️note/🌉️bridge.js\",\"byteLength\":42,\"sha256\":\"30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a\",\"blake3\":\"937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303\"},{\"path\":\"🗒️note/🔣️.json\",\"byteLength\":33,\"sha256\":\"34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309\",\"blake3\":\"1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce\"},{\"path\":\"🗒️note/🛂️.descriptor.semio\",\"byteLength\":24,\"sha256\":\"480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f\",\"blake3\":\"3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e\"},{\"path\":\"🗒️note/🟨️.js\",\"byteLength\":25,\"sha256\":\"411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06\",\"blake3\":\"8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4\"},{\"path\":\"🪞️vendor/🔤️guestslim-typst-fonts.bin\",\"byteLength\":5,\"sha256\":\"8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14\",\"blake3\":\"36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc\"},{\"path\":\"🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js\",\"byteLength\":27,\"sha256\":\"57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae\",\"blake3\":\"b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0\"}]}\n",
+    "sha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+    "blake3": "c674363eac37c30a96c763600bb618e5770402bc612977810248ead075550051",
+    "pretty": "{\n  \"schema\": \"semio.hub.trusted-plugin-module/v1\",\n  \"pluginId\": \"note\",\n  \"packageId\": \"semio:note\",\n  \"version\": \"0.1.0\",\n  \"sourceComponentSha256\": \"1111111111111111111111111111111111111111111111111111111111111111\",\n  \"sourceDescriptorByteSha256\": \"480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f\",\n  \"moduleDirectory\": \"🗒️note\",\n  \"entry\": \"🗒️note/🌉️bridge.js\",\n  \"files\": [\n    {\n      \"path\": \"🗒️note/semio_s_plugin_note_component.core.wasm\",\n      \"byteLength\": 8,\n      \"sha256\": \"93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476\",\n      \"blake3\": \"0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4\"\n    },\n    {\n      \"path\": \"🗒️note/semio_s_plugin_note_component.js\",\n      \"byteLength\": 27,\n      \"sha256\": \"8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648\",\n      \"blake3\": \"102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911\"\n    },\n    {\n      \"path\": \"🗒️note/🌉️bridge.js\",\n      \"byteLength\": 42,\n      \"sha256\": \"30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a\",\n      \"blake3\": \"937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303\"\n    },\n    {\n      \"path\": \"🗒️note/🔣️.json\",\n      \"byteLength\": 33,\n      \"sha256\": \"34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309\",\n      \"blake3\": \"1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce\"\n    },\n    {\n      \"path\": \"🗒️note/🛂️.descriptor.semio\",\n      \"byteLength\": 24,\n      \"sha256\": \"480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f\",\n      \"blake3\": \"3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e\"\n    },\n    {\n      \"path\": \"🗒️note/🟨️.js\",\n      \"byteLength\": 25,\n      \"sha256\": \"411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06\",\n      \"blake3\": \"8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4\"\n    },\n    {\n      \"path\": \"🪞️vendor/🔤️guestslim-typst-fonts.bin\",\n      \"byteLength\": 5,\n      \"sha256\": \"8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14\",\n      \"blake3\": \"36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc\"\n    },\n    {\n      \"path\": \"🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js\",\n      \"byteLength\": 27,\n      \"sha256\": \"57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae\",\n      \"blake3\": \"b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0\"\n    }\n  ]\n}\n"
+  },
+  "cases": [
+    {
+      "id": "valid",
+      "schemaValid": true,
+      "accepted": true,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "unknown-field",
+      "schemaValid": false,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ],
+        "note": 1
+      }
+    },
+    {
+      "id": "wrong-schema",
+      "schemaValid": false,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v2",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "traversal-path",
+      "schemaValid": false,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/../🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "absolute-path",
+      "schemaValid": false,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "/🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "query-path",
+      "schemaValid": false,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js?v=1",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "module-directory-slash",
+      "schemaValid": false,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note/sub",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-length",
+      "schemaValid": false,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 0,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "uppercase-digest",
+      "schemaValid": false,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411AF1746AD9CB9DD09EA6059962A44F3DC16DE5B49DE3CF1C2A140FFBED1C06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "too-few-files",
+      "schemaValid": false,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          }
+        ]
+      }
+    },
+    {
+      "id": "unsorted",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          }
+        ]
+      }
+    },
+    {
+      "id": "duplicate-path",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "outside-roots",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🧵️shard/x.js",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry-not-bridge",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🟨️.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry-outside-directory",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🪞️vendor/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry-missing",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "descriptor-json-missing",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "descriptor-pack-missing",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "descriptor-pack-differs",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "source-component-differs",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1212121212121212121212121212121212121212121212121212121212121212",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "source-descriptor-differs",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "1313131313131313131313131313131313131313131313131313131313131313",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "identity-differs",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "draw",
+        "packageId": "semio:note",
+        "version": "0.1.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "version-differs",
+      "schemaValid": true,
+      "accepted": false,
+      "manifest": {
+        "schema": "semio.hub.trusted-plugin-module/v1",
+        "pluginId": "note",
+        "packageId": "semio:note",
+        "version": "0.2.0",
+        "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceDescriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+        "moduleDirectory": "🗒️note",
+        "entry": "🗒️note/🌉️bridge.js",
+        "files": [
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+            "byteLength": 8,
+            "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+            "blake3": "0d66d411a21e80d93afa1487b002a1867432c04ba1d08dc790d259639f6a69c4"
+          },
+          {
+            "path": "🗒️note/semio_s_plugin_note_component.js",
+            "byteLength": 27,
+            "sha256": "8e7ecadb4fac07963a04a74dc9d46a0eefa6fcf8e429ec87ef0c706acd1d5648",
+            "blake3": "102aae1e0dd8cf7df6584b012dfcfe1df0bb841536b0048103e09c7bd47d7911"
+          },
+          {
+            "path": "🗒️note/🌉️bridge.js",
+            "byteLength": 42,
+            "sha256": "30b9e9a13dfeafec35f718da93b72307d8115a55e2e43165a926eb0b4645bb2a",
+            "blake3": "937fc866aa5a90e213fb79785b626d9e07a3ab21f8a498bd058dcc8dc3e5a303"
+          },
+          {
+            "path": "🗒️note/🔣️.json",
+            "byteLength": 33,
+            "sha256": "34b66380d568922b0607f9079466e8c525c306defc20fd1dd4a0cb2b96969309",
+            "blake3": "1032a5da2f1644998e6b0a4d68e93c81bd8d068012d6e3de80e3a5b8932758ce"
+          },
+          {
+            "path": "🗒️note/🛂️.descriptor.semio",
+            "byteLength": 24,
+            "sha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "blake3": "3e36ea2ca9a78bc46fab25674c1c3ef11c98b03c3fb93deb9ea7eeddada5838e"
+          },
+          {
+            "path": "🗒️note/🟨️.js",
+            "byteLength": 25,
+            "sha256": "411af1746ad9cb9dd09ea6059962a44f3dc16de5b49de3cf1c2a140ffbed1c06",
+            "blake3": "8efece0c5fbc909506fcf9c2afd47793c38cd255de92c2da31a1e8760cc641b4"
+          },
+          {
+            "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+            "byteLength": 5,
+            "sha256": "8d50c2feb7ab837497cb1244199c19ae6d28256c81d197e7446fd6e55a564f14",
+            "blake3": "36247a2bde73c291e935f058d9aba7f56325e1960ff337879b8bdf78b21fbbbc"
+          },
+          {
+            "path": "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+            "byteLength": 27,
+            "sha256": "57018039329748cc54c206678f58a9f8232357c0906610c5ec93d54f6f5f46ae",
+            "blake3": "b6b2eeb3e5be77f0512202e84da214d9f8d0d61c9e70a1f982567d96010c74c0"
+          }
+        ]
+      }
+    }
+  ],
+  "fileCases": [
+    {
+      "id": "exact",
+      "path": "🗒️note/🟨️.js",
+      "contentHex": "6578706f72742066756e6374696f6e206c6f672829207b7d0a",
+      "accepted": true
+    },
+    {
+      "id": "tampered",
+      "path": "🗒️note/🟨️.js",
+      "contentHex": "6478706f72742066756e6374696f6e206c6f672829207b7d0a",
+      "accepted": false
+    },
+    {
+      "id": "truncated",
+      "path": "🗒️note/🟨️.js",
+      "contentHex": "78706f72742066756e6374696f6e206c6f672829207b7d0a",
+      "accepted": false
+    },
+    {
+      "id": "appended",
+      "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+      "contentHex": "666f6e747321",
+      "accepted": false
+    }
+  ],
+  "index": [
+    {
+      "id": "valid",
+      "schemaValid": true,
+      "accepted": true,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.symbol"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "unknown-field",
+      "schemaValid": false,
+      "accepted": false,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.symbol"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js",
+            "extra": true
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-bundle-length",
+      "schemaValid": false,
+      "accepted": false,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.symbol"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 0,
+            "entry": "🖍️draw/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "duplicate-dependency",
+      "schemaValid": false,
+      "accepted": false,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.symbol"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio",
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing-dialects",
+      "schemaValid": false,
+      "accepted": false,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.symbol"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "duplicate-dialect",
+      "schemaValid": false,
+      "accepted": false,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.drawing"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "unsorted-dialects",
+      "schemaValid": true,
+      "accepted": false,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.symbol",
+              "s.draw.drawing"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "unsorted",
+      "schemaValid": true,
+      "accepted": false,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          },
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.symbol"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "duplicate-plugin",
+      "schemaValid": true,
+      "accepted": false,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "note",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.symbol"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "extension",
+      "schemaValid": true,
+      "accepted": true,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.symbol"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note-extension-ink",
+            "packageId": "semio:note-extension-ink",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "note"
+            ],
+            "dialectArtifactKinds": [],
+            "extendsPluginId": "note",
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖋️note-extension-ink/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "extends-outside-dependencies",
+      "schemaValid": true,
+      "accepted": false,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.symbol"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "extendsPluginId": "draw",
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing-extends",
+      "schemaValid": false,
+      "accepted": false,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.symbol"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "blank-extends",
+      "schemaValid": false,
+      "accepted": false,
+      "index": {
+        "schema": "semio.hub.trusted-plugin-module-index/v1",
+        "generationId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "modules": [
+          {
+            "pluginId": "draw",
+            "packageId": "semio:draw",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [],
+            "dialectArtifactKinds": [
+              "s.draw.drawing",
+              "s.draw.symbol"
+            ],
+            "extendsPluginId": null,
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🖍️draw/🌉️bridge.js"
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "descriptorByteSha256": "480c8ddf797f627bdd3c089852303cbd5494b181bff6d439301c22db8111501f",
+            "dependencies": [
+              "stdio"
+            ],
+            "dialectArtifactKinds": [
+              "s.note.note"
+            ],
+            "extendsPluginId": " ",
+            "bundleSha256": "fc3970f03d809ed2041131fb393a23dacdcb17ecbc128651a842daf3f9135357",
+            "bundleByteLength": 2131,
+            "entry": "🗒️note/🌉️bridge.js"
+          }
+        ]
+      }
+    }
+  ],
+  "contentTypes": [
+    {
+      "path": "🗒️note/🌉️bridge.js",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "🗒️note/x.mjs",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "🗒️note/semio_s_plugin_note_component.core.wasm",
+      "contentType": "application/wasm"
+    },
+    {
+      "path": "🗒️note/🔣️.json",
+      "contentType": "application/json"
+    },
+    {
+      "path": "🗒️note/🛂️.descriptor.semio",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "🪞️vendor/🔤️guestslim-typst-fonts.bin",
+      "contentType": "application/octet-stream"
+    }
+  ]
+}

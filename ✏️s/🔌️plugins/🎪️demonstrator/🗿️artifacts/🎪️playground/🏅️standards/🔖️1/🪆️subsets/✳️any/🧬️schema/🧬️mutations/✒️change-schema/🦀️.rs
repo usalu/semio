@@ -23,7 +23,7 @@ impl protocol::MutationKind<PlaygroundSnapshot, PlaygroundMutation> for ChangeSc
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change playground schema to \"{}\"", self.new_schema), &format!("Spielplatzschema auf \"{}\" ändern", self.new_schema))
+        protocol::LocalizedLabel::native(&format!("Change playground schema to \"{}\"", self.new_schema), &format!("Playground-Schema auf \"{}\" ändern", self.new_schema))
     }
 
     fn target(&self) -> Vec<String> {

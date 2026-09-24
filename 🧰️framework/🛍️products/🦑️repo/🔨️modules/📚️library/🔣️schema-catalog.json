@@ -6457,7 +6457,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "bba6e20f61716178f5b46ce70d648cfec46acc2bb46f53a1899f3e7ea8c0321b"
+        "🔣️.json": "be6283e49e4963b61648b7bf89365b75a40a1d9c74fd26a8ee05d63504fa93ba"
       }
     },
     "framework.graph.layout-run": {
@@ -7621,6 +7621,24 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "8aa0413c123d721fca3523e617a6f031a3d759a1bd8f617fabaf06fc23322d2d"
+      }
+    },
+    "framework.trace-record": {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📝️record/🧬️schema",
+      "level": "framework-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "TraceRecordLine": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "1abc6861a6a153b2706c756343258a6b93d5c37e57b093d6c20a9d7a3666a1ae"
       }
     },
     "framework.trace.clock.contention": {
@@ -9734,7 +9752,7 @@
       "hashes": {
         "🔣️.json": "b216cddb8f7b4876edaadec29836153ee1f4b68ec0a01278beb7671e5f0c24b8",
         "🟦️.ts": "3f01af0c521c72f340dc378a9d6f6266a8f344c3665e869ccfcee926f8d8cb8a",
-        "🦀️.rs": "d7cc81a471d12dca92e59b766fd5233cf9b2651770b597eda1a6a3430546a7da"
+        "🦀️.rs": "8c540d5608f2b4aec3d8148e49975506e7e0e099ec39d3155d6de915f24d5b78"
       }
     },
     "hub.lag-rebootstrap": {
@@ -10480,7 +10498,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "adb77d4e16338a5d82daee492a3d8ee7cbdcfd6283b89e7c7df13cff9717a6a3"
+        "🔣️.json": "246f8026662037265dc8f2d17fdae39f55b839503ef3160d7155eeb47ecd75ce"
       }
     },
     "os.db.storage.writer": {
@@ -12574,7 +12592,7 @@
       "hashes": {
         "🔣️.json": "84129290ce747c5052ef8b38a72c1c310c0eebf8922f37cc1226e693c45f8c3b",
         "🟦️.ts": "904372dede48d5cb2024c0061438f455243c5f6f2985693488e816901410c108",
-        "🦀️.rs": "881d95100cca3d4293b0f4bb0e392fa3764c80cff371be31d69aa3e49afa488e"
+        "🦀️.rs": "c2717ec9eb6b62c5b7e19d465e9f7a2333fa9c8f107bc10844a1b63725e83ca1"
       }
     },
     "os.mcp.artifact": {
@@ -12613,6 +12631,10 @@
           "file": "🔣️.json",
           "facet": "component"
         },
+        "HubInferenceServiceV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
         "InferenceBindingCancellationLawV1": {
           "file": "🔣️.json",
           "facet": "component"
@@ -12621,7 +12643,43 @@
           "file": "🔣️.json",
           "facet": "component"
         },
+        "InferenceExecutionSiteV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
         "InferenceIdV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "InferenceJobEventV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "InferenceJobPageV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "InferenceJobProgressV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "InferenceJobStateV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "InferenceProposalStateV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "InferenceProposalV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "InferenceRouteV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "InferenceServiceLawV1": {
           "file": "🔣️.json",
           "facet": "component"
         },
@@ -12634,7 +12692,7 @@
         "os.mcp.workspace"
       ],
       "hashes": {
-        "🔣️.json": "9dd7c1012dde2ca33a9e9ccf3a1799054bae937f08b9409c7305d18254afe01d"
+        "🔣️.json": "5b1da52c52d452d75787cb9c3f2881304eb63e52156012265c29faf4e054eba5"
       }
     },
     "os.mcp.workspace": {
@@ -12720,7 +12778,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "a5f959262d650b036e3894d87f527f8575ae6cc25466b126c988aa71b88933fc"
+        "🔣️.json": "702eefd7ea3dab0c520cef25cf9be80f9b18ca262e07cd57b7b94f0720969810"
       }
     },
     "os.mcp.workspace.remote": {
@@ -13454,7 +13512,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "2d537439d83cc602834eae3fda447dc6bd29e02318f2f527854f7f188522047d"
+        "🔣️.json": "654f47a879edb11afe860eb16aafbd08519b7f5363080d2a432e1b5c82c4911b"
       }
     },
     "os.plugin.interpreter": {
@@ -14181,8 +14239,8 @@
         "framework.value.resident"
       ],
       "hashes": {
-        "🔣️.json": "2d6248c552e588fb4abc5f29d89bfa3ca03d993af3dce8bd1ccb0c18256a6e7d",
-        "🟦️.ts": "bd6047efdecc5389d0c7838cc296933969dc708772725af05b702c8ca9502c2c"
+        "🔣️.json": "8f19460ab91a49851655e99a8fe83dcd9b20883107d62d9c75c25f16b5647f14",
+        "🟦️.ts": "fef690b582209d7df2deb00669831002a07eac8ee18253f5e0550f49839b8902"
       }
     },
     "os.shell": {
@@ -14414,7 +14472,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "be01dc16d9206b6c3c78c00dbf8308326a5644279d2013a8031d3eab3a230567"
+        "🔣️.json": "92ea0645fefa21dcbf1e6b42ed8b7ef45304f7be8d51cd8ec9a3eaf3a1e844a9"
       }
     },
     "os.spr.history.identity": {
@@ -15768,6 +15826,22 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "GalleryKindPage": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "GalleryRenderEvidence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "GalleryTheme": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "GalleryVariantMeasurement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "Kind": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -15803,8 +15877,8 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "6c800f2ae30723a45e639afba36c094103edc2127768d85655fad43fc87b8f92",
-        "🟦️.ts": "0bdd9e926974d2d82e490e7b485a95d7869f248714e152c7df1972a3be5cce6f"
+        "🔣️.json": "297a701f82938330532f18d332f8e81ff560fa966816de1b7fbd18a2c6ee32e4",
+        "🟦️.ts": "4b86c12a9db37d59ff1a3e4e3e79212951505943d94d2fdb13b67fc8f6c66226"
       }
     },
     "print.print-font-catalog": {
@@ -16432,7 +16506,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "414d53e31d6912e97fc7da4ba46dd310f833a969f13eda7cce8aa61a2fb732d9"
+        "🔣️.json": "1a0bc8de7714aae0def61ec686ba7035aca3f6765bc00fc137391b5a5b0c7167"
       }
     },
     "repo.library.caching": {
@@ -17930,6 +18004,10 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "ReferenceSurvey": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "ResultArtifact": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -18077,7 +18155,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "36e4ef5b1cffbd0b47c7fcd2d050a20a18bcc7d91eca5e907880e8503d02f787"
+        "🔣️.json": "b4b55f9ae679e7dca1b2ad234414973273e114df0dfb2e77ed40ca5d0dfb4901"
       }
     },
     "repo.test-runner": {
@@ -36921,7 +36999,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "96ab948d4c89e34b03aaf05290c127b5d95f746898d080b4ed062b0c5c9d9ba4",
+        "🔣️.json": "b96043d9827f0f514f187fa8ebae8b2f870ff15833b42309a5f63b59ec02f5c5",
         "🟦️.ts": "126e61071d5b1f27ced8b1e422c4f082ce5523e0525ec910cf5af7d276e3bfa6"
       }
     },
@@ -49382,7 +49460,7 @@
         "🔺️diff/🦀️.rs": "8890247a420d2e1baf24efc9f243dcfb34f651516a2d8e405f92a50367822c44",
         "🛰️.proto": "df1ccd41fa2fb6769ab13a125ddf62a7613bb73b370c0aae2078d743e047f377",
         "🟦️.ts": "35033b086fb157b8eafb1b412ba40bdc6d8620ed37e7a0387ba87e03cdf7344c",
-        "🦀️.rs": "685b3b174998a2eca56b89962bc11ec44a30a9b3716b68e5a930319d9e7db6b8",
+        "🦀️.rs": "f27e688f7862b64ea7c060a2de6d5328b84f2033268f1a147bd192b56ff3be45",
         "🧬️mutations/💾️binary/🟦️.ts": "3196c4853b1a42b24a7162c8fe2ad9ab9d194b8126cd00b2a34445367ab90612",
         "🧬️mutations/💾️binary/🦀️.rs": "141d3bbb3555e920d5a9f8271543c6b7406a6f0e1a85a23dc88c4bd7e815239f",
         "🧬️mutations/📝️text/🔗️.graphql": "3046eceeb42f2f22cf3e564fa2ff18dacf9d76d52bddaf9fffafadd06d970ec0",
@@ -53372,7 +53450,7 @@
         "🔺️diff/🦀️.rs": "1c02313ddf36280cda9711cef270b2aed5a5bbe515b928d68891d10f5f46962c",
         "🛰️.proto": "1ac64b5a54278f6c8f65f9af7f58c4dc3f6ac80ae87b3baed2968815cad361fa",
         "🟦️.ts": "ea0199d3b46d42726a4992eedec670a9e6a6619a6b30455fdc3023bbf4046771",
-        "🦀️.rs": "8f90ab76304e1ba56c4b4282a681d83e13fb98acba37cdbc3514dcf79a9fbe17",
+        "🦀️.rs": "46fc9aea2dc54d412103837efa263041ac14fe4450efa07953e9acb5a5ece9c8",
         "🧬️mutations/💾️binary/🟦️.ts": "5473371744c0bcef45695e174319010a385f04a42250a70aabbb636566f6c938",
         "🧬️mutations/💾️binary/🦀️.rs": "f1c3c9cdf45f639d26b1ebe9f9c0235f4f61bc41734a5c1c841ff74f53b7afcf",
         "🧬️mutations/📝️text/🔗️.graphql": "fcc82f6b9631a535fd131081d524252299dc4ce52ac2efc2c43d20dbb9f58b6e",
@@ -57427,9 +57505,9 @@
         "🧬️mutations/📝️text/🦀️.rs": "ac73ee3195157dbc259338978076717422b963fb982c323a96bc3aa60343c2ad",
         "🧬️mutations/🔗️.graphql": "c9666cb88c9dce712a8e9168112fc350832c626b2ce0c0cd3335dbf58861f344",
         "🧬️mutations/🔣️.json": "df56298e4827440470a40aec9b3e01c6f091b48c5d08dfc7c7fa271a2a5ce878",
-        "🧬️mutations/🛰️.proto": "7e499e7efc1ae3f0492e6c862c1040e559eec242d7b861d19aad89ebd5e9ebde",
-        "🧬️mutations/🟦️.ts": "a1453f493d888a1b9f8cdb11a4481ce5a8d81f1aa39c91d5a19a74a1875d9b28",
-        "🧬️mutations/🦀️.rs": "194d7aa9e4d74e86a9187757566407e37e4033b1eaacc2b338edb5760cc30441"
+        "🧬️mutations/🛰️.proto": "2647c85988411a2f34166393795aa836940a5dd15d157cb59eaf827a271edf5b",
+        "🧬️mutations/🟦️.ts": "c7527496716148bd0e5fbb0d842e789ebed320e258883a1509cef8247f029f8b",
+        "🧬️mutations/🦀️.rs": "f779f5cfd1e6a0fca6b6167d0cb29891f3179649042eb6942faf65e566d3acb8"
       }
     },
     "s.stdio.binary.raw.any.mutation.append-bytes": {
@@ -59098,10 +59176,7 @@
           "facet": "inference"
         }
       },
-      "dependsOn": [
-        "s.stdio.dwg.ac1018.any.mutation.set-snapshot",
-        "s.stdio.dwg.ac1018.any.mutation.set-version-info"
-      ],
+      "dependsOn": [],
       "hashes": {
         "💡️inferences/💾️binary/🟦️.ts": "540bdfd8aa743aebe2fe945a654ce8e7402789fe6402588dac8fa468c0ead57c",
         "💡️inferences/💾️binary/🦀️.rs": "3a3808e11f287fda966aa15991c86b0707ea6623a5090c1c1eb9d73f47eed2fd",
@@ -59152,887 +59227,7 @@
         "🧬️mutations/🔣️.json": "0af72f9d6f18a583efde6051a77dd57a14003096841835fbf9fecb1569cf6ece",
         "🧬️mutations/🛰️.proto": "dec87cd425f1e3bd14cdf1a20762468e4817083df3198df9edb112ed37221872",
         "🧬️mutations/🟦️.ts": "ca1f45de517d77a006de1c8b8a2170dfa11e653f7a962998907bb49ce317d118",
-        "🧬️mutations/🦀️.rs": "bd2888290f95c4119902f04db0e6f192495378d5d12beb4ec3df480088e324ab"
-      }
-    },
-    "s.stdio.dwg.ac1018.any.mutation.set-snapshot": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "DwgAnnotationScale": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgApplicationHistory": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgApplicationInfo": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgApplicationProperty": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgApplicationPropertyKind": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgArcEntity": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssoc2dConstraintGroup": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssocNetwork": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssocNetworkMember": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssocNetworkMemberKind": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssociativeAction": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssociativeActionDependency": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssociativeActionStatus": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssociativeDependency": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssociativeDependencyStatus": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssociativeDimensionDependencyBody": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssociativeGeometryDependency": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssociativeValueDependency": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAssociativeVariable": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAuxiliaryHeader": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgAxisConstraint": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockAction": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockActionConnection": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockActionCoordinateMode": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockActionDependency": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockActionWithBasePoint": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockAlignmentGrip": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockAlignmentParameter": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockBasePointParameter": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockBeginEntity": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockElement": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockEndEntity": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockFlipAction": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockFlipGrip": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockFlipParameter": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockFlipValueSet": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockGrip": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockGripLocationComponent": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockHeaderTableRecord": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockLinearConstraintParameter": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockLinearGrip": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockLinearParameter": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockMoveAction": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockMoveCoordinateMode": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockOnePointParameter": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockParameterAllowedValues": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockParameterBaseLocation": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockParameterConnection": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockParameterDependencyBody": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockParameterProperty": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockRepresentationData": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockScaleAction": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockScaleMode": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockStretchAction": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockTableControl": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockTwoPointParameter": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockVisibilityGrip": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgBlockVisibilityParameter": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgCellBorder": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgCellBorders": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgCellContentFormat": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgCellMargins": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgCellStyle": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgClass": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgCompatibilityProfile": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgComplexColor": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgComplexColorValue": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgConstrainedBoundedLine": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgConstrainedDatumLine": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgConstrainedImplicitPoint": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgConstraintGeometry": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgConstraintNode": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgConstraintNodeCore": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgCustomProperty": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDefaultLightingType": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDependency": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDictionaryBody": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDictionaryVariable": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionBehavior": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionEntityCommon": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionGeometry": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionLineSpacingStyle": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionR2010": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionSettings": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionStatus": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionStyleTableControl": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionStyleTableRecord": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionText": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionTextAttachment": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDimensionUnits": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDistanceConstraint": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDrawOrderEntry": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDrawingPolicy": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDynamicBlockProxyNode": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgDynamicBlockPurgePreventer": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEntityBody": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEntityColor": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEntityColorKind": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEntityCommon": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEntityMode": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEntityReferenceMode": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEvaluationExpression": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEvaluationExpressionValue": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEvaluationGraph": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEvaluationGraphEdge": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEvaluationGraphNode": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgEvaluationVariant": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgExplicitConstraint": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgExtendedEntityData": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgGeometricConstraint": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgGeometryEntity": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgHeaderIntegerSettings": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgHeaderModes": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgHeaderRelations": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgHeaderScalars": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgHeaderSpaceGeometry": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgHeaderStrings": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgHeaderTimeState": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgHeaderUnits": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgHeaderVariables": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgIndexedPreview": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgInsertEntity": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgJulianDate": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLayerTableRecord": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLayout": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLayoutOptions": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLineEntity": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLinearDimensionEntity": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLinetypeDash": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLinetypeTableControl": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLinetypeTableRecord": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLogicalDrawing": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLogicalGeometry": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLogicalGeometryKind": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLogicalLayer": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLogicalObject": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLogicalObjectBody": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLwPolylineEntity": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgLwPolylineVertex": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderArrow": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderAttachmentDirection": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderBlockConnection": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderBlockStyle": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderContentType": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderDogleg": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderDrawOrder": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderKind": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderLanding": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderLeaderOrder": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderLeaderStyle": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderStyle": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderTextAlignment": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderTextAngle": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderTextAttachment": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMLeaderTextStyle": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMaterial": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMaterialChannels": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMaterialColor": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMaterialMap": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMaterialMapSource": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMaterialProjection": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMaterialTiling": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMeasurement": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMlineCaps": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMlineLinetype": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMlineStyle": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgMlineStyleElement": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgNamedEvaluationNodeReference": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgNamedReference": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgObjectCategory": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgOrthographicView": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgPlaceholder": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgPlotArea": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgPlotOptions": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgPlotPaperUnit": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgPlotRotation": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgPreviewOrigin": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgProductInformation": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgPropertyExpressionReference": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgRegisteredApplicationTableRecord": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgRevisionHistory": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgRgba": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgShadePlot": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgShadePlotMode": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgShadePlotResolution": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgSnapshot": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgSortEntitiesTable": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgStandardScale": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgStretchSelection": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgStretchSelector": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgSummaryInfo": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgTableControlBody": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgTableControlEntries": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgTableControlEntry": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgTableRecordBody": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgTableRecordCommon": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgTableStyle": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgTemplate": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgTextStyleTableRecord": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgVersionStamp": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgViewportEntity": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgViewportRenderMode": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgViewportStatusFlag": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgViewportTableRecord": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgVisibilityEvaluationHistory": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgVisibilityState": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgVisualStyle": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgVisualStyleProperties": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgVisualStylePropertyOperation": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgXRecordBody": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DwgXRecordValue": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SetSnapshot": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "97521f4cf09447fbd5e43765bd8eca1a0b63e0cb31fadaa6563da7d1ed6012e2"
-      }
-    },
-    "s.stdio.dwg.ac1018.any.mutation.set-version-info": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️set-version-info/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "SetVersionInfo": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "8156c4317a7f997d29b8054edbf449b7b85eb94f059496412c54c3e5022f18c5"
+        "🧬️mutations/🦀️.rs": "2802c15c0dbaefe00b64355bb8f4446a7b72f2021985afbebc355dc78fb239a6"
       }
     },
     "s.stdio.dwg.ac1024.any": {
@@ -60124,12 +59319,12 @@
         "📸️snapshot/📝️text/🛰️.proto": "d0cc6da92c49981b47b9f2f030308c507bfbf088b409e1a561cdcdc9f52b9822",
         "📸️snapshot/📝️text/🟦️.ts": "dbe7d36bec78f486b5a6255c15d3600b9278eab30e5746af7a61f82d3c4fede6",
         "📸️snapshot/📝️text/🦀️.rs": "602f58d5af3f4f40147138b0eb24fc80bed31f9f91f1695d52ac85ecca756718",
-        "📸️snapshot/🔗️.graphql": "e6ccf398b6aa9aaa9a07de840e38703f3f85398551746b7bb3b5d47a5e6d0046",
+        "📸️snapshot/🔗️.graphql": "8ed1839568905d7b71b539930b5be9f17330284e45cac2732992c6fd5db0dc70",
         "📸️snapshot/🔣️.json": "800d2540ce888b01e71f096b9e4c2a7dba6c242d07dd7cb6b8ca24a7109130fd",
-        "📸️snapshot/🛰️.proto": "feaac06e3a5e1be3e465182d77f741dbc78f310acf724c4910859751dde58c42",
+        "📸️snapshot/🛰️.proto": "06e1772dcd68be5522ac85f67685766d928438a92c2643441304d807feb477f8",
         "📸️snapshot/🟦️.ts": "b9135f58d7178b5a23c18704a81102a877b62ebbe0df369cff7784e17336f03b",
-        "📸️snapshot/🦀️.rs": "1fef9b8078f976578d182f59ca192de868b67dc349ab083bfccfad024aefdfc8",
-        "🔗️.graphql": "1bcf801876141f513f25440d702c2f28e8e103e7a0faa51f69057d8adf0fa513",
+        "📸️snapshot/🦀️.rs": "5044a55ffc9f180daa733fe8a6b2ad326374aaa7fea93323eed142d2f79ab1dc",
+        "🔗️.graphql": "4146a1527cf742160e9c888815a83781ebbe5c4262957f63c9350dc6f4c913fe",
         "🔣️.json": "6695f21b54980bf6cec87ede1322c615d990f478c4e0b584996ed8c14d053c89",
         "🔺️diff/💾️binary/🟦️.ts": "36a76018d3510725786bea66074fc23805809a7618f9339694cf6780d5268141",
         "🔺️diff/💾️binary/🦀️.rs": "9957a508fc623dfc45fecc40e02233ce6f33b60d3579a477197e8c72369cc1fc",
@@ -60138,13 +59333,13 @@
         "🔺️diff/📝️text/🛰️.proto": "01b26e0ce598ec81a66455da33542eee079c1616d22607b00b6a6425ac70fe2f",
         "🔺️diff/📝️text/🟦️.ts": "bb4d258060a23504b9d05de1c1a467f8be6357a4ca0d1a237beae60c6edad002",
         "🔺️diff/📝️text/🦀️.rs": "2f60629375dac9a8bbe022f8299cbd109fc88e787814e3c68b9cf01e886459a6",
-        "🔺️diff/🔗️.graphql": "87f11630583e2067b4193359dd6dcdac80442e0dc225c4fa21d3ffe1b7b9b2a0",
+        "🔺️diff/🔗️.graphql": "1c2c743f798bd09b416bce709f9045c6d903192ae5767fa2be525b8a1d92bffa",
         "🔺️diff/🔣️.json": "e1de02697fe164fef6a625ebd8c9f0d6471593947b7a1927634f4625d4b9899e",
-        "🔺️diff/🛰️.proto": "c80043b52bfd2e91c1570853b944c72382d4c07737e4573d146b37fb15fabb50",
+        "🔺️diff/🛰️.proto": "cdeae67130c07b27925d88451b9dca04765f0247de7c07e9cc99bc6d1b6e6e5c",
         "🔺️diff/🟦️.ts": "e8f5b651637d43148db935569160799564e6cda23e88c0591b9ed8e10d983ef6",
         "🔺️diff/🦀️.rs": "1e4c098cc6785911ace74e2bd7894d72e363bc151b8c19ccd714a90768823d88",
-        "🛰️.proto": "068d5223e105e009f548b4c365bd74b1c7f8ad3eb00d724ff010b394f2497b5e",
-        "🟦️.ts": "242071896644079c88abb1d78079026d6488cbc8c65e7320ebad4faca3ae38ea",
+        "🛰️.proto": "952c0e480ed765bc9cc7be02c9df9aa7c6f1c31dba32ab10c3445037de0c71f2",
+        "🟦️.ts": "c12f2a0c2c7655104741eb77a538294fd56458bad5a657c3677e63e05dfaeb6d",
         "🦀️.rs": "4c97f2794ccc7e3ad315f6a0832d35cf1e1b2b9733e03be86b704b851bfefdf0",
         "🧬️mutations/💾️binary/🟦️.ts": "bf369c07821d178f42e11dfdcf45b07d10decea289e6707dac443de23b55a383",
         "🧬️mutations/💾️binary/🦀️.rs": "fb8c320009fc1c86b00e745244948d7c01be67f4b7cd88da24269f97e8773b74",
@@ -60417,6 +59612,10 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "DwgCircleEntity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "DwgClass": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -60545,6 +59744,10 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "DwgEllipseEntity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "DwgEntityBody": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -60601,11 +59804,11 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
-        "DwgGeometricConstraint": {
+        "DwgFace3dEntity": {
           "file": "🔣️.json",
           "facet": "schema"
         },
-        "DwgGeometryEntity": {
+        "DwgGeometricConstraint": {
           "file": "🔣️.json",
           "facet": "schema"
         },
@@ -60869,6 +60072,22 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "DwgPointEntity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "DwgPolyfaceFaceEntity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "DwgPolyfaceMeshEntity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "DwgPolyline3dEntity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "DwgPreviewOrigin": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -60893,6 +60112,10 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "DwgSequenceEndEntity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "DwgShadePlot": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -60910,6 +60133,10 @@
           "facet": "schema"
         },
         "DwgSortEntitiesTable": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "DwgSplineEntity": {
           "file": "🔣️.json",
           "facet": "schema"
         },
@@ -60957,11 +60184,19 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "DwgTextEntity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "DwgTextStyleTableRecord": {
           "file": "🔣️.json",
           "facet": "schema"
         },
         "DwgVersionStamp": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "DwgVertexEntity": {
           "file": "🔣️.json",
           "facet": "schema"
         },
@@ -61016,7 +60251,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "4f2e22939430ff75ab41e2c34da284cd5d3ce8ab9b525f2013c1780bbeaebee0"
+        "🔣️.json": "dbda2e659022dee8c4d2cf6633d87c20b0c9bd0492ec368950db21369611ec21"
       }
     },
     "s.stdio.dwg.ac1024.any.mutation.set-version-info": {
@@ -74286,7 +73521,7 @@
         "🧬️mutations/🔣️.json": "645dcca59fd6b0341c1ad2b213b96d77314e35a4c9aa6bc9da99da185ed62477",
         "🧬️mutations/🛰️.proto": "370fcdace86b629a65174debdc4070787671a6e7b26ba8e24d9be06c254846e7",
         "🧬️mutations/🟦️.ts": "ffb8e19e60d28f7bf3ee4b15780aa34fdc8307d273d90d4cac24471dfd9d2855",
-        "🧬️mutations/🦀️.rs": "134f2039047334c45a7d450d778029ba308b77e940f9b019eb3890dc1a23b16c"
+        "🧬️mutations/🦀️.rs": "e4b83951fff7fdf9e9869b1e8c51cf663be6c0875953caf8b82d4926738d30d8"
       }
     },
     "s.stdio.html.5.any.mutation.insert-node": {
@@ -76370,6 +75605,25 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "53fa041948c4a45facaeec49256fe0ecf07ad0529720075bdef262f2e984580a"
+      }
+    },
+    "s.stdio.json.rfc8259.geojson": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema",
+      "level": "artifact-standard-subset",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {},
+      "dependsOn": [
+        "s.stdio.json.rfc8259.base"
+      ],
+      "hashes": {
+        "🔣️.json": "2514b399ddede9b58f89f2e53f45cc72d31c16955336985d3d883a4e42b3461b",
+        "🟦️.ts": "c0ccc596a90c966259d0c4f4bdcfda411256c27d39e6db227e4ac01bf13dcdbe",
+        "🦀️.rs": "4a774ed0a9ec44ea36917a6b9a6a3b70ed5e1d0663201e80c3887782dd9649c1"
       }
     },
     "s.stdio.json.rfc8259.i-json": {
@@ -98343,7 +97597,7 @@
         "💡️inferences/🔣️.json": "1c90136bbcd5b76001fd453d45a84dc5ea05da000dd25e2ae35bad917aa84688",
         "💡️inferences/🛰️.proto": "17ba34a1bfacb2e485a4f5ea60a6830c71ab1cede8dbcb439d3137fd003bddef",
         "💡️inferences/🟦️.ts": "1f98d85e1c71a21c9d022b25234dffeab7ab241073a1374f5e615da2885f4070",
-        "💡️inferences/🦀️.rs": "bae268ff1de3526bcb3d9554ba8ebc2fdfef19fea50599ae84973b81636136e3",
+        "💡️inferences/🦀️.rs": "d59ca8b90a0a5749adf2585f2f2fa6ae421e374c8ddc8c73076f6c9ffe7d97a5",
         "📸️snapshot/💾️binary/🟦️.ts": "c85f0eca29dec738a39c902213c3a8adfb98601ab9821391bb7ed703c496e33b",
         "📸️snapshot/💾️binary/🦀️.rs": "9ce86bcc81e43aea616fe6dc975542f0af24488b43e3ce159fc993ea9e457cb2",
         "📸️snapshot/📝️text/🟦️.ts": "1adfc3c35f399fcbc590589eaec59c60f7f944d11fcf89c45f00070a42f0ceb8",
@@ -98609,7 +97863,7 @@
         "💡️inferences/🔣️.json": "0548b3964902b8604a012e0141a36d37d1333c296968c8d3444bb79a70562ba9",
         "💡️inferences/🛰️.proto": "79e27110347b4d7b56c6b4a2698c5e8093510a1343382d898b785ae7a9c8f816",
         "💡️inferences/🟦️.ts": "2bf1325e639b27c0ef5c583459e048ef48e57d699d561776c90268cf525b426b",
-        "💡️inferences/🦀️.rs": "315b09035ba90a787b0adf94497a2f9022e0db8632b4df96ed85003b5102e37f",
+        "💡️inferences/🦀️.rs": "e90b97d9d0f2272bb15bd3e60f8ecddf61d387ecd5846a95c3292daa0190e8ce",
         "📸️snapshot/💾️binary/🟦️.ts": "50a4244364a4f5e1f8c81ca338549c0e3af2a3fdffa9644d79d5b6cc4075c1dd",
         "📸️snapshot/💾️binary/🦀️.rs": "cc99b98e00b02f588b594f5bd32a24f59bb950f72d0f9e495132ad74ad4df171",
         "📸️snapshot/📝️text/🟦️.ts": "d78f4c46bff100cb23d7b24a43c18e1e6ec4e729a8a608683343b738040d68fa",
@@ -98929,7 +98183,7 @@
         "💡️inferences/🔣️.json": "3b4723962d09327bc75534504cd37098eddefad4c0e8369c8d3fc421cd49a35f",
         "💡️inferences/🛰️.proto": "a2df46799d7116511f70c3ebefd892b00a67457369010e955e865d2f0b1535bd",
         "💡️inferences/🟦️.ts": "06d73c1481244f48fc0108ae6448573ba2a9e2a77eae9ee3c5d2681c60b21963",
-        "💡️inferences/🦀️.rs": "a43b7ed08dd537104e13a545e7c6b11ea8d4c2d3f95b25d3cdef4077a1eaa8c4",
+        "💡️inferences/🦀️.rs": "630189b02181d2da8bb9ae53cf059c6bb241db56200e97edc57885e4521680be",
         "📸️snapshot/💾️binary/🦀️.rs": "a973d46a5f885aeeefc2ed56fd8ecd1c5fc262a8eb6606216dcb358e69f9f964",
         "📸️snapshot/📝️text/🦀️.rs": "db04756b181478f3fcc717443544a5f77a2ed6b3c3cca3e62c4fb725c0416292",
         "📸️snapshot/🔗️.graphql": "6416cb9dac1e78f29e9013ad1149268ee8003ea8d0f473e089006b0dfd1bdf22",
@@ -99243,7 +98497,7 @@
         "💡️inferences/🔣️.json": "f298aaaf76ad63b8226f7e8957103623540edfc322a7b6b52186f5ac784c955b",
         "💡️inferences/🛰️.proto": "d105a805e7e1570300b2c0aa2d6f4eab433004d526b2d1a3dacd1a3a5a0ea430",
         "💡️inferences/🟦️.ts": "514348b14d53db8ce6156ac96842f83b7bd1cb70bf91789b597c2296c5049c31",
-        "💡️inferences/🦀️.rs": "d60700d9c8ddd676ff730ed8428bc454d53a9e6832f193e20b282701d1400f63",
+        "💡️inferences/🦀️.rs": "73ecea5ee8764ee745d730b12dedb3f475c2eb54f4dc853c846db48c01688471",
         "📸️snapshot/💾️binary/🟦️.ts": "e012b0b3e8da6d6845ccb229002d42b5141975c389b620e9eb9389a58c149d59",
         "📸️snapshot/📝️text/🟦️.ts": "db8fc51e8f12771619c386fa9036583316036483c24fe970254d7b9406e11b84",
         "📸️snapshot/🔗️.graphql": "c5cdee771bcc845a7516791e7664b69a5c2d8b80c6f23255a9dca93d381a9e15",
@@ -99577,7 +98831,7 @@
         "💡️inferences/🔣️.json": "d8c5323afc3d1d0b6b78857e402115c8677879767b195522049573d866efe674",
         "💡️inferences/🛰️.proto": "2bc1c3861feaf9a7946a129b58cd715688b3dbd79e978585ba7a05a2473d9d5a",
         "💡️inferences/🟦️.ts": "4a32c31a28259b5637e8103d9318167e4618a6bd5472dc4cfe61d2416a2437b7",
-        "💡️inferences/🦀️.rs": "7d71eef4092d13b82741a765cc21d3e7c8f08f294e2fb190291f5ca72ef3288c",
+        "💡️inferences/🦀️.rs": "ec3cddfc79336de527ef67c55dadb063af587430f1efdfe1bf3478e1b32e17f2",
         "📸️snapshot/💾️binary/🟦️.ts": "637c26f32ae1aee75ed38c2080e86a7a120203f4689a3bbac2495ad4ab7cf156",
         "📸️snapshot/💾️binary/🦀️.rs": "cc8a5e9c3d4755c7038552b21722213395c30b5e9aeaa1995854db33a6e29e16",
         "📸️snapshot/📝️text/🟦️.ts": "3eccea850892776f11a23a755af118f9ff3c563ba199e4c6261ded913224e2e1",

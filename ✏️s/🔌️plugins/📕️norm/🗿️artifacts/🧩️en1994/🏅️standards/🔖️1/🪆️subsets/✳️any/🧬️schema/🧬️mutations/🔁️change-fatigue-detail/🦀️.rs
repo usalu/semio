@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeFatigueDet
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fatigue detail to \"{}\"", self.new_fatigue_detail), &format!("Ermüdungsdetail auf \"{}\" ändern", self.new_fatigue_detail))
+        protocol::LocalizedLabel::native(&format!("Change fatigue detail to \"{}\"", self.new_fatigue_detail), &format!("Kerbdetail auf \"{}\" ändern", self.new_fatigue_detail))
     }
 }
 //#endregion 🔖️Payload

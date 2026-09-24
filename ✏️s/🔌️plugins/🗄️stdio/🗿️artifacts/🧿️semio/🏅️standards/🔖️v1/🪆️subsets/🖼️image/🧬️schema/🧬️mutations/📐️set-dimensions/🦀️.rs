@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetDimen
         agg_inverse(&SemioImageMutation::SetDimensions(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-dimensions", "Abmessungen setzen")
+        protocol::LocalizedLabel::native("Set dimensions", "Abmessungen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

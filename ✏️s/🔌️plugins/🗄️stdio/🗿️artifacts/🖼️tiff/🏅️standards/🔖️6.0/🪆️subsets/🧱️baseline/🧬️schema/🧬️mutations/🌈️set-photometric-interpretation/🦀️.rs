@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetPhotometricInterpretation {
-    pub(crate) photometric: u16,
+    pub photometric: u16,
 }
 
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetPhotometricInterpretation {
@@ -21,7 +21,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetPhotometr
         agg_inverse(&TiffBaselineMutation::SetPhotometricInterpretation(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-photometric-interpretation", "photometrische Interpretation setzen")
+        protocol::LocalizedLabel::native("Set photometric interpretation", "Photometrische Interpretation setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

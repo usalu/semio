@@ -90,10 +90,20 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                 | params                                                                                                                                          |
-      | no-mutation        | {}                                                                                                                                               |
       | set-snapshot       | {"insertionBase": [5, 5, 0], "layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS"}], "entities": [{"entityKind": "circle", "layer": "0", "center": [0, 0, 0], "radius": 42}]} |
       | set-header-var     | {"name": "$INSBASE", "value": [15, 25, 0]}                                                                                                      |
       | remove-header-var  | {"name": "$INSBASE"}                                                                                                                             |
+
+  @id-no-mutation-baseline-mutate
+  @level-exhaustive
+  @mode-differential
+  Scenario: Apply no-mutation to the real document
+    Given the real input document asset://🚏️bus-shelter/🖊️.dxf
+    When the no-mutation mutation is applied with its parameters
+      """
+      {"kind": "no-mutation", "params": {}}
+      """
+    Then the oracle and the subject agree on the semantic projection
 
   @id-inverse
   @level-exhaustive
@@ -107,10 +117,20 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                 | params                                                                                                                                          |
-      | no-mutation        | {}                                                                                                                                               |
       | set-snapshot       | {"insertionBase": [5, 5, 0], "layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS"}], "entities": [{"entityKind": "circle", "layer": "0", "center": [0, 0, 0], "radius": 42}]} |
       | set-header-var     | {"name": "$INSBASE", "value": [15, 25, 0]}                                                                                                      |
       | remove-header-var  | {"name": "$INSBASE"}                                                                                                                             |
+
+  @id-no-mutation-baseline-inverse
+  @level-exhaustive
+  @mode-differential
+  Scenario: Undoing no-mutation restores the document
+    Given the real input document asset://🚏️bus-shelter/🖊️.dxf
+    When the no-mutation mutation is applied and then undone
+      """
+      {"kind": "no-mutation", "params": {}}
+      """
+    Then the oracle and the subject agree on the semantic projection
 
   @id-identity-round-trip
   @level-long

@@ -2,7 +2,7 @@
 @no-oracle-repo-cli-owned-mcp-verb-wiring
 @comparison-ordered-json-v1
 Feature: The `mcp` verb serves the repo repository on stdio
-  `semio mcp [kind]` starts the repo Model Context Protocol server on standard input and output
+  `semio-repo mcp [kind]` starts the repo Model Context Protocol server on standard input and output
   with the profile the operand names or `SEMIO_REPO_MCP_CLIENT` supplies, and the shipped
   `repo` binary serves the same repository. The protocol itself belongs to 🔌️mcp; what
   this case proves is that the verb wires the production repository behind it, that `initialize`
@@ -14,7 +14,7 @@ Feature: The `mcp` verb serves the repo repository on stdio
   @id-the-verb-completes-the-handshake
   @level-fundamental
   @mode-conformance
-  Scenario: `semio mcp` answers initialize, tools/list and resources/list over stdio
+  Scenario: `semio-repo mcp` answers initialize, tools/list and resources/list over stdio
     Given the conversation shared://🔌️mcp-verb-handshake/🤝️handshake.json
     When the host runs the conversation against the `mcp` verb
     Then the initialize result carries the stated protocol version, server name, server version and capabilities, and the declared tool and resource names equal the stated ones

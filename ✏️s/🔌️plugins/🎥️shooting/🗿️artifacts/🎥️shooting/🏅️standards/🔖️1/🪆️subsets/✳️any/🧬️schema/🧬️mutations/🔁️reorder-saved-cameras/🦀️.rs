@@ -22,7 +22,7 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ReorderSavedCameras {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder saved camera \"{}\"", self.id), &format!("gespeicherte Kamera \"{}\" umordnen", self.id))
+        protocol::LocalizedLabel::native(&format!("Reorder saved camera \"{}\"", self.id), &format!("Reihenfolge von gespeicherter Kamera \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

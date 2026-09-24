@@ -30,7 +30,7 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetComment {
         agg_inverse(&BcfMutation::SetComment(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-comment", "Kommentar setzen")
+        protocol::LocalizedLabel::native("Set comment", "Kommentar setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -374,9 +374,11 @@ fn collect_drawing_handles_from_value(value: &NeuralValue, handles: &mut Vec<Str
     }
 }
 
+/// 🖍️ A drawing is the `draw.drawing`-schema dictionary the draw operators emit; its `handle` is the
+/// kernel's content address (hex), so the schema — never a handle spelling — identifies it.
 fn collect_drawing_handles_from_dictionary(dict: &Dictionary, handles: &mut Vec<String>) {
-    if let Some(handle) = dict.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()) {
-        if handle.starts_with("drawing-") {
+    if dict.schema() == Some("draw.drawing") {
+        if let Some(handle) = dict.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()) {
             handles.push(handle.to_string());
         }
     }

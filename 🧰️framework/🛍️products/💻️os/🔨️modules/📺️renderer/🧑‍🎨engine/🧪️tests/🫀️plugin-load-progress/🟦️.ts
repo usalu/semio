@@ -8,7 +8,7 @@
  * 30002 ms with no progress for 30000 ms` — an idle window they were never idle in. */
 
 import { describe, expect, it, beforeEach } from "vitest";
-import { fetchDescriptorManifest } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { fetchDescriptorManifest, fetchPackageDescriptor } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import { SHARD_LIVENESS_POLICY } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import {
   beginPluginLoadV1,
@@ -176,6 +176,17 @@ describe("descriptor fetch progress", () => {
     const manifest = await withFetch(unreadable, () => fetchDescriptorManifest("demonstrator", "/plugin-modules/demonstrator/bridge.js", undefined, () => { beats += 1; }));
     expect(manifest.pluginId).toBe("demonstrator");
     expect(beats).toBe(1);
+  });
+
+  /** 🪪️ LAW: a package descriptor answers the identity hub documents bind by — its own package id and
+   * component digest — and a descriptor without either is refused rather than guessed. */
+  it("reads a package descriptor's identity and refuses one that has none", async () => {
+    const identified = JSON.stringify({ packageId: "semio:demonstrator", hashes: { wasmSha256: "a".repeat(64) }, manifest: { pluginId: "demonstrator", apps: [] } });
+    const read = await withFetch(streamingResponse([identified]), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"));
+    expect({ packageId: read.packageId, componentSha256: read.componentSha256, pluginId: read.manifest.pluginId }).toEqual({ packageId: "semio:demonstrator", componentSha256: "a".repeat(64), pluginId: "demonstrator" });
+    await expect(withFetch(streamingResponse([descriptor]), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("missing package identity");
+    const shortDigest = JSON.stringify({ packageId: "semio:demonstrator", hashes: { wasmSha256: "A".repeat(64) }, manifest: { pluginId: "demonstrator", apps: [] } });
+    await expect(withFetch(streamingResponse([shortDigest]), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("missing package identity");
   });
 
   /** 🔤️ A chunk boundary is a BYTE boundary, and this repo's descriptors are full of multi-byte emoji

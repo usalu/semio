@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceAccessRule {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace access rule \"{}\"", self.access_rule.header.name), &format!("Zugangregel \"{}\" ersetzen", self.access_rule.header.name))
+        protocol::LocalizedLabel::native(&format!("Replace access rule \"{}\"", self.access_rule.header.name), &format!("Zugangsregel \"{}\" ersetzen", self.access_rule.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.access_rule.header.id.0.clone()]

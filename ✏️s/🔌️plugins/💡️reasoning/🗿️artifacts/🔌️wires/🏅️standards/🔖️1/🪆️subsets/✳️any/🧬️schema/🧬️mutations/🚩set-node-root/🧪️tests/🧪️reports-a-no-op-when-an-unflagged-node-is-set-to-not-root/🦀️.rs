@@ -6,7 +6,7 @@
 //!
 //! ⚠️ Every board-WRITING wires diff funnels through `diff_board_fixture`, which re-mints the
 //! composed `s.stdio.semio.graph` child handle as a `DefaultHasher` digest — unhand-authorable.
-//! `set-node-root` reaches an APPLIED state without that hash because its guard short-circuits:
+//! `set-node-root` reaches a NO-OP state without that hash because its guard short-circuits:
 //! the flag already holds, so `MutationOutcome::empty().warn("mutation.no-op", …)` comes back and
 //! `set_node_field(.., "root", ..)` is never called.
 //!
@@ -86,12 +86,12 @@ async fn committed_json_is_canonical() {
     assert_eq!(original.get("newRoot").and_then(serde_json::Value::as_bool), Some(false), "the payload must state the flag explicitly — a bare bool has no skip_serializing_if");
 }
 
-/// 🎯️ The declared outcome — `applied` with one `warn`/`mutation.no-op` — is exactly what the
+/// 🎯️ The declared outcome — `no-op` with one `warn`/`mutation.no-op` — is exactly what the
 /// already-that-flag guard emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "set-node-root/reports-a-no-op-when-an-unflagged-node-is-set-to-not-root declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "set-node-root/reports-a-no-op-when-an-unflagged-node-is-set-to-not-root declares a no-op outcome");
     let produced = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its diagnostics");

@@ -26,7 +26,7 @@ impl MutationKind<CadSnapshot, CadMutation> for ChangeReferenceLocked {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change lock state of reference \"{}\"", self.reference_id), &format!("Sperrenzustand von Referenz \"{}\" ändern", self.reference_id))
+        protocol::LocalizedLabel::native(&format!("Change lock state of reference \"{}\"", self.reference_id), &format!("Sperrstatus von Referenz \"{}\" ändern", self.reference_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.model_definition_id.clone(), self.reference_id.clone()]

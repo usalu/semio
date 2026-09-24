@@ -25,6 +25,7 @@ import {
   type ThreeEvent,
   type TreeDataItem,
 } from "@semio-tech/ui-react";
+import { GestureRecognizer, applyPinchToOrbit, type PinchStep } from "@semio-tech/framework";
 import { clearColorResolveCache, resolveColorHex, resolveSpatialAxisColors, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@semio-tech/ui-styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement, type ReactNode } from "react";
 import { OrbitControls as ThreeOrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -65,7 +66,6 @@ const {
   RGBAFormat,
   Scene,
   ShaderMaterial,
-  TOUCH,
   Vector2,
   Vector3,
   WebGLRenderTarget,
@@ -3454,7 +3454,6 @@ export interface WorldOrbitGatedProps {
 
 const WORLD_ORBIT_CONSTRAINTS_DEFAULT: NonNullable<WorldOrbitGatedProps["constraints"]> = { rotate: true };
 
-/** @emoji 🛰️ Canvas-local Three orbit-control binding that never crosses the optional Drei runtime boundary. */
 /** @emoji 🖱️ The element a world canvas actually RECEIVES pointer and wheel events on.
  *
  * A `<Canvas eventSource={…}>` hands its own events to that source element and stamps
@@ -3472,6 +3471,40 @@ export function useWorldPointerTarget(): HTMLElement {
   return (connected instanceof HTMLElement ? connected : gl.domElement) as HTMLElement;
 }
 
+/** @emoji 🤏️ Applies one shared-recognizer pinch step to a Three orbit rig through the renderer-neutral
+ * {@link applyPinchToOrbit} law: target-centred dolly (perspective) or zoom factor (orthographic), plus
+ * the centroid pan in the camera plane, inside the controls' own distance/zoom limits. */
+function applyWorldOrbitPinch(controls: ThreeOrbitControls, camera: Camera, step: PinchStep, viewportHeight: number): void {
+  const orthographic = camera instanceof ThreeOrthographicCamera;
+  const perspective = camera instanceof ThreePerspectiveCamera;
+  if (!orthographic && !perspective) return;
+  const next = applyPinchToOrbit(
+    { position: [camera.position.x, camera.position.y, camera.position.z], target: [controls.target.x, controls.target.y, controls.target.z], up: [camera.up.x, camera.up.y, camera.up.z], zoom: orthographic ? camera.zoom : 1 },
+    step,
+    orthographic ? { kind: "orthographic", frustumHeight: camera.top - camera.bottom } : { kind: "perspective", fovYRadians: ((camera as ThreePerspectiveCamera).fov * Math.PI) / 180 },
+    viewportHeight,
+    { distance: { min: controls.minDistance, max: controls.maxDistance }, zoom: { min: controls.minZoom, max: controls.maxZoom } },
+  );
+  camera.position.set(next.position[0], next.position[1], next.position[2]);
+  controls.target.set(next.target[0], next.target[1], next.target[2]);
+  if (orthographic) {
+    camera.zoom = next.zoom;
+    camera.updateProjectionMatrix();
+  }
+  controls.update();
+}
+
+/**
+ * @emoji 🛰️ Canvas-local Three orbit-control binding that never crosses the optional Drei runtime boundary.
+ *
+ * Two-finger touch is NOT Three's: the shared `👆️gesture` {@link GestureRecognizer} listens in the capture
+ * phase on the same pointer target, so it sees the second contact before `OrbitControls` does, suspends
+ * the controls for the whole latched gesture (the finger left down never resumes orbiting), and drives
+ * dolly/zoom + pan itself through {@link applyWorldOrbitPinch}. The same recognizer runs in
+ * `🖥️Board2dHost` and the dag `🕸️NodeGraph` surface, so a pinch means one thing on every viewport.
+ * `OrbitControls` keeps mouse input and one-finger orbit, and still emits the gesture's `start`/`end`
+ * (it tracked the first finger), which is what commits the camera once.
+ */
 function WorldOrbitControlsBridge({
   camera,
   enabled,
@@ -3495,6 +3528,9 @@ function WorldOrbitControlsBridge({
   const set = useThree((state) => state.set);
   const get = useThree((state) => state.get);
   const controlsRef = reactHostPort.useRef<ThreeOrbitControls | null>(null);
+  const gestureRecognizerRef = reactHostPort.useRef<GestureRecognizer | null>(null);
+  const enabledRef = reactHostPort.useRef(enabled);
+  enabledRef.current = enabled;
   const callbacksRef = reactHostPort.useRef({ onChange, onStart, onEnd });
   callbacksRef.current = { onChange, onStart, onEnd };
   const resolvedConstraints = constraints ?? WORLD_ORBIT_CONSTRAINTS_DEFAULT;
@@ -3503,13 +3539,7 @@ function WorldOrbitControlsBridge({
     controls.enableDamping = false;
     controls.enablePan = true;
     controls.enableZoom = true;
-    // 🤏️ Said out loud rather than inherited from the control's own defaults: ONE finger orbits, TWO
-    // fingers pinch-zoom AND pan together, which is the only zoom path a touch-only device has (there is
-    // no wheel). `WorldCanvas` already stamps `touch-action: none` on this same element, so the browser
-    // never steals the second contact for a page scroll; `🌐️World3dHost` goes quiet for the whole
-    // multi-touch gesture so its marquee cannot grow underneath it.
-    controls.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN };
-    controls.enabled = enabled;
+    controls.enabled = enabledRef.current;
     controls.mouseButtons = { ...mouseButtons };
     const change = () => callbacksRef.current.onChange();
     const start = () => callbacksRef.current.onStart(controls);
@@ -3518,9 +3548,35 @@ function WorldOrbitControlsBridge({
     controls.addEventListener("start", start);
     controls.addEventListener("end", end);
     controlsRef.current = controls;
+    const gestures = new GestureRecognizer();
+    gestureRecognizerRef.current = gestures;
+    const gesturePoint = (event: PointerEvent) => {
+      const rect = pointerTarget.getBoundingClientRect();
+      return { pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top };
+    };
+    const onGestureDown = (event: PointerEvent) => {
+      if (gestures.down(gesturePoint(event)).kind === "pinchBegin") controls.enabled = false;
+    };
+    const onGestureMove = (event: PointerEvent) => {
+      const verdict = gestures.move(gesturePoint(event));
+      if (verdict.kind === "pinch" && enabledRef.current) applyWorldOrbitPinch(controls, camera, verdict.step, pointerTarget.clientHeight);
+    };
+    const onGestureUp = (event: PointerEvent) => {
+      if (gestures.up(event.pointerId).kind === "pinchEnd") controls.enabled = enabledRef.current;
+    };
+    const gestureDocument = pointerTarget.ownerDocument;
+    pointerTarget.addEventListener("pointerdown", onGestureDown, { capture: true });
+    gestureDocument.addEventListener("pointermove", onGestureMove, { capture: true });
+    gestureDocument.addEventListener("pointerup", onGestureUp, { capture: true });
+    gestureDocument.addEventListener("pointercancel", onGestureUp, { capture: true });
     set({ controls });
     controls.update();
     return () => {
+      pointerTarget.removeEventListener("pointerdown", onGestureDown, { capture: true });
+      gestureDocument.removeEventListener("pointermove", onGestureMove, { capture: true });
+      gestureDocument.removeEventListener("pointerup", onGestureUp, { capture: true });
+      gestureDocument.removeEventListener("pointercancel", onGestureUp, { capture: true });
+      if (gestureRecognizerRef.current === gestures) gestureRecognizerRef.current = null;
       controls.removeEventListener("change", change);
       controls.removeEventListener("start", start);
       controls.removeEventListener("end", end);
@@ -3532,7 +3588,7 @@ function WorldOrbitControlsBridge({
   reactHostPort.useEffect(() => {
     const controls = controlsRef.current;
     if (!controls) return;
-    controls.enabled = enabled;
+    controls.enabled = enabled && !gestureRecognizerRef.current?.latched;
     controls.mouseButtons = { ...mouseButtons };
     controls.enableRotate = resolvedConstraints.rotate;
     controls.minPolarAngle = resolvedConstraints.minPolar ?? 0;

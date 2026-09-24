@@ -272,33 +272,6 @@ impl RoleBasedPolicy {
 }
 //#endregion 🔖️Policy
 
-//#region 🔖️SpaceGrants
-/// @emoji 🪐️ Compiles a hub space's `kind` (`"atelier"|"studio"|"archive"`, string-identical to the
-/// wasm-facing `space` crate's `SpaceKind` — see `🌎️hub/🔨️modules/📇️directory`'s `SpaceRecord`) into
-/// this crate's `Grant`s: `"author"` gets `Read`+`Write` over the space, `"spectator"` gets `Read`
-/// only, and an `"archive"` space additionally gets an explicit `Grant::deny` on `"author"` writes
-/// — deny-overrides semantics (`RoleBasedPolicy::evaluate`: a matching `Deny` short-circuits
-/// regardless of any `Allow`) so an archive stays frozen even if a membership row is ever
-/// (incorrectly) left with an `Author` role. Purely mechanical/data-driven per this crate's module
-/// doc: it interprets `kind` as an opaque string, never a hub- or space-crate-specific type.
-///
-/// `space_id` is accepted for API symmetry and future audit/log context, but the returned grants'
-/// patterns use a wildcard document segment (`["db", "document", "*", "**"]`) rather than a literal
-/// `space_id` segment — a hub document id is the compound `"{space_id}:{document_id}"` string (see
-/// `🌎️hub`'s `scope_key`), which `AuthzScope::segments()` carries as ONE opaque segment, so a literal
-/// match can't select "this space's documents" by substring. This is sound because the caller
-/// (`🌎️hub`'s WS handler) builds a fresh `RoleBasedPolicy`/`SecurityGate` per connection, and a
-/// connection is already scoped to exactly one space's one document — the wildcard never needs to
-/// discriminate across spaces because it is never evaluated against another space's document.
-pub async fn space_grants(_space_id: &str, kind: &str) -> Vec<Grant> {
-    let mut grants = vec![Grant::allow("author", &["db", "document", "*", "**"], &[Action::Read, Action::Write]), Grant::allow("spectator", &["db", "document", "*", "**"], &[Action::Read])];
-    if kind == "archive" {
-        grants.push(Grant::deny("author", &["db", "document", "*", "**"], &[Action::Write]));
-    }
-    grants
-}
-//#endregion 🔖️SpaceGrants
-
 //#region 🔖️Signing
 /// @emoji ✍️ A detached signature over a 32-byte message, plus the scheme/key it was produced
 /// with — the shape `protocol::Signer`/`protocol::SignatureVerifier` exchange, packaged so

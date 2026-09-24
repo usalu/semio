@@ -67,13 +67,23 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                   | params                                                                                                                                                                                                                                                                                    |
-      | no-mutation          | {}                                                                                                                                                                                                                                                                                        |
       | set-snapshot         | {"mainHeader": {"microSecPerFrame": 40000, "maxBytesPerSec": 1000, "paddingGranularity": 0, "flags": 16, "totalFrames": 0, "initialFrames": 0, "streams": 0, "suggestedBufferSize": 0, "width": 64, "height": 64, "reserved": [0, 0, 0, 0]}, "streams": [], "idx1Present": false, "unknownChunks": []} |
       | set-main-header      | {"mainHeader": {"microSecPerFrame": 66666, "maxBytesPerSec": 25000, "paddingGranularity": 0, "flags": 2320, "totalFrames": 45, "initialFrames": 0, "streams": 1, "suggestedBufferSize": 1048576, "width": 960, "height": 864, "reserved": [0, 0, 0, 0]}}                                |
       | insert-stream        | {"index": 1, "stream": {"strh": {"fccType": "vids", "fccHandler": "MJPG", "flags": 0, "priority": 0, "language": 0, "initialFrames": 0, "scale": 1, "rate": 15, "start": 0, "length": 0, "suggestedBufferSize": 0, "quality": -1, "sampleSize": 0, "rcFrameLeft": 0, "rcFrameTop": 0, "rcFrameRight": 0, "rcFrameBottom": 0}, "strf": {"format": "bitmapInfo", "size": 40, "width": 480, "height": 432, "planes": 1, "bitCount": 24, "compression": "MJPG", "sizeImage": 0, "xPelsPerMeter": 0, "yPelsPerMeter": 0, "colorsUsed": 0, "colorsImportant": 0}, "chunks": []}} |
       | remove-stream        | {"index": 0}                                                                                                                                                                                                                                                                              |
       | set-stream-header    | {"streamIndex": 0, "strh": {"fccType": "vids", "fccHandler": "MJPG", "flags": 0, "priority": 100, "language": 0, "initialFrames": 0, "scale": 1, "rate": 30, "start": 0, "length": 45, "suggestedBufferSize": 21828, "quality": -1, "sampleSize": 0, "rcFrameLeft": 0, "rcFrameTop": 0, "rcFrameRight": 480, "rcFrameBottom": 432}} |
       | set-stream-format    | {"streamIndex": 0, "strf": {"format": "raw", "data": "deadbeef"}}                                                                                                                                                                                                                        |
+
+  @id-no-mutation-baseline-mutate
+  @level-exhaustive
+  @mode-differential
+  Scenario: Apply no-mutation to the real video container
+    Given the real input document shared://🎬️.avi
+    When the no-mutation mutation is applied with its parameters
+      """
+      {"kind": "no-mutation", "params": {}}
+      """
+    Then the oracle and the subject agree on the semantic projection
 
   @id-inverse
   @level-exhaustive
@@ -87,13 +97,23 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                   | params                                                                                                                                                                                                                                                                                    |
-      | no-mutation          | {}                                                                                                                                                                                                                                                                                        |
       | set-snapshot         | {"mainHeader": {"microSecPerFrame": 40000, "maxBytesPerSec": 1000, "paddingGranularity": 0, "flags": 16, "totalFrames": 0, "initialFrames": 0, "streams": 0, "suggestedBufferSize": 0, "width": 64, "height": 64, "reserved": [0, 0, 0, 0]}, "streams": [], "idx1Present": false, "unknownChunks": []} |
       | set-main-header      | {"mainHeader": {"microSecPerFrame": 66666, "maxBytesPerSec": 25000, "paddingGranularity": 0, "flags": 2320, "totalFrames": 45, "initialFrames": 0, "streams": 1, "suggestedBufferSize": 1048576, "width": 960, "height": 864, "reserved": [0, 0, 0, 0]}}                                |
       | insert-stream        | {"index": 1, "stream": {"strh": {"fccType": "vids", "fccHandler": "MJPG", "flags": 0, "priority": 0, "language": 0, "initialFrames": 0, "scale": 1, "rate": 15, "start": 0, "length": 0, "suggestedBufferSize": 0, "quality": -1, "sampleSize": 0, "rcFrameLeft": 0, "rcFrameTop": 0, "rcFrameRight": 0, "rcFrameBottom": 0}, "strf": {"format": "bitmapInfo", "size": 40, "width": 480, "height": 432, "planes": 1, "bitCount": 24, "compression": "MJPG", "sizeImage": 0, "xPelsPerMeter": 0, "yPelsPerMeter": 0, "colorsUsed": 0, "colorsImportant": 0}, "chunks": []}} |
       | remove-stream        | {"index": 0}                                                                                                                                                                                                                                                                              |
       | set-stream-header    | {"streamIndex": 0, "strh": {"fccType": "vids", "fccHandler": "MJPG", "flags": 0, "priority": 100, "language": 0, "initialFrames": 0, "scale": 1, "rate": 30, "start": 0, "length": 45, "suggestedBufferSize": 21828, "quality": -1, "sampleSize": 0, "rcFrameLeft": 0, "rcFrameTop": 0, "rcFrameRight": 480, "rcFrameBottom": 432}} |
       | set-stream-format    | {"streamIndex": 0, "strf": {"format": "raw", "data": "deadbeef"}}                                                                                                                                                                                                                        |
+
+  @id-no-mutation-baseline-inverse
+  @level-exhaustive
+  @mode-differential
+  Scenario: Undoing no-mutation restores the real video container
+    Given the real input document shared://🎬️.avi
+    When the no-mutation mutation is applied and then undone
+      """
+      {"kind": "no-mutation", "params": {}}
+      """
+    Then the oracle and the subject agree on the semantic projection
 
   @id-identity-round-trip
   @level-long

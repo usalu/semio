@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -36,12 +37,13 @@ type Step struct {
 
 // Scenario is one planned scenario, already expanded and level-filtered by the coordinator.
 type Scenario struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Level string `json:"level"`
-	Mode  string `json:"mode"`
-	Seed  string `json:"seed"`
-	Steps []Step `json:"steps"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Level     string `json:"level"`
+	Mode      string `json:"mode"`
+	Seed      string `json:"seed"`
+	Steps     []Step `json:"steps"`
+	OutlineOf string `json:"outlineOf"`
 }
 
 // SubsetTarget is the smallest owning subset a case is scoped to. A case with no target is
@@ -228,6 +230,15 @@ func (c *Context) Seed() int64 {
 	return value
 }
 
+// Row is the Examples row id this scenario expands, or an error for a plain scenario.
+func (c *Context) Row() (string, error) {
+	prefix := c.Scenario.OutlineOf + "-"
+	if c.Scenario.OutlineOf == "" || !strings.HasPrefix(c.Scenario.ID, prefix) {
+		return "", fmt.Errorf("scenario %s expands no Scenario Outline row", c.Scenario.ID)
+	}
+	return strings.TrimPrefix(c.Scenario.ID, prefix), nil
+}
+
 // Outcome is what a scenario handler returns: an artifact BUNDLE plus the compared projection.
 type Outcome struct {
 	Raw                []byte
@@ -263,16 +274,29 @@ func NewAdapter(implementation string) *Adapter {
 	return &Adapter{Implementation: implementation, handlers: map[string]Handler{}}
 }
 
-// Oracle registers the reference-implementation handler for one scenario.
+// Oracle registers the reference-implementation handler for one scenario id, or for a Scenario
+// Outline's base id (`@id-<base>`), which then serves every row the feature expands.
 func (a *Adapter) Oracle(scenario string, handler Handler) *Adapter {
 	a.handlers[scenario+"::oracle"] = handler
 	return a
 }
 
-// Subject registers this repository's handler for one scenario.
+// Subject registers this repository's handler for one scenario id, or for a Scenario Outline's base id.
 func (a *Adapter) Subject(scenario string, handler Handler) *Adapter {
 	a.handlers[scenario+"::subject"] = handler
 	return a
+}
+
+// handler is the one registered for the scenario's own id, else for its outline's base id.
+func (a *Adapter) handler(scenario *Scenario, role string) (Handler, bool) {
+	if exact, registered := a.handlers[scenario.ID+"::"+role]; registered {
+		return exact, true
+	}
+	if scenario.OutlineOf == "" {
+		return nil, false
+	}
+	outline, registered := a.handlers[scenario.OutlineOf+"::"+role]
+	return outline, registered
 }
 
 //#endregion 🔖️Adapter
@@ -351,7 +375,7 @@ func RunMain(adapter *Adapter) {
 			Artifacts:      []ResultArtifact{},
 			Diagnostics:    []Diagnostic{},
 		}
-		handler, registered := adapter.handlers[scenario.ID+"::"+plan.Role]
+		handler, registered := adapter.handler(scenario, plan.Role)
 		if !registered {
 			failed = true
 			result.Status = "errored"

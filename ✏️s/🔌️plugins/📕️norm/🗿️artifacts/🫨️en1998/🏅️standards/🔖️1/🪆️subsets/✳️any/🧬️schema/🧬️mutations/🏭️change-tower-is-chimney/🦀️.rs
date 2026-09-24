@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerIsChi
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change tower-is-chimney flag to {}", self.new_tower_is_chimney), &format!("Turm- -Schornsteinschalter auf {} ändern", self.new_tower_is_chimney))
+        protocol::LocalizedLabel::native(&format!("Change tower-is-chimney flag to {}", self.new_tower_is_chimney), &format!("Kennzeichen Turm als Schornstein auf {} ändern", self.new_tower_is_chimney))
     }
 }
 //#endregion 🔖️ChangeTowerIsChimney

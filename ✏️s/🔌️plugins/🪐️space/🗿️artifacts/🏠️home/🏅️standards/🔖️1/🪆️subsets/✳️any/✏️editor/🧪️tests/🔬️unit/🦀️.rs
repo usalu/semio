@@ -165,9 +165,8 @@ async fn config_with_one_folded_space() -> HomeConfig {
         "recordedAtMs": 1001
     })
     .to_string();
-    let base = HomeConfig::default();
-    let created = protocol::Mutation::diff(&HomeConfigMutation::FoldDirectoryEvent { event_json: created }, &base).diff().clone();
-    protocol::Mutation::diff(&HomeConfigMutation::FoldDirectoryEvent { event_json: member }, &created).diff().clone()
+    let directory = [created, member].iter().map(|event| pack::from_json_str::<store::os_directory::DirectoryEvent>(event).expect("fixture directory event")).fold(store::os_directory::DirectoryReadModel::default(), |model, event| store::os_directory::fold(model, &event));
+    HomeConfig { directory_json: crate::editor::home::config::directory_to_json(&directory), ..HomeConfig::default() }
 }
 
 #[semio_framework_async_macros::async_test]

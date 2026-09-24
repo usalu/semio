@@ -13,45 +13,6 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, restore_members};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
 
-//#region 🔖️Kinds
-const KINDS: &[&str] = &[
-    "bind-morph-target-attribute",
-    "bind-primitive-attribute",
-    "bind-primitive-indices",
-    "bind-primitive-material",
-    "change-mesh-extension-data",
-    "change-mesh-extra-data",
-    "change-mesh-morph-weights",
-    "change-mesh-name",
-    "change-primitive-extension-data",
-    "change-primitive-extra-data",
-    "change-primitive-topology-mode",
-    "create-accessor",
-    "create-mesh",
-    "create-morph-target",
-    "create-primitive",
-    "delete-accessor",
-    "delete-mesh",
-    "delete-morph-target",
-    "delete-primitive",
-    "move-accessor",
-    "move-mesh",
-    "move-morph-target",
-    "move-morph-target-attribute",
-    "move-primitive",
-    "move-primitive-attribute",
-    "reorder-accessors",
-    "reorder-meshs",
-    "reorder-morph-target-attributes",
-    "reorder-morph-targets",
-    "reorder-primitive-attributes",
-    "reorder-primitives",
-    "unbind-morph-target-attribute",
-    "unbind-primitive-attribute",
-    "unbind-primitive-indices",
-    "unbind-primitive-material",
-];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Spec
 /// 📏️ The `semantic-gltf-v1` writer freedom every glTF mutation case is measured under.
@@ -316,12 +277,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built
 }

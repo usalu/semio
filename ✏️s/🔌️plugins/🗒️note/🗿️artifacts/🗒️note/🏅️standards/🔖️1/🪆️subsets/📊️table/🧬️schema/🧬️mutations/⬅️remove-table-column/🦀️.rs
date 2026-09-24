@@ -32,7 +32,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for RemoveTableColumn {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove column from table \"{}\"", self.id), &format!("Stütze aus Tabelle \"{}\" entfernen", self.id))
+        protocol::LocalizedLabel::native(&format!("Remove column from table \"{}\"", self.id), &format!("Spalte aus Tabelle \"{}\" entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

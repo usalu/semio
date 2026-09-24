@@ -10,7 +10,7 @@
 //! mints a fresh handle whose `child_id` is a `std::collections::hash_map::DefaultHasher` digest of
 //! the child content. Hand-authoring such an `➡️after` would mean hand-forging a value from `std`'s
 //! deliberately unspecified default hasher. `remove-data-property`'s own `mutation.no-op` guard returns BEFORE that call, so it is
-//! the one branch of this verb that mints nothing — an APPLIED case with the artifact's `Default`
+//! the one branch of this verb that mints nothing — an NO-OP case with the artifact's `Default`
 //! diff, `➡️after` byte-identical to `⬅️before`, and all seven assertions intact.
 //!
 //! 🧹️ This is the one fixture in the jack set that drives the `EntityRef::Edge` arm (its
@@ -119,20 +119,20 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "remove-data-property/keeps-an-edge-without-the-property-it-never-had: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared outcome — applied, with exactly one `warn`-level `mutation.no-op` — is what
-/// `remove-data-property` really emits here. A no-op is APPLIED with an empty diff, never rejected.
+/// 🎯️ The declared outcome — `no-op`, with exactly one `warn`-level `mutation.no-op` — is what
+/// `remove-data-property` really emits here. A no-op is a NO-OP with an empty diff, never rejected.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "remove-data-property/keeps-an-edge-without-the-property-it-never-had declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "remove-data-property/keeps-an-edge-without-the-property-it-never-had declares a no-op outcome");
     let produced = <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::diff(&mutation(), &before());
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its diagnostics");
     assert_eq!(declared.len(), produced.messages().len(), "the declared diagnostic count must match the emitted one");
     assert_eq!(declared[0].get("level").and_then(serde_json::Value::as_str), Some("warn"), "remove-data-property's no-op is declared at warn level");
     assert_eq!(declared[0].get("code").and_then(serde_json::Value::as_str), Some(produced.messages()[0].code.0.as_str()), "the declared code must match the emitted one");
     let mut snapshot = before();
-    apply_trinity_graph_mutation(&mut snapshot, &mutation()).expect("remove-data-property/keeps-an-edge-without-the-property-it-never-had: declared applied but the mutation was rejected");
-    assert_eq!(snapshot, before(), "an APPLIED no-op still leaves the document exactly where it was");
+    apply_trinity_graph_mutation(&mut snapshot, &mutation()).expect("remove-data-property/keeps-an-edge-without-the-property-it-never-had: declared no-op but the mutation was rejected");
+    assert_eq!(snapshot, before(), "an accepted no-op still leaves the document exactly where it was");
 }
 
 /// 🔺️ A no-op `remove-data-property` produces the artifact's `Default` diff — every slot `None`, and in

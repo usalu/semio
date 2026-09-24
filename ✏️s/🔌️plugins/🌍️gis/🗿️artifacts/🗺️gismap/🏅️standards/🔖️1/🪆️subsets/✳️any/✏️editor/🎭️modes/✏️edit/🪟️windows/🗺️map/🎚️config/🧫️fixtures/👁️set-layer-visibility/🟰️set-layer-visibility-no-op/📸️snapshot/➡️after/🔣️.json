@@ -1,0 +1,12 @@
+{
+  "layerVisibility": {
+    "parcels": false
+  },
+  "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+  "renderMode": "combined",
+  "vectorStyle": "colored",
+  "lodMode": "automatic",
+  "layerStrokeScale": {
+    "parcels": 1.0
+  }
+}

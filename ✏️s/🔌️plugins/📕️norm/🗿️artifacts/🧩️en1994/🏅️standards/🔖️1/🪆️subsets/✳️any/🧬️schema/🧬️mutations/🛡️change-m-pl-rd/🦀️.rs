@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeMPlRd {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change plastic moment resistance M_pl,Rd to {}", self.new_m_pl_rd), &format!("Plastizitätsmomentwiderstandm_pl,Rd auf {} ändern", self.new_m_pl_rd))
+        protocol::LocalizedLabel::native(&format!("Change plastic moment resistance M_pl,Rd to {}", self.new_m_pl_rd), &format!("Plastische Momententragfähigkeit M_pl,Rd auf {} ändern", self.new_m_pl_rd))
     }
 }
 //#endregion 🔖️Payload

@@ -1,0 +1,604 @@
+{
+  "description": "Per-surface verdicts of one browser-actor patch offer on the shell (G-P1-4). Each step applies `patches` to the stores the previous steps retained; `retained: false` starts an opening.",
+  "windowKey": "gis2d-main",
+  "panelTabs": [
+    {
+      "kind": {
+        "kind": "detailsCategory"
+      },
+      "label": {
+        "en": "x"
+      },
+      "group": "details",
+      "children": [
+        {
+          "kind": {
+            "kind": "app",
+            "id": "framework.panel.inspection"
+          },
+          "label": {
+            "en": "x"
+          },
+          "group": "details",
+          "bodyKey": "gis2d.play.inspection",
+          "children": []
+        },
+        {
+          "kind": {
+            "kind": "app",
+            "id": "framework.panel.unbodied"
+          },
+          "label": {
+            "en": "x"
+          },
+          "group": "details",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": {
+        "kind": "app",
+        "id": "framework.panel.history"
+      },
+      "label": {
+        "en": "x"
+      },
+      "group": "details",
+      "bodyKey": "framework.body.history",
+      "children": []
+    }
+  ],
+  "panelKeys": [
+    "framework.panel.inspection",
+    "framework.panel.history"
+  ],
+  "steps": [
+    {
+      "name": "first offer paints window and panel",
+      "retained": false,
+      "patches": [
+        {
+          "surface": "gis2d-main",
+          "baseRevision": 0,
+          "revision": 1,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "gis2d-main.body",
+              "component": {
+                "type": "text",
+                "value": "gis2d-main.body",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        },
+        {
+          "surface": "framework.panel.inspection",
+          "baseRevision": 0,
+          "revision": 1,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "framework.panel.inspection.body",
+              "component": {
+                "type": "text",
+                "value": "framework.panel.inspection.body",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "gis2d-main",
+          "outcome": "acknowledged",
+          "revision": 1
+        },
+        {
+          "surface": "framework.panel.inspection",
+          "outcome": "acknowledged",
+          "revision": 1
+        }
+      ],
+      "stored": true,
+      "panelsAdded": true,
+      "revisions": {
+        "gis2d-main": 1,
+        "framework.panel.inspection": 1
+      }
+    },
+    {
+      "name": "remote edit moves only the panel",
+      "retained": true,
+      "patches": [
+        {
+          "surface": "framework.panel.inspection",
+          "baseRevision": 1,
+          "revision": 2,
+          "ops": [
+            {
+              "type": "setComponent",
+              "id": 1,
+              "component": {
+                "type": "text",
+                "value": "area 152",
+                "emphasize": null,
+                "dataAttributes": null
+              }
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "framework.panel.inspection",
+          "outcome": "acknowledged",
+          "revision": 2
+        }
+      ],
+      "stored": true,
+      "panelsAdded": false,
+      "revisions": {
+        "gis2d-main": 1,
+        "framework.panel.inspection": 2
+      }
+    },
+    {
+      "name": "stale panel is refused and reset while the window keeps its frame",
+      "retained": true,
+      "patches": [
+        {
+          "surface": "gis2d-main",
+          "baseRevision": 1,
+          "revision": 2,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "gis2d-main.body",
+              "component": {
+                "type": "text",
+                "value": "gis2d-main.body",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        },
+        {
+          "surface": "framework.panel.inspection",
+          "baseRevision": 7,
+          "revision": 8,
+          "ops": []
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "gis2d-main",
+          "outcome": "acknowledged",
+          "revision": 2
+        },
+        {
+          "surface": "framework.panel.inspection",
+          "outcome": "rejected",
+          "revision": 0,
+          "reason": "revisionMismatch"
+        }
+      ],
+      "stored": true,
+      "panelsAdded": false,
+      "revisions": {
+        "gis2d-main": 2,
+        "framework.panel.inspection": 0
+      }
+    },
+    {
+      "name": "full resend after the reset applies from zero",
+      "retained": true,
+      "patches": [
+        {
+          "surface": "framework.panel.inspection",
+          "baseRevision": 0,
+          "revision": 1,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "framework.panel.inspection.body",
+              "component": {
+                "type": "text",
+                "value": "framework.panel.inspection.body",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "framework.panel.inspection",
+          "outcome": "acknowledged",
+          "revision": 1
+        }
+      ],
+      "stored": true,
+      "panelsAdded": false,
+      "revisions": {
+        "gis2d-main": 2,
+        "framework.panel.inspection": 1
+      }
+    },
+    {
+      "name": "a surface this app does not render is refused",
+      "retained": true,
+      "patches": [
+        {
+          "surface": "foreign.panel",
+          "baseRevision": 0,
+          "revision": 1,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "foreign.panel.body",
+              "component": {
+                "type": "text",
+                "value": "foreign.panel.body",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "foreign.panel",
+          "outcome": "rejected",
+          "revision": 0,
+          "reason": "unknown-surface"
+        }
+      ],
+      "stored": true,
+      "panelsAdded": false,
+      "revisions": {
+        "gis2d-main": 2,
+        "framework.panel.inspection": 1
+      }
+    },
+    {
+      "name": "an opening whose first offer leaves the window unpainted retains nothing",
+      "retained": false,
+      "patches": [
+        {
+          "surface": "framework.panel.history",
+          "baseRevision": 0,
+          "revision": 1,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "framework.panel.history.body",
+              "component": {
+                "type": "text",
+                "value": "framework.panel.history.body",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "framework.panel.history",
+          "outcome": "rejected",
+          "revision": 0,
+          "reason": "window-surface-unpainted"
+        }
+      ],
+      "stored": false,
+      "panelsAdded": false,
+      "revisions": {}
+    },
+    {
+      "name": "a failing first window patch refuses every surface",
+      "retained": false,
+      "patches": [
+        {
+          "surface": "gis2d-main",
+          "baseRevision": 4,
+          "revision": 5,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "gis2d-main.body",
+              "component": {
+                "type": "text",
+                "value": "gis2d-main.body",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        },
+        {
+          "surface": "framework.panel.inspection",
+          "baseRevision": 0,
+          "revision": 1,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "framework.panel.inspection.body",
+              "component": {
+                "type": "text",
+                "value": "framework.panel.inspection.body",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "gis2d-main",
+          "outcome": "rejected",
+          "revision": 0,
+          "reason": "revisionMismatch"
+        },
+        {
+          "surface": "framework.panel.inspection",
+          "outcome": "rejected",
+          "revision": 0,
+          "reason": "window-surface-unpainted"
+        }
+      ],
+      "stored": false,
+      "panelsAdded": false,
+      "revisions": {}
+    }
+  ]
+}

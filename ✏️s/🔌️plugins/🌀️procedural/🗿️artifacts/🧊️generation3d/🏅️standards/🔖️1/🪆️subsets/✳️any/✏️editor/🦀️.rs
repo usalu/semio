@@ -2459,6 +2459,7 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("importDocumentRequest", InteractiveJobClassification::Migrated)
             .action_interactive_job("importDocument", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
+            .action_destructive("exportDocument")
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                     ActionArgOption::new("neuron", LocalizedLabel::native("Neuron", "Neuron")),

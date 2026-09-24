@@ -133,7 +133,7 @@ export type DocumentOpeningAttachmentStepV1 = "attach-a" | "attached-a" | "detac
 export interface DocumentOpeningCloseFailureV1 { readonly attached: boolean; readonly sequence: readonly ("socket" | "attach" | "close" | "detach" | "retire")[] }
 export interface DocumentOpeningRefV1 { readonly documentId: string; readonly schema: string; readonly spaceId?: string }
 export interface DocumentOpeningContextV1 { readonly currentSpaceId: string | null; readonly identity: { readonly hubBaseUrl: string } | null; readonly dataDir?: string; readonly surface?: string }
-export type DocumentOpeningTargetV1 = { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly requestedSurfaceId: string } | { readonly kind: "folder"; readonly path: string };
+export type DocumentOpeningTargetV1 = { readonly kind: "hub"; readonly dataClass: "persistedShared"; readonly baseUrl: string; readonly spaceId: string; readonly requestedSurfaceId: string } | { readonly kind: "folder"; readonly dataClass: "persistedLocalOnly"; readonly path: string };
 export type DocumentOpeningErrorCodeV1 = "opening.identity-required" | "opening.surface-required";
 export interface DocumentOpeningScopeResolutionV1 { readonly id: string; readonly ref: DocumentOpeningRefV1; readonly context: DocumentOpeningContextV1; readonly expected?: readonly DocumentOpeningTargetV1[]; readonly error?: DocumentOpeningErrorCodeV1 }
 export type DocumentOpeningRequestStageV1 = "open-plan" | "manifest" | "component" | "descriptor" | "socket-grants";

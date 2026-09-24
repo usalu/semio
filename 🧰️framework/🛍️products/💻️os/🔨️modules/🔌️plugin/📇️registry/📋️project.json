@@ -75,6 +75,16 @@
         "forwardAllArgs": true
       }
     },
+    "rebuild-all": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts rebuild-all",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

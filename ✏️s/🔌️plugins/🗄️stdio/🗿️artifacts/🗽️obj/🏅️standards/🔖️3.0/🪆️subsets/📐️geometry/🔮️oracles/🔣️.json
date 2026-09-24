@@ -147,7 +147,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "insert-vertex",
         "remove-vertex",
@@ -180,49 +179,17 @@
       "subsetDirectoryName": "📐️geometry",
       "mutations": [
         {
-          "id": "no-mutation",
-          "capability": "obj-3-0-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#NoMutation",
-          "outcomes": [
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "no-mutation",
-            "bridgeVersion": 1,
-            "variant": "ObjMutation::NoMutation"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "obj-3-0-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "tobj-obj-3-0-mutate-reader"
-            }
-          ],
-          "carriers": [
-            "obj"
-          ],
-          "invariants": {
-            "local": [
-              "composed-projection-unchanged"
-            ],
-            "enclosing": [
-              "tobj-mesh-and-independent-document-projection-agree"
-            ]
-          }
-        },
-        {
           "id": "set-snapshot",
           "capability": "obj-3-0-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::SetSnapshot"
+            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -254,7 +221,7 @@
           "productionDispatch": {
             "operation": "insert-vertex",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::InsertVertex"
+            "variant": "InsertVertex"
           },
           "oracleRequirements": [
             {
@@ -286,7 +253,7 @@
           "productionDispatch": {
             "operation": "remove-vertex",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::RemoveVertex"
+            "variant": "RemoveVertex"
           },
           "oracleRequirements": [
             {
@@ -318,7 +285,7 @@
           "productionDispatch": {
             "operation": "set-vertex",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::SetVertex"
+            "variant": "SetVertex"
           },
           "oracleRequirements": [
             {
@@ -350,7 +317,7 @@
           "productionDispatch": {
             "operation": "insert-texcoord",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::InsertTexcoord"
+            "variant": "InsertTexcoord"
           },
           "oracleRequirements": [
             {
@@ -382,7 +349,7 @@
           "productionDispatch": {
             "operation": "remove-texcoord",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::RemoveTexcoord"
+            "variant": "RemoveTexcoord"
           },
           "oracleRequirements": [
             {
@@ -414,7 +381,7 @@
           "productionDispatch": {
             "operation": "set-texcoord",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::SetTexcoord"
+            "variant": "SetTexcoord"
           },
           "oracleRequirements": [
             {
@@ -446,7 +413,7 @@
           "productionDispatch": {
             "operation": "insert-normal",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::InsertNormal"
+            "variant": "InsertNormal"
           },
           "oracleRequirements": [
             {
@@ -478,7 +445,7 @@
           "productionDispatch": {
             "operation": "remove-normal",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::RemoveNormal"
+            "variant": "RemoveNormal"
           },
           "oracleRequirements": [
             {
@@ -510,7 +477,7 @@
           "productionDispatch": {
             "operation": "set-normal",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::SetNormal"
+            "variant": "SetNormal"
           },
           "oracleRequirements": [
             {
@@ -542,7 +509,7 @@
           "productionDispatch": {
             "operation": "insert-face",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::InsertFace"
+            "variant": "InsertFace"
           },
           "oracleRequirements": [
             {
@@ -575,7 +542,7 @@
           "productionDispatch": {
             "operation": "remove-face",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::RemoveFace"
+            "variant": "RemoveFace"
           },
           "oracleRequirements": [
             {
@@ -608,7 +575,7 @@
           "productionDispatch": {
             "operation": "set-face",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::SetFace"
+            "variant": "SetFace"
           },
           "oracleRequirements": [
             {
@@ -640,7 +607,7 @@
           "productionDispatch": {
             "operation": "set-group",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::SetGroup"
+            "variant": "SetGroup"
           },
           "oracleRequirements": [
             {
@@ -672,7 +639,7 @@
           "productionDispatch": {
             "operation": "remove-group",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::RemoveGroup"
+            "variant": "RemoveGroup"
           },
           "oracleRequirements": [
             {
@@ -704,7 +671,7 @@
           "productionDispatch": {
             "operation": "set-object",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::SetObject"
+            "variant": "SetObject"
           },
           "oracleRequirements": [
             {
@@ -736,7 +703,7 @@
           "productionDispatch": {
             "operation": "remove-object",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::RemoveObject"
+            "variant": "RemoveObject"
           },
           "oracleRequirements": [
             {
@@ -762,13 +729,12 @@
           "capability": "obj-3-0-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSmoothingGroups",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-smoothing-groups",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::SetSmoothingGroups"
+            "variant": "SetSmoothingGroups"
           },
           "oracleRequirements": [
             {
@@ -794,13 +760,12 @@
           "capability": "obj-3-0-mutate",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetUnknownStatements",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-unknown-statements",
             "bridgeVersion": 1,
-            "variant": "ObjMutation::SetUnknownStatements"
+            "variant": "SetUnknownStatements"
           },
           "oracleRequirements": [
             {
@@ -815,6 +780,70 @@
           "invariants": {
             "local": [
               "retained-statement-lines-match-the-declared-list"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-usemtl",
+          "capability": "obj-3-0-material-mutate",
+          "subset": "material",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🖌️set-usemtl/🦀️.rs#SetUsemtl",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-usemtl",
+            "bridgeVersion": 1,
+            "variant": "SetUsemtl"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-material-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "usemtl-run-starts-match-the-declared-list"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "set-mtllib",
+          "capability": "obj-3-0-material-mutate",
+          "subset": "material",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🎨set-mtllib/🦀️.rs#SetMtllib",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-mtllib",
+            "bridgeVersion": 1,
+            "variant": "SetMtllib"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-material-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-obj-3-0-document-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "mtllib-reference-matches-or-is-absent"
             ],
             "enclosing": [
               "tobj-mesh-and-independent-document-projection-agree"
@@ -873,8 +902,6 @@
         "standard": "3.0",
         "subset": "geometry"
       },
-      "mutation": "no-mutation",
-      "outcome": "no-op",
       "units": {
         "length": "unitless",
         "angle": "degree"

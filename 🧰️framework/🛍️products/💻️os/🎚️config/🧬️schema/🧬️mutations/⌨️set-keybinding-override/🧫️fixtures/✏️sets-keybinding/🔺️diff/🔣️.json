@@ -1,0 +1,13 @@
+{
+  "appearance": null,
+  "layout": null,
+  "driverId": null,
+  "customDrivers": {},
+  "locale": null,
+  "terminology": null,
+  "themeId": null,
+  "customThemes": {},
+  "keybindingOverrides": {
+    "edit.undo": "Meta+Z"
+  }
+}

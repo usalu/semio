@@ -1,0 +1,26 @@
+/** 🔎️ WG7 — authors one note block through the artifact panel's "Add Text" on a local document and reads the block rows back. */
+import { chromium } from "playwright";
+const SHELL = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6551/?plugin=note";
+const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--enable-features=Vulkan,WebGPU", "--ignore-gpu-blocklist", "--use-angle=metal"] });
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+const lines = [];
+page.on("console", (message) => lines.push(message.text()));
+await page.goto(SHELL, { waitUntil: "domcontentloaded" });
+await page.waitForFunction(() => typeof globalThis.semioWgpuIntrospection?.dumpStructure === "function", null, { timeout: 180_000 });
+await page.waitForTimeout(8000);
+const nodes = async () => JSON.parse((await page.evaluate(async () => globalThis.semioWgpuIntrospection.dumpAccessibility())) || "{}").windows?.flatMap((w) => w.nodes) ?? [];
+const click = (key) => page.evaluate((k) => { const e = document.querySelector(`#semio-wgpu-accessibility [data-node-key="${k}"]`); if (!e) return "absent"; e.focus(); e.dispatchEvent(new MouseEvent("click", { bubbles: true })); return "ok"; }, key);
+const rows = async () => (await nodes()).filter((n) => String(n.key).startsWith("note-play-block:")).map((n) => `${n.key}|${n.label}`);
+await click("framework.panel.artifact");
+await page.waitForTimeout(3000);
+const before = await rows();
+const pressed = await click("note-play-blocks.add.text");
+await page.waitForTimeout(6000);
+const after = await rows();
+const panelNodes = (await nodes()).filter((n) => n.windowId === undefined || true).map((n) => `${n.key}|${n.role}|${n.label ?? ""}`).filter((s) => !s.startsWith("dock.") && !s.startsWith("framework.window"));
+await click("framework.panel.history");
+await page.waitForTimeout(3000);
+const history = (await nodes()).filter((n) => String(n.key).startsWith("framework.history.entry.")).map((n) => n.label);
+const artifact = (await nodes()).filter((n) => String(n.key).startsWith("note-play-blocks")).map((n) => `${n.key}|${n.label}`);
+console.log(JSON.stringify({ panelNodes, pressed, before, after, history, artifact, tail: lines.slice(lines.findIndex((l) => l.includes('action=addBlock'))).filter((l) => !/render (begin|leave)|ui-doc|resident/u.test(l)).slice(0, 30), relevant: lines.filter((l) => /addBlock|add\.text|failed|fault |dispatch|action/u.test(l) && !/ui-doc begin refused/u.test(l)).slice(-14) }, null, 1));
+await browser.close();

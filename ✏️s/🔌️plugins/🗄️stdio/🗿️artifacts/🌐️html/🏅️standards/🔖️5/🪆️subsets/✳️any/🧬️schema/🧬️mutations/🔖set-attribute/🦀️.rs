@@ -23,7 +23,7 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetAttribute {
         agg_inverse(&HtmlMutation::SetAttribute(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-attribute", "Attribut setzen")
+        protocol::LocalizedLabel::native("Set attribute", "Attribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

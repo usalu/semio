@@ -131,8 +131,8 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                 }
 
                 /// 🧵️ A generation command authors no transient of its own: it carries the `previewEval` run start,
-                /// and the run publishes the app transient every generate preview renders. The bundled `rect`
-                /// needs the uncontributed `math.add`, so callers remove it first or no run is servable.
+                /// and the run publishes the app transient every generate preview renders. The bundled `rect` and
+                /// `outline` need the uncontributed `draw` operators, so callers remove them first or no run is servable.
                 async fn populate_generate_preview(app: &mut TestApp, view: &ViewModel) -> Result<(), String> {
                     let before = app.ephemeral_snapshot().await.transient_generation;
                     let receipt = dispatch(app, Some(view), Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await?;
@@ -202,7 +202,9 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     load_exact::<generate_preview::config::Generation2dGeneratePreviewWindowConfigOwner>(&mut app, "generate-right", generate_preview::config::Generation2dGeneratePreviewWindowConfig { viewport: generate_right_value }).await?;
                     eprintln!("[DEBUG] Generation2d exact-window law loaded four preview owners");
 
-                    Box::pin(dispatch(&mut app, Some(&generate_left), Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "rect".into() }))).await?;
+                    for widget_id in ["rect", "outline"] {
+                        Box::pin(dispatch(&mut app, Some(&generate_left), Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: widget_id.into() }))).await?;
+                    }
                     Box::pin(populate_generate_preview(&mut app, &generate_left)).await?;
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     let app_before = app.config_pack().await.map_err(|error| format!("{error:?}"))?;

@@ -25,7 +25,9 @@
  * dev session to drive — the gate reuses it rather than paying an activation, and says so.
  * `S_OS_MCP_LIVE_PLUGIN` (default `note`) is the variant that session serves.
  * `S_OS_MCP_LIVE_MUTATION`/`S_OS_MCP_LIVE_MUTATION_INPUT` (default `addBlock` and its `{kind,x,y}`)
- * name that plugin's own UNCONDITIONAL mutation for the (f) chain. `S_AGENT_BRIDGE_DIR` is
+ * name that plugin's own UNCONDITIONAL mutation for the (f) chain. `S_OS_MCP_LIVE_LOCALE` (`en`,
+ * default, or `de`) is the language of the human's browser; the approval affordance must speak it
+ * (step `(i18n)`), so running the gate once per locale proves both. `S_AGENT_BRIDGE_DIR` is
  * inherited untouched: the gateway must meet the session in the rendezvous THAT session published
  * into, so a gate that minted its own would always find a 404 where the offer should be.
  *
@@ -60,6 +62,14 @@ const MUTATION_INPUT = JSON.parse(process.env.S_OS_MCP_LIVE_MUTATION_INPUT ?? `{
  * `windows=s-home-main`). Unset for every single-plugin `dev` session, which already boots the
  * program it serves. Ticket 26/09/18 S5 §8 / S6. */
 const SPAWN_PLUGIN = process.env.S_OS_MCP_LIVE_SPAWN ?? null;
+/** 🌐️ The language the human's shell runs in (`en` or `de`): the browser context's locale, which the
+ * shell adopts when it holds no stored preference. Every surface the human reads — the transcript and
+ * the approval affordance — must speak it; the oracle below is this gate's own, not the shell's bundle. */
+const LOCALE = process.env.S_OS_MCP_LIVE_LOCALE === "de" ? "de" : "en";
+const APPROVAL_WORDS: Readonly<Record<"en" | "de", Readonly<{ once: string; deny: string; withdrawnCancelled: string }>>> = {
+  en: { once: "Approve Once", deny: "Deny", withdrawnCancelled: "the agent's request was cancelled" },
+  de: { once: "Einmal genehmigen", deny: "Ablehnen", withdrawnCancelled: "die Anfrage des Agenten wurde abgebrochen" },
+};
 /** 🧱️ The one module the shell-bound artifact route lives in. A serve transforming an older copy
  * of it answers every (f) step from a route that no longer exists in the tree under test, which is
  * how two runs of this gate on two serves produced two different verdicts (LB1 §11.2). */
@@ -230,16 +240,10 @@ function readShell(page: Page) {
       id: element.id,
     })),
     cancelButtons: [...document.querySelectorAll("[data-semio-agent-chat-cancel]")].map((element) => element.getAttribute("data-semio-agent-chat-cancel")),
-    approvalGroups: [...document.querySelectorAll("[data-semio-agent-chat-approval]")].map((element) => element.getAttribute("data-semio-agent-chat-approval")),
-    // 🤖️ The `🤖️AgentApprovals` dialog's own rows. It is MODAL, so while it is up its veil owns
-    //    every pointer event and the transcript's inline group — real, and clickable once the human
-    //    dismisses the dialog — cannot be reached. The affordance a human would actually use is
-    //    therefore the topmost one, and that is what this gate clicks.
-    approvalDialogRows: [...document.querySelectorAll("[data-semio-agent-approval-id]")].map((element) => element.getAttribute("data-semio-agent-approval-id")),
-    approvalCountdown: (() => {
-      const shown = document.querySelector("[data-semio-agent-approval-countdown], [data-semio-agent-chat-approval-countdown]");
-      return shown?.getAttribute("data-semio-agent-approval-countdown") ?? shown?.getAttribute("data-semio-agent-chat-approval-countdown") ?? null;
-    })(),
+    // ⛩️ Every approval's ONE affordance (`🤖️AgentApprovals`' `AgentApprovalAffordance`, rendered in the agent
+    //    conversation; ticket 26/09/18 session 11 U5 retired the modal copy whose veil blocked the inline one).
+    approvals: [...document.querySelectorAll("[data-semio-agent-approval-id]")].map((element) => element.getAttribute("data-semio-agent-approval-id")),
+    approvalCountdown: document.querySelector("[data-semio-agent-approval-countdown]")?.getAttribute("data-semio-agent-approval-countdown") ?? null,
     windowIds: [...new Set([...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id")))],
   }));
 }
@@ -264,7 +268,7 @@ if (!servedShellHost.includes("agentArtifactRouteRef"))
   );
 
 const browser = await chromium.launch({ headless: process.env.S_OS_MCP_LIVE_HEADED !== "1", args: ["--use-angle=metal", "--ignore-gpu-blocklist"] });
-const page = await (await browser.newContext({ viewport: { width: 1600, height: 1000 } })).newPage();
+const page = await (await browser.newContext({ viewport: { width: 1600, height: 1000 }, locale: LOCALE === "de" ? "de-DE" : "en-US" })).newPage();
 
 let gateway: Peer | null = null;
 try {
@@ -470,9 +474,13 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     // 🖱️ Found and clicked inside ONE evaluate: a locator click is a second round trip, and an
     //    in-flight verb can settle in that gap — which scores the shell's own promptness as a
     //    missing cancel button. This clicks the affordance that exists at the instant it is seen.
+    //    Only the `action_invoke` row qualifies: the search calls before it answer the gate before
+    //    their own result frame reaches the shell, so "the first running row" was sometimes one of
+    //    them — a click on an already-settled call that proved nothing (U5 §2, run 2).
+    const cancelledAt = Date.now();
     const cancelled = await until("a cancellable row to click", 30_000, 100, async () =>
       page.evaluate(() => {
-        const button = document.querySelector<HTMLElement>("[data-semio-agent-chat-cancel]");
+        const button = document.querySelector<HTMLElement>("[data-semio-agent-chat-cancel][data-semio-agent-chat-tool='action_invoke']");
         if (!button) return null;
         const id = button.getAttribute("data-semio-agent-chat-cancel");
         button.click();
@@ -488,7 +496,35 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
         return row && row.state !== "running" ? row : null;
       });
       const settled = await inFlight;
-      record("(c) Cancel cancels an in-flight call", cancelling ? "pass" : "fail", `clicked=${cancelled} row=${JSON.stringify(cancelling)} call=${describe(settled as Record<string, any>)}`);
+      const settledMs = Date.now() - cancelledAt;
+      // 🛑️ The call must END as cancelled, promptly — not merely show a `cancelling` row while it
+      //    waits out the 120 s approval deadline as `APPROVAL_REQUIRED`, which is what a parked
+      //    approval did before the gateway's wait observed the tool call's own job (U5 §2, run 1).
+      const endedCancelled = structured(settled as Record<string, any>).code === "CANCELLED" && settledMs < 30_000;
+      record("(c) Cancel cancels an in-flight call", cancelling && endedCancelled ? "pass" : "fail", `clicked=${cancelled} row=${JSON.stringify(cancelling)} settledMs=${settledMs} call=${describe(settled as Record<string, any>)}`);
+      // 🪦️ The call parked on an approval, so the shell was showing a decidable affordance for it. The
+      //    gateway withdraws it with the cancel (`ApprovalWithdrawn{cancelled}`), and the shell must
+      //    retire it — no countdown, no decision — and say why in the human's language, instead of
+      //    leaving it decidable until its own countdown runs out (U5 §7).
+      const approvalId = String(structured(settled as Record<string, any>).details?.approvalHandle ?? "");
+      const retired = await until("the withdrawn approval affordance", 15_000, 150, async () =>
+        page.evaluate((id: string) => {
+          const affordance = [...document.querySelectorAll<HTMLElement>("[data-semio-agent-approval-id]")].filter((element) => id === "" || element.getAttribute("data-semio-agent-approval-id") === id).at(-1);
+          if (!affordance || affordance.getAttribute("data-semio-agent-approval-state") !== "withdrawn") return null;
+          return {
+            id: affordance.getAttribute("data-semio-agent-approval-id"),
+            withdrawal: affordance.getAttribute("data-semio-agent-approval-withdrawal"),
+            countdown: affordance.querySelector("[data-semio-agent-approval-countdown]") !== null,
+            decisions: affordance.querySelectorAll("[id^='framework.approvals.deny.'], [id^='framework.approvals.once.'], [id^='framework.approvals.session.']").length,
+            text: (affordance.querySelector("[role='status']") as HTMLElement | null)?.innerText ?? "",
+          };
+        }, approvalId),
+      );
+      record(
+        `(c2) the cancelled call's approval is withdrawn in the shell (${LOCALE})`,
+        retired !== null && retired.withdrawal === "cancelled" && !retired.countdown && retired.decisions === 0 && retired.text.includes(APPROVAL_WORDS[LOCALE].withdrawnCancelled) ? "pass" : "fail",
+        retired ? `approval=${retired.id} withdrawal=${retired.withdrawal} countdown=${retired.countdown} decisions=${retired.decisions} text="${retired.text}"` : `no approval affordance turned withdrawn (approvalHandle=${approvalId || "<none in the answer>"})`,
+      );
     }
   }
 
@@ -631,20 +667,18 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     //    `ApprovalRequested` over `/bridge`, the shell must render a decidable affordance, and the
     //    human's click must come back as the typed outcome. `sawAffordance` is an assertion here,
     //    not a note: without it the human was never given the chance to decide.
-    const decide = async (decision: "once" | "deny"): Promise<{ answer: Record<string, any>; surface: string; countdown: string | null }> => {
+    const decide = async (decision: "once" | "deny"): Promise<{ answer: Record<string, any>; surface: string; countdown: string | null; words: Readonly<{ once: string; deny: string }> | null }> => {
       // 🗂️ Every approval this run already parked stays on screen — `(c)` cancels its call while the
       //    gateway is still waiting for a human, so a row from it outlives the step. Deciding "the
       //    first row" would answer THAT one, whose budget has been running since, and leave this
       //    invocation waiting on a decision nobody made. Only an id that was not there a moment ago
       //    belongs to the call this step just made.
-      const before = new Set((await readShell(page)).approvalDialogRows.concat((await readShell(page)).approvalGroups).filter((id): id is string => id !== null));
+      const before = new Set((await readShell(page)).approvals.filter((id): id is string => id !== null));
       const invoked = gateway!.call("action_invoke", { capabilityId: target, input: {} });
       const shown = await until("the approval affordance", 30_000, 150, async () => {
         const view = await readShell(page);
-        const dialogRow = view.approvalDialogRows.find((id) => id !== null && !before.has(id));
-        if (dialogRow) return { id: dialogRow, controlId: `framework.approvals.${decision}.${dialogRow}`, surface: "dialog", countdown: view.approvalCountdown };
-        const inline = view.approvalGroups.find((id) => id !== null && !before.has(id));
-        return inline ? { id: inline, controlId: `framework.chat.approval.${decision}.${inline}`, surface: "chat", countdown: view.approvalCountdown } : null;
+        const fresh = view.approvals.find((id) => id !== null && !before.has(id));
+        return fresh ? { id: fresh, controlId: `framework.approvals.${decision}.${fresh}`, surface: "conversation", countdown: view.approvalCountdown } : null;
       });
       // ⏳️ The countdown is part of the affordance, not decoration: a human asked to decide inside
       //    a deadline they cannot see is being asked to guess. Read from THIS approval's own row,
@@ -652,14 +686,21 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
       const countdown = shown
         ? await page.evaluate(
             (id: string) =>
-              document.querySelector(`[data-semio-agent-approval-id="${id}"] [data-semio-agent-approval-countdown]`)?.getAttribute("data-semio-agent-approval-countdown") ??
-              document.querySelector(`[data-semio-agent-chat-approval-countdown]`)?.getAttribute("data-semio-agent-chat-approval-countdown") ??
-              null,
+              document.querySelector(`[data-semio-agent-approval-id="${id}"] [data-semio-agent-approval-countdown]`)?.getAttribute("data-semio-agent-approval-countdown") ?? null,
+            shown.id,
+          )
+        : null;
+      const words = shown
+        ? await page.evaluate(
+            (id: string) => ({
+              once: (document.querySelector(`[id="framework.approvals.once.${id}"]`) as HTMLElement | null)?.innerText.trim() ?? "",
+              deny: (document.querySelector(`[id="framework.approvals.deny.${id}"]`) as HTMLElement | null)?.innerText.trim() ?? "",
+            }),
             shown.id,
           )
         : null;
       if (shown) await page.locator(`[id="${shown.controlId}"]`).first().click({ timeout: 10_000 });
-      return { answer: await invoked, surface: shown?.surface ?? "none", countdown };
+      return { answer: await invoked, surface: shown?.surface ?? "none", countdown, words };
     };
     const once = await decide("once");
     record(
@@ -667,6 +708,9 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
       once.surface !== "none" && structured(once.answer).code !== "APPROVAL_REQUIRED" && structured(once.answer).code !== "PERMISSION_DENIED" ? "pass" : "fail",
       `affordance=${once.surface} countdown=${once.countdown ?? "(none)"} answer=${describe(once.answer)}`,
     );
+    const lang = await page.evaluate(() => document.documentElement.lang);
+    const spoken = once.words !== null && once.words.once === APPROVAL_WORDS[LOCALE].once && once.words.deny === APPROVAL_WORDS[LOCALE].deny;
+    record(`(i18n) the approval affordance speaks ${LOCALE}`, spoken ? "pass" : "fail", `lang=${lang} once="${once.words?.once ?? ""}" deny="${once.words?.deny ?? ""}" expected="${APPROVAL_WORDS[LOCALE].once}"/"${APPROVAL_WORDS[LOCALE].deny}"`);
     const denied = await decide("deny");
     record(
       "(e2) Deny returns the typed refusal",

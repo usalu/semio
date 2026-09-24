@@ -1,0 +1,22 @@
+/** 🔎️ WG7 — opens the wgpu shell's search palette (mod+p), types "Add Block" and lists what the mirror offers. */
+import { chromium } from "playwright";
+import { writeFileSync } from "node:fs";
+const SHELL = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6551/?plugin=note";
+const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--enable-features=Vulkan,WebGPU", "--ignore-gpu-blocklist", "--use-angle=metal"] });
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+await page.goto(SHELL, { waitUntil: "domcontentloaded" });
+await page.waitForFunction(() => typeof globalThis.semioWgpuIntrospection?.dumpStructure === "function", null, { timeout: 180_000 });
+await page.waitForTimeout(8000);
+const nodes = async () => JSON.parse((await page.evaluate(async () => globalThis.semioWgpuIntrospection.dumpAccessibility())) || "{}").windows?.flatMap((w) => w.nodes.map((n) => `${n.key}|${n.role}|${n.label ?? ""}`)) ?? [];
+const before = new Set(await nodes());
+await page.mouse.click(500, 400);
+await page.waitForTimeout(1000);
+await page.keyboard.press("Meta+p");
+await page.waitForTimeout(2500);
+await page.keyboard.type("Add Block");
+await page.waitForTimeout(2500);
+const after = (await nodes()).filter((n) => !before.has(n));
+await page.screenshot({ path: "generated/search-probe.png" });
+writeFileSync("generated/search-probe.json", JSON.stringify(after, null, 1));
+console.log(after.slice(0, 60).join("\n"));
+await browser.close();

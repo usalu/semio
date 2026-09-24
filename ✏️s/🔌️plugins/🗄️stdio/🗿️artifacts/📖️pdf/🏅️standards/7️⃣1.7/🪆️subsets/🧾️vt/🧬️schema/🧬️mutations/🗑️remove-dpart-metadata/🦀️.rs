@@ -28,7 +28,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveDpartMetadata {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove PDF/VT partition metadata", "PDF/VTpartitionsmetadaten entfernen")
+        protocol::LocalizedLabel::native("Remove PDF/VT partition metadata", "PDF/VT-Partitionsmetadaten entfernen")
     }
 
     fn target(&self) -> Vec<String> {

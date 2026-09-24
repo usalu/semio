@@ -34,7 +34,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change ideal loads system {} minimum cooling supply air temperature to {:?}", self.id.0, self.new_min_cooling_supply_air_temp_c), &format!("ideale Lastensystem {} Minimalkühlungszuluftlufttemperatur auf {:?} ändern", self.id.0, self.new_min_cooling_supply_air_temp_c))
+        protocol::LocalizedLabel::native(&format!("Change ideal loads system {} minimum cooling supply air temperature to {:?}", self.id.0, self.new_min_cooling_supply_air_temp_c), &format!("Minimale Kühlzulufttemperatur von Ideallastsystem {} auf {:?} ändern", self.id.0, self.new_min_cooling_supply_air_temp_c))
     }
 
     fn target(&self) -> Vec<String> {

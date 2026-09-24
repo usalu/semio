@@ -37,6 +37,17 @@ export function getWorkspaceRoot(): string {
 }
 //#endregion 🔎️WorkspaceRoot
 
+//#region 🗂️Declared
+/** 🗂️ The package directories the root `package.json` declares as workspaces (kept exact by
+ * `workspaces --check`), repository-relative. A consumer that needs every package manifest reads these
+ * instead of walking the repository. */
+export function declaredWorkspaces(repoRoot: string): readonly string[] {
+  const manifest = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as { workspaces?: unknown };
+  if (!Array.isArray(manifest.workspaces) || manifest.workspaces.some((entry) => typeof entry !== "string")) throw new Error("Root package.json must declare workspaces as a string array.");
+  return manifest.workspaces as string[];
+}
+//#endregion 🗂️Declared
+
 //#region 🔣️Constants
 const MANIFEST_FILENAME = "package.json";
 

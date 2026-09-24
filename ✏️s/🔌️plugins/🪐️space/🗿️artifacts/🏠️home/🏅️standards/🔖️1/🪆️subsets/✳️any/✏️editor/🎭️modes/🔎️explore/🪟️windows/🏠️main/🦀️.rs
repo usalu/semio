@@ -23,9 +23,9 @@ use crate::editor::home::config::HomeConfig;
 use crate::editor::home::terminology::SHomeLabels;
 use crate::editor::home::S_HOME_CONTROLLER_ID;
 use crate::HomeTableLabels;
-use semio_framework_plugin::app::{TableRow, TableRowAction, TableRowsView, TableWindowKit, WindowKit};
+use semio_framework_plugin::app::{table_row_action, table_window_row, TableWindowKit, TreeWindows, WindowKit};
 use semio_framework_plugin::{ActionFactory, IconName, LocalizedLabel, WindowKindDefinition};
-use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
+use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, HasStackLayout};
 
 //#region 🔖️Constants
 pub const S_HOME_WINDOW: &str = "s-home-main";
@@ -65,12 +65,15 @@ fn fixed_label(value: semio_framework_plugin::LabelText, code: &'static str) -> 
     semio_framework_ui_contract::Label::try_from(value.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new(code, "fixed label admission failed"))
 }
 
-fn home_row_action(icon: IconName, label: semio_framework_plugin::LabelText, action_id: &str, space_id: &str) -> semio_framework_plugin::UiAssemblyResult<TableRowAction> {
+fn home_space_action(action_id: &str, space_id: &str) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     let mut args = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.action-args", "fixed table action argument admission failed"))?;
     args.push("spaceId".to_owned(), semio_framework_plugin::UiValue::Text(fixed_text(space_id, "ui.table.space-id")?))
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.action-args.space-id", "fixed table action argument admission failed"))?;
-    let action = ActionFactory::new(S_HOME_CONTROLLER_ID).action(action_id, Some(semio_framework_plugin::UiValue::Map(args.finish())))?;
-    Ok(TableRowAction::new(fixed_text(icon.as_str(), "ui.table.action-icon")?, fixed_label(label, "ui.table.action-label")?, action))
+    ActionFactory::new(S_HOME_CONTROLLER_ID).action(action_id, Some(semio_framework_plugin::UiValue::Map(args.finish())))
+}
+
+fn home_row_action(icon: IconName, label: semio_framework_plugin::LabelText, action_id: &str, space_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::RowAction> {
+    table_row_action(icon.as_str(), label.as_str(), home_space_action(action_id, space_id)?)
 }
 
 /// 🛂️ `openSpace` is offered to every row; the directory-owned lifecycle affordances
@@ -78,36 +81,29 @@ fn home_row_action(icon: IconName, label: semio_framework_plugin::LabelText, act
 /// caller's own current membership role is `author`. Hub origin alone is not a capability: a
 /// spectator reaching a control the server correctly rejects is exactly the role blindness this
 /// replaces. The pane it opens still renders solely from the server's own capability flags.
-fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<TableRowAction>> {
-    let mut actions = semio_framework_plugin::UiFixedList::default();
-    actions.try_push(home_row_action(IconName::FolderOpen, labels.action_open, "openSpace", &row.id)?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
-        if row.data_class == "ephemeralLocalOnly" {
-            for action in [
-                home_row_action(IconName::Cloud, labels.action_promote, "promoteToHubSpace", &row.id)?,
-                home_row_action(IconName::Save, labels.action_persist, "persistLocally", &row.id)?,
-            ] {
-                actions.try_push(action).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
-            }
-            return Ok(actions);
-        }
+fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> semio_framework_plugin::UiAssemblyResult<Vec<semio_framework_plugin::RowAction>> {
+    let mut actions = vec![home_row_action(IconName::FolderOpen, labels.action_open, "openSpace", &row.id)?];
+    if row.data_class == "ephemeralLocalOnly" {
+        actions.push(home_row_action(IconName::Cloud, labels.action_promote, "promoteToHubSpace", &row.id)?);
+        actions.push(home_row_action(IconName::Save, labels.action_persist, "persistLocally", &row.id)?);
+        return Ok(actions);
+    }
     if row.origin == "hub" && row.role == Some(crate::DirectorySpaceRole::Author) {
-        for action in [
-            home_row_action(IconName::Pencil, labels.action_rename, "renameSpace", &row.id)?,
-            home_row_action(IconName::Link, labels.action_share, "shareSpace", &row.id)?,
-            home_row_action(IconName::Trash2, labels.action_delete, "deleteSpace", &row.id)?,
-            home_row_action(IconName::Users, labels.action_manage, "manageSpace", &row.id)?,
-        ] {
-            actions.try_push(action).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
-        }
+        actions.push(home_row_action(IconName::Pencil, labels.action_rename, "renameSpace", &row.id)?);
+        actions.push(home_row_action(IconName::Link, labels.action_share, "shareSpace", &row.id)?);
+        actions.push(home_row_action(IconName::Trash2, labels.action_delete, "deleteSpace", &row.id)?);
+        actions.push(home_row_action(IconName::Users, labels.action_manage, "manageSpace", &row.id)?);
     }
     Ok(actions)
 }
 
 /// 🧪️ The pure per-row-list core, split out from `render` so the empty-state branch is unit-testable
-/// in ISOLATION from `crate::list_all_space_catalog_entries()`'s process-global catalog singleton
-/// (shared across every test in this crate's test binary — genuinely never guaranteed empty once any
-/// other test has created a studio, which is why `render` itself cannot be probed for "empty" reliably).
-fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+/// in ISOLATION from `crate::list_all_space_catalog_entries()`'s process-global catalog singleton.
+/// Every space is one `TableRow` record (cells and row actions are props) inside the windowed table
+/// kit, so any number of spaces stays inside the window's node budget: the host streams the rows its
+/// viewport shows (ticket 26/09/18 U5 §6b — 9 author rows used to fault the whole window at
+/// `nodes 129 > 128`). A row's own activation (Enter on the focused row) opens the space.
+fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if rows.is_empty() {
         return semio_framework_ui_contract::text(fixed_label(table.empty_message, "ui.table.empty-label")?)
             .try_id(S_HOME_EMPTY)
@@ -115,27 +111,12 @@ fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &
             .try_build()
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.empty", "empty table text admission failed"));
     }
-    let mut view = TableRowsView::new(fixed_text(table.column_actions.as_str(), "ui.table.actions-label")?);
-    for column in [table.column_name, table.column_kind, table.column_visibility, table.column_members, table.column_updated, table.column_origin] {
-        let column = fixed_text(column.as_str(), "ui.table.column")?;
-        view.try_push_column(column).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.columns", "fixed table column admission failed"))?;
-    }
-    for row in rows {
-        let row_id = semio_framework_plugin::UiText::try_format(format_args!("space:{}", row.id)).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-id", "fixed table row id admission failed"))?;
-        let mut table_row = TableRow::new(row_id);
-        for cell in [&row.name, &row.kind, &row.visibility, &row.members, &row.updated] {
-            let cell = fixed_text(cell, "ui.table.cell")?;
-            table_row.try_push_cell(cell).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cells", "fixed table cell admission failed"))?;
-        }
+    let columns = [table.column_name.as_str(), table.column_kind.as_str(), table.column_visibility.as_str(), table.column_members.as_str(), table.column_updated.as_str(), table.column_origin.as_str()];
+    TableWindowKit::render_rows(windows, table.table_name.as_str(), &columns, Some(table.column_actions.as_str()), rows, |row| {
         let origin = if row.origin == "hub" { table.origin_hub.as_str() } else { table.origin_local.as_str() };
-        let origin = fixed_text(origin, "ui.table.origin")?;
-        table_row.try_push_cell(origin).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cells", "fixed table cell admission failed"))?;
-        for action in row_actions(actions, row)? {
-            table_row.try_push_action(action).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
-        }
-        view.try_push_row(table_row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.rows", "fixed table row admission failed"))?;
-    }
-    TableWindowKit::render_rows(view)
+        let key = format!("space:{}", row.id);
+        table_window_row(&key, &[row.name.as_str(), row.kind.as_str(), row.visibility.as_str(), row.members.as_str(), row.updated.as_str(), origin], row_actions(actions, row)?, Some(home_space_action("openSpace", &row.id)?))
+    })
 }
 
 /// 🆕️ ticket §C0 lane 4-F — the `#s-home-create-space` toolbar button, always rendered above the
@@ -189,13 +170,14 @@ fn create_space_button(actions: &SHomeLabels) -> semio_framework_plugin::UiAssem
 /// That is exactly what `s-home-main` did for every signed-out visitor: the empty-catalog message was
 /// `try_build()`-ed `#0` and the first spacer was positioned `#0` (ticket 26/09/18, S3 — measured live
 /// and pinned by `the_signed_out_window_body_survives_the_component_tree_producer`).
-fn render_rows_wrapped(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let table_node = render_rows(rows, table, actions)?;
+fn render_rows_wrapped(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let table_node = render_rows(rows, table, actions, windows)?;
     let mut children: semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode> = semio_framework_plugin::UiFixedList::default();
     for child in [window_content_dead_line_spacer(S_HOME_DEAD_LINE[0])?, window_content_dead_line_spacer(S_HOME_DEAD_LINE[1])?, create_space_button(actions)?, table_node] {
         children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?;
     }
     semio_framework_ui_contract::column()
+        .grow(true)
         .try_children(children)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?
         .try_build()
@@ -224,7 +206,7 @@ pub fn render(cfg: &HomeConfig, view_state: &semio_framework_plugin::ViewModel) 
         Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory, &identity.user_id)),
         None => Vec::new(),
     };
-    render_rows_wrapped(&rows, table, actions)
+    render_rows_wrapped(&rows, table, actions, &TreeWindows::for_body(view_state, S_HOME_BODY))
 }
 //#endregion 🔖️Render
 

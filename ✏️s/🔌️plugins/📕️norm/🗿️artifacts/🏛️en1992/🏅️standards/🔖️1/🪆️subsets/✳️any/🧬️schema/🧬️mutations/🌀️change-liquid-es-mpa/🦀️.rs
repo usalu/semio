@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidESMp
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change liquid e s mpa to {:?}", self.new_liquid_e_s_mpa), &format!("Flüssigkeitsesmpa auf {:?} ändern", self.new_liquid_e_s_mpa))
+        protocol::LocalizedLabel::native(&format!("Change liquid-retaining reinforcement modulus E_s [MPa] to {:?}", self.new_liquid_e_s_mpa), &format!("E-Modul der Bewehrung E_s [MPa] (Flüssigkeitsbehälter) auf {:?} ändern", self.new_liquid_e_s_mpa))
     }
 }
 //#endregion 🔖️ChangeLiquidESMpa

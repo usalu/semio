@@ -1,0 +1,13 @@
+{
+  "why": "A window's chrome panes (Actions, Utilities, Window Options, search) must stay above ANY body content, whatever z-index a canvas host gives its own layers. The window body's PaneHost root is its own stacking context (`isolate`), and every chrome pane is its sibling, never its descendant. Replayed by the Window component suite (structure, jsdom) and by the live `s` matrix probe, whose oracle is Chromium's own hit-testing (`elementFromPoint` over each chip must answer the chip).",
+  "liveDefect": "Ticket 26/09/23 S15, measured inside `s` on 2026-09-25: raster's `Paint2dHost` paints a transparent full-bleed pointer overlay at `z-30`; the window body was no stacking context, so the overlay out-ranked the chrome panes at `--z-pane: 20` and both raster windows' `Actions` chips were dead to a pointer (`no Actions rail row after unfolding`).",
+  "bodyContentRoot": { "slot": "pane-host-root", "class": "isolate" },
+  "chromeSlots": ["window-engagement-overlay", "utility-bar-overlay", "window-measures-overlay", "window-search-overlay"],
+  "chromeLevelClass": "z-pane",
+  "cases": [
+    { "name": "full-bleed pointer overlay above the chrome level", "bodyLayerClass": "absolute inset-0 z-30" },
+    { "name": "label canvas far above every chrome level", "bodyLayerClass": "pointer-events-none absolute inset-0 z-40" },
+    { "name": "arbitrary z-index escape attempt", "bodyLayerClass": "absolute inset-0 z-[9999]" },
+    { "name": "unstacked body content", "bodyLayerClass": "relative h-full w-full" }
+  ]
+}

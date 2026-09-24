@@ -219,7 +219,7 @@ export function cleanProjectRemovals(root: string, removals: readonly CleanRemov
     removals.filter((row) => {
       const absolute = resolve(root, row.path);
       const allowedOpenTicket =
-        row.kind === "ticket-generated"
+        row.kind === "ticket-generated" || row.kind === "ticket-file" || row.kind === "ticket-dir" || row.kind === "gitignore"
           ? cleanTicketGeneratedOutputTicketRoot(root, absolute) ?? cleanTicketFolderForPath(root, absolute)
           : row.kind === "windows-illegal"
             ? cleanTicketFolderForPath(root, absolute)

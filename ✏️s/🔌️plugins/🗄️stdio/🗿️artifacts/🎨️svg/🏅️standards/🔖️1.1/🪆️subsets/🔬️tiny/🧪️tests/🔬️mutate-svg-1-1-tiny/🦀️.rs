@@ -14,13 +14,6 @@
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::tiny::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_svg_tiny};
 
-//#region 🔖️Kinds
-/// 📇️ Kebab-case spelling of every `SvgTinyMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS` --
-/// duplicated rather than imported because the ORACLE-only build of this adapter must never link
-/// `semio-s-plugin-stdio`.
-const KINDS: &[&str] = &["set-snapshot", "stamp-base-profile", "insert-tiny-element", "remove-element", "set-tiny-attribute", "set-text", "set-view-box", "set-transform", "strip-non-tiny"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🔳️qr-code.svg";
@@ -293,17 +286,14 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 9 kinds — the scenario id only selects which Examples row's
-/// `<id>`/`<params>` doc string the shared handler reads.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

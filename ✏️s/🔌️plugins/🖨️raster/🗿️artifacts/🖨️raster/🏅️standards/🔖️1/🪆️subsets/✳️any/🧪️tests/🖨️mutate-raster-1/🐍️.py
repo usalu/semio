@@ -187,7 +187,7 @@ def apply_mutation(document, mutation):
     """🧬️ Applies one typed mutation, returning the resulting document.
 
     Attaching an asset the document ALREADY holds is a no-op that returns the document untouched,
-    not a rejection: the committed `add-layer-asset` vector declares `status: "applied"` with a
+    not a rejection: the committed `add-layer-asset` vector declares `status: "no-op"` with a
     `mutation.no-op` warning for exactly that case. Removing one the document never held IS a
     rejection — its committed vector declares `status: "rejected"`, `mutation.target-missing`. Every
     other rejection below is an error rather than a silent no-op.

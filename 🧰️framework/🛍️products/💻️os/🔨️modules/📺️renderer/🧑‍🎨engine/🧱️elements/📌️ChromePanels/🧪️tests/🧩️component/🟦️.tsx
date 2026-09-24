@@ -1,11 +1,12 @@
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createFrameworkSettingsPanelTab, themeAlphaInput, themeNumberInputRow, themeTextInputRow, type ConflictsHostApi } from "../../🟦️.tsx";
+import { createFrameworkSettingsPanelTab, themeAlphaInput, themeContrastBadgeText, themeContrastRatioFormatter, themeNumberInputRow, themeTextInputRow, type ConflictsHostApi } from "../../🟦️.tsx";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import type { PanelTabLeaf } from "@semio-tech/ui-react";
+import type { Rgba8 } from "@semio-tech/ui-styling";
 import type { ReactElement } from "react";
 
 afterEach(() => {
@@ -50,6 +51,35 @@ describe("ChromePanels theme inputs", () => {
     fireEvent.blur(input);
     expect(commit).toHaveBeenCalledWith(1);
     expect(consoleError).not.toHaveBeenCalled();
+  });
+});
+
+describe("♿️ theme contrast live warning", () => {
+  const grade = (value: string) => `grade:${value}`;
+  const warning = (options: { readonly ratio: string; readonly minimum: string; readonly counterpart: string }) => `warn ${options.ratio} < ${options.minimum} with ${options.counterpart}`;
+  const palette: Record<string, Rgba8> = { base: [255, 255, 255, 255], foreground: [0, 0, 0, 255], mutedForeground: [119, 119, 119, 255], panel: [255, 255, 255, 255], accent: [0, 0, 0, 255], accentForeground: [0, 0, 0, 255], borderNormal: [0, 0, 0, 255] };
+
+  it("prints the measured ratio in the ACTIVE locale's number format — no language is assumed", () => {
+    expect(themeContrastRatioFormatter("en")(4.5)).toBe("4.50");
+    expect(themeContrastRatioFormatter("de")(4.5)).toBe("4,50");
+    expect(themeContrastRatioFormatter("de")(21)).toBe("21,00");
+  });
+
+  it("a pair below WCAG AA carries an inline warning naming the other paint of the pair", () => {
+    const verdict = themeContrastBadgeText(palette, "mutedForeground", grade, themeContrastRatioFormatter("de"), warning)!;
+    expect(verdict.passesBodyText).toBe(false);
+    expect(verdict.grade).toBe("aaLarge");
+    expect(verdict.counterpart).toBe("base");
+    expect(verdict.text).toBe("4,48:1 · grade:aaLarge");
+    expect(verdict.warning).toBe("warn 4,48 < 4,50 with base");
+  });
+
+  it("measures text against its OWN surface, never text against text, and says nothing for a border", () => {
+    const accent = themeContrastBadgeText(palette, "accentForeground", grade, themeContrastRatioFormatter("en"), warning)!;
+    expect(accent.counterpart).toBe("accent");
+    expect(accent.ratio).toBe(1);
+    expect(themeContrastBadgeText(palette, "foreground", grade, themeContrastRatioFormatter("en"), warning)!.counterpart).not.toBe("accentForeground");
+    expect(themeContrastBadgeText(palette, "borderNormal", grade, themeContrastRatioFormatter("en"), warning)).toBeNull();
   });
 });
 

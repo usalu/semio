@@ -21,7 +21,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveLinetype {
         agg_inverse(&DxfMutation::RemoveLinetype(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-linetype", "Linientyp entfernen")
+        protocol::LocalizedLabel::native("Remove linetype", "Linientyp entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

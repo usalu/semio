@@ -21,7 +21,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveEntity {
         agg_inverse(&DxfMutation::RemoveEntity(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-entity", "Entität entfernen")
+        protocol::LocalizedLabel::native("Remove entity", "Entität entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -23,7 +23,7 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RenameMember {
         agg_inverse(&JsonIJsonMutation::RenameMember(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("rename-member", "Glied umbenennen")
+        protocol::LocalizedLabel::native("Rename member", "Eigenschaft umbenennen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

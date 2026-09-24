@@ -20,7 +20,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeAirtight
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change airtightness n50 to {}", self.new_airtightness_n50), &format!("Luftdichtheitsn50 auf {} ändern", self.new_airtightness_n50))
+        protocol::LocalizedLabel::native(&format!("Change airtightness n50 to {}", self.new_airtightness_n50), &format!("Luftdichtheit n50 auf {} ändern", self.new_airtightness_n50))
     }
 }
 //#endregion 🔖️Payload

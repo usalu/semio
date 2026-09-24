@@ -279,30 +279,37 @@ impl crate::value::ToValue for MutationDiffParticipation {
     }
 }
 
-/// 🧷️ Schema vocabulary for one direct mutation's observable outcomes.
+/// 🧷️ The protocol outcome class one direct mutation can reach — the vocabulary fixtures, manifests and bridges
+/// share verbatim, so no layer projects one record onto another.
+///
+/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — `$defs/MutationOutcomeClass`
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum MutationOutcomeClass {
     Applied,
-    Info,
-    Warning,
-    Error,
-    Fatal,
+    NoOp,
+    Empty,
+    Disjoint,
+    Rejected,
+}
+
+impl MutationOutcomeClass {
+    /// 🏷️ The wire spelling of this class.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            MutationOutcomeClass::Applied => "applied",
+            MutationOutcomeClass::NoOp => "no-op",
+            MutationOutcomeClass::Empty => "empty",
+            MutationOutcomeClass::Disjoint => "disjoint",
+            MutationOutcomeClass::Rejected => "rejected",
+        }
+    }
 }
 
 /// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
 impl crate::value::ToValue for MutationOutcomeClass {
     fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::String(
-            match self {
-                MutationOutcomeClass::Applied => "applied",
-                MutationOutcomeClass::Info => "info",
-                MutationOutcomeClass::Warning => "warning",
-                MutationOutcomeClass::Error => "error",
-                MutationOutcomeClass::Fatal => "fatal",
-            }
-            .to_string(),
-        )
+        crate::value::DslValue::String(self.as_str().to_string())
     }
 }
 

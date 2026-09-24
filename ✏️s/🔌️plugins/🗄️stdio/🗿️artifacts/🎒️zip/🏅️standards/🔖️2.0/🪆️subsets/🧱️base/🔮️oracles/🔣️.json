@@ -16,7 +16,13 @@
       ],
       "license": "MIT",
       "testOnly": true,
-      "productionDebt": {"reachableFrom": ["🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"], "owner": "🧰️framework/🛍️products/💻️os/🖥️host", "plan": "The same reach the `zip` oracle records in ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json: the OS host declares an optional `zip` dependency for container handling. This oracle's subject does not link it; the stdio and architect crates keep `zip` as a dev-dependency. The debt retires when the host routes containers through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."},
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
+        "plan": "The same reach the `zip` oracle records in ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json: the OS host declares an optional `zip` dependency for container handling. This oracle's subject does not link it; the stdio and architect crates keep `zip` as a dev-dependency. The debt retires when the host routes containers through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."
+      },
       "homepage": "https://github.com/zip-rs/zip2",
       "rationale": "🩹️ RECLASSIFIED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10, 2026-09-02). This entry was registered `third-party-library` on the strength of a real crate that does genuine codec work, but the mutation's expected RESULT is computed by this owner's own `🦀️.rs` -- its dispatch function's catch-all arm is `\"mutation kind {...} has no oracle implementation\"`, proof that every OTHER arm is an implementation, not a reading. Both halves of the comparison then descend from the same specification, so a shared misreading produces two agreeing wrong answers -- the one failure a differential oracle exists to catch. This is a `cross-semio-implementation`: a required SUPPLEMENT (metamorphic/inverse/round-trip evidence), never a substitute. A qualifying third-party reference for the mutation semantics is still owed. See $TICKET/📓️a10-oracle-honesty.md.\n\nThe reference ZIP reader/writer of the Rust ecosystem, driven here through the full add/remove/rename/set-data/set-comment/set-snapshot mutation vocabulary this subset declares, with the archive-level comment kept live (never ignored) so `set-archive-comment` is a real, checked mutation and not a no-op. Distinct id and capability from the top-level `zip` entry's `zip-archive` (plain create/read/remove-member evidence): reusing that entry outside its surveyed capability would fail the contract's oracle-capability-mismatch check, and a mutation vocabulary belongs to the subset that declares it, not to the format generally.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
@@ -151,7 +157,8 @@
           "capability": "zip-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-entry",
@@ -171,7 +178,8 @@
           "capability": "zip-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-entry",
@@ -191,7 +199,8 @@
           "capability": "zip-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "rename-entry",
@@ -231,7 +240,8 @@
           "capability": "zip-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-entry-data",
@@ -251,7 +261,8 @@
           "capability": "zip-2-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",

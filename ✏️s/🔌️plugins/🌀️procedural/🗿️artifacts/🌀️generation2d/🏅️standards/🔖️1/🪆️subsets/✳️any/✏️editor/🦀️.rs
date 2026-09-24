@@ -1780,7 +1780,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         match port {
             "drawing:out" => {
                 let eval_json = crate::standards::v1::subsets::any::schema::evaluate_generation_preview(&doc.snapshot.host_snapshot, &semio_framework_artifact_playbook_playbook::PlaybookValues::new());
-                let layers_json = crate::standards::v1::subsets::any::schema::generation_preview_layers(&eval_json);
+                let layers_json = crate::standards::v1::subsets::any::schema::generation_output_layers(&doc.snapshot.host_snapshot, &eval_json);
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }
             "artifact:out" => {
@@ -1922,6 +1922,7 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
         .action_interactive_job("setShowMode", InteractiveJobClassification::Migrated)
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+        .action_destructive("setActiveExample")
         .action_interactive_job("generate", InteractiveJobClassification::Migrated)
         .action_interactive_job("setEvalOutputs", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)

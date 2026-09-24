@@ -115,7 +115,7 @@ impl ArtifactEditor for En1990PlayApp {
         command.command_id()
     }
 
-    semio_s_artifact_norm_contract::norm_command_from_action!(En1990Command, text);
+    semio_s_artifact_norm_contract::norm_command_from_action!(En1990Command, text, crate::standards::v1::subsets::any::schema::snapshot::decode_en1990_snapshot_json);
 
     fn handle(
         command: &En1990Command,

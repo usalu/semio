@@ -35,7 +35,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for ReplaceLayerSt
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace layer \"{}\" stroke", self.layer_id), &format!("Ebene \"{}\" Strich ersetzen", self.layer_id))
+        protocol::LocalizedLabel::native(&format!("Replace layer \"{}\" stroke", self.layer_id), &format!("Kontur von Ebene \"{}\" ersetzen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

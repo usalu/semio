@@ -64,7 +64,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimiti
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Primitive Topology Mode", "Primitivtopologienmodus ändern")
+        protocol::LocalizedLabel::native("Change Primitive Topology Mode", "Topologiemodus des Primitivs ändern")
     }
 
     fn target(&self) -> Vec<String> {

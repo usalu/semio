@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeRetrofitLi
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change retrofit limit state to \"{}\"", self.new_retrofit_limit_state), &format!("Sanierungsgrenzwertzustand auf \"{}\" ändern", self.new_retrofit_limit_state))
+        protocol::LocalizedLabel::native(&format!("Change retrofit limit state to \"{}\"", self.new_retrofit_limit_state), &format!("Grenzzustand der Ertüchtigung auf \"{}\" ändern", self.new_retrofit_limit_state))
     }
 }
 //#endregion 🔖️ChangeRetrofitLimitState

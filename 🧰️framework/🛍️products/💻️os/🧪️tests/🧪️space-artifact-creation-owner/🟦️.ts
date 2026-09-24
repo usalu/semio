@@ -436,6 +436,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type SocketGrantReceiptV1 = import("../../🟦️.ts").SocketGrantReceiptV1;
   type DocumentSocketGrantReceiptV1 = import("../../🟦️.ts").DocumentSocketGrantReceiptV1;
   type UiNodeRecord = import("../../../../🔨️modules/🛂️manifest/🟦️.ts").UiNodeRecord;
+  type ResolvedPluginViewState = import("../../../../🔨️modules/🛂️manifest/🟦️.ts").ResolvedPluginViewState;
   type WireArtifactBootstrap = import("../../../../🔨️modules/📡️replication/🟦️.ts").WireArtifactBootstrap;
   type WireFrontierSummary = import("../../../../🔨️modules/📡️replication/🟦️.ts").WireFrontierSummary;
 
@@ -4552,7 +4553,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         }
         if (name === "foreign-scope") fields.scope.spaceId = "foreign";
         const component = new Uint8Array([1]),
-          descriptor = new Uint8Array([2]);
+          descriptor = executionTargetBytes(fixture.descriptorHex);
         const lease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(fields), fixture.hubOrigin, component, descriptor);
         state.executionTargetLease = name === "no-lease" ? null : lease;
         if (name !== "ungranted-lease")
@@ -4615,7 +4616,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(() => entry.lease.admitBrowserActor(documentExecutionTargetLeaseMintToken, fixture.socketGrant, Date.now() + 30000, { binding: hubBinding(entry.state.config)!, intent: fixture.intent, assertCurrent() {} })).toThrow();
         beforeTerminate = () => {
           expect(entry.component[0]).toBe(1);
-          expect(entry.descriptor[0]).toBe(2);
+          expect(entry.descriptor[0]).toBe(executionTargetBytes(fixture.descriptorHex)[0]);
         };
         dropDocumentExecutionTargetLease(entry.state);
         expect(entry.component[0]).toBe(0);
@@ -4963,6 +4964,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const descriptorApp = guest.manifest.apps.find((app: Record<string, unknown>) => app.id === fixture.manifest.surface.appId);
       if (descriptorApp === undefined) throw new Error("direct browser actor fixture: descriptor app absent");
       descriptorApp.role = "editor";
+      const panelSurfaces = [{ key: "framework.panel.inspection", bodyKey: "gis2d.play.inspection" }, { key: "framework.panel.history", bodyKey: "framework.body.history" }];
+      descriptorApp.panelTabs = [
+        { kind: { kind: "detailsCategory" }, label: "Details", group: "details", children: [{ kind: { kind: "app", id: panelSurfaces[0]!.key }, label: "Inspection", group: "details", bodyKey: panelSurfaces[0]!.bodyKey, children: [] }] },
+        { kind: { kind: "app", id: panelSurfaces[1]!.key }, label: "History", group: "details", bodyKey: panelSurfaces[1]!.bodyKey, children: [] },
+      ];
+      const panelVisible = (view: ResolvedPluginViewState) => panelSurfaces.map((panel) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: panel.key }, bodyKey: panel.bodyKey, viewState: encodePackValue(panelViewContext(view)) } }));
+      const { panelViewContext } = await import("../../../../🔨️modules/🛂️manifest/🟦️.ts");
       const descriptor = encodePackValue(guest),
         descriptorByteSha256 = await executionTargetSha256Hex(descriptor);
       const { UiDocumentStore } = await import("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
@@ -4980,6 +4988,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         return descriptor.manifest.apps.find((app: Record<string, any>) => app.id === fixture.manifest.surface.appId).windowKinds.find((window: Record<string, any>) => window.id === windowKindId).bodyKey;
       }
       const visibleViews: Record<string, unknown>[] = [];
+      let panelRefreshes = 0;
       for (const key of Object.keys(guest.hashes)) guest.hashes[key] = "";
       const received = new Uint8Array(pack.byteLength + spr.byteLength),
         pageIndexes: number[] = [],
@@ -5072,7 +5081,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             const acknowledged = lifecycleAck?.tag === "captured";
             const patchAck = events[0]?.tag === "patch-ack" ? events[0].val : null;
             const patchRejection = events[0]?.tag === "patch-rejected" ? events[0].val : null;
-            const visible = events[0]?.tag === "surface-visible" ? events[0].val : null;
+            const panelRefresh = events[0]?.tag === "surface-visible" && events[0].val.surface.surface !== windowKindId;
+            if (panelRefresh) {
+              expect(events).toEqual(panelVisible(state.browserActorViewState!));
+              panelRefreshes++;
+            }
+            const visible = events[0]?.tag === "surface-visible" && !panelRefresh ? events[0].val : null;
             const wake = events[0]?.tag === "wake";
             const shellMessage = events[0]?.tag === "message" && events[0].val?.source?.tag === "shell" ? events[0].val : null;
             const backboneMessage = events[0]?.tag === "message" && events[0].val?.source?.tag === "backbone" ? events[0].val : null;
@@ -5094,6 +5108,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               const visibleView = decodePackValue(visible.viewState) as Record<string, unknown>;
               expect(visibleView).toEqual(state.browserActorViewState);
               visibleViews.push(visibleView);
+              expect(events.slice(1)).toEqual(panelVisible(state.browserActorViewState!));
             }
             if (wake) {
               expect(renderEvents[0]).toBe("surface-visible");
@@ -5325,12 +5340,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         }
         if (message.kind !== "browser-actor-ui-patch") return;
         patchOffers.push(message);
-        if (message.patch.baseRevision === 1 && message.patch.revision === 2) {
+        expect(message.patches).toHaveLength(1);
+        const offered = message.patches[0]!;
+        if (offered.baseRevision === 1 && offered.revision === 2) {
           heldActionPatch = message;
           return;
         }
         const before = uiStore.getState();
-        const applied = uiStore.applyPatch(message.patch);
+        const applied = uiStore.applyPatch(offered);
         if (applied.ok) {
           handleTsRequest({
             kind: "browser-actor-ui-patch-result",
@@ -5340,8 +5357,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             activationGeneration: message.activationGeneration,
             instanceId: message.instanceId,
             receipt: message.receipt,
-            outcome: "acknowledged",
-            revision: uiStore.getRevisionSnapshot(),
+            verdicts: [{ surface: offered.surface, outcome: "acknowledged", revision: uiStore.getRevisionSnapshot() }],
           });
           return;
         }
@@ -5354,9 +5370,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           activationGeneration: message.activationGeneration,
           instanceId: message.instanceId,
           receipt: message.receipt,
-          outcome: "rejected",
-          revision: uiStore.getRevisionSnapshot(),
-          reason: applied.rejection.type,
+          verdicts: [{ surface: offered.surface, outcome: "rejected", revision: uiStore.getRevisionSnapshot(), reason: applied.rejection.type }],
         });
       };
       (globalThis as unknown as { Worker: unknown }).Worker = ColdPairWorker;
@@ -5516,7 +5530,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(workerResponses.filter((message) => message.kind === "browser-actor-action-result")).toHaveLength(0);
         expect(commandSequences).toEqual([]);
         const actionPatch = heldActionPatch!;
-        const actionApplied = uiStore.applyPatch(actionPatch.patch);
+        const actionApplied = uiStore.applyPatch(actionPatch.patches[0]!);
         expect(actionApplied.ok).toBe(true);
         handleTsRequest({
           kind: "browser-actor-ui-patch-result",
@@ -5526,8 +5540,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           activationGeneration: actionPatch.activationGeneration,
           instanceId: actionPatch.instanceId,
           receipt: actionPatch.receipt,
-          outcome: "acknowledged",
-          revision: uiStore.getRevisionSnapshot(),
+          verdicts: [{ surface: actionPatch.patches[0]!.surface, outcome: "acknowledged", revision: uiStore.getRevisionSnapshot() }],
         });
         await vi.waitFor(() => expect(workerResponses.some((message) => message.kind === "browser-actor-action-result")).toBe(true));
         await remoteDelivery;
@@ -5692,7 +5705,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             async invoke(path: readonly string[], args: BrowserActorChildValue[]): Promise<BrowserActorChildValue> {
               expect(path).toEqual(["reactor", "poll"]);
               const events = args[0] as Record<string, any>[];
-              expect(events).toEqual([turns === 0 ? { tag: "surface-visible", val: { surface: { instance: 0, surface: windowKindId }, bodyKey, viewState: encodePackValue(state.browserActorViewState!) } } : { tag: "wake" }]);
+              expect(events).toEqual(turns === 0 ? [{ tag: "surface-visible", val: { surface: { instance: 0, surface: windowKindId }, bodyKey, viewState: encodePackValue(state.browserActorViewState!) } }, ...panelVisible(state.browserActorViewState!)] : [{ tag: "wake" }]);
               turns++;
               if (row.name === "stale-after-turn") current = false;
               return {
@@ -5727,6 +5740,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           networkChunks: 2,
           terminated: 0,
         });
+        expect(panelRefreshes).toBeGreaterThan(0);
         console.log(
           `[DEBUG] browser-cold-pair-transfer: lazy-render-events=${renderEvents.join(",")} pages=${pageIndexes.length} bytes=${received.byteLength} lifecycle-ack=1 applied=1 patch-ack=1 patch-rejected=1 tiled-map=1 network-chunks=${bootstrap.chunk_count}`,
         );
@@ -6002,7 +6016,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: refused } });
         expect(state.pendingDocumentBackboneBytes).toBe(DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - 1);
         expect(outcomes.at(-1)).toMatchObject({ kind: "event", event: { kind: "commandOutcome", outcome: { kind: "rejected", reason: "document backbone pending capacity" } } });
-        handleAck(state, 0, [{ Applied: { outcome: "Accepted" } }]);
+        await handleAck(state, 0, [{ Applied: { outcome: "Accepted" } }]);
         expect(state.pendingDocumentBackboneBytes).toBe(DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - 1 - targets[0]);
         handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: refused } });
         expect(state.pendingDocumentBackboneBytes).toBe(DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - 1 - targets[0] + refused.byteLength);
@@ -6011,6 +6025,58 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(state.pendingDocumentBackboneMessages).toBe(0);
       } finally {
         closeArtifact(documentId, "space-1");
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+        (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = originalBroadcastChannel;
+      }
+    });
+
+    it("rebootstraps a browser actor whose batch the hub refused or transformed, never handing its correction to the Shell", async () => {
+      const originalWebSocket = globalThis.WebSocket;
+      const originalBroadcastChannel = globalThis.BroadcastChannel;
+      class BoundPortBroadcastChannel {
+        onmessage: ((event: MessageEvent) => void) | null = null;
+        postMessage(): void { throw new Error("bound document backbone must not echo before server authority"); }
+        close(): void {}
+      }
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = BoundPortBroadcastChannel;
+      testSeams.documentSocketGrantTestIssue = async () => ({ schema: "semio.hub.document-socket-grant/v1", protocol: "semio.session.v1", actorId: `hub.v1.${"4".repeat(64)}`, expiresAtMs: Number.MAX_SAFE_INTEGER });
+      const replacement = (documentId: string) => ({ mutation_id: "hub-replacement", document_id: documentId, actor: "caller", dependencies: [], diff: { schema: "demo/v1", payload: Array.from(encodePackValue("hub")) }, inverse: { schema: "demo/v1", payload: Array.from(encodePackValue(null)) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 4n } });
+      const cases = [
+        { documentId: "doc-ack-refused", outcome: { Rejected: { reason: "stale-base", messages: [] } }, expected: { kind: "rejected", reason: "stale-base", messages: [] } },
+        { documentId: "doc-ack-transformed", outcome: { Transformed: { envelope: replacement("doc-ack-transformed") } }, expected: { kind: "transformed" } },
+      ] as const;
+      try {
+        for (const row of cases) {
+          FakeHubWebSocket.instances = [];
+          const edit = (id: string) => encodeBackboneMessage({
+            kind: "mutations",
+            envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: row.documentId, actor: "caller", dependencies: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n } }]),
+          });
+          const outcomes: BackboneWorkerResponse[] = [];
+          testSeams.workerPostTestSink = (message) => outcomes.push(message);
+          openArtifact({ documentId: row.documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+          await flushSocketGrantTurns();
+          const socket = FakeHubWebSocket.instances[0]!;
+          socket.open();
+          const state = artifactState(row.documentId, "space-1")!;
+          installVerifiedDocumentBackbonePair(state);
+          await handleHubFrame(state, { Session: { actor: `hub.v1.${"4".repeat(64)}`, color: 1 } });
+          for (const id of ["authored-edit", "queued-edit"]) handleTsRequest({ kind: "send", documentId: row.documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: edit(id) } });
+          const delivered: Uint8Array[] = [];
+          state.browserActorReservation = { receiveBackbone: async (bytes: Uint8Array) => { delivered.push(bytes); }, close: () => {} } as unknown as ArtifactState["browserActorReservation"];
+          await handleAck(state, 0, [{ Applied: { outcome: row.outcome } }] as unknown as Parameters<typeof handleAck>[2]);
+          expect(delivered, row.documentId).toEqual([]);
+          expect(outcomes.filter((message) => message.kind === "event" && message.event.kind === "documentBackbone"), row.documentId).toEqual([]);
+          expect(outcomes.some((message) => message.kind === "artifact-rebootstrap-required"), row.documentId).toBe(true);
+          expect(state.artifactRebootstrapRequired, row.documentId).toBe(true);
+          expect(state.outbox.map((envelope) => envelope.id), row.documentId).toEqual(["queued-edit"]);
+          expect(outcomes.filter((message) => message.kind === "event" && message.event.kind === "commandOutcome").map((message) => (message as Extract<BackboneWorkerResponse, { kind: "event" }>).event), row.documentId).toEqual([expect.objectContaining({ outcome: row.expected })]);
+          state.browserActorReservation = null;
+          closeArtifact(row.documentId, "space-1");
+        }
+      } finally {
+        for (const row of cases) closeArtifact(row.documentId, "space-1");
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
         (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = originalBroadcastChannel;
       }

@@ -1,0 +1,23 @@
+{
+  "sources": [
+    {
+      "id": "ui-axes",
+      "module": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🌱️bootstrap/🟦️.ts",
+      "export": "bootstrapUiAxes",
+      "outputs": [
+        "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌐️locale/🤖️generated/🦀️.rs"
+      ],
+      "requiredBy": "every repository script: the `@semio-tech/framework` barrel value-imports the UI axis TypeScript projection"
+    },
+    {
+      "id": "flow-core-package",
+      "module": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+      "export": "bootstrapFlowCorePackage",
+      "outputs": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json"
+      ],
+      "requiredBy": "`bun install`: `🌊️flow/🫀️core/🕸️bindings` is a root workspace member"
+    }
+  ]
+}

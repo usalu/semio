@@ -377,8 +377,6 @@ pub mod editor {
             pub mod create_space;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-space/🦀️.rs"]
             pub mod delete_space;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📇️fold-directory-events/🦀️.rs"]
-            pub mod fold_directory_events;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👥️presence-heartbeat/🦀️.rs"]
             pub mod presence_heartbeat;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-space/🦀️.rs"]

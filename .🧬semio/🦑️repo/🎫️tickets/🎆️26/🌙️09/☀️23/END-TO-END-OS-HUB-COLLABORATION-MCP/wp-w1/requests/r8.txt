@@ -1,0 +1,18 @@
+# R8 (session 11) guest / wasm rebuild requests
+2026-09-25 02:10  semio-framework-os-flow (every flow-domain guest + the flow_core wasm-pack bindings, `bun 🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts wasm`)
+  reason: 🕸️wasm/📡️protocol/🦀️.rs now admits operation 2608 (pointerCancelScreen): it was implemented in the wasm (FlowAction2608),
+  declared in the ABI json and the TS host, but the port refused it as UnknownOperation. Also the flow host JS pump scheduler
+  (🕸️wasm/🖥️host/🏃️runtime/🟨️.js) changed; the gitignored published copy 🫀️core/🕸️bindings/🖥️host/🟨️.js must be republished by
+  the flow `wasm` step (flow `test-browser-ownership` compares it byte-for-byte to the source and is red until then).
+
+[w2 2026-09-25 03:5x] flow-domain guests: covered by the full rebuild (every flow guest re-described after 01:19). The flow_core wasm-pack
+  bindings step (`bun 🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts wasm`) runs under the wasm mutex after the catalog publish. Result is appended here.
+
+2026-09-25 12:0x  semio-framework-os-flow + semio-framework-artifact-flow-flow (held fixes landed after catalog B, coordinator 11:50)
+  change: `impl ArtifactDsl for FlowHostSnapshot` now answers `envelope_id() = "flow.flow"` (delegates to FlowHostSnapshotDsl, which
+  already printed/parsed `semio flow.flow.dsl v1`); `FlowRetainedVcs::close_phase` rewrote `Option::filter` as a guard
+  (behaviour-neutral). No ABI / pack-schema / codec-hash change: headers were already `flow.flow`, only the trait's identity answer moved.
+  request: include every flow-domain guest and the flow_core wasm-pack bindings (`bun 🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts wasm`)
+  in the full-catalog rebuild; the bindings step also clears `production_reachability_fixture_and_hostile_source_census_reject_the_old_route`
+  (compares 🕸️wasm/🖥️host/🏃️runtime/🟨️.js with the gitignored published 🫀️core/🕸️bindings/🖥️host/🟨️.js).
+  evidence: `wp-r8/generated/flow-held-check-1.txt` (cargo check both crates EXIT 0), `flow-nextest-10.txt` (260/261, the 1 = bindings copy).

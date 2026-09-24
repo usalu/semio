@@ -1,0 +1,190 @@
+{
+  "schema": "semio.hub.local-session-broker-cases/v1",
+  "description": "🎫️ Accepted and refused shapes of the local development session broker's record, request and issued session; every implementation (the hub's JSON Schema through Ajv, the TypeScript parsers) must agree case by case.",
+  "cases": [
+    {
+      "id": "record-valid",
+      "def": "LocalSessionBrokerRecordV1",
+      "value": {
+        "schema": "semio.hub.local-session-broker/v1",
+        "hubOrigin": "http://127.0.0.1:8787",
+        "runId": "0123456789abcdef0123456789abcdef",
+        "port": 51234,
+        "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profiles": [
+          "developer",
+          "user-1",
+          "user-2"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "id": "record-non-loopback-origin",
+      "def": "LocalSessionBrokerRecordV1",
+      "value": {
+        "schema": "semio.hub.local-session-broker/v1",
+        "hubOrigin": "http://192.168.1.2:8787",
+        "runId": "0123456789abcdef0123456789abcdef",
+        "port": 51234,
+        "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profiles": [
+          "developer",
+          "user-1",
+          "user-2"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "record-short-secret",
+      "def": "LocalSessionBrokerRecordV1",
+      "value": {
+        "schema": "semio.hub.local-session-broker/v1",
+        "hubOrigin": "http://127.0.0.1:8787",
+        "runId": "0123456789abcdef0123456789abcdef",
+        "port": 51234,
+        "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profiles": [
+          "developer",
+          "user-1",
+          "user-2"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "record-port-zero",
+      "def": "LocalSessionBrokerRecordV1",
+      "value": {
+        "schema": "semio.hub.local-session-broker/v1",
+        "hubOrigin": "http://127.0.0.1:8787",
+        "runId": "0123456789abcdef0123456789abcdef",
+        "port": 0,
+        "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profiles": [
+          "developer",
+          "user-1",
+          "user-2"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "record-no-profiles",
+      "def": "LocalSessionBrokerRecordV1",
+      "value": {
+        "schema": "semio.hub.local-session-broker/v1",
+        "hubOrigin": "http://127.0.0.1:8787",
+        "runId": "0123456789abcdef0123456789abcdef",
+        "port": 51234,
+        "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profiles": []
+      },
+      "valid": false
+    },
+    {
+      "id": "record-uppercase-profile",
+      "def": "LocalSessionBrokerRecordV1",
+      "value": {
+        "schema": "semio.hub.local-session-broker/v1",
+        "hubOrigin": "http://127.0.0.1:8787",
+        "runId": "0123456789abcdef0123456789abcdef",
+        "port": 51234,
+        "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profiles": [
+          "Developer"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "record-extra-field",
+      "def": "LocalSessionBrokerRecordV1",
+      "value": {
+        "schema": "semio.hub.local-session-broker/v1",
+        "hubOrigin": "http://127.0.0.1:8787",
+        "runId": "0123456789abcdef0123456789abcdef",
+        "port": 51234,
+        "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profiles": [
+          "developer",
+          "user-1",
+          "user-2"
+        ],
+        "pid": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "request-valid",
+      "def": "LocalSessionRequestV1",
+      "value": {
+        "schema": "semio.hub.local-session-request/v1",
+        "profileId": "user-2"
+      },
+      "valid": true
+    },
+    {
+      "id": "request-wrong-schema",
+      "def": "LocalSessionRequestV1",
+      "value": {
+        "schema": "semio.hub.local-session/v1",
+        "profileId": "user-2"
+      },
+      "valid": false
+    },
+    {
+      "id": "request-trailing-dash-profile",
+      "def": "LocalSessionRequestV1",
+      "value": {
+        "schema": "semio.hub.local-session-request/v1",
+        "profileId": "user-"
+      },
+      "valid": false
+    },
+    {
+      "id": "request-extra-field",
+      "def": "LocalSessionRequestV1",
+      "value": {
+        "schema": "semio.hub.local-session-request/v1",
+        "profileId": "developer",
+        "clientClass": "native"
+      },
+      "valid": false
+    },
+    {
+      "id": "session-valid",
+      "def": "LocalSessionV1",
+      "value": {
+        "schema": "semio.hub.local-session/v1",
+        "profileId": "developer",
+        "token": "session.v1.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "userId": "01a0d597-03b3-70e0-b39d-2831b163a16c"
+      },
+      "valid": true
+    },
+    {
+      "id": "session-foreign-token",
+      "def": "LocalSessionV1",
+      "value": {
+        "schema": "semio.hub.local-session/v1",
+        "profileId": "developer",
+        "token": "share.v1.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "userId": "u"
+      },
+      "valid": false
+    },
+    {
+      "id": "session-empty-user",
+      "def": "LocalSessionV1",
+      "value": {
+        "schema": "semio.hub.local-session/v1",
+        "profileId": "developer",
+        "token": "session.v1.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "userId": ""
+      },
+      "valid": false
+    }
+  ]
+}

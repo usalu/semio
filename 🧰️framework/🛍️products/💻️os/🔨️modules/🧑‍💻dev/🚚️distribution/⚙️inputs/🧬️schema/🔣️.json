@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/os/dev/distribution/build-inputs/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "environmentPrefixes",
+    "environmentVariables",
+    "files"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "environmentPrefixes": {
+      "const": [
+        "VITE_"
+      ]
+    },
+    "environmentVariables": {
+      "const": [
+        "S_HUB_URL",
+        "S_DATA_DIR",
+        "GIS_MAP_TILE_SERVE_MODE"
+      ]
+    },
+    "files": {
+      "const": [
+        ".env",
+        ".env.local",
+        ".env.production",
+        ".env.production.local"
+      ]
+    }
+  }
+}

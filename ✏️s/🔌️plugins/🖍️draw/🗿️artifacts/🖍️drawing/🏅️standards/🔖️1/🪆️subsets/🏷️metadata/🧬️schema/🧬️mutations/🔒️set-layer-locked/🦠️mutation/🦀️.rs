@@ -31,7 +31,7 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerLocked
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set layer \"{}\" locked to {}", self.layer_id, self.locked), &format!("Ebene \"{}\" gesperrt auf {} setzen", self.layer_id, self.locked))
+        protocol::LocalizedLabel::native(&format!("Set layer \"{}\" locked to {}", self.layer_id, self.locked), &format!("Sperre von Ebene \"{}\" auf {} setzen", self.layer_id, self.locked))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

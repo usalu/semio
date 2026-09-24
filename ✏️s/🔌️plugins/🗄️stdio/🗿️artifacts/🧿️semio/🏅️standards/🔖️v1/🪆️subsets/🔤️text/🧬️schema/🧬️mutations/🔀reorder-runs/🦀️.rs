@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for ReorderRun
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Move run #{} to #{}", self.from, self.to), &format!("Lauf #{} nach #{} verschieben", self.from, self.to))
+        protocol::LocalizedLabel::native(&format!("Move run #{} to #{}", self.from, self.to), &format!("Textlauf #{} nach #{} verschieben", self.from, self.to))
     }
     fn target(&self) -> Vec<String> {
         vec![self.from.to_string()]

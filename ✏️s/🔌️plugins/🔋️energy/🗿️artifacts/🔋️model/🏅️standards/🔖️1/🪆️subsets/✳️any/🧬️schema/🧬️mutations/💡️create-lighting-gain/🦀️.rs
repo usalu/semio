@@ -48,7 +48,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create Lighting Gain {} at index {}", self.id.0, self.index), &format!("Beleuchtungsgewinn {} an Index {} erstellen", self.id.0, self.index))
+        protocol::LocalizedLabel::native(&format!("Create Lighting Gain {} at index {}", self.id.0, self.index), &format!("Beleuchtungswärmegewinn {} an Index {} erstellen", self.id.0, self.index))
     }
 
     fn target(&self) -> Vec<String> {

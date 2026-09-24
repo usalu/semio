@@ -25,7 +25,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ReorderPages {
         inverse_reorder_pages(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder page \"{}\"", self.id), &format!("Seite \"{}\" umordnen", self.id))
+        protocol::LocalizedLabel::native(&format!("Reorder page \"{}\"", self.id), &format!("Reihenfolge von Seite \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

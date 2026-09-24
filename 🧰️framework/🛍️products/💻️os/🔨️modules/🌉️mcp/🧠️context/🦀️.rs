@@ -138,6 +138,10 @@ pub fn capability_resource_contents(catalog: &Catalog, id: Option<&str>) -> Resu
 /// (`build_server_with_workspace` clones it once more — a cheap refcount bump, never a second,
 /// divergent `HeadlessWorkspace` instance answering for the same folder/hub).
 ///
+/// Every URI has exactly one owner, so `list` never reports one twice: this registry declares the
+/// tier-independent `semio://capability`, `semio://workspace` and `semio://workspace/artifacts`, the
+/// bound backend lists only its live per-document resources.
+///
 /// `list`/`templates` never depend on whether a workspace is bound — mirrors `🦀️.rs`'s
 /// `DECLARED_STUB_TOOL_NAMES` convention: a resource's PRESENCE never depends on tier, only its
 /// `read` RESULT does. With no workspace bound, a read against a workspace URI is a structured,
@@ -220,13 +224,6 @@ impl ResourceRegistry for WorkspaceResourceRegistry {
         }
         resources.extend(crate::ui::ui_resources(self.bridge.as_ref()));
         resources.extend(crate::inference::inference_resources(self.workspace.as_ref()));
-        // 🆔️ A resource URI is an identity: a client that keys off it must never see the same one
-        // twice (`📓️g7-mcp-agent-and-collaboration-audit.md` §6 P2.11 — the bound workspace re-reports
-        // `semio://workspace` AND `semio://workspace/artifacts`, both of which this registry already
-        // declares statically). First declaration wins; a URI-specific `filter` here only ever
-        // covered whichever pair someone had noticed.
-        let mut seen: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
-        resources.retain(|resource| seen.insert(resource.uri.clone()));
         resources
     }
 

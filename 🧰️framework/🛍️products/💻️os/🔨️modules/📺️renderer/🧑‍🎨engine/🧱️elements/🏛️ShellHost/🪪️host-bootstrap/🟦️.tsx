@@ -107,6 +107,14 @@ export function BootstrapStatusNotice({
 }
 
 //#region 🪪️ExecutionTargetLease
+/** 🛑️ The one control a running execution-target install offers: closing the document aborts the worker's
+ * `docAbort`, which stops the hub download, discards every verified byte and settles as `cancelled`. A 15 MB
+ * component plus a 20 MB browser actor is an expensive operation, and every expensive operation can be cancelled. */
+const EXECUTION_TARGET_COPY = {
+  en: { cancel: "Cancel opening" },
+  de: { cancel: "Öffnen abbrechen" },
+} as const;
+
 export type ExecutionTargetUiStatus = Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>;
 export type ExecutionTargetUiAction = ExecutionTargetUiStatus | { readonly kind: "execution-target-cleared"; readonly documentId: string; readonly scope?: DocumentScope };
 export type ExecutionTargetUiState = Readonly<Record<string, ExecutionTargetUiStatus>>;
@@ -133,9 +141,11 @@ export function reduceExecutionTargetUiState(current: ExecutionTargetUiState, ac
 export function ExecutionTargetStatusNotice({
   status,
   locale,
+  onCancel,
 }: {
   readonly status: ExecutionTargetUiStatus;
   readonly locale: "en" | "de";
+  readonly onCancel: () => void;
 }) {
   const text = DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1[status.code][locale];
   const role = documentExecutionTargetStatusRoleV1(status.code);
@@ -143,6 +153,7 @@ export function ExecutionTargetStatusNotice({
     <section role="status" aria-live="polite" aria-label={text} data-semio-execution-target-status={status.documentId} {...(status.progress ? { "data-semio-execution-target-stage": status.progress.stage } : {})}>
       <p>{text}</p>
       {status.progress ? <progress aria-label={text} value={status.progress.completedBytes} max={status.progress.totalBytes} /> : null}
+      <button type="button" data-semio-execution-target-cancel={status.documentId} onClick={onCancel}>{EXECUTION_TARGET_COPY[locale].cancel}</button>
     </section>
   ) : (
     <section role="alert" aria-live="assertive" data-semio-execution-target-status={status.documentId} {...(status.diagnostic ? { "data-semio-execution-target-diagnostic": status.diagnostic } : {})}>{text}</section>

@@ -4,11 +4,13 @@ fn stage_publication_fixture(fixture: &FixtureDirectory, data: &Path) -> serde_j
     let root = data.join("trusted-catalog/generations").join(generation);
     std::fs::create_dir_all(&root).unwrap();
     for record in fixture.bundle["packages"].as_array().unwrap() {
-        let mut paths = vec![record["component"]["path"].as_str().unwrap(), record["descriptor"]["path"].as_str().unwrap()];
+        let mut paths = vec![record["component"]["path"].as_str().unwrap().to_owned(), record["descriptor"]["path"].as_str().unwrap().to_owned(), record["pluginModule"]["path"].as_str().unwrap().to_owned()];
         if let Some(path) = record["browserActor"]["path"].as_str() {
-            paths.push(path);
+            paths.push(path.to_owned());
         }
-        for path in paths {
+        let manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(fixture.root.join(record["pluginModule"]["path"].as_str().unwrap())).unwrap()).unwrap();
+        paths.extend(manifest["files"].as_array().unwrap().iter().map(|file| plugin_module::plugin_module_blob_path(file["sha256"].as_str().unwrap())));
+        for path in &paths {
             let destination = root.join(path);
             std::fs::create_dir_all(destination.parent().unwrap()).unwrap();
             std::fs::copy(fixture.root.join(path), destination).unwrap();
@@ -125,7 +127,7 @@ impl AuthorityOperationControl for PublicationLeafSwap {
 
 #[tokio::test]
 async fn trusted_publication_post_verification_leaf_substitution_preserves_current() {
-    for field in ["component", "descriptor", "browserActor", "bundle"] {
+    for field in ["component", "descriptor", "browserActor", "pluginModule", "bundle"] {
         let a = prepared_fixture();
         let b = prepared_fixture();
         let data = a.root.join("publication-data");

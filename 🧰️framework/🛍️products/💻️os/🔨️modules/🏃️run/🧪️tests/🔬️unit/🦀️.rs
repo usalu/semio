@@ -470,7 +470,7 @@ async fn cancelling_the_run_token_stops_the_run_before_the_next_node() {
 
     // 🛑️ Cancel BEFORE the run even starts — deterministic, no real sleep/race needed: the very
     // first `compute_node` call (node-a) must already observe `Cancelled`.
-    cancel.cancel();
+    cancel.cancel().await;
     let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
     assert!(matches!(result, Err(RunError::Cancelled)), "a run cancelled before its first node must fail with RunError::Cancelled, got {result:?}");
     assert!(recorder.0.borrow().completed_in_order.is_empty(), "no node's exchange should run once the token is cancelled before the run starts");

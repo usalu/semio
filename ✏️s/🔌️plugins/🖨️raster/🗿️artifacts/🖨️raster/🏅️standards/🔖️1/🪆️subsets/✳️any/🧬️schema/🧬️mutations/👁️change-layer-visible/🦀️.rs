@@ -26,7 +26,7 @@ pub mod mutation {
         }
 
         fn label(&self) -> protocol::LocalizedLabel {
-            protocol::LocalizedLabel::native(&format!("Set layer {} visible to {}", self.layer_id, self.new_visible), &format!("Ebene {} sichtbar auf {} setzen", self.layer_id, self.new_visible))
+            protocol::LocalizedLabel::native(&format!("Set layer {} visible to {}", self.layer_id, self.new_visible), &format!("Sichtbarkeit von Ebene {} auf {} setzen", self.layer_id, self.new_visible))
         }
 
         fn target(&self) -> Vec<String> {

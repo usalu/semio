@@ -6,7 +6,7 @@
 
 export const INFERENCE_REQUEST_MAX_BYTES = 1024;
 export const INFERENCE_SERVER_ID_MAX_BYTES = 96;
-export const INFERENCE_INPUT_MAX_BYTES = 65536;
+export const INFERENCE_INPUT_MAX_BYTES = 1048576;
 export const INFERENCE_RESULT_MAX_BYTES = 16384;
 export const INFERENCE_PROPOSAL_MAX_BYTES = 4096;
 export const INFERENCE_COMMAND_MAX_BYTES = 8192;
@@ -537,13 +537,13 @@ export function parseInferenceWalTargetV1(value: unknown): InferenceWalTargetV1 
 
 /** 🚧️ Every hub-owned bound one inference job execution is fenced by. */
 export type InferenceLimitsV1 = {
-  readonly requestMaxBytes: 1024; readonly inputMaxBytes: 65536; readonly resultMaxBytes: 16384; readonly proposalMaxBytes: 4096; readonly commandMaxBytes: 8192;
+  readonly requestMaxBytes: 1024; readonly inputMaxBytes: 1048576; readonly resultMaxBytes: 16384; readonly proposalMaxBytes: 4096; readonly commandMaxBytes: 8192;
   readonly identityJsonMaxBytes: 8192; readonly jobCapacity: 128; readonly operationCapacity: 32; readonly documentGateCapacity: 64; readonly progressMaxCursor: 16;
   readonly eventPageMaxItems: 8; readonly claimLeaseMaxMs: 30000; readonly jobMaxLifetimeMs: 120000; readonly workUnitLimit: 4096; readonly recursionDepth: 32;
   readonly allocationBytes: 1048576; readonly approvalMaxRecords: 8;
 };
 const INFERENCE_LIMITS: InferenceLimitsV1 = {
-  requestMaxBytes: 1024, inputMaxBytes: 65536, resultMaxBytes: 16384, proposalMaxBytes: 4096, commandMaxBytes: 8192, identityJsonMaxBytes: 8192, jobCapacity: 128,
+  requestMaxBytes: 1024, inputMaxBytes: 1048576, resultMaxBytes: 16384, proposalMaxBytes: 4096, commandMaxBytes: 8192, identityJsonMaxBytes: 8192, jobCapacity: 128,
   operationCapacity: 32, documentGateCapacity: 64, progressMaxCursor: 16, eventPageMaxItems: 8, claimLeaseMaxMs: 30000, jobMaxLifetimeMs: 120000, workUnitLimit: 4096,
   recursionDepth: 32, allocationBytes: 1048576, approvalMaxRecords: 8,
 };

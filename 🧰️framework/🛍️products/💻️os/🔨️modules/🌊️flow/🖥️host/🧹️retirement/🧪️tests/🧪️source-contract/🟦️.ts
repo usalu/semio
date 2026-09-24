@@ -33,7 +33,9 @@ for (const [, source, retainedOwner] of sceneConsumers) {
   assert(source.includes(retainedOwner));
   assert(source.includes("advance_opaque_scene_retirement"));
 }
-assert(sceneConsumers[1][1].includes("assert!(turns > 1_600)"));
+const boardWorldLaws = await Bun.file(new URL("../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧪️tests/🔬️board-host-standalone/🦀️.rs", import.meta.url)).text();
+const boardWorldRetirementLaw = boardWorldLaws.slice(boardWorldLaws.indexOf("fn board_world_scene_retirement_retains_exact_token_until_backing_is_released"));
+assert(boardWorldRetirementLaw.slice(0, boardWorldRetirementLaw.indexOf("#[test]")).includes("assert!(turns > 1_600)"));
 for (const grant of fixture.grants) {
   let total = 0;
   for (const owner of owners) { let left = Buffer.byteLength(owner); while (left) { const released = Math.min(grant, left); total += released; left -= released; } }

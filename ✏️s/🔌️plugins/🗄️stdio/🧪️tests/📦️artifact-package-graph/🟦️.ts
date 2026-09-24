@@ -1,65 +1,107 @@
-export function createStdioArtifactPackageTests(dependencies: Record<string, any>, source: { directory: string; url: string }) {
-  const { assert, assertActualCargoDag, assertCargoMetadata, assertSchemaOracle, assertSourceContract, buildTypeScriptPackage, canonicalNames, CARGO_CONTRACT_NAME, cargoMetadata, checkTypeScriptPackageDeclaration, COMPOSITION_RUST_NAME, COMPOSITION_TYPESCRIPT_NAME, dirname, join, NX_CONTRACT_NAME, readJson, runCaptured, slash, stdioArtifactPackageContract } = dependencies;
-  type JsonMap = any;
-  type PackageRecord = any;
-  /** 🔍️ Validates schema fixtures, declarations, workspaces and Cargo's own metadata projection. */
-  async function testStdioArtifactPackageContract(repoRoot: string): Promise<void> {
-    const contract = stdioArtifactPackageContract(repoRoot);
-    await assertSchemaOracle(contract);
-    await assertSourceContract(repoRoot, contract);
-    await assertCargoMetadata(repoRoot, contract);
-    console.log(`[stdio-package-contract] source packages=${contract.packages.length} dag=valid`);
+import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import { join, relative } from "node:path";
+import ts from "typescript";
+import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { type JsonMap, readStdioJson, slashStdioPath, STDIO_RELATIVE_ROOT, stdioArtifactDefinitionPaths, stdioArtifactPackageContract } from "../../🗿️artifacts/📇️inventory/🟦️.ts";
+import { assertStdioArtifactSchema, assertStdioArtifactSourceContract } from "../../🗿️artifacts/🛂️contract/🟦️.ts";
+import { assertStdioArtifactCargoMetadata, assertStdioArtifactNxGraph, stdioCargoMetadata } from "../../🗿️artifacts/🕸️graph/🟦️.ts";
+
+type CommandOwnership = Readonly<{
+  owners: readonly Readonly<{ id: string; path: string; exports: readonly string[] }>[];
+  routers: readonly Readonly<{ id: "root" | "composition-package"; path: string; defaultCommand: string; commands: readonly string[] }>[];
+  artifactDefinitions: readonly string[];
+  inputs: Readonly<Record<"build" | "contract" | "graph", readonly string[]>>;
+  registration: Readonly<{ projectPath: string; packagePath: string; launchSeedPath: string; launchPath: string; projectName: string }>;
+}>;
+
+/** 🧭️ Named Nx input that carries each declared input set of the command-ownership contract. */
+const STDIO_NAMED_INPUTS: Readonly<Record<keyof CommandOwnership["inputs"], string>> = { build: "stdioCompositionBuild", contract: "stdioArtifactContract", graph: "stdioArtifactGraph" };
+
+/** 🧭️ Declared input set each composition-package command hashes. */
+const STDIO_COMMAND_INPUTS: Readonly<Record<string, keyof CommandOwnership["inputs"]>> = { build: "build", check: "build", test: "build", "package-contract": "contract", "package-graph": "graph" };
+
+function sortedNames(values: Iterable<string>): string[] {
+  return [...values].sort((left, right) => left.localeCompare(right, "en"));
+}
+
+function sourceFile(path: string): ts.SourceFile {
+  return ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+}
+
+function exportedNames(path: string): string[] {
+  const names = new Set<string>();
+  for (const statement of sourceFile(path).statements) {
+    if (!(ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined)?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) continue;
+    if ((ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement)) && statement.name) names.add(statement.name.text);
+    if (ts.isVariableStatement(statement)) for (const declaration of statement.declarationList.declarations) if (ts.isIdentifier(declaration.name)) names.add(declaration.name.text);
   }
-  
-  /** 🕸️ Compares declared artifact dependencies with the Nx project graph. */
-  async function testStdioArtifactPackageGraph(repoRoot: string): Promise<void> {
-    const contract = stdioArtifactPackageContract(repoRoot);
-    const metadata = await cargoMetadata(repoRoot);
-    const cargoPackages = new Map((metadata.packages as JsonMap[]).map((entry) => [String(entry.name), entry]));
-    assertActualCargoDag(metadata, new Set(contract.packages.map((entry) => entry.rust.cargoName)));
-    const output = await runCaptured(process.execPath, ["run", "nx", "graph", "--print"], repoRoot, 180_000);
-    const start = output.indexOf("{");
-    assert(start >= 0, "Nx graph emitted no JSON");
-    const graph = JSON.parse(output.slice(start)) as JsonMap;
-    const dependencies = graph.graph?.dependencies ?? graph.dependencies;
-    const nodes = graph.graph?.nodes ?? graph.nodes;
-    for (const entry of contract.packages) {
-      assert(nodes?.[entry.rust.nxName], `Nx graph misses ${entry.rust.nxName}`);
-      assert(nodes?.[entry.typescript.nxName], `Nx graph misses ${entry.typescript.nxName}`);
-      const rustEdges = new Set((dependencies?.[entry.rust.nxName] ?? []).map((edge: JsonMap) => edge.target));
-      const typescriptEdges = new Set((dependencies?.[entry.typescript.nxName] ?? []).map((edge: JsonMap) => edge.target));
-      assert(!rustEdges.has(COMPOSITION_RUST_NAME), `${entry.rust.nxName} has a composition back-edge`);
-      assert(rustEdges.has(NX_CONTRACT_NAME), `${entry.rust.nxName} misses Nx edge ${NX_CONTRACT_NAME}`);
-      const cargo = cargoPackages.get(entry.rust.cargoName);
-      assert(cargo, `Cargo metadata misses ${entry.rust.cargoName}`);
-      const expectedRustEdges = (cargo.dependencies as JsonMap[]).map((dependency) => String(dependency.name))
-        .filter((name) => name.startsWith("semio-s-artifact-stdio-") && name !== CARGO_CONTRACT_NAME)
-        .map((name) => canonicalNames(name.slice("semio-s-artifact-stdio-".length)).rustNx);
-      for (const target of expectedRustEdges) assert(rustEdges.has(target), `${entry.rust.nxName} misses Nx edge ${target}`);
-      const typescript = readJson(join(repoRoot, entry.typescript.manifest));
-      for (const target of Object.keys(typescript.dependencies ?? {})) assert(typescriptEdges.has(target), `${entry.typescript.nxName} misses Nx edge ${target}`);
-      const ownerRoot = slash(dirname(dirname(entry.source)));
-      const otherOwnerRoots = contract.packages.filter((candidate) => candidate.identity !== entry.identity).map((candidate) => slash(dirname(dirname(candidate.source))));
-      for (const node of [nodes[entry.rust.nxName], nodes[entry.typescript.nxName]]) {
-        const defaultInputs = node.data?.namedInputs?.default ?? [];
-        assert(defaultInputs.some((input: unknown) => typeof input === "string" && input.startsWith(`{workspaceRoot}/${ownerRoot}/`)), `${node.name} does not hash ${ownerRoot}`);
-        for (const input of defaultInputs) if (typeof input === "string" && !input.startsWith("!")) for (const other of otherOwnerRoots) {
-          if (input.startsWith(`{workspaceRoot}/${other}/`)) assert(!input.includes("*"), `${node.name} broadly hashes another artifact owner ${other}`);
-        }
-      }
-    }
-    assert(nodes?.[NX_CONTRACT_NAME], `Nx graph misses ${NX_CONTRACT_NAME}`);
-    assert(nodes?.[COMPOSITION_TYPESCRIPT_NAME], `Nx graph misses ${COMPOSITION_TYPESCRIPT_NAME}`);
-    console.log(`[stdio-package-contract] Nx graph rust=${contract.packages.length} typescript=${contract.packages.length}`);
+  return sortedNames(names);
+}
+
+function routedCommands(path: string): Readonly<{ commands: string[]; defaultCommand: string | undefined; declarations: string[] }> {
+  const source = sourceFile(path);
+  const commands: string[] = [];
+  let defaultCommand: string | undefined;
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "register" && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) commands.push(node.arguments[0].text);
+    if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name) && node.name.text === "defaultCommand" && ts.isStringLiteral(node.initializer)) defaultCommand = node.initializer.text;
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  const declarations = source.statements.flatMap((statement) => (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) && statement.name ? [statement.name.text] : []);
+  return { commands: sortedNames(commands), defaultCommand, declarations };
+}
+
+/** 🔍️ Validates schema fixtures, declarations, workspaces and Cargo's own metadata projection. */
+export async function testStdioArtifactPackageContract(repoRoot: string): Promise<void> {
+  const stdioRoot = join(repoRoot, STDIO_RELATIVE_ROOT);
+  const contract = stdioArtifactPackageContract(repoRoot, stdioRoot);
+  await assertStdioArtifactSchema(contract, stdioRoot);
+  await assertStdioArtifactSourceContract(repoRoot, contract, stdioRoot);
+  assertStdioArtifactCargoMetadata(repoRoot, contract, await stdioCargoMetadata(repoRoot));
+  console.log(`[stdio-package-contract] source packages=${contract.packages.length} dag=valid`);
+}
+
+/** 🕸️ Compares declared artifact dependencies with Cargo metadata and the Nx project graph. */
+export async function testStdioArtifactPackageGraph(repoRoot: string): Promise<void> {
+  const contract = stdioArtifactPackageContract(repoRoot);
+  await assertStdioArtifactNxGraph(repoRoot, contract, await stdioCargoMetadata(repoRoot));
+}
+
+/** 🏷️ Binds semantic owners, pure routers, admitted artifact definitions, Nx inputs, package scripts and launch entries to the command-ownership contract. */
+export async function verifyStdioCommandOwnership(repoRoot = getWorkspaceRoot()): Promise<void> {
+  const stdioRoot = join(repoRoot, STDIO_RELATIVE_ROOT);
+  const { default: Ajv2020 } = await import("ajv/dist/2020");
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(readStdioJson(join(stdioRoot, "🧬️schema/🏃️command-ownership/🔣️.json")));
+  const fixture = readStdioJson(join(stdioRoot, "🧫️fixtures/🏃️command-ownership/🔣️.json")) as CommandOwnership;
+  assert(validate(fixture), JSON.stringify(validate.errors));
+  for (const owner of fixture.owners) {
+    const path = join(repoRoot, owner.path);
+    assert(existsSync(path), `missing stdio owner ${owner.id}: ${owner.path}`);
+    assert.deepEqual(exportedNames(path), sortedNames(owner.exports), `${owner.id} exports`);
   }
-  
-  async function testTypeScriptPackage(root: string, entry: PackageRecord): Promise<void> {
-    await buildTypeScriptPackage(root, entry);
-    checkTypeScriptPackageDeclaration(root, entry.typescript.name, "definition, type ArtifactDefinition");
-    const module = await import(entry.typescript.name);
-    assert.equal(module.definition?.id, entry.identity);
-    assert.equal(module.definition?.artifact, entry.artifact);
-    console.log(`[stdio-package] tested ${entry.typescript.name} identity=${entry.identity}`);
+  for (const router of fixture.routers) {
+    const routed = routedCommands(join(repoRoot, router.path));
+    assert.deepEqual(routed.commands, sortedNames(router.commands), `${router.id} commands`);
+    assert.equal(routed.defaultCommand, router.defaultCommand, `${router.id} default command`);
+    assert.deepEqual(routed.declarations, [], `${router.id} router declares its own implementation`);
   }
-  return { testStdioArtifactPackageContract, testStdioArtifactPackageGraph, testTypeScriptPackage };
+  assert.deepEqual(stdioArtifactDefinitionPaths(stdioRoot, repoRoot).map((path) => slashStdioPath(relative(repoRoot, path))), [...fixture.artifactDefinitions].sort(), "artifact definitions");
+  const project = readStdioJson(join(repoRoot, fixture.registration.projectPath)) as JsonMap;
+  const manifest = readStdioJson(join(repoRoot, fixture.registration.packagePath)) as JsonMap;
+  assert.equal(project.name, fixture.registration.projectName);
+  for (const [set, name] of Object.entries(STDIO_NAMED_INPUTS)) assert.deepEqual(project.namedInputs?.[name], fixture.inputs[set as keyof CommandOwnership["inputs"]], `named input ${name}`);
+  const launches = [fixture.registration.launchSeedPath, fixture.registration.launchPath].map((path) => readFileSync(join(repoRoot, path), "utf8"));
+  const compositionRouter = fixture.routers.find((router) => router.id === "composition-package")!;
+  for (const command of compositionRouter.commands) {
+    const set = STDIO_COMMAND_INPUTS[command];
+    assert(set, `stdio command ${command} declares no input set`);
+    assert(project.targets?.[command]?.inputs?.includes(STDIO_NAMED_INPUTS[set]), `target ${command} does not hash ${STDIO_NAMED_INPUTS[set]}`);
+    assert.equal(project.targets[command].options?.command, `bun ./📜️script.ts ${command}`);
+    const invocation = `bun nx run ${fixture.registration.projectName}:${command}`;
+    assert.equal(manifest.scripts?.[command], invocation, `package script ${command}`);
+    for (const [index, launch] of launches.entries()) assert(launch.includes(`"command": "${invocation}"`), `${index === 0 ? fixture.registration.launchSeedPath : fixture.registration.launchPath} misses ${invocation}`);
+  }
+  console.log(`[stdio-command-ownership] owners=${fixture.owners.length} routers=${fixture.routers.length} artifacts=${fixture.artifactDefinitions.length} commands=${compositionRouter.commands.length}`);
 }

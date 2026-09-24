@@ -28,7 +28,7 @@ pub mod mutation {
         }
 
         fn label(&self) -> protocol::LocalizedLabel {
-            protocol::LocalizedLabel::native(&format!("Set layer {} adjustment kind to {}", self.layer_id, self.new_adjustment_kind), &format!("Ebene {} Anpassungsart auf {} setzen", self.layer_id, self.new_adjustment_kind))
+            protocol::LocalizedLabel::native(&format!("Set layer {} adjustment kind to {}", self.layer_id, self.new_adjustment_kind), &format!("Korrekturart von Ebene {} auf {} setzen", self.layer_id, self.new_adjustment_kind))
         }
 
         fn target(&self) -> Vec<String> {

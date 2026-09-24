@@ -333,18 +333,15 @@ def inverse(ctx: Context) -> Outcome:
     return Outcome({"mutated": mutated, "restored": restored})
 
 
-def spec_vector(kind: str):
+def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed `(before, mutation, after)` vector — a THIRD statement of
     what the verb means, independent of both implementations, kept from before this oracle existed."""
-
-    def handler(ctx: Context) -> Outcome:
-        committed = vector(ctx, kind)
-        applied = apply_mutation(committed["before"], {"kind": committed["kind"], "params": committed["params"]})
-        if applied != committed["after"]:
-            raise AssertionError("%s: the applied snapshot does not match the committed after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied), json.dumps(committed["after"])))
-        return Outcome(applied)
-
-    return handler
+    kind = ctx.row()
+    committed = vector(ctx, kind)
+    applied = apply_mutation(committed["before"], {"kind": committed["kind"], "params": committed["params"]})
+    if applied != committed["after"]:
+        raise AssertionError("%s: the applied snapshot does not match the committed after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied), json.dumps(committed["after"])))
+    return Outcome(applied)
 
 
 def carrier_once(ctx: Context, uri: str, what: str) -> dict:
@@ -392,11 +389,9 @@ def identity_round_trip(ctx: Context) -> Outcome:
 
 # region 🔖️Registration
 def adapter() -> Adapter:
-    """🧭️ Registration entry point the host calls — by FULL expanded scenario id, one per row."""
-    built = Adapter("python")
-    for kind in KINDS:
-        built = built.oracle("mutate-%s" % kind, mutate).oracle("inverse-%s" % kind, inverse).oracle("spec-vector-%s" % kind, spec_vector(kind))
-    return built.oracle("identity-round-trip", identity_round_trip)
+    """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
+    ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
+    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

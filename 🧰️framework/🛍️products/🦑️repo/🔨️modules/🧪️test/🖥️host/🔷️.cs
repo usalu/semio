@@ -35,7 +35,8 @@ public sealed record Scenario(
     [property: JsonPropertyName("level")] string Level,
     [property: JsonPropertyName("mode")] string Mode,
     [property: JsonPropertyName("seed")] string? Seed,
-    [property: JsonPropertyName("steps")] List<Step>? Steps);
+    [property: JsonPropertyName("steps")] List<Step>? Steps,
+    [property: JsonPropertyName("outlineOf")] string? OutlineOf);
 
 /// <summary>🪆️ The smallest owning subset a case is scoped to. A case with no target is UNSCOPED,
 /// and Protocol v2 reports that rather than letting a host widen itself to the whole artifact.</summary>
@@ -169,6 +170,11 @@ public sealed class Context
 
     /// <summary>🎲️ Deterministic seed declared by the scenario's <c>@seed-…</c> tag.</summary>
     public long Seed => long.TryParse(Scenario.Seed, out var value) ? value : 0;
+
+    /// <summary>🪆️ The Examples row id this scenario expands; throws for a plain scenario.</summary>
+    public string Row => !string.IsNullOrEmpty(Scenario.OutlineOf) && Scenario.Id.StartsWith(Scenario.OutlineOf + "-", StringComparison.Ordinal)
+        ? Scenario.Id[(Scenario.OutlineOf.Length + 1)..]
+        : throw new InvalidOperationException($"scenario {Scenario.Id} expands no Scenario Outline row");
 }
 
 /// <summary>🧭️ One implementation's registration for a case.</summary>
@@ -181,21 +187,25 @@ public sealed class Adapter
 
     public string Implementation { get; }
 
-    /// <summary>🔮️ Registers the reference-implementation handler for one scenario.</summary>
+    /// <summary>🔮️ Registers the reference-implementation handler for one scenario id, or for a Scenario
+    /// Outline's base id (<c>@id-&lt;base&gt;</c>), which then serves every row the feature expands.</summary>
     public Adapter Oracle(string scenario, Func<Context, Outcome> handler)
     {
         handlers[scenario + "::oracle"] = handler;
         return this;
     }
 
-    /// <summary>🎯️ Registers this repository's handler for one scenario.</summary>
+    /// <summary>🎯️ Registers this repository's handler for one scenario id, or for a Scenario Outline's base id.</summary>
     public Adapter Subject(string scenario, Func<Context, Outcome> handler)
     {
         handlers[scenario + "::subject"] = handler;
         return this;
     }
 
-    internal Func<Context, Outcome>? Handler(string scenario, string role) => handlers.TryGetValue(scenario + "::" + role, out var handler) ? handler : null;
+    internal Func<Context, Outcome>? Handler(Scenario scenario, string role) =>
+        handlers.TryGetValue(scenario.Id + "::" + role, out var exact) ? exact
+        : !string.IsNullOrEmpty(scenario.OutlineOf) && handlers.TryGetValue(scenario.OutlineOf + "::" + role, out var outline) ? outline
+        : null;
 }
 
 #endregion 🔖️Adapter
@@ -265,7 +275,7 @@ public static class TestHost
             object? projection = null;
             byte[]? raw = null;
             Outcome? produced = null;
-            var handler = adapter.Handler(scenario.Id, plan.Role);
+            var handler = adapter.Handler(scenario, plan.Role);
             if (handler is null)
             {
                 failed = true;

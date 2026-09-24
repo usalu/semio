@@ -1,0 +1,141 @@
+{
+  "schema": "semio.hub.document-check-in-fixtures/v1",
+  "valid": {
+    "requests": [
+      {
+        "name": "head",
+        "source": "{\"schema\":\"semio.hub.document-check-in/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"}}"
+      },
+      {
+        "name": "first-edit",
+        "source": "{\"schema\":\"semio.hub.document-check-in/v1\",\"requestId\":\"00000000000000000000000000000001\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":1,\"headEditId\":\"edit-1\",\"lastCommitSeq\":1,\"chainSha256\":\"a2222222222222222222222222222222222222222222222222222222222222ff\"}}"
+      }
+    ],
+    "statuses": [
+      {
+        "name": "accepted",
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"accepted\",\"progress\":{\"completedUnits\":0,\"totalUnits\":8}}"
+      },
+      {
+        "name": "materializing",
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"materializing\",\"progress\":{\"completedUnits\":3,\"totalUnits\":8}}"
+      },
+      {
+        "name": "publishing",
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"publishing\",\"progress\":{\"completedUnits\":6,\"totalUnits\":8}}"
+      },
+      {
+        "name": "ready",
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"ready\",\"progress\":{\"completedUnits\":8,\"totalUnits\":8},\"ready\":{\"checkpointId\":\"5555555555555555555555555555555555555555555555555555555555555555\",\"parentCheckpointId\":\"6666666666666666666666666666666666666666666666666666666666666666\",\"baseline\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"}}}"
+      },
+      {
+        "name": "stale",
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"failed\",\"progress\":{\"completedUnits\":2,\"totalUnits\":8},\"refusal\":\"stale-head\"}"
+      },
+      {
+        "name": "unknown",
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"failed\",\"progress\":{\"completedUnits\":3,\"totalUnits\":8},\"refusal\":\"unknown-head\"}"
+      },
+      {
+        "name": "cancelled",
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"cancelled\",\"progress\":{\"completedUnits\":4,\"totalUnits\":8}}"
+      }
+    ]
+  },
+  "invalid": {
+    "requests": [
+      {
+        "name": "client-pair-overpost",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"},\"pack\":\"AAAA\"}"
+      },
+      {
+        "name": "label-overpost",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"},\"label\":\"Survey baseline\"}"
+      },
+      {
+        "name": "genesis-head",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":0,\"headEditId\":\"edit-0\",\"lastCommitSeq\":0,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"}}"
+      },
+      {
+        "name": "zero-request",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in/v1\",\"requestId\":\"00000000000000000000000000000000\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"}}"
+      },
+      {
+        "name": "zero-chain",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\"}}"
+      },
+      {
+        "name": "upper-hex-chain",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB\"}}"
+      },
+      {
+        "name": "control-character-edit-id",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit\\u00073\",\"lastCommitSeq\":2,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"}}"
+      },
+      {
+        "name": "unsafe-ordinal",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":9007199254740992,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"}}"
+      },
+      {
+        "name": "wrong-schema",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.checkpoint-publication-command/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"}}"
+      },
+      {
+        "name": "noncanonical-order",
+        "schemaValid": true,
+        "source": "{\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"schema\":\"semio.hub.document-check-in/v1\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"}}"
+      },
+      {
+        "name": "padded",
+        "schemaValid": true,
+        "source": " {\"schema\":\"semio.hub.document-check-in/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"head\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"}}"
+      }
+    ],
+    "statuses": [
+      {
+        "name": "ready-without-checkpoint",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"ready\",\"progress\":{\"completedUnits\":8,\"totalUnits\":8}}"
+      },
+      {
+        "name": "failed-without-refusal",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"failed\",\"progress\":{\"completedUnits\":0,\"totalUnits\":8}}"
+      },
+      {
+        "name": "accepted-with-refusal",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"accepted\",\"progress\":{\"completedUnits\":0,\"totalUnits\":8},\"refusal\":\"stale-head\"}"
+      },
+      {
+        "name": "materializing-with-checkpoint",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"materializing\",\"progress\":{\"completedUnits\":3,\"totalUnits\":8},\"ready\":{\"checkpointId\":\"5555555555555555555555555555555555555555555555555555555555555555\",\"parentCheckpointId\":\"6666666666666666666666666666666666666666666666666666666666666666\",\"baseline\":{\"documentId\":\"map-a\",\"headEditOrdinal\":3,\"headEditId\":\"edit-3\",\"lastCommitSeq\":2,\"chainSha256\":\"2222222222222222222222222222222222222222222222222222222222222222\"}}}"
+      },
+      {
+        "name": "unknown-refusal",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"failed\",\"progress\":{\"completedUnits\":0,\"totalUnits\":8},\"refusal\":\"blob-integrity\"}"
+      },
+      {
+        "name": "unknown-phase",
+        "schemaValid": false,
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"queued\",\"progress\":{\"completedUnits\":0,\"totalUnits\":8}}"
+      },
+      {
+        "name": "progress-overrun",
+        "schemaValid": true,
+        "source": "{\"schema\":\"semio.hub.document-check-in-status/v1\",\"requestId\":\"0a1b2c3d4e5f60718293a4b5c6d7e8f9\",\"phase\":\"materializing\",\"progress\":{\"completedUnits\":9,\"totalUnits\":8}}"
+      }
+    ]
+  }
+}

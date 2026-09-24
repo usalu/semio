@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeBearingDEd
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change bearing design displacement D_Ed [mm] to {}", self.new_bearing_d_ed_mm), &format!("Lagerbemessungsverschiebungsd_Ed [mm] auf {} ändern", self.new_bearing_d_ed_mm))
+        protocol::LocalizedLabel::native(&format!("Change bearing design displacement D_Ed [mm] to {}", self.new_bearing_d_ed_mm), &format!("Bemessungsverschiebung des Lagers D_Ed [mm] auf {} ändern", self.new_bearing_d_ed_mm))
     }
 }
 //#endregion 🔖️ChangeBearingDEdMm

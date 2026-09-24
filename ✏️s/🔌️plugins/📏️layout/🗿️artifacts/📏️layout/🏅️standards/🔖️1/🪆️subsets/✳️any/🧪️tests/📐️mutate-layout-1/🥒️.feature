@@ -80,6 +80,7 @@ Feature: Apply every typed layout-document mutation to its committed specificati
       | create-frame           | ➕create-frame           | 🔲️inserts-a-rect-frame-at-index-1                 |
       | delete-frame           | ➖delete-frame           | 🚫️removes-the-text-frame-and-its-layer-membership |
       | move-frame             | 🕹️move-frame             | 📍️moves-the-rect-frame                            |
+      | rotate-frame           | 🔄️rotate-frame           | 🌀️rotates-the-rect-frame                          |
       | resize-frame           | 📏resize-frame           | 📐️resizes-the-rect-frame                          |
       | change-frame-fill      | 🎨change-frame-fill      | 🎨️repaints-the-rect-frame-fill                    |
       | change-frame-stroke    | 🖊️change-frame-stroke    | 🖊️adds-a-stroke-to-the-rect-frame                 |
@@ -116,6 +117,7 @@ Feature: Apply every typed layout-document mutation to its committed specificati
       | create-frame           | ➕create-frame           | 🔲️inserts-a-rect-frame-at-index-1                 |
       | delete-frame           | ➖delete-frame           | 🚫️removes-the-text-frame-and-its-layer-membership |
       | move-frame             | 🕹️move-frame             | 📍️moves-the-rect-frame                            |
+      | rotate-frame           | 🔄️rotate-frame           | 🌀️rotates-the-rect-frame                          |
       | resize-frame           | 📏resize-frame           | 📐️resizes-the-rect-frame                          |
       | change-frame-fill      | 🎨change-frame-fill      | 🎨️repaints-the-rect-frame-fill                    |
       | change-frame-stroke    | 🖊️change-frame-stroke    | 🖊️adds-a-stroke-to-the-rect-frame                 |

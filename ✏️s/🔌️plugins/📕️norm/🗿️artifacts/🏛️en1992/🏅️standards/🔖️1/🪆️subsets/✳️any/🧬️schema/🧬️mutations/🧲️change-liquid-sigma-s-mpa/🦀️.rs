@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidSigm
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change liquid sigma s mpa to {:?}", self.new_liquid_sigma_s_mpa), &format!("Flüssigkeitssigmasmpa auf {:?} ändern", self.new_liquid_sigma_s_mpa))
+        protocol::LocalizedLabel::native(&format!("Change liquid-retaining steel stress σ_s [MPa] to {:?}", self.new_liquid_sigma_s_mpa), &format!("Stahlspannung σ_s [MPa] (Flüssigkeitsbehälter) auf {:?} ändern", self.new_liquid_sigma_s_mpa))
     }
 }
 //#endregion 🔖️ChangeLiquidSigmaSMpa

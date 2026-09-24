@@ -43,7 +43,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ResizePage {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("resize page", "Seite skalieren")
+        protocol::LocalizedLabel::native("Resize page", "Seitengröße ändern")
     }
 
     fn target(&self) -> Vec<String> {

@@ -831,7 +831,8 @@ impl FlowRetainedVcs {
             return Err(FlowVcsFault::ClosePending);
         }
         let operation = self.operations[slot].as_mut().expect("validated Flow VCS operation");
-        operation.stage = FlowVcsStage::Closing;
+        let rolling_back = operation.cursor.phase == FlowVcsCursorPhase::Rollback;
+        operation.stage = if rolling_back { stage } else { FlowVcsStage::Closing };
         if let Some(update) = operation.layout_update.as_mut() {
             update.begin_close();
             update.close_step(LayoutGrant { maximum_items: 1, maximum_bytes: grant.bytes });
@@ -851,14 +852,12 @@ impl FlowRetainedVcs {
                 document.generation = operation.cursor.prior_generation;
                 document.committed_digest = operation.cursor.prior_digest;
                 operation.cursor.visibility_published = false;
-                operation.stage = stage;
                 return Ok(false);
             }
             if operation.cursor.surface_transferred {
                 let surface = self.retired_surfaces.pop().ok_or(FlowVcsFault::InvalidMutation)?;
                 self.document.as_mut().ok_or(FlowVcsFault::Closed)?.surface = Some(surface);
                 operation.cursor.surface_transferred = false;
-                operation.stage = stage;
                 return Ok(false);
             }
             if operation.cursor.history_transferred {
@@ -870,19 +869,16 @@ impl FlowRetainedVcs {
                 .ok_or(FlowVcsFault::InvalidMutation)?;
                 operation.action = Some(action);
                 operation.cursor.history_transferred = false;
-                operation.stage = stage;
                 return Ok(false);
             }
             if operation.cursor.redo_retired > 0 {
                 let action = self.retired_actions.pop().ok_or(FlowVcsFault::InvalidMutation)?;
                 self.redo.push(action).map_err(|_| FlowVcsFault::Full)?;
                 operation.cursor.redo_retired -= 1;
-                operation.stage = stage;
                 return Ok(false);
             }
             let document = self.document.as_mut().ok_or(FlowVcsFault::Closed)?;
             if !flow_vcs_step_rollback(document, operation)? {
-                operation.stage = stage;
                 return Ok(false);
             }
             if operation.cursor.owns_edit {
@@ -901,7 +897,6 @@ impl FlowRetainedVcs {
                 operation.cursor.history_loaded = false;
             }
             operation.cursor.phase = FlowVcsCursorPhase::Scan;
-            operation.stage = stage;
             return Ok(false);
         }
         match operation.close_phase {
@@ -1017,7 +1012,10 @@ impl FlowRetainedVcs {
         if self.closing && !(self.undo.is_empty() && self.redo.is_empty()) {
             return FlowVcsClosePhase::History;
         }
-        match self.document.as_ref().filter(|_| self.closing) {
+        if !self.closing {
+            return FlowVcsClosePhase::Complete;
+        }
+        match self.document.as_ref() {
             Some(document) if document.surface.is_some() => FlowVcsClosePhase::DocumentSurface,
             Some(document) if !document.versions.is_empty() => FlowVcsClosePhase::DocumentVersion,
             Some(_) => FlowVcsClosePhase::Document,

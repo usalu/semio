@@ -223,7 +223,7 @@ async fn shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool
     executor.send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
 
     match wait_for_one(&outcomes) {
-        ShardOutcome::Turn { actor: reported, result } => {
+        ShardOutcome::Turn { actor: reported, result, .. } => {
             assert_eq!(reported, actor.0);
             assert_eq!(result.usage.fuel, 77, "the scripted turn's own fuel_used must round-trip through the pool job, proving it genuinely ran pump() there");
         }
@@ -305,8 +305,8 @@ async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbo
     assert_eq!(collected.len(), 2);
     let expected = case["expectedActors"].as_array().expect("expected ingress actors");
     assert_eq!(case["maxFramesPerDrive"].as_u64(), Some(1));
-    assert!(matches!(&collected[0], ShardOutcome::Turn { actor, result } if u64::from(ActorId(*actor).ordinal()) == expected[0].as_u64().expect("first expected actor") && result.usage.fuel == frames[1]["fuel"].as_u64().expect("interactive fuel")));
-    assert!(matches!(&collected[1], ShardOutcome::Turn { actor, result } if u64::from(ActorId(*actor).ordinal()) == expected[1].as_u64().expect("second expected actor") && result.usage.fuel == frames[0]["fuel"].as_u64().expect("background fuel")));
+    assert!(matches!(&collected[0], ShardOutcome::Turn { actor, result, .. } if u64::from(ActorId(*actor).ordinal()) == expected[0].as_u64().expect("first expected actor") && result.usage.fuel == frames[1]["fuel"].as_u64().expect("interactive fuel")));
+    assert!(matches!(&collected[1], ShardOutcome::Turn { actor, result, .. } if u64::from(ActorId(*actor).ordinal()) == expected[1].as_u64().expect("second expected actor") && result.usage.fuel == frames[0]["fuel"].as_u64().expect("background fuel")));
     pool.shutdown();
 }
 

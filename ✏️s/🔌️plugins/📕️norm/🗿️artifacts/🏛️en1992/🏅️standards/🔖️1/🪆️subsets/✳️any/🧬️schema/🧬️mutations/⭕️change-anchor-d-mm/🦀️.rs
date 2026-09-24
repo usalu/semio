@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorDMm 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change anchor d mm to {:?}", self.new_anchor_d_mm), &format!("Ankerdmm auf {:?} ändern", self.new_anchor_d_mm))
+        protocol::LocalizedLabel::native(&format!("Change anchor diameter d [mm] to {:?}", self.new_anchor_d_mm), &format!("Dübeldurchmesser d [mm] auf {:?} ändern", self.new_anchor_d_mm))
     }
 }
 //#endregion 🔖️ChangeAnchorDMm

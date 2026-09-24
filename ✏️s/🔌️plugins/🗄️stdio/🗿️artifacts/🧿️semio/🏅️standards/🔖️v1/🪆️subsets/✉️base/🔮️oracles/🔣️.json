@@ -104,7 +104,9 @@
           "capability": "semio-v1-base-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",
@@ -125,6 +127,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -146,6 +149,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -167,6 +171,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -188,6 +193,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -209,6 +215,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -230,6 +237,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -251,6 +259,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -272,6 +281,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -293,6 +303,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -314,6 +325,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -335,6 +347,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -356,6 +369,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -377,6 +391,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -398,6 +413,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -419,6 +435,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -440,6 +457,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -461,6 +479,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -482,6 +501,7 @@
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {

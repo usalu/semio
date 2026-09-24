@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHrCpJK
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change heat recovery specific heat capacity to {}", self.new_hr_cp_j_kgk), &format!("Wärmenrückgewinnungsspezifischwärmenkapazität auf {} ändern", self.new_hr_cp_j_kgk))
+        protocol::LocalizedLabel::native(&format!("Change heat recovery specific heat capacity to {}", self.new_hr_cp_j_kgk), &format!("Spezifische Wärmekapazität der Wärmerückgewinnung auf {} ändern", self.new_hr_cp_j_kgk))
     }
 }
 //#endregion 🔖️ChangeHrCpJKgk

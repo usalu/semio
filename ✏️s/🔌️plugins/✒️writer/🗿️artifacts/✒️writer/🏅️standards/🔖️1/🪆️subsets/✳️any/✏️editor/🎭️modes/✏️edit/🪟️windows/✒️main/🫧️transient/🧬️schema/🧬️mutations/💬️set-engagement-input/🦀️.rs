@@ -18,7 +18,7 @@ impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransient
         vec![Self { value: base.engagement_input.clone() }.into()]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Writer Window Engagement Input", "Schreiberfensterbeteiligungseingabe setzen")
+        protocol::LocalizedLabel::native("Set Writer Window Engagement Input", "Interaktionseingabe des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["engagement_input".into()]

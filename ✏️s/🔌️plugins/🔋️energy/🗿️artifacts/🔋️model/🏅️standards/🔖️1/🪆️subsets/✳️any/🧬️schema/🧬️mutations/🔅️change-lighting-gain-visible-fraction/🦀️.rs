@@ -33,7 +33,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Lighting Gain Visible Fraction of lighting gain {}", self.id.0), &format!("sichtbare Beleuchtungsgewinnanteil von Beleuchtungsgewinn {} ändern", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Change Lighting Gain Visible Fraction of lighting gain {}", self.id.0), &format!("Sichtbaren Anteil von Beleuchtungswärmegewinn {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

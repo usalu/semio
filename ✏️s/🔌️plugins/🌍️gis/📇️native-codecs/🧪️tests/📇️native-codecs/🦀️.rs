@@ -235,3 +235,33 @@ async fn gis_guest_genesis_is_byte_for_byte_the_linked_codec_pair_on_one_generat
         assert_eq!(reprinted.ops, guest.ops, "{schema} ops differ between the guest producer and the linked codec");
     }
 }
+
+/// 🧬️ Generator and law of `📇️native-codecs/🔣️.json`'s `packSchemaSha256`: each receipt's value is the live
+/// `os_pack::schema_hash` the hub's linked GIS codec binds, so the trusted-catalog bootstrap reads it instead of
+/// deriving it. With `SEMIO_NATIVE_CODEC_PROJECTION=write` (the gis `native-codec-projection` verb) the committed
+/// values are written in place; otherwise the committed projection must already equal the live receipts.
+#[test]
+fn native_codec_projection_pack_schema_hashes_equal_live_receipts() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../📇️native-codecs/🔣️.json");
+    let committed = std::fs::read_to_string(&path).unwrap();
+    let mut generated = committed.clone();
+    let protocol_key = "\"protocolSha256\": \"";
+    let hash_key = ",\n      \"packSchemaSha256\": \"";
+    for receipt in native_codec_factory_receipts().expect("complete inert GIS closure") {
+        let identity = receipt.identity();
+        let hash = identity.pack_schema_hash.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+        let row = generated.find(&format!("\"factoryId\": \"{}\"", identity.factory_id)).unwrap_or_else(|| panic!("projection omits {}", identity.factory_id));
+        let protocol_end = row + generated[row..].find(protocol_key).expect("receipt carries protocolSha256") + protocol_key.len() + 64 + 1;
+        if generated[protocol_end..].starts_with(hash_key) {
+            let start = protocol_end + hash_key.len();
+            generated.replace_range(start..start + 64, &hash);
+        } else {
+            generated.insert_str(protocol_end, &format!("{hash_key}{hash}\""));
+        }
+    }
+    if std::env::var("SEMIO_NATIVE_CODEC_PROJECTION").as_deref() == Ok("write") {
+        std::fs::write(&path, &generated).unwrap();
+    } else {
+        assert_eq!(generated, committed, "GIS native codec projection is stale: run the gis native-codec-projection verb");
+    }
+}

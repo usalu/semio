@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeAlphaS {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change shaft resistance factor alpha_s to {}", self.new_alpha_s), &format!("Schachtwiderstandfaktoralpha_s auf {} ändern", self.new_alpha_s))
+        protocol::LocalizedLabel::native(&format!("Change shaft resistance factor alpha_s to {}", self.new_alpha_s), &format!("Mantelreibungsbeiwert α_s auf {} ändern", self.new_alpha_s))
     }
 }
 //#endregion 🔖️ChangeAlphaS

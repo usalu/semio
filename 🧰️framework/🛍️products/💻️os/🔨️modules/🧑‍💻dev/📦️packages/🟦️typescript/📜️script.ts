@@ -5,6 +5,7 @@ import { PlaygroundSessionGenerateScript, PlaygroundSessionPreviewScript } from 
 import { PreparationScript } from "../../♻️activation/🧰️preparation/🟦️.ts";
 import { ActivationScript } from "../../♻️activation/🏃️execution/🟦️.ts";
 import { ServeScript } from "../../♻️activation/🌐️serve/🟦️.ts";
+import { DevLocalHubScript } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 import { ColdBootCheckScript } from "../../♻️activation/🩺️readiness/🟦️.ts";
 import { CanonicalBootstrapFolderMirrorCheckScript } from "../../🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts";
 import { TestScript } from "../../🧪️tests/🏃️execution/🟦️.ts";
@@ -25,6 +26,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("prepare", PreparationScript)
   .register("activate", ActivationScript)
   .register("serve", ServeScript)
+  .register("local-hub", DevLocalHubScript)
   .register("cold-boot-check", ColdBootCheckScript)
   .register("canonical-bootstrap-folder-mirror-check", CanonicalBootstrapFolderMirrorCheckScript)
   .register("closed-browser-component-factory-check", class extends BundleScript {

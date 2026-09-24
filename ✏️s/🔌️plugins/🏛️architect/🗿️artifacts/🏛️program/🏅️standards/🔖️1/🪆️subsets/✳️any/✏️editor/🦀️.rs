@@ -1600,6 +1600,7 @@ impl ArtifactEditor for ArchitectPlayApp {
 pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::ARCHITECT_DIALECT)
             .document(["semio", "architect"])
+            .artifact_kind(crate::artifact_kind())
             .icon_id("architect")
             .mode_def(edit_mode::definition())
             .mode_def(review_mode::definition())
@@ -1650,7 +1651,9 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("addRegisterItem", InteractiveJobClassification::Migrated)
             .action_interactive_job("applyTemplate", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportProgram", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_destructive("exportProgram")
             .action_interactive_job("exportRegistersCsv", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_destructive("exportRegistersCsv")
             .action_interactive_job("importProgram", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("importRegistersCsv", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)

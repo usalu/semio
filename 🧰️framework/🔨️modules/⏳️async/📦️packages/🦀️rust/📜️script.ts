@@ -80,12 +80,13 @@ class WorkerParkingCheckScript extends BundleScript {
     for (const row of fixture.protocol) assert.equal(model(row.case, row.timerDue), row.expected, row.case);
     assert.equal(fixture.idle.maximumSleepsInQuietWindow, 0);
     assert.equal(fixture.periodicTimer.maximumSleepsPerTick, 1);
+    assert(fixture.farKeeper.farDeadlineMs > fixture.farKeeper.chainBoundMs * 6, "a chain parked behind the far keeper must outlive the chain bound");
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     for (const marker of ["fn signal_work(", "fn signal_timer(", "fn signal_timer_from_firing_worker(", "fn hand_off_timers(", "fn park(", "Ordering::SeqCst"]) assert(source.includes(marker), `missing parking primitive: ${marker}`);
     const crate = readFileSync(join(owner, "../🦀️.rs"), "utf8");
     const pool = crate.slice(crate.indexOf("mod native_pool {"), crate.indexOf("//#endregion 🧵️WorkerPoolNative"));
     assert(pool.length > 0 && !pool.includes("wait_timeout(guard") && !pool.includes("notify_all"), "the native pool must not poll or broadcast");
-    console.log(`worker-parking-independent-oracle: AJV=1 protocol=${fixture.protocol.length} quiet-window=${fixture.idle.quietWindowMs}ms periodic-ticks=${fixture.periodicTimer.ticks}`);
+    console.log(`worker-parking-independent-oracle: AJV=1 protocol=${fixture.protocol.length} quiet-window=${fixture.idle.quietWindowMs}ms periodic-ticks=${fixture.periodicTimer.ticks} far-keeper-chains=${fixture.farKeeper.chains}`);
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,
@@ -99,6 +100,7 @@ class WorkerParkingCheckScript extends BundleScript {
           "native_pool::tests::an_idle_native_pool_sleeps_without_a_poll_interval",
           "native_pool::tests::a_timer_deadline_wakes_exactly_the_parked_keeper",
           "native_pool::tests::a_timer_re_armed_from_its_own_callback_wakes_only_the_keeper",
+          "native_pool::tests::a_timer_re_armed_by_a_firing_callback_never_waits_behind_a_far_keeper",
         ],
       }],
       artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,

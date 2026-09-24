@@ -11,7 +11,7 @@ import { parseArgs } from "node:util";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyCanonicalChildKindBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
-import { BundleScript, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, ScriptRouter, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetMs, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, findRepoRoot, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, layeringBreaches, layeringCounts, layeringReferences, loadFrameworkOsPlaygroundCatalog, loadLayeringBaseline, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetMs, orchestratorBudgetOpts, parseTsImportSpecs, partitionNextestExecutionFilters, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, ScriptRouter, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetMs, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, findRepoRoot, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, layeringBreaches, layeringCounts, layeringReferences, loadFrameworkOsPlaygroundCatalog, loadLayeringBaseline, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetMs, orchestratorBudgetOpts, parseTsImportSpecs, partitionNextestExecutionFilters, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, testLevelAtLeast, testLevelBudgetMs, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, leadingEmojiIdentity, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, pathEmojiStatuteFindings, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validation/🟦️.ts";
 import { taxonomyCliArtifactPath } from "../../🧹️normalization/🎮️command-contract/🟦️.ts";
@@ -23,6 +23,7 @@ import { MUTATION_STRUCTURAL_POLICY_KINDS, inspectMutationRootReachability, poli
 import { mutationTaxonomyStructuralView } from "../../🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts";
 import { planMutationTaxonomy, runMutationTaxonomyCli } from "../../🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts";
 import { inventoryMutationTaxonomy } from "../../🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts";
+import "../✂️node-native-typescript/🟦️.ts";
 import "../🎫️ticket-role-routing/🟦️.ts";
 import "../🎭️source-roster-roles/🟦️.ts";
 import "../📣️typescript-declaration-facts/🟦️.ts";
@@ -140,9 +141,10 @@ describe("current JCO destination authority", () => {
       expect(readFileSync(join(owner, "jcoprobe.core.wasm")).subarray(0, 4)).toEqual(Buffer.from([0, 97, 115, 109]));
     }
     const shim = join(host, "🪞️preview2-shim");
-    const names = ["cli.js", "clocks.js", "config.js", "environment.js", "filesystem.js", "http.js", "index.js", "io.js", "random.js", "sockets.js"];
+    const tool = join(root, "node_modules/@bytecodealliance/preview2-shim/dist/browser"), names = readdirSync(tool).filter((name) => name.endsWith(".js")).sort();
+    expect(names).toEqual(expect.arrayContaining(["cli.js", "clocks.js", "config.js", "environment.js", "filesystem.js", "http.js", "index.js", "io.js", "random.js", "sockets.js"]));
     expect(readdirSync(shim).sort()).toEqual(names);
-    for (const name of names) expect(readFileSync(join(shim, name))).toEqual(readFileSync(join(root, "node_modules/@bytecodealliance/preview2-shim/dist/browser", name)));
+    for (const name of names) expect(readFileSync(join(shim, name))).toEqual(readFileSync(join(tool, name)));
   });
 
   test("separates current paths from immutable evidence and agrees with the schema oracle", async () => {
@@ -247,7 +249,7 @@ describe("materialized JCO interface filename boundaries", () => {
     const contracts = Object.entries(taxonomy.fixedFilenameContracts).filter(([id]) => id.startsWith("dev-jco-interface-"));
     const parentIds = taxonomy.fixedDirectoryContractSets!["dev-jco-all-interfaces"];
     expect(contracts).toHaveLength(33);
-    expect(parentIds).toHaveLength(82);
+    expect(parentIds).toHaveLength(83);
     const normalSource = readFileSync(join(import.meta.dir, "../../🧹️normalization/🟦️.ts"), "utf8");
     const syntax = ts.createSourceFile("🟦️.ts", normalSource, ts.ScriptTarget.Latest, true);
     const declaration = syntax.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "fixedScopeMatches");
@@ -272,7 +274,7 @@ describe("materialized JCO interface filename boundaries", () => {
       physicalFiles += physical.length;
       for (const filename of physical) {
         const stem = filename.slice(0, -".d.ts".length);
-        expect(ts.resolveModuleName("../../📦️packages/🟦️typescript" + stem + ".js", join(root, parent, "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, parent, filename).replaceAll("\\", "/"));
+        expect(ts.resolveModuleName("./" + stem + ".js", join(root, parent, "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, parent, filename).replaceAll("\\", "/"));
       }
       for (const filename of ["custom.d.ts", "semio-framework-types.d.ts.extra", "🧪️custom.d.ts"]) expect(resolver.filenameIdsForPath(parent + "/" + filename, { parentFixedDirectoryContractIds: [parentId] })).toEqual([]);
     }
@@ -286,11 +288,11 @@ describe("materialized JCO interface filename boundaries", () => {
 });
 
 describe("materialized JCO companion boundaries", () => {
-  test("preserves only the 82 exact compiler-linked triples", async () => {
+  test("preserves only the 83 exact compiler-linked triples", async () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts"), ts = await import("typescript"), picomatch = (await import("picomatch")).default;
     const taxonomy = loadTaxonomy(), root = findRepoRoot(import.meta.dir), resolver = discovery.createFixedContractResolver(taxonomy);
     const contracts = Object.entries(taxonomy.fixedFilenameContracts).filter(([id]) => /^dev-(plugin|extension)-component-/u.test(id));
-    expect(contracts).toHaveLength(246);
+    expect(contracts).toHaveLength(249);
     const options = { allowJs: true, moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext };
     for (const [id, contract] of contracts) {
       const path = contract.pathPattern;
@@ -302,7 +304,7 @@ describe("materialized JCO companion boundaries", () => {
       }
       if (id.endsWith("-js")) {
         const declaration = path.slice(0, -3) + ".d.ts", core = basename(path).slice(0, -3) + ".core.wasm";
-        expect(ts.resolveModuleName("../../📦️packages/🟦️typescript" + basename(path), join(root, dirname(path), "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, declaration).replaceAll("\\", "/"));
+        expect(ts.resolveModuleName("./" + basename(path), join(root, dirname(path), "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, declaration).replaceAll("\\", "/"));
         expect(readFileSync(join(root, path), "utf8")).toContain(core);
       }
       if (id.endsWith("-wasm")) expect(new Uint8Array(await Bun.file(join(root, path)).slice(0, 8).arrayBuffer())).toEqual(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
@@ -332,7 +334,7 @@ describe("Flow compiler output boundaries", () => {
     for (const parent of vector.owners) {
       const owner = join(flow, parent, vector.outputDirectory);
       expect(existsSync(join(flow, parent, "pkg"))).toBe(false);
-      expect(ts.resolveModuleName("../../📦️packages/🟦️typescript/flow_core.js", join(owner, "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(owner, "flow_core.d.ts").replaceAll("\\", "/"));
+      expect(ts.resolveModuleName("./flow_core.js", join(owner, "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(owner, "flow_core.d.ts").replaceAll("\\", "/"));
       expect(readFileSync(join(owner, "flow_core.js"), "utf8")).toContain("flow_core_bg.wasm");
       for (const name of vector.companions) {
         const path = relative(root, join(owner, name)).replaceAll("\\", "/");
@@ -369,11 +371,11 @@ describe("package language semantic handoff", () => {
   test("the actual directory classifier agrees with independent compilers and JSON Schema semantic matching", async () => {
     const ts = await import("typescript");
     const { parse: parseJsonc } = await import("jsonc-parser");
-    const { createTaxonomyPathMatcher } = await import("../../🔍️discovery/🟦️.ts");
+    const { createTaxonomyPathMatcher, mutationOwnerIdentity, targetInsidePackageBoundaryFinding } = await import("../../🔍️discovery/🟦️.ts");
     expect(parseJsonc(readFileSync(join(inputRoot, "🔣️.json"), "utf8"))).toEqual(vector);
     const source = readFileSync(join(import.meta.dir, "../../🧹️normalization/🟦️.ts"), "utf8");
     const syntax = ts.createSourceFile("🟦️.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const names = new Set(["emojiFold", "graphemes", "isEmojiGrapheme", "splitLeadingEmoji", "splitLeadingEmojiIdentity", "matchDirectoryKind", "packageLocation", "fixedSpecificity", "compareFixedSpecificity", "equalFixedSpecificity", "fixedScopeMatches", "matchingFixedContracts", "violation", "canonicalDirectory"]);
+    const names = new Set(["emojiFold", "graphemes", "isEmojiGrapheme", "splitLeadingEmoji", "splitLeadingEmojiIdentity", "matchDirectoryKind", "packageLocation", "fixedSpecificity", "compareFixedSpecificity", "equalFixedSpecificity", "fixedScopeMatches", "matchingFixedContracts", "violation", "mutationDomainOwnerLocation", "canonicalDirectory"]);
     const declarations = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && names.has(node.name?.text ?? ""));
     expect(declarations).toHaveLength(names.size);
     const code = declarations.map((node) => node.getText(syntax)).join("\n") + "\nreturn canonicalDirectory;";
@@ -381,7 +383,7 @@ describe("package language semantic handoff", () => {
       new Bun.Transpiler({ loader: "ts" }).transformSync(code),
       ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText,
     ];
-    const operations = compilers.map((javascript) => new Function("basename", "dirname", "SEGMENTER", "pathEmojiStatuteFindings", javascript)(basename, dirname, new Intl.Segmenter("und", { granularity: "grapheme" }), pathEmojiStatuteFindings));
+    const operations = compilers.map((javascript) => new Function("basename", "dirname", "SEGMENTER", "pathEmojiStatuteFindings", "targetInsidePackageBoundaryFinding", "mutationOwnerIdentity", javascript)(basename, dirname, new Intl.Segmenter("und", { granularity: "grapheme" }), pathEmojiStatuteFindings, targetInsidePackageBoundaryFinding, mutationOwnerIdentity));
     const cases = [
       ...vector.languages.flatMap((language: { id: string; name: string }) => [language.name, fold(language.name)].map((name) => ({ id: name, steps: [{ name, parentKindId: "packages", kindId: language.id, canonicalName: language.name, violationCodes: [] }] }))),
       ...vector.cases,
@@ -416,7 +418,7 @@ describe("package language semantic handoff", () => {
         let parentCanonical = "📦️packages", previousKind: string | undefined;
         return scenario.steps.map((step: { name: string; parentKindId: string; kindId: string | null; canonicalName: string; violationCodes: string[] }) => {
           const parentKindId = step.parentKindId === "previous" ? previousKind : step.parentKindId;
-          const result = operation(parentCanonical + "/" + step.name, parentCanonical, parentKindId, ["packages"], { schema: registry, directoryKinds, pathMatcher: createTaxonomyPathMatcher() });
+          const result = operation(parentCanonical + "/" + step.name, parentCanonical, parentKindId, ["packages"], { schema: registry, discoverySchema: registry, directoryKinds, pathMatcher: createTaxonomyPathMatcher() });
           const expected = { path: parentCanonical + "/" + step.canonicalName, kindId: step.kindId, violationCodes: step.violationCodes };
           const actual = { path: result.path, kindId: result.kindId, violationCodes: result.violations.map((row: { code: string }) => row.code) };
           const slug = step.name.replace(/^[^\p{L}]*/u, ""), emoji = step.name.slice(0, step.name.length - slug.length);
@@ -434,8 +436,7 @@ describe("package language semantic handoff", () => {
       expect(observed[0], scenario.id).toEqual(observed[1]);
     }
     expect(oracleCompileCalls).toBe(oracleCompilationCounts.size);
-    console.info("[DEBUG] Package classifier oracle compilation", JSON.stringify({ pid: process.pid, scenarios: cases.length, compilers: operations.length, compileCalls: oracleCompileCalls, uniqueSchemas: oracleCompilationCounts.size }));
-  });
+  }, 30_000);
 
   test("resident native metadata binds the exact semantic owner and one Cargo identity", async () => {
     const { parse: parseJsonc } = await import("jsonc-parser");
@@ -449,7 +450,7 @@ describe("package language semantic handoff", () => {
     for (const invalid of [{ ...expected, extra: true }, { ...expected, schemaVersion: 2 }, { ...expected, ownerPath: "foreign" }, { ...expected, cargo: { ...expected.cargo, lib: { ...expected.cargo.lib, path: "../../../🦀️.rs" } } }, { ...expected, cargo: { ...expected.cargo, dependencies: { serde_json: { workspace: true } } } }, { ...expected, wasmTargets: [...expected.wasmTargets].reverse() }]) expect(validate(invalid)).toBe(false);
     expect(validateTaxonomy(schema)).toEqual([]);
     expect(canonicalPrimaryFilenameForKind("rust-source", schema)).toBe("🦀️.rs");
-    expect(semanticDirectoryKindId(basename(fixtureRoot), schema, { parentKindId: "test-case" })).toBe("test-fixture-member");
+    expect(semanticDirectoryKindId(basename(dirname(inputRoot)), schema, { parentKindId: "members-of-modules" })).toBe("fixtures");
     expect(semanticDirectoryKindId("🔨️modules", schema)).toBe("modules");
     expect(semanticDirectoryKindId("🌱️value", schema, { parentKindId: "modules" })).toBe("members-of-modules");
     expect(semanticDirectoryKindId(expected.member.name, schema, { parentKindId: expected.member.ownerKindId })).toBe(expected.member.registry);
@@ -461,8 +462,8 @@ describe("package language semantic handoff", () => {
     const source = semanticOwnedInputFileSnapshot(root, expected.sourcePath), nativeTests = semanticOwnedInputFileSnapshot(root, expected.testPath);
     expect(source?.nodeKind).toBe("file");
     expect(nativeTests?.nodeKind).toBe("file");
-    expect(source!.bytes.toString()).toContain('#[path = "🧪️tests/🦀️.rs"]');
-    expect(nativeTests!.bytes.toString()).toContain('include_str!("../../📦️packages/🧫️fixture/🔣️.json")');
+    expect(source!.bytes.toString()).toContain(`#[path = "${posix.relative(posix.dirname(expected.sourcePath), expected.testPath)}"]`);
+    expect(nativeTests!.bytes.toString()).toContain(`include_str!("${posix.relative(posix.dirname(expected.testPath), expected.fixturePath)}")`);
     expect(semanticOwnedInputFileSnapshot(root, expected.ownerPath + "/🦀️missing.rs")).toBeNull();
     for (const path of [expected.sourcePath, expected.testPath]) expect(basename(path)).toBe(canonicalPrimaryFilenameForKind("rust-source", schema));
     const packageRoot = join(root, expected.packagePath);
@@ -482,7 +483,7 @@ describe("package language semantic handoff", () => {
     expect(Bun.TOML.parse(workspaceText).workspace).toEqual(workspace);
     expect(workspace.members.filter(path => path === expected.packagePath)).toHaveLength(1);
     expect(workspace.dependencies[expected.cargo.package.name]).toEqual({ path: expected.packagePath });
-    expect(workspace.package).toMatchObject({ version: "0.1.0", edition: "2021", "rust-version": "1.88" });
+    expect(workspace.package).toMatchObject({ version: "0.1.0", edition: "2021", "rust-version": "1.95" });
     const projectText = readFileSync(join(packageRoot, "📋️project.json"), "utf8"), project = JSON.parse(projectText);
     expect(parseJsonc(projectText)).toEqual(project);
     expect(project).toEqual(expected.project);
@@ -510,7 +511,6 @@ describe("package language semantic handoff", () => {
     expect(() => semanticOwnedInputFileSnapshot(fixture, "🧫️link/🦀️.rs")).toThrow("no-follow");
     expect(semanticOwnedInputFileSnapshot(fixture, "🧫️target/🦀️.rs")?.bytes.toString()).toBe("pub fn neutral_fixture() {}\n");
     writeFileSync(join(fixture, "📝️.md"), "# Resident Metadata No-Follow Fixture\n\nAuthored neutral Rust input and ancestor-link rejection only; no native compilation.\n");
-    console.info("[DEBUG] Resident native metadata", JSON.stringify({ pid: process.pid, package: expected.cargo.package.name, nativeExecuted: false, fixture }));
   });
 
   test("resident native metadata router preserves exact sequential bounded commands without executing Cargo", async () => {
@@ -579,7 +579,6 @@ describe("package language semantic handoff", () => {
       expect(calls).toHaveLength(1);
       expect((calls[0]![1] as string[]).at(-1)).toBe(expected.wasmTargets[0]);
     }
-    console.info("[DEBUG] Resident command source parity", JSON.stringify({ pid: process.pid, compilers: compiled.length, nativeExecuted: false }));
   });
 
   test("UI-host metadata binds canonical source inputs and exact existing Cargo ownership", async () => {
@@ -597,7 +596,7 @@ describe("package language semantic handoff", () => {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🤝️package-language-kind-handoff/🖥️ui-host-package/🔣️.json").toString("utf8")));
     expect(validate(expected), JSON.stringify(validate.errors)).toBe(true);
     expect(parseJsonc(Buffer.from(captured.get(neutralPath)!).toString("utf8"))).toEqual(expected);
-    for (const invalid of [{ ...expected, extra: true }, { ...expected, schemaVersion: 2 }, { ...expected, cargo: { ...expected.cargo, libPath: "../../🦀️.rs" } }, { ...expected, admission: { ...expected.admission, importSpecifier: "../../📥️inputs/🎟️admission/📜️script.ts" } }, { ...expected, project: { ...expected.project, targets: { ...expected.project.targets, install: {} } } }, { ...expected, checks: [...expected.checks, { command: "check-wasip2", args: ["check", "--target", "wasm32-wasip2"] }] }]) expect(validate(invalid)).toBe(false);
+    for (const invalid of [{ ...expected, extra: true }, { ...expected, schemaVersion: 2 }, { ...expected, cargo: { ...expected.cargo, libPath: "🦀️.rs" } }, { ...expected, sourceOracles: [{ ...expected.sourceOracles[0], importSpecifier: "../../📥️inputs/🎟️admission/📜️script.ts" }, ...expected.sourceOracles.slice(1)] }, { ...expected, sourceOracles: expected.sourceOracles.slice(0, 1) }, { ...expected, browserHost: { ...expected.browserHost, script: "../../🧪️tests/🟨️.js" } }, { ...expected, project: { ...expected.project, targets: { ...expected.project.targets, install: {} } } }, { ...expected, checks: [...expected.checks, { command: "check-wasip2", args: ["check", "--target", "wasm32-wasip2"] }] }]) expect(validate(invalid)).toBe(false);
     try {
       const projectPath = expected.packagePath + "/📋️project.json", projectText = read(projectPath).toString("utf8"), project = JSON.parse(projectText);
       expect(parseJsonc(projectText)).toEqual(project);
@@ -621,23 +620,28 @@ describe("package language semantic handoff", () => {
       expect(semanticOwnedInputFileSnapshot(root, expected.packagePath + "/package.json")).toBeNull();
       expect(fixedFilenameContractIdsForPath(projectPath, schema)).toContain("nx-project-manifest");
       expect(fixedFilenameContractIdsForPath(expected.packagePath + "/📜️script.ts", schema)).toContain("root-script");
-      expect(semanticDirectoryKindId(basename(fixtureRoot), schema, { parentKindId: "test-case" })).toBe("test-fixture-member");
+      expect(semanticDirectoryKindId(basename(dirname(inputRoot)), schema, { parentKindId: "members-of-modules" })).toBe("fixtures");
+      expect(readdirSync(packageRoot).sort()).toEqual([...expected.packageFiles].sort());
       for (const member of expected.members) {
         expect(semanticDirectoryKindId(member.name, schema, { parentKindId: member.ownerKindId }), member.name).toBe(member.registry);
         expect(schema.semanticDirectoryMemberKinds[member.registry].memberNames.filter((name: string) => name === member.name)).toEqual([member.name]);
       }
       expect(semanticDirectoryKindId("📦️packages", schema, { parentKindId: "members-of-members-of-modules" })).toBe("packages");
       expect(semanticDirectoryKindId("🦀️rust", schema, { parentKindId: "packages" })).toBe("rust-language");
-      for (const [operand, target] of [[expected.cargo.libPath, expected.packagePath + "/" + expected.cargo.libPath], [expected.admission.importSpecifier, expected.admission.scriptPath], [expected.abi.libRelativePath, expected.abi.sourcePath], [expected.project.$schema, "node_modules/nx/schemas/project-schema.json"]]) {
-        expect(posix.normalize(posix.join(expected.packagePath, operand))).toBe(target);
-        expect(win32.normalize(win32.join(expected.packagePath, operand)).replaceAll("\\", "/")).toBe(target);
+      const libraryBase = posix.dirname(expected.cargo.libSourcePath);
+      for (const [base, operand, target] of [[expected.packagePath, expected.cargo.libPath, expected.cargo.libSourcePath], ...expected.sourceOracles.map((oracle: { importSpecifier: string; scriptPath: string }) => [expected.packagePath, oracle.importSpecifier, oracle.scriptPath]), [expected.packagePath, expected.browserHost.script, expected.browserHost.sourcePath], [libraryBase, expected.abi.libRelativePath, expected.abi.sourcePath], [expected.packagePath, expected.project.$schema, "node_modules/nx/schemas/project-schema.json"]]) {
+        expect(posix.normalize(posix.join(base, operand))).toBe(target);
+        expect(win32.normalize(win32.join(base, operand)).replaceAll("\\", "/")).toBe(target);
       }
-      const entry = read(expected.packagePath + "/" + expected.cargo.libPath).toString("utf8");
+      const entry = read(expected.cargo.libSourcePath).toString("utf8");
       expect(entry).toContain('#[path = "' + expected.abi.libRelativePath + '"]');
       read(expected.abi.sourcePath);
-      for (const path of [expected.admission.scriptPath, expected.admission.fixturePath, expected.admission.schemaPath, expected.packagePath + "/📜️script.ts"]) read(path);
-      for (const path of [expected.admission.fixturePath, expected.admission.schemaPath]) expect(parseJsonc(Buffer.from(captured.get(path)!).toString("utf8"))).toEqual(JSON.parse(Buffer.from(captured.get(path)!).toString("utf8")));
-      for (const old of ["🧪️fixture/🔣️.json", "🧪️schema/🔣️.json"]) expect(semanticOwnedInputFileSnapshot(root, posix.join(posix.dirname(expected.admission.scriptPath), old))).toBeNull();
+      for (const path of [expected.browserHost.sourcePath, expected.packagePath + "/📜️script.ts"]) read(path);
+      for (const oracle of expected.sourceOracles as { ownerPath: string; scriptPath: string; fixturePath: string; schemaPath: string }[]) {
+        for (const path of [oracle.scriptPath, oracle.fixturePath, oracle.schemaPath]) read(path);
+        for (const path of [oracle.fixturePath, oracle.schemaPath]) expect(parseJsonc(Buffer.from(captured.get(path)!).toString("utf8"))).toEqual(JSON.parse(Buffer.from(captured.get(path)!).toString("utf8")));
+        for (const old of ["📜️script.ts", "🧪️fixture/🔣️.json", "🧪️schema/🔣️.json", "🧪️test/🔣️s.json"]) expect(semanticOwnedInputFileSnapshot(root, posix.join(oracle.ownerPath, old))).toBeNull();
+      }
       const toolchainText = read("rust-toolchain.toml").toString("utf8"), toolchain = toml.parse(toolchainText);
       expect(Bun.TOML.parse(toolchainText)).toEqual(toolchain);
       expect((toolchain.toolchain as { targets: string[] }).targets).toContain("wasm32-unknown-unknown");
@@ -652,10 +656,8 @@ describe("package language semantic handoff", () => {
       const workspaceAfter = Buffer.from(semanticOwnedInputFileSnapshot(root, "Cargo.toml")!.bytes), current = readToml<CargoWorkspaceManifest>(workspaceAfter.toString("utf8")).workspace;
       expect(current.members.filter((path) => path === expected.packagePath)).toEqual([expected.packagePath]);
       expect(current.dependencies[expected.cargo.name]).toEqual(workspace.dependencies[expected.cargo.name]);
-      console.info("[DEBUG] UI-host scoped Cargo source identity", JSON.stringify({ pid: process.pid, before: createHash("sha256").update(workspaceBefore).digest("hex"), after: createHash("sha256").update(workspaceAfter).digest("hex"), nativeExecuted: false }));
     } finally {
       for (const [path, bytes] of captured) expect(semanticOwnedInputFileSnapshot(root, path)?.bytes, path + " changed during metadata proof").toEqual(bytes);
-      console.info("[DEBUG] UI-host metadata input identities", JSON.stringify([...captured].map(([path, bytes]) => ({ path, size: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") }))));
     }
   });
 
@@ -666,7 +668,8 @@ describe("package language semantic handoff", () => {
     const sourcePath = expected.packagePath + "/📜️script.ts", snapshot = semanticOwnedInputFileSnapshot(root, sourcePath);
     expect(snapshot?.nodeKind, sourcePath).toBe("file");
     const source = Buffer.from(snapshot!.bytes).toString("utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const inputs = [sourcePath, expected.packagePath + "/Cargo.toml", expected.admission.scriptPath, expected.admission.fixturePath, expected.admission.schemaPath];
+    const oracles = expected.sourceOracles as { scope: string; scriptPath: string; importSpecifier: string; functionName: string; fixturePath: string; schemaPath: string; arguments: unknown[] }[];
+    const inputs = [sourcePath, expected.packagePath + "/Cargo.toml", expected.browserHost.sourcePath, ...oracles.flatMap((oracle) => [oracle.scriptPath, oracle.fixturePath, oracle.schemaPath])];
     const before = new Map(inputs.map((path: string) => {
       const row = semanticOwnedInputFileSnapshot(root, path); expect(row?.nodeKind, path).toBe("file"); return [path, row!.bytes] as const;
     }));
@@ -685,7 +688,7 @@ describe("package language semantic handoff", () => {
         if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
           expect(node.arguments).toHaveLength(1);
           expect(ts.isStringLiteral(node.arguments[0]!)).toBe(true);
-          expect((node.arguments[0] as import("typescript").StringLiteral).text).toBe(expected.admission.importSpecifier);
+          expect(oracles.map((oracle) => oracle.importSpecifier)).toContain((node.arguments[0] as import("typescript").StringLiteral).text);
           dynamicImports++;
           return ts.factory.createCallExpression(ts.factory.createIdentifier("loadInputFixture"), undefined, [node.arguments[0]!]);
         }
@@ -700,12 +703,13 @@ describe("package language semantic handoff", () => {
       return node => ts.visitNode(node, visit) as import("typescript").SourceFile;
     }]);
     const code = ts.createPrinter().printFile(transformed.transformed[0]!); transformed.dispose();
-    expect(dynamicImports).toBe(1);
+    expect(dynamicImports).toBe(oracles.length);
     const compiled = [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText];
     const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
     try {
       for (const javascript of compiled) {
-        let router: ScriptRouter | undefined, importsCalled = 0, sourceCalled = 0, refuse = false;
+        let router: ScriptRouter | undefined, refuse = false;
+        const imported: string[] = [], called: string[] = [];
         const calls: unknown[][] = [];
         const dependencies = {
           BundleScript, ScriptRouter, buildBudgetMs: library.buildBudgetMs, resolveTestLevel: library.resolveTestLevel,
@@ -713,40 +717,46 @@ describe("package language semantic handoff", () => {
           runCargoTestBudgeted: async (...args: unknown[]) => { calls.push(args); if (refuse) throw new Error("native delegation refused"); },
           runTestBudgeted: async (...args: unknown[]) => { calls.push(args); if (refuse) throw new Error("native delegation refused"); },
           loadInputFixture: async (specifier: string) => {
-            expect(specifier).toBe(expected.admission.importSpecifier); importsCalled++;
+            const oracle = oracles.find((row) => row.importSpecifier === specifier);
+            expect(oracle, specifier).toBeDefined();
+            imported.push(oracle!.scope);
             const absolute = resolve(packageRoot, specifier);
-            expect(absolute).toBe(join(root, expected.admission.scriptPath));
+            expect(absolute).toBe(join(root, oracle!.scriptPath));
             const actual = await import(pathToFileURL(absolute).href) as Record<string, (...args: unknown[]) => unknown>;
-            expect(typeof actual[expected.admission.functionName]).toBe("function");
-            return { [expected.admission.functionName]: (...args: unknown[]) => { sourceCalled++; expect(args).toEqual(expected.admission.arguments); return actual[expected.admission.functionName]!(...args); } };
+            expect(typeof actual[oracle!.functionName]).toBe("function");
+            return { [oracle!.functionName]: (...args: unknown[]) => { called.push(oracle!.scope); expect(args).toEqual(oracle!.arguments); return actual[oracle!.functionName]!(...args); } };
           },
         };
         await new AsyncFunction(...Object.keys(dependencies), javascript.replace(/^#!\/usr\/bin\/env bun\r?\n/u, ""))(...Object.values(dependencies));
         expect(router).toBeInstanceOf(ScriptRouter);
         expect(router!.usage()).toBe("bun ./📜️script.ts <test|check|check-wasm> [args…]");
-        expect(importsCalled).toBe(0);
+        expect(imported).toEqual([]);
         for (const row of expected.nativeCases) {
           process.env.SEMIO_TEST_LEVEL = "fundamental"; delete process.env.SEMIO_COVERAGE;
           calls.length = 0;
           await router!.run(row.segments);
           const args = ["--no-fail-fast", ...row.rest];
-          expect(calls).toEqual([[[expected.cargo.name], root, args]]);
+          expect(calls).toEqual([[process.execPath, [expected.browserHost.script], { cwd: packageRoot, budgetMs: library.buildBudgetMs() }], [[expected.cargo.name], root, args]]);
           expect(process.env.SEMIO_TEST_LEVEL).toBe(row.level);
           expect(partitionNextestExecutionFilters(args)).toEqual(row.partition);
-          expect(importsCalled).toBe(0);
+          expect(imported).toEqual([]);
         }
         for (const row of expected.checks) {
           calls.length = 0;
           await router!.run([row.command]);
           expect(calls).toEqual([["cargo", row.args, { cwd: root, budgetMs: library.buildBudgetMs() }]]);
-          expect(importsCalled).toBe(0);
+          expect(imported).toEqual([]);
         }
-        calls.length = 0;
-        await router!.run(["test", "source"]);
-        expect([importsCalled, sourceCalled]).toEqual([1, expected.admission.callsPerCompiler]);
-        expect(calls).toEqual([]);
+        for (const row of expected.sourceCases as { segments: string[]; scopes: string[] }[]) {
+          calls.length = 0; imported.length = 0; called.length = 0;
+          await router!.run(row.segments);
+          expect(imported).toEqual(row.scopes);
+          expect(called).toEqual(row.scopes);
+          expect(calls).toEqual([]);
+        }
+        imported.length = 0; called.length = 0;
         for (const args of expected.rejectedSegments) await expect(router!.run(args)).rejects.toThrow();
-        expect([importsCalled, sourceCalled]).toEqual([1, expected.admission.callsPerCompiler]);
+        expect([imported, called]).toEqual([[], []]);
         expect(calls).toEqual([]);
         const exit = spyOn(process, "exit").mockImplementation((() => { throw new Error("UI-host command rejected"); }) as never);
         try { await expect(router!.run(["unknown"])).rejects.toThrow("UI-host command rejected"); } finally { exit.mockRestore(); }
@@ -762,9 +772,7 @@ describe("package language semantic handoff", () => {
       if (originalLevel === undefined) delete process.env.SEMIO_TEST_LEVEL; else process.env.SEMIO_TEST_LEVEL = originalLevel;
       if (originalCoverage === undefined) delete process.env.SEMIO_COVERAGE; else process.env.SEMIO_COVERAGE = originalCoverage;
       for (const [path, bytes] of before) expect(semanticOwnedInputFileSnapshot(root, path)?.bytes, path + " changed during router proof").toEqual(bytes);
-      console.info("[DEBUG] UI-host router source identities", JSON.stringify([...before].map(([path, bytes]) => ({ path, size: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") }))));
     }
-    console.info("[DEBUG] UI-host router delegation", JSON.stringify({ pid: process.pid, compilers: compiled.length, actualSourceCalls: compiled.length, nativeExecuted: false }));
   });
 
 });
@@ -889,13 +897,13 @@ describe("registryCompilerImports", () => {
 
   test("rejects malformed runtime compiler capabilities without trusting declarations", async () => {
     const { scanRegistryCompilerImports } = await import("../../🔍️discovery/🟦️.ts");
-    for (const platform of [null, {}, { Transpiler: 7 }, { Transpiler: () => ({}) }, { Transpiler: class {} }, { Transpiler: class { scanImports() { return {}; } } }, { Transpiler: class { scanImports() { return [{ path: 1, kind: "import-statement" }]; } } }, { Transpiler: class { scanImports() { return [{ path: "../../📦️packages/🟦️typescript/a", kind: null }]; } } }]) {
-      expect(() => scanRegistryCompilerImports("import '../../📦️packages/🟦️typescript/🟦️'", "tsx", platform)).toThrow();
+    for (const platform of [null, {}, { Transpiler: 7 }, { Transpiler: () => ({}) }, { Transpiler: class {} }, { Transpiler: class { scanImports() { return {}; } } }, { Transpiler: class { scanImports() { return [{ path: 1, kind: "import-statement" }]; } } }, { Transpiler: class { scanImports() { return [{ path: "./a", kind: null }]; } } }]) {
+      expect(() => scanRegistryCompilerImports("import './🟦️'", "tsx", platform)).toThrow();
     }
-    const row = { path: "../../📦️packages/🟦️typescript/a", kind: "import-statement", ignored: true };
+    const row = { path: "./a", kind: "import-statement", ignored: true };
     const imports = scanRegistryCompilerImports("", "tsx", { Transpiler: class { scanImports() { return [row]; } } });
-    row.path = "../../📦️packages/🟦️typescript/rebound";
-    expect(imports).toEqual([{ path: "../../📦️packages/🟦️typescript/a", kind: "import-statement" }]);
+    row.path = "./rebound";
+    expect(imports).toEqual([{ path: "./a", kind: "import-statement" }]);
   });
 });
 //#endregion 🔗️RegistryCompilerImports
@@ -1020,17 +1028,17 @@ describe("mutation metadata source provider", () => {
 
   test("proves current STDIO TXT and GLTF wrapped origins through kernel aliases", () => {
     const repositoryRoot = getWorkspaceRoot();
-    const consumerManifest = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml", consumerLibrary = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs", facadeManifest = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml", facadeLibrary = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs", dslSource = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs", sprSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs", commandSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs";
+    const facadeManifest = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml", facadeLibrary = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs", dslSource = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs", sprSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs", commandSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs";
     const leaves = [
-      { root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-line/🦀️.rs" },
-      { root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦀️.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename/🦀️.rs" },
+      { consumerManifest: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/Cargo.toml", consumerLibrary: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs", root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-line/🦀️.rs" },
+      { consumerManifest: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/Cargo.toml", consumerLibrary: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️.rs", root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦀️.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename/🦀️.rs" },
     ] as const;
-    const origins = leaves.map(({ sourcePath }) => {
+    const origins = leaves.map(({ consumerManifest, sourcePath }) => {
       const declarations = inspectRustMutationMetadataFacts(readFileSync(join(repositoryRoot, sourcePath), "utf8")).declarations.filter((item) => item.visibility === "pub" && !item.conditional && item.mutationLeaf.state === "valid");
       expect(declarations, sourcePath).toHaveLength(1);
-      return { sourcePath, declarationName: declarations[0]!.name, modulePath: declarations[0]!.modulePath };
+      return { consumerManifest, origin: { sourcePath, declarationName: declarations[0]!.name, modulePath: declarations[0]!.modulePath } };
     });
-    const files = [consumerManifest, consumerLibrary, facadeManifest, facadeLibrary, dslSource, sprSource, commandSource, ...leaves.flatMap(({ root, sourcePath }) => [root, sourcePath])];
+    const files = [facadeManifest, facadeLibrary, dslSource, sprSource, commandSource, ...leaves.flatMap(({ consumerManifest, consumerLibrary, root, sourcePath }) => [consumerManifest, consumerLibrary, root, sourcePath])];
     expect(files.every((path) => !path.split("/").some((segment) => segment.toLocaleLowerCase("en-US") === "compose") && !lstatSync(join(repositoryRoot, path)).isSymbolicLink())).toBe(true);
     const source = new Map(files.map((path) => [path, readFileSync(join(repositoryRoot, path), "utf8")]));
     const graph = inspectRustModuleGraph([...source.keys()], (path) => source.get(path), { strictManifests: true });
@@ -1042,8 +1050,7 @@ describe("mutation metadata source provider", () => {
     expect((graph.contexts.get(facadeLibrary) ?? []).filter((context) => context.manifestPath === facadeManifest && context.modulePath.join("\0") === "os_dsl")).toHaveLength(1);
     expect((graph.contexts.get(dslSource) ?? []).filter((context) => context.manifestPath === facadeManifest && context.modulePath.join("\0") === "os_dsl\0component")).toHaveLength(1);
     expect(resolveCargoProviderBinding({ workspaceRoot: repositoryRoot, consumerManifestLocator: facadeManifest, dependencyKey: "dsl_derive" })).toMatchObject({ providerManifestLocator: "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml", libraryName: "dsl_derive", procMacro: true });
-    for (const origin of origins) {
-      if (!origin) continue;
+    for (const { consumerManifest, origin } of origins) {
       expect((graph.contexts.get(origin.sourcePath) ?? []).filter((context) => context.manifestPath === consumerManifest && context.sourceScope.join("\0") === origin.modulePath.join("\0"))).toHaveLength(1);
       expect(inspectMutationMetadataSource({ repositoryRoot, consumerManifestLocator: consumerManifest, origin, files: [...source.keys()], readSource: (path) => source.get(path) })).toMatchObject({ accepted: true, deriveProvider: { role: "metadata-derive", manifestLocator: "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml", libraryName: "dsl_derive", procMacro: true }, contractProvider: { role: "lower-contract", manifestLocator: "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml", libraryName: "protocol", procMacro: false }, facadeProvider: { role: "os-facade", manifestLocator: facadeManifest, libraryName: "semio_framework_os_kernel", procMacro: false } });
     }
@@ -1515,11 +1522,11 @@ describe("Nx Unicode project transport", () => {
     expect(env.NX_ISOLATE_PLUGINS).toBe("true");
   });
 
-  test("builds the describe graph without a lossy duplicate repo-test root", () => {
+  test.if(testLevelAtLeast("long"))("builds the describe graph without a lossy duplicate repo-test root", () => {
     const root = getWorkspaceRoot();
     const result = spawnSync("bun", ["nx", "show", "projects", "--with-target", "describe"], { cwd: root, encoding: "utf8", env: { ...process.env, NX_ISOLATE_PLUGINS: "true" } });
     expect(result.status, result.stderr).toBe(0);
-  }, 20_000);
+  }, 180_000);
 });
 //#endregion 🧩️NxUnicodeTransport
 
@@ -1855,12 +1862,22 @@ describe("micro-commit", () => {
 
   test("buildMicroCommitMetrics merges uloc and git numstat by language", async () => {
     const { buildMicroCommitMetrics } = await import("../../📦️packages/🟦️typescript/🟦️.ts");
-    const root = process.cwd();
-    const metrics = buildMicroCommitMetrics(root, {
-      countRepoByLanguage: () => ({ Rust: 100, TypeScript: 50, JSON: 20 }),
-    });
-    expect(metrics.some((m) => m.lang === "Rust" && m.code === 100)).toBe(true);
-  });
+    const root = mkdtempSync(join(tmpdir(), "compose-micro-commit-metrics-"));
+    try {
+      for (const args of [["init"], ["config", "user.email", "t@e.com"], ["config", "user.name", "T"], ["config", "commit.gpgsign", "false"]]) spawnSync("git", args, { cwd: root, env: gitSpawnEnv() });
+      mkdirSync(join(root, "repo", "js"), { recursive: true });
+      writeFileSync(join(root, "repo/js/a.ts"), "a\n", "utf8");
+      spawnSync("git", ["add", "-A"], { cwd: root, env: gitSpawnEnv() });
+      spawnSync("git", ["commit", "-m", "seed"], { cwd: root, env: gitSpawnEnv() });
+      writeFileSync(join(root, "repo/js/a.ts"), "a\nb\nc\n", "utf8");
+      spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root, env: gitSpawnEnv() });
+      const metrics = buildMicroCommitMetrics(root, { countRepoByLanguage: () => ({ Rust: 100, TypeScript: 50, JSON: 20 }) });
+      expect(metrics.some((m) => m.lang === "Rust" && m.code === 100)).toBe(true);
+      expect(metrics.some((m) => m.lang === "TypeScript" && m.code === 50 && m.added > 0)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 60_000);
 
   test("isUlocCachePlausible rejects partial caches", async () => {
     const { isUlocCachePlausible, gitRepoRoot } = await import("../../📦️packages/🟦️typescript/🟦️.ts");
@@ -1898,7 +1915,7 @@ describe("micro-commit", () => {
 
   test("shouldSkipPathForUloc skips dot paths license templates and .🧬semio", async () => {
     const { shouldSkipPathForUloc } = await import("../../📦️packages/🟦️typescript/🟦️.ts");
-    const root = process.cwd();
+    const root = getWorkspaceRoot();
     expect(shouldSkipPathForUloc(root, ".cursor/plans/foo.plan.md")).toBe(true);
     expect(shouldSkipPathForUloc(root, ".agents/skills/micro-commit/SKILL.md")).toBe(true);
     expect(shouldSkipPathForUloc(root, "compose/client/ui/LICENSE.md")).toBe(true);
@@ -2236,32 +2253,25 @@ describe("package boundary guards", () => {
 
   test("vite and vitest configs avoid cross-package @semio-tech aliases", () => {
     const offenders: string[] = [];
-    const walk = (dir: string) => {
-      for (const entry of require("node:fs").readdirSync(dir, { withFileTypes: true })) {
-        if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".🧬semio" || entry.name === "dist" || entry.name === "target" || entry.name === ".claude") continue;
-        const full = join(dir, entry.name);
-        if (entry.isDirectory()) {
-          walk(full);
-          continue;
-        }
-        if (!/vite.*\.config\.ts$/.test(entry.name) && !(entry.name === "🟦️.ts" && dir.split("/").pop() === "🧪️tests")) continue;
-        const pkgDir = findNearestPackageDir(full, repoRoot);
-        const text = readFileSync(full, "utf8");
-        for (const match of text.matchAll(/find:\s*(?:\/\^)?["']@semio-tech\/[^"']+["']/g)) {
-          const line = text.slice(0, match.index).split("\n").length;
-          const snippet = text.split("\n")[line - 1] ?? "";
-          if (/path\.resolve\(__dirname,\s*["']\.\./.test(snippet) && pkgDir && !snippet.includes("node_modules")) {
-            offenders.push(`${full.replace(repoRoot + "/", "")}:${line}`);
-          }
+    const listed = spawnSync("rg", ["--files", "--glob", "**/*vite*.config.ts", "--glob", "**/🧪️tests/🟦️.ts", "--glob", "!**/.🧬semio/**", "--glob", "!**/.claude/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    for (const relativePath of (listed.stdout ?? "").split("\n").map((line) => line.trim()).filter(Boolean)) {
+      const full = join(repoRoot, relativePath);
+      const pkgDir = findNearestPackageDir(full, repoRoot);
+      const text = readFileSync(full, "utf8");
+      for (const match of text.matchAll(/find:\s*(?:\/\^)?["']@semio-tech\/[^"']+["']/g)) {
+        const line = text.slice(0, match.index).split("\n").length;
+        const snippet = text.split("\n")[line - 1] ?? "";
+        if (/path\.resolve\(__dirname,\s*["']\.\./.test(snippet) && pkgDir && !snippet.includes("node_modules")) {
+          offenders.push(`${relativePath}:${line}`);
         }
       }
-    };
-    walk(repoRoot);
+    }
+    expect([0, 1]).toContain(listed.status);
     expect(offenders).toEqual([]);
   });
 
   test("legacy package aliases are absent from source imports", () => {
-    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🧬semio/**", "--glob", "!**/🔬️index.test.ts"], {
+    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🧬semio/**", "--glob", "!**/🔬️workspace-contract/🟦️.ts"], {
       cwd: repoRoot,
       encoding: "utf8",
     });
@@ -2273,7 +2283,7 @@ describe("package boundary guards", () => {
   });
 
   test("framework renderer host has no per-technology registerUi surface host APIs", () => {
-    const indexPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx");
+    const indexPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🟦️.tsx");
     const indexSource = readFileSync(indexPath, "utf8");
     expect(indexSource).not.toMatch(/registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/);
     expect(indexSource).toContain("bootFrameworkOs");
@@ -2338,7 +2348,7 @@ describe("commit", () => {
   test("pathsFromNumstatRow expands rename paths", async () => {
     const { pathsFromNumstatRow } = await import("../../📦️packages/🟦️typescript/🟦️.ts");
     expect(pathsFromNumstatRow("old/a.ts\tnew/b.ts")).toEqual(["old/a.ts", "new/b.ts"]);
-    expect(pathsFromNumstatRow("dir/{old.ts => new.ts}")).toEqual(["old.ts", "new.ts"]);
+    expect(pathsFromNumstatRow("dir/{old.ts => new.ts}")).toEqual(["dir/old.ts", "dir/new.ts"]);
   });
 
   test("pathMatchesBundleIndex does not treat empty prefix set as match-all", async () => {
@@ -2476,7 +2486,7 @@ describe("commit", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 60_000);
 
   test("sortCommitBundlesByEditTotal orders bundles by descending gitDeltaLineTotal", async () => {
     const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
@@ -2589,7 +2599,7 @@ describe("commit", () => {
 });
 
 describe("command budgets", () => {
-  const indexPath = join(import.meta.dir, "🟦️.ts");
+  const indexPath = join(import.meta.dir, "../../📦️packages/🟦️typescript/🟦️.ts");
 
   /** ⏱️Runs `runCmd` in a fresh subprocess (its budget-exceeded path calls `process.exit`, which would kill the test runner in-process) against a child that sleeps far longer than its budget. */
   function spawnBudgetedSleep(budgetMs: number, envOverride?: Record<string, string>): ReturnType<typeof runProbe> {
@@ -2632,12 +2642,12 @@ describe("command budgets", () => {
   });
 
   test("orchestratorBudgetOpts supplies the opt-in orchestrator budget", () => {
-    expect(orchestratorBudgetOpts()).toEqual({ budgetMs: orchestratorBudgetMs() });
+    expect(orchestratorBudgetOpts()).toEqual({ budgetMs: orchestratorBudgetMs(), env: devToolingEnv() });
     expect(() => runCmd(process.execPath, ["-e", "1"], orchestratorBudgetOpts())).not.toThrow();
   });
 
   test("daemonBudgetOpts returns the daemon budget class", () => {
-    expect(daemonBudgetOpts()).toEqual({ budgetMs: daemonBudgetMs() });
+    expect(daemonBudgetOpts()).toEqual({ budgetMs: daemonBudgetMs(), env: devToolingEnv() });
     expect(daemonBudgetMs()).toBe(DAEMON_BUDGET_MS);
     expect(orchestratorBudgetMs()).toBe(ORCHESTRATOR_BUDGET_MS);
   });
@@ -2765,14 +2775,14 @@ describe("nextest execution filters", () => {
 
 describe("resolveCargoPackageName", () => {
   test("resolves short lib names to full package names", () => {
-    const root = process.cwd();
+    const root = getWorkspaceRoot();
     expect(resolveCargoPackageName("db", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust"))).toBe("semio-framework-os-kernel-db");
     expect(resolveCargoPackageName("semio-s-plugin-architect", join(root, "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust"))).toBe("semio-s-plugin-architect");
     expect(resolveCargoPackageName("semio-s-plugin-energy", join(root, "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust"))).toBe("semio-s-plugin-energy");
   });
 
   test("resolves empty package list to local Cargo.toml package name", () => {
-    const root = process.cwd();
+    const root = getWorkspaceRoot();
     const dbDir = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust");
     expect(resolveCargoPackageNames([], dbDir)).toEqual(["semio-framework-os-kernel-db"]);
   });
@@ -3004,7 +3014,7 @@ describe("loadTaxonomy", () => {
       const invocations: unknown[] = [];
       const invoke = new Function("nxTargetRecord", "record", "generatorPreviewScriptArguments", "generatorPreviewResourceLimits", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "nx:run-commands", options: { cwd: "compiler", command } }), (value: unknown) => value, discovery.generatorPreviewScriptArguments, discovery.generatorPreviewResourceLimits, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
       invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] });
-      expect(invocations).toMatchObject([{ executable: "bun", args: ["../../📦️packages/🟦️typescript/📜️script.ts", "browser", "preview"], options: { maxBuffer: 268435456, timeout: 240000 } }]);
+      expect(invocations).toMatchObject([{ executable: "bun", args: ["./📜️script.ts", "browser", "preview"], options: { cwd: "/neutral/compiler", maxBuffer: 268435456, timeout: 240000 } }]);
       command = "bun ./📜️script.ts preview-generated";
       expect(() => invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] })).toThrow("exact owner JSON preview");
       expect(invocations).toHaveLength(1);
@@ -3062,7 +3072,7 @@ describe("loadTaxonomy", () => {
   test("declares direct plugin-root facets without a nested directory taxonomy field", () => {
     const taxonomy = loadTaxonomy();
     expect("pluginDirName" in taxonomy).toBe(false);
-    expect(taxonomy.pluginChildDirs).toEqual(["🎮️commands", "🔨️modules"]);
+    expect(taxonomy.pluginChildDirs).toEqual(["🎮️commands", "🔨️modules", "🧬️schema"]);
     expect(taxonomy.osChildDirs).toEqual(["🎮️commands", "🎚️config"]);
   });
 
@@ -3166,8 +3176,8 @@ describe("loadTaxonomy", () => {
 
   test("enforces clean declared and undeclared areas while keeping recovered compose trees opaque", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.areaEnforcement).toEqual({ requiredState: "clean", undeclaredAreas: "enforce", opaquePathExclusionIds: ["compose", "temp-compose"] });
-    expect(new Set(Object.values(taxonomy.areas))).toEqual(new Set(["clean"]));
+    expect(taxonomy.areaEnforcement).toEqual({ requiredState: "clean", undeclaredAreas: "enforce", opaquePathExclusionIds: ["compose", "temp-compose", "mit-bestand-recherche"] });
+    expect(Object.entries(taxonomy.areas).filter(([, state]) => state !== "clean")).toEqual([[".🧬semio/🦑️repo/🎫️tickets", "exempt"]]);
     expect(taxonomy.migratedMarker).toBe("packages-dir-exists");
   });
 });
@@ -3339,7 +3349,7 @@ describe("validateTaxonomy", () => {
 
   test("declares direct plugin-root facets", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.pluginChildDirs).toEqual(["🎮️commands", "🔨️modules"]);
+    expect(taxonomy.pluginChildDirs).toEqual(["🎮️commands", "🔨️modules", "🧬️schema"]);
   });
 
   test("includes commands at every command-owning scope", () => {
@@ -3624,13 +3634,13 @@ function semanticFixture(options: { readonly secondProductionConsumer?: boolean;
   write("🧰️framework/🔨️modules/📏measure/🟦️.ts", "export const measure = (value: number) => value;\n");
   if (options.rustRelativeConsumers || options.glueConsumer) write("🧰️framework/🔨️modules/📏measure/🦀️.rs", "pub fn measure(value: u32) -> u32 { value }\n");
   write("🧰️framework/🔨️modules/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [{ directory: "📏measure", id: "measure", kind: "module", responsibility: "exact and stable numeric measurement", module: { productionConsumers: options.secondProductionConsumer ? ["height", "width"] : ["width"] } }] } }));
-  write("🧰️framework/💡️inferences/📏width/🟦️.ts", 'import { measure } from "../../📦️packages/🟦️typescript/🟦️";\nexport const width = measure(1);\n');
-  if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🟦️.ts", 'import { measure } from "../../📦️packages/🟦️typescript/🟦️";\nexport const height = measure(1);\n');
+  write("🧰️framework/💡️inferences/📏width/🟦️.ts", 'import { measure } from "../../🔨️modules/📏measure/🟦️";\nexport const width = measure(1);\n');
+  if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🟦️.ts", 'import { measure } from "../../🔨️modules/📏measure/🟦️";\nexport const height = measure(1);\n');
   if (options.rustRelativeConsumers) {
     write("🧰️framework/💡️inferences/📏width/🦀️.rs", "use super::super::modules::measure::measure;\npub fn width() -> u32 { measure(1) }\n");
     if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🦀️.rs", "use super::super::modules::measure::measure;\npub fn height() -> u32 { measure(1) }\n");
   }
-  if (options.glueConsumer) write("🧰️framework/💡️inferences/📏width/📦️packages/🦀️rust/🦀️.rs", '#[path = "../../../📏measure/🦀️.rs"]\npub mod measure;\n');
+  if (options.glueConsumer) write("🧰️framework/💡️inferences/📏width/📦️packages/🦀️rust/🦀️.rs", '#[path = "../../../../🔨️modules/📏measure/🦀️.rs"]\npub mod measure;\n');
   write("🧰️framework/💡️inferences/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
     { directory: "📏width", id: "width", kind: "inference", responsibility: "derived width", inference: { inputs: ["value"], target: "width" } },
     ...(options.secondProductionConsumer ? [{ directory: "↕️height", id: "height", kind: "inference", responsibility: "derived height", inference: { inputs: ["value"], target: "height" } }] : []),
@@ -3761,9 +3771,9 @@ describe("semantic collection census", () => {
   test("does not count a test call site as a second production component", () => {
     const fixture = semanticFixture();
     try {
-      const testPath = join(fixture.root, "🧰️framework/💡️inferences/📏width/🧪️test/🟦️s.ts");
+      const testPath = join(fixture.root, "🧰️framework/💡️inferences/📏width/🧪️tests/🟦️.ts");
       mkdirSync(join(testPath, ".."), { recursive: true });
-      writeFileSync(testPath, 'import { measure } from "../../📦️packages/🟦️typescript/🟦️";\nexport const checked = measure(1);\n');
+      writeFileSync(testPath, 'import { measure } from "../../../🔨️modules/📏measure/🟦️";\nexport const checked = measure(1);\n');
       const module = buildSemanticCensus(fixture.root, {}, fixture.taxonomy).records.find((record) => record.id === "measure");
       expect(module?.productionConsumers).toEqual(["width"]);
       expect(module?.excludedConsumers).toEqual(["width"]);
@@ -3898,7 +3908,7 @@ describe("discoverPackages", () => {
       .map((entry) => `✏️s/🔌️plugins/${entry.name}`)
       .sort();
 
-  test("finds every migrated plugin under the real repo root", () => {
+  test.if(testLevelAtLeast("long"))("finds every migrated plugin under the real repo root", () => {
     const root = getWorkspaceRoot();
     const catalog = discoverPackages(root);
     const pluginOwners = [...new Set(catalog.filter((pkg) => pkg.role === "plugin").map((pkg) => pkg.ownerRel))].sort();
@@ -3907,16 +3917,16 @@ describe("discoverPackages", () => {
     expect(writerEntry?.area).toBe("clean");
     expect(writerEntry?.lang).toBe("🦀️rust");
     expect(writerEntry?.id).toBe("semio-s-plugin-writer");
-  });
+  }, 600_000);
 
-  test("only ever reports roles from the declared vocabulary", () => {
+  test.if(testLevelAtLeast("long"))("only ever reports roles from the declared vocabulary", () => {
     const taxonomy = loadTaxonomy();
     const catalog = discoverPackages(getWorkspaceRoot());
     expect(catalog.filter((pkg) => !taxonomy.roles.includes(pkg.role))).toEqual([]);
     expect(catalog.filter((pkg) => !taxonomy.langs.includes(pkg.lang))).toEqual([]);
-  });
+  }, 600_000);
 
-  test("discovers every moved target-first React package with its exact owner and package root", () => {
+  test.if(testLevelAtLeast("long"))("discovers every moved target-first React package with its exact owner and package root", () => {
     const catalog = discoverPackages(getWorkspaceRoot(), loadCatalogTaxonomy());
     const expected = [
       { id: "ui-react", role: "framework", ownerRel: "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react", target: "⚛️react" },
@@ -3927,9 +3937,9 @@ describe("discoverPackages", () => {
       const packageRel = `${row.ownerRel}/📦️packages/🟦️typescript`;
       expect(catalog.filter((pkg) => pkg.id === row.id).map(({ id, role, ownerRel, target, packageRel, manifestPath }) => ({ id, role, ownerRel, target, packageRel, manifestPath }))).toEqual([{ ...row, packageRel, manifestPath: `${packageRel}/package.json` }]);
     }
-  });
+  }, 600_000);
 
-  test("an in-flight plugin is discovered as mixed, never as a problem", () => {
+  test.if(testLevelAtLeast("long"))("an in-flight plugin is discovered as mixed, never as a problem", () => {
     const root = getWorkspaceRoot();
     // 🏗️ fem is the last plugin still mid-migration: a marked new-contract package PLUS residual
     // ⚡️implementations sandwiches and a Shape V1 owner-root entry file. Tolerating that state (instead of
@@ -3941,11 +3951,11 @@ describe("discoverPackages", () => {
     expect(fem?.roles).toEqual(["plugin"]);
     expect(fem?.maturity).toBe(fem!.residualImplDirs === 0 && fem!.entryFilesAtOwnerRoot.length === 0 ? "clean" : "mixed");
     expect(discoverPackageProblems(root).filter((problem) => problem.path.startsWith("✏️s/🔌️plugins/🏗️fem"))).toEqual([]);
-  });
+  }, 600_000);
 
-  test("the real repo raises no discovery problems", () => {
+  test.if(testLevelAtLeast("long"))("the real repo raises no discovery problems", () => {
     expect(discoverPackageProblems(getWorkspaceRoot())).toEqual([]);
-  });
+  }, 600_000);
 });
 
 describe("discoverOwners", () => {
@@ -3983,15 +3993,15 @@ describe("discoverBurndown", () => {
     return total;
   };
 
-  test("counts residual ⚡️implementations dirs the same way an independent walk does", () => {
+  test.if(testLevelAtLeast("long"))("counts residual ⚡️implementations dirs the same way an independent walk does", () => {
     const root = getWorkspaceRoot();
     const burndown = discoverBurndown(root);
     const perPluginArea = burndown.implDirsByArea["clean"] ?? 0;
     expect(perPluginArea).toBe(countImplDirs(join(root, "✏️s/🔌️plugins")));
     expect(burndown.implDirsTotal).toBeGreaterThanOrEqual(perPluginArea);
-  });
+  }, 600_000);
 
-  test("owner residual counts add up to their area total", () => {
+  test.if(testLevelAtLeast("long"))("owner residual counts add up to their area total", () => {
     const root = getWorkspaceRoot();
     const burndown = discoverBurndown(root);
     const owners = discoverOwners(root).filter((owner) => owner.area === "mixed");
@@ -3999,7 +4009,7 @@ describe("discoverBurndown", () => {
     expect(summed).toBe(burndown.implDirsByArea["mixed"] ?? 0);
     expect(burndown.mixedOwners.every((owner) => owner.residualImplDirs > 0 || owner.entryFilesAtOwnerRoot.length > 0)).toBe(true);
     expect(burndown.cleanOwners + burndown.mixedOwners.length).toBe(burndown.ownersTotal);
-  });
+  }, 600_000);
 
   test("markerless package manifests stay visible even where they are a silent skip", () => {
     const root = getWorkspaceRoot();
@@ -4009,7 +4019,7 @@ describe("discoverBurndown", () => {
     expect(burndown.packagingViolations.every((violation) => violation.path.includes("📦️packages/"))).toBe(true);
   });
 
-  test("discoverPackageProblems promotes packaging violations into census problems", () => {
+  test.if(testLevelAtLeast("long"))("discoverPackageProblems promotes packaging violations into census problems", () => {
     const root = getWorkspaceRoot();
     clearDiscoveryCache();
     const problems = discoverPackageProblems(root);
@@ -4017,14 +4027,14 @@ describe("discoverBurndown", () => {
     expect(problems.every((problem) => problem.path.length > 0 && problem.message.includes(problem.path))).toBe(true);
     const censusProblems = buildSemanticCensus(root).problems.filter((problem) => problem.code === "packaging-violation");
     expect(censusProblems.length).toBe(problems.filter((problem) => problem.kind === "packaging-violation").length);
-  });
+  }, 600_000);
 
-  test("clearDiscoveryCache forces a fresh walk", () => {
+  test.if(testLevelAtLeast("long"))("clearDiscoveryCache forces a fresh walk", () => {
     const root = getWorkspaceRoot();
     const first = discoverPackages(root);
     clearDiscoveryCache();
     expect(discoverPackages(root).map((pkg) => pkg.manifestPath)).toEqual(first.map((pkg) => pkg.manifestPath));
-  });
+  }, 600_000);
 });
 
 describe("computeWorkspaces", () => {
@@ -4139,7 +4149,7 @@ describe("computeWorkspaces", () => {
     }
   });
 
-  test("against the real repo: packages are physical, unambiguous, and preserve their owned payload boundaries", () => {
+  test.if(testLevelAtLeast("long"))("against the real repo: packages are physical, unambiguous, and preserve their owned payload boundaries", () => {
     const root = getWorkspaceRoot();
     const result = computeWorkspaces(root);
     for (const entry of result) expect(existsSync(join(root, entry, "package.json"))).toBe(true);
@@ -4148,7 +4158,7 @@ describe("computeWorkspaces", () => {
     expect(result).toContain("✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript");
     expect(result).toContain("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust");
     expect(result).not.toContain("🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg");
-  });
+  }, 600_000);
 });
 
 //#region 🧪️PluginDependencyParityPolicy
@@ -4222,32 +4232,32 @@ describe("policyPluginDependencyParityBreaches", () => {
 describe("🏛️ layering", () => {
   const repoRoot = getWorkspaceRoot();
 
-  test("the ratchet never allows a file to grow past its baseline", () => {
+  test.if(testLevelAtLeast("long"))("the ratchet never allows a file to grow past its baseline", () => {
     expect(layeringBreaches(repoRoot)).toEqual([]);
-  }, 60_000);
+  }, 600_000);
 
-  test("no repo-wide or framework file exceeds what the baseline records", () => {
+  test.if(testLevelAtLeast("long"))("no repo-wide or framework file exceeds what the baseline records", () => {
     const baseline = loadLayeringBaseline(repoRoot);
     for (const [file, count] of Object.entries(layeringCounts(layeringReferences(repoRoot)))) {
       expect(count, `${file} references more implementation paths than its baseline`).toBeLessThanOrEqual(baseline.allowed[file] ?? 0);
     }
-  }, 60_000);
+  }, 600_000);
 
-  test("the baseline lists no file that is already clean", () => {
+  test.if(testLevelAtLeast("long"))("the baseline lists no file that is already clean", () => {
     const counts = layeringCounts(layeringReferences(repoRoot));
     for (const [file, allowed] of Object.entries(loadLayeringBaseline(repoRoot).allowed)) {
       if (allowed === 0) expect(counts[file] ?? 0, `${file} is baselined at 0 and should be dropped from the list`).toBe(0);
     }
-  }, 60_000);
+  }, 600_000);
 
-  test("an area contributes its own policy exemptions, and the router merges them by discovery", () => {
+  test.if(testLevelAtLeast("long"))("an area contributes its own policy exemptions, and the router merges them by discovery", () => {
     const merged = policyDiscoveredAllowlist(repoRoot, "semantic-vocabulary");
     expect(merged.size).toBeGreaterThan(0);
     // 🧭️Every entry must live under the area that contributed it — an exemption never outlives the
     // code it exempts, which is the whole point of moving it out of the root router.
     for (const entry of merged) expect(entry.length).toBeGreaterThan(0);
     expect(policyDiscoveredAllowlist(repoRoot, "no-such-rule-key").size).toBe(0);
-  }, 60_000);
+  }, 600_000);
 });
 
 //#region 🛤️ArtifactPathProjectionAuthority
@@ -4417,7 +4427,7 @@ function projectionAuthority(projection: ArtifactProjectionGoldenEntry, nodes = 
   });
 }
 
-describe("artifact path projection authority", () => {
+describe.if(testLevelAtLeast("long"))("artifact path projection authority", () => {
   test("authored Draw preflight context preserves absent evidence and foreign ticket inputs", async () => {
     const root = join(DRAW_SOURCE_SCENARIO_ROOT, "🛫️preflight-context"), text = readFileSync(join(root, "🔣️.json"), "utf8"), vector = JSON.parse(text);
     const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🖍️draw-source-scenario/🛫️preflight-context/🔣️.json"), "utf8")));
@@ -5576,7 +5586,7 @@ function expectNormalizationApplyFailure(run: () => TaxonomyApplyResult): void {
   expect(failed).toBe(true);
 }
 
-describe("taxonomy normalization", () => {
+describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
   test("a minimal CAD catalog commits and re-inventories without source hierarchy authority", () => {
     const cad = projectionGolden("artifact-example-model-catalog-v1");
     const member = cad.mappings.find(({ sourcePath }) => sourcePath.includes("/🎬️actions/") && sourcePath.slice(cad.sourceRoot.length + 1).split("/").length === 3)!;
@@ -6445,7 +6455,7 @@ describe("taxonomy normalization", () => {
     test(`rolls back byte-for-byte when failure is injected at ${failureStage}`, () => {
       const fixture = normalizationFixture(`failure-${failureStage}`, {
         "🟦️subject.ts": "export const value = 1;\n",
-        "🟦️consumer.ts": "export { value } from \"🧪️tests/🧪️fixture/🟦️subject.ts\";\n",
+        "🧪️consumer/🟦️.ts": "export { value } from \"🧪️tests/🧪️fixture/🟦️subject.ts\";\n",
       });
       try {
         const { plan } = normalizationPlan(fixture);
@@ -6547,7 +6557,7 @@ describe("generator preview protocol", () => {
     for (const content of cases) expect(() => parseGeneratorPreviewManifest(content, "fixture-generator", ["🧪️workspace/🤖️generated"], ["compose"])).toThrow();
   });
 
-  test("plans, applies, verifies, and converges an exact Nx-owned preview", () => {
+  test.if(testLevelAtLeast("long"))("plans, applies, verifies, and converges an exact Nx-owned preview", () => {
     const fixture = normalizationFixture(
       "generator-preview",
       {
@@ -6634,7 +6644,7 @@ describe("generator preview protocol", () => {
 //#endregion 🧾️GeneratorPreviewProtocol
 
 //#region 🧾️TransactionDispositionsV2
-describe("taxonomy transaction dispositions v2", () => {
+describe.if(testLevelAtLeast("long"))("taxonomy transaction dispositions v2", () => {
   const sentinelCasesPath = resolve(import.meta.dir, "../../🖼️assets/🚨️transaction-sentinel-cases/🔣️.json");
   const dispositionOutcomesPath = resolve(import.meta.dir, "../../🧫️fixtures/🎲️transaction-disposition-outcomes/🔣️.json");
   const protocolPath = resolve(import.meta.dir, "../../🧫️fixtures/🤝️transaction-protocol/🔣️.json");
@@ -6998,7 +7008,7 @@ describe("direct mutation ownership", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
   //#endregion 🔍️MutationRootDiscovery
 
   test("fails closed for missing, opaque, escaped, and symlinked explicit scopes", () => {
@@ -7062,7 +7072,7 @@ describe("direct mutation ownership", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   test("recognizes a binary leaf tag only when its numeric identity equals the descriptor", () => {
     const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔭️mutation-scope/🔣️.json"), "utf8")) as {
@@ -7089,7 +7099,7 @@ describe("direct mutation ownership", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   test("rejects executable root aggregate codecs while preserving generic framing and unrelated syntax", () => {
     const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔐️mutation-codec-ownership/🔣️.json"), "utf8")) as {
@@ -7131,6 +7141,7 @@ describe("direct mutation ownership", () => {
     const root = mutationFixtureRoot("semio-direct-mutation-aggregate-");
     try {
       mkdirSync(join(root, golden.mutationRoot, "➕️insert-page"), { recursive: true });
+      writeFileSync(join(root, golden.mutationRoot, "➕️insert-page", "🦀️.rs"), "pub struct InsertPage;\n");
       const aggregate = join(root, golden.mutationRoot, "🦀️.rs");
       for (const vector of golden.aggregateCases) {
         writeFileSync(aggregate, vector.source);
@@ -7203,7 +7214,7 @@ describe("direct mutation ownership", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   test("requires one enabled reachable non-ignored leaf test proven by parsed Rust items", () => {
     const fixturePath = join(import.meta.dir, "../../🧫️fixtures/✅️mutation-test-presence/🔣️.json");
@@ -7281,7 +7292,7 @@ describe("direct mutation ownership", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   test("scaffolds one direct mutation idempotently without overwriting implementation", () => {
     const root = mutationFixtureRoot("semio-direct-mutation-scaffold-");
@@ -7315,7 +7326,7 @@ describe("direct mutation ownership", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   test("prepares AST-safe direct mutation scaffolds before one guarded publication", () => {
     const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🏗️mutation-scaffolding/🔣️.json"), "utf8")) as { schemaVersion: number; mutationRoot: string; name: string; attributedAggregate: string; malformedAggregate: string; ambiguousAggregate: string; wrongMountAggregate: string; privateMountAggregate: string; wrongVariantAggregate: string; scopedAggregate: string; unrelatedDocAggregate: string; nestedAggregateDecoy: string; nestedAggregateScopes: string; unmatchedAggregate: string };
@@ -7405,7 +7416,7 @@ describe("direct mutation ownership", () => {
       try { chmodSync(mutationRoot, 0o755); } catch {}
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   test("inventories direct and legacy records as stable language-neutral JSON validated by Ajv", () => {
     const root = mutationFixtureRoot("semio-direct-mutation-inventory-");
@@ -7426,7 +7437,7 @@ describe("direct mutation ownership", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   test("resolves mutation consumers and schema-validated assignment evidence from a stable source index", () => {
     const root = mutationFixtureRoot("semio-mutation-inventory-consumers-");

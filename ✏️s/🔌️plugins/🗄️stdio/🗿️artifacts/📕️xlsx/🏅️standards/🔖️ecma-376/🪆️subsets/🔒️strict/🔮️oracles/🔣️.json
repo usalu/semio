@@ -95,7 +95,8 @@
           "capability": "xlsx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-vml-part",
@@ -115,7 +116,8 @@
           "capability": "xlsx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-conformance-attribute",
@@ -135,7 +137,8 @@
           "capability": "xlsx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-vml-part",
@@ -235,7 +238,8 @@
           "capability": "xlsx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-worksheet-content-type",

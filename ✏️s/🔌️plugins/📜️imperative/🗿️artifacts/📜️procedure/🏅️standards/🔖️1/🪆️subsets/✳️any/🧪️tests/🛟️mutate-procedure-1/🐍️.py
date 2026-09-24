@@ -150,7 +150,7 @@ def apply_reorder_steps(program, payload):
     current = next(i for i, step in enumerate(scope) if step["id"] == target)
     clamped = min(to_index, len(scope) - 1)
     if clamped == current:
-        return program, {}, {"status": "applied", "messages": [{"level": "warn", "code": "mutation.no-op"}]}
+        return program, {}, {"status": "no-op", "messages": [{"level": "warn", "code": "mutation.no-op"}]}
     after = copy.deepcopy(program)
     after_scope = resolve_scope(after, payload["pathRef"])
     item = after_scope.pop(current)
@@ -165,7 +165,7 @@ def apply_edit_step_params(program, payload):
     target, new_params = payload["id"], payload["newParams"]
     node = next(step for step in scope if step["id"] == target)
     if node.get("params") == new_params:
-        return program, {}, {"status": "applied", "messages": [{"level": "warn", "code": "mutation.no-op"}]}
+        return program, {}, {"status": "no-op", "messages": [{"level": "warn", "code": "mutation.no-op"}]}
     after = copy.deepcopy(program)
     after_node = next(step for step in resolve_scope(after, payload["pathRef"]) if step["id"] == target)
     after_node["params"] = new_params

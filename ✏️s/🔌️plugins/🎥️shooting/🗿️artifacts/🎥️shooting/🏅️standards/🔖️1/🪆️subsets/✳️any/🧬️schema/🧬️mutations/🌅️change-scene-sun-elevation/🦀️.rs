@@ -21,6 +21,6 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneSunElevatio
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change sun elevation to {}", self.new_elevation), &format!("Sonnenansicht auf {} ändern", self.new_elevation))
+        protocol::LocalizedLabel::native(&format!("Change sun elevation to {}", self.new_elevation), &format!("Sonnenhöhe auf {} ändern", self.new_elevation))
     }
 }

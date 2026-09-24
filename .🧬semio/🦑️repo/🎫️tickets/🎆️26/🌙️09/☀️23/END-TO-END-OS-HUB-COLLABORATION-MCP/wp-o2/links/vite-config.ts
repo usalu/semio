@@ -1,1 +1,0 @@
-/Users/ueli/Documents/semio/.tmp-ticket/wp-o2/links/vite-config-ts

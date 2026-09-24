@@ -28,7 +28,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageMediaBox {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set page {} media box", self.index), &format!("Seite {} Medienkasten setzen", self.index))
+        protocol::LocalizedLabel::native(&format!("Set page {} media box", self.index), &format!("MediaBox von Seite {} setzen", self.index))
     }
 
     fn target(&self) -> Vec<String> {

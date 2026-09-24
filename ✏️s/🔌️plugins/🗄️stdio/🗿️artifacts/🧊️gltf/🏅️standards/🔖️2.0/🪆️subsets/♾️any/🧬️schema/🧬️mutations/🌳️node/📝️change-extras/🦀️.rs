@@ -76,7 +76,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeExt
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Node Extra Data", "zusätzliche Knotendaten ändern")
+        protocol::LocalizedLabel::native("Change Node Extra Data", "Zusatzdaten des Knotens ändern")
     }
 
     fn target(&self) -> Vec<String> {

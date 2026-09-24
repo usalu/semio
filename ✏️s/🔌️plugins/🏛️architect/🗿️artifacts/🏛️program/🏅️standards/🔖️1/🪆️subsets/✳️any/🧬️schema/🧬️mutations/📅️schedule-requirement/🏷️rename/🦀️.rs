@@ -26,7 +26,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameScheduleRequiremen
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename schedule requirement to \"{}\"", self.new_name), &format!("Zeitplananforderung in \"{}\" umbenennen", self.new_name))
+        protocol::LocalizedLabel::native(&format!("Rename schedule requirement to \"{}\"", self.new_name), &format!("Terminanforderung in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

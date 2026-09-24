@@ -1,0 +1,1483 @@
+# U5 handcrafted German mutation labels. One line per template: `EN  →  NEW_DE`, EN exactly as the leaf spells its
+# English literals (joined by ` ‖ ` when a body has several), NEW_DE the German literals in the same positions.
+# Placeholder sequences must stay identical to the current German (the codemod asserts it).
+
+## semio-framework-artifact-flow-flow
+Replace flow fixture  →  Flussbeispiel ersetzen
+
+## semio-framework-artifact-infinite-dag
+Resize node {}  →  Größe von Knoten {} ändern
+
+## semio-framework-artifact-workflow-run
+Finish run node {}  →  Laufknoten {} abschließen
+Seal run  →  Lauf versiegeln
+
+## semio-framework-artifact-workflow-workflow
+Unbind workflow input {}  →  Bindung der Arbeitsablaufeingabe {} aufheben
+Unbind workflow output {}  →  Bindung der Arbeitsablaufausgabe {} aufheben
+Unbind workflow parameter field {}  →  Bindung des Arbeitsablaufparameterfelds {} aufheben
+
+## semio-framework-os-config
+Sign in \"{}\"  →  Als \"{}\" anmelden
+Sign out  →  Abmelden
+
+## semio-framework-os-kernel
+Add observed counter  →  Beobachteten Zähler hinzufügen
+Add rejected counter  →  Abgelehnten Zähler hinzufügen
+Add then notify foreign  →  Hinzufügen und Fremddokument benachrichtigen
+Add to missing counter  →  Zum fehlenden Zähler addieren
+Add to unchecked counter  →  Zum ungeprüften Zähler addieren
+Add {} twice  →  {} zweimal hinzufügen
+Commit space checkpoint {}  →  Space-Sicherungspunkt {} festschreiben
+Remove space checkpoint {}  →  Space-Sicherungspunkt {} entfernen
+Create space alternative {}  →  Space-Alternative {} erstellen
+Remove space alternative {}  →  Space-Alternative {} entfernen
+Restore active space alternative  →  Aktive Space-Alternative wiederherstellen
+Switch space alternative {}  →  Zu Space-Alternative {} wechseln
+Set Error N  →  Fehler N setzen
+Set Fatal N  →  Schwerwiegend N setzen
+Set Warning N  →  Warnung N setzen
+
+## semio-framework-plugin
+Change publication transient to {}  →  Transiente Veröffentlichung auf {} ändern
+Set dummy count to {}  →  Platzhalteranzahl auf {} setzen
+
+## semio-s-artifact-animate-presentation
+Reorder tile \"{}\" to position {}  →  Kachel \"{}\" an Position {} verschieben
+Replace source with \"{}\"  →  Quelle durch \"{}\" ersetzen
+Replace tiles with {} tiles  →  Kacheln durch {} Kacheln ersetzen
+Resize source frame to {:.2}x{:.2}  →  Größe des Quellrahmens auf {:.2}×{:.2} ändern
+Resize tile \"{}\" crop  →  Zuschnitt von Kachel \"{}\" ändern
+Set Engagement Input  →  Interaktionseingabe setzen
+
+## semio-s-artifact-architect-program
+Connect adjacency between \"{}\" and \"{}\"  →  Nachbarschaft zwischen \"{}\" und \"{}\" herstellen
+Connect trace \"{}\" -> \"{}\"  →  Nachverfolgung \"{}\" -> \"{}\" verknüpfen
+Disconnect adjacency \"{}\"  →  Nachbarschaft \"{}\" aufheben
+Disconnect trace \"{}\"  →  Nachverfolgung \"{}\" aufheben
+Create access rule \"{}\"  →  Zugangsregel \"{}\" erstellen
+Delete access rule \"{}\"  →  Zugangsregel \"{}\" löschen
+Rename access rule to \"{}\"  →  Zugangsregel in \"{}\" umbenennen
+Replace access rule \"{}\"  →  Zugangsregel \"{}\" ersetzen
+Create analysis record \"{}\"  →  Analysedatensatz \"{}\" erstellen
+Delete analysis record \"{}\"  →  Analysedatensatz \"{}\" löschen
+Rename analysis record to \"{}\"  →  Analysedatensatz in \"{}\" umbenennen
+Replace analysis record \"{}\"  →  Analysedatensatz \"{}\" ersetzen
+Create approval record \"{}\"  →  Freigabedatensatz \"{}\" erstellen
+Delete approval record \"{}\"  →  Freigabedatensatz \"{}\" löschen
+Rename approval record to \"{}\"  →  Freigabedatensatz in \"{}\" umbenennen
+Replace approval record \"{}\"  →  Freigabedatensatz \"{}\" ersetzen
+Create audit event \"{}\"  →  Audit-Ereignis \"{}\" erstellen
+Delete audit event \"{}\"  →  Audit-Ereignis \"{}\" löschen
+Rename audit event to \"{}\"  →  Audit-Ereignis in \"{}\" umbenennen
+Replace audit event \"{}\"  →  Audit-Ereignis \"{}\" ersetzen
+Create benchmark record \"{}\"  →  Benchmark-Datensatz \"{}\" erstellen
+Delete benchmark record \"{}\"  →  Benchmark-Datensatz \"{}\" löschen
+Rename benchmark record to \"{}\"  →  Benchmark-Datensatz in \"{}\" umbenennen
+Replace benchmark record \"{}\"  →  Benchmark-Datensatz \"{}\" ersetzen
+Create collaboration record \"{}\"  →  Zusammenarbeitsdatensatz \"{}\" erstellen
+Delete collaboration record \"{}\"  →  Zusammenarbeitsdatensatz \"{}\" löschen
+Rename collaboration record to \"{}\"  →  Zusammenarbeitsdatensatz in \"{}\" umbenennen
+Replace collaboration record \"{}\"  →  Zusammenarbeitsdatensatz \"{}\" ersetzen
+Create delivery constraint \"{}\"  →  Lieferrandbedingung \"{}\" erstellen
+Delete delivery constraint \"{}\"  →  Lieferrandbedingung \"{}\" löschen
+Rename delivery constraint to \"{}\"  →  Lieferrandbedingung in \"{}\" umbenennen
+Replace delivery constraint \"{}\"  →  Lieferrandbedingung \"{}\" ersetzen
+Create equipment \"{}\"  →  Ausstattung \"{}\" erstellen
+Delete equipment \"{}\"  →  Ausstattung \"{}\" löschen
+Rename equipment to \"{}\"  →  Ausstattung in \"{}\" umbenennen
+Replace equipment \"{}\"  →  Ausstattung \"{}\" ersetzen
+Create human factor requirement \"{}\"  →  Ergonomieanforderung \"{}\" erstellen
+Delete human factor requirement \"{}\"  →  Ergonomieanforderung \"{}\" löschen
+Rename human factor requirement to \"{}\"  →  Ergonomieanforderung in \"{}\" umbenennen
+Replace human factor requirement \"{}\"  →  Ergonomieanforderung \"{}\" ersetzen
+Create knowledge record \"{}\"  →  Wissensdatensatz \"{}\" erstellen
+Delete knowledge record \"{}\"  →  Wissensdatensatz \"{}\" löschen
+Rename knowledge record to \"{}\"  →  Wissensdatensatz in \"{}\" umbenennen
+Replace knowledge record \"{}\"  →  Wissensdatensatz \"{}\" ersetzen
+Create regulatory requirement \"{}\"  →  Regulatorische Anforderung \"{}\" erstellen
+Delete regulatory requirement \"{}\"  →  Regulatorische Anforderung \"{}\" löschen
+Rename regulatory requirement to \"{}\"  →  Regulatorische Anforderung in \"{}\" umbenennen
+Replace regulatory requirement \"{}\"  →  Regulatorische Anforderung \"{}\" ersetzen
+Create report record \"{}\"  →  Berichtsdatensatz \"{}\" erstellen
+Delete report record \"{}\"  →  Berichtsdatensatz \"{}\" löschen
+Rename report record to \"{}\"  →  Berichtsdatensatz in \"{}\" umbenennen
+Replace report record \"{}\"  →  Berichtsdatensatz \"{}\" ersetzen
+Create schedule requirement \"{}\"  →  Terminanforderung \"{}\" erstellen
+Delete schedule requirement \"{}\"  →  Terminanforderung \"{}\" löschen
+Rename schedule requirement to \"{}\"  →  Terminanforderung in \"{}\" umbenennen
+Replace schedule requirement \"{}\"  →  Terminanforderung \"{}\" ersetzen
+Create security requirement \"{}\"  →  Schutzanforderung \"{}\" erstellen
+Delete security requirement \"{}\"  →  Schutzanforderung \"{}\" löschen
+Rename security requirement to \"{}\"  →  Schutzanforderung in \"{}\" umbenennen
+Replace security requirement \"{}\"  →  Schutzanforderung \"{}\" ersetzen
+Create storage requirement \"{}\"  →  Stauraumanforderung \"{}\" erstellen
+Delete storage requirement \"{}\"  →  Stauraumanforderung \"{}\" löschen
+Rename storage requirement to \"{}\"  →  Stauraumanforderung in \"{}\" umbenennen
+Replace storage requirement \"{}\"  →  Stauraumanforderung \"{}\" ersetzen
+Create workshop \"{}\"  →  Workshop \"{}\" erstellen
+Delete workshop \"{}\"  →  Workshop \"{}\" löschen
+Rename workshop to \"{}\"  →  Workshop in \"{}\" umbenennen
+Replace workshop \"{}\"  →  Workshop \"{}\" ersetzen
+Rename governance framework to \"{}\"  →  Governance-Rahmen in \"{}\" umbenennen
+Replace governance \"{}\"  →  Governance \"{}\" ersetzen
+
+## semio-s-artifact-block-2d
+Change handle \"{}\" handle kind to \"{}\"  →  Griffart von Griff \"{}\" auf \"{}\" ändern
+Change handle kind \"{}\" color to \"{}\"  →  Farbe von Griffart \"{}\" auf \"{}\" ändern
+Change handle kind \"{}\" default wire kind to \"{}\"  →  Standarddrahtart von Griffart \"{}\" auf \"{}\" ändern
+Change handle kind \"{}\" label to \"{}\"  →  Beschriftung von Griffart \"{}\" auf \"{}\" ändern
+Scale camera to {}  →  Kamerazoom auf {} setzen
+
+## semio-s-artifact-block-3d
+Change representation \"{}\" LOD  →  Detailstufe von Repräsentation \"{}\" ändern
+Change representation \"{}\" description  →  Beschreibung von Repräsentation \"{}\" ändern
+Change representation \"{}\" mesh URL  →  Netz-URL von Repräsentation \"{}\" ändern
+Change vortex \"{}\" label  →  Beschriftung von Wirbel \"{}\" ändern
+Change vortex \"{}\" vortex kind to \"{}\"  →  Wirbelart von Wirbel \"{}\" auf \"{}\" ändern
+Change vortex kind \"{}\" color to \"{}\"  →  Farbe von Wirbelart \"{}\" auf \"{}\" ändern
+Change vortex kind \"{}\" default cable kind to \"{}\"  →  Standardkabelart von Wirbelart \"{}\" auf \"{}\" ändern
+Change vortex kind \"{}\" label to \"{}\"  →  Beschriftung von Wirbelart \"{}\" auf \"{}\" ändern
+Resize vortex \"{}\"  →  Größe von Wirbel \"{}\" ändern
+Scale camera to {}  →  Kamerazoom auf {} setzen
+Set World Window Brush Preview  →  Pinselvorschau im Weltfenster setzen
+
+## semio-s-artifact-block-5d
+Change grip \"{}\" grip kind to \"{}\"  →  Griffart von Griff \"{}\" auf \"{}\" ändern
+Change grip kind \"{}\" color to \"{}\"  →  Farbe von Griffart \"{}\" auf \"{}\" ändern
+Change grip kind \"{}\" default rope kind to \"{}\"  →  Standardseilart von Griffart \"{}\" auf \"{}\" ändern
+Change grip kind \"{}\" label to \"{}\"  →  Beschriftung von Griffart \"{}\" auf \"{}\" ändern
+Change representation \"{}\" LOD  →  Detailstufe von Repräsentation \"{}\" ändern
+Change representation \"{}\" description  →  Beschreibung von Repräsentation \"{}\" ändern
+Change representation \"{}\" mesh URL  →  Netz-URL von Repräsentation \"{}\" ändern
+Move 2D camera to ({}, {})  →  2D-Kamera nach ({}, {}) verschieben
+Move 3D camera to {:?}  →  3D-Kamera nach {:?} verschieben
+Resize grip \"{}\" (3D)  →  Größe von Griff \"{}\" (3D) ändern
+Scale 2D camera to {}  →  2D-Kamerazoom auf {} setzen
+Scale 3D camera to {}  →  3D-Kamerazoom auf {} setzen
+Update part 2D presentation  →  2D-Darstellung des Bauteils aktualisieren
+Update part 3D pose  →  3D-Lage des Bauteils aktualisieren
+
+## semio-s-artifact-cad-cad
+Change lock state of reference \"{}\"  →  Sperrstatus von Referenz \"{}\" ändern
+Create drawing child {}  →  Zeichnungs-Kind {} erstellen
+Delete drawing child {}  →  Zeichnungs-Kind {} löschen
+Create structure-classic-model child {}  →  Klassisches-Tragwerksmodell-Kind {} erstellen
+Delete structure-classic-model child  →  Klassisches-Tragwerksmodell-Kind löschen
+
+## semio-s-artifact-dag-dag
+Change node \"{}\" abbreviation to \"{}\"  →  Abkürzung von Knoten \"{}\" auf \"{}\" ändern
+Change node \"{}\" icon to \"{}\"  →  Symbol von Knoten \"{}\" auf \"{}\" ändern
+Change node \"{}\" operator kind  →  Operatorart von Knoten \"{}\" ändern
+Rename node \"{}\" label to \"{}\"  →  Beschriftung von Knoten \"{}\" in \"{}\" umbenennen
+Replace node \"{}\" kind  →  Art von Knoten \"{}\" ersetzen
+Replace node \"{}\" properties  →  Eigenschaften von Knoten \"{}\" ersetzen
+Resize node \"{}\" to ({}, {})  →  Größe von Knoten \"{}\" auf ({}, {}) ändern
+
+## semio-s-artifact-demonstrator-playground
+Change playground schema to \"{}\"  →  Playground-Schema auf \"{}\" ändern
+
+## semio-s-artifact-draw-drawing
+Reorder layer \"{}\"  →  Reihenfolge von Ebene \"{}\" ändern
+Replace layer \"{}\" fill  →  Füllung von Ebene \"{}\" ersetzen
+Replace layer \"{}\" stroke  →  Kontur von Ebene \"{}\" ersetzen
+Set layer \"{}\" blend mode to {}  →  Füllmethode von Ebene \"{}\" auf {} setzen
+Set layer \"{}\" boolean operation to {}  →  Boolesche Operation von Ebene \"{}\" auf {} setzen
+Set layer \"{}\" locked to {}  →  Sperre von Ebene \"{}\" auf {} setzen
+Set layer \"{}\" opacity to {}  →  Deckkraft von Ebene \"{}\" auf {} setzen
+Set layer \"{}\" visible to {}  →  Sichtbarkeit von Ebene \"{}\" auf {} setzen
+Update layer \"{}\" trace params  →  Nachzeichnungsparameter von Ebene \"{}\" aktualisieren
+Update layer \"{}\" transform  →  Transformation von Ebene \"{}\" aktualisieren
+
+## semio-s-artifact-energy-model
+Add battery {} to electrical load center {}  →  Batterie {} zu Stromverteiler {} hinzufügen
+Add output variable \"{}\" for \"{}\"  →  Ausgabevariable \"{}\" für \"{}\" hinzufügen
+Add plant equipment {} to plant loop {}  →  Anlagenkomponente {} zu Anlagenkreislauf {} hinzufügen
+Add pv system {} to electrical load center {}  →  PV-Anlage {} zu Stromverteiler {} hinzufügen
+Add layer {} to construction {} at index {}  →  Schicht {} zu Konstruktion {} an Index {} hinzufügen
+Add terminal zone {} to air loop {}  →  Versorgte Zone {} zu Luftkreislauf {} hinzufügen
+Add zone {} to thermal enclosure {}  →  Zone {} zu thermischer Hülle {} hinzufügen
+Bind fenestration {} to glazing construction {}  →  Fenster {} an Verglasungsaufbau {} binden
+Change Annual Schedule Default Daily Schedule of annual schedule {}  →  Standard-Tageszeitplan von Jahreszeitplan {} ändern
+Change Annual Schedule Holiday Daily Schedule of annual schedule {}  →  Feiertags-Tageszeitplan von Jahreszeitplan {} ändern
+Change Battery Capacity of battery {}  →  Kapazität von Batterie {} ändern
+Change Battery Max Charge of battery {}  →  Maximale Ladeleistung von Batterie {} ändern
+Change Battery Max Discharge of battery {}  →  Maximale Entladeleistung von Batterie {} ändern
+Change Battery Round Trip Efficiency of battery {}  →  Zyklenwirkungsgrad von Batterie {} ändern
+Change Constant Schedule Value of constant schedule {}  →  Wert von konstantem Zeitplan {} ändern
+Change Daily Schedule Interpolation of daily schedule {}  →  Interpolation von Tageszeitplan {} ändern
+Change Equipment Gain Latent Fraction of equipment gain {}  →  Latenten Anteil von Gerätewärmegewinn {} ändern
+Change Equipment Gain Radiant Fraction of equipment gain {}  →  Strahlungsanteil von Gerätewärmegewinn {} ändern
+Change Equipment Gain Schedule of equipment gain {}  →  Zeitplan von Gerätewärmegewinn {} ändern
+Change Equipment Gain Watts Per Area of equipment gain {}  →  Leistung pro Fläche von Gerätewärmegewinn {} ändern
+Change Equipment Gain Zone of equipment gain {}  →  Zone von Gerätewärmegewinn {} ändern
+Change Fault Severity of fault {}  →  Schweregrad von Fehler {} ändern
+Change Fault Start Schedule of fault {}  →  Startzeitplan von Fehler {} ändern
+Change Fault Target Equipment of fault {}  →  Betroffene Anlage von Fehler {} ändern
+Change Fault Type of fault {}  →  Typ von Fehler {} ändern
+Change Gas Material Gas of gas material {}  →  Gasart von Gasfüllung {} ändern
+Change Gas Material Thickness of gas material {}  →  Dicke von Gasfüllung {} ändern
+Change Glazing Material Conductivity of glazing material {}  →  Wärmeleitfähigkeit von Verglasungsmaterial {} ändern
+Change Glazing Material Infrared Emissivity of glazing material {}  →  Infrarot-Emissionsgrad von Verglasungsmaterial {} ändern
+Change Glazing Material Solar Transmittance of glazing material {}  →  Solaren Transmissionsgrad von Verglasungsmaterial {} ändern
+Change Glazing Material Thickness of glazing material {}  →  Dicke von Verglasungsmaterial {} ändern
+Change Glazing Material Visible Transmittance of glazing material {}  →  Lichttransmissionsgrad von Verglasungsmaterial {} ändern
+Change Infiltration Constant Term Coefficient of infiltration {}  →  Konstanten Koeffizienten von Infiltration {} ändern
+Change Infiltration Design Flow Ach of infiltration {}  →  Bemessungsluftwechsel von Infiltration {} ändern
+Change Infiltration Discharge Coefficient of infiltration {}  →  Durchflussbeiwert von Infiltration {} ändern
+Change Infiltration Effective Leakage Area of infiltration {}  →  Effektive Leckagefläche von Infiltration {} ändern
+Change Infiltration Flow Per Exterior Area of infiltration {}  →  Volumenstrom pro Außenfläche von Infiltration {} ändern
+Change Infiltration Method of infiltration {}  →  Methode von Infiltration {} ändern
+Change Infiltration Schedule of infiltration {}  →  Zeitplan von Infiltration {} ändern
+Change Infiltration Stack Height of infiltration {}  →  Kaminhöhe von Infiltration {} ändern
+Change Infiltration Temperature Term Coefficient of infiltration {}  →  Temperaturkoeffizienten von Infiltration {} ändern
+Change Infiltration Velocity Squared Term Coefficient of infiltration {}  →  Quadratischen Windkoeffizienten von Infiltration {} ändern
+Change Infiltration Velocity Term Coefficient of infiltration {}  →  Linearen Windkoeffizienten von Infiltration {} ändern
+Change Infiltration Zone of infiltration {}  →  Zone von Infiltration {} ändern
+Change Lighting Gain Radiant Fraction of lighting gain {}  →  Strahlungsanteil von Beleuchtungswärmegewinn {} ändern
+Change Lighting Gain Return Air Fraction of lighting gain {}  →  Rückluftanteil von Beleuchtungswärmegewinn {} ändern
+Change Lighting Gain Schedule of lighting gain {}  →  Zeitplan von Beleuchtungswärmegewinn {} ändern
+Change Lighting Gain Visible Fraction of lighting gain {}  →  Sichtbaren Anteil von Beleuchtungswärmegewinn {} ändern
+Change Lighting Gain Watts Per Area of lighting gain {}  →  Leistung pro Fläche von Beleuchtungswärmegewinn {} ändern
+Change Lighting Gain Zone of lighting gain {}  →  Zone von Beleuchtungswärmegewinn {} ändern
+Change Material Conductivity of material {}  →  Wärmeleitfähigkeit von Material {} ändern
+Change Material Density of material {}  →  Rohdichte von Material {} ändern
+Change Material Roughness of material {}  →  Rauigkeit von Material {} ändern
+Change Material Solar Absorptance of material {}  →  Solaren Absorptionsgrad von Material {} ändern
+Change Material Specific Heat of material {}  →  Spezifische Wärmekapazität von Material {} ändern
+Change Material Thermal Absorptance of material {}  →  Thermischen Absorptionsgrad von Material {} ändern
+Change Material Thickness of material {}  →  Dicke von Material {} ändern
+Change Material Visible Absorptance of material {}  →  Sichtbaren Absorptionsgrad von Material {} ändern
+Change Mechanical Ventilation Design Flow of mechanical ventilation {}  →  Bemessungsvolumenstrom von mechanischer Lüftung {} ändern
+Change Mechanical Ventilation Fan Delta Pressure of mechanical ventilation {}  →  Ventilatordruckerhöhung von mechanischer Lüftung {} ändern
+Change Mechanical Ventilation Fan Total Efficiency of mechanical ventilation {}  →  Ventilatorgesamtwirkungsgrad von mechanischer Lüftung {} ändern
+Change Mechanical Ventilation Schedule of mechanical ventilation {}  →  Zeitplan von mechanischer Lüftung {} ändern
+Change Mechanical Ventilation Zone of mechanical ventilation {}  →  Zone von mechanischer Lüftung {} ändern
+Change People Gain Activity Schedule of people gain {}  →  Aktivitätszeitplan von Personenwärmegewinn {} ändern
+Change People Gain Latent Fraction of people gain {}  →  Latenten Anteil von Personenwärmegewinn {} ändern
+Change People Gain People Per Area of people gain {}  →  Personen pro Fläche von Personenwärmegewinn {} ändern
+Change People Gain Radiant Fraction of people gain {}  →  Strahlungsanteil von Personenwärmegewinn {} ändern
+Change People Gain Schedule of people gain {}  →  Zeitplan von Personenwärmegewinn {} ändern
+Change People Gain Sensible Fraction of people gain {}  →  Sensiblen Anteil von Personenwärmegewinn {} ändern
+Change People Gain Zone of people gain {}  →  Zone von Personenwärmegewinn {} ändern
+Change Pv System Area of pv system {}  →  Fläche von PV-Anlage {} ändern
+Change Pv System Azimuth of pv system {}  →  Azimut von PV-Anlage {} ändern
+Change Pv System Dc Capacity of pv system {}  →  DC-Nennleistung von PV-Anlage {} ändern
+Change Pv System Inverter Efficiency of pv system {}  →  Wechselrichterwirkungsgrad von PV-Anlage {} ändern
+Change Pv System Module Efficiency of pv system {}  →  Modulwirkungsgrad von PV-Anlage {} ändern
+Change Pv System Tilt of pv system {}  →  Neigung von PV-Anlage {} ändern
+Change Refrigeration System Case Count of refrigeration system {}  →  Anzahl Kühlmöbel von Kälteanlage {} ändern
+Change Refrigeration System Defrost Schedule of refrigeration system {}  →  Abtauzeitplan von Kälteanlage {} ändern
+Change Refrigeration System Design Load of refrigeration system {}  →  Auslegungslast von Kälteanlage {} ändern
+Change Shw System Heater Capacity of service hot water system {}  →  Heizleistung von Trinkwarmwasseranlage {} ändern
+Change Shw System Schedule of service hot water system {}  →  Zeitplan von Trinkwarmwasseranlage {} ändern
+Change Shw System Setpoint of service hot water system {}  →  Sollwert von Trinkwarmwasseranlage {} ändern
+Change Shw System Storage Volume of service hot water system {}  →  Speichervolumen von Trinkwarmwasseranlage {} ändern
+Change Solar Thermal System Azimuth of solar thermal system {}  →  Azimut von Solarthermieanlage {} ändern
+Change Solar Thermal System Collector Area of solar thermal system {}  →  Kollektorfläche von Solarthermieanlage {} ändern
+Change Solar Thermal System Efficiency of solar thermal system {}  →  Wirkungsgrad von Solarthermieanlage {} ändern
+Change Solar Thermal System Storage Volume of solar thermal system {}  →  Speichervolumen von Solarthermieanlage {} ändern
+Change Solar Thermal System Tilt of solar thermal system {}  →  Neigung von Solarthermieanlage {} ändern
+Change Time Series Schedule Timestep of time series schedule {}  →  Zeitschritt von Zeitreihenzeitplan {} ändern
+Change Water System Fixture Count of water system {}  →  Anzahl Entnahmestellen von Wasseranlage {} ändern
+Change Water System Peak Flow of water system {}  →  Spitzenvolumenstrom von Wasseranlage {} ändern
+Change Water System Schedule of water system {}  →  Zeitplan von Wasseranlage {} ändern
+Change air loop {} design supply air flow to {:?}  →  Bemessungszuluftvolumenstrom von Luftkreislauf {} auf {:?} ändern
+Change air loop {} name to {:?}  →  Name von Luftkreislauf {} auf {:?} ändern
+Change air loop {} return node to {:?}  →  Rückluftknoten von Luftkreislauf {} auf {:?} ändern
+Change air loop {} supply node to {:?}  →  Zuluftknoten von Luftkreislauf {} auf {:?} ändern
+Change daily schedule {} limits  →  Grenzwerte von Tageszeitplan {} ändern
+Change daylight zone {} glare limit to {:?}  →  Blendungsgrenzwert von Tageslichtzone {} auf {:?} ändern
+Change daylight zone {} illuminance target to {:?}  →  Soll-Beleuchtungsstärke von Tageslichtzone {} auf {:?} ändern
+Change daylight zone {} window transmittance to {:?}  →  Fenstertransmissionsgrad von Tageslichtzone {} auf {:?} ändern
+Change daylight zone {} zone to {}  →  Zone von Tageslichtzone {} auf {} ändern
+Change energy model version to \"{}\"  →  Energiemodellversion auf \"{}\" ändern
+Change fenestration {} SHGC to {}  →  g-Wert von Fenster {} auf {} ändern
+Change fenestration {} U-value to {} W/(m²·K)  →  U-Wert von Fenster {} auf {} W/(m²·K) ändern
+Change fenestration {} area to {} m²  →  Fläche von Fenster {} auf {} m² ändern
+Change fenestration {} divider conductance to {} W/K  →  Sprossen-Wärmeleitwert von Fenster {} auf {} W/K ändern
+Change fenestration {} fin depth to {} m  →  Seitenblendentiefe von Fenster {} auf {} m ändern
+Change fenestration {} fin offset to {} m  →  Seitenblendenabstand von Fenster {} auf {} m ändern
+Change fenestration {} frame conductance to {} W/K  →  Rahmen-Wärmeleitwert von Fenster {} auf {} W/K ändern
+Change fenestration {} height to {} m  →  Höhe von Fenster {} auf {} m ändern
+Change fenestration {} overhang depth to {} m  →  Überstandstiefe von Fenster {} auf {} m ändern
+Change fenestration {} overhang offset to {} m  →  Überstandsabstand von Fenster {} auf {} m ändern
+Change fenestration {} sill height to {} m  →  Brüstungshöhe von Fenster {} auf {} m ändern
+Change fenestration {} visible transmittance to {}  →  Lichttransmissionsgrad von Fenster {} auf {} ändern
+Change humidistat {} dehumidifying setpoint schedule to {}  →  Entfeuchtungs-Sollwertzeitplan von Feuchteregler {} auf {} ändern
+Change humidistat {} dehumidifying throttle range to {:?}  →  Entfeuchtungs-Proportionalbereich von Feuchteregler {} auf {:?} ändern
+Change humidistat {} humidifying setpoint schedule to {}  →  Befeuchtungs-Sollwertzeitplan von Feuchteregler {} auf {} ändern
+Change humidistat {} humidifying throttle range to {:?}  →  Befeuchtungs-Proportionalbereich von Feuchteregler {} auf {:?} ändern
+Change humidistat {} zone to {}  →  Zone von Feuchteregler {} auf {} ändern
+Change ideal loads system {} maximum cooling capacity to {:?}  →  Maximale Kühlleistung von Ideallastsystem {} auf {:?} ändern
+Change ideal loads system {} maximum heating capacity to {:?}  →  Maximale Heizleistung von Ideallastsystem {} auf {:?} ändern
+Change ideal loads system {} maximum heating supply air temperature to {:?}  →  Maximale Heizzulufttemperatur von Ideallastsystem {} auf {:?} ändern
+Change ideal loads system {} minimum cooling supply air temperature to {:?}  →  Minimale Kühlzulufttemperatur von Ideallastsystem {} auf {:?} ändern
+Change ideal loads system {} outdoor air rate per floor area to {:?}  →  Außenluftrate pro Geschossfläche von Ideallastsystem {} auf {:?} ändern
+Change ideal loads system {} outdoor air rate per person to {:?}  →  Außenluftrate pro Person von Ideallastsystem {} auf {:?} ändern
+Change ideal loads system {} zone to {}  →  Zone von Ideallastsystem {} auf {} ändern
+Change outdoor air system {} air loop to {}  →  Luftkreislauf von Außenluftsystem {} auf {} ändern
+Change outdoor air system {} economizer setting to {:?}  →  Economizer-Einstellung von Außenluftsystem {} auf {:?} ändern
+Change outdoor air system {} minimum outdoor air flow to {:?}  →  Minimalen Außenluftvolumenstrom von Außenluftsystem {} auf {:?} ändern
+Change plant loop {} design mass flow to {:?}  →  Bemessungsmassenstrom von Anlagenkreislauf {} auf {:?} ändern
+Change plant loop {} loop type to {:?}  →  Kreislauftyp von Anlagenkreislauf {} auf {:?} ändern
+Change plant loop {} name to {:?}  →  Name von Anlagenkreislauf {} auf {:?} ändern
+Change plant loop {} return temperature to {:?}  →  Rücklauftemperatur von Anlagenkreislauf {} auf {:?} ändern
+Change plant loop {} supply temperature to {:?}  →  Vorlauftemperatur von Anlagenkreislauf {} auf {:?} ändern
+Change room air model assignment {} room air model to {:?}  →  Raumluftmodell von Raumluftmodellzuordnung {} auf {:?} ändern
+Change setpoint manager {} name to {:?}  →  Name von Sollwertmanager {} auf {:?} ändern
+Change setpoint manager {} schedule to {:?}  →  Zeitplan von Sollwertmanager {} auf {:?} ändern
+Change shading surface {} transmittance schedule  →  Transmissionszeitplan von Verschattungsfläche {} ändern
+Change simulation settings to {} / {} min, {} warmup days  →  Simulationseinstellungen auf {} / {} min, {} Einschwingtage ändern
+Change sizing object {} design day type to {:?}  →  Auslegungstagtyp von Auslegungsobjekt {} auf {:?} ändern
+Change sizing object {} sizing type to {:?}  →  Auslegungsart von Auslegungsobjekt {} auf {:?} ändern
+Change sizing object {} zone to {}  →  Zone von Auslegungsobjekt {} auf {} ändern
+Change space {} floor area to {} m²  →  Geschossfläche von Raum {} auf {} m² ändern
+Change surface {} boundary to {:?}  →  Randbedingung von Oberfläche {} auf {:?} ändern
+Change surface {} class to {:?}  →  Klasse von Oberfläche {} auf {:?} ändern
+Change surface {} construction to {}  →  Konstruktion von Oberfläche {} auf {} ändern
+Change surface {} multiplier to {}  →  Multiplikator von Oberfläche {} auf {} ändern
+Change surface {} sun exposure to {}  →  Besonnung von Oberfläche {} auf {} ändern
+Change surface {} wind exposure to {}  →  Windexposition von Oberfläche {} auf {} ändern
+Change thermostat {} cooling setpoint schedule to {}  →  Kühl-Sollwertzeitplan von Thermostat {} auf {} ändern
+Change thermostat {} cooling throttle range to {:?}  →  Kühl-Proportionalbereich von Thermostat {} auf {:?} ändern
+Change thermostat {} heating setpoint schedule to {}  →  Heiz-Sollwertzeitplan von Thermostat {} auf {} ändern
+Change thermostat {} heating throttle range to {:?}  →  Heiz-Proportionalbereich von Thermostat {} auf {:?} ändern
+Change thermostat {} zone to {}  →  Zone von Thermostat {} auf {} ändern
+Change weekly schedule {} day {}  →  Wochenzeitplan {}: Tag {} ändern
+Change zone equipment {} cooling capacity to {:?}  →  Kühlleistung von Zonengerät {} auf {:?} ändern
+Change zone equipment {} equipment type to {:?}  →  Gerätetyp von Zonengerät {} auf {:?} ändern
+Change zone equipment {} heating capacity to {:?}  →  Heizleistung von Zonengerät {} auf {:?} ändern
+Change zone equipment {} priority to {:?}  →  Priorität von Zonengerät {} auf {:?} ändern
+Change zone equipment {} zone to {}  →  Zone von Zonengerät {} auf {} ändern
+Change zone {} conditioned to {}  →  Konditionierung von Zone {} auf {} ändern
+Change zone {} floor-area participation to {}  →  Geschossflächenanteil von Zone {} auf {} ändern
+Change zone {} multiplier to {}  →  Multiplikator von Zone {} auf {} ändern
+Change zone {} volume to {} m³  →  Volumen von Zone {} auf {} m³ ändern
+Clear fenestration {} glazing construction  →  Verglasungsaufbau von Fenster {} entfernen
+Colour surfaces by {}  →  Oberflächen nach {} einfärben
+Connect referenced model {}  →  Referenziertes Modell {} verbinden
+Create Constant Schedule {} at index {}  →  Konstanten Zeitplan {} an Index {} erstellen
+Create Electrical Load Center {} at index {}  →  Stromverteiler {} an Index {} erstellen
+Create Equipment Gain {} at index {}  →  Gerätewärmegewinn {} an Index {} erstellen
+Create Lighting Gain {} at index {}  →  Beleuchtungswärmegewinn {} an Index {} erstellen
+Create Mechanical Ventilation {} at index {}  →  Mechanische Lüftung {} an Index {} erstellen
+Create People Gain {} at index {}  →  Personenwärmegewinn {} an Index {} erstellen
+Create Pv System {} at index {}  →  PV-Anlage {} an Index {} erstellen
+Create Refrigeration System {} at index {}  →  Kälteanlage {} an Index {} erstellen
+Create Shw System {} at index {}  →  Trinkwarmwasseranlage {} an Index {} erstellen
+Create Solar Thermal System {} at index {}  →  Solarthermieanlage {} an Index {} erstellen
+Create Thermal Enclosure {} at index {}  →  Thermische Hülle {} an Index {} erstellen
+Create Water System {} at index {}  →  Wasseranlage {} an Index {} erstellen
+Create air loop {}  →  Luftkreislauf {} erstellen
+Create ideal loads system {}  →  Ideallastsystem {} erstellen
+Create plant loop {}  →  Anlagenkreislauf {} erstellen
+Create setpoint manager {}  →  Sollwertmanager {} erstellen
+Create shading surface \"{}\"  →  Verschattungsfläche \"{}\" erstellen
+Create zone equipment {}  →  Zonengerät {} erstellen
+Delete Constant Schedule {}  →  Konstanten Zeitplan {} löschen
+Delete Electrical Load Center {}  →  Stromverteiler {} löschen
+Delete Equipment Gain {}  →  Gerätewärmegewinn {} löschen
+Delete Lighting Gain {}  →  Beleuchtungswärmegewinn {} löschen
+Delete Mechanical Ventilation {}  →  Mechanische Lüftung {} löschen
+Delete People Gain {}  →  Personenwärmegewinn {} löschen
+Delete Pv System {}  →  PV-Anlage {} löschen
+Delete Refrigeration System {}  →  Kälteanlage {} löschen
+Delete Shw System {}  →  Trinkwarmwasseranlage {} löschen
+Delete Solar Thermal System {}  →  Solarthermieanlage {} löschen
+Delete Thermal Enclosure {}  →  Thermische Hülle {} löschen
+Delete Water System {}  →  Wasseranlage {} löschen
+Delete air loop {}  →  Luftkreislauf {} löschen
+Delete ideal loads system {}  →  Ideallastsystem {} löschen
+Delete plant loop {}  →  Anlagenkreislauf {} löschen
+Delete setpoint manager {}  →  Sollwertmanager {} löschen
+Delete shading surface {}  →  Verschattungsfläche {} löschen
+Delete zone equipment {}  →  Zonengerät {} löschen
+Disconnect the referenced model  →  Referenziertes Modell trennen
+Insert rule at {} of annual schedule {}  →  Regel an Position {} in Jahreszeitplan {} einfügen
+Remove battery {} from electrical load center {}  →  Batterie {} aus Stromverteiler {} entfernen
+Remove layer {} from construction {}  →  Schicht {} aus Konstruktion {} entfernen
+Remove output variable \"{}\" for \"{}\"  →  Ausgabevariable \"{}\" für \"{}\" entfernen
+Remove plant equipment {} from plant loop {}  →  Anlagenkomponente {} aus Anlagenkreislauf {} entfernen
+Remove pv system {} from electrical load center {}  →  PV-Anlage {} aus Stromverteiler {} entfernen
+Remove rule {} of annual schedule {}  →  Regel {} aus Jahreszeitplan {} entfernen
+Remove terminal zone {} from air loop {}  →  Versorgte Zone {} aus Luftkreislauf {} entfernen
+Remove zone {} from thermal enclosure {}  →  Zone {} aus thermischer Hülle {} entfernen
+Rename Construction of construction {}  →  Konstruktion {} umbenennen
+Rename Electrical Load Center of electrical load center {}  →  Stromverteiler {} umbenennen
+Rename Gas Material of gas material {}  →  Gasfüllung {} umbenennen
+Rename Glazing Material of glazing material {}  →  Verglasungsmaterial {} umbenennen
+Rename Material of material {}  →  Material {} umbenennen
+Rename Space List of space list {}  →  Raumliste {} umbenennen
+Rename Thermal Enclosure of thermal enclosure {}  →  Thermische Hülle {} umbenennen
+Rename energy model to \"{}\"  →  Energiemodell in \"{}\" umbenennen
+Rename shading surface {} to \"{}\"  →  Verschattungsfläche {} in \"{}\" umbenennen
+Reorder annual schedule {} rule {} to {}  →  Jahreszeitplan {}: Regel {} an Position {} verschieben
+Reorder construction {} into {} layers  →  Konstruktion {} in {} Schichten neu ordnen
+Replace Daily Schedule Hourly Values of daily schedule {}  →  Stundenwerte von Tageszeitplan {} ersetzen
+Replace Time Series Schedule Values of time series schedule {}  →  Werte von Zeitreihenzeitplan {} ersetzen
+Replace airflow network with {} zone nodes ‖ Detach the airflow network  →  Luftströmungsnetz durch {} Zonenknoten ersetzen ‖ Luftströmungsnetz entfernen
+Replace fenestration {} with a {}-vertex polygon  →  Fenster {} durch ein Polygon mit {} Ecken ersetzen
+Replace setpoint manager {} control law with {}  →  Regelgesetz von Sollwertmanager {} durch {} ersetzen
+Replace shading surface {} with a {}-vertex polygon  →  Verschattungsfläche {} durch ein Polygon mit {} Ecken ersetzen
+Replace surface {} with a {}-vertex polygon  →  Oberfläche {} durch ein Polygon mit {} Ecken ersetzen
+Unbind the weather file  →  Bindung der Wetterdatei aufheben
+Update run period to {}-{} .. {}-{}  →  Simulationszeitraum auf {}-{} .. {}-{} aktualisieren
+
+## semio-s-artifact-fem-2d
+Add load \"{}\" to case \"{}\"  →  Last \"{}\" zu Lastfall \"{}\" hinzufügen
+Remove load \"{}\" from case \"{}\"  →  Last \"{}\" aus Lastfall \"{}\" entfernen
+Rename case \"{}\" to \"{}\"  →  Lastfall \"{}\" in \"{}\" umbenennen
+Replace load \"{}\" in case \"{}\"  →  Last \"{}\" in Lastfall \"{}\" ersetzen
+Set case \"{}\" self-weight to {}  →  Eigengewicht von Lastfall \"{}\" auf {} setzen
+Create region \"{}\"  →  Bereich \"{}\" erstellen
+Delete region \"{}\"  →  Bereich \"{}\" löschen
+Replace region \"{}\"  →  Bereich \"{}\" ersetzen
+Create section \"{}\"  →  Querschnitt \"{}\" erstellen
+Delete section \"{}\"  →  Querschnitt \"{}\" löschen
+Replace section \"{}\"  →  Querschnitt \"{}\" ersetzen
+
+## semio-s-artifact-fem-3d
+Add load \"{}\" to case \"{}\"  →  Last \"{}\" zu Lastfall \"{}\" hinzufügen
+Remove load \"{}\" from case \"{}\"  →  Last \"{}\" aus Lastfall \"{}\" entfernen
+Rename case \"{}\" to \"{}\"  →  Lastfall \"{}\" in \"{}\" umbenennen
+Replace load \"{}\" in case \"{}\"  →  Last \"{}\" in Lastfall \"{}\" ersetzen
+Set case \"{}\" self-weight to {}  →  Eigengewicht von Lastfall \"{}\" auf {} setzen
+Create section \"{}\"  →  Querschnitt \"{}\" erstellen
+Delete section \"{}\"  →  Querschnitt \"{}\" löschen
+Replace section \"{}\"  →  Querschnitt \"{}\" ersetzen
+Set Results Window Playback Clock  →  Wiedergabeuhr des Ergebnisfensters setzen
+
+## semio-s-artifact-flow-flow
+Reorder synapse \"{}\" to {}  →  Synapse \"{}\" an Position {} verschieben
+Reorder widget \"{}\" to {}  →  Widget \"{}\" an Position {} verschieben
+Update synapse \"{}\" endpoints  →  Endpunkte von Synapse \"{}\" aktualisieren
+
+## semio-s-artifact-forms-forms
+Change step \"{}\" description  →  Beschreibung von Schritt \"{}\" ändern
+Reorder step \"{}\"  →  Reihenfolge von Schritt \"{}\" ändern
+
+## semio-s-artifact-gis-gismap
+Reorder position \"{}\" to {}  →  Position \"{}\" an Stelle {} verschieben
+Reorder region \"{}\" to {}  →  Region \"{}\" an Stelle {} verschieben
+Reorder route \"{}\" to {}  →  Route \"{}\" an Stelle {} verschieben
+Replace position \"{}\" data  →  Daten von Position \"{}\" ersetzen
+Replace region \"{}\" data  →  Daten von Region \"{}\" ersetzen
+Replace route \"{}\" data  →  Daten von Route \"{}\" ersetzen
+Set LOD mode  →  Detailstufenmodus setzen
+Set layer stroke scale {}  →  Linienstärkenmaßstab der Ebene {} setzen
+
+## semio-s-artifact-gis-gisterrain
+Change imported terrain features  →  Importierte Geländemerkmale ändern
+Change terrain exaggeration to {}  →  Geländeüberhöhung auf {} ändern
+
+## semio-s-artifact-imperative-procedure
+Edit step \"{}\" parameters  →  Parameter von Schritt \"{}\" bearbeiten
+Reorder step \"{}\" to position {}  →  Schritt \"{}\" an Position {} verschieben
+
+## semio-s-artifact-layout-layout
+Change frame \"{}\" columns  →  Spalten von Rahmen \"{}\" ändern
+Change frame \"{}\" fill  →  Füllung von Rahmen \"{}\" ändern
+Change frame \"{}\" stroke  →  Kontur von Rahmen \"{}\" ändern
+Change frame \"{}\" wrap mode  →  Umbruchmodus von Rahmen \"{}\" ändern
+Change link \"{}\" path  →  Pfad von Verknüpfung \"{}\" ändern
+Change page \"{}\" height  →  Höhe von Seite \"{}\" ändern
+Change page \"{}\" width  →  Breite von Seite \"{}\" ändern
+Create story \"{}\"  →  Textfluss \"{}\" erstellen
+Delete story \"{}\"  →  Textfluss \"{}\" löschen
+Edit story \"{}\"  →  Textfluss \"{}\" bearbeiten
+Reorder page \"{}\"  →  Reihenfolge von Seite \"{}\" ändern
+Resize frame \"{}\"  →  Größe von Rahmen \"{}\" ändern
+Update page \"{}\" columns  →  Spalten von Seite \"{}\" aktualisieren
+Update page \"{}\" margins  →  Ränder von Seite \"{}\" aktualisieren
+
+## semio-s-artifact-lowpoly-lowpoly
+Insert paint layer \"{}\"  →  Malebene \"{}\" einfügen
+Paint on layer {} of object \"{}\"  →  Auf Ebene {} von Objekt \"{}\" malen
+Remove paint layer {} from object \"{}\"  →  Malebene {} aus Objekt \"{}\" entfernen
+Rename paint layer to \"{}\"  →  Malebene in \"{}\" umbenennen
+Reorder object \"{}\" to {}  →  Objekt \"{}\" an Position {} verschieben
+Set object \"{}\" smooth shading to {}  →  Weiche Schattierung von Objekt \"{}\" auf {} setzen
+Set paint layer blend mode to \"{}\"  →  Füllmethode der Malebene auf \"{}\" setzen
+Set paint layer opacity to {}  →  Deckkraft der Malebene auf {} setzen
+Set paint layer visible to {}  →  Sichtbarkeit der Malebene auf {} setzen
+
+## semio-s-artifact-mathematical-equation
+Relabel node \"{}\" to \"{}\"  →  Beschriftung von Knoten \"{}\" in \"{}\" ändern
+
+## semio-s-artifact-norm-din16798
+Change CO2 concentration to {}  →  CO2-Konzentration auf {} ändern
+Change DHW delivery temperature to {}  →  Trinkwarmwasser-Zapftemperatur auf {} ändern
+Change actual EER to {}  →  Tatsächliche Leistungszahl EER auf {} ändern
+Change building volume to {}  →  Gebäudevolumen auf {} ändern
+Change cellar ventilation air flow to {}  →  Luftvolumenstrom der Kellerlüftung auf {} ändern
+Change cooling degree hours to {}  →  Kühlgradstunden auf {} ändern
+Change cooling energy demand to {}  →  Kühlenergiebedarf auf {} ändern
+Change cooling energy reference to {}  →  Referenzwert Kühlenergie auf {} ändern
+Change cooling gain utilization factor to {}  →  Ausnutzungsgrad der Wärmegewinne (Kühlung) auf {} ändern
+Change cooling internal gains to {}  →  Interne Wärmegewinne (Kühlung) auf {} ändern
+Change data center supply temperature to {}  →  Zulufttemperatur des Rechenzentrums auf {} ändern
+Change duct leakage class to \"{}\"  →  Luftdichtheitsklasse der Kanäle auf \"{}\" ändern
+Change duct leakage rate to {}  →  Leckagerate der Kanäle auf {} ändern
+Change duct test pressure to {}  →  Prüfdruck der Kanäle auf {} ändern
+Change dwelling ventilation air flow to {}  →  Luftvolumenstrom der Wohnungslüftung auf {} ändern
+Change equivalent sound pressure level to {}  →  Äquivalenten Schalldruckpegel auf {} ändern
+Change fan energy reference to {}  →  Referenzwert Ventilatorenergie auf {} ändern
+Change fan running time to {}  →  Ventilatorlaufzeit auf {} ändern
+Change fan volume flow to {}  →  Ventilatorvolumenstrom auf {} ändern
+Change generation energy reference to {}  →  Referenzwert Erzeugungsenergie auf {} ändern
+Change heat recovery efficiency to {}  →  Wärmerückgewinnungsgrad auf {} ändern
+Change heat recovery mass flow rate to {}  →  Massenstrom der Wärmerückgewinnung auf {} ändern
+Change heat recovery operating time to {}  →  Betriebszeit der Wärmerückgewinnung auf {} ändern
+Change heat recovery savings reference to {}  →  Referenzwert Einsparung durch Wärmerückgewinnung auf {} ändern
+Change heat recovery specific heat capacity to {}  →  Spezifische Wärmekapazität der Wärmerückgewinnung auf {} ändern
+Change heat recovery temperature difference to {}  →  Temperaturdifferenz der Wärmerückgewinnung auf {} ändern
+Change indoor air quality class to \"{}\"  →  Raumluftqualitätsklasse auf \"{}\" ändern
+Change minimum heat recovery efficiency to {}  →  Mindest-Wärmerückgewinnungsgrad auf {} ändern
+Change n50 air change rate to {}  →  Luftwechselrate n50 auf {} ändern
+Change number of bedrooms to {}  →  Anzahl der Schlafzimmer auf {} ändern
+Change number of occupants to {}  →  Anzahl der Nutzer auf {} ändern
+Change number of persons to {}  →  Anzahl der Personen auf {} ändern
+Change occupancy type to \"{}\"  →  Nutzungsart auf \"{}\" ändern
+Change operative temperature to {}  →  Operative Temperatur auf {} ändern
+Change provided humidification rate to {}  →  Vorhandene Befeuchtungsleistung auf {} ändern
+Change relative humidity to {}  →  Relative Feuchte auf {} ändern
+Change required SFP class to {}  →  Erforderliche SFP-Klasse auf {} ändern
+Change required humidification rate to {}  →  Erforderliche Befeuchtungsleistung auf {} ändern
+Change residential ventilation air flow to {}  →  Luftvolumenstrom der Wohnraumlüftung auf {} ändern
+Change running mean outdoor temperature to {}  →  Gleitenden Mittelwert der Außentemperatur auf {} ändern
+Change specific fan power to {}  →  Spezifische Ventilatorleistung auf {} ändern
+Change storage heat transfer coefficient to {}  →  Wärmeverlustkoeffizienten des Speichers auf {} ändern
+Change transmission heat transfer coefficient to {}  →  Transmissionswärmetransferkoeffizienten auf {} ändern
+Change ventilation air flow to {}  →  Lüftungsvolumenstrom auf {} ändern
+Change ventilation heat transfer coefficient to {}  →  Lüftungswärmetransferkoeffizienten auf {} ändern
+Change years since last inspection to {}  →  Jahre seit der letzten Inspektion auf {} ändern
+
+## semio-s-artifact-norm-din18599
+Change annual primary energy limit [kWh] to {}  →  Grenzwert des Jahresprimärenergiebedarfs [kWh] auf {} ändern
+Change building use class to {:?}  →  Gebäudenutzungsklasse auf {:?} ändern
+Change energy carrier to \"{}\"  →  Energieträger auf \"{}\" ändern
+Change heated floor area [m2] to {}  →  Beheizte Fläche [m2] auf {} ändern
+Change internal heat gains [W/m2] to {}  →  Interne Wärmegewinne [W/m2] auf {} ändern
+Change number of occupants to {}  →  Anzahl der Nutzer auf {} ändern
+Change reference primary energy demand Q_p [kWh] to {}  →  Primärenergiebedarf Q_p des Referenzgebäudes [kWh] auf {} ändern
+Change renewable energy contribution [kWh] to {}  →  Beitrag erneuerbarer Energien [kWh] auf {} ändern
+Change solar heat gains [kWh] to {}  →  Solare Wärmegewinne [kWh] auf {} ändern
+Change transmission heat transfer coefficient H_T [W/K] to {}  →  Transmissionswärmetransferkoeffizienten H_T [W/K] auf {} ändern
+Change ventilation heat transfer coefficient H_V [W/K] to {}  →  Lüftungswärmetransferkoeffizienten H_V [W/K] auf {} ändern
+
+## semio-s-artifact-norm-din4108
+Change airtightness n50 to {}  →  Luftdichtheit n50 auf {} ändern
+Change catalog id to \"{}\"  →  Katalog-ID auf \"{}\" ändern
+Change declared application class to \"{}\"  →  Deklarierte Anwendungsklasse auf \"{}\" ändern
+Change layer #{} lambda to {}  →  Wärmeleitfähigkeit λ von Schicht #{} auf {} ändern
+Change layer #{} thickness to {}  →  Dicke von Schicht #{} auf {} ändern
+Change material id to \"{}\"  →  Material-ID auf \"{}\" ändern
+Change solar absorptance to {}  →  Solaren Absorptionsgrad auf {} ändern
+Insert layer at #{}  →  Schicht an #{} einfügen
+Move layer #{} to #{}  →  Schicht #{} nach #{} verschieben
+Remove layer #{}  →  Schicht #{} entfernen
+
+# Lines may carry `  ⟸  NEW_EN` when the English literal itself is a field-name dump rather than prose.
+
+## semio-s-artifact-norm-din4108
+Change envelope area m2 to {}  →  Hüllfläche [m2] auf {} ändern  ⟸  Change envelope area [m2] to {}
+Change irradiance w m2 to {}  →  Bestrahlungsstärke [W/m2] auf {} ändern  ⟸  Change irradiance [W/m2] to {}
+Change moisture mu exterior to {}  →  Diffusionswiderstandszahl μ außen auf {} ändern  ⟸  Change exterior vapour diffusion resistance μ to {}
+Change moisture mu interior to {}  →  Diffusionswiderstandszahl μ innen auf {} ändern  ⟸  Change interior vapour diffusion resistance μ to {}
+Change psi times l sum to {}  →  Summe Ψ·l auf {} ändern  ⟸  Change sum of Ψ·l to {}
+Change rh int to {}  →  Relative Raumluftfeuchte auf {} ändern  ⟸  Change indoor relative humidity to {}
+Change t int c to {}  →  Raumlufttemperatur [°C] auf {} ändern  ⟸  Change indoor temperature [°C] to {}
+Change bb2 details conform to {}  →  Beiblatt-2-Konformität der Details auf {} ändern  ⟸  Change Supplement 2 detail conformity to {}
+
+## semio-s-artifact-norm-en1990
+Change consequence class to CC{}  →  Schadensfolgeklasse auf CC{} ändern
+Change permanent action G_k to {} kN  →  Ständige Einwirkung G_k auf {} kN ändern
+Change seismic action A_Ed to {} kN  →  Erdbebeneinwirkung A_Ed auf {} kN ändern
+Change variable action #{} category to \"{}\"  →  Kategorie der veränderlichen Einwirkung #{} auf \"{}\" ändern
+Change variable action #{} value to {}  →  Wert der veränderlichen Einwirkung #{} auf {} ändern
+Insert variable action \"{}\" ({}) at #{}  →  Veränderliche Einwirkung \"{}\" ({}) an #{} einfügen
+Move variable action #{} to #{}  →  Veränderliche Einwirkung #{} nach #{} verschieben
+Remove variable action #{}  →  Veränderliche Einwirkung #{} entfernen
+
+## semio-s-artifact-norm-en1991
+Change accidental impact mass to {:?}  →  Masse beim außergewöhnlichen Anprall auf {:?} ändern
+Change accidental impact speed to {:?}  →  Geschwindigkeit beim außergewöhnlichen Anprall auf {:?} ändern
+Change basic wind velocity to {:?}  →  Basiswindgeschwindigkeit auf {:?} ändern
+Change bridge lane count to {:?}  →  Anzahl der Fahrstreifen auf {:?} ändern
+Change bridge lane width to {:?}  →  Fahrstreifenbreite auf {:?} ändern
+Change bridge moment resistance to {:?}  →  Momententragfähigkeit der Brücke auf {:?} ändern
+Change bridge span to {:?}  →  Stützweite der Brücke auf {:?} ändern
+Change characteristic snow load to {:?}  →  Charakteristische Schneelast auf {:?} ändern
+Change construction activity to \"{}\"  →  Bautätigkeit auf \"{}\" ändern
+Change dynamic factor c_d to {:?}  →  Dynamischen Faktor c_d auf {:?} ändern
+Change fire member capacity factor to {:?}  →  Ausnutzungsgrad des Bauteils im Brandfall auf {:?} ändern
+Change fire resistance to {:?}  →  Feuerwiderstand auf {:?} ändern
+Change hoisting speed to {:?}  →  Hubgeschwindigkeit auf {:?} ändern
+Change imposed category to {:?}  →  Nutzungskategorie auf {:?} ändern
+Change silo bulk density to {:?}  →  Schüttdichte im Silo auf {:?} ändern
+Change silo friction coefficient to {:?}  →  Wandreibungsbeiwert des Silos auf {:?} ändern
+Change silo hydraulic radius to {:?}  →  Hydraulischen Radius des Silos auf {:?} ändern
+Change silo lateral pressure ratio to {:?}  →  Horizontallastverhältnis des Silos auf {:?} ändern
+Change size factor c_s to {:?}  →  Größenfaktor c_s auf {:?} ändern
+Change snow altitude to {:?}  →  Geländehöhe für die Schneelast auf {:?} ändern
+Change snow zone to {:?}  →  Schneelastzone auf {:?} ändern
+Change thermal delta to {:?}  →  Temperaturdifferenz auf {:?} ändern
+
+## semio-s-artifact-norm-en1992
+Change a c mm2 to {:?}  →  Betonquerschnittsfläche A_c [mm2] auf {:?} ändern  ⟸  Change concrete area A_c [mm2] to {:?}
+Change a s mm2 to {:?}  →  Bewehrungsquerschnitt A_s [mm2] auf {:?} ändern  ⟸  Change reinforcement area A_s [mm2] to {:?}
+Change anchor a s mm2 to {:?}  →  Spannungsquerschnitt des Dübels A_s [mm2] auf {:?} ändern  ⟸  Change anchor stressed area A_s [mm2] to {:?}
+Change anchor c1 mm to {:?}  →  Randabstand des Dübels c1 [mm] auf {:?} ändern  ⟸  Change anchor edge distance c1 [mm] to {:?}
+Change anchor cracked to {:?}  →  Gerissenen Beton am Dübel auf {:?} ändern  ⟸  Change anchor in cracked concrete to {:?}
+Change anchor d mm to {:?}  →  Dübeldurchmesser d [mm] auf {:?} ändern  ⟸  Change anchor diameter d [mm] to {:?}
+Change anchor f uk mpa to {:?}  →  Zugfestigkeit des Dübels f_uk [MPa] auf {:?} ändern  ⟸  Change anchor tensile strength f_uk [MPa] to {:?}
+Change anchor f yk mpa to {:?}  →  Streckgrenze des Dübels f_yk [MPa] auf {:?} ändern  ⟸  Change anchor yield strength f_yk [MPa] to {:?}
+Change anchor h ef mm to {:?}  →  Verankerungstiefe h_ef [mm] auf {:?} ändern  ⟸  Change anchor embedment depth h_ef [mm] to {:?}
+Change anchor n ed kn to {:?}  →  Zuglast des Dübels N_Ed [kN] auf {:?} ändern  ⟸  Change anchor tension load N_Ed [kN] to {:?}
+Change anchor v ed kn to {:?}  →  Querlast des Dübels V_Ed [kN] auf {:?} ändern  ⟸  Change anchor shear load V_Ed [kN] to {:?}
+Change b mm to {:?}  →  Breite b [mm] auf {:?} ändern  ⟸  Change width b [mm] to {:?}
+Change bridge delta sigma s mpa to {:?}  →  Spannungsschwingbreite der Bewehrung Δσ_s [MPa] (Brücke) auf {:?} ändern  ⟸  Change bridge reinforcement stress range Δσ_s [MPa] to {:?}
+Change bridge sigma c mpa to {:?}  →  Betonspannung σ_c [MPa] (Brücke) auf {:?} ändern  ⟸  Change bridge concrete stress σ_c [MPa] to {:?}
+Change d mm to {:?}  →  Statische Nutzhöhe d [mm] auf {:?} ändern  ⟸  Change effective depth d [mm] to {:?}
+Change f ck to {:?}  →  Betondruckfestigkeit f_ck auf {:?} ändern  ⟸  Change concrete strength f_ck to {:?}
+Change f yk to {:?}  →  Streckgrenze der Bewehrung f_yk auf {:?} ändern  ⟸  Change reinforcement yield strength f_yk to {:?}
+Change fire rating to {:?}  →  Feuerwiderstandsklasse auf {:?} ändern
+Change hd over h to {:?}  →  Verhältnis h_d/h auf {:?} ändern  ⟸  Change ratio h_d/h to {:?}
+Change liquid e s mpa to {:?}  →  E-Modul der Bewehrung E_s [MPa] (Flüssigkeitsbehälter) auf {:?} ändern  ⟸  Change liquid-retaining reinforcement modulus E_s [MPa] to {:?}
+Change liquid f ct eff mpa to {:?}  →  Wirksame Zugfestigkeit f_ct,eff [MPa] (Flüssigkeitsbehälter) auf {:?} ändern  ⟸  Change liquid-retaining effective tensile strength f_ct,eff [MPa] to {:?}
+Change liquid rho p eff to {:?}  →  Wirksamen Bewehrungsgrad ρ_p,eff (Flüssigkeitsbehälter) auf {:?} ändern  ⟸  Change liquid-retaining effective reinforcement ratio ρ_p,eff to {:?}
+Change liquid s r max mm to {:?}  →  Maximalen Rissabstand s_r,max [mm] (Flüssigkeitsbehälter) auf {:?} ändern  ⟸  Change liquid-retaining maximum crack spacing s_r,max [mm] to {:?}
+Change liquid sigma s mpa to {:?}  →  Stahlspannung σ_s [MPa] (Flüssigkeitsbehälter) auf {:?} ändern  ⟸  Change liquid-retaining steel stress σ_s [MPa] to {:?}
+Change m ed knm to {:?}  →  Bemessungsmoment M_Ed [kNm] auf {:?} ändern  ⟸  Change design moment M_Ed [kNm] to {:?}
+Change n ed kn to {:?}  →  Bemessungsnormalkraft N_Ed [kN] auf {:?} ändern  ⟸  Change design axial force N_Ed [kN] to {:?}
+Change p kn to {:?}  →  Last P [kN] auf {:?} ändern  ⟸  Change load P [kN] to {:?}
+Change provided axis distance mm to {:?}  →  Vorhandenen Achsabstand a [mm] auf {:?} ändern  ⟸  Change provided axis distance a [mm] to {:?}
+Change rho l to {:?}  →  Längsbewehrungsgrad ρ_l auf {:?} ändern  ⟸  Change longitudinal reinforcement ratio ρ_l to {:?}
+Change span m to {:?}  →  Stützweite [m] auf {:?} ändern  ⟸  Change span [m] to {:?}
+Change udl kn m to {:?}  →  Gleichstreckenlast [kN/m] auf {:?} ändern  ⟸  Change uniform load [kN/m] to {:?}
+Change use fem to {:?}  →  Verwendung der FEM-Berechnung auf {:?} ändern  ⟸  Change use of FEM analysis to {:?}
+Change v ed kn to {:?}  →  Bemessungsquerkraft V_Ed [kN] auf {:?} ändern  ⟸  Change design shear force V_Ed [kN] to {:?}
+
+## semio-s-artifact-norm-en1993
+Update EN 1993-1-10 through-thickness inputs  →  EN 1993-1-10 Eingaben zu Eigenschaften in Dickenrichtung aktualisieren
+Update EN 1993-1-11 tension component inputs  →  EN 1993-1-11 Eingaben für Zugglieder aktualisieren
+Update EN 1993-1-2 fire resistance inputs  →  EN 1993-1-2 Eingaben zum Feuerwiderstand aktualisieren
+Update EN 1993-1-3 cold-formed section inputs  →  EN 1993-1-3 Eingaben für kaltgeformte Querschnitte aktualisieren
+Update EN 1993-1-4 stainless steel inputs  →  EN 1993-1-4 Eingaben für nichtrostenden Stahl aktualisieren
+Update EN 1993-1-5 plated element buckling inputs  →  EN 1993-1-5 Eingaben zum Plattenbeulen aktualisieren
+Update EN 1993-1-6/-4-1 shell and silo wall inputs  →  EN 1993-1-6/-4-1 Eingaben für Schalen und Silowände aktualisieren
+Update EN 1993-1-8 bolted connection inputs  →  EN 1993-1-8 Eingaben für Schraubverbindungen aktualisieren
+Update EN 1993-1-8 welded connection inputs  →  EN 1993-1-8 Eingaben für Schweißverbindungen aktualisieren
+Update EN 1993-1-9 fatigue inputs  →  EN 1993-1-9 Eingaben zur Ermüdung aktualisieren
+Update EN 1993-2 steel bridge inputs  →  EN 1993-2 Eingaben für Stahlbrücken aktualisieren
+Update EN 1993-3-1 tower buckling inputs  →  EN 1993-3-1 Eingaben zur Stabilität von Türmen aktualisieren
+Update EN 1993-5 pile foundation inputs  →  EN 1993-5 Eingaben für Pfahlgründungen aktualisieren
+Update EN 1993-6 crane runway inputs  →  EN 1993-6 Eingaben für Kranbahnen aktualisieren
+Update member properties (forces, section, material)  →  Bauteileigenschaften (Schnittgrößen, Querschnitt, Material) aktualisieren
+
+## semio-s-artifact-norm-en1994
+Change concrete modulus E_cm to {}  →  E-Modul des Betons E_cm auf {} ändern
+Change concrete strength f_ck to {}  →  Betondruckfestigkeit f_ck auf {} ändern
+Change deck type to \"{}\"  →  Deckentyp auf \"{}\" ändern
+Change design moment M_Ed to {}  →  Bemessungsmoment M_Ed auf {} ändern
+Change design shear V_Ed to {}  →  Bemessungsquerkraft V_Ed auf {} ändern
+Change fatigue cycle count N to {}  →  Anzahl der Lastwechsel N auf {} ändern
+Change fatigue detail to \"{}\"  →  Kerbdetail auf \"{}\" ändern
+Change fatigue stress range Δσ to {}  →  Spannungsschwingbreite Δσ auf {} ändern
+Change fire rating to \"{}\"  →  Feuerwiderstandsklasse auf \"{}\" ändern
+Change insulation thickness to {}  →  Dämmstoffdicke auf {} ändern
+Change longitudinal shear resistance V_L,Rd to {}  →  Längsschubtragfähigkeit V_L,Rd auf {} ändern
+Change plastic moment resistance M_pl,Rd to {}  →  Plastische Momententragfähigkeit M_pl,Rd auf {} ändern
+Change shear connection degree η to {}  →  Verdübelungsgrad η auf {} ändern
+Change shear per stud V_Ed to {}  →  Schubkraft je Kopfbolzendübel V_Ed auf {} ändern
+Change span to {}  →  Stützweite auf {} ändern
+Change steel plastic moment M_pl,a to {}  →  Plastisches Moment des Stahlprofils M_pl,a auf {} ändern
+Change steel yield strength f_y to {}  →  Streckgrenze des Baustahls f_y auf {} ändern
+Change stud diameter d to {}  →  Dübeldurchmesser d auf {} ändern
+Change stud fatigue stress range Δτ to {}  →  Schubspannungsschwingbreite des Dübels Δτ auf {} ändern
+Change stud height h_sc to {}  →  Dübelhöhe h_sc auf {} ändern
+Change stud ultimate strength f_u to {}  →  Zugfestigkeit des Dübels f_u auf {} ändern
+
+## semio-s-artifact-norm-en1995
+Change a ef mm2 to {:?}  →  Wirksame Fläche A_ef [mm2] auf {:?} ändern  ⟸  Change effective area A_ef [mm2] to {:?}
+Change a mm2 to {:?}  →  Fläche A [mm2] auf {:?} ändern  ⟸  Change area A [mm2] to {:?}
+Change a vert m s2 to {:?}  →  Vertikalbeschleunigung a_vert [m/s2] auf {:?} ändern  ⟸  Change vertical acceleration a_vert [m/s2] to {:?}
+Change b mm to {:?}  →  Breite b [mm] auf {:?} ändern  ⟸  Change width b [mm] to {:?}
+Change f c 0 k to {:?}  →  Druckfestigkeit f_c,0,k auf {:?} ändern  ⟸  Change compressive strength f_c,0,k to {:?}
+Change f ed kn to {:?}  →  Bemessungskraft F_Ed [kN] auf {:?} ändern  ⟸  Change design force F_Ed [kN] to {:?}
+Change f m k to {:?}  →  Biegefestigkeit f_m,k auf {:?} ändern  ⟸  Change bending strength f_m,k to {:?}
+Change f v k to {:?}  →  Schubfestigkeit f_v,k auf {:?} ändern  ⟸  Change shear strength f_v,k to {:?}
+Change fire duration min to {:?}  →  Branddauer [min] auf {:?} ändern  ⟸  Change fire duration [min] to {:?}
+Change h mm to {:?}  →  Höhe h [mm] auf {:?} ändern  ⟸  Change depth h [mm] to {:?}
+Change load duration to {:?}  →  Klasse der Lasteinwirkungsdauer auf {:?} ändern
+Change m crit knm to {:?}  →  Kritisches Moment M_crit [kNm] auf {:?} ändern  ⟸  Change critical moment M_crit [kNm] to {:?}
+Change m ed knm to {:?}  →  Bemessungsmoment M_Ed [kNm] auf {:?} ändern  ⟸  Change design moment M_Ed [kNm] to {:?}
+Change n cycles bridge to {:?}  →  Anzahl der Lastwechsel n (Brücke) auf {:?} ändern  ⟸  Change bridge load cycles n to {:?}
+Change n ed kn to {:?}  →  Bemessungsnormalkraft N_Ed [kN] auf {:?} ändern  ⟸  Change design axial force N_Ed [kN] to {:?}
+Change section depth mm to {:?}  →  Querschnittshöhe [mm] auf {:?} ändern  ⟸  Change section depth [mm] to {:?}
+Change service class to {:?}  →  Nutzungsklasse auf {:?} ändern
+Change v ed kn to {:?}  →  Bemessungsquerkraft V_Ed [kN] auf {:?} ändern  ⟸  Change design shear force V_Ed [kN] to {:?}
+Change w mm3 to {:?}  →  Widerstandsmoment W [mm3] auf {:?} ändern  ⟸  Change section modulus W [mm3] to {:?}
+
+## semio-s-artifact-norm-en1996
+Change bed joint thickness [mm] to {}  →  Lagerfugendicke [mm] auf {} ändern
+Change characteristic compressive strength f_k [MPa] to {}  →  Charakteristische Druckfestigkeit f_k [MPa] auf {} ändern
+Change characteristic shear strength f_vk [MPa] to {}  →  Charakteristische Schubfestigkeit f_vk [MPa] auf {} ändern
+Change design axial force N_Ed [kN] to {}  →  Bemessungsnormalkraft N_Ed [kN] auf {} ändern
+Change design bending moment M_Ed [kNm] to {}  →  Bemessungsbiegemoment M_Ed [kNm] auf {} ändern
+Change design horizontal force H_Ed [kN] to {}  →  Bemessungshorizontalkraft H_Ed [kN] auf {} ändern
+Change design shear force V_Ed [kN] to {}  →  Bemessungsquerkraft V_Ed [kN] auf {} ändern
+Change durability exposure class to {:?}  →  Expositionsklasse (Dauerhaftigkeit) auf {:?} ändern
+Change effective height h_ef [mm] to {}  →  Knicklänge h_ef [mm] auf {} ändern
+Change effective thickness t_ef [mm] to {}  →  Effektive Wanddicke t_ef [mm] auf {} ändern
+Change fire resistance requirement [min] to {}  →  Anforderung an den Feuerwiderstand [min] auf {} ändern
+Change friction coefficient mu to {}  →  Reibungsbeiwert μ auf {} ändern
+Change masonry unit material to \"{}\"  →  Mauersteinmaterial auf \"{}\" ändern
+Change number of storeys to {}  →  Anzahl der Geschosse auf {} ändern
+Change section modulus z [mm3] to {}  →  Widerstandsmoment z [mm3] auf {} ändern
+
+## semio-s-artifact-norm-en1997
+Change Poisson's ratio nu to {}  →  Querdehnzahl ν auf {} ändern
+Change base resistance q_b [kPa] to {}  →  Spitzenwiderstand q_b [kPa] auf {} ändern
+Change cohesion c [kPa] to {}  →  Kohäsion c [kPa] auf {} ändern
+Change design horizontal load H_Ed [kN] to {}  →  Bemessungshorizontallast H_Ed [kN] auf {} ändern
+Change design pile axial load N_Ed [kN] to {}  →  Bemessungswert der Pfahlnormalkraft N_Ed [kN] auf {} ändern
+Change design vertical load V_Ed [kN] to {}  →  Bemessungsvertikallast V_Ed [kN] auf {} ändern
+Change footing width B [m] to {}  →  Fundamentbreite B [m] auf {} ändern
+Change founding depth D_f [m] to {}  →  Gründungstiefe D_f [m] auf {} ändern
+Change friction angle phi [deg] to {}  →  Reibungswinkel φ [deg] auf {} ändern
+Change investigated depth [m] to {}  →  Erkundungstiefe [m] auf {} ändern
+Change number of investigated pile profiles to {}  →  Anzahl der untersuchten Pfahlprofile auf {} ändern
+Change pile base area [m2] to {}  →  Pfahlfußfläche [m2] auf {} ändern
+Change shaft resistance factor alpha_s to {}  →  Mantelreibungsbeiwert α_s auf {} ändern
+Change shaft resistance q_s [kPa] to {}  →  Mantelreibung q_s [kPa] auf {} ändern
+Change soil modulus E_s [MPa] to {}  →  Steifemodul E_s [MPa] auf {} ändern
+Change soil unit weight [kN/m3] to {}  →  Wichte des Bodens [kN/m3] auf {} ändern
+
+## semio-s-artifact-norm-en1998
+Change EN ground type to \"{}\"  →  EN-Baugrundklasse auf \"{}\" ändern
+Change EN spectrum type to \"{}\"  →  EN-Spektrumtyp auf \"{}\" ändern
+Change bearing design displacement D_Ed [mm] to {}  →  Bemessungsverschiebung des Lagers D_Ed [mm] auf {} ändern
+Change bearing design displacement capacity D_Rd [mm] to {}  →  Verschiebekapazität des Lagers D_Rd [mm] auf {} ändern
+Change bridge design shear resistance [kN] to {}  →  Querkrafttragfähigkeit der Brücke [kN] auf {} ändern
+Change building height [m] to {}  →  Gebäudehöhe [m] auf {} ändern
+Change design shear resistance V_Rd [kN] to {}  →  Querkrafttragfähigkeit V_Rd [kN] auf {} ändern
+Change foundation bearing resistance p_Rd [kPa] to {}  →  Sohldruckwiderstand p_Rd [kPa] auf {} ändern
+Change foundation design horizontal force H_Ed [kN] to {}  →  Bemessungshorizontalkraft der Gründung H_Ed [kN] auf {} ändern
+Change foundation horizontal resistance H_Rd [kN] to {}  →  Gleitwiderstand der Gründung H_Rd [kN] auf {} ändern
+Change foundation stiffness k [kN/m] to {}  →  Gründungssteifigkeit k [kN/m] auf {} ändern
+Change fundamental period T1 [s] to {}  →  Grundschwingzeit T1 [s] auf {} ändern
+Change ground type to \"{}\"  →  Baugrundklasse auf \"{}\" ändern
+Change multiple resisting systems flag to {}  →  Kennzeichen mehrerer Aussteifungssysteme auf {} ändern
+Change national annex to \"{}\"  →  Nationalen Anhang auf \"{}\" ändern
+Change period ratio to {}  →  Schwingzeitverhältnis auf {} ändern
+Change reference ground acceleration a_gr to {}  →  Referenz-Bodenbeschleunigung a_gr auf {} ändern
+Change retaining wall height [m] to {}  →  Höhe der Stützwand [m] auf {} ändern
+Change retrofit capacity R_k [kN] to {}  →  Tragfähigkeit nach Ertüchtigung R_k [kN] auf {} ändern
+Change retrofit confidence factor gamma_el to {}  →  Konfidenzbeiwert der Ertüchtigung gamma_el auf {} ändern
+Change retrofit demand E_d [kN] to {}  →  Beanspruchung der Ertüchtigung E_d [kN] auf {} ändern
+Change retrofit knowledge level to \"{}\"  →  Kenntnisstand der Ertüchtigung auf \"{}\" ändern
+Change retrofit limit state to \"{}\"  →  Grenzzustand der Ertüchtigung auf \"{}\" ändern
+Change seismic mass [t] to {}  →  Seismische Masse [t] auf {} ändern
+Change silo axial resistance N_Rd [kN] to {}  →  Normalkrafttragfähigkeit des Silos N_Rd [kN] auf {} ändern
+Change silo design shear V_Ed [kN] to {}  →  Bemessungsquerkraft des Silos V_Ed [kN] auf {} ändern
+Change silo nominal behaviour factor q to {}  →  Verhaltensbeiwert des Silos q auf {} ändern
+Change silo shear resistance V_Rd [kN] to {}  →  Querkrafttragfähigkeit des Silos V_Rd [kN] auf {} ändern
+Change soil stiffness k [kN/m] to {}  →  Bodensteifigkeit k [kN/m] auf {} ändern
+Change tank shear resistance V_Rd [kN] to {}  →  Querkrafttragfähigkeit des Tanks V_Rd [kN] auf {} ändern
+Change tower design moment M_Ed [kNm] to {}  →  Bemessungsmoment des Turms M_Ed [kNm] auf {} ändern
+Change tower moment resistance M_Rd [kNm] to {}  →  Momententragfähigkeit des Turms M_Rd [kNm] auf {} ändern
+Change tower nominal behaviour factor q to {}  →  Verhaltensbeiwert des Turms q auf {} ändern
+Change tower-is-chimney flag to {}  →  Kennzeichen Turm als Schornstein auf {} ändern
+Change wall backfill friction angle [deg] to {}  →  Reibungswinkel der Hinterfüllung [deg] auf {} ändern
+Change wall backfill unit weight [kN/m3] to {}  →  Wichte der Hinterfüllung [kN/m3] auf {} ändern
+Change wall behaviour factor r to {}  →  Verhaltensbeiwert der Wand r auf {} ändern
+Change wall horizontal resistance H_Rd [kN] to {}  →  Horizontaltragfähigkeit der Wand H_Rd [kN] auf {} ändern
+
+## semio-s-artifact-norm-en1999
+Change buckling length L_cr [mm] to {}  →  Knicklänge L_cr [mm] auf {} ändern
+Change buckling reduction factor chi to {}  →  Abminderungsbeiwert χ auf {} ändern
+Change correlation factor beta_w to {}  →  Korrelationsbeiwert β_w auf {} ändern
+Change design axial force N_Ed [kN] to {}  →  Bemessungsnormalkraft N_Ed [kN] auf {} ändern
+Change design bending moment M_Ed [kNm] to {}  →  Bemessungsbiegemoment M_Ed [kNm] auf {} ändern
+Change design weld shear force V_Ed [kN] to {}  →  Bemessungsquerkraft der Schweißnaht V_Ed [kN] auf {} ändern
+Change elastic section modulus W_el [mm3] to {}  →  Elastisches Widerstandsmoment W_el [mm3] auf {} ändern
+Change fatigue design stress range [MPa] to {}  →  Bemessungsspannungsschwingbreite (Ermüdung) [MPa] auf {} ändern
+Change fatigue detail category theta_C [MPa] to {}  →  Kerbfall θ_C [MPa] auf {} ändern
+Change fatigue reference stress range [MPa] to {}  →  Bezugswert der Ermüdungsfestigkeit [MPa] auf {} ändern
+Change number of fatigue cycles to {}  →  Anzahl der Lastwechsel auf {} ändern
+Change sheet design moment M_Ed [kNm] to {}  →  Bemessungsmoment des Blechs M_Ed [kNm] auf {} ändern
+Change sheet elastic section modulus [mm3] to {}  →  Elastisches Widerstandsmoment des Blechs [mm3] auf {} ändern
+Change sheet plate buckling factor k_sigma to {}  →  Beulwert des Blechs k_σ auf {} ändern
+Change sheet thickness t [mm] to {}  →  Blechdicke t [mm] auf {} ändern
+Change sheet width b [mm] to {}  →  Blechbreite b [mm] auf {} ändern
+Change shell radius r [mm] to {}  →  Schalenradius r [mm] auf {} ändern
+Change shell thickness t [mm] to {}  →  Schalendicke t [mm] auf {} ändern
+Change torsion constant I_t [mm4] to {}  →  Torsionsträgheitsmoment I_t [mm4] auf {} ändern
+Change weld throat thickness [mm] to {}  →  Kehlnahtdicke [mm] auf {} ändern
+
+## semio-s-artifact-norm-iso16757
+Add selection constraint on \"{}\"  →  Auswahlbedingung für \"{}\" hinzufügen
+Remove selection constraint #{}  →  Auswahlbedingung #{} entfernen
+Change part-number input \"{}\"  →  Artikelnummer-Eingabe \"{}\" ändern
+Remove part-number input \"{}\"  →  Artikelnummer-Eingabe \"{}\" entfernen
+Replace part-number rule  →  Artikelnummer-Regel ersetzen
+
+## semio-s-artifact-norm-vdi3805
+Change correction-as-of to {}-{:02}  →  Korrekturstand auf {}-{:02} ändern
+Change edition profile for sheet {} to {:?}  →  Ausgabeprofil für Blatt {} auf {:?} ändern
+Change strict mode to {}  →  Strikten Modus auf {} ändern
+Remove edition profile override for sheet {}  →  Ausgabeprofil-Überschreibung für Blatt {} entfernen
+Resize geometry \"{}\"  →  Größe von Geometrie \"{}\" ändern
+
+## semio-s-artifact-note-note
+Change block \"{}\" font size to {}  →  Schriftgröße von Block \"{}\" auf {} ändern
+Change block \"{}\" ink width to {}  →  Strichbreite von Block \"{}\" auf {} ändern
+Change block \"{}\" locked to {}  →  Sperre von Block \"{}\" auf {} ändern
+Change block \"{}\" visible to {}  →  Sichtbarkeit von Block \"{}\" auf {} ändern
+Change grid visible to {:?}  →  Rastersichtbarkeit auf {:?} ändern
+Change snap enabled to {:?}  →  Fangfunktion auf {:?} ändern
+Edit block \"{}\" ink stroke  →  Tintenstrich von Block \"{}\" bearbeiten
+Edit block \"{}\" math  →  Formel von Block \"{}\" bearbeiten
+Edit block \"{}\" text  →  Text von Block \"{}\" bearbeiten
+Insert column into table \"{}\"  →  Spalte in Tabelle \"{}\" einfügen
+Remove column from table \"{}\"  →  Spalte aus Tabelle \"{}\" entfernen
+Resize block \"{}\"  →  Größe von Block \"{}\" ändern
+
+## semio-s-artifact-playbook-playbook
+Change playbook title to \"{}\"  →  Playbook-Titel auf \"{}\" ändern
+
+## semio-s-artifact-procedural-generation2d
+Change generation \"{}\" value \"{}\"  →  Erzeugung \"{}\": Wert \"{}\" ändern
+
+## semio-s-artifact-procedural-generation3d
+Change generation \"{}\" value \"{}\"  →  Erzeugung \"{}\": Wert \"{}\" ändern
+Delete widget position \"{}\"  →  Widget-Position \"{}\" löschen
+Set Active Example  →  Aktives Beispiel setzen
+Set Lod Mode  →  Detailstufenmodus setzen
+Set Preview Eval  →  Vorschauauswertung setzen
+Set Selected Generation  →  Ausgewählte Erzeugung setzen
+Set Show Mode  →  Anzeigemodus setzen
+
+## semio-s-artifact-process-process3d
+Move cursor to step {cursor} ‖ Clear cursor  →  Cursor nach Schritt {cursor} verschieben ‖ Cursor entfernen
+Move stock  →  Rohteil verschieben
+Rename stock to \"{}\"  →  Rohteil in \"{}\" umbenennen
+Reorder step \"{}\"  →  Reihenfolge von Schritt \"{}\" ändern
+Replace measure of step \"{}\"  →  Maß von Schritt \"{}\" ersetzen
+Replace stock solid  →  Rohteilkörper ersetzen
+
+## semio-s-artifact-puzzle-2d
+Change edge \"{}\" kind  →  Art von Kante \"{}\" ändern
+Change edge \"{}\" locked  →  Sperre von Kante \"{}\" ändern
+Change edge \"{}\" tips  →  Spitzen von Kante \"{}\" ändern
+Change edge \"{}\" visible  →  Sichtbarkeit von Kante \"{}\" ändern
+Change manifest id  →  Manifest-ID ändern
+Change node \"{}\" anchor  →  Anker von Knoten \"{}\" ändern
+Change node \"{}\" icon  →  Symbol von Knoten \"{}\" ändern
+Change node \"{}\" kind  →  Art von Knoten \"{}\" ändern
+Change node \"{}\" locked  →  Sperre von Knoten \"{}\" ändern
+Change node \"{}\" root  →  Wurzel von Knoten \"{}\" ändern
+Change node \"{}\" visible  →  Sichtbarkeit von Knoten \"{}\" ändern
+Change target region hidden \"{}\"  →  Ausblendung von Zielregion \"{}\" ändern
+Change target region locked \"{}\"  →  Sperre von Zielregion \"{}\" ändern
+Connect kind compatibility \"{}\" -> \"{}\"  →  Artkompatibilität \"{}\" -> \"{}\" herstellen
+Disconnect kind compatibility \"{}\" -> \"{}\"  →  Artkompatibilität \"{}\" -> \"{}\" aufheben
+Edit node \"{}\" text  →  Text von Knoten \"{}\" bearbeiten
+Edit target region label \"{}\"  →  Beschriftung von Zielregion \"{}\" bearbeiten
+Replace edge \"{}\" geometry  →  Geometrie von Kante \"{}\" ersetzen
+Replace handle \"{}\" on node \"{}\"  →  Griff \"{}\" an Knoten \"{}\" ersetzen
+Replace node \"{}\" geometry  →  Geometrie von Knoten \"{}\" ersetzen
+Resize target region \"{}\"  →  Größe von Zielregion \"{}\" ändern
+
+## semio-s-artifact-puzzle-3d
+Change object \"{}\" anchor  →  Anker von Objekt \"{}\" ändern
+Change object \"{}\" hidden  →  Ausblendung von Objekt \"{}\" ändern
+Change object \"{}\" kind  →  Art von Objekt \"{}\" ändern
+Change object \"{}\" locked  →  Sperre von Objekt \"{}\" ändern
+Change object \"{}\" mesh  →  Netz von Objekt \"{}\" ändern
+Change reference \"{}\" hidden  →  Ausblendung von Referenz \"{}\" ändern
+Change reference \"{}\" locked  →  Sperre von Referenz \"{}\" ändern
+Change target volume \"{}\" hidden  →  Ausblendung von Zielvolumen \"{}\" ändern
+Change target volume \"{}\" locked  →  Sperre von Zielvolumen \"{}\" ändern
+Connect kind compatibility \"{}\" -> \"{}\"  →  Artkompatibilität \"{}\" -> \"{}\" herstellen
+Disconnect kind compatibility \"{}\" -> \"{}\"  →  Artkompatibilität \"{}\" -> \"{}\" aufheben
+Edit object \"{}\" label  →  Beschriftung von Objekt \"{}\" bearbeiten
+Replace attraction \"{}\" geometry  →  Geometrie von Anziehung \"{}\" ersetzen
+Replace reference \"{}\" source  →  Quelle von Referenz \"{}\" ersetzen
+Replace vortex \"{}\" on object \"{}\"  →  Wirbel \"{}\" an Objekt \"{}\" ersetzen
+Resize reference \"{}\"  →  Größe von Referenz \"{}\" ändern
+
+## semio-s-artifact-puzzle-5d
+Change fastener \"{}\" kind  →  Art von Verbindungsmittel \"{}\" ändern
+Change part \"{}\" 2d hidden  →  2D-Ausblendung von Bauteil \"{}\" ändern
+Change part \"{}\" 2d icon  →  2D-Symbol von Bauteil \"{}\" ändern
+Change part \"{}\" 2d locked  →  2D-Sperre von Bauteil \"{}\" ändern
+Change part \"{}\" 3d mesh  →  3D-Netz von Bauteil \"{}\" ändern
+Change part \"{}\" anchor  →  Anker von Bauteil \"{}\" ändern
+Change part \"{}\" kind  →  Art von Bauteil \"{}\" ändern
+Change target volume hidden \"{}\"  →  Ausblendung von Zielvolumen \"{}\" ändern
+Change target volume locked \"{}\"  →  Sperre von Zielvolumen \"{}\" ändern
+Connect kind compatibility \"{}\" -> \"{}\"  →  Artkompatibilität \"{}\" -> \"{}\" herstellen
+Disconnect kind compatibility \"{}\" -> \"{}\"  →  Artkompatibilität \"{}\" -> \"{}\" aufheben
+Edit part \"{}\" 2d text  →  2D-Text von Bauteil \"{}\" bearbeiten
+Edit part \"{}\" 3d label  →  3D-Beschriftung von Bauteil \"{}\" bearbeiten
+Move part \"{}\" (2d)  →  Bauteil \"{}\" (2D) verschieben
+Move part \"{}\" (3d)  →  Bauteil \"{}\" (3D) verschieben
+Rename puzzle5d  →  Puzzle 5D umbenennen
+Replace fastener \"{}\" geometry  →  Geometrie von Verbindungsmittel \"{}\" ersetzen
+Replace grip \"{}\" on part \"{}\"  →  Griff \"{}\" an Bauteil \"{}\" ersetzen
+Replace part \"{}\" 2d geometry  →  2D-Geometrie von Bauteil \"{}\" ersetzen
+Rotate part \"{}\" (3d)  →  Bauteil \"{}\" (3D) drehen
+Scale part \"{}\" (3d)  →  Bauteil \"{}\" (3D) skalieren
+
+## semio-s-artifact-raster-raster
+Reorder layer {}  →  Reihenfolge von Ebene {} ändern
+Resize layer {} to {}x{}  →  Größe von Ebene {} auf {}×{} ändern
+Set layer {} adjustment kind to {}  →  Korrekturart von Ebene {} auf {} setzen
+Set layer {} blend mode to {}  →  Füllmethode von Ebene {} auf {} setzen
+Set layer {} opacity to {}  →  Deckkraft von Ebene {} auf {} setzen
+Set layer {} visible to {}  →  Sichtbarkeit von Ebene {} auf {} setzen
+
+## semio-s-artifact-reasoning-wires
+Change node \"{}\" kind to \"{}\"  →  Art von Knoten \"{}\" auf \"{}\" ändern
+Change node \"{}\" shape to \"{}\"  →  Form von Knoten \"{}\" auf \"{}\" ändern
+Edit node \"{}\" text to \"{}\"  →  Text von Knoten \"{}\" in \"{}\" ändern
+Resize node \"{}\"  →  Größe von Knoten \"{}\" ändern
+Set Drag  →  Ziehvorgang setzen
+Set node \"{}\" root to {}  →  Wurzel von Knoten \"{}\" auf {} setzen
+
+## semio-s-artifact-remodel-remodeling
+Add frame {} to stream \"{}\"  →  Einzelbild {} zu Datenstrom \"{}\" hinzufügen
+Append {} content leaves to \"{}\"  →  {} Inhaltsblätter an \"{}\" anhängen
+Change stream \"{}\" sync offset to {}ms  →  Synchronisationsversatz von Datenstrom \"{}\" auf {}ms ändern
+Create rig extrinsic \"{}\"  →  Extrinsische Rig-Kalibrierung \"{}\" erstellen
+Create stream \"{}\"  →  Datenstrom \"{}\" erstellen
+Delete rig extrinsic \"{}\"  →  Extrinsische Rig-Kalibrierung \"{}\" löschen
+Delete stream \"{}\"  →  Datenstrom \"{}\" löschen
+Remove content \"{}\" leaves from {}  →  Blätter von Inhalt \"{}\" aus {} entfernen
+Remove frame {} from stream \"{}\"  →  Einzelbild {} aus Datenstrom \"{}\" entfernen
+Replace dense  →  Dichte Punktwolke ersetzen
+Replace qc  →  Qualitätsprüfung ersetzen
+Replace sparse  →  Dünne Punktwolke ersetzen
+Replace stream \"{}\" source  →  Quelle von Datenstrom \"{}\" ersetzen
+Replace tracks  →  Merkmalsspuren ersetzen
+Replace trajectory  →  Trajektorie ersetzen
+Update dense params  →  Parameter der dichten Rekonstruktion aktualisieren
+Update feature params  →  Merkmalsparameter aktualisieren
+Update geo params  →  Georeferenzierungsparameter aktualisieren
+Update ingest params  →  Importparameter aktualisieren
+Update matching params  →  Zuordnungsparameter aktualisieren
+Update rig extrinsic \"{}\"  →  Extrinsische Rig-Kalibrierung \"{}\" aktualisieren
+Update sfm params  →  SfM-Parameter aktualisieren
+
+## semio-s-artifact-sequence-sequence
+Edit step \"{}\" parameters  →  Parameter von Schritt \"{}\" bearbeiten
+
+## semio-s-artifact-shooting-shooting
+Change asset \"{}\" url  →  URL von Asset \"{}\" ändern
+Change material roughness to {}  →  Materialrauigkeit auf {} ändern
+Change shot \"{}\" format  →  Format von Aufnahme \"{}\" ändern
+Change shot \"{}\" height  →  Höhe von Aufnahme \"{}\" ändern
+Change shot \"{}\" shape  →  Form von Aufnahme \"{}\" ändern
+Change shot \"{}\" width  →  Breite von Aufnahme \"{}\" ändern
+Change sun elevation to {}  →  Sonnenhöhe auf {} ändern
+Create saved camera \"{}\"  →  Gespeicherte Kamera \"{}\" erstellen
+Delete saved camera \"{}\"  →  Gespeicherte Kamera \"{}\" löschen
+Rename saved camera to \"{}\"  →  Gespeicherte Kamera in \"{}\" umbenennen
+Reorder asset \"{}\"  →  Reihenfolge von Asset \"{}\" ändern
+Reorder saved camera \"{}\"  →  Reihenfolge von gespeicherter Kamera \"{}\" ändern
+Reorder shot \"{}\"  →  Reihenfolge von Aufnahme \"{}\" ändern
+Replace saved camera \"{}\" view  →  Ansicht von gespeicherter Kamera \"{}\" ersetzen
+Replace shot \"{}\" camera  →  Kamera von Aufnahme \"{}\" ersetzen
+Set Camera Draft Label  →  Kamera-Entwurfsbeschriftung setzen
+Set Center Model  →  Modellzentrierung setzen
+Set Shot Selection  →  Aufnahmeauswahl setzen
+Set active asset to \"{id}\" ‖ Clear active asset  →  Aktives Asset auf \"{id}\" setzen ‖ Aktives Asset entfernen
+Set active shot to \"{id}\" ‖ Clear active shot  →  Aktive Aufnahme auf \"{id}\" setzen ‖ Aktive Aufnahme entfernen
+
+## semio-s-artifact-sourcing-curation
+Set curated count of \"{}\" to {}  →  Kuratierte Anzahl von \"{}\" auf {} setzen
+
+## semio-s-artifact-space-home
+Change catalog generation to {}  →  Katalogstand auf {} ändern
+
+## semio-s-artifact-space-space
+Touch artifact \"{}\"  →  Artefakt \"{}\" als geändert markieren
+
+## semio-s-artifact-stdio-avi
+add-unknown-chunk  →  Unbekannten Chunk hinzufügen
+remove-unknown-chunk  →  Unbekannten Chunk entfernen
+insert-stream  →  Datenstrom einfügen
+remove-stream  →  Datenstrom entfernen
+set-chunk-keyframe  →  Keyframe-Kennung des Chunks setzen
+set-idx1-present  →  idx1-Index vorhanden setzen
+set-main-header  →  Haupt-Header setzen
+set-stream-format  →  Datenstromformat setzen
+set-stream-header  →  Datenstrom-Header setzen
+
+## semio-s-artifact-stdio-bcf
+set-topic-markup  →  Themen-Markup setzen
+set-viewpoint-snapshot  →  Blickpunkt-Schnappschuss setzen
+
+## semio-s-artifact-stdio-binary
+
+## semio-s-artifact-stdio-csv
+set-has-header  →  Kopfzeile vorhanden setzen
+
+## semio-s-artifact-stdio-deflate
+set-preset-dictionary  →  Voreingestelltes Wörterbuch setzen
+
+## semio-s-artifact-stdio-docx
+insert-alternate-content  →  Alternativen Inhalt einfügen
+remove-alternate-content  →  Alternativen Inhalt entfernen
+insert-style  →  Formatvorlage einfügen
+remove-style  →  Formatvorlage entfernen
+insert-vml-part  →  VML-Paketteil einfügen
+remove-vml-part  →  VML-Paketteil entfernen
+remove-part  →  Paketteil entfernen
+set-part  →  Paketteil setzen
+set-run-formatting  →  Formatierung des Textlaufs setzen
+set-run-text  →  Text des Textlaufs setzen
+set-style-based-on  →  Basis der Formatvorlage setzen
+set-style-name  →  Name der Formatvorlage setzen
+
+## semio-s-artifact-stdio-dxf
+insert-layer  →  Layer einfügen
+remove-layer  →  Layer entfernen
+set-layer  →  Layer setzen
+insert-style  →  Textstil einfügen
+remove-style  →  Textstil entfernen
+set-style  →  Textstil setzen
+remove-header-var  →  Header-Variable entfernen
+set-header-var  →  Header-Variable setzen
+
+## semio-s-artifact-stdio-epw
+set-comments1  →  Kommentare 1 setzen
+set-comments2  →  Kommentare 2 setzen
+set-design-conditions  →  Auslegungsbedingungen setzen
+set-holidays-dst  →  Feiertage und Sommerzeit setzen
+set-location  →  Standort setzen
+set-typical-extreme-periods  →  Typische und extreme Perioden setzen
+
+## semio-s-artifact-stdio-gif
+add-app-extension  →  Anwendungserweiterung hinzufügen
+remove-app-extension  →  Anwendungserweiterung entfernen
+insert-frame  →  Einzelbild einfügen
+move-frame  →  Einzelbild verschieben
+remove-frame  →  Einzelbild entfernen
+set-background-color-index  →  Hintergrundfarbindex setzen
+set-frame-delay  →  Verzögerung des Einzelbilds setzen
+set-frame-disposal  →  Entsorgungsmethode des Einzelbilds setzen
+set-frame-geometry  →  Geometrie des Einzelbilds setzen
+set-frame-interlace  →  Zeilensprung des Einzelbilds setzen
+set-frame-pixels  →  Pixel des Einzelbilds setzen
+set-frame-transparency  →  Transparenz des Einzelbilds setzen
+set-frame-user-input  →  Benutzereingabe-Kennung des Einzelbilds setzen
+set-global-color-table  →  Globale Farbtabelle setzen
+set-image-interlace  →  Zeilensprung des Bilds setzen
+set-loop-count  →  Wiederholungsanzahl setzen
+set-pixel-aspect-ratio  →  Pixel-Seitenverhältnis setzen
+
+## semio-s-artifact-stdio-gltf
+Add Required Extension  →  Erforderliche Erweiterung hinzufügen
+Add Used Extension  →  Verwendete Erweiterung hinzufügen
+Bind Node Child  →  Kindknoten binden
+Bind Node Skin  →  Knoten-Skin binden
+Change Asset Descriptive Metadata  →  Beschreibende Asset-Metadaten ändern
+Change Asset Extension Data  →  Erweiterungsdaten des Assets ändern
+Change Asset Extra Data  →  Zusatzdaten des Assets ändern
+Change Asset Version  →  Asset-Version ändern
+Change Document Extension Data  →  Erweiterungsdaten des Dokuments ändern
+Change Document Extra Data  →  Zusatzdaten des Dokuments ändern
+Change Material Alpha Mode  →  Alpha-Modus des Materials ändern
+Change Material Double Sided  →  Doppelseitigkeit des Materials ändern
+Change Mesh Extension Data  →  Erweiterungsdaten des Netzes ändern
+Change Mesh Extra Data  →  Zusatzdaten des Netzes ändern
+Change Mesh Morph Weights  →  Morph-Gewichte des Netzes ändern
+Change Node Extension Data  →  Erweiterungsdaten des Knotens ändern
+Change Node Extra Data  →  Zusatzdaten des Knotens ändern
+Change Node Morph Weights  →  Morph-Gewichte des Knotens ändern
+Change Primitive Extension Data  →  Erweiterungsdaten des Primitivs ändern
+Change Primitive Extra Data  →  Zusatzdaten des Primitivs ändern
+Change Primitive Topology Mode  →  Topologiemodus des Primitivs ändern
+Change Scene Extension Data  →  Erweiterungsdaten der Szene ändern
+Change Scene Extra Data  →  Zusatzdaten der Szene ändern
+Create Skin  →  Skin erstellen
+Delete Skin  →  Skin löschen
+Move Node Child  →  Kindknoten verschieben
+Move Node Parent  →  Elternknoten verschieben
+Move Required Extension  →  Erforderliche Erweiterung verschieben
+Move Skin  →  Skin verschieben
+Move Used Extension  →  Verwendete Erweiterung verschieben
+Remove Required Extension  →  Erforderliche Erweiterung entfernen
+Remove Used Extension  →  Verwendete Erweiterung entfernen
+Reorder Node Children  →  Kindknoten umordnen
+Reorder Required Extensions  →  Erforderliche Erweiterungen umordnen
+Reorder Skins  →  Skins umordnen
+Reorder Used Extensions  →  Verwendete Erweiterungen umordnen
+Unbind Default Scene  →  Bindung der Standardszene aufheben
+Unbind Morph Target Attribute  →  Bindung des Morphzielattributs aufheben
+Unbind Node Camera  →  Bindung der Knotenkamera aufheben
+Unbind Node Child  →  Bindung des Kindknotens aufheben
+Unbind Node Mesh  →  Bindung des Knotennetzes aufheben
+Unbind Node Skin  →  Bindung des Knoten-Skins aufheben
+Unbind Primitive Attribute  →  Bindung des Primitivattributs aufheben
+Unbind Primitive Indices  →  Bindung der Primitivindizes aufheben
+Unbind Primitive Material  →  Bindung des Primitivmaterials aufheben
+Unbind Scene Root Node  →  Bindung des Szenenwurzelknotens aufheben
+
+## semio-s-artifact-stdio-ifc
+set-analysis-model  →  Analysemodell setzen
+set-facility-name  →  Bauwerksname setzen
+set-floor-elevation  →  Geschosshöhenkote setzen
+set-header  →  Header setzen
+set-structural-entity  →  Tragwerkselement setzen
+set-view-definition  →  Modellansichtsdefinition setzen
+
+## semio-s-artifact-stdio-jpg
+change jfif header  →  JFIF-Header ändern
+change re encode quality  →  Qualität der Neukodierung ändern
+insert other segment  →  Sonstiges Segment einfügen
+remove other segment  →  Sonstiges Segment entfernen
+insert-frame-component  →  Frame-Komponente einfügen
+remove-frame-component  →  Frame-Komponente entfernen
+insert-huffman-table  →  Huffman-Tabelle einfügen
+remove huffman table  →  Huffman-Tabelle entfernen
+remove-huffman-table  →  Huffman-Tabelle entfernen
+replace huffman table  →  Huffman-Tabelle ersetzen
+set-arithmetic  →  Arithmetische Kodierung setzen
+set-sample-precision  →  Abtastgenauigkeit setzen
+set-sof-marker  →  SOF-Marker setzen
+
+## semio-s-artifact-stdio-json
+Insert Array Element  →  Array-Element einfügen
+Remove Array Element  →  Array-Element entfernen
+Remove Member  →  Eigenschaft entfernen
+Set Member  →  Eigenschaft setzen
+insert-array-element  →  Array-Element einfügen
+remove-array-element  →  Array-Element entfernen
+remove-member  →  Eigenschaft entfernen
+rename-member  →  Eigenschaft umbenennen
+set-safe-number  →  Sichere Zahl setzen
+set-top-level  →  Wurzelwert setzen
+upsert-member  →  Eigenschaft einfügen oder aktualisieren
+
+## semio-s-artifact-stdio-las
+insert-vlr  →  VLR einfügen
+remove-vlr  →  VLR entfernen
+set-points-by-return  →  Punktanzahl pro Echo setzen
+set-software-info  →  Softwareinfo setzen
+set-vlr-data  →  VLR-Daten setzen
+
+## semio-s-artifact-stdio-md
+set-inlines  →  Inline-Elemente setzen
+
+## semio-s-artifact-stdio-mp3
+set-frames  →  Frames setzen
+set-id3v1  →  ID3v1-Tag setzen
+set-id3v2  →  ID3v2-Tag setzen
+
+## semio-s-artifact-stdio-mp4
+insert-sample  →  Sample einfügen
+remove-sample  →  Sample entfernen
+set-ftyp  →  ftyp-Box setzen
+set-sample-sync  →  Sync-Kennung des Samples setzen
+set-track-codec  →  Codec der Spur setzen
+set-track-dimensions  →  Abmessungen der Spur setzen
+
+## semio-s-artifact-stdio-obj
+set-unknown-statements  →  Unbekannte Anweisungen setzen
+
+## semio-s-artifact-stdio-pdf
+Embed {} on font descriptor {}  →  {} in Schriftdeskriptor {} einbetten
+Insert JavaScript action  →  JavaScript-Aktion einfügen
+Remove JavaScript action  →  JavaScript-Aktion entfernen
+Insert embedded file \"{}\"  →  Eingebettete Datei \"{}\" einfügen
+Insert encryption dictionary V{} R{}  →  Verschlüsselungswörterbuch V{} R{} einfügen
+Insert launch action  →  Launch-Aktion einfügen
+Remove AF relationship from \"{}\"  →  AF-Beziehung aus \"{}\" entfernen
+Remove PDF/A output intent  →  PDF/A-Ausgabebedingung entfernen
+Remove PDF/E output intent  →  PDF/E-Ausgabebedingung entfernen
+Remove PDF/UA language  →  PDF/UA-Sprache entfernen
+Remove PDF/UA marked flag  →  PDF/UA-Markierungskennung entfernen
+Remove PDF/UA structure tree root  →  PDF/UA-Strukturbaumwurzel entfernen
+Remove PDF/UA title display preference  →  PDF/UA-Anzeigeeinstellung für den Titel entfernen
+Remove PDF/VT document partition  →  PDF/VT-Dokumentpartition entfernen
+Remove PDF/VT output intent  →  PDF/VT-Ausgabebedingung entfernen
+Remove PDF/VT partition metadata  →  PDF/VT-Partitionsmetadaten entfernen
+Remove PDF/VT trim box on page {}  →  PDF/VT-TrimBox auf Seite {} entfernen
+Remove PDF/X output intent  →  PDF/X-Ausgabebedingung entfernen
+Remove PDF/X trim box on page {}  →  PDF/X-TrimBox auf Seite {} entfernen
+Remove embedded file \"{}\"  →  Eingebettete Datei \"{}\" entfernen
+Remove encryption dictionary V{} R{}  →  Verschlüsselungswörterbuch V{} R{} entfernen
+Remove launch action  →  Launch-Aktion entfernen
+Remove named destination {}  →  Benanntes Ziel {} entfernen
+Remove shading {}  →  Schattierung {} entfernen
+Remove trailer entry {}  →  Trailer-Eintrag {} entfernen
+Set AF relationship for \"{}\"  →  AF-Beziehung für \"{}\" setzen
+Set PDF/A output intent \"{}\"  →  PDF/A-Ausgabebedingung \"{}\" setzen
+Set PDF/E output intent \"{}\"  →  PDF/E-Ausgabebedingung \"{}\" setzen
+Set PDF/H author \"{}\"  →  PDF/H-Autor \"{}\" setzen
+Set PDF/H title \"{}\"  →  PDF/H-Titel \"{}\" setzen
+Set PDF/UA display document title to {}  →  PDF/UA-Anzeige des Dokumenttitels auf {} setzen
+Set PDF/UA language to {}  →  PDF/UA-Sprache auf {} setzen
+Set PDF/UA marked flag to {}  →  PDF/UA-Markierungskennung auf {} setzen
+Set PDF/UA structure tree root  →  PDF/UA-Strukturbaumwurzel setzen
+Set PDF/UA title \"{}\"  →  PDF/UA-Titel \"{}\" setzen
+Set PDF/VT document partition {}  →  PDF/VT-Dokumentpartition {} setzen
+Set PDF/VT output intent \"{}\"  →  PDF/VT-Ausgabebedingung \"{}\" setzen
+Set PDF/VT partition metadata {}  →  PDF/VT-Partitionsmetadaten {} setzen
+Set PDF/VT trim box on page {}  →  PDF/VT-TrimBox auf Seite {} setzen
+Set PDF/X output intent \"{}\"  →  PDF/X-Ausgabebedingung \"{}\" setzen
+Set PDF/X trim box on page {}  →  PDF/X-TrimBox auf Seite {} setzen
+Set document-id  →  Dokument-ID setzen
+Set named destination {}  →  Benanntes Ziel {} setzen
+Set object {} {} value  →  Wert von Objekt {} {} setzen
+Set page {} content  →  Inhalt von Seite {} setzen
+Set page {} crop box  →  CropBox von Seite {} setzen
+Set page {} media box  →  MediaBox von Seite {} setzen
+Set page {} rotation to {}  →  Drehung von Seite {} auf {} setzen
+Set page {} user unit  →  Benutzereinheit von Seite {} setzen
+Set page {} {:?} box  →  Seite {}: {:?}-Box setzen
+Set shading {}  →  Schattierung {} setzen
+Set trailer entry {}  →  Trailer-Eintrag {} setzen
+Set {} outline items  →  {} Lesezeichen setzen
+Set {} output intents  →  {} Ausgabebedingungen setzen
+collapse page size  →  Seitenbreite auf null setzen  ⟸  Collapse page width to zero
+resize page  →  Seitengröße ändern
+
+## semio-s-artifact-stdio-png
+change chromaticities  →  Chromatizität ändern
+change header  →  Header ändern
+change physical dims  →  Physische Abmessungen ändern  ⟸  Change physical dimensions
+change srgb intent  →  sRGB-Rendering-Intent ändern  ⟸  Change sRGB rendering intent
+insert text chunk  →  Text-Chunk einfügen
+insert unknown chunk  →  Unbekannten Chunk einfügen
+remove text chunk  →  Text-Chunk entfernen
+remove unknown chunk  →  Unbekannten Chunk entfernen
+replace text chunk  →  Text-Chunk ersetzen
+
+## semio-s-artifact-stdio-pptx
+insert-alternate-content  →  Alternativen Inhalt einfügen
+remove-alternate-content  →  Alternativen Inhalt entfernen
+insert-vml-part  →  VML-Paketteil einfügen
+remove-vml-part  →  VML-Paketteil entfernen
+set-shape-position  →  Position der Form setzen
+set-shape-text  →  Text der Form setzen
+
+## semio-s-artifact-stdio-binary
+truncate-at  →  An Position kürzen  ⟸  Truncate at position
+
+## semio-s-artifact-stdio-semio
+Add design {}  →  Entwurf {} hinzufügen
+Edit design {}  →  Entwurf {} bearbeiten
+Remove design {}  →  Entwurf {} entfernen
+Add mark to run #{} at #{}  →  Auszeichnung zu Textlauf #{} an #{} hinzufügen
+Remove mark #{} from run #{}  →  Auszeichnung #{} aus Textlauf #{} entfernen
+Change run #{} language to {}  →  Sprache von Textlauf #{} auf {} ändern
+Edit run #{}  →  Textlauf #{} bearbeiten
+Insert run at #{}  →  Textlauf an #{} einfügen
+Move run #{} to #{}  →  Textlauf #{} nach #{} verschieben
+Remove run #{}  →  Textlauf #{} entfernen
+Change material \"{}\" base color  →  Basisfarbe von Material \"{}\" ändern
+Change material \"{}\" metallic factor  →  Metallizitätsfaktor von Material \"{}\" ändern
+Change material \"{}\" roughness factor  →  Rauigkeitsfaktor von Material \"{}\" ändern
+Change node \"{}\" kind to {}  →  Art von Knoten \"{}\" auf {} ändern
+Change node \"{}\" label to {}  →  Beschriftung von Knoten \"{}\" auf {} ändern
+Change texture \"{}\" mime type  →  MIME-Typ von Textur \"{}\" ändern
+Create brep child {}  →  B-Rep-Kind {} erstellen
+Delete brep child  →  B-Rep-Kind löschen
+Create column {}  →  Spalte {} erstellen
+Delete column {}  →  Spalte {} löschen
+Move column {} to #{}  →  Spalte {} nach #{} verschieben
+Rename column {} to {}  →  Spalte {} in {} umbenennen
+Flatten node in layer #{}  →  Knoten in Ebene #{} reduzieren
+Unflatten node in layer #{}  →  Reduzierung von Knoten in Ebene #{} aufheben
+Ungroup node in layer #{}  →  Gruppierung von Knoten in Ebene #{} aufheben
+RotateNode node in layer #{}  →  Knoten in Ebene #{} drehen  ⟸  Rotate node in layer #{}
+ScaleNode node in layer #{}  →  Knoten in Ebene #{} skalieren  ⟸  Scale node in layer #{}
+Reorder node #{} to #{}  →  Knoten #{} nach #{} verschieben
+Replace primitive \"{}\" geometry in mesh \"{}\"  →  Geometrie von Primitiv \"{}\" in Netz \"{}\" ersetzen
+Replace texture \"{}\" bytes  →  Bytes von Textur \"{}\" ersetzen
+Set primitive \"{}\" material in mesh \"{}\"  →  Material von Primitiv \"{}\" in Netz \"{}\" setzen
+Set primitive \"{}\" topology in mesh \"{}\"  →  Topologie von Primitiv \"{}\" in Netz \"{}\" setzen
+Unbind representation at #{}  →  Bindung der Repräsentation an #{} aufheben
+insert-frame  →  Einzelbild einfügen
+move-frame  →  Einzelbild verschieben
+remove-frame  →  Einzelbild entfernen
+set-frame-delay  →  Verzögerung des Einzelbilds setzen
+set-frame-pixels  →  Pixel des Einzelbilds setzen
+insert-master  →  Master einfügen
+remove-master  →  Master entfernen
+insert-sample  →  Sample einfügen
+remove-sample  →  Sample entfernen
+insert-stream  →  Datenstrom einfügen
+remove-stream  →  Datenstrom entfernen
+remove-map-entry  →  Zuordnungseintrag entfernen
+set-map-entry  →  Zuordnungseintrag setzen
+set-block-entity-layer  →  Ebene der Blockentität setzen
+set-entity-layer  →  Ebene der Entität setzen
+set-channel-samples  →  Stützwerte des Kanals setzen
+set-heading-level  →  Überschriftenebene setzen
+set-icc  →  ICC-Profil setzen
+set-layout-master  →  Layout-Master setzen
+set-list-ordered  →  Nummerierung der Liste setzen
+set-run-style  →  Stil des Textlaufs setzen
+set-run-text  →  Text des Textlaufs setzen
+set-sample-data  →  Sample-Daten setzen
+set-sample-flags  →  Sample-Kennungen setzen
+set-sample-rate  →  Abtastrate setzen
+set-stream-meta  →  Datenstrom-Metadaten setzen
+set-style-based-on  →  Basis des Stils setzen
+set-text-box-blocks  →  Blöcke des Textfelds setzen
+set-shape-frame  →  Rahmen der Form setzen
+
+## semio-s-artifact-stdio-step
+Demote shape representation #{} onto this class's ceiling  →  Formrepräsentation #{} auf die Obergrenze dieser Klasse herabstufen
+Set the whole CC1 snapshot  →  Gesamte CC1-Momentaufnahme setzen
+Set the whole CC2 snapshot  →  Gesamte CC2-Momentaufnahme setzen
+Set the whole CC3 snapshot  →  Gesamte CC3-Momentaufnahme setzen
+Set the whole CC4 snapshot  →  Gesamte CC4-Momentaufnahme setzen
+Set the whole CC5 snapshot  →  Gesamte CC5-Momentaufnahme setzen
+Set the whole CC6 snapshot  →  Gesamte CC6-Momentaufnahme setzen
+
+## semio-s-artifact-stdio-stl
+set-triangle-normal  →  Normale des Dreiecks setzen
+set-triangle-vertices  →  Eckpunkte des Dreiecks setzen
+
+## semio-s-artifact-stdio-svg
+Set View Box  →  ViewBox setzen
+set-view-box  →  ViewBox setzen
+insert-basic-element  →  Basic-Element einfügen
+set-basic-attribute  →  Basic-Attribut setzen
+insert-tiny-element  →  Tiny-Element einfügen
+set-tiny-attribute  →  Tiny-Attribut setzen
+insert-clip-path-shape  →  Form des Beschneidungspfads einfügen
+set-clip-path-reference  →  Referenz des Beschneidungspfads setzen
+stamp-base-profile  →  Basisprofil kennzeichnen
+strip-non-tiny  →  Nicht-Tiny-Inhalte entfernen  ⟸  Strip non-Tiny content
+
+## semio-s-artifact-stdio-tiff
+insert ifd  →  IFD einfügen  ⟸  Insert IFD
+remove ifd  →  IFD entfernen  ⟸  Remove IFD
+insert-tile-tags  →  Kachel-Tags einfügen
+remove-tile-tags  →  Kachel-Tags entfernen
+remove-strip-offsets  →  Streifen-Offsets entfernen
+set-strip-offsets  →  Streifen-Offsets setzen
+set-bits-per-sample  →  Bits pro Abtastwert setzen
+set-photometric-interpretation  →  Photometrische Interpretation setzen
+
+## semio-s-artifact-stdio-tsv
+set-line-ending  →  Zeilenende setzen
+set-trailing-newline  →  Abschließenden Zeilenumbruch setzen
+
+## semio-s-artifact-stdio-txt
+Insert Line  →  Zeile einfügen
+Remove Line  →  Zeile entfernen
+Set Line  →  Zeile setzen
+Set Line Ending  →  Zeilenende setzen
+Set Trailing Newline  →  Abschließenden Zeilenumbruch setzen
+
+## semio-s-artifact-stdio-wav
+set-fmt  →  fmt-Chunk setzen
+set-other-chunks  →  Sonstige Chunks setzen
+
+## semio-s-artifact-stdio-xlsx
+insert-shared-string  →  Gemeinsame Zeichenfolge einfügen
+remove-shared-string  →  Gemeinsame Zeichenfolge entfernen
+set-shared-string  →  Gemeinsame Zeichenfolge setzen
+insert-sheet  →  Arbeitsblatt einfügen
+remove-sheet  →  Arbeitsblatt entfernen
+rename-sheet  →  Arbeitsblatt umbenennen
+insert-vml-part  →  VML-Paketteil einfügen
+remove-vml-part  →  VML-Paketteil entfernen
+set-relationships-namespace  →  Beziehungsnamensraum setzen
+set-worksheet-content-type  →  Inhaltstyp des Arbeitsblatts setzen
+
+## semio-s-artifact-stdio-xml
+set-external-subset  →  Externe Teilmenge setzen
+set-internal-subset  →  Interne Teilmenge setzen
+set-standalone  →  Standalone-Deklaration setzen
+
+## semio-s-artifact-stdio-zip
+add-deflated-entry  →  Komprimierten Eintrag hinzufügen
+add-stored-entry  →  Unkomprimierten Eintrag hinzufügen
+set-entry-data  →  Daten des Eintrags setzen
+
+## semio-s-artifact-trinity-jack
+Replace Results Window Query Output  →  Abfrageausgabe des Ergebnisfensters ersetzen
+Set Editor Window Selection  →  Auswahl im Editorfenster setzen
+Set Window Lod Mode  →  Detailstufenmodus des Fensters setzen
+node ‖ edge ‖ Change {kind} \"{id}\" property \"{}\"  →  Knoten ‖ Kante ‖ Eigenschaft von {kind} \"{id}\": \"{}\" ändern
+node ‖ edge ‖ Remove {kind} \"{id}\" property \"{}\"  →  Knoten ‖ Kante ‖ Eigenschaft von {kind} \"{id}\": \"{}\" entfernen
+
+## semio-s-artifact-trinity-rewriting
+Change rule layout point \"{}\"  →  Layoutpunkt der Regel \"{}\" ändern
+Remove rule layout point \"{}\"  →  Layoutpunkt der Regel \"{}\" entfernen
+Edit before-fixture  →  Ausgangszustand bearbeiten
+Edit lhs  →  Linke Regelseite bearbeiten
+Edit rhs  →  Rechte Regelseite bearbeiten
+Set Window Lod Mode  →  Detailstufenmodus des Fensters setzen
+
+## semio-s-artifact-vcs-vcs
+Rename vcs to \"{}\"  →  VCS in \"{}\" umbenennen
+
+## semio-s-artifact-wfc-2d
+Change Active Tile  →  Aktive Kachel ändern
+Change Tile Media  →  Medien der Kachel ändern
+Change Tile Weight  →  Gewicht der Kachel ändern
+Connect Slots  →  Slots verbinden
+Create Slot  →  Slot erstellen
+Delete Slot  →  Slot löschen
+Disconnect Slots  →  Slots trennen
+Move Slot  →  Slot verschieben
+Pin Slot  →  Slot fixieren
+Resize Slot  →  Größe des Slots ändern
+Unpin Slot  →  Fixierung des Slots aufheben
+
+## semio-s-artifact-wfc-3d
+Change Active Tile  →  Aktive Kachel ändern
+Change tile \"{}\" media  →  Medien von Kachel \"{}\" ändern
+Change tile \"{}\" weight  →  Gewicht von Kachel \"{}\" ändern
+Connect slots \"{}\" ↔ \"{}\"  →  Slots \"{}\" ↔ \"{}\" verbinden
+Create slot \"{}\"  →  Slot \"{}\" erstellen
+Delete slot \"{}\"  →  Slot \"{}\" löschen
+Disconnect slots edge \"{}\"  →  Slot-Kante \"{}\" trennen
+Move slot \"{}\"  →  Slot \"{}\" verschieben
+Pin slot \"{}\" to tile \"{}\"  →  Slot \"{}\" auf Kachel \"{}\" fixieren
+Resize slot \"{}\"  →  Größe von Slot \"{}\" ändern
+Unpin slot \"{}\"  →  Fixierung von Slot \"{}\" aufheben
+
+## semio-s-artifact-wfc-bitmap
+Pin ({}, {}) to colour {}  →  ({}, {}) auf Farbe {} fixieren
+Unpin ({}, {})  →  Fixierung von ({}, {}) aufheben
+Resize input to {}×{}  →  Größe der Eingabe auf {}×{} ändern
+Resize output to {}×{}  →  Größe der Ausgabe auf {}×{} ändern
+
+## semio-s-artifact-wfc-grid2d
+Pin cell ({}, {}) to \"{}\"  →  Zelle ({}, {}) auf \"{}\" fixieren
+Unpin cell ({}, {})  →  Fixierung von Zelle ({}, {}) aufheben
+Resize grid to {}×{}  →  Größe des Rasters auf {}×{} ändern
+
+## semio-s-artifact-wfc-grid3d
+Pin cell {} to tile \"{}\"  →  Zelle {} auf Kachel \"{}\" fixieren
+Unpin cell {}  →  Fixierung von Zelle {} aufheben
+Resize grid to {}×{}×{}  →  Größe des Rasters auf {}×{}×{} ändern
+
+## semio-s-artifact-writer-writer
+Change document URI to \"{}\"  →  Dokument-URI auf \"{}\" ändern
+Set Writer Window Camera  →  Kamera des Schreibfensters setzen
+Set Writer Window Editor Selection  →  Editorauswahl des Schreibfensters setzen
+Set Writer Window Editor Settings  →  Editoreinstellungen des Schreibfensters setzen
+Set Writer Window Engagement Input  →  Interaktionseingabe des Schreibfensters setzen
+Set Writer Window Lint Generation  →  Prüfstand des Schreibfensters setzen
+
+## semio-s-plugin-cad-aec-building
+Create building storey \"{}\"  →  Gebäudegeschoss \"{}\" erstellen
+
+## semio-s-plugin-norm
+Select compliance check {index} ‖ Clear selected compliance check  →  Konformitätsprüfung {index} auswählen ‖ Auswahl der Konformitätsprüfung aufheben
+
+## semio-framework-plugin

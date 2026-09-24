@@ -81,7 +81,7 @@
         "responsibility": "Binary artifact definition."
       },
       {
-        "directory": "📄️pdf",
+        "directory": "📖️pdf",
         "id": "s.stdio.pdf",
         "kind": "artifact",
         "responsibility": "Portable Document Format artifact definition."
@@ -207,7 +207,7 @@
         "responsibility": "glTF artifact definition."
       },
       {
-        "directory": "🧊️obj",
+        "directory": "🗽️obj",
         "id": "s.stdio.obj",
         "kind": "artifact",
         "responsibility": "Wavefront OBJ artifact definition."

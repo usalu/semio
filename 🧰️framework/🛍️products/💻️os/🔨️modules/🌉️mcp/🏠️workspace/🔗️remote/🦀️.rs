@@ -63,6 +63,10 @@ pub struct AuthorizedPackageSelection {
 pub struct AuthorizedCatalogSnapshot {
     pub authority_generation: u64,
     pub selections: Vec<AuthorizedPackageSelection>,
+    /// 🪢 Each document's owning-app dialect coordinate exactly as its own authenticated lease names it
+    /// (`parent_dialect.artifact_kind`, the dialect the hub indexed at genesis). Kept per document
+    /// because `selections` is deduplicated per package, and one package owns several kinds.
+    pub dialect_kinds: HashMap<DocumentScope, String>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -219,6 +223,7 @@ impl HubRemoteBinding {
         let mut documents: Vec<_> = snapshot.documents.values().cloned().collect();
         documents.sort_by(|left, right| left.scope.space_id.cmp(&right.scope.space_id).then_with(|| left.scope.document_id.cmp(&right.scope.document_id)));
         let mut selected = BTreeMap::<(String, String, String, String, String), AuthorizedPackageSelection>::new();
+        let mut dialect_kinds = HashMap::<DocumentScope, String>::new();
         let mut descriptor_bytes_total = 0usize;
         let mut catalog_generation_id: Option<String> = None;
         for (index, document) in documents.into_iter().enumerate() {
@@ -281,6 +286,7 @@ impl HubRemoteBinding {
                 lease.package.component_sha256.clone(),
                 lease.package.descriptor_byte_sha256.clone(),
             );
+            dialect_kinds.insert(document.scope.clone(), lease.parent_dialect.artifact_kind.clone());
             let candidate = AuthorizedPackageSelection { scope: document.scope, descriptor_digest_v1: document.descriptor_digest_v1, lease, descriptor };
             if let Some(previous) = selected.get(&key) {
                 if previous.descriptor != candidate.descriptor || previous.lease.catalog != candidate.lease.catalog {
@@ -298,7 +304,7 @@ impl HubRemoteBinding {
         {
             return Err(HubBindingError::StaleRefresh);
         }
-        let catalog = Arc::new(AuthorizedCatalogSnapshot { authority_generation, selections: selected.into_values().collect() });
+        let catalog = Arc::new(AuthorizedCatalogSnapshot { authority_generation, selections: selected.into_values().collect(), dialect_kinds });
         *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = Some(catalog.clone());
         Ok(catalog)
     }
@@ -509,7 +515,8 @@ impl HubRemoteBinding {
     pub(crate) fn install_catalog_for_test(&self, selections: Vec<AuthorizedPackageSelection>) {
         let authority_generation = self.authority_generation.load(Ordering::SeqCst);
         assert_ne!(authority_generation, 0);
-        *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = Some(Arc::new(AuthorizedCatalogSnapshot { authority_generation, selections }));
+        let dialect_kinds = selections.iter().map(|selection| (selection.scope.clone(), selection.lease.parent_dialect.artifact_kind.clone())).collect();
+        *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = Some(Arc::new(AuthorizedCatalogSnapshot { authority_generation, selections, dialect_kinds }));
     }
 }
 
@@ -1143,60 +1150,68 @@ impl NativeHubBindingDriver {
         (context, operation_now)
     }
 
+    /// 🌎️ The inference services the hub executes itself, read from its own readiness body — the one
+    /// place a hub declares them, so a client never keeps a table of its own.
+    pub fn read_hub_inference_services(&self, hub_origin: &str, cancel: &semio_framework_async::CancelToken) -> Result<Vec<crate::inference::HubInferenceServiceV1>, crate::inference::InferenceRouteErrorV1> {
+        let (context, _) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
+        self.runtime.block_on(crate::inference::read_hub_inference_services(self.inference_transport.as_ref(), &context, hub_origin))
+    }
+
     /// 📥️ Submits one closed client intent through the protected inference transport and blocks the
     /// synchronous MCP tool call until the hub answers or `cancel`/the deadline interrupts it.
-    pub fn submit_gis_map_inference_job(
-        &self, scope: &DocumentScope, hub_origin: &str, request: &crate::inference::GisMapInferenceSubmitRequestV1, cancel: &semio_framework_async::CancelToken,
-    ) -> Result<crate::inference::GisMapInferenceJobReceiptV1, crate::inference::InferenceRouteErrorV1> {
+    pub fn submit_hub_inference_job(
+        &self, scope: &DocumentScope, hub_origin: &str, route: &str, request: &crate::inference::HubInferenceSubmitRequestV1, cancel: &semio_framework_async::CancelToken,
+    ) -> Result<crate::inference::HubInferenceJobReceiptV1, crate::inference::InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
-        self.runtime.block_on(crate::inference::submit_gis_map_job(self.inference_transport.as_ref(), &context, hub_origin, scope, request))
+        self.runtime.block_on(crate::inference::submit_hub_inference_job(self.inference_transport.as_ref(), &context, hub_origin, scope, route, request))
     }
 
     /// 📤️ Reads one owner-private bounded event page.
-    pub fn read_gis_map_inference_job_events(
-        &self, scope: &DocumentScope, hub_origin: &str, job_id: &str, after: u64, cancel: &semio_framework_async::CancelToken,
-    ) -> Result<crate::inference::GisMapInferenceEventPageV1, crate::inference::InferenceRouteErrorV1> {
+    pub fn read_hub_inference_job_events(
+        &self, scope: &DocumentScope, hub_origin: &str, route: &str, job_id: &str, after: u64, cancel: &semio_framework_async::CancelToken,
+    ) -> Result<crate::inference::HubInferenceEventPageV1, crate::inference::InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
-        self.runtime.block_on(crate::inference::read_gis_map_job_events(self.inference_transport.as_ref(), &context, hub_origin, scope, job_id, after))
+        self.runtime.block_on(crate::inference::read_hub_inference_job_events(self.inference_transport.as_ref(), &context, hub_origin, scope, route, job_id, after))
     }
 
     /// 🛑️ Records the owner's durable cancel request.
-    pub fn cancel_gis_map_inference_job(
-        &self, scope: &DocumentScope, hub_origin: &str, job_id: &str, cancel: &semio_framework_async::CancelToken,
-    ) -> Result<crate::inference::GisMapInferenceEventPageV1, crate::inference::InferenceRouteErrorV1> {
+    pub fn cancel_hub_inference_job(
+        &self, scope: &DocumentScope, hub_origin: &str, route: &str, job_id: &str, cancel: &semio_framework_async::CancelToken,
+    ) -> Result<crate::inference::HubInferenceEventPageV1, crate::inference::InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
-        self.runtime.block_on(crate::inference::cancel_gis_map_job(self.inference_transport.as_ref(), &context, hub_origin, scope, job_id))
+        self.runtime.block_on(crate::inference::cancel_hub_inference_job(self.inference_transport.as_ref(), &context, hub_origin, scope, route, job_id))
     }
 
     /// ✅️ Sends one explicit approval of an exact proposal hash.
-    pub fn approve_gis_map_inference_job(
-        &self, scope: &DocumentScope, hub_origin: &str, request: &crate::inference::GisMapInferenceApprovalRequestV1, cancel: &semio_framework_async::CancelToken,
-    ) -> Result<crate::inference::GisMapInferenceApprovalReceiptV1, crate::inference::InferenceRouteErrorV1> {
+    pub fn approve_hub_inference_job(
+        &self, scope: &DocumentScope, hub_origin: &str, route: &str, request: &crate::inference::HubInferenceApprovalRequestV1, cancel: &semio_framework_async::CancelToken,
+    ) -> Result<crate::inference::HubInferenceApprovalReceiptV1, crate::inference::InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
-        self.runtime.block_on(crate::inference::approve_gis_map_job(self.inference_transport.as_ref(), &context, hub_origin, scope, request))
+        self.runtime.block_on(crate::inference::approve_hub_inference_job(self.inference_transport.as_ref(), &context, hub_origin, scope, route, request))
     }
 
     /// ↩️ Sends one Hub-minted durable GIS approval undo through the authenticated transport.
-    pub fn undo_gis_map_approval(
+    pub fn undo_hub_inference_approval(
         &self,
         scope: &DocumentScope,
         hub_origin: &str,
+        route: &str,
         request: &semio_framework_os_kernel::os_directory::GisMapApprovalUndoRequestV1,
         cancel: &semio_framework_async::CancelToken,
     ) -> Result<semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1, crate::inference::InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
-        self.runtime.block_on(crate::inference::undo_gis_map_approval(self.inference_transport.as_ref(), &context, hub_origin, scope, request))
+        self.runtime.block_on(crate::inference::undo_hub_inference_approval(self.inference_transport.as_ref(), &context, hub_origin, scope, route, request))
     }
 
     /// 🧊️ Mounts the P4-C canonical checkpoint pair for one scope and projects exactly the frozen
     /// base identity an inference job is compared against: descriptor digest, active checkpoint,
     /// catalog generation, etag and the verified baseline frontier.
-    pub fn gis_map_inference_base(&self, binding: &HubRemoteBinding, scope: &DocumentScope, cancel: &semio_framework_async::CancelToken) -> Result<crate::inference::GisMapInferenceBaseBindingV1, CanonicalPairMountError> {
+    pub fn hub_inference_base(&self, binding: &HubRemoteBinding, scope: &DocumentScope, cancel: &semio_framework_async::CancelToken) -> Result<crate::inference::HubInferenceBaseBindingV1, CanonicalPairMountError> {
         let (context, operation_now) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
         let mount = self.mount_canonical_pair(binding, scope, None, None, &context, wall_now_ms(), operation_now)?;
         let identity = mount.identity();
         let baseline = mount.baseline();
-        Ok(crate::inference::GisMapInferenceBaseBindingV1 {
+        Ok(crate::inference::HubInferenceBaseBindingV1 {
             hub_origin: identity.hub_origin.clone(),
             space_id: identity.scope.space_id.clone(),
             document_id: identity.scope.document_id.clone(),

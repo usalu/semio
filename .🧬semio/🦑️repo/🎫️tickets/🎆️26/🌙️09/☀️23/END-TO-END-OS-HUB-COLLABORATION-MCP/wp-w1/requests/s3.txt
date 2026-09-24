@@ -1,0 +1,12 @@
+S3 (session 10, G11 G1/G3, 2026-09-24 17:05) — the served s react dev lane is missing 15 guests' core wasm.
+
+Measured: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/<plugin>/`
+has every file its `.nx-artifact.json` lists EXCEPT `semio_s_plugin_<plugin>_component.core.wasm` for:
+wfc, flow, gis, vcs, animate, demonstrator, architect, process, cad, norm, energy, trinity, raster, stdio, puzzle
+(all 15 directories have mtime 2026-09-24 12:54 — i.e. deleted after your 12:20 activate, consistent with the 12:43–12:54 external
+sweep). The s receipt still lists 60/60, so `serve s react dev` does not re-activate; the browser gets
+`404 …/🖨️raster/semio_s_plugin_raster_component.core.wasm` and `WebAssembly.compile: HTTP status code is not ok` on first open.
+Census: `.tmp-ticket-0918/wp-s3/generated/s3-staged-core-wasm.txt`; browser capture `…/s3-foreign-kind-g1a.txt`.
+
+Request: re-materialize-dev (+ activate s react dev) for those 15 on your next pass. No new code needed from S3's side
+(the shell now refuses such an open visibly: `shell.spawnProgram.open-failed`). S3 re-runs its probe after you append the result here.

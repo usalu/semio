@@ -2666,6 +2666,37 @@ fn hub_socket_reactor() -> Result<&'static tokio::runtime::Runtime, GatewayError
         .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the hub document-socket reactor: {error}")))
 }
 
+/// 💓️ Whether a hub document event is a moment an agent session owes the hub a presence beat: a
+/// new connection (`Session`) or a live status on it. Everything else leaves the roster as it is.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn agent_presence_moment(event: &store::sync::ArtifactEvent) -> bool {
+    matches!(event, store::sync::ArtifactEvent::Session { .. } | store::sync::ArtifactEvent::Status(store::sync::ArtifactSyncStatus { remote: store::sync::RemoteState::Live { .. }, .. }))
+}
+
+/// 🤖️ The identity-only peer an agent session beats: every app-owned ephemeral absent, and no
+/// admitted field claimed, since the hub overwrites label, user, role, color, surface and principal
+/// kind with what it authenticated for the socket.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn agent_presence_peer(actor: &str) -> store::os_spr::PresencePeer {
+    store::os_spr::PresencePeer {
+        actor: actor.to_string(),
+        connected_at_ms: 0,
+        label: None,
+        presence_pack: None,
+        user_id: None,
+        role: None,
+        drag_ghost_json: None,
+        interaction: None,
+        color: None,
+        surface: None,
+        views: Vec::new(),
+        ui: None,
+        tool_run: None,
+        principal_kind: None,
+        active_tool: None,
+    }
+}
+
 /// 🗂️ One package's own document codec, as the component exports it — the compiled component plus
 /// the artifact schema it was registered for.
 ///
@@ -2749,14 +2780,41 @@ fn guest_apply_ops_binary<'a>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8]) -> s
     })
 }
 
-/// 🚫️ `interface codec` exports four functions and neither of these is one of them: there is no
+/// 📜️ `(pack, spr, encode_envelopes) -> (pack, spr, ops text)` — the replica fold of a ledger
+/// stream through the same route resolution; the ops text is the component's own print of the result.
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_replay_envelopes<'a>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> store::ArtifactCodecApplyFuture<'a> {
+    Box::pin(async move {
+        let routes = guest_codec_route_snapshot();
+        let mut refusals: Vec<String> = Vec::new();
+        for route in &routes {
+            let budget = headless_codec_budget();
+            let replayed = match route.runtime.codec_replay_envelopes(&route.compiled, &route.artifact_schema, pack, spr, envelopes, &budget, |_, _| {}).await {
+                Ok(replayed) => replayed,
+                Err(error) => {
+                    refusals.push(format!("{}/{}: {error}", route.plugin_id, route.artifact_schema));
+                    continue;
+                }
+            };
+            let mirror = route
+                .runtime
+                .codec_print_mirror(&route.compiled, &route.artifact_schema, &replayed.pack, &replayed.spr, &budget)
+                .await
+                .map_err(|error| store::VcsError::Serialize(format!("{}/{} replayed the ledger but cannot print the result: {error}", route.plugin_id, route.artifact_schema)))?;
+            return Ok((replayed.pack, replayed.spr, mirror.ops));
+        }
+        Err(store::VcsError::Deserialize(format!("no registered guest codec replays this ledger ({} candidate(s): {})", routes.len(), refusals.join("; "))))
+    })
+}
+
+/// 🚫️ `interface codec` exports five functions and neither of these is one of them: there is no
 /// `compile-dsl` and no `edit-text-from-envelope` in the WIT, because both belong to the FOLDER text
 /// lane (`FolderTextStorage`'s `.dsl`/`.ops` writes) and a guest-backed codec exists precisely for a
 /// binding that has no folder. A typed refusal naming that is the honest answer; fabricating text
 /// here would put bytes in a `.ops` file that no component ever produced.
 #[cfg(not(target_arch = "wasm32"))]
 fn guest_compile_dsl<'a>(_dsl: &'a str, _ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(store::ArtifactPackFiles, String), store::VcsError>> + Send + 'a>> {
-    Box::pin(async move { Err(store::VcsError::Deserialize("a guest-backed document codec has no `compile-dsl`: `interface codec` exports pack-schema-hash, genesis, print-mirror and apply-ops only".to_string())) })
+    Box::pin(async move { Err(store::VcsError::Deserialize("a guest-backed document codec has no `compile-dsl`: `interface codec` exports pack-schema-hash, genesis, print-mirror, apply-ops and replay-envelopes only".to_string())) })
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -2805,6 +2863,7 @@ fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, compone
         print_mirror: guest_print_mirror,
         edit_text_from_envelope: guest_edit_text_from_envelope,
         apply_ops_binary: guest_apply_ops_binary,
+        replay_envelopes: guest_replay_envelopes,
     })
     .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("registering a guest-backed codec for `{artifact_schema}`: {error}")))?;
     Ok(pack_schema_hash)
@@ -3538,6 +3597,12 @@ impl HeadlessWorkspace {
         binding.ready_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX))
     }
 
+    /// 🗂️ The verified package roster and per-document dialects of the live descriptor authority.
+    fn hub_catalog_snapshot(&self) -> Result<Arc<remote::AuthorizedCatalogSnapshot>, GatewayError> {
+        let binding = self.hub_binding.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub descriptor binding is unbound").retryable())?;
+        binding.ready_catalog_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX))
+    }
+
     /// 🧪️ Opens (creating on first use) a real `ProbeStore` bound through `ArtifactHost` — real VCS
     /// history, real backbone attachment (`ArtifactHost::send`/`subscribe` — §6 of the brief: "guest
     /// `SendMessage{Backbone}` effects route to `ArtifactHost::send`; inbound
@@ -3963,7 +4028,33 @@ impl HeadlessWorkspace {
             self.artifact_host.close_key(&channels.document_key);
             return (None, Some(format!("document `{artifact_id}` opened outside its authenticated document scope")));
         }
+        self.beat_agent_presence(reactor, channels.document_key.clone());
         (Some(channels.cmd_tx), None)
+    }
+
+    /// 🤖️ Makes this session a visible principal on the hub document it holds. The hub lists a
+    /// socket in the roster only once it has beaten, and keeps the row for as long as that socket
+    /// stays open (`expire_presence_for_live`), so the contract is one beat per hub connection: on
+    /// the connection's `Session` and on every `Live` status after it. The beat carries no identity
+    /// of its own — the hub stamps the delegation's label and the principal kind it authenticated
+    /// (`agent`), so the roster can never show this session as the human who delegated it. The task
+    /// ends when the document closes and drops its event channel.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn beat_agent_presence(&self, reactor: &'static tokio::runtime::Runtime, document_key: store::sync::ArtifactDocumentKey) {
+        let host = self.artifact_host.clone();
+        let actor = self.actor_label();
+        let mut events = semio_framework::io::resolve_ready(host.subscribe_key(&document_key));
+        reactor.spawn(async move {
+            loop {
+                match events.recv().await {
+                    Ok(event) if agent_presence_moment(&event) => {
+                        host.presence_heartbeat_key(&document_key, now_ms(), agent_presence_peer(&actor));
+                    }
+                    Ok(_) | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                }
+            }
+        });
     }
 
     /// 🆕️ Creates `artifact_id` as a REAL artifact of `schema`, seeded from the owning plugin's own
@@ -4226,21 +4317,7 @@ impl GatewayBackend for HeadlessWorkspace {
     }
 
     fn list_resources(&self) -> Result<Vec<Resource>, GatewayError> {
-        let mut resources = vec![Resource {
-            uri: "semio://workspace".to_string(),
-            name: "Workspace".to_string(),
-            title: Some("Active workspace".to_string()),
-            description: Some("Active space and its artifacts".to_string()),
-            mime_type: Some("application/json".to_string()),
-            size: None,
-        }, Resource {
-            uri: "semio://workspace/artifacts".to_string(),
-            name: "Workspace artifacts".to_string(),
-            title: Some("Authenticated artifact descriptor index".to_string()),
-            description: Some("Artifacts currently visible in the bound workspace".to_string()),
-            mime_type: Some("application/json".to_string()),
-            size: None,
-        }];
+        let mut resources = Vec::new();
         match &self.origin {
             WorkspaceOrigin::Folder { .. } => {
                 for artifact_id in self.workspace_artifact_ids()? {
@@ -4355,8 +4432,8 @@ impl HeadlessWorkspace {
                 // an agent unable to match ANY verb to a hub document (M8 §5.4(1), measured live).
                 Some("schema") => {
                     let document = snapshot.documents.values().find(|document| document.scope.document_id == artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")))?;
-                    let body =
-                        serde_json::json!({ "artifactId": artifact_id, "schema": document.view.descriptor.artifact_schema, "artifactKind": document.view.descriptor.artifact_kind, "spaceId": document.scope.space_id });
+                    let catalog = self.hub_catalog_snapshot()?;
+                    let body = serde_json::json!({ "artifactId": artifact_id, "schema": document.view.descriptor.artifact_schema, "artifactKind": catalog.dialect_kinds.get(&document.scope), "spaceId": document.scope.space_id });
                     return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
                 }
                 Some("validation") => return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "artifact validation remains unavailable until the wire protocol carries a validate query command").retryable()),
@@ -4433,14 +4510,11 @@ fn base64_encode(bytes: &[u8]) -> String {
 //#region 🧪️Tests
 //#region 💡️Inference
 use semio_framework_os_kernel::os_directory::DocumentScope;
-fn is_gis_map_descriptor(artifact_kind: &str, artifact_schema: &str) -> bool {
-    artifact_schema == crate::inference::GIS_MAP_INFERENCE_ARTIFACT_SCHEMA && artifact_kind == crate::inference::GIS_MAP_INFERENCE_ARTIFACT_KIND
-}
 
-/// 💡️ The authenticated hub GIS Map inference facade. Every method here is a thin, typed pass to
-/// the hub's own four routes: this process holds no inference authority of its own, mints no job
-/// state, and never applies anything to a document. A `--folder` workspace answers a retryable
-/// `PLUGIN_UNAVAILABLE` naming the `--hub`/`--space` binding it needs.
+/// 💡️ The authenticated facade to the inference services a bound hub executes itself. Every method
+/// here is a thin, typed pass to the route family the hub publishes for a service: this process holds
+/// no authority over a hub-executed job, and never applies anything to a document on its own. A
+/// `--folder` workspace publishes no hub-executed service at all.
 impl HeadlessWorkspace {
     fn hub_inference_binding(&self) -> Result<&Arc<HubRemoteBinding>, GatewayError> {
         if !matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
@@ -4459,31 +4533,34 @@ impl HeadlessWorkspace {
         self.hub_inference_binding()?.inference_subject(i64::try_from(now_ms()).unwrap_or(i64::MAX))
     }
 
-    /// 🧭️ The bound document's OWN descriptor kind/schema, straight from the hub's view — the fact
-    /// `💡️inference::resolve_hub_inference_route` routes on, so the four hub-backed inference tools
-    /// pick a service from the artifact's descriptor instead of assuming one
-    /// (`📓️g7-mcp-agent-and-collaboration-audit.md` §6 P1.9).
-    pub fn hub_inference_document_descriptor(&self, document_id: &str) -> Result<(String, String), GatewayError> {
-        let (_, document) = self.hub_inference_binding()?.inference_document(document_id, i64::try_from(now_ms()).unwrap_or(i64::MAX))?;
-        Ok((document.view.descriptor.artifact_kind.clone(), document.view.descriptor.artifact_schema.clone()))
+    /// 🌎️ The inference services the bound hub executes itself, as its readiness publishes them
+    /// (`features.inferenceServices`). A folder workspace executes every service in its guest.
+    pub fn hub_inference_services(&self) -> Result<Vec<crate::inference::HubInferenceServiceV1>, GatewayError> {
+        if !matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
+            return Ok(Vec::new());
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let binding = self.hub_inference_binding()?;
+            let driver = self.hub_inference_driver()?;
+            driver.read_hub_inference_services(binding.hub_origin(), &semio_framework_async::CancelToken::root_now()).map_err(|error| error.to_gateway_error("hub readiness"))
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            Err(crate::inference::hub_inference_binding_required("hub_inference_services"))
+        }
     }
 
-    /// 📄️ Resolves one document id in the bound space and states plainly when it is not a GIS Map.
-    fn gis_map_inference_scope(&self, document_id: &str) -> Result<DocumentScope, GatewayError> {
-        let (scope, document) = self.hub_inference_binding()?.inference_document(document_id, i64::try_from(now_ms()).unwrap_or(i64::MAX))?;
-        if !is_gis_map_descriptor(&document.view.descriptor.artifact_kind, &document.view.descriptor.artifact_schema) {
-            return Err(GatewayError::new(
-                GatewayErrorCode::PreconditionFailed,
-                format!("document `{document_id}` is `{}`/`{}`, not the GIS Map kind this inference service is bound to", document.view.descriptor.artifact_kind, document.view.descriptor.artifact_schema),
-            ));
-        }
+    /// 📄️ Resolves one document id inside the bound space.
+    fn hub_inference_scope(&self, document_id: &str) -> Result<DocumentScope, GatewayError> {
+        let (scope, _) = self.hub_inference_binding()?.inference_document(document_id, i64::try_from(now_ms()).unwrap_or(i64::MAX))?;
         Ok(scope)
     }
 
     /// 🧊️ The P4-C canonical pair mount projected to exactly the frozen base an inference job is
     /// compared against. It is a LOCAL record: the hub re-derives its own base from server objects.
-    pub fn gis_map_inference_base(&self, document_id: &str) -> Result<crate::inference::GisMapInferenceBaseBindingV1, GatewayError> {
-        let scope = self.gis_map_inference_scope(document_id)?;
+    pub fn hub_inference_base(&self, document_id: &str) -> Result<crate::inference::HubInferenceBaseBindingV1, GatewayError> {
+        let scope = self.hub_inference_scope(document_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
             let binding = self.hub_inference_binding()?;
@@ -4491,22 +4568,22 @@ impl HeadlessWorkspace {
             let cancel = semio_framework_async::CancelToken::root_now();
             let label = crate::inference::inference_operation_label(&scope.space_id, &scope.document_id, None);
             crate::inference::retain_inference_operation(&label, cancel.clone());
-            let mounted = driver.gis_map_inference_base(binding.as_ref(), &scope, &cancel);
+            let mounted = driver.hub_inference_base(binding.as_ref(), &scope, &cancel);
             crate::inference::release_inference_operation(&label);
             mounted.map_err(remote::pair_mount_error_to_gateway)
         }
         #[cfg(target_arch = "wasm32")]
         {
             let _ = scope;
-            Err(crate::inference::hub_inference_binding_required("gis_map_inference_base"))
+            Err(crate::inference::hub_inference_binding_required("hub_inference_base"))
         }
     }
 
     /// 📥️ Submits one closed client intent. The hub runs the bounded deterministic service inline,
     /// so this call blocks until an offer, a refusal or the bounded deadline — the local wait is
     /// retained under this document's operation label so `inference_cancel` can interrupt it.
-    pub fn submit_gis_map_inference_job(&self, document_id: &str, request: &crate::inference::GisMapInferenceSubmitRequestV1) -> Result<crate::inference::GisMapInferenceJobReceiptV1, GatewayError> {
-        let scope = self.gis_map_inference_scope(document_id)?;
+    pub fn submit_hub_inference_job(&self, document_id: &str, route: &str, request: &crate::inference::HubInferenceSubmitRequestV1) -> Result<crate::inference::HubInferenceJobReceiptV1, GatewayError> {
+        let scope = self.hub_inference_scope(document_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
             let binding = self.hub_inference_binding()?;
@@ -4514,54 +4591,54 @@ impl HeadlessWorkspace {
             let cancel = semio_framework_async::CancelToken::root_now();
             let label = crate::inference::inference_operation_label(&scope.space_id, &scope.document_id, None);
             crate::inference::retain_inference_operation(&label, cancel.clone());
-            let submitted = driver.submit_gis_map_inference_job(&scope, binding.hub_origin(), request, &cancel);
+            let submitted = driver.submit_hub_inference_job(&scope, binding.hub_origin(), route, request, &cancel);
             crate::inference::release_inference_operation(&label);
             submitted.map_err(|error| error.to_gateway_error("inference_submit"))
         }
         #[cfg(target_arch = "wasm32")]
         {
-            let _ = (scope, request);
-            Err(crate::inference::hub_inference_binding_required("submit_gis_map_inference_job"))
+            let _ = (scope, route, request);
+            Err(crate::inference::hub_inference_binding_required("submit_hub_inference_job"))
         }
     }
 
     /// 📤️ Reads the next owner-private bounded page of lifecycle events and progress rows.
-    pub fn read_gis_map_inference_job_events(&self, document_id: &str, job_id: &str, after: u64) -> Result<crate::inference::GisMapInferenceEventPageV1, GatewayError> {
-        let scope = self.gis_map_inference_scope(document_id)?;
+    pub fn read_hub_inference_job_events(&self, document_id: &str, route: &str, job_id: &str, after: u64) -> Result<crate::inference::HubInferenceEventPageV1, GatewayError> {
+        let scope = self.hub_inference_scope(document_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
             let binding = self.hub_inference_binding()?;
             let driver = self.hub_inference_driver()?;
             let cancel = semio_framework_async::CancelToken::root_now();
-            driver.read_gis_map_inference_job_events(&scope, binding.hub_origin(), job_id, after, &cancel).map_err(|error| error.to_gateway_error("inference_events"))
+            driver.read_hub_inference_job_events(&scope, binding.hub_origin(), route, job_id, after, &cancel).map_err(|error| error.to_gateway_error("inference_events"))
         }
         #[cfg(target_arch = "wasm32")]
         {
-            let _ = (scope, job_id, after);
-            Err(crate::inference::hub_inference_binding_required("read_gis_map_inference_job_events"))
+            let _ = (scope, route, job_id, after);
+            Err(crate::inference::hub_inference_binding_required("read_hub_inference_job_events"))
         }
     }
 
     /// 🛑️ Records the owner's durable cancel request on the hub.
-    pub fn cancel_gis_map_inference_job(&self, document_id: &str, job_id: &str) -> Result<crate::inference::GisMapInferenceEventPageV1, GatewayError> {
-        let scope = self.gis_map_inference_scope(document_id)?;
+    pub fn cancel_hub_inference_job(&self, document_id: &str, route: &str, job_id: &str) -> Result<crate::inference::HubInferenceEventPageV1, GatewayError> {
+        let scope = self.hub_inference_scope(document_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
             let binding = self.hub_inference_binding()?;
             let driver = self.hub_inference_driver()?;
             let cancel = semio_framework_async::CancelToken::root_now();
-            driver.cancel_gis_map_inference_job(&scope, binding.hub_origin(), job_id, &cancel).map_err(|error| error.to_gateway_error("inference_cancel"))
+            driver.cancel_hub_inference_job(&scope, binding.hub_origin(), route, job_id, &cancel).map_err(|error| error.to_gateway_error("inference_cancel"))
         }
         #[cfg(target_arch = "wasm32")]
         {
-            let _ = (scope, job_id);
-            Err(crate::inference::hub_inference_binding_required("cancel_gis_map_inference_job"))
+            let _ = (scope, route, job_id);
+            Err(crate::inference::hub_inference_binding_required("cancel_hub_inference_job"))
         }
     }
 
     /// ✅️ Sends one explicit approval of an exact proposal hash; the hub rebuilds the typed effect.
-    pub fn approve_gis_map_inference_job(&self, document_id: &str, request: &crate::inference::GisMapInferenceApprovalRequestV1) -> Result<crate::inference::GisMapInferenceApprovalReceiptV1, GatewayError> {
-        let scope = self.gis_map_inference_scope(document_id)?;
+    pub fn approve_hub_inference_job(&self, document_id: &str, route: &str, request: &crate::inference::HubInferenceApprovalRequestV1) -> Result<crate::inference::HubInferenceApprovalReceiptV1, GatewayError> {
+        let scope = self.hub_inference_scope(document_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
             let binding = self.hub_inference_binding()?;
@@ -4569,20 +4646,20 @@ impl HeadlessWorkspace {
             let cancel = semio_framework_async::CancelToken::root_now();
             let label = crate::inference::inference_operation_label(&scope.space_id, &scope.document_id, Some(&request.job_id));
             crate::inference::retain_inference_operation(&label, cancel.clone());
-            let approved = driver.approve_gis_map_inference_job(&scope, binding.hub_origin(), request, &cancel);
+            let approved = driver.approve_hub_inference_job(&scope, binding.hub_origin(), route, request, &cancel);
             crate::inference::release_inference_operation(&label);
             approved.map_err(|error| error.to_gateway_error("inference_approve"))
         }
         #[cfg(target_arch = "wasm32")]
         {
-            let _ = (scope, request);
-            Err(crate::inference::hub_inference_binding_required("approve_gis_map_inference_job"))
+            let _ = (scope, route, request);
+            Err(crate::inference::hub_inference_binding_required("approve_hub_inference_job"))
         }
     }
 
     /// ↩️ Resolves one session-private history member through the normal authenticated Hub undo route.
-    pub fn undo_gis_map_approval(&self, member: &crate::actions::HubGisMapApprovalUndoMemberV1) -> Result<semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1, GatewayError> {
-        let scope = self.gis_map_inference_scope(&member.document_id)?;
+    pub fn undo_hub_inference_approval(&self, member: &crate::actions::HubInferenceApprovalUndoMemberV1) -> Result<semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1, GatewayError> {
+        let scope = self.hub_inference_scope(&member.document_id)?;
         let binding = self.hub_inference_binding()?;
         if scope.space_id != member.space_id || binding.hub_origin() != member.hub_origin {
             return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, "durable undo authority does not belong to this Hub workspace"));
@@ -4595,7 +4672,7 @@ impl HeadlessWorkspace {
             expected_current: member.expected_current.clone(),
         };
         if !request.validate() {
-            return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "invalid durable GIS approval undo member"));
+            return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "invalid durable hub inference approval undo member"));
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -4603,7 +4680,7 @@ impl HeadlessWorkspace {
             let cancel = semio_framework_async::CancelToken::root_now();
             let label = crate::inference::inference_operation_label(&scope.space_id, &scope.document_id, None);
             crate::inference::retain_inference_operation(&label, cancel.clone());
-            let receipt = driver.undo_gis_map_approval(&scope, binding.hub_origin(), &request, &cancel);
+            let receipt = driver.undo_hub_inference_approval(&scope, binding.hub_origin(), &member.route, &request, &cancel);
             crate::inference::release_inference_operation(&label);
             receipt.map_err(|error| error.to_gateway_error("history_undo"))
         }
@@ -4617,8 +4694,8 @@ impl HeadlessWorkspace {
 //#endregion 💡️Inference
 
 impl crate::actions::HistoryUndoPort for HeadlessWorkspace {
-    fn undo_hub_gis_map_approval(&self, member: &crate::actions::HubGisMapApprovalUndoMemberV1) -> Result<(), GatewayError> {
-        self.undo_gis_map_approval(member).map(|_| ())
+    fn undo_hub_inference_approval(&self, member: &crate::actions::HubInferenceApprovalUndoMemberV1) -> Result<(), GatewayError> {
+        self.undo_hub_inference_approval(member).map(|_| ())
     }
 }
 

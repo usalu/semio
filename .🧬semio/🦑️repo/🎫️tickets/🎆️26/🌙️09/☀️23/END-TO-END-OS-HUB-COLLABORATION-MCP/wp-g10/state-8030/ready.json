@@ -1,0 +1,47 @@
+{
+  "schema": "semio.hub.readiness/v1",
+  "status": "ready",
+  "runId": "0dc26710f2aba6f35dfb5ffb13596ed2",
+  "mode": "development",
+  "bindScope": "loopback",
+  "authentication": {
+    "kind": "local-bootstrap-pipe-v1",
+    "bootstrapReady": true,
+    "publicSessionIssuance": true
+  },
+  "directory": {
+    "ready": true
+  },
+  "storage": {
+    "ready": true
+  },
+  "artifactCasBarrier": {
+    "ready": true
+  },
+  "artifactPublication": {
+    "ready": true
+  },
+  "artifactCasSweeper": {
+    "ready": true,
+    "execute": false,
+    "defaultMode": "dry-run"
+  },
+  "artifactAuthority": {
+    "ready": true
+  },
+  "adminAssets": {
+    "ready": true
+  },
+  "features": {
+    "openPlan": true,
+    "openPlanExchange": true,
+    "rebootstrap": true,
+    "mcpWorkspace": true,
+    "inferenceServices": [
+      {
+        "serviceId": "s.gis.gismap.inference",
+        "route": "inference/gis-map"
+      }
+    ]
+  }
+}

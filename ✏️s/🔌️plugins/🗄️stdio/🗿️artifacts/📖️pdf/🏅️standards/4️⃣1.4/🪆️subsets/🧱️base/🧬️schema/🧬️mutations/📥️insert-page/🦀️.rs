@@ -56,7 +56,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertPage {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert page", "Seite einfügen")
+        protocol::LocalizedLabel::native("Insert page", "Seite einfügen")
     }
 
     fn target(&self) -> Vec<String> {

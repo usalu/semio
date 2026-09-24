@@ -12,17 +12,6 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::csv::standards::v_rfc4180::subsets::any::{oracle_apply_mutation, project_csv_grid, read_grid, write_grid};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
-//#region 🔖️Kinds
-/// 🧾️ Test-case-local mirror of the `csv-rfc4180-any` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs::KINDS` — that
-/// module lives in the SUBJECT crate, and the oracle role must not link the subject crate at all
-/// (fleet brief §5.3), while this loop registers handlers for both roles from one list. That other
-/// `KINDS` carries its own test proving it matches the enum AND the catalog manifest; a mismatch
-/// HERE against either one is caught structurally instead — the contract phase fails with
-/// `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits or invents a kind, and the
-/// runner fails every unregistered scenario id outright (`adapter has no {role} registration`).
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-has-header", "insert-record", "remove-record", "set-field"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🧪️reuse-marketplaces/📊️.csv";
@@ -150,12 +139,12 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::mutations::apply_csv_mutation;
     use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::snapshot::{decode_csv, encode_csv};
-    use crate::{CsvField, CsvMutation, CsvRecord, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_csv::{CsvField, CsvMutation, CsvRecord, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::csv::standards::v_rfc4180::subsets::any::project_csv_grid;
 
     /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
     /// `CsvMutation` — the only channel between the feature's parameters and the subject's codec.
-    fn mutation_from_spec(spec: &Json) -> Result<CsvMutation, String> {
+    fn mutation_from_spec(spec: &Json) -> Result<Vec<CsvMutation>, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         let number = |key: &str| match params.get(key) {
             Some(Json::Number(value)) => Some(*value),
@@ -175,7 +164,8 @@ mod subject {
                 })
                 .collect()
         };
-        Ok(match spec.str("kind").as_str() {
+        Ok(vec![match spec.str("kind").as_str() {
+            "no-mutation" => return Ok(Vec::new()),
             "set-has-header" => CsvMutation::SetHasHeader(semio_s_artifact_stdio_csv::schema::mutations::set_has_header::SetHasHeader { has_header: boolean("hasHeader").ok_or("set-has-header: missing `hasHeader`")? }),
             "set-snapshot" => {
                 let records = params
@@ -203,7 +193,7 @@ mod subject {
             "remove-record" => CsvMutation::RemoveRecord(semio_s_artifact_stdio_csv::schema::mutations::remove_record::RemoveRecord { index: number("index").ok_or("remove-record: missing `index`")? as usize }),
             "set-field" => CsvMutation::SetField(semio_s_artifact_stdio_csv::schema::mutations::set_field::SetField { record_index: number("recordIndex").ok_or("set-field: missing `recordIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-field: missing `fieldIndex`")? as usize, value: params.str("value"), quoted: false }),
             other => return Err(format!("no subject rule for kind {other:?}")),
-        })
+        }])
     }
 
     fn decode(bytes: &[u8]) -> Result<CsvSnapshot, String> {
@@ -213,8 +203,9 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        apply_csv_mutation(&mut snapshot, &mutation);
+        for mutation in mutation_from_spec(&ctx.doc_json()?)? {
+            apply_csv_mutation(&mut snapshot, &mutation);
+        }
         let output = encode_csv(&snapshot).into_bytes();
         let projection = project_csv_grid(&output, snapshot.has_header)?;
         Ok(Outcome::with_raw(output, projection))
@@ -224,8 +215,9 @@ mod subject {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&input)?;
-        apply_csv_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
-        apply_csv_mutation(&mut snapshot, &mutation_from_spec(&inverse_spec(&input, &spec)?)?);
+        for mutation in mutation_from_spec(&spec)?.into_iter().chain(mutation_from_spec(&inverse_spec(&input, &spec)?)?) {
+            apply_csv_mutation(&mut snapshot, &mutation);
+        }
         let output = encode_csv(&snapshot).into_bytes();
         let projection = project_csv_grid(&output, snapshot.has_header)?;
         Ok(Outcome::with_raw(output, projection))
@@ -253,12 +245,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

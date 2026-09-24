@@ -7,7 +7,7 @@ import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from 
 import { pluginModulesRoot } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { ACTOR_COMPONENT_EXPORTS, PLUGIN_DESCRIPTOR_PROBE_SOURCE, finalizePluginDescriptor } from "../../🛂️descriptor/🟦️.ts";
 import { artifactFiles, fileDigest } from "../../📦️distribution/📋️inventory/🟦️.ts";
-import { ensurePreview2ShimVendorAt, hostShimSource, PLUGIN_HOST_SHIM_FILE, PREVIEW2_VENDOR_RELATIVE, pluginComponentBridgeSource, SHARD_WORKER_FILE, shardWorkerSource, transpilePluginComponentAsync } from "../🟦️.ts";
+import { ensureGuestSlimTypstFontsAt, ensurePreview2ShimVendorAt, hostShimSource, PLUGIN_HOST_SHIM_FILE, PREVIEW2_VENDOR_RELATIVE, pluginComponentBridgeSource, SHARD_WORKER_FILE, shardWorkerSource, transpilePluginComponentAsync } from "../🟦️.ts";
 
 type Profile = "dev" | "release";
 
@@ -32,7 +32,8 @@ export class SupportScript extends BundleScript {
       writeFileSync(join(shard, SHARD_WORKER_FILE), shardWorkerSource());
       await stageArtifacts(join(root, PREVIEW2_VENDOR_RELATIVE), `browser-support:${profile}:preview2`, artifactFiles(vendor));
       await stageArtifacts(join(root, MODULE_SHARD_DIRECTORY), `browser-support:${profile}:shard`, artifactFiles(shard));
-      console.log(`Browser support ${profile}: vendor shims and shard worker staged`);
+      if (!ensureGuestSlimTypstFontsAt(root, getWorkspaceRoot())) throw new Error("Missing typst font seed; run semio-framework-os-infinite:fonts through Nx");
+      console.log(`Browser support ${profile}: vendor shims, typst fonts and shard worker staged`);
     } finally { rmSync(temporary, { recursive: true, force: true }); }
   }
 }

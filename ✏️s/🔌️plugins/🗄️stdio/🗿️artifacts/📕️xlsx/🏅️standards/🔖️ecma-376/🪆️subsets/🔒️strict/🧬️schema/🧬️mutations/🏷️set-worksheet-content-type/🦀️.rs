@@ -22,7 +22,7 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetWorksheetCo
         agg_inverse(&XlsxStrictMutation::SetWorksheetContentType(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-worksheet-content-type", "Arbeitsblattinhalttyp setzen")
+        protocol::LocalizedLabel::native("Set worksheet content type", "Inhaltstyp des Arbeitsblatts setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

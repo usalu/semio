@@ -24,7 +24,7 @@ impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetBlockEnti
         agg_inverse(&SemioCadMutation::SetBlockEntityGeometry(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-block-entity-geometry", "Blockentitätsgeometrie setzen")
+        protocol::LocalizedLabel::native("Set block entity geometry", "Blockentitätsgeometrie setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

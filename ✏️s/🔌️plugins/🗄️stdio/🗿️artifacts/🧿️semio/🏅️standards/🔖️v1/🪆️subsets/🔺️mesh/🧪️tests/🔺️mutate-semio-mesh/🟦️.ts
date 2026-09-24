@@ -71,26 +71,6 @@ const TOPOLOGY_ORDER = ["points", "lines", "lineStrip", "triangles", "triangleSt
 const TOPOLOGY_LETTER: Record<string, string> = { points: "P", lines: "L", lineStrip: "S", triangles: "T", triangleStrip: "X", triangleFan: "F" };
 const LETTER_TOPOLOGY: Record<string, string> = Object.fromEntries(Object.entries(TOPOLOGY_LETTER).map(([kind, letter]) => [letter, kind]));
 
-const KINDS = [
-  "create-mesh",
-  "delete-mesh",
-  "create-primitive",
-  "delete-primitive",
-  "set-primitive-topology",
-  "replace-primitive-geometry",
-  "set-primitive-material",
-  "create-material",
-  "delete-material",
-  "change-material-base-color",
-  "change-material-metallic",
-  "change-material-roughness",
-  "create-texture",
-  "delete-texture",
-  "change-texture-mime",
-  "replace-texture-bytes",
-  "move-vertex",
-] as const;
-
 const ARTIFACT_DSL = "shared://🔺️mutate-semio-mesh/🗣️.dsl.semio";
 const ARTIFACT_PACK = "shared://🔺️mutate-semio-mesh/🎒️.pack.semio";
 // #endregion 🧬️Model
@@ -958,11 +938,13 @@ function identityRoundTrip(ctx: AdapterContext): AdapterOutcome {
 // #endregion 🎯️Handlers
 
 // #region 🧭️Adapter
-/** 🧭️ Registration by FULL expanded scenario id, mirroring the feature's `Examples` tables. */
+/** 🧭️ Handlers are registered under the Scenario Outline base ids, which the host resolves for every Examples row, and plain scenarios under their own ids. */
 export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
-    ...Object.fromEntries(KINDS.flatMap((kind) => [[`mutate-${kind}`, { oracle: mutate }], [`inverse-${kind}`, { oracle: inverse }], [`spec-vector-${kind}`, { oracle: specVector }]])),
+    mutate: { oracle: mutate },
+    inverse: { oracle: inverse },
+    "spec-vector": { oracle: specVector },
     "identity-round-trip": { oracle: identityRoundTrip },
   },
 });

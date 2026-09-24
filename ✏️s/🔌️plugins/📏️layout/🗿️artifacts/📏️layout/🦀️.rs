@@ -1158,6 +1158,9 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-frame/🦀️.rs"]
                             mod component;
                             pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-frame/🧪️tests/🌀️rotates-the-rect-frame/🦀️.rs"]
+                            mod tests_rotates_the_rect_frame;
                         }
                         #[path = "."]
                         pub mod change_frame_fill {

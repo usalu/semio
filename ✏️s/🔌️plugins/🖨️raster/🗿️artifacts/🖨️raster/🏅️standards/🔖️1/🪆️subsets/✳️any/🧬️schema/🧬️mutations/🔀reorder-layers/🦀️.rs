@@ -28,7 +28,7 @@ pub mod mutation {
         }
 
         fn label(&self) -> protocol::LocalizedLabel {
-            protocol::LocalizedLabel::native(&format!("Reorder layer {}", self.layer_id), &format!("Ebene {} umordnen", self.layer_id))
+            protocol::LocalizedLabel::native(&format!("Reorder layer {}", self.layer_id), &format!("Reihenfolge von Ebene {} ändern", self.layer_id))
         }
 
         fn target(&self) -> Vec<String> {

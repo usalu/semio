@@ -31,5 +31,6 @@ semio-s-artifact-stdio-contract = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+miniz_oxide = "0.8.9"
 semio-framework-async-macros = { workspace = true }
 semio-framework-ui-scene = { workspace = true }

@@ -22,7 +22,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ReorderLayers 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Move layer #{} to #{}", self.from, self.to), &format!("Ebene #{} nach #{} verschieben", self.from, self.to))
+        protocol::LocalizedLabel::native(&format!("Move layer #{} to #{}", self.from, self.to), &format!("Schicht #{} nach #{} verschieben", self.from, self.to))
     }
     fn target(&self) -> Vec<String> {
         vec![self.from.to_string()]

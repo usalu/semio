@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeHeated
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change heated floor area [m2] to {}", self.new_heated_area_m2), &format!("Heizgeschossfläche [m2] auf {} ändern", self.new_heated_area_m2))
+        protocol::LocalizedLabel::native(&format!("Change heated floor area [m2] to {}", self.new_heated_area_m2), &format!("Beheizte Fläche [m2] auf {} ändern", self.new_heated_area_m2))
     }
 }
 //#endregion 🔖️ChangeHeatedAreaM2

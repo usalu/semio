@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteStorageRequirement
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete storage requirement \"{}\"", self.id.0), &format!("Speicheranforderung \"{}\" löschen", self.id.0))
+        protocol::LocalizedLabel::native(&format!("Delete storage requirement \"{}\"", self.id.0), &format!("Stauraumanforderung \"{}\" löschen", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

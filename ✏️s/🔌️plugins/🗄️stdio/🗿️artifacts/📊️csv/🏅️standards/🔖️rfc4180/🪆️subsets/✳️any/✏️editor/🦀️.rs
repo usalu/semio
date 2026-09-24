@@ -29,7 +29,7 @@ pub const CSV_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum CsvEditorCommand {
     SetCell { row: u32, column: u32, value: String },
-    /// 🎬️ The navbar example picker's payload — see the `🎬️ExampleSwitch` region below.
+    /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
     SetActiveExample { example_id: String },
 }
 
@@ -65,8 +65,9 @@ impl protocol::OpText for CsvEditorCommand {
 
 impl protocol::OpBinary for CsvEditorCommand {
     /// 🎯️ The app-owned retained routes this command channel carries — the join key
-    /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. `set-cell`
-    /// is a `TableWindowKit` window-kind action and owns no app-level route, so it stays out.
+    /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TableWindowKit`
+    /// mints `set-cell`, but only this editor can reduce it into its own mutation, so it is an
+    /// app-owned route exactly like the example switch.
     const TOOL_JOB_IDS: &'static [&'static str] = CSV_RETAINED_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -92,18 +93,25 @@ fn grid_row_to_record_index(has_header: bool, row: u32) -> usize {
 }
 //#endregion 🔖️GridMapping
 
-//#region 🎬️ExampleSwitch
-/// 🧵️ The ONE app-owned retained route this editor declares. `validate_ui_dispatch_classification`
-/// refuses any verb that is not `Migrated`, and `Migrated` only survives the guest's
-/// `interactive-job.catalog-incomplete` boot check when this roster, the publication contracts and
-/// the `bounded_first_step_tool_proofs!` block below all name the same id.
-const CSV_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
+//#region 🧵️RetainedRoutes
+/// 🪟️ The verb the `TableWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
+const CSV_KIT_ACTION_ID: &str = "set-cell";
+/// 🧵️ The app-owned retained routes this editor declares: the example switch and `set-cell`.
+/// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
+/// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
+/// publication contracts and the `bounded_first_step_tool_proofs!` block below all name the same
+/// ids. Without the kit verb's row the reactor refused every `set-cell` with
+/// `interactive-job.missing-factory`.
+const CSV_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, CSV_KIT_ACTION_ID];
 const CSV_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.csv.tool-command.v1";
 const CSV_RETAINED_RAW_BYTES: usize = 8_192;
 /// 🚦️ The example switch publishes into NO document lane: it hands the host one
-/// `Effect::LoadDocument`, so its only lane is `HostOnly`.
-const CSV_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
-    &[ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
+/// `Effect::LoadDocument`, so its only lane is `HostOnly`. `set-cell` publishes the artifact
+/// mutation it reduces into, so its only lane is `Artifact`.
+const CSV_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: CSV_KIT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn csv_retained_contract() -> ToolExecutionContract {
@@ -129,7 +137,7 @@ fn csv_example_snapshot(example_id: &str) -> CsvSnapshot {
 fn csv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<CsvEditorCommand, Fault> {
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(CsvEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        "set-cell" => Ok(CsvEditorCommand::SetCell { row: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["row"], 0), column: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["column"], 0), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
+        CSV_KIT_ACTION_ID => Ok(CsvEditorCommand::SetCell { row: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["row"], 0), column: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["column"], 0), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.csv.unhandled-action"),
@@ -142,21 +150,45 @@ fn csv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn csv_command_id(command: &CsvEditorCommand) -> &'static str {
     match command {
-        CsvEditorCommand::SetCell { .. } => "set-cell",
+        CsvEditorCommand::SetCell { .. } => CSV_KIT_ACTION_ID,
         CsvEditorCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn csv_retained_extent(command: &CsvEditorCommand, _snapshot: &CsvSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    matches!(command, CsvEditorCommand::SetActiveExample { .. }).then_some(1)
+fn csv_retained_extent(_command: &CsvEditorCommand, _snapshot: &CsvSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    Some(1)
+}
+
+/// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
+/// its document, `set-cell` becomes this artifact's own mutation.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn csv_emit(command: &CsvEditorCommand, snapshot: &CsvSnapshot) -> Result<Emit<CsvMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    let (row, column, value) = match command {
+        CsvEditorCommand::SetActiveExample { example_id } => {
+            return Ok(Emit {
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&csv_example_snapshot(example_id), STDIO_CSV_DOCUMENT_SCHEMA)],
+                description: Some(format!("Load example {example_id}")),
+                ..Default::default()
+            })
+        }
+        CsvEditorCommand::SetCell { row, column, value } => (row, column, value),
+    };
+    let record_index = grid_row_to_record_index(snapshot.has_header, *row);
+    let Some(record) = snapshot.records.get(record_index) else { return Ok(Emit::default()) };
+    let quoted = record.fields.get(*column as usize).is_some_and(|field| field.quoted);
+    Ok(Emit {
+        artifact_mutations: vec![CsvMutation::SetField(crate::schema::mutations::set_field::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted })],
+        description: Some(format!("Set cell {row},{column}")),
+        ..Default::default()
+    })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn csv_retained_reduce(
     command: &CsvEditorCommand,
-    _snapshot: &CsvSnapshot,
+    snapshot: &CsvSnapshot,
     _config: &NoConfig,
     _history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
@@ -164,14 +196,7 @@ fn csv_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CsvEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<CsvMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    match command {
-        CsvEditorCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&csv_example_snapshot(example_id), STDIO_CSV_DOCUMENT_SCHEMA)],
-            description: Some(format!("Load example {example_id}")),
-            ..Default::default()
-        }),
-        CsvEditorCommand::SetCell { .. } => Err(Fault::from("stdio-csv-retained-route-mismatch")),
-    }
+    csv_emit(command, snapshot)
 }
 
 struct CsvRetainedCommandJobFactory {
@@ -224,7 +249,7 @@ impl ArtifactOwnedToolJobFactory for CsvRetainedCommandJobFactory {
     const DOCUMENT_SCHEMA: &'static str = STDIO_CSV_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = CSV_RETAINED_PUBLICATION_CONTRACTS;
 }
-//#endregion 🎬️ExampleSwitch
+//#endregion 🧵️RetainedRoutes
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -254,7 +279,7 @@ impl ArtifactEditor for CsvEditor {
         factory: "CsvRetainedCommandJobFactory",
         factory_type: CsvRetainedCommandJobFactory,
         contract: csv_retained_contract(),
-        tools: ["setActiveExample"]
+        tools: ["setActiveExample", "set-cell"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -269,6 +294,7 @@ impl ArtifactEditor for CsvEditor {
         if csv_command_id(&request.command) != request.tool_id {
             return Err(Fault::from("stdio-csv-retained-command-tool-mismatch"));
         }
+        let tool_id = csv_command_id(&request.command);
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id,
@@ -291,7 +317,7 @@ impl ArtifactEditor for CsvEditor {
             csv_command_id,
             CSV_RETAINED_RAW_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, csv_retained_reduce, csv_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(tool_id, csv_retained_reduce, csv_retained_extent)),
         )?;
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -302,6 +328,13 @@ impl ArtifactEditor for CsvEditor {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 📤️ The artifact lane's one-item publication authority. The kit verb's route declares the
+    /// `Artifact` lane, and without this authority every such route fails closed with
+    /// `interactive-job.publication-authority-missing`.
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("stdio-csv-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     /// 🧹️ The rest of the close protocol installing a document owner implies: an app that owns its
@@ -380,24 +413,7 @@ impl ArtifactEditor for CsvEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        let (row, column, value) = match command {
-            CsvEditorCommand::SetActiveExample { example_id } => {
-                return Ok(Emit {
-                    effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&csv_example_snapshot(example_id), STDIO_CSV_DOCUMENT_SCHEMA)],
-                    description: Some(format!("Load example {example_id}")),
-                    ..Default::default()
-                })
-            }
-            CsvEditorCommand::SetCell { row, column, value } => (row, column, value),
-        };
-        let record_index = grid_row_to_record_index(doc.snapshot.has_header, *row);
-        let Some(record) = doc.snapshot.records.get(record_index) else { return Ok(Emit::default()) };
-        let quoted = record.fields.get(*column as usize).is_some_and(|field| field.quoted);
-        Ok(Emit {
-            artifact_mutations: vec![CsvMutation::SetField(crate::schema::mutations::set_field::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted })],
-            description: Some(format!("Set cell {row},{column}")),
-            ..Default::default()
-        })
+        csv_emit(command, doc.snapshot)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

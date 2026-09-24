@@ -32,7 +32,7 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeGripKind
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change grip kind \"{}\" color to \"{}\"", self.id, self.new_color), &format!("Griffart \"{}\" Farbe auf \"{}\" ändern", self.id, self.new_color))
+        protocol::LocalizedLabel::native(&format!("Change grip kind \"{}\" color to \"{}\"", self.id, self.new_color), &format!("Farbe von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_color))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

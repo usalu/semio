@@ -26,7 +26,7 @@ impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for 
         agg_inverse(&SemioAnimationMutation::SetKeyframeTime(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-keyframe-time", "Schlüsselbildzeit setzen")
+        protocol::LocalizedLabel::native("Set keyframe time", "Schlüsselbildzeit setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

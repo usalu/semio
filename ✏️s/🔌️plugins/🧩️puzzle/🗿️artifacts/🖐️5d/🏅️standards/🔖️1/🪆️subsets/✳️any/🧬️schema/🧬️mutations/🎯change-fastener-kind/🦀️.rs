@@ -26,7 +26,7 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeFasten
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fastener \"{}\" kind", self.id), &format!("Verbindungsmittel \"{}\" Art ändern", self.id))
+        protocol::LocalizedLabel::native(&format!("Change fastener \"{}\" kind", self.id), &format!("Art von Verbindungsmittel \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

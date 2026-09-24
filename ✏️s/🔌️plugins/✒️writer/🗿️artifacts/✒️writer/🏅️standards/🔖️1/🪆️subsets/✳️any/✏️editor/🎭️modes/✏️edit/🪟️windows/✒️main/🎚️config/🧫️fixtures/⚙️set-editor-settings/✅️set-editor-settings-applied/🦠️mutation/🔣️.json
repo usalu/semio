@@ -1,0 +1,9 @@
+{
+  "kind": "set-editor-settings",
+  "settings": {
+    "showLineNumbers": true,
+    "fontPx": 16,
+    "lineHeight": 24,
+    "tabSize": 2
+  }
+}

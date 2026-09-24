@@ -295,9 +295,9 @@ async fn deterministic_logical_round_trip() {
     assert_eq!(e.name, "readme.md");
     assert_eq!(e.data, snap.entries[0].data);
 
-    let pptx_bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("read exact OPC fixture");
-    let logical = decode_zip(&pptx_bytes).expect("decode native OPC ZIP");
-    assert_eq!(logical.entries.len(), 211);
+    let archive_bytes: &[u8] = include_bytes!("../../../🧫️fixtures/📦️opc.zip");
+    let logical = decode_zip(archive_bytes).expect("decode the committed OPC package");
+    assert_eq!(logical.entries.len(), 6);
 
     let dsl = <ZipSnapshot as store::ArtifactDsl>::print_dsl(&logical);
     let from_dsl = <ZipSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse logical ZIP DSL");
@@ -322,17 +322,17 @@ async fn deterministic_logical_round_trip() {
     crate::schema::mutations::apply_zip_mutation(&mut from_binary_op, &binary_op);
     assert_eq!(from_binary_op, logical);
 
-    let analysis = crate::standards::v2_0::subsets::base::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pptx_bytes)]);
+    let analysis = crate::standards::v2_0::subsets::base::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(archive_bytes)]);
     assert_eq!(analysis.parts.snapshot.as_ref(), Some(&logical));
     let dialect = <crate::standards::v2_0::subsets::base::schema::ZipAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
-    let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pptx_bytes) }]).expect("compose native OPC ZIP");
+    let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(archive_bytes) }]).expect("compose native OPC ZIP");
     assert_eq!(composition.snapshot, logical);
 
     for routed in [&from_dsl, &from_pack, &from_text_op, &from_binary_op, &composition.snapshot] {
         assert_eq!(decode_zip(&encode_zip(routed).expect("materialize canonical logical ZIP")).expect("redecode canonical logical ZIP"), logical);
     }
 
-    let opc = crate::opc::decode_opc(&pptx_bytes).expect("decode logical OPC package");
+    let opc = crate::opc::decode_opc(archive_bytes).expect("decode logical OPC package");
     let canonical_opc = crate::opc::encode_opc(&opc).expect("materialize deterministic OPC package");
     assert_eq!(crate::opc::decode_opc(&canonical_opc).expect("redecode deterministic OPC package"), opc);
 }

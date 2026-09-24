@@ -26,15 +26,6 @@
 
 use semio_repo_test_host::Adapter;
 
-//#region 🔖️Kinds
-/// 🏷️ Mirrors `SemioVideoMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/
-/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the registration loop runs in
-/// builds where the subject crate is not linked. The contract's mutation-coverage gate keeps this
-/// list honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file
-/// keeps it honest against the enum.
-#[cfg_attr(not(feature = "sut"), allow(dead_code))]
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
@@ -281,15 +272,14 @@ mod subject {
     /// 🧫️ The same verb on its committed `(before, mutation, after)` vector — a THIRD statement of
     /// what the verb means, independent of both implementations, kept from before this oracle
     /// existed rather than replaced by it.
-    pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| {
-            let (mut current, mutation, expected) = vector_of(ctx, kind)?;
-            run(&mut current, &mutation, ctx.scenario.id.as_str())?;
-            if current != expected {
-                return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
-            }
-            Ok(outcome(snapshot_json(&current)))
+    pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
+        let kind = ctx.row()?;
+        let (mut current, mutation, expected) = vector_of(ctx, kind)?;
+        run(&mut current, &mutation, ctx.scenario.id.as_str())?;
+        if current != expected {
+            return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
         }
+        Ok(outcome(snapshot_json(&current)))
     }
 
     /// 🔁️ The real committed artifact, parsed into the typed snapshot, printed back to DSL text and
@@ -342,20 +332,18 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
-/// id, so the whole vocabulary is registered in one loop. Subject only — the oracle role belongs to
-/// `🐍️component.py`.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids. Subject
+/// only — the oracle role belongs to `🐍️component.py`.
 pub fn adapter() -> Adapter {
     #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        for kind in KINDS {
-            built = built
-                .subject(&format!("mutate-{kind}"), subject::mutate)
-                .subject(&format!("inverse-{kind}"), subject::inverse)
-                .subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
-        }
+        built = built
+            .subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate)
+            .subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse)
+            .subject("spec-vector", subject::spec_vector);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

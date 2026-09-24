@@ -116,7 +116,7 @@ fn clearing_the_product_identity_is_what_turns_the_soft_diagnostic_on() {
 /// checked here rather than asserted in prose four times.
 #[test]
 fn the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place() {
-    use crate::standards::v_ap214::subsets::{cc1, cc2, cc3, cc4, cc5, cc6};
+    use crate::artifacts::step::standards::v_ap214::subsets::{cc1, cc2, cc3, cc4, cc5, cc6};
 
     for (class, rung, kinds) in [("cc2", cc2::MAX_RUNG, cc2::KINDS), ("cc3", cc3::MAX_RUNG, cc3::KINDS), ("cc4", cc4::MAX_RUNG, cc4::KINDS), ("cc5", cc5::MAX_RUNG, cc5::KINDS)] {
         assert!(ladder::ceiling_type_of(rung).is_some(), "{class} sits inside the ladder, so it has a ceiling type to write and to demote onto");

@@ -36,7 +36,7 @@ const CLASS: &str = "ISO 10303-214 CC1 (config data only)";
 
 /// 🏷️ The declared vocabulary, mirroring `StepCc1Mutation`'s own variants in declaration order.
 /// Duplicated rather than imported: the oracle crate must never link the production crate.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-schema", "set-product-identity", "remove-shape-representation"];
+pub const KINDS: &[&str] = &["set-snapshot", "set-file-schema", "set-product-identity", "remove-shape-representation"];
 //#endregion 🔖️Class
 
 #[cfg(feature = "oracles")]

@@ -111,6 +111,10 @@ export function uiAccessibilityRoleV1(component: Component, activatable: boolean
       return "application";
     case "extension":
       return "region";
+    case "table":
+      return "grid";
+    case "tableRow":
+      return "row";
   }
 }
 
@@ -133,6 +137,7 @@ export function uiAccessibilityIsFocusableV1(component: Component, activatable: 
     case "ring":
     case "iconSelect":
     case "treeItem":
+    case "tableRow":
     case "surface":
       return true;
     case "container":
@@ -178,7 +183,7 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
     key: record.key,
     role: uiAccessibilityRoleV1(record.component, activatable),
     depth,
-    label: accessibility.label ?? (record.component.type === "treeItem" ? record.component.label : null),
+    label: accessibility.label ?? (record.component.type === "treeItem" || record.component.type === "table" ? record.component.label : null),
     description: accessibility.description ?? null,
     live: accessibility.live ?? "off",
     shortcut: accessibility.shortcut ?? null,

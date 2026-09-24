@@ -23,7 +23,7 @@
 //! included — is dropped from the inverse law.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pptx_mutation, KINDS};
+use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pptx_mutation};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
@@ -84,14 +84,14 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{mutable_input, KINDS};
+    use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_pptx, encode_pptx};
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::mutations::apply_pptx_mutation;
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::mutations::{insert_shape, insert_slide, move_slide, remove_shape, remove_slide, set_shape_position, set_shape_text, set_snapshot};
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide, PptxTransform};
-    use crate::{PptxMutation, PptxSnapshot};
+    use semio_s_artifact_stdio_pptx::{PptxMutation, PptxSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::base::project_pptx_mutation;
 
     //#region 🔖️SpecCodec
@@ -251,28 +251,19 @@ mod subject {
     }
     //#endregion 🔖️Handlers
 
-    /// 🧭️ Re-exported so `super::adapter()` can register the same 9-kind sweep for the subject role
-    /// from the one list the subset's own oracle module declares.
-    pub const SUBJECT_KINDS: &[&str] = KINDS;
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 9 kinds -- the scenario id only selects which fixture row's
-/// `<id>`/`<params>` doc string the shared handler reads, per `Adapter::oracle`/`subject`'s own
-/// per-scenario dispatch table.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-    }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        for kind in subject::SUBJECT_KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

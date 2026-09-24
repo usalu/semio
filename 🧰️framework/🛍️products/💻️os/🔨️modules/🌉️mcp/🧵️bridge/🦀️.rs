@@ -242,6 +242,38 @@ impl ApprovalDecision {
     }
 }
 
+/// 🪦️ Why the gateway took an approval request back before any human decided it. The shell retires
+/// the affordance and says why; the gateway no longer waits for a decision on it.
+/// - `Cancelled`: the agent's call that parked the request was cancelled.
+/// - `TimedOut`: nobody decided within the request's own countdown.
+/// - `Superseded`: the request moved to a newer shell connection, which now carries it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "snake_case")]
+#[value(rename_all = "snake_case")]
+pub enum ApprovalWithdrawal {
+    Cancelled,
+    TimedOut,
+    Superseded,
+}
+
+impl ApprovalWithdrawal {
+    fn to_tag(self) -> u8 {
+        match self {
+            ApprovalWithdrawal::Cancelled => 0,
+            ApprovalWithdrawal::TimedOut => 1,
+            ApprovalWithdrawal::Superseded => 2,
+        }
+    }
+    fn from_tag(tag: u8) -> Result<Self, GatewayError> {
+        match tag {
+            0 => Ok(ApprovalWithdrawal::Cancelled),
+            1 => Ok(ApprovalWithdrawal::TimedOut),
+            2 => Ok(ApprovalWithdrawal::Superseded),
+            other => Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("bridge frame: unknown ApprovalWithdrawal tag {other}"))),
+        }
+    }
+}
+
 /// 📇️ One entry of `Instances{entries}` — `BridgeInstanceRef{plugin_id, app_id, instance_id,
 /// artifact_ref, window_ids}` verbatim from `📋️master.md` §2.2.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
@@ -1356,7 +1388,8 @@ impl ShellToGatewayMaterializeCursor {
 //#endregion 🔖️BoundedShellDecode
 
 //#region 🔖️GatewayToShell
-/// 📤️ Gateway→Shell frames, tag 0..9 in this exact declaration order (`📋️master.md` §2.2).
+/// 📤️ Gateway→Shell frames, tag 0..11 in this exact declaration order (`📋️master.md` §2.2); a new
+/// variant only ever goes last. Wire fixture: `🧫️fixtures/📨️frames.json`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -1387,6 +1420,9 @@ pub enum GatewayToShell {
     /// locale: it is the agent's own words, and the only translated strings on the surface are the
     /// role nouns around them.
     AgentReply { reply_id: String, in_reply_to: Option<String>, text: String, complete: bool },
+    /// 🪦️ The approval request `approval_id` is withdrawn — its call was cancelled, it timed out, or it
+    /// moved to a newer shell connection — so the shell retires its affordance and says why.
+    ApprovalWithdrawn { approval_id: String, reason: ApprovalWithdrawal },
 }
 
 /// 💬️ Tools whose OWN result is already a conversation frame, so `tools/call` must not also publish
@@ -1437,6 +1473,7 @@ impl GatewayToShell {
                 let base = 3usize.checked_add(bridge_wire_field_len(reply_id.len())?)?.checked_add(bridge_wire_field_len(text.len())?)?;
                 in_reply_to.as_ref().map_or(Some(base), |value| base.checked_add(bridge_wire_field_len(value.len())?))
             }
+            GatewayToShell::ApprovalWithdrawn { approval_id, .. } => 2usize.checked_add(bridge_wire_field_len(approval_id.len())?),
         }
     }
 
@@ -1500,6 +1537,11 @@ impl GatewayToShell {
                 wire::write_option_string(&mut buf, in_reply_to);
                 wire::write_string(&mut buf, text);
                 wire::write_bool(&mut buf, *complete);
+            }
+            GatewayToShell::ApprovalWithdrawn { approval_id, reason } => {
+                wire::write_u8(&mut buf, 11);
+                wire::write_string(&mut buf, approval_id);
+                wire::write_u8(&mut buf, reason.to_tag());
             }
         }
         buf
@@ -1571,6 +1613,11 @@ impl GatewayToShell {
                 writer.field(text.as_bytes());
                 writer.push(&[*complete as u8]);
             }
+            Self::ApprovalWithdrawn { approval_id, reason } => {
+                writer.push(&[11]);
+                writer.field(approval_id.as_bytes());
+                writer.push(&[reason.to_tag()]);
+            }
         }
         writer.written
     }
@@ -1590,6 +1637,7 @@ impl GatewayToShell {
             8 => GatewayToShell::AgentToolCall { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, arguments: reader.read_string()? },
             9 => GatewayToShell::AgentToolResult { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, ok: reader.read_bool()?, summary: reader.read_string()? },
             10 => GatewayToShell::AgentReply { reply_id: reader.read_string()?, in_reply_to: reader.read_option_string()?, text: reader.read_string()?, complete: reader.read_bool()? },
+            11 => GatewayToShell::ApprovalWithdrawn { approval_id: reader.read_string()?, reason: ApprovalWithdrawal::from_tag(reader.read_u8()?)? },
             other => return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("bridge frame: unknown GatewayToShell tag {other}"))),
         };
         reader.finish()?;
@@ -2196,6 +2244,11 @@ impl BridgeEncodedFrame {
                 }
                 encoded.write_field(text.as_bytes());
                 encoded.write_u8(*complete as u8);
+            }
+            GatewayToShell::ApprovalWithdrawn { approval_id, reason } => {
+                encoded.write_u8(11);
+                encoded.write_field(approval_id.as_bytes());
+                encoded.write_u8(reason.to_tag());
             }
         }
         assert_eq!(encoded.len, expected, "preflighted bridge frame length changed during encode");

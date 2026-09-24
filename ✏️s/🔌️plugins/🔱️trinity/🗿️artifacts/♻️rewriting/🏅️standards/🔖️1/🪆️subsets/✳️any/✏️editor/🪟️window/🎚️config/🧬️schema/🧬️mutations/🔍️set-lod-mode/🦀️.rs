@@ -23,7 +23,7 @@ impl protocol::MutationKind<RewritingWindowConfig, RewritingWindowConfigMutation
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Window Lod Mode", "Fensterlodmodus setzen")
+        protocol::LocalizedLabel::native("Set Window Lod Mode", "Detailstufenmodus des Fensters setzen")
     }
 
     fn target(&self) -> Vec<String> {

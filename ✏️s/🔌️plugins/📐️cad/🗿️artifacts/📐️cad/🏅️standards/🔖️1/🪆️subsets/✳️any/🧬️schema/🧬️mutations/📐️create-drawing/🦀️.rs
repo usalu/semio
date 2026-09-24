@@ -27,7 +27,7 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateDrawing {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create drawing child {}", self.child_id), &format!("Zeichnungskind {} erstellen", self.child_id))
+        protocol::LocalizedLabel::native(&format!("Create drawing child {}", self.child_id), &format!("Zeichnungs-Kind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.child_id.clone()]

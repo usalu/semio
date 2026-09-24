@@ -254,6 +254,10 @@ export type UiTranslationSchema = {
           readonly aa: UiLabelValue;
           readonly aaLarge: UiLabelValue;
           readonly fail: UiLabelValue;
+          /** ♿️ Inline warning under a sub-AA paint: `{{ratio}}` is the measured ratio and `{{minimum}}`
+           * the WCAG AA body-text floor, both already formatted in the active locale; `{{counterpart}}` is
+           * the other paint of the failing text-on-surface pair. */
+          readonly warning: UiLabelValue;
         };
       };
       readonly unavailable: UiLabelValue;
@@ -277,6 +281,29 @@ export type UiTranslationSchema = {
       readonly waitingForHost: UiLabelValue;
       readonly unavailable: UiLabelValue;
       readonly source: UiLabelValue;
+      /** 🛒️ The Marketplace panel tab and its extension-install section (`createFrameworkMarketplacePanelTab`). */
+      readonly marketplace: UiLabelValue;
+      readonly marketplaceUnavailable: UiLabelValue;
+      readonly extension: {
+        readonly enabled: UiLabelValue;
+        readonly disabled: UiLabelValue;
+        readonly enable: UiLabelValue;
+        readonly disable: UiLabelValue;
+        readonly install: UiLabelValue;
+        readonly fromUrl: UiLabelValue;
+        readonly installFromUrl: UiLabelValue;
+        readonly urlPrompt: UiLabelValue;
+        readonly fromFile: UiLabelValue;
+        readonly installFromFile: UiLabelValue;
+      };
+      /** 🩺️ Crash / quarantine recovery affordances (`PluginRecoveryPanel`, twin of `ui_wgpu::ui_recovery_panel`). */
+      readonly recovery: {
+        readonly title: UiLabelValue;
+        readonly crashed: UiLabelValue;
+        readonly quarantined: UiLabelValue;
+        readonly restartApp: UiLabelValue;
+        readonly disablePlugin: UiLabelValue;
+      };
     };
     readonly command: {
       readonly introduceApp: UiLabelValue;
@@ -333,6 +360,7 @@ export type UiTranslationSchema = {
       readonly unknown: UiLabelValue;
     };
     readonly common: {
+      readonly routeNotFound: UiLabelValue;
       readonly mixedValues: UiLabelValue;
       readonly name: UiLabelValue;
       readonly save: UiLabelValue;
@@ -427,11 +455,17 @@ export type UiTranslationSchema = {
       readonly nodes: UiLabelValue;
       readonly edges: UiLabelValue;
       readonly empty: UiLabelValue;
+      /** ♿️ Live-region sentences spoken after a keyboard step; `{{node}}` is the node's label,
+       * `{{position}}`/`{{count}}` its reading-order position among all nodes or the selection size. */
       readonly focusedNode: UiLabelValue;
       readonly selectedNode: UiLabelValue;
+      readonly deselectedNode: UiLabelValue;
+      readonly selectionCleared: UiLabelValue;
     };
     readonly host: {
       readonly emptyScene: UiLabelValue;
+      /** ♿️ The polite status under a windowed table: which of its rows are materialised. */
+      readonly tableRowRange: UiLabelValue;
       readonly preview: UiLabelValue;
       readonly sourceAvailable: UiLabelValue;
       readonly blockImage: UiLabelValue;
@@ -530,6 +564,11 @@ export type UiTranslationSchema = {
       readonly pending: UiLabelValue;
       readonly hubLabel: UiLabelValue;
       readonly hubSignIn: UiLabelValue;
+      readonly online: UiLabelValue;
+      readonly localOnly: UiLabelValue;
+      readonly backboneFile: UiLabelValue;
+      readonly backboneFolder: UiLabelValue;
+      readonly backboneRemote: UiLabelValue;
     };
     readonly ink: {
       readonly link: UiLabelValue;
@@ -612,6 +651,10 @@ export type UiTranslationSchema = {
       readonly discard: UiLabelValue;
       readonly quarantined: UiLabelValue;
       readonly degraded: UiLabelValue;
+      /** 🌐️ The hub refused one of this human's command batches; the edit was rolled back locally. */
+      readonly hubRejected: UiLabelValue;
+      /** 🌐️ The hub applied one of this human's command batches in a transformed form (a concurrent edit won). */
+      readonly hubTransformed: UiLabelValue;
     };
     /** 👥️ `PresenceBar` roster chrome (ticket `26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS`
      * lane 2-F) — the `(space, document, surface)` peer list's own aria strings; per-peer display names are

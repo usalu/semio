@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeAnnual
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change annual primary energy limit [kWh] to {}", self.new_annual_limit_kwh), &format!("Jahresprimärenergiengrenzwert [kWh] auf {} ändern", self.new_annual_limit_kwh))
+        protocol::LocalizedLabel::native(&format!("Change annual primary energy limit [kWh] to {}", self.new_annual_limit_kwh), &format!("Grenzwert des Jahresprimärenergiebedarfs [kWh] auf {} ändern", self.new_annual_limit_kwh))
     }
 }
 //#endregion 🔖️ChangeAnnualLimitKwh

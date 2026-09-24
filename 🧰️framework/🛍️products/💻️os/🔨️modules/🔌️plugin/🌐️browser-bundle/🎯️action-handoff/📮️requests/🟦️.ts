@@ -38,9 +38,10 @@ export class BrowserActorActionMailboxV1 {
     if (!Number.isSafeInteger(capacity) || capacity < 1 || capacity > 1_024) throw new Error("browser-actor-action: invalid capacity");
   }
 
-  /** 🎯️ Captures an intent before handing its immutable bytes to the worker transport. */
-  async dispatchIntent(owner: Omit<BrowserActorActionOwnerV1, "actionSequence">, windowKindId: string, intent: UiIntent): Promise<BrowserActorActionResultV1> {
-    return await this.dispatchRequest(actionSequence => createBrowserActorUiIntentRequestV1({ ...owner, actionSequence }, windowKindId, intent));
+  /** 🎯️ Captures an intent made on one rendered surface (the window or a panel body) before handing its immutable
+   * bytes to the worker transport. */
+  async dispatchIntent(owner: Omit<BrowserActorActionOwnerV1, "actionSequence">, surfaceKey: string, intent: UiIntent): Promise<BrowserActorActionResultV1> {
+    return await this.dispatchRequest(actionSequence => createBrowserActorUiIntentRequestV1({ ...owner, actionSequence }, surfaceKey, intent));
   }
 
   /** 🎛️ Captures a complete catalog invocation and view state on the same in-order owner. */

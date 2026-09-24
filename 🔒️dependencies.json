@@ -2523,10 +2523,31 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "libjpeg-jpg-jfif-1-01-baseline-marker-cli",
         "libjpeg-jpg-jfif-1-01-marker-cli"
       ],
       "capabilities": [
+        "jpg-jfif-1-01-baseline-mutate",
         "jpg-jfif-1-01-mutate-libjpeg"
+      ]
+    },
+    {
+      "ecosystem": "native",
+      "name": "libredwg",
+      "version": "0.13.3",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "libredwg-dwg-preamble-cli"
+      ],
+      "capabilities": [
+        "dwg-ac1018-mutate",
+        "dwg-ac1024-mutate"
       ]
     },
     {
@@ -2929,13 +2950,13 @@
       "productionReachable": false,
       "oracleIds": [
         "pillow-bmp-v3-header-reader",
-        "pillow-jpg-jfif-1-01-baseline-mutate-reader",
+        "pillow-jpg-jfif-1-01-baseline-fixture-generator",
         "pillow-jpg-jfif-1-01-marker-reader",
         "pillow-png-1-2-chunk-reader"
       ],
       "capabilities": [
         "bmp-3-mutate-header",
-        "jpg-jfif-1-01-baseline-mutate",
+        "jpg-jfif-1-01-baseline-fixture-generate",
         "jpg-jfif-1-01-mutate-marker",
         "png-1-2-mutate-chunk"
       ]
@@ -3895,7 +3916,8 @@
         "test-runner"
       ],
       "users": [
-        "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false
     },
@@ -5226,6 +5248,31 @@
         "zip-2-0-mutate",
         "zip-archive"
       ]
+    },
+    {
+      "ecosystem": "rust",
+      "name": "acadrust",
+      "version": "0.5.5",
+      "kinds": [
+        "test-runner"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "rust",
+      "name": "geojson",
+      "version": "1.0.0",
+      "kinds": [
+        "test-runner"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false
     }
   ]
 }

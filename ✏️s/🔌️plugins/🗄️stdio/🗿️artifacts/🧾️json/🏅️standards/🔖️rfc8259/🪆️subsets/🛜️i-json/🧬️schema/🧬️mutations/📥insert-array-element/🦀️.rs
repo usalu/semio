@@ -23,7 +23,7 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for InsertArrayElem
         agg_inverse(&JsonIJsonMutation::InsertArrayElement(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("insert-array-element", "Arrayelement einfügen")
+        protocol::LocalizedLabel::native("Insert array element", "Array-Element einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

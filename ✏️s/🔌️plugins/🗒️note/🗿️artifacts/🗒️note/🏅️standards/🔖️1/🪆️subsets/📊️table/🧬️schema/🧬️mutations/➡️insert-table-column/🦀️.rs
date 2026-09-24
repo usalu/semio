@@ -32,7 +32,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for InsertTableColumn {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Insert column into table \"{}\"", self.id), &format!("Stütze in Tabelle \"{}\" einfügen", self.id))
+        protocol::LocalizedLabel::native(&format!("Insert column into table \"{}\"", self.id), &format!("Spalte in Tabelle \"{}\" einfügen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

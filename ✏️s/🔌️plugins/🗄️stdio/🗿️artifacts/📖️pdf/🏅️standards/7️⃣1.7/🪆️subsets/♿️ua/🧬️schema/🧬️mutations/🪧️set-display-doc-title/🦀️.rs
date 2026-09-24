@@ -35,7 +35,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetDisplayDocTitle {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set PDF/UA display document title to {}", self.display), &format!("PDF/UAanzeigendokumenttitel auf {} setzen", self.display))
+        protocol::LocalizedLabel::native(&format!("Set PDF/UA display document title to {}", self.display), &format!("PDF/UA-Anzeige des Dokumenttitels auf {} setzen", self.display))
     }
 
     fn target(&self) -> Vec<String> {

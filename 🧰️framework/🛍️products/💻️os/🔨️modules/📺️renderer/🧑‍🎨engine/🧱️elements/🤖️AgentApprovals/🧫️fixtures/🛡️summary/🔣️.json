@@ -43,5 +43,87 @@
   "unusableTimeout": {
     "summary": "{\"capabilityId\":\"note.x\",\"diffSummary\":\"d\",\"risk\":\"low\",\"requestedBy\":\"agent:local\",\"timeoutMs\":0}",
     "parsedTimeoutMs": null
-  }
+  },
+  "affordance": [
+    {
+      "row": "rich",
+      "secondsLeft": 42,
+      "en": [
+        "Action: Delete Selection",
+        "Capability: cad.s.cad.cad@1/*#editor.deleteSelection",
+        "Removes every currently selected element from the drawing.",
+        "Applies to: s.cad.cad",
+        "Change summary: Delete Selection — {\"opsCount\":3}",
+        "Requested by: agent:local",
+        "Risk: High",
+        "42s left to decide"
+      ],
+      "de": [
+        "Aktion: Delete Selection",
+        "Fähigkeit: cad.s.cad.cad@1/*#editor.deleteSelection",
+        "Removes every currently selected element from the drawing.",
+        "Betrifft: s.cad.cad",
+        "Änderungszusammenfassung: Delete Selection — {\"opsCount\":3}",
+        "Angefragt von: agent:local",
+        "Risiko: Hoch",
+        "Noch 42 s für die Entscheidung"
+      ]
+    },
+    {
+      "row": "rich",
+      "secondsLeft": 0,
+      "en": [
+        "Action: Delete Selection",
+        "Capability: cad.s.cad.cad@1/*#editor.deleteSelection",
+        "Removes every currently selected element from the drawing.",
+        "Applies to: s.cad.cad",
+        "Change summary: Delete Selection — {\"opsCount\":3}",
+        "Requested by: agent:local",
+        "Risk: High",
+        "Out of time — the agent was refused"
+      ],
+      "de": [
+        "Aktion: Delete Selection",
+        "Fähigkeit: cad.s.cad.cad@1/*#editor.deleteSelection",
+        "Removes every currently selected element from the drawing.",
+        "Betrifft: s.cad.cad",
+        "Änderungszusammenfassung: Delete Selection — {\"opsCount\":3}",
+        "Angefragt von: agent:local",
+        "Risiko: Hoch",
+        "Zeit abgelaufen — der Agent wurde abgelehnt"
+      ]
+    },
+    {
+      "row": "plainText",
+      "secondsLeft": null,
+      "en": [
+        "Approval: translate selection by (1,0,0)",
+        "Change summary: translate selection by (1,0,0)",
+        "Waiting for your decision"
+      ],
+      "de": [
+        "Freigabe: translate selection by (1,0,0)",
+        "Änderungszusammenfassung: translate selection by (1,0,0)",
+        "Wartet auf deine Entscheidung"
+      ]
+    },
+    {
+      "row": "legacyWithoutTheNewFields",
+      "secondsLeft": null,
+      "en": [
+        "Approval: note.s.note.note@1/*#editor.deleteSelection",
+        "Change summary: Delete Selection — {}",
+        "Requested by: agent:local",
+        "Risk: High",
+        "Waiting for your decision"
+      ],
+      "de": [
+        "Freigabe: note.s.note.note@1/*#editor.deleteSelection",
+        "Änderungszusammenfassung: Delete Selection — {}",
+        "Angefragt von: agent:local",
+        "Risiko: Hoch",
+        "Wartet auf deine Entscheidung"
+      ]
+    }
+  ]
 }

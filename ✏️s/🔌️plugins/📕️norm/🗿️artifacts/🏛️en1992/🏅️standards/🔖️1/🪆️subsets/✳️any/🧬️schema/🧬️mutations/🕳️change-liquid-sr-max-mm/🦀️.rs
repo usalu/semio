@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidSRMa
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change liquid s r max mm to {:?}", self.new_liquid_s_r_max_mm), &format!("Flüssigkeitssrmaximalmm auf {:?} ändern", self.new_liquid_s_r_max_mm))
+        protocol::LocalizedLabel::native(&format!("Change liquid-retaining maximum crack spacing s_r,max [mm] to {:?}", self.new_liquid_s_r_max_mm), &format!("Maximalen Rissabstand s_r,max [mm] (Flüssigkeitsbehälter) auf {:?} ändern", self.new_liquid_s_r_max_mm))
     }
 }
 //#endregion 🔖️ChangeLiquidSRMaxMm

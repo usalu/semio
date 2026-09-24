@@ -117,7 +117,7 @@ struct RasterProcessCreditBaseline {
 impl RasterProcessCreditBaseline {
     fn observe() -> Self {
         Self {
-            standalone: RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire),
+            standalone: RASTER_STANDALONE_PROCESS_CONTROLS.claimed(),
             pages: RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire),
             initialization: RASTER_INITIALIZATION_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire),
         }
@@ -133,7 +133,7 @@ impl RasterProcessCreditBaseline {
         // 📏️ Entry readings are kept for diagnosis; no law compares against them (see above), and the
         // saturation laws drive to the pool's own refusal rather than to a predicted headroom.
         let _ = (self.standalone, self.pages, self.initialization);
-        assert!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire) <= RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY, "{what}: the standalone control pool never exceeds its declared capacity");
+        assert!(RASTER_STANDALONE_PROCESS_CONTROLS.claimed() <= RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY, "{what}: the standalone control pool never exceeds its declared capacity");
         assert!(RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire) <= RASTER_RETIREMENT_PROCESS_PAGE_CAPACITY, "{what}: the retirement page pool never exceeds its declared capacity");
         assert!(RASTER_INITIALIZATION_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire) <= RASTER_INITIALIZATION_PROCESS_CONTROL_CAPACITY, "{what}: the initialization control pool never exceeds its declared capacity");
     }
@@ -810,13 +810,13 @@ fn raster_box_and_arc_control_backings_require_and_report_fixed_credit() {
 ///
 /// The refused probe holds NO credit, so it cannot reach terminal-empty (and therefore cannot be
 /// dropped) until some credit is returned — the caller keeps it and closes it last.
-fn saturate_standalone_controls() -> (Vec<RasterOwnedRetirement>, RasterOwnedRetirement, *const u8) {
-    let mut held: Vec<RasterOwnedRetirement> = Vec::with_capacity(RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY);
+fn saturate_standalone_controls(pool: &'static RasterStandaloneControlPool) -> (Vec<RasterOwnedRetirement>, RasterOwnedRetirement, *const u8) {
+    let mut held: Vec<RasterOwnedRetirement> = Vec::with_capacity(pool.capacity);
     loop {
-        assert!(held.len() <= RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY, "the standalone control pool refuses within its declared capacity");
+        assert!(held.len() <= pool.capacity, "the standalone control pool refuses within its declared capacity");
         let owner = format!("exact-owner-{}", held.len());
         let owner_pointer = owner.as_ptr();
-        let construction = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| RasterOwnedRetirement::new(RasterRetirementOwner::String(owner))));
+        let construction = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| RasterOwnedRetirement::new_in(pool, RasterRetirementOwner::String(owner))));
         let retirement = construction.expect("standalone construction retains rather than panics, saturated or not");
         match retirement.control.as_ref().map(|credit| (credit.held_items, credit.held_bytes)) {
             Some(credit) => {
@@ -833,8 +833,9 @@ fn raster_standalone_control_max_plus_one_returns_exact_owner_and_resumes_after_
     let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
     let baseline = RasterProcessCreditBaseline::observe();
     // 🫙 The refusal itself is the saturation witness — see `saturate_standalone_controls`.
-    let (mut saturated, mut plus_one, plus_one_pointer) = saturate_standalone_controls();
-    assert!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire) <= RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY);
+    static POOL: RasterStandaloneControlPool = RasterStandaloneControlPool::new(RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY);
+    let (mut saturated, mut plus_one, plus_one_pointer) = saturate_standalone_controls(&POOL);
+    assert_eq!(POOL.claimed(), POOL.capacity, "the law's own pool is exactly full");
 
     assert!(plus_one.control.is_none());
     let retained_pointer = match plus_one.root.as_ref().and_then(|frame| frame.owner.as_ref()) {
@@ -852,7 +853,7 @@ fn raster_standalone_control_max_plus_one_returns_exact_owner_and_resumes_after_
     // 📏️ Only a strict inequality is provable here: the pool is PROCESS-wide, so a sibling law may
     // hold part of it and an exact `CAPACITY - 1` reads as a coin flip. What this law is about is the
     // resume below, which is exact.
-    assert!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire) < RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY, "returning one standalone control frees one slot in the process pool");
+    assert_eq!(POOL.claimed(), POOL.capacity - 1, "returning one standalone control frees exactly one slot in the law's own pool");
 
     assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut plus_one, 1, 0).expect("plus-one owner resumes into the returned exact control"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
     assert_eq!(plus_one.control.as_ref().map(|credit| (credit.held_items, credit.held_bytes)), Some((1, RASTER_CONTROL_BACKING_BYTES)));
@@ -879,11 +880,12 @@ fn raster_arc_factory_full_saturation_preserves_exact_producer_through_every_con
     // 🫙 Saturate to the pool's own refusal rather than to a predicted headroom — see
     // `saturate_standalone_controls`. The refused probe holds no credit and is closed last, once the
     // two returns below have freed one.
-    let (mut saturated, mut refused_probe, _) = saturate_standalone_controls();
+    static POOL: RasterStandaloneControlPool = RasterStandaloneControlPool::new(RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY);
+    let (mut saturated, mut refused_probe, _) = saturate_standalone_controls(&POOL);
     let producer = std::sync::Arc::new(RasterSnapshot { schema: "arc-owner".into(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() });
     let producer_pointer = std::sync::Arc::as_ptr(&producer);
     let producer_witness = std::sync::Arc::downgrade(&producer);
-    let construction = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| store::SnapshotRetirementFactory::retire(&RasterSnapshotRetirementFactory, producer)));
+    let construction = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| -> Box<dyn store::ErasedSnapshotRetirement> { Box::new(RasterSnapshotRootRetirement::new_in(&POOL, producer)) }));
     let mut root = construction.expect("saturated Arc factory retains rather than panics");
     assert_eq!(std::sync::Arc::as_ptr(&producer_witness.upgrade().expect("saturated Arc owner remains alive")), producer_pointer);
     assert!(matches!(root.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("full Arc control saturation retains exact owner"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));

@@ -24,7 +24,7 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleNormal {
         agg_inverse(&StlMutation::SetTriangleNormal(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-triangle-normal", "Dreiecknormale setzen")
+        protocol::LocalizedLabel::native("Set triangle normal", "Normale des Dreiecks setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

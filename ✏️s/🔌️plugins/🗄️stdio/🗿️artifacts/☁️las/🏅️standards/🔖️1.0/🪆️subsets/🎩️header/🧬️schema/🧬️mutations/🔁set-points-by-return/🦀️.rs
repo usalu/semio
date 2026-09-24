@@ -24,7 +24,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetPointsByReturn {
         agg_inverse(&LasMutation::SetPointsByReturn(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-points-by-return", "Punkte durch Rückluft setzen")
+        protocol::LocalizedLabel::native("Set points by return", "Punktanzahl pro Echo setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

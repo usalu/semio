@@ -21,7 +21,7 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetShotS
         vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Shot Selection", "Aufnahmenauswahl setzen")
+        protocol::LocalizedLabel::native("Set Shot Selection", "Aufnahmeauswahl setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["selected_shot_ids".into()]

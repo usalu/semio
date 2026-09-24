@@ -12,7 +12,7 @@
 use crate::SHomeSnapshot;
 use crate::editor::home::commands::apply_directory_event_page;
 use crate::editor::home::commands::{bind_space_file, create_studio, import_space, open_space, persist_locally, promote_to_hub_space};
-use crate::editor::home::commands::{copy_invite_link, create_space, delete_space, fold_directory_events, manage_space, presence_heartbeat, rename_space, share_space};
+use crate::editor::home::commands::{copy_invite_link, create_space, delete_space, manage_space, presence_heartbeat, rename_space, share_space};
 use crate::editor::home::commands::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use crate::editor::home::presence::{HomePresence, HomePresenceMutation};
@@ -54,7 +54,6 @@ app_commands! {
         "shareSpace" as "share-space" => share_space::ShareSpace,
         "manageSpace" as "manage-space" => manage_space::ManageSpace,
         "copyInviteLink" as "copy-invite-link" => copy_invite_link::CopyInviteLink,
-        "foldDirectoryEvents" as "fold-directory-events" => fold_directory_events::FoldDirectoryEvents,
         "presenceHeartbeat" as "presence-heartbeat" => presence_heartbeat::PresenceHeartbeat,
     }
 }
@@ -72,8 +71,8 @@ const HOME_RETAINED_WORK_ITEMS: usize = 1;
 /// refuses any item declaring more than [`store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES`] (1 MiB). These
 /// two constants were 4 MiB and 16 MiB, so `HomeConfigPreparationFactory::preflight`'s footprint could
 /// never be admitted and every retained config gesture died with "one-item preparation footprint exceeds
-/// its fixed item or byte capacity" — invisible while `applyDirectoryEventPage` and `foldDirectoryEvents`
-/// were `BatchOnlyPendingRewrite` and therefore never reached this lane at all (ticket 26/09/18 S4).
+/// its fixed item or byte capacity" — invisible while `applyDirectoryEventPage` was
+/// `BatchOnlyPendingRewrite` and therefore never reached this lane at all (ticket 26/09/18 S4).
 /// The directory projection they carry is a few KiB for an ordinary hub, and the hub pages it, so the
 /// store's own ceiling is the honest budget rather than an aspirational one.
 const HOME_CONFIG_BASE_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
@@ -126,8 +125,7 @@ fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _inter
         HomeCommand::BindSpaceFile(_)
         | HomeCommand::ImportSpace(_)
         | HomeCommand::DeleteVirtualFileSystemNode(_)
-        | HomeCommand::RenameSpace(_)
-        | HomeCommand::FoldDirectoryEvents(_) => return None,
+        | HomeCommand::RenameSpace(_) => return None,
     };
     (admitted <= ceiling).then_some(HOME_RETAINED_WORK_ITEMS)
 }
@@ -271,7 +269,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutatio
             {
                 (directory_json.len().saturating_add(session_binding_sha256.len()).saturating_add(receipt_sha256.len()).saturating_add(8), HOME_CONFIG_BASE_BYTES + 136)
             }
-            HomeConfigMutation::FoldDirectoryEvent { event_json } => (event_json.len(), HOME_CONFIG_BASE_BYTES),
             _ => return Err("Space Home config preparation rejects non-retained mutations".into()),
         };
         if lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
@@ -289,7 +286,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutatio
             {
                 (directory_json.len().saturating_add(session_binding_sha256.len()).saturating_add(receipt_sha256.len()).saturating_add(8), HOME_CONFIG_BASE_BYTES + 136)
             }
-            HomeConfigMutation::FoldDirectoryEvent { event_json } => (event_json.len(), HOME_CONFIG_BASE_BYTES),
             _ => return Err(request),
         };
         if request.lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
@@ -328,13 +324,6 @@ impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for 
                     authorization_generation: std::mem::replace(&mut post.directory_authorization_generation, *authorization_generation),
                     receipt_sha256: std::mem::replace(&mut post.directory_receipt_sha256, receipt_sha256.clone()),
                 },
-                // ⚙️ The fold is not a field replacement — its post state is the mutation's own diff,
-                // and its declared inverse is the exact pre-fold snapshot.
-                HomeConfigMutation::FoldDirectoryEvent { .. } => {
-                    let diff = ::protocol::Mutation::diff(&mutation, base).into_parts().0;
-                    post = ::protocol::MutationDiff::apply(&diff, base).map_err(|_| "Space Home config fold could not apply its own diff".to_string())?;
-                    HomeConfigMutation::Snapshot { config: base.clone() }
-                }
                 _ => return Err("Space Home config preparation received a non-retained mutation".into()),
             };
             self.candidate = Some((post, inverse, mutation));
@@ -578,9 +567,6 @@ impl ArtifactEditor for HomeApp {
                 space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
                 folder_path: str_field("folderPath").or_else(|| str_field("folder_path")),
             })),
-            "foldDirectoryEvents" => {
-                Ok(HomeCommand::FoldDirectoryEvents(fold_directory_events::FoldDirectoryEvents { events_json: args.and_then(|value| value.get("eventsJson")).and_then(DslValue::as_str).map_or_else(|| "[]".into(), str::to_string) }))
-            }
             "presenceHeartbeat" => Ok(HomeCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat {})),
             other => Err(Fault::new(FaultOrigin::App, "s.home.unhandled-action", format!("home: unhandled action id {other}"))),
         }
@@ -717,7 +703,6 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         )
 
         .view_action("applyDirectoryEventPage", LocalizedLabel::native("Apply Directory Event Page", "Verzeichnis-Ereignisseite anwenden"))
-        .view_action("foldDirectoryEvents", LocalizedLabel::native("Fold Directory Events", "Verzeichnisereignisse einspielen"))
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Präsenz-Heartbeat"))
         .action_interactive_job("createStudio", InteractiveJobClassification::Migrated)
         .action_interactive_job("bindSpaceFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
@@ -728,6 +713,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("goHome", InteractiveJobClassification::Migrated)
         .action_interactive_job("createSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("deleteSpace", InteractiveJobClassification::Migrated)
+        .action_destructive("deleteSpace")
         .action_interactive_job("renameSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("shareSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("manageSpace", InteractiveJobClassification::Migrated)
@@ -735,7 +721,6 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("promoteToHubSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("persistLocally", InteractiveJobClassification::Migrated)
         .action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::Migrated)
-        .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
         .window_kind_action_refs(crate::editor::home::modes::explore::windows::main::S_HOME_WINDOW, vec![
             "createStudio".into(),

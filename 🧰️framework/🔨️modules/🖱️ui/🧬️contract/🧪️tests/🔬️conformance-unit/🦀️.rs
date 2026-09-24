@@ -141,6 +141,8 @@ mod tests {
             crate::Component::Image(_) => "image",
             crate::Component::Surface(_) => "surface",
             crate::Component::Extension(_) => "extension",
+            crate::Component::Table(_) => "table",
+            crate::Component::TableRow(_) => "tableRow",
         }
     }
 
@@ -261,7 +263,7 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 63);
+        assert_eq!(count, 64);
     }
     //#endregion 🔍️Pairing
 

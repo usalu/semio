@@ -34,11 +34,14 @@ fn regenerated(scenario: &std::path::Path) -> Vec<(std::path::PathBuf, String)> 
             (scenario.join("🦠️mutation/🔣️.json"), canonical(&mutation)),
         ];
     }
-    assert_eq!(status.as_deref(), Some("applied"), "{}: a puzzle5d mutation scenario is applied or rejected", scenario.display());
+    assert!(matches!(status.as_deref(), Some("applied" | "no-op")), "{}: a puzzle5d mutation scenario is applied, no-op or rejected", scenario.display());
     assert_eq!(serde_json::to_value(&mutation).expect("mutation encodes"), serde_json::from_str::<serde_json::Value>(&canonical(&mutation)).expect("canonical mutation reparses"), "{}: the owned and the oracle mutation encodings disagree", scenario.display());
     let mut after = before.clone();
     apply_puzzle5d_mutation(&mut after, &mutation).expect("mutation applies to its committed before-snapshot");
     let diff: Puzzle5dDiff = <Puzzle5dMutation as protocol::Mutation<Puzzle5dSnapshot>>::diff(&mutation, &before).diff().clone();
+    if status.as_deref() == Some("no-op") {
+        assert_eq!(after, before, "{}: a NO-OP scenario leaves its own before-snapshot untouched", scenario.display());
+    }
     vec![
         (scenario.join("📸️snapshot/⬅️before/🔣️.json"), canonical(&before)),
         (scenario.join("📸️snapshot/➡️after/🔣️.json"), canonical(&after)),

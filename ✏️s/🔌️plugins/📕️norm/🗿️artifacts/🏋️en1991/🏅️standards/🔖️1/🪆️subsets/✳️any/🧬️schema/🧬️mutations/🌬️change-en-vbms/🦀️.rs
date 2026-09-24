@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeEnVBMS {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change basic wind velocity to {:?}", self.new_en_v_b_m_s), &format!("grundlegende Windgeschwindigkeit auf {:?} ändern", self.new_en_v_b_m_s))
+        protocol::LocalizedLabel::native(&format!("Change basic wind velocity to {:?}", self.new_en_v_b_m_s), &format!("Basiswindgeschwindigkeit auf {:?} ändern", self.new_en_v_b_m_s))
     }
 }
 //#endregion 🔖️Payload

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeMCritKnm {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change m crit knm to {:?}", self.new_m_crit_knm), &format!("Mcritknm auf {:?} ändern", self.new_m_crit_knm))
+        protocol::LocalizedLabel::native(&format!("Change critical moment M_crit [kNm] to {:?}", self.new_m_crit_knm), &format!("Kritisches Moment M_crit [kNm] auf {:?} ändern", self.new_m_crit_knm))
     }
 }
 //#endregion 🔖️ChangeMCritKnm

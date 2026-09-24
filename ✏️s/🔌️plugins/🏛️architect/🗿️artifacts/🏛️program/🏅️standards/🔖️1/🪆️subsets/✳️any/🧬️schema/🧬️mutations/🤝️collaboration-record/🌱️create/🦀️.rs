@@ -25,7 +25,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateCollaborationRecor
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create collaboration record \"{}\"", self.collaboration_record.header.name), &format!("Zusammenarbeitdatensatz \"{}\" erstellen", self.collaboration_record.header.name))
+        protocol::LocalizedLabel::native(&format!("Create collaboration record \"{}\"", self.collaboration_record.header.name), &format!("Zusammenarbeitsdatensatz \"{}\" erstellen", self.collaboration_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.collaboration_record.header.id.0.clone()]

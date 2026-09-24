@@ -22,7 +22,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetLoopCount {
         agg_inverse(&GifMutation::SetLoopCount(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-loop-count", "Kreisanzahl setzen")
+        protocol::LocalizedLabel::native("Set loop count", "Wiederholungsanzahl setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

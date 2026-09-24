@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeQCKwh 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change cooling energy demand to {}", self.new_q_c_kwh), &format!("Kühlungsenergienbedarf auf {} ändern", self.new_q_c_kwh))
+        protocol::LocalizedLabel::native(&format!("Change cooling energy demand to {}", self.new_q_c_kwh), &format!("Kühlenergiebedarf auf {} ändern", self.new_q_c_kwh))
     }
 }
 //#endregion 🔖️ChangeQCKwh

@@ -674,11 +674,21 @@ wrapper (root `package.json:"nx"`), which rewrites `workspace:dev -- <variant>` 
 
 ## 🪟️ Windows Setup [↑](#-development)
 
-Native Windows development is zero-touch through the checked-in bootstrap script:
+Native Windows development is zero-touch through the checked-in bootstrap script. Clone with long paths enabled
+(tracked fixture paths reach 239 characters below the clone root; `setup git` keeps `core.longpaths` in the clone's own
+`.git/config` afterwards) and run the script with the Windows PowerShell 5.1 that ships with Windows — no Bun needed yet:
 
 ```powershell
-bun ./📜️script.ts setup native
+git clone -c core.longpaths=true https://github.com/usalu/semio.git
+cd semio
+powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🔵️.ps1" setup
 ```
+
+Once Bun is installed, `bun ./📜️script.ts setup native` re-runs the same script. It never writes user-global tool
+configuration (`~/.cargo/config.toml`, global git config). It reports, in English and German, when the machine-wide
+`LongPathsEnabled` switch is off and prints the one elevated command that enables it: Python, CMake and every other tool
+that relies on that switch fail past 260 characters, and Rust build outputs reach ~246 characters below the clone root, so
+keep the clone root short (for example `C:\src\semio`).
 
 The script installs the same baseline toolchain the devcontainer provides on a fresh machine:
 
@@ -699,11 +709,22 @@ Native Neo4j Desktop must own the local DBMS. Create a Neo4j Desktop **Local Ins
 - Browser: `http://127.0.0.1:7474`
 - Database: `neo4j`
 
-Native macOS and Linux use the same root router:
+Native macOS and Linux bootstrap from a fresh clone with the checked-in shell script (no Bun needed yet); afterwards
+`bun ./📜️script.ts setup native` re-runs it:
 
 ```bash
-bun ./📜️script.ts setup native
+bash "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh" setup
 ```
+
+It installs the native C/C++ toolchain through `apt-get`, `dnf`, `pacman` or `zypper` (Homebrew on macOS), the
+repository-pinned Bun, rustup with the `rust-toolchain.toml` toolchain, Go, the .NET 8 SDK and uv, then runs
+`bun nx run workspace:setup`. Linux links with the `rust-lld` that ships inside the pinned toolchain, so no distribution
+linker package is required.
+
+Every `bun nx` call first publishes the declared bootstrap sources
+(`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🌱️sources/🔣️.json`): generated files a fresh
+clone lacks but that Bun or the repository scripts need before Nx can run anything — the UI axis projections every script
+imports through `@semio-tech/framework`, and the `@semio-tech/flow-core` workspace manifest `bun install` requires.
 
 IDE startup runs `bun ./📜️script.ts start`, which checks the native Neo4j Desktop `compose` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the product graph databases `compose`, `elements`, `coda`, and `reuse`, plus any names listed in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated, e.g. `metabolism,mydb`), when the DBMS edition supports multi-database administration. **Neo4j Community Edition allows only one standard user graph per DBMS** (often still named `neo4j` until you rename it). Those `CREATE DATABASE` calls do nothing useful on Community, so you will **not** see extra graphs in Desktop or Browser unless the edition supports them. Use **Neo4j Enterprise** (or another deployment that supports multiple standard databases) if you need isolated Bolt databases for each graph.
 

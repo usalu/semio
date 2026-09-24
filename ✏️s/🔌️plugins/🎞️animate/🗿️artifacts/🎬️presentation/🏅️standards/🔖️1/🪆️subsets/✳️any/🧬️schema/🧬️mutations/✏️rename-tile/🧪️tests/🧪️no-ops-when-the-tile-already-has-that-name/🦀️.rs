@@ -95,12 +95,12 @@ fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "rename-tile/no-ops-when-the-tile-already-has-that-name: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op` — a
+/// 🎯️ The declared outcome holds: `no-op`, with one untargeted Warning `mutation.no-op` — a
 /// presentation tile with an unchanged name is a warning, never the Error a missing id would raise.
 #[test]
 fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "rename-tile/no-ops-when-the-tile-already-has-that-name declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "rename-tile/no-ops-when-the-tile-already-has-that-name declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();

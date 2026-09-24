@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sources"],
+  "properties": {
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "module", "export", "outputs", "requiredBy"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "module": { "type": "string", "minLength": 1 },
+          "export": { "type": "string", "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$" },
+          "outputs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "requiredBy": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

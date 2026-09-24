@@ -25,7 +25,7 @@ impl protocol::MutationKind<JackEditorWindowTransient, JackEditorWindowTransient
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Editor Window Selection", "Editorfensterauswahl setzen")
+        protocol::LocalizedLabel::native("Set Editor Window Selection", "Auswahl im Editorfenster setzen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeFoundation
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change foundation horizontal resistance H_Rd [kN] to {}", self.new_foundation_h_rd_kn), &format!("Gründungshorizontalwiderstandh_Rd [kN] auf {} ändern", self.new_foundation_h_rd_kn))
+        protocol::LocalizedLabel::native(&format!("Change foundation horizontal resistance H_Rd [kN] to {}", self.new_foundation_h_rd_kn), &format!("Gleitwiderstand der Gründung H_Rd [kN] auf {} ändern", self.new_foundation_h_rd_kn))
     }
 }
 //#endregion 🔖️ChangeFoundationHRdKn

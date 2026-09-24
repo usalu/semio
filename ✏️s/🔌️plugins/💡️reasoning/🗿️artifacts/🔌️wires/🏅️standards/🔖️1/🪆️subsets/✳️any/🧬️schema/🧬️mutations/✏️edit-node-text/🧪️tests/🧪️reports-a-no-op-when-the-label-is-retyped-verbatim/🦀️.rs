@@ -5,7 +5,7 @@
 //!
 //! ⚠️ A text-CHANGING `➡️after` cannot be hand-authored here: `diff_board_fixture` re-mints the
 //! composed `s.stdio.semio.graph` child handle as a `DefaultHasher` digest of the child content.
-//! `edit-node-text`'s unchanged-text guard reaches an APPLIED outcome without touching that hash,
+//! `edit-node-text`'s unchanged-text guard reaches a NO-OP outcome without touching that hash,
 //! returning `MutationOutcome::empty().warn("mutation.no-op", …)` instead.
 //!
 //! ✏️ `edit-node-text` is the wires vocabulary's only `edit` verb — the board node's `text` is
@@ -80,12 +80,12 @@ async fn committed_json_is_canonical() {
     assert_eq!(original.get("newText").and_then(serde_json::Value::as_str), Some("Thesis"), "the payload must carry the very label BASE already holds — otherwise this stops being a no-op case");
 }
 
-/// 🎯️ The declared outcome — `applied` with one `warn`/`mutation.no-op` — is exactly what the
+/// 🎯️ The declared outcome — `no-op` with one `warn`/`mutation.no-op` — is exactly what the
 /// unchanged-text guard emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "edit-node-text/reports-a-no-op-when-the-label-is-retyped-verbatim declares an applied outcome");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "edit-node-text/reports-a-no-op-when-the-label-is-retyped-verbatim declares a no-op outcome");
     let produced = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation(), &before());
     let messages = produced.messages();
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("a no-op outcome declares its diagnostics");

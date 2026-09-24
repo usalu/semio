@@ -31,7 +31,7 @@ impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for
         ]
     }
     fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native(&format!("Create space alternative {}", self.alternative.name), &format!("Raumalternative {} erstellen", self.alternative.name))
+        crate::LocalizedLabel::native(&format!("Create space alternative {}", self.alternative.name), &format!("Space-Alternative {} erstellen", self.alternative.name))
     }
     fn target(&self) -> Vec<String> {
         vec!["alternatives".into(), self.alternative.id.clone()]

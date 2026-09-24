@@ -29,7 +29,7 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Sign out", "aus signieren")
+        protocol::LocalizedLabel::native("Sign out", "Abmelden")
     }
 
     fn target(&self) -> Vec<String> {

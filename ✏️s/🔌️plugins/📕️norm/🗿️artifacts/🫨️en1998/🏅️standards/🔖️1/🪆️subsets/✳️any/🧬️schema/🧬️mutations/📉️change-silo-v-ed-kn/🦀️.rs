@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeSiloVEdKn 
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change silo design shear V_Ed [kN] to {}", self.new_silo_v_ed_kn), &format!("Silobemessungsschubv_Ed [kN] auf {} ändern", self.new_silo_v_ed_kn))
+        protocol::LocalizedLabel::native(&format!("Change silo design shear V_Ed [kN] to {}", self.new_silo_v_ed_kn), &format!("Bemessungsquerkraft des Silos V_Ed [kN] auf {} ändern", self.new_silo_v_ed_kn))
     }
 }
 //#endregion 🔖️ChangeSiloVEdKn

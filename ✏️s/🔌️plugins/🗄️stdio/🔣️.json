@@ -87,7 +87,60 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "row",
+                    "label": {
+                      "native": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      },
+                      "reuse": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "column",
+                    "label": {
+                      "native": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      },
+                      "reuse": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -2426,7 +2479,60 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "row",
+                    "label": {
+                      "native": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      },
+                      "reuse": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "column",
+                    "label": {
+                      "native": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      },
+                      "reuse": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -4765,7 +4871,25 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Text",
+                        "de": "Text"
+                      },
+                      "reuse": {
+                        "en": "Text",
+                        "de": "Text"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -7104,7 +7228,42 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "nodeId",
+                    "label": {
+                      "native": {
+                        "en": "Node",
+                        "de": "Knoten"
+                      },
+                      "reuse": {
+                        "en": "Node",
+                        "de": "Knoten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -9443,7 +9602,42 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "nodeId",
+                    "label": {
+                      "native": {
+                        "en": "Node",
+                        "de": "Knoten"
+                      },
+                      "reuse": {
+                        "en": "Node",
+                        "de": "Knoten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -11782,7 +11976,42 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "nodeId",
+                    "label": {
+                      "native": {
+                        "en": "Node",
+                        "de": "Knoten"
+                      },
+                      "reuse": {
+                        "en": "Node",
+                        "de": "Knoten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -14121,7 +14350,42 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "nodeId",
+                    "label": {
+                      "native": {
+                        "en": "Node",
+                        "de": "Knoten"
+                      },
+                      "reuse": {
+                        "en": "Node",
+                        "de": "Knoten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -16459,7 +16723,25 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Text",
+                        "de": "Text"
+                      },
+                      "reuse": {
+                        "en": "Text",
+                        "de": "Text"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -18796,7 +19078,25 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Text",
+                        "de": "Text"
+                      },
+                      "reuse": {
+                        "en": "Text",
+                        "de": "Text"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -25098,6 +25398,19 @@
                   "claims": [
                     {
                       "namespace": "dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "dbbdaed7fe71844174fe745f130e32f3704848d9513c2ba26345429442bc7609",
+                  "executable": false,
+                  "identity": "s.stdio.json.composer.dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
                       "value": "s.stdio.json@rfc8259/i-json"
                     }
                   ],
@@ -25325,6 +25638,19 @@
                   "executable": false,
                   "identity": "s.stdio.json.standard.rfc8259.representation.mime-application-json-extension-json",
                   "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "5086cf3e6128d39e038f0724bd1d62f5235aa8bcf709c6f829c50c464cccf7d2",
+                  "executable": false,
+                  "identity": "s.stdio.json.subset-validator.validated-dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "subset-validator",
                   "localizations": []
                 },
                 {
@@ -34740,6 +35066,19 @@
                   "claims": [
                     {
                       "namespace": "dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "dbbdaed7fe71844174fe745f130e32f3704848d9513c2ba26345429442bc7609",
+                  "executable": false,
+                  "identity": "s.stdio.json.composer.dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
                       "value": "s.stdio.json@rfc8259/i-json"
                     }
                   ],
@@ -34967,6 +35306,19 @@
                   "executable": false,
                   "identity": "s.stdio.json.standard.rfc8259.representation.mime-application-json-extension-json",
                   "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.json@rfc8259/geojson"
+                    }
+                  ],
+                  "descriptorSha256": "5086cf3e6128d39e038f0724bd1d62f5235aa8bcf709c6f829c50c464cccf7d2",
+                  "executable": false,
+                  "identity": "s.stdio.json.subset-validator.validated-dialect-s-stdio-json-rfc8259-geojson.v1",
+                  "kind": "subset-validator",
                   "localizations": []
                 },
                 {
@@ -40328,19 +40680,6 @@
       },
       {
         "owner": {
-          "artifactKind": "s.stdio.bcf",
-          "standard": "2.1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xml",
-          "standard": "1.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
           "artifactKind": "s.stdio.csv",
           "standard": "rfc4180",
           "subset": "*"
@@ -40421,19 +40760,6 @@
         "owner": {
           "artifactKind": "s.stdio.docx",
           "standard": "ecma-376",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xml",
-          "standard": "1.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.stdio.docx",
-          "standard": "ecma-376",
           "subset": "strict"
         },
         "counterpart": {
@@ -40473,19 +40799,6 @@
         "owner": {
           "artifactKind": "s.stdio.docx",
           "standard": "ecma-376",
-          "subset": "strict"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xml",
-          "standard": "1.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.stdio.docx",
-          "standard": "ecma-376",
           "subset": "transitional"
         },
         "counterpart": {
@@ -40517,19 +40830,6 @@
         "counterpart": {
           "artifactKind": "s.stdio.zip",
           "standard": "2.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.stdio.docx",
-          "standard": "ecma-376",
-          "subset": "transitional"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xml",
-          "standard": "1.0",
           "subset": "*"
         },
         "direction": "import"
@@ -40708,6 +41008,45 @@
           "artifactKind": "s.stdio.json",
           "standard": "rfc8259",
           "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "geojson"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "geojson"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "geojson"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "geojson"
         },
         "counterpart": {
           "artifactKind": "s.stdio.txt",
@@ -41461,19 +41800,6 @@
         "owner": {
           "artifactKind": "s.stdio.pptx",
           "standard": "ecma-376",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xml",
-          "standard": "1.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.stdio.pptx",
-          "standard": "ecma-376",
           "subset": "strict"
         },
         "counterpart": {
@@ -41513,19 +41839,6 @@
         "owner": {
           "artifactKind": "s.stdio.pptx",
           "standard": "ecma-376",
-          "subset": "strict"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xml",
-          "standard": "1.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.stdio.pptx",
-          "standard": "ecma-376",
           "subset": "transitional"
         },
         "counterpart": {
@@ -41557,19 +41870,6 @@
         "counterpart": {
           "artifactKind": "s.stdio.zip",
           "standard": "2.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.stdio.pptx",
-          "standard": "ecma-376",
-          "subset": "transitional"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xml",
-          "standard": "1.0",
           "subset": "*"
         },
         "direction": "import"
@@ -42072,19 +42372,6 @@
         "owner": {
           "artifactKind": "s.stdio.xlsx",
           "standard": "ecma-376",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xml",
-          "standard": "1.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.stdio.xlsx",
-          "standard": "ecma-376",
           "subset": "strict"
         },
         "counterpart": {
@@ -42124,19 +42411,6 @@
         "owner": {
           "artifactKind": "s.stdio.xlsx",
           "standard": "ecma-376",
-          "subset": "strict"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xml",
-          "standard": "1.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.stdio.xlsx",
-          "standard": "ecma-376",
           "subset": "transitional"
         },
         "counterpart": {
@@ -42168,19 +42442,6 @@
         "counterpart": {
           "artifactKind": "s.stdio.zip",
           "standard": "2.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.stdio.xlsx",
-          "standard": "ecma-376",
-          "subset": "transitional"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.xml",
-          "standard": "1.0",
           "subset": "*"
         },
         "direction": "import"
@@ -42373,11 +42634,6 @@
             "artifactKind": "s.stdio.zip",
             "standard": "2.0",
             "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xml",
-            "standard": "1.0",
-            "subset": "*"
           }
         ]
       },
@@ -42435,11 +42691,6 @@
             "artifactKind": "s.stdio.zip",
             "standard": "2.0",
             "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xml",
-            "standard": "1.0",
-            "subset": "*"
           }
         ]
       },
@@ -42464,11 +42715,6 @@
             "artifactKind": "s.stdio.zip",
             "standard": "2.0",
             "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xml",
-            "standard": "1.0",
-            "subset": "*"
           }
         ]
       },
@@ -42492,11 +42738,6 @@
           {
             "artifactKind": "s.stdio.zip",
             "standard": "2.0",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xml",
-            "standard": "1.0",
             "subset": "*"
           }
         ]
@@ -42617,6 +42858,30 @@
             "artifactKind": "s.stdio.json",
             "standard": "rfc8259",
             "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.txt",
+            "standard": "utf-8",
+            "subset": "*"
+          }
+        ]
+      },
+      {
+        "writes": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "geojson"
+        },
+        "reads": [
+          {
+            "artifactKind": "s.stdio.json",
+            "standard": "rfc8259",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.json",
+            "standard": "rfc8259",
+            "subset": "geojson"
           },
           {
             "artifactKind": "s.stdio.txt",
@@ -43078,11 +43343,6 @@
             "artifactKind": "s.stdio.zip",
             "standard": "2.0",
             "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xml",
-            "standard": "1.0",
-            "subset": "*"
           }
         ]
       },
@@ -43107,11 +43367,6 @@
             "artifactKind": "s.stdio.zip",
             "standard": "2.0",
             "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xml",
-            "standard": "1.0",
-            "subset": "*"
           }
         ]
       },
@@ -43135,11 +43390,6 @@
           {
             "artifactKind": "s.stdio.zip",
             "standard": "2.0",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xml",
-            "standard": "1.0",
             "subset": "*"
           }
         ]
@@ -43457,11 +43707,6 @@
             "artifactKind": "s.stdio.zip",
             "standard": "2.0",
             "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xml",
-            "standard": "1.0",
-            "subset": "*"
           }
         ]
       },
@@ -43486,11 +43731,6 @@
             "artifactKind": "s.stdio.zip",
             "standard": "2.0",
             "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xml",
-            "standard": "1.0",
-            "subset": "*"
           }
         ]
       },
@@ -43514,11 +43754,6 @@
           {
             "artifactKind": "s.stdio.zip",
             "standard": "2.0",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.xml",
-            "standard": "1.0",
             "subset": "*"
           }
         ]
@@ -43622,8 +43857,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "b0d39c81bc0105cab54c3a3b88c9a7dc3056051a12322dd9dae3d07e809722de",
-    "coreWasmSha256": "db2e6816fd927819fa34d2724a66f67316d00cf22145dbbae14196cf946be853",
-    "descriptorSha256": "50e0ce89e8f3ea17db9799729be1c82438f7629b9d1aea54b8b30f9222110c80"
+    "wasmSha256": "6339403dd0f39ea55a3521c62a4b64578302e71064a1ad60287b025a295ca61a",
+    "coreWasmSha256": "e4868c766d0f7199b1de7253cd79678ac7059d41abbe121cf6fde12827b68742",
+    "descriptorSha256": "5f2458a2c8b0ab9478ae49df2c88c28e2e564689bb9a13fc40bdb16ea48ff731"
   }
 }

@@ -113,7 +113,6 @@ describe("WASI codegen profile policy", () => {
     for (const vector of fixture.artifactPaths) {
       expect(pluginWasmArtifactPath(root, vector.packageName, vector.profile ?? undefined, freshTarget)).toBe(join(freshTarget, ...vector.expectedRelativePath.split("/")));
     }
-    console.log("[DEBUG] registry-wasm-profile routes=" + fixture.cases.length + " package-overrides=" + Object.keys(developmentPackageOverrides).length + " artifact-paths=" + fixture.artifactPaths.length);
     expect(manifest.profile["wasm-release"]).toMatchObject({ inherits: "release", "opt-level": "s", lto: "thin", "codegen-units": 1, strip: "symbols", incremental: false, "trim-paths": "object" });
   });
 

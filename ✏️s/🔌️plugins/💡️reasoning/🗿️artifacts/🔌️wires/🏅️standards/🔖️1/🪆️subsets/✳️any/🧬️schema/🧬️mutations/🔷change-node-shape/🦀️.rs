@@ -31,7 +31,7 @@ impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ChangeNodeShape {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change node \"{}\" shape to \"{}\"", self.node_id, self.new_shape), &format!("Knoten \"{}\" Form auf \"{}\" ändern", self.node_id, self.new_shape))
+        protocol::LocalizedLabel::native(&format!("Change node \"{}\" shape to \"{}\"", self.node_id, self.new_shape), &format!("Form von Knoten \"{}\" auf \"{}\" ändern", self.node_id, self.new_shape))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]

@@ -16,7 +16,7 @@ path = "../../🦀️.rs"
 [features]
 # 🔮️ Links the registered third-party reference implementations. Enabled only by a generated test
 # host, never by any production target — `bun ./📜️script.ts dependency` enforces that.
-oracles = ["dep:pdf-writer", "dep:lopdf", "dep:png", "dep:gif", "dep:zip", "dep:flate2", "dep:csv", "dep:image", "dep:tobj", "dep:stl_io", "dep:quick-xml", "dep:json", "dep:html5ever", "dep:markup5ever_rcdom", "dep:comrak", "dep:dxf", "dep:las", "dep:mp4", "dep:ruststep", "dep:calamine", "dep:rust_xlsxwriter", "dep:ply-rs", "dep:riff", "dep:id3"]
+oracles = ["dep:pdf-writer", "dep:lopdf", "dep:png", "dep:gif", "dep:zip", "dep:flate2", "dep:csv", "dep:image", "dep:tobj", "dep:stl_io", "dep:quick-xml", "dep:json", "dep:html5ever", "dep:markup5ever_rcdom", "dep:comrak", "dep:dxf", "dep:las", "dep:mp4", "dep:ruststep", "dep:calamine", "dep:rust_xlsxwriter", "dep:ply-rs", "dep:riff", "dep:id3", "dep:bstr", "dep:tiff"]
 
 [dependencies]
 semio-repo-test-host = { path = "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
@@ -27,6 +27,12 @@ gif = { version = "0.13", optional = true }
 zip = { version = "6", optional = true, default-features = false, features = ["deflate"] }
 flate2 = { version = "1", optional = true }
 csv = { version = "1", optional = true }
+# 📖️ UTF-8 byte-string LINE reader (MIT OR Apache-2.0), registered as `bstr-txt-utf-8-mutate-reader`:
+# `lines_with_terminator` reports each line with the terminator it carried, which is what 🔤️txt's oracle reads.
+bstr = { version = "1.13", optional = true, default-features = false, features = ["std"] }
+# 🖼️ TIFF tag reader (MIT OR Apache-2.0), registered as `tiff-tiff-6-0-baseline-mutate-reader`: 🖼️tiff 🧱️baseline reads
+# its five conformance axes out of IFD 0 through `Decoder::find_tag`.
+tiff = { version = "0.11", optional = true }
 image = { version = "0.25", optional = true, default-features = false, features = ["bmp", "tiff", "jpeg"] }
 tobj = { version = "4", optional = true }
 stl_io = { version = "0.8", optional = true }

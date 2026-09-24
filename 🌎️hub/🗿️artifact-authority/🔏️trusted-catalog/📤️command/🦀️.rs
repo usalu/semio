@@ -1,16 +1,41 @@
-//! 📡️ One-shot private publication transport, dispatched before any Hub service is opened.
+//! 📡️ One-shot private trusted-catalog verbs, dispatched before any Hub service is opened: `publish`
+//! (the publication transport) and `open-targets` (the hub's own document-open pairing rule over one
+//! descriptor, so a publisher never re-derives it).
 
 use super::HubError;
 use std::ffi::OsString;
 
-fn selected(arguments: &[OsString]) -> Result<bool, HubError> {
+/// 🚪️ The closed set of trusted-catalog verbs.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TrustedCatalogVerb {
+    Publish,
+    OpenTargets,
+}
+
+fn selected(arguments: &[OsString]) -> Result<Option<TrustedCatalogVerb>, HubError> {
     if arguments.is_empty() {
-        return Ok(false);
+        return Ok(None);
     }
     if arguments == [OsString::from("trusted-catalog"), OsString::from("publish")] {
-        return Ok(true);
+        return Ok(Some(TrustedCatalogVerb::Publish));
+    }
+    if arguments == [OsString::from("trusted-catalog"), OsString::from("open-targets")] {
+        return Ok(Some(TrustedCatalogVerb::OpenTargets));
     }
     Err(HubError::UnsafeAuthConfiguration("unknown Hub command".into()))
+}
+
+/// 🎯️ Reads one bounded package descriptor from stdin and writes the hub's document-open targets for it.
+fn open_targets() -> Result<(), HubError> {
+    use semio_hub::artifact_authority::trusted_catalog::{descriptor_open_targets_answer, TRUSTED_DESCRIPTOR_MAX_BYTES};
+    use std::io::{Read, Write};
+    let mut bytes = Vec::new();
+    std::io::stdin().lock().take(TRUSTED_DESCRIPTOR_MAX_BYTES + 1).read_to_end(&mut bytes)?;
+    let answer = descriptor_open_targets_answer(&bytes)?;
+    let mut output = std::io::stdout().lock();
+    output.write_all(&answer)?;
+    output.flush()?;
+    Ok(())
 }
 
 #[cfg(any(test, feature = "native-artifact-execution"))]
@@ -26,7 +51,7 @@ fn read_command(input: impl std::io::Read) -> Result<Vec<u8>, HubError> {
 
 #[cfg(feature = "native-artifact-execution")]
 async fn publish() -> Result<(), HubError> {
-    use super::{AuthorityError, AuthorityLimits, AuthorityOperationControl, NativeCodecProviderSetV1, OperationContext, StartupCatalogControl, Tracer};
+    use super::{AuthorityError, AuthorityLimits, NativeCodecProviderSetV1, OperationContext, StartupCancellationV1, StartupCatalogControl, Tracer, TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS};
     use semio_hub::artifact_authority::trusted_catalog::{TrustedCatalogPublicationOutcome, TrustedCatalogPublisher};
     use std::io::Write;
     use std::time::Duration;
@@ -39,8 +64,8 @@ async fn publish() -> Result<(), HubError> {
         .await
         .map_err(|_| HubError::UnsafeAuthConfiguration("publication command input deadline exceeded".into()))?
         .map_err(|_| HubError::UnsafeAuthConfiguration("publication command reader failed".into()))??;
-    let control = StartupCatalogControl::new(Tracer::from_environment());
-    let context = OperationContext::new(control.now_ms().saturating_add(30000), AuthorityLimits::maximum(), &control);
+    let control = StartupCatalogControl::new(Tracer::from_environment(), StartupCancellationV1::default());
+    let context = OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &control)?;
     let providers = NativeCodecProviderSetV1::linked();
     let outcome = TrustedCatalogPublisher::publish_current(&data, &bytes, &providers, &context).await;
     bytes.fill(0);
@@ -66,12 +91,13 @@ async fn publish() -> Result<(), HubError> {
     Err(HubError::UnsafeAuthConfiguration("publication requires the compiled native-artifact-execution provider".into()))
 }
 
-/// 🚪️ Handles only the exact publication verb and leaves ordinary no-argument startup untouched.
+/// 🚪️ Handles only the exact trusted-catalog verbs and leaves ordinary no-argument startup untouched.
 pub(super) async fn dispatch(arguments: &[OsString]) -> Result<bool, HubError> {
-    if !selected(arguments)? {
-        return Ok(false);
+    match selected(arguments)? {
+        None => return Ok(false),
+        Some(TrustedCatalogVerb::Publish) => publish().await?,
+        Some(TrustedCatalogVerb::OpenTargets) => open_targets()?,
     }
-    publish().await?;
     Ok(true)
 }
 

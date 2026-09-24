@@ -346,3 +346,69 @@ async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_his
     assert_eq!(actual, expected);
     println!("[DEBUG] rewriting reset preserves its source and pack and emits neutral edit-free history without an envelope owner");
 }
+
+//#region 🩹️RailVerbLaws
+fn working_graph_node_ids(state: &RewritingSnapshot) -> Vec<String> {
+    semio_s_artifact_trinity_jack::JackSnapshot::from_json(&state.before_fixture_json).expect("the working graph decodes").nodes().into_iter().map(|node| node.id).collect()
+}
+
+fn working_graph_node_name(state: &RewritingSnapshot, id: &str) -> String {
+    semio_s_artifact_trinity_jack::JackSnapshot::from_json(&state.before_fixture_json).expect("the working graph decodes").nodes().into_iter().find(|node| node.id == id).map(|node| node.name).expect("node")
+}
+
+/// ⚖️ LAW: `patchNodes` pressed from the rail with an EMPTY `nodeIds` patches the selected nodes of the
+/// working graph, and a comma list in the text field names several nodes (S15: the verb "moved nothing").
+#[semio_framework_async_macros::async_test]
+async fn patch_nodes_from_the_rail_patches_the_selection_or_the_listed_nodes() {
+    let mut app = new_app().await;
+    let ids = working_graph_node_ids(&app.snapshot().expect("projection"));
+    select_graph(&mut app, &[&ids[0]]).await;
+    let rail = |pairs: &[(&str, &str)]| pack::json_to_dsl_value(&pack::JsonValue::Object(pairs.iter().map(|(key, value)| ((*key).to_string(), pack::JsonValue::String((*value).to_string()))).collect()));
+    app.handle_action("patchNodes", Some(&rail(&[("field", "name"), ("value", "S15 Selected")])), &meta("local")).await.expect("an empty nodeIds patches the selection");
+    settle(&mut app).await;
+    assert_eq!(working_graph_node_name(&app.snapshot().expect("projection"), &ids[0]), "S15 Selected");
+    app.handle_action("patchNodes", Some(&rail(&[("nodeIds", &format!("{} {}", ids[0], ids[1])), ("field", "name"), ("value", "S15 Listed")])), &meta("local")).await.expect("a listed nodeIds patches both nodes");
+    settle(&mut app).await;
+    let state = app.snapshot().expect("projection");
+    assert_eq!((working_graph_node_name(&state, &ids[0]), working_graph_node_name(&state, &ids[1])), ("S15 Listed".to_string(), "S15 Listed".to_string()));
+}
+
+/// ⚖️ LAW: a `patchNodes` that cannot move the document is refused by name — an unknown id is
+/// `mutation.target-missing`, no id and no selection, an unsupported field or an empty value is
+/// `app.command.invalid-args`. It used to answer an empty emit that read as an accepted edit.
+#[semio_framework_async_macros::async_test]
+async fn patch_nodes_refuses_what_it_cannot_apply() {
+    let state = default_rule_state();
+    let first = working_graph_node_ids(&state)[0].clone();
+    let code = |result: Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
+    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &["no-such-node".into()], &[], "name", "x")), "mutation.target-missing");
+    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[], &[], "name", "x")), "app.command.invalid-args");
+    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[first.clone()], &[], "colour", "x")), "app.command.invalid-args");
+    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[first.clone()], &[], "kind", " ")), "app.command.invalid-args");
+    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[first.clone()], &[], "kind", "NoSuchKind")), "app.command.invalid-args", "a kind the manifest does not declare is refused, not written");
+    assert!(!crate::editor::rewriting::commands::patch_nodes(&state, &[], &[first], "name", "Beam").expect("the selection is the target").artifact_mutations.is_empty());
+}
+
+/// ⚖️ LAW: `nodeGraphEdit` is the node-graph host's gesture verb (a `surfaceId` plus an `operations`
+/// list), so it stays out of the palette, the Actions rail and the context menu's `transform` group —
+/// pressed there it was refused `missing operationsJson` (S15). The menu's own delete row still
+/// dispatches it with its full payload.
+#[semio_framework_async_macros::async_test]
+async fn the_node_graph_gesture_verb_is_kept_off_the_rail_and_the_transform_group() {
+    let definition = create_rewriting_app();
+    let edit = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == "nodeGraphEdit").expect("declared");
+    assert!(!edit.in_palette, "nodeGraphEdit is a canvas gesture, never a rail row");
+    let patch = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == "patchNodes").expect("declared");
+    assert!(patch.args.iter().any(|arg| arg.id == "nodeIds" && !arg.required), "nodeIds is optional: empty means the selection");
+    let mut app = new_app().await;
+    let request = ContextMenuRequest {
+        menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+        surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: TRINITY_REWRITING_PLAY_SURFACE_BEFORE.into(), kind: "nodeGraph".into(), hits: Vec::new(), selection: Vec::new(), text: None }),
+        window_instance_id: None,
+        point: None,
+    };
+    let menu = app.context_menu(&request, &ViewModel::default()).await;
+    let bare_edit_rows = menu.iter().flat_map(|row| std::iter::once(row).chain(row.children.iter().flatten())).filter(|row| row.action.as_deref() == Some("nodeGraphEdit") && row.id != "delete-selection").count();
+    assert_eq!(bare_edit_rows, 0, "no argument-less nodeGraphEdit row: {menu:?}");
+}
+//#endregion 🩹️RailVerbLaws

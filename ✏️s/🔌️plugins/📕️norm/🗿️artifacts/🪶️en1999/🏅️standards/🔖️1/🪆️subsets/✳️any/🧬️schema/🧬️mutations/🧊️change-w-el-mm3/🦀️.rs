@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeWElMm3 {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change elastic section modulus W_el [mm3] to {}", self.new_w_el_mm3), &format!("Elastizitätsabschnittmodulw_el [mm3] auf {} ändern", self.new_w_el_mm3))
+        protocol::LocalizedLabel::native(&format!("Change elastic section modulus W_el [mm3] to {}", self.new_w_el_mm3), &format!("Elastisches Widerstandsmoment W_el [mm3] auf {} ändern", self.new_w_el_mm3))
     }
 }
 //#endregion 🔖️ChangeWElMm3

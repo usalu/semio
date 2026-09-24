@@ -20,7 +20,7 @@ impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransient
         vec![Self { selection: base.editor_selection.clone() }.into()]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Writer Window Editor Selection", "Schreiberfenstereditorauswahl setzen")
+        protocol::LocalizedLabel::native("Set Writer Window Editor Selection", "Editorauswahl des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["editor_selection".into()]

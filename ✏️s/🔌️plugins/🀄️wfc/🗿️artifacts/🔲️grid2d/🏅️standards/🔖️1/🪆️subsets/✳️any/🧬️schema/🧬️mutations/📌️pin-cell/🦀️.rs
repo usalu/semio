@@ -31,7 +31,7 @@ impl MutationKind<Grid2dSnapshot, Grid2dMutation> for PinCell {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Pin cell ({}, {}) to \"{}\"", self.x, self.y, self.tile_id), &format!("Zelle ({}, {}) an \"{}\" anheften", self.x, self.y, self.tile_id))
+        protocol::LocalizedLabel::native(&format!("Pin cell ({}, {}) to \"{}\"", self.x, self.y, self.tile_id), &format!("Zelle ({}, {}) auf \"{}\" fixieren", self.x, self.y, self.tile_id))
     }
     fn target(&self) -> Vec<String> {
         vec![format!("{},{}", self.x, self.y)]

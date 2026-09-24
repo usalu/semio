@@ -1,0 +1,26 @@
+{
+  "description": "📝️ Record-line vectors: each `record` is rendered by `TraceRecord::to_json_line` and must equal `line` byte for byte (Rust law), and every `line` must validate against `📝️record/🧬️schema/🔣️.json` with a third-party validator (Ajv, `🌎️hub/🧪️tests/📝️trace-record`). `invalid` lines must be refused by the same schema.",
+  "valid": [
+    { "record": { "level": "info", "event": "server.boot", "outcome": "ok" }, "line": "{\"level\":\"info\",\"event\":\"server.boot\",\"outcome\":\"ok\"}" },
+    {
+      "record": { "level": "info", "event": "server.document.socket", "outcome": "ok", "requestId": "r00000000002a", "principal": "user:ada", "space": "space-1", "artifact": "doc-7", "durationUs": 1234, "detail": "upgrade" },
+      "line": "{\"level\":\"info\",\"event\":\"server.document.socket\",\"outcome\":\"ok\",\"requestId\":\"r00000000002a\",\"principal\":\"user:ada\",\"space\":\"space-1\",\"artifact\":\"doc-7\",\"durationUs\":1234,\"detail\":\"upgrade\"}"
+    },
+    {
+      "record": { "level": "info", "event": "server.document.socket", "outcome": "cancelled", "requestId": "r00000000002a", "principal": "user:ada", "space": "space-1", "artifact": "doc-7", "durationUs": 0, "detail": "closed" },
+      "line": "{\"level\":\"info\",\"event\":\"server.document.socket\",\"outcome\":\"cancelled\",\"requestId\":\"r00000000002a\",\"principal\":\"user:ada\",\"space\":\"space-1\",\"artifact\":\"doc-7\",\"durationUs\":0,\"detail\":\"closed\"}"
+    },
+    { "record": { "level": "warn", "event": "server.directory.command", "outcome": "refused", "requestId": "r000000000001", "detail": "malformed-request" }, "line": "{\"level\":\"warn\",\"event\":\"server.directory.command\",\"outcome\":\"refused\",\"requestId\":\"r000000000001\",\"detail\":\"malformed-request\"}" },
+    { "record": { "level": "debug", "event": "server.catalog.publication", "outcome": "started", "detail": "he said \"stop\"\n\tat \u0001/path\\here" }, "line": "{\"level\":\"debug\",\"event\":\"server.catalog.publication\",\"outcome\":\"started\",\"detail\":\"he said \\\"stop\\\"\\n\\tat \\u0001/path\\\\here\"}" },
+    { "record": { "level": "info", "event": "server.presence.expiry", "outcome": "ok", "principal": "actor-a", "space": "s", "artifact": "d" }, "line": "{\"level\":\"info\",\"event\":\"server.presence.expiry\",\"outcome\":\"ok\",\"principal\":\"actor-a\",\"space\":\"s\",\"artifact\":\"d\"}" }
+  ],
+  "invalid": [
+    "{\"level\":\"off\",\"event\":\"server.boot\",\"outcome\":\"ok\"}",
+    "{\"level\":\"info\",\"event\":\"Server Boot\",\"outcome\":\"ok\"}",
+    "{\"level\":\"info\",\"event\":\"server.boot\",\"outcome\":\"done\"}",
+    "{\"level\":\"info\",\"event\":\"server.boot\"}",
+    "{\"level\":\"info\",\"event\":\"server.boot\",\"outcome\":\"ok\",\"principal\":null}",
+    "{\"level\":\"info\",\"event\":\"server.boot\",\"outcome\":\"ok\",\"durationUs\":-1}",
+    "{\"level\":\"info\",\"event\":\"server.boot\",\"outcome\":\"ok\",\"payload\":\"x\"}"
+  ]
+}

@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeVolume
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change building volume to {}", self.new_volume_m3), &format!("Gebäudenvolumen auf {} ändern", self.new_volume_m3))
+        protocol::LocalizedLabel::native(&format!("Change building volume to {}", self.new_volume_m3), &format!("Gebäudevolumen auf {} ändern", self.new_volume_m3))
     }
 }
 //#endregion 🔖️ChangeVolumeM3

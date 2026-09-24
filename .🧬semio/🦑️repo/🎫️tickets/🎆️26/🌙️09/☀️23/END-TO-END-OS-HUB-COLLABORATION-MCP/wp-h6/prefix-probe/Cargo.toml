@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = ["m/⏳️async/📦️packages/🦀️rust", "m/⏱️trace/📦️packages/🦀️rust"]
+
+[workspace.package]
+rust-version = "1.95"
+
+[workspace.dependencies]
+semio-framework-trace = { path = "m/⏱️trace/📦️packages/🦀️rust" }

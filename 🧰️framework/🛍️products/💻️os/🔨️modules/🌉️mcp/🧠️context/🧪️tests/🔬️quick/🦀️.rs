@@ -135,6 +135,22 @@ async fn bound_registry_reads_a_workspace_uri_through_to_the_live_backend() {
     assert!(registry.list().iter().any(|resource| resource.uri == "semio://artifact/probe-a"), "a real open artifact appears in list() once a workspace is bound");
 }
 
+#[tokio::test]
+async fn a_bound_registry_lists_every_resource_uri_exactly_once() {
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), Arc::new(test_catalog())).expect("opens"));
+    workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "n": 1 })).await.expect("seed");
+    let listed = WorkspaceResourceRegistry::with_workspace(Arc::new(test_catalog()), workspace).list();
+    let mut uris: Vec<&str> = listed.iter().map(|resource| resource.uri.as_str()).collect();
+    let total = uris.len();
+    uris.sort_unstable();
+    uris.dedup();
+    assert_eq!(uris.len(), total, "{uris:?}");
+    for uri in ["semio://workspace", "semio://workspace/artifacts", "semio://artifact/probe-a"] {
+        assert!(uris.contains(&uri), "{uri} missing from {uris:?}");
+    }
+}
+
 #[test]
 fn bound_registry_keeps_serving_real_catalog_reads_unchanged() {
     let dir = store::test_support::tempdir().expect("tempdir");

@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeDeltaSigma
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fatigue reference stress range [MPa] to {}", self.new_delta_sigma_c), &format!("Ermüdungsreferenzspannungsbereich [MPa] auf {} ändern", self.new_delta_sigma_c))
+        protocol::LocalizedLabel::native(&format!("Change fatigue reference stress range [MPa] to {}", self.new_delta_sigma_c), &format!("Bezugswert der Ermüdungsfestigkeit [MPa] auf {} ändern", self.new_delta_sigma_c))
     }
 }
 //#endregion 🔖️ChangeDeltaSigmaC

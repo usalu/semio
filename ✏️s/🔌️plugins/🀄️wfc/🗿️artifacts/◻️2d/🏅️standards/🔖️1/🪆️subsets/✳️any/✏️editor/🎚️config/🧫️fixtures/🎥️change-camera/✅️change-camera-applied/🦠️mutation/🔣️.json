@@ -1,0 +1,8 @@
+{
+  "mutation": "changeCamera",
+  "payload": {
+    "x": 12.5,
+    "y": -3.0,
+    "zoom": 1.5
+  }
+}

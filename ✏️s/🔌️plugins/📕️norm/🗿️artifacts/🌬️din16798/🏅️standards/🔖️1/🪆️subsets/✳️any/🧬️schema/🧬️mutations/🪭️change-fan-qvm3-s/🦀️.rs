@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeFanQVM
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fan volume flow to {}", self.new_fan_q_v_m3_s), &format!("Ventilatorvolumenfluss auf {} ändern", self.new_fan_q_v_m3_s))
+        protocol::LocalizedLabel::native(&format!("Change fan volume flow to {}", self.new_fan_q_v_m3_s), &format!("Ventilatorvolumenstrom auf {} ändern", self.new_fan_q_v_m3_s))
     }
 }
 //#endregion 🔖️ChangeFanQVM3S

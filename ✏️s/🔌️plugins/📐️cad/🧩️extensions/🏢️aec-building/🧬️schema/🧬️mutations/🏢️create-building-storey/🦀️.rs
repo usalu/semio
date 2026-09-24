@@ -37,7 +37,7 @@ impl protocol::CompositeMutationKind<CadSnapshot, CadMutation> for CreateBuildin
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create building storey \"{}\"", self.storey_label()), &format!("Gebäudengeschoss \"{}\" erstellen", self.storey_label()))
+        protocol::LocalizedLabel::native(&format!("Create building storey \"{}\"", self.storey_label()), &format!("Gebäudegeschoss \"{}\" erstellen", self.storey_label()))
     }
 
     fn target(&self) -> Vec<String> {

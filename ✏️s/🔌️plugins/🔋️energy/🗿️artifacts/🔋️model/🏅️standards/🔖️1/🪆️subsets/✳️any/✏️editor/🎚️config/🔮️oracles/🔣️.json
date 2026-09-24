@@ -1,0 +1,235 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The config state lane of `s.energy.model`'s editor (✏️editor/🎚️config): its mutation vocabulary `EnergyModelConfigMutation` over `EnergyModelConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-energy-model-1-any-editor-config` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "energy-model-1-any-editor-config-state-lane-semantics",
+      "capabilities": [
+        "energy-model-1-any-editor-config-mutate"
+      ],
+      "rationale": "`EnergyModelConfigMutation` is the config state lane of `s.energy.model`'s ✏️editor/🎚️config surface: it holds the simulation settings (zone and system timesteps, warm-up days) and the per-surface result field the 3d window colours by. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`change-simulation-settings`, `change-result-field`) changes exactly its own part of `EnergyModelConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A persisted key-value store for desktop settings; it has no model of this surface's typed config record, its per-kind setters, their no-op guard or the inverse each kind computes."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it defines no typed config mutations and neither their no-op nor their inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "`EnergyModelConfig` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "energy-model-1-any-editor-config",
+      "capability": "energy-model-1-any-editor-config-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "change-simulation-settings",
+        "change-result-field"
+      ],
+      "vectors": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.energy.model",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎚️config",
+      "mutations": [
+        {
+          "id": "change-simulation-settings",
+          "capability": "energy-model-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-simulation-settings",
+            "bridgeVersion": 1,
+            "variant": "ChangeSimulationSettings"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-result-field",
+          "capability": "energy-model-1-any-editor-config-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-result-field",
+            "bridgeVersion": 1,
+            "variant": "ChangeResultField"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-any-editor-config-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-simulation-settings-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.energy.model",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "change-simulation-settings",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/⏱️change-simulation-settings/✅️change-simulation-settings-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d31926ceb8b039d7b78465c4a130eb04fda74778cc0e7b98929ff3cc41d59e5c",
+          "bytes": 117
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/⏱️change-simulation-settings/✅️change-simulation-settings-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f6644e51b8acb9862761714df80b8f510c64c893099e78f60998df2cc3a109fb",
+          "bytes": 148
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/⏱️change-simulation-settings/✅️change-simulation-settings-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ba1a11fb3bf1b9d616ff00bab25829f95122ae8b2344b443502c593a44b4a02b",
+          "bytes": 116
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/⏱️change-simulation-settings/✅️change-simulation-settings-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ba1a11fb3bf1b9d616ff00bab25829f95122ae8b2344b443502c593a44b4a02b",
+          "bytes": 116
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/⏱️change-simulation-settings/✅️change-simulation-settings-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `change-simulation-settings` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-result-field-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.energy.model",
+        "standard": "1",
+        "subset": "any",
+        "surface": "✏️editor/🎚️config"
+      },
+      "mutation": "change-result-field",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🎨️change-result-field/✅️change-result-field-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ba1a11fb3bf1b9d616ff00bab25829f95122ae8b2344b443502c593a44b4a02b",
+          "bytes": 116
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/🎨️change-result-field/✅️change-result-field-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:13cdd4d52cf90815214a4ee3cc2199f8c786669bdbfd57e3c485e06232459430",
+          "bytes": 90
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🎨️change-result-field/✅️change-result-field-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5b4da6b8df3ace131e1d077e4d4d7b4af259930ee3c33e31e024387e4265e471",
+          "bytes": 118
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/🎨️change-result-field/✅️change-result-field-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5b4da6b8df3ace131e1d077e4d4d7b4af259930ee3c33e31e024387e4265e471",
+          "bytes": 118
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/🎨️change-result-field/✅️change-result-field-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "config-state-lane",
+      "notes": "The owner's committed contract vector for `change-result-field` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own."
+    }
+  ]
+}

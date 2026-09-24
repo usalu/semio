@@ -32,7 +32,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetObjectValue {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set object {} {} value", self.id.num, self.id.gen), &format!("Objekt {} {} Wert setzen", self.id.num, self.id.gen))
+        protocol::LocalizedLabel::native(&format!("Set object {} {} value", self.id.num, self.id.gen), &format!("Wert von Objekt {} {} setzen", self.id.num, self.id.gen))
     }
 
     fn target(&self) -> Vec<String> {

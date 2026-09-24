@@ -27,7 +27,7 @@ pub const TSV_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tsv", 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum TsvEditorCommand {
     SetCell { row: u32, column: u32, value: String },
-    /// 🎬️ The navbar example picker's payload — see the `🎬️ExampleSwitch` region below.
+    /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
     SetActiveExample { example_id: String },
 }
 
@@ -63,8 +63,9 @@ impl protocol::OpText for TsvEditorCommand {
 
 impl protocol::OpBinary for TsvEditorCommand {
     /// 🎯️ The app-owned retained routes this command channel carries — the join key
-    /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The
-    /// window-kind verb stays out: it is declared by the framework window kit, not by this app.
+    /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TableWindowKit`
+    /// mints `set-cell`, but only this editor can reduce it into its own mutation, so it is an
+    /// app-owned route exactly like the example switch.
     const TOOL_JOB_IDS: &'static [&'static str] = TSV_RETAINED_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -77,18 +78,25 @@ impl protocol::OpBinary for TsvEditorCommand {
 }
 //#endregion 🔖️Command
 
-//#region 🎬️ExampleSwitch
-/// 🧵️ The ONE app-owned retained route this editor declares. `validate_ui_dispatch_classification`
-/// refuses any verb that is not `Migrated`, and `Migrated` only survives the guest's
-/// `interactive-job.catalog-incomplete` boot check when this roster, the publication contracts and
-/// the `bounded_first_step_tool_proofs!` block below all name the same id.
-const TSV_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
+//#region 🧵️RetainedRoutes
+/// 🪟️ The verb the `TableWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
+const TSV_KIT_ACTION_ID: &str = "set-cell";
+/// 🧵️ The app-owned retained routes this editor declares: the example switch and `set-cell`.
+/// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
+/// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
+/// publication contracts and the `bounded_first_step_tool_proofs!` block below all name the same
+/// ids. Without the kit verb's row the reactor refused every `set-cell` with
+/// `interactive-job.missing-factory`.
+const TSV_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, TSV_KIT_ACTION_ID];
 const TSV_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.tsv.tool-command.v1";
 const TSV_RETAINED_RAW_BYTES: usize = 8_192;
 /// 🚦️ The example switch publishes into NO document lane: it hands the host one
-/// `Effect::LoadDocument`, so its only lane is `HostOnly`.
-const TSV_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
-    &[ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
+/// `Effect::LoadDocument`, so its only lane is `HostOnly`. `set-cell` publishes the artifact
+/// mutation it reduces into, so its only lane is `Artifact`.
+const TSV_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: TSV_KIT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn tsv_retained_contract() -> ToolExecutionContract {
@@ -114,7 +122,7 @@ fn tsv_example_snapshot(example_id: &str) -> TsvSnapshot {
 fn tsv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<TsvEditorCommand, Fault> {
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(TsvEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        "set-cell" => Ok(TsvEditorCommand::SetCell { row: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["row"], 0), column: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["column"], 0), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
+        TSV_KIT_ACTION_ID => Ok(TsvEditorCommand::SetCell { row: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["row"], 0), column: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["column"], 0), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.tsv.unhandled-action"),
@@ -127,21 +135,41 @@ fn tsv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn tsv_command_id(command: &TsvEditorCommand) -> &'static str {
     match command {
-        TsvEditorCommand::SetCell { .. } => "set-cell",
+        TsvEditorCommand::SetCell { .. } => TSV_KIT_ACTION_ID,
         TsvEditorCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn tsv_retained_extent(command: &TsvEditorCommand, _snapshot: &TsvSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    matches!(command, TsvEditorCommand::SetActiveExample { .. }).then_some(1)
+fn tsv_retained_extent(_command: &TsvEditorCommand, _snapshot: &TsvSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    Some(1)
+}
+
+/// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
+/// its document, `set-cell` becomes this artifact's own mutation.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn tsv_emit(command: &TsvEditorCommand, snapshot: &TsvSnapshot) -> Result<Emit<TsvMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    let (row, column, value) = match command {
+        TsvEditorCommand::SetActiveExample { example_id } => {
+            return Ok(Emit {
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tsv_example_snapshot(example_id), STDIO_TSV_DOCUMENT_SCHEMA)],
+                description: Some(format!("Load example {example_id}")),
+                ..Default::default()
+            })
+        }
+        TsvEditorCommand::SetCell { row, column, value } => (row, column, value),
+    };
+    if snapshot.records.get(*row as usize).is_none() {
+        return Ok(Emit::default());
+    }
+    Ok(Emit { artifact_mutations: vec![TsvMutation::SetCell(set_cell::SetCell { row_index: *row as usize, field_index: *column as usize, value: value.clone() })], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn tsv_retained_reduce(
     command: &TsvEditorCommand,
-    _snapshot: &TsvSnapshot,
+    snapshot: &TsvSnapshot,
     _config: &NoConfig,
     _history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
@@ -149,14 +177,7 @@ fn tsv_retained_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TsvEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<TsvMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    match command {
-        TsvEditorCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tsv_example_snapshot(example_id), STDIO_TSV_DOCUMENT_SCHEMA)],
-            description: Some(format!("Load example {example_id}")),
-            ..Default::default()
-        }),
-        TsvEditorCommand::SetCell { .. } => Err(Fault::from("stdio-tsv-retained-route-mismatch")),
-    }
+    tsv_emit(command, snapshot)
 }
 
 struct TsvRetainedCommandJobFactory {
@@ -209,7 +230,7 @@ impl ArtifactOwnedToolJobFactory for TsvRetainedCommandJobFactory {
     const DOCUMENT_SCHEMA: &'static str = STDIO_TSV_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = TSV_RETAINED_PUBLICATION_CONTRACTS;
 }
-//#endregion 🎬️ExampleSwitch
+//#endregion 🧵️RetainedRoutes
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -239,7 +260,7 @@ impl ArtifactEditor for TsvEditor {
         factory: "TsvRetainedCommandJobFactory",
         factory_type: TsvRetainedCommandJobFactory,
         contract: tsv_retained_contract(),
-        tools: ["setActiveExample"]
+        tools: ["setActiveExample", "set-cell"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -254,6 +275,7 @@ impl ArtifactEditor for TsvEditor {
         if tsv_command_id(&request.command) != request.tool_id {
             return Err(Fault::from("stdio-tsv-retained-command-tool-mismatch"));
         }
+        let tool_id = tsv_command_id(&request.command);
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id,
@@ -276,7 +298,7 @@ impl ArtifactEditor for TsvEditor {
             tsv_command_id,
             TSV_RETAINED_RAW_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, tsv_retained_reduce, tsv_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(tool_id, tsv_retained_reduce, tsv_retained_extent)),
         )?;
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -287,6 +309,13 @@ impl ArtifactEditor for TsvEditor {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 📤️ The artifact lane's one-item publication authority. The kit verb's route declares the
+    /// `Artifact` lane, and without this authority every such route fails closed with
+    /// `interactive-job.publication-authority-missing`.
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("stdio-tsv-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     /// 🧹️ The rest of the close protocol installing a document owner implies: an app that owns its
@@ -363,20 +392,7 @@ impl ArtifactEditor for TsvEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        let (row, column, value) = match command {
-            TsvEditorCommand::SetActiveExample { example_id } => {
-                return Ok(Emit {
-                    effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tsv_example_snapshot(example_id), STDIO_TSV_DOCUMENT_SCHEMA)],
-                    description: Some(format!("Load example {example_id}")),
-                    ..Default::default()
-                })
-            }
-            TsvEditorCommand::SetCell { row, column, value } => (row, column, value),
-        };
-        if doc.snapshot.records.get(*row as usize).is_none() {
-            return Ok(Emit::default());
-        }
-        Ok(Emit { artifact_mutations: vec![TsvMutation::SetCell(set_cell::SetCell { row_index: *row as usize, field_index: *column as usize, value: value.clone() })], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
+        tsv_emit(command, doc.snapshot)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

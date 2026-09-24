@@ -22,7 +22,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetBlock {
         agg_inverse(&DxfMutation::SetBlock(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("set-block", "Block setzen")
+        protocol::LocalizedLabel::native("Set block", "Block setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

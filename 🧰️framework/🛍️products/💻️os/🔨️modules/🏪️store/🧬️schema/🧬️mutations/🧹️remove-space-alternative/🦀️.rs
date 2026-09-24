@@ -37,7 +37,7 @@ impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for
             .unwrap_or_default()
     }
     fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native(&format!("Remove space alternative {}", self.alternative_id), &format!("Raumalternative {} entfernen", self.alternative_id))
+        crate::LocalizedLabel::native(&format!("Remove space alternative {}", self.alternative_id), &format!("Space-Alternative {} entfernen", self.alternative_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["alternatives".into(), self.alternative_id.clone()]

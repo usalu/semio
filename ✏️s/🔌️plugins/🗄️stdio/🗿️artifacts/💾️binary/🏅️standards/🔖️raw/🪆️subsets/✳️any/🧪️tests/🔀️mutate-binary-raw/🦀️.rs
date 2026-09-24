@@ -18,14 +18,6 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::oracle_apply_mutation;
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
 
-//#region 🔖️Kinds
-/// 🏷️ Mirrors this subset's own `BinaryMutation::KINDS` (`../../🏅️standards/🔖️raw/🪆️subsets/✳️any/
-/// 🧬️schema/🧬️mutations/🦀️.rs`). Kept as a plain literal here rather than imported since
-/// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
-/// coverage against the `binary-raw-any` catalog) is what keeps the two lists honest against
-/// each other.
-const KINDS: &[&str] = &["set-snapshot", "splice", "append-bytes", "truncate-at"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
@@ -83,19 +75,19 @@ fn projection_of(bytes: &[u8]) -> Json {
 fn inverse_spec(kind: &str, input: &[u8], params: &Json) -> Json {
     match kind {
         "set-snapshot" => json_spec("set-snapshot", json_obj(vec![("snapshot", json_obj(vec![("bytes", bytes_json(input))]))])),
-        "splice" => {
+        "replace-byte-range" => {
             let offset = usize_field(params, "offset").unwrap_or(0).min(input.len());
             let remove_len = usize_field(params, "removeLen").unwrap_or(0);
             let insert = bytes_field(params, "insert");
             let end = (offset + remove_len).min(input.len());
             let removed = input[offset..end].to_vec();
-            json_spec("splice", json_obj(vec![("offset", Json::Number(offset as f64)), ("removeLen", Json::Number(insert.len() as f64)), ("insert", bytes_json(&removed))]))
+            json_spec("replace-byte-range", json_obj(vec![("offset", Json::Number(offset as f64)), ("removeLen", Json::Number(insert.len() as f64)), ("insert", bytes_json(&removed))]))
         }
         "append-bytes" => json_spec("truncate-at", json_obj(vec![("offset", Json::Number(input.len() as f64))])),
         "truncate-at" => {
             let offset = usize_field(params, "offset").unwrap_or(input.len()).min(input.len());
             let tail = input[offset..].to_vec();
-            json_spec("splice", json_obj(vec![("offset", Json::Number(offset as f64)), ("removeLen", Json::Number(0.0)), ("insert", bytes_json(&tail))]))
+            json_spec("replace-byte-range", json_obj(vec![("offset", Json::Number(offset as f64)), ("removeLen", Json::Number(0.0)), ("insert", bytes_json(&tail))]))
         }
         other => json_spec(other, json_obj(vec![])),
     }
@@ -164,16 +156,16 @@ fn append_to_empty_buffer_oracle(ctx: &Context) -> Result<Outcome, String> {
     apply_and_project(&[], &spec)
 }
 
-/// 🔮️ An invalid splice must be REJECTED, never silently applied. Rejection is itself the passing
+/// 🔮️ An invalid byte-range replacement must be REJECTED, never silently applied. Rejection is itself the passing
 /// outcome — a handler that returns `Err` here would mean the framework SILENTLY skipped a scenario
 /// registration, not "the mutation was invalid"; that failure mode is caught by returning `Err`
 /// only when the reference did NOT reject the invalid input.
-fn invalid_splice_oracle(ctx: &Context) -> Result<Outcome, String> {
+fn invalid_replacement_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     match oracle_apply_mutation(&input, &spec) {
         Err(_) => Ok(Outcome::with_raw(input, json_obj(vec![("rejected", Json::Bool(true))]))),
-        Ok(bytes) => Err(format!("expected the invalid splice to be rejected, but it produced {} byte(s) without erroring", bytes.len())),
+        Ok(bytes) => Err(format!("expected the invalid byte-range replacement to be rejected, but it produced {} byte(s) without erroring", bytes.len())),
     }
 }
 //#endregion 🔖️Oracle
@@ -183,7 +175,7 @@ fn invalid_splice_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{bytes_field, inverse_spec, json_obj, mutable_input, projection_of, usize_field};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_binary::standards::v_raw::subsets::any::schema::mutations::{append_bytes, apply_binary_mutation, set_snapshot, splice, truncate_at, BinaryMutation};
+    use semio_s_artifact_stdio_binary::standards::v_raw::subsets::any::schema::mutations::{append_bytes, apply_binary_mutation, replace_byte_range, set_snapshot, truncate_at, BinaryMutation};
     use semio_s_artifact_stdio_binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::oracle_apply_mutation;
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
@@ -200,7 +192,7 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
                 let snapshot_json = params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?;
                 BinaryMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: BinarySnapshot { bytes: bytes_field(snapshot_json, "bytes"), ..Default::default() } })
             }
-            "splice" => BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: usize_field(params, "offset")?, remove_len: usize_field(params, "removeLen")?, insert: bytes_field(params, "insert") }),
+            "replace-byte-range" => BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: usize_field(params, "offset")?, remove_len: usize_field(params, "removeLen")?, insert: bytes_field(params, "insert") }),
             "append-bytes" => BinaryMutation::AppendBytes(append_bytes::AppendBytes { data: bytes_field(params, "data") }),
             "truncate-at" => BinaryMutation::TruncateAt(truncate_at::TruncateAt { offset: usize_field(params, "offset")? }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
@@ -297,12 +289,12 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
         Ok(Outcome::with_raw(bytes.clone(), projection_of(&bytes)))
     }
 
-    pub fn invalid_splice(ctx: &Context) -> Result<Outcome, String> {
+    pub fn invalid_replacement(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         match apply_and_encode(&input, &spec) {
             Err(_) => Ok(Outcome::with_raw(input, json_obj(vec![("rejected", Json::Bool(true))]))),
-            Ok(bytes) => Err(format!("expected the invalid splice to be rejected, but it produced {} byte(s) without erroring", bytes.len())),
+            Ok(bytes) => Err(format!("expected the invalid byte-range replacement to be rejected, but it produced {} byte(s) without erroring", bytes.len())),
         }
     }
     //#endregion 🔖️Handlers
@@ -313,12 +305,10 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]
@@ -326,12 +316,10 @@ pub fn adapter() -> Adapter {
         built = built.subject("identity-round-trip", subject::round_trip);
     }
 
-    for id in ["zero-length-splice", "splice-at-offset-zero", "splice-at-exact-end", "splice-spans-whole-buffer", "truncate-to-zero", "truncate-beyond-length"] {
-        built = built.oracle(&format!("vector-{id}"), vector_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("vector-{id}"), subject::vector);
-        }
+    built = built.oracle("vector", vector_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("vector", subject::vector);
     }
 
     built = built.oracle("append-to-empty-buffer", append_to_empty_buffer_oracle);
@@ -340,12 +328,10 @@ pub fn adapter() -> Adapter {
         built = built.subject("append-to-empty-buffer", subject::append_to_empty_buffer);
     }
 
-    for id in ["offset-beyond-buffer", "remove-len-exceeds-buffer"] {
-        built = built.oracle(&format!("invalid-splice-{id}"), invalid_splice_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("invalid-splice-{id}"), subject::invalid_splice);
-        }
+    built = built.oracle("invalid-replace-byte-range", invalid_replacement_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("invalid-replace-byte-range", subject::invalid_replacement);
     }
 
     built

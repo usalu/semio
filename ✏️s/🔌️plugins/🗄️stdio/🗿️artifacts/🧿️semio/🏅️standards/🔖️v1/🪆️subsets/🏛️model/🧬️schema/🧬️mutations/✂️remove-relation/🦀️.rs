@@ -21,7 +21,7 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for RemoveRe
         agg_inverse(&SemioModelMutation::RemoveRelation(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-relation", "Relation entfernen")
+        protocol::LocalizedLabel::native("Remove relation", "Relation entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

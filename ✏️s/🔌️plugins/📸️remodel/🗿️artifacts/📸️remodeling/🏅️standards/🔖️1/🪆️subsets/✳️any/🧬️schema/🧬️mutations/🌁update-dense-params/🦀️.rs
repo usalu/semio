@@ -34,7 +34,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for UpdateDe
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update dense params", "dichte Parameter aktualisieren")
+        protocol::LocalizedLabel::native("Update dense params", "Parameter der dichten Rekonstruktion aktualisieren")
     }
 }
 //#endregion 🔖️Mutation

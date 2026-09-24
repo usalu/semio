@@ -12,3 +12,13 @@ pub fn set_layout(layout: Option<UiChromeLayout>) -> UiPreferencesConfigMutation
     UiPreferencesConfigMutation::SetLayout(SetLayout { layout })
 }
 optional_setting_impl!(SetLayout, SetLayout, layout, "set-layout", "layout", "layout", "layout");
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/✏️sets-layout/🦀️.rs"]
+mod tests_sets_layout;
+
+#[cfg(test)]
+#[path = "🧪️tests/🟰️keeps-layout/🦀️.rs"]
+mod tests_keeps_layout;
+//#endregion 🧪️Tests

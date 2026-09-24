@@ -1,0 +1,152 @@
+{
+  "schema": "semio.os-mcp.approval-withdrawal-law/v1",
+  "law": "A shell never keeps a decidable affordance for an approval nobody is waiting on. Every approval the gateway publishes to a shell ends on that shell with exactly one closing frame: approvalResolved when a human there decided it, or approvalWithdrawn naming why the gateway stopped waiting — cancelled (the agent's call was cancelled), timed_out (the countdown ran out) or superseded (a newer shell connection now carries it, and is asked with the time that remains). A decision made after a withdrawal changes nothing.",
+  "cases": [
+    {
+      "name": "a human decides in the shell",
+      "trigger": "decide-once",
+      "resolution": "approved",
+      "shells": [
+        [
+          {
+            "variant": "approvalRequested"
+          },
+          {
+            "variant": "approvalResolved",
+            "decision": "once"
+          }
+        ]
+      ]
+    },
+    {
+      "name": "the agent's call is cancelled while the request waits",
+      "trigger": "cancel",
+      "resolution": "cancelled",
+      "shells": [
+        [
+          {
+            "variant": "approvalRequested"
+          },
+          {
+            "variant": "approvalWithdrawn",
+            "reason": "cancelled"
+          }
+        ]
+      ]
+    },
+    {
+      "name": "nobody decides within the countdown",
+      "trigger": "timeout",
+      "resolution": "unreachable",
+      "shells": [
+        [
+          {
+            "variant": "approvalRequested"
+          },
+          {
+            "variant": "approvalWithdrawn",
+            "reason": "timed_out"
+          }
+        ]
+      ]
+    },
+    {
+      "name": "a newer shell connects and decides",
+      "trigger": "newer-shell-decides-once",
+      "resolution": "approved",
+      "shells": [
+        [
+          {
+            "variant": "approvalRequested"
+          },
+          {
+            "variant": "approvalWithdrawn",
+            "reason": "superseded"
+          }
+        ],
+        [
+          {
+            "variant": "approvalRequested"
+          },
+          {
+            "variant": "approvalResolved",
+            "decision": "once"
+          }
+        ]
+      ]
+    }
+  ],
+  "retiredAffordances": [
+    {
+      "name": "withdrawn by a cancel",
+      "frames": [
+        {
+          "variant": "approvalRequested"
+        },
+        {
+          "variant": "approvalWithdrawn",
+          "reason": "cancelled"
+        }
+      ],
+      "state": "withdrawn",
+      "withdrawal": "cancelled",
+      "pending": 0
+    },
+    {
+      "name": "withdrawn by the countdown",
+      "frames": [
+        {
+          "variant": "approvalRequested"
+        },
+        {
+          "variant": "approvalWithdrawn",
+          "reason": "timed_out"
+        }
+      ],
+      "state": "withdrawn",
+      "withdrawal": "timed_out",
+      "pending": 0
+    },
+    {
+      "name": "moved to a newer shell",
+      "frames": [
+        {
+          "variant": "approvalRequested"
+        },
+        {
+          "variant": "approvalWithdrawn",
+          "reason": "superseded"
+        }
+      ],
+      "state": "withdrawn",
+      "withdrawal": "superseded",
+      "pending": 0
+    },
+    {
+      "name": "decided here",
+      "frames": [
+        {
+          "variant": "approvalRequested"
+        },
+        {
+          "variant": "approvalResolved",
+          "decision": "deny"
+        }
+      ],
+      "state": "resolved",
+      "withdrawal": null,
+      "pending": 0
+    },
+    {
+      "name": "still waiting",
+      "frames": [
+        {
+          "variant": "approvalRequested"
+        }
+      ],
+      "state": "pending",
+      "withdrawal": null,
+      "pending": 1
+    }
+  ]
+}

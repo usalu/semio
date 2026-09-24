@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHrDelt
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change heat recovery temperature difference to {}", self.new_hr_delta_t_c), &format!("Wärmenrückgewinnungstemperaturdifferenz auf {} ändern", self.new_hr_delta_t_c))
+        protocol::LocalizedLabel::native(&format!("Change heat recovery temperature difference to {}", self.new_hr_delta_t_c), &format!("Temperaturdifferenz der Wärmerückgewinnung auf {} ändern", self.new_hr_delta_t_c))
     }
 }
 //#endregion 🔖️ChangeHrDeltaTC

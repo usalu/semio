@@ -1,0 +1,98 @@
+2026-09-25T05:53:31.764Z heartbeat
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.boot","outcome":"ok","detail":"instance-storage=/Users/ueli/Documents/semio/.tmp-ticket/wp-u5/hub-8080/instance"}
+[WARN] os-hub listening at http://127.0.0.1:8080 but /readyz reports not-ready — closed gates: artifactAuthority=trusted-catalog-never-published-in-this-data-root
+[INFO] bind scope loopback (127.0.0.1:8080), cross-origin policy loopback-development, trusted forwarding none
+{"level":"warn","event":"server.readiness","outcome":"refused","detail":"addr=127.0.0.1:8080 scope=loopback blocked:artifactAuthority=trusted-catalog-never-published-in-this-data-root"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"warn","event":"server.auth.session.mint","outcome":"refused","requestId":"r0000000000dd","durationUs":4585,"detail":"invalid-credentials"}
+{"level":"warn","event":"server.auth.session.mint","outcome":"refused","requestId":"r0000000000e5","durationUs":16502,"detail":"invalid-credentials"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.auth.session.mint","outcome":"ok","requestId":"r000000000100","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":2016926}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000105","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":20249,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000106","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":5261,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000107","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3879,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000108","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3192,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000109","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3046,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000010a","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":2616,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000010b","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":4536,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000010c","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3858,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000010d","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":2785,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000010e","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":2624,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000010f","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":2880,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000110","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":2823,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000111","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":4714,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000112","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":4635,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000113","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":5038,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000114","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3095,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000115","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3890,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000116","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3343,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000117","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":2736,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000118","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":4502,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000119","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3425,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000011a","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3225,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000011b","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3635,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000011c","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":2996,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000011d","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3360,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000011e","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3124,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r00000000011f","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":4133,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000120","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3499,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000121","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":3554,"detail":"create-space"}
+{"level":"info","event":"server.directory.command","outcome":"ok","requestId":"r000000000122","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":4434,"detail":"create-space"}
+{"level":"info","event":"server.auth.session.mint","outcome":"ok","requestId":"r000000000138","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":2009829}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r00000000013a","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":1829}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r00000000013f","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":200}
+{"level":"info","event":"server.directory.socket","outcome":"ok","requestId":"r000000000142","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":900,"detail":"upgrade"}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r00000000014a","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":192}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000155","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":239}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000160","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":265}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r00000000016b","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":197}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000176","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":233}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000180","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":234}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r00000000018b","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":203}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000195","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":484}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r0000000001a0","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":461}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r0000000001ab","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":253}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r0000000001b6","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":487}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r0000000001c1","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":242}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r0000000001cc","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":213}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r0000000001d7","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":212}
+{"level":"info","event":"server.directory.socket","outcome":"cancelled","requestId":"r000000000142","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":70203002,"detail":"closed"}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r0000000001e0","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":255}
+{"level":"info","event":"server.directory.socket","outcome":"ok","requestId":"r0000000001e4","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":148,"detail":"upgrade"}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r0000000001ec","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":244}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r0000000001f7","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":221}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000201","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":327}
+{"level":"info","event":"server.directory.socket","outcome":"cancelled","requestId":"r0000000001e4","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":14083220,"detail":"closed"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.auth.session.mint","outcome":"ok","requestId":"r000000000220","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":1938982}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000222","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":261}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000227","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":217}
+{"level":"info","event":"server.directory.socket","outcome":"ok","requestId":"r00000000022a","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":164,"detail":"upgrade"}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000232","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":201}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r00000000023d","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":203}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000248","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":219}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000253","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":222}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r00000000025e","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":206}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000269","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":217}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000273","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":196}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r00000000027e","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":219}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000289","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":252}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r000000000294","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":219}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r00000000029f","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":230}
+{"level":"info","event":"server.auth.session.read","outcome":"ok","requestId":"r0000000002aa","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":212}
+{"level":"info","event":"server.directory.socket","outcome":"cancelled","requestId":"r00000000022a","principal":"user:01a0d712-adfa-79cb-9002-c58a6d28ee17","durationUs":58971103,"detail":"closed"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+{"level":"info","event":"server.artifact.maintenance","outcome":"ok","detail":"examined=0 protected=0 eligible=0 deleted=0 missing=0 continued=false"}
+

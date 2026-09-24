@@ -142,5 +142,57 @@
     "child-load-shape",
     "child-invoke-shape",
     "child-rehash-after-transfer"
+  ],
+  "valueAdmission": [
+    {
+      "name": "list<u8>",
+      "lift": "Uint8Array",
+      "length": 3,
+      "expected": "admitted"
+    },
+    {
+      "name": "list<node-id> (set-children)",
+      "lift": "BigUint64Array",
+      "length": 3,
+      "expected": "admitted"
+    },
+    {
+      "name": "list<u32>",
+      "lift": "Uint32Array",
+      "length": 2,
+      "expected": "admitted"
+    },
+    {
+      "name": "list<f64>",
+      "lift": "Float64Array",
+      "length": 2,
+      "expected": "admitted"
+    },
+    {
+      "name": "sliced view",
+      "lift": "BigUint64Array",
+      "length": 3,
+      "offsetElements": 1,
+      "expected": "browser actor child: exclusive fixed buffer required"
+    },
+    {
+      "name": "shared buffer",
+      "lift": "BigUint64Array",
+      "length": 2,
+      "repeat": true,
+      "expected": "browser actor child: exclusive fixed buffer required"
+    },
+    {
+      "name": "DataView is no WIT lift",
+      "lift": "DataView",
+      "length": 8,
+      "expected": "browser actor child: record required"
+    },
+    {
+      "name": "Uint8ClampedArray is no WIT lift",
+      "lift": "Uint8ClampedArray",
+      "length": 2,
+      "expected": "browser actor child: record required"
+    }
   ]
 }

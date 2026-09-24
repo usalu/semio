@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHrSavi
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change heat recovery savings reference to {}", self.new_hr_savings_reference_kwh), &format!("Wärmenrückgewinnungseinsparungenreferenz auf {} ändern", self.new_hr_savings_reference_kwh))
+        protocol::LocalizedLabel::native(&format!("Change heat recovery savings reference to {}", self.new_hr_savings_reference_kwh), &format!("Referenzwert Einsparung durch Wärmerückgewinnung auf {} ändern", self.new_hr_savings_reference_kwh))
     }
 }
 //#endregion 🔖️ChangeHrSavingsReferenceKwh

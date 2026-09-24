@@ -71,7 +71,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimiti
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Primitive Extension Data", "Primitiverweiterungsdaten ändern")
+        protocol::LocalizedLabel::native("Change Primitive Extension Data", "Erweiterungsdaten des Primitivs ändern")
     }
 
     fn target(&self) -> Vec<String> {

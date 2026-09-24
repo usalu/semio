@@ -1,0 +1,48 @@
+# U5 (session 11) guest rebuild requests — appended by U5; W2 appends the result path below each request.
+
+2026-09-25 01:15 — mutation-label German/English text pass (literal-only, placeholder-parity checked; see 📓️wp-u5.md §1).
+Touched 105 crates (list: wp-u5/generated/u5-check-batches.json); labels only change history-panel text, no ABI/wire change.
+Reason: every s guest built before 01:15 carries the pre-U5 German labels ("Bemessungsaxialkraftn_Ed", "Stütze" for a
+table column, "Einklappenseitengröße", kebab English "set-snapshot"). Your post-01:13 H9 full rebuild picks the new
+literals up for every crate it compiles after 01:15 — no separate rebuild is needed if that run started compiling the
+plugin crates after 01:15. Native `cargo check` sweep of all 105 crates: wp-u5/generated/u5-check-sweep.txt.
+
+2026-09-25 01:58 — dag horizontal two-finger pan: `🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs` (crate
+`semio-framework-surface`, the browser surface wasm-bindgen package `@semio-tech/framework-surface-rs`, NOT a plugin guest)
+now carries `delta_x` through `wheelScreen` → `GraphHost::wheel_screen/plan_wheel`. Native check + unit tests green
+(wp-u5/generated/u5-check-surface-native.txt, u5-test-surface-wheel.txt). Needs `bun nx run
+@semio-tech/framework-surface-rs:wasm` (wasm-pack → 🕸️bindings) for the served shell to pick it up; the
+`prepare-<variant>-react-*` targets depend on it. No guest ABI change.
+
+2026-09-25 03:40 — space guest + describe: Home's unauthenticated `foldDirectoryEvents` writer is retired (U5 §6b, C10 F3).
+Crate `semio-s-artifact-space-home` (via `semio-s-plugin-space`): action `foldDirectoryEvents`, command module
+`📇️fold-directory-events`, `HomeConfigMutation::FoldDirectoryEvent` and `HomeViewCommand::FoldDirectoryEvents` are gone;
+the sealed `applyDirectoryEventPage` lane is the projection's only writer. Needs the space guest rebuilt AND `describe`
+regenerated (`✏️s/🔌️plugins/🪐️space/🔣️.json` + `🛂️.descriptor.semio` still list Home `foldDirectoryEvents` until then;
+the `home-host-panel-owner` gate in `📜️script.ts` now asserts it is absent). Home config op set shrinks (3 → 2 variants:
+`snapshot`, `replace-directory-projection`) — a persisted Home config carrying a `fold-directory-event` line no longer
+parses. Native: `cargo check -p semio-s-artifact-space-home --lib --tests` + `-p semio-s-plugin-space --lib --tests`
+green; `cargo test -p semio-s-artifact-space-home --lib --features component-app-assembly` 92/94 (the 2 failures are
+pre-existing peer state: `retained_config_cancel_and_cleanup…` vs the S8 page-sized close_step, and the in-flight
+`change-catalog-generation` descriptor outcome classes). The shell side (ShellHost + wgpu shell) no longer relays events
+to Home, so the served shell works with the OLD guest too.
+
+[w2 2026-09-25 03:5x] labels: covered. Every describe in the full rebuild compiled after 01:19 (> 01:15). surface-rs wasm-pack:
+  `@semio-tech/framework-surface-rs:wasm` runs under the wasm mutex after the catalog publish (it's not a plugin guest). The result is appended here.
+
+2026-09-25 06:1x — framework interaction label: `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs` `INTERACTION_HOVER_ACTION_ID`
+German label "Hover" → "Darüberfahren" (seen live as an untranslated raster history row). Crate `semio-framework`
+(`cargo check -p semio-framework --lib` green). Reaches the served shell only through regenerated descriptors
+(`dist/release/🔌️plugin-modules/*/🔣️.json` still carry `"de":"Hover"`); fold it into your next describe/restage, no
+separate run needed.
+
+2026-09-25 07:4x — windowed table (U5 §6b cause 2: Home faulted at `nodes 129 > 128` with ≥ 9 hub spaces). Additive UI
+contract: `Component::Table` + `Component::TableRow` (cells, row actions as props; `TreeWindow` stamp, same ledger as
+tree windows). No WIT/owned-ABI change, no pack schema, no codec hash: guests that never emit a table are unaffected.
+Guest sources changed: `semio-s-artifact-space-home` (editor + viewer main windows, `HomeTableLabels.table_name`),
+`semio-s-artifact-space-space` (index editor + viewer main windows), SDK `semio-framework-plugin`
+(`TableWindowKit::render_rows` windowed; `TableRowsView` + its retire arena removed; reactor ladder removed).
+Needs: the SPACE guest rebuilt + describe + restage (only space emits tables). Native checks green:
+`-p semio-framework-ui-contract -p semio-framework-ui-runtime -p semio-framework-ui (wgpu-engine)
+-p semio-framework-plugin -p semio-s-artifact-space-home -p semio-s-artifact-space-space -p semio-s-plugin-space
+-p semio-framework-os-renderer-wgpu`; SDK table laws 5/5, Home window tests 21/21, Space window tests 7/7.

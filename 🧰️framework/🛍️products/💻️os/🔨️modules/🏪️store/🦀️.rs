@@ -10515,6 +10515,10 @@ pub struct ArtifactCodec {
     /// Host-authoritative Emit apply: (pack, spr, encode_ops_vec) -> (pack, spr, ops text).
     // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
     pub apply_ops_binary: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecApplyFuture<'a>,
+    /// 📜️ Hub Check In fold: `(pack, spr, encode_envelopes) -> (pack, spr, ops text)` through the
+    /// replica gate, see [`replay_envelopes_onto_pair`].
+    // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
+    pub replay_envelopes: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecApplyFuture<'a>,
 }
 
 //#region 🗃️BoundedArtifactStoreOwners
@@ -10611,6 +10615,115 @@ where
         Arc::new(BoundedArtifactRetirementFactory::<Mutation>::new()),
         Box::new(ArtifactStoreCursorDisposer::<P, Mutation>::new()),
     )
+}
+
+/// 🧺️ Runs a throwaway reduction store's close cursor to exact terminal emptiness and forgets the
+/// shell, so no codec thunk can reach `ArtifactStore`'s asserting `Drop` with a live owner. Shared by
+/// [`ArtifactCodec::apply_ops_binary`] and [`replay_envelopes_onto_pair`].
+fn close_codec_reduction_store<P, Mutation>(mut store: ArtifactStore<P, Mutation>) -> Result<(), VcsError>
+where
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+{
+    let mut closed = Err(VcsError::ValidationFailed("artifact codec store did not reach terminal emptiness within its bounded close budget".into()));
+    for _ in 0..ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS {
+        match store.close_owned_step(1, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES) {
+            Ok(SnapshotRetirementStep::Complete) => {
+                closed = if store.close_owned_terminal_is_empty() { Ok(()) } else { Err(VcsError::ValidationFailed("artifact codec store reported close completion without terminal emptiness".into())) };
+                break;
+            }
+            Ok(SnapshotRetirementStep::Pending { .. }) => continue,
+            Ok(SnapshotRetirementStep::Blocked) => {
+                closed = Err(VcsError::ValidationFailed("artifact codec store close is blocked by an outstanding snapshot read lease".into()));
+                break;
+            }
+            Err(error) => {
+                closed = Err(VcsError::ValidationFailed(error));
+                break;
+            }
+        }
+    }
+    let drop_ready = store.envelope_detached
+        && store.current_detached
+        && store.backbone.is_none()
+        && store.dag.terminal_is_empty()
+        && store.applied_edit_ids.is_empty()
+        && store.redo_edit_ids.is_empty()
+        && store.current_checkpoint_id.is_none()
+        && store.local_actor_id.is_none()
+        && store.revision_accumulator.applied.is_empty()
+        && store.revision_accumulator.redo.is_empty()
+        && store.tail_undo_cache.is_none()
+        && store.snapshot_read_leases.terminal_is_empty()
+        && store.displaced_retirements.terminal_is_empty()
+        && store.owned_disposer.is_none()
+        && store.owned_disposer_terminal
+        && store.pending_report.edit_ids.is_none()
+        && store.pending_report.messages.is_empty()
+        && store.pending_report.outbound.is_empty()
+        && store.pending_report.worst.is_none()
+        && store.durable_group_root.is_none();
+    std::mem::forget(store);
+    closed?;
+    if drop_ready {
+        Ok(())
+    } else {
+        Err(VcsError::ValidationFailed("artifact codec store close left a live shallow-shell owner".into()))
+    }
+}
+
+/// 📜️ Folds an [`crate::os_spr::encode_envelopes`] ledger stream onto one authoritative pair through
+/// the SAME gate every replica folds a remote envelope through ([`ArtifactStore::ingest_remote`]):
+/// causal order, history transitions (undo/redo/checkpoint), edit identity and conflict quarantine are
+/// exactly a replica's, so the printed pair is the one any client holding that ledger prefix holds.
+/// A quarantined conflict or an envelope left waiting on an unknown dependency refuses the fold, and a
+/// raw-mutation apply (`apply_ops_binary`) is never a substitute: it mints new edit ids and drops every
+/// transition. This is how a hub materializes a Check In from its own ledger.
+///
+/// See `🌎️hub/🗿️artifact-authority/📌️check-in` and `db::artifact_ledger_tail`.
+pub async fn replay_envelopes_onto_pair<P, Mutation>(pack: &[u8], spr: &[u8], envelopes: &[u8], owners: impl FnOnce() -> DocumentStoreOwners<P, Mutation>) -> Result<ArtifactPackFiles, VcsError>
+where
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+{
+    if pack.is_empty() || spr.is_empty() {
+        return Err(VcsError::Deserialize("replay-envelopes has no pack+spr baseline".into()));
+    }
+    let envelopes = crate::os_spr::decode_envelopes(envelopes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let parsed = parse_document_pack::<P, Mutation>(pack, spr).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let mut envelope = parsed.into_envelope();
+    let (applied, redo) = match &envelope.cursor {
+        Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
+        None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+    };
+    envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
+    let mut store = ArtifactStore::new(envelope).await?;
+    store.install_document_store_owners_exact(owners());
+    let mut folded = Ok(());
+    for envelope in envelopes {
+        match store.ingest_remote(envelope).await {
+            Ok(report) if report.accepted && report.conflict.is_none() => {}
+            Ok(_) => {
+                folded = Err(VcsError::ValidationFailed("replay-envelopes quarantined a ledger envelope as a conflict".into()));
+                break;
+            }
+            Err(error) => {
+                folded = Err(error);
+                break;
+            }
+        }
+    }
+    if folded.is_ok() && !store.dag.pending_is_empty() {
+        folded = Err(VcsError::ValidationFailed("replay-envelopes left a ledger envelope waiting on an unknown dependency".into()));
+    }
+    let printed = match &folded {
+        Ok(()) => print_document_pack(&store.envelope).await,
+        Err(_) => Err(VcsError::ValidationFailed("replay-envelopes skipped print after a refused fold".into())),
+    };
+    let closed = close_codec_reduction_store(store);
+    folded?;
+    closed?;
+    printed
 }
 //#endregion 🗃️BoundedArtifactStoreOwners
 
@@ -10728,54 +10841,22 @@ impl ArtifactCodec {
                     Ok(_) => print_document_pack(&store.envelope).await,
                     Err(_) => Err(VcsError::ValidationFailed("artifact codec apply skipped print after a failed reduction".into())),
                 };
-                let mut closed = Err(VcsError::ValidationFailed("artifact codec store did not reach terminal emptiness within its bounded close budget".into()));
-                for _ in 0..ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS {
-                    match store.close_owned_step(1, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES) {
-                        Ok(SnapshotRetirementStep::Complete) => {
-                            closed = if store.close_owned_terminal_is_empty() {
-                                Ok(())
-                            } else {
-                                Err(VcsError::ValidationFailed("artifact codec store reported close completion without terminal emptiness".into()))
-                            };
-                            break;
-                        }
-                        Ok(SnapshotRetirementStep::Pending { .. }) => continue,
-                        Ok(SnapshotRetirementStep::Blocked) => {
-                            closed = Err(VcsError::ValidationFailed("artifact codec store close is blocked by an outstanding snapshot read lease".into()));
-                            break;
-                        }
-                        Err(error) => {
-                            closed = Err(VcsError::ValidationFailed(error));
-                            break;
-                        }
-                    }
-                }
-                let drop_ready = store.envelope_detached
-                    && store.current_detached
-                    && store.backbone.is_none()
-                    && store.dag.terminal_is_empty()
-                    && store.applied_edit_ids.is_empty()
-                    && store.redo_edit_ids.is_empty()
-                    && store.current_checkpoint_id.is_none()
-                    && store.local_actor_id.is_none()
-                    && store.revision_accumulator.applied.is_empty()
-                    && store.revision_accumulator.redo.is_empty()
-                    && store.tail_undo_cache.is_none()
-                    && store.snapshot_read_leases.terminal_is_empty()
-                    && store.displaced_retirements.terminal_is_empty()
-                    && store.owned_disposer.is_none()
-                    && store.owned_disposer_terminal
-                    && store.pending_report.edit_ids.is_none()
-                    && store.pending_report.messages.is_empty()
-                    && store.pending_report.outbound.is_empty()
-                    && store.pending_report.worst.is_none()
-                    && store.durable_group_root.is_none();
-                std::mem::forget(store);
+                let closed = close_codec_reduction_store(store);
                 applied?;
-                if closed.is_err() || !drop_ready {
-                    return Err(closed.err().unwrap_or_else(|| VcsError::ValidationFailed("artifact codec store close left a live shallow-shell owner".into())));
-                }
+                closed?;
                 let files = printed?;
+                Ok((files.pack, files.spr, files.ops))
+            })
+        }
+
+        // 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
+        fn replay_envelopes_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
+        where
+            P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
+            Mutation: Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static,
+        {
+            Box::pin(async move {
+                let files = replay_envelopes_onto_pair::<P, Mutation>(pack, spr, envelopes, bounded_artifact_store_owners::<P, Mutation>).await?;
                 Ok((files.pack, files.spr, files.ops))
             })
         }
@@ -10804,6 +10885,7 @@ impl ArtifactCodec {
             print_mirror: print_mirror_impl::<P, Mutation>,
             edit_text_from_envelope: edit_text_from_envelope_impl::<P, Mutation>,
             apply_ops_binary: apply_ops_binary_impl::<P, Mutation>,
+            replay_envelopes: replay_envelopes_impl::<P, Mutation>,
         }
     }
 }
@@ -10846,6 +10928,7 @@ fn same_document_codec(left: &ArtifactCodec, right: &ArtifactCodec) -> bool {
         && std::ptr::fn_addr_eq(left.print_mirror, right.print_mirror)
         && std::ptr::fn_addr_eq(left.edit_text_from_envelope, right.edit_text_from_envelope)
         && std::ptr::fn_addr_eq(left.apply_ops_binary, right.apply_ops_binary)
+        && std::ptr::fn_addr_eq(left.replay_envelopes, right.replay_envelopes)
 }
 
 fn validate_document_codecs(registry: &BTreeMap<String, ArtifactCodec>, codecs: &[ArtifactCodec]) -> Result<(), DocumentCodecRegistryError> {
@@ -10915,6 +10998,80 @@ pub fn register_document_codecs_in_assembly(_assembly: &ArtifactAssemblyTransact
 pub async fn document_codec(schema: &str) -> Result<Option<ArtifactCodec>, DocumentCodecRegistryError> {
     let registry = document_codec_registry().read().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
     Ok(registry.get(schema).cloned())
+}
+
+/// @emoji 🧬️ A component codec answer still in flight. `Send` natively, where document owners run on
+/// the shared worker pool; the browser's single isolate needs no `Send`.
+#[cfg(not(target_arch = "wasm32"))]
+pub type ComponentDocumentCodecFuture<'a, T> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<T, VcsError>> + Send + 'a>>;
+
+#[cfg(target_arch = "wasm32")]
+pub type ComponentDocumentCodecFuture<'a, T> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<T, VcsError>> + 'a>>;
+
+/// @emoji 🧬️ One document kind's codec as the COMPONENT that owns the kind answers it — the
+/// `world actor` `codec` interface (ticket 26/09/18 slice TC3b) — installed by the host that mounted
+/// that component. A process that links no Rust codec for a kind identifies and validates its documents
+/// through this, exactly as the hub's trusted catalog does for a package it links no codec for
+/// (`🌎️hub/🗿️artifact-authority/🔏️trusted-catalog`'s `VerifiedNativeArtifactCodec`: its linked `codec`,
+/// else its component `guest`).
+pub trait ComponentDocumentCodec: Send + Sync {
+    /// 🏷️ The document schema the component owns.
+    fn schema(&self) -> &str;
+    /// 🧬️ `codec.pack-schema-hash`: the kind's structural snapshot fingerprint.
+    fn pack_schema_hash(&self) -> ComponentDocumentCodecFuture<'_, [u8; 32]>;
+    /// 📥️ `codec.print-mirror`: the pair's text mirror, which is also its validation fence.
+    fn print_mirror<'a>(&'a self, pack: &'a [u8], spr: &'a [u8]) -> ComponentDocumentCodecFuture<'a, ArtifactTextFiles>;
+}
+
+/// @emoji 🧭️ The one codec a document owner resolves for a schema: the Rust codec this binary links
+/// when it links one, else the component codec installed for the mounted component that owns the kind.
+#[derive(Clone)]
+pub enum DocumentKindCodec {
+    Linked(ArtifactCodec),
+    Component(Arc<dyn ComponentDocumentCodec>),
+}
+
+impl DocumentKindCodec {
+    /// 🧬️ The kind's structural snapshot fingerprint.
+    pub async fn pack_schema_hash(&self) -> Result<[u8; 32], VcsError> {
+        match self {
+            Self::Linked(codec) => Ok(codec.pack_schema_hash),
+            Self::Component(codec) => codec.pack_schema_hash().await,
+        }
+    }
+
+    /// 📥️ The pair's text mirror; an `Err` means the pair is not a document of this kind.
+    pub async fn print_mirror(&self, pack: &[u8], spr: &[u8]) -> Result<ArtifactTextFiles, VcsError> {
+        match self {
+            Self::Linked(codec) => (codec.print_mirror)(pack, spr).await,
+            Self::Component(codec) => codec.print_mirror(pack, spr).await,
+        }
+    }
+}
+
+static COMPONENT_DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<String, Arc<dyn ComponentDocumentCodec>>>> = std::sync::OnceLock::new();
+
+fn component_document_codec_registry() -> &'static std::sync::RwLock<BTreeMap<String, Arc<dyn ComponentDocumentCodec>>> {
+    COMPONENT_DOCUMENT_CODEC_REGISTRY.get_or_init(|| std::sync::RwLock::new(BTreeMap::new()))
+}
+
+/// 📝️ Installs a mounted component's codec for the schema it owns. A later mount of that kind's
+/// owner replaces an earlier one: in this process the component a host mounted IS the kind's owner.
+#[must_use]
+pub fn register_component_document_codec(codec: Arc<dyn ComponentDocumentCodec>) -> Result<(), DocumentCodecRegistryError> {
+    let mut registry = component_document_codec_registry().write().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
+    registry.insert(codec.schema().to_string(), codec);
+    Ok(())
+}
+
+/// 🔎️ Resolves `schema` to the one codec a document owner uses — see [`DocumentKindCodec`].
+#[must_use]
+pub async fn document_kind_codec(schema: &str) -> Result<Option<DocumentKindCodec>, DocumentCodecRegistryError> {
+    if let Some(codec) = document_codec(schema).await? {
+        return Ok(Some(DocumentKindCodec::Linked(codec)));
+    }
+    let registry = component_document_codec_registry().read().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
+    Ok(registry.get(schema).cloned().map(DocumentKindCodec::Component))
 }
 
 /// @emoji 📜️ Reads the document schema id from an encoded `.spr` history log.
@@ -22432,6 +22589,48 @@ impl TransactionCoordinator {
 /// @emoji 🧪️ Round-trip assertions shared by every technology crate's `Mutation` test suite.
 pub mod test_support {
     use super::*;
+
+    //#region 🧪️MutationReport
+    /// 🧪️ The report every language-neutral mutation case compares against its committed specification vector. The
+    /// base and expected-after snapshots and the mutation are decoded through the production JSON codec, the mutation is
+    /// applied through `Mutation::diff(..).apply_to` (so an apply refusal surfaces as the fatal message production
+    /// dispatch records), and the mutation's own computed inverse steps are replayed in order onto the applied snapshot.
+    /// The forward half is `base`, `expectedSnapshot`, `snapshot`, `diff`, `messages`; the inverse half is
+    /// `inverseSteps`, `inverseSnapshot`, `inverseMessages`. `expectedSnapshot` is decoded through the same path as
+    /// `base`, so a caller compares like with like.
+    ///
+    /// @see ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs — the laws case adapters assert over this report.
+    pub fn mutation_report_json<S, M>(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String>
+    where
+        S: Clone + ToValue + FromValue,
+        M: Mutation<S>,
+    {
+        let decode_snapshot = |text: &str| -> Result<S, String> { crate::os_pack::json::from_json_str(text).map_err(|error| error.to_string()) };
+        let base = decode_snapshot(base_json)?;
+        let expected = decode_snapshot(after_json)?;
+        let mutation: M = crate::os_pack::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
+        let mut applied = base.clone();
+        let forward = mutation.diff(&base).apply_to(&mut applied);
+        let inverse = mutation.inverse(&base);
+        let mut undone = applied.clone();
+        let mut inverse_messages = Vec::new();
+        for step in &inverse {
+            inverse_messages.extend(step.diff(&undone).apply_to(&mut undone).messages().iter().cloned());
+        }
+        let json = |value: DslValue| crate::os_pack::json::from_dsl_value(&value);
+        let report = crate::os_pack::json::object([
+            ("base".to_string(), json(base.to_value())),
+            ("expectedSnapshot".to_string(), json(expected.to_value())),
+            ("snapshot".to_string(), json(applied.to_value())),
+            ("diff".to_string(), json(forward.diff().to_value())),
+            ("messages".to_string(), json(forward.messages().to_vec().to_value())),
+            ("inverseSteps".to_string(), json(inverse.to_value())),
+            ("inverseSnapshot".to_string(), json(undone.to_value())),
+            ("inverseMessages".to_string(), json(inverse_messages.to_value())),
+        ]);
+        Ok(crate::os_pack::json::to_string(&report))
+    }
+    //#endregion 🧪️MutationReport
 
     /// 🧬️ Order-preserving test projection for an independent JSON byte encoder.
     #[cfg(test)]

@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeEnergy
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change energy carrier to \"{}\"", self.new_energy_carrier), &format!("Energienträger auf \"{}\" ändern", self.new_energy_carrier))
+        protocol::LocalizedLabel::native(&format!("Change energy carrier to \"{}\"", self.new_energy_carrier), &format!("Energieträger auf \"{}\" ändern", self.new_energy_carrier))
     }
 }
 //#endregion 🔖️ChangeEnergyCarrier

@@ -22,10 +22,6 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
-//#region 🔖️Kinds
-/// 🏷️ The seven kinds of this subset's `IfcMutation::KINDS` that both implementations can produce.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "set-entity-arg"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc";
@@ -261,12 +257,9 @@ pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        for kind in KINDS {
-            built = built.subject(&format!("differential-{kind}"), subject::mutate).subject(&format!("differential-inverse-{kind}"), subject::inverse);
-        }
+        built = built.subject("differential", subject::mutate).subject("differential-inverse", subject::inverse);
         built = built.subject("differential-identity-round-trip", subject::round_trip);
     }
-    let _ = KINDS;
     built
 }
 //#endregion 🔖️Registration

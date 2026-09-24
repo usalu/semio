@@ -33,7 +33,7 @@ impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutati
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Active Example", "aktive Beispiel setzen")
+        protocol::LocalizedLabel::native("Set Active Example", "Aktives Beispiel setzen")
     }
 
     fn target(&self) -> Vec<String> {

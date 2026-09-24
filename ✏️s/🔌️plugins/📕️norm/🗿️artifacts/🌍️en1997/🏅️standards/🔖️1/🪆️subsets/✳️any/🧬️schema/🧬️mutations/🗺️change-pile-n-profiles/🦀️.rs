@@ -25,7 +25,7 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangePileNProfi
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change number of investigated pile profiles to {}", self.new_pile_n_profiles), &format!("Nummer von untersuchte Pfahlprofile auf {} ändern", self.new_pile_n_profiles))
+        protocol::LocalizedLabel::native(&format!("Change number of investigated pile profiles to {}", self.new_pile_n_profiles), &format!("Anzahl der untersuchten Pfahlprofile auf {} ändern", self.new_pile_n_profiles))
     }
 }
 //#endregion 🔖️ChangePileNProfiles

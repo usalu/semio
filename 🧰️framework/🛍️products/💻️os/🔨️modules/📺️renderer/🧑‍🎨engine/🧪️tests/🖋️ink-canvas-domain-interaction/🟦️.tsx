@@ -10,7 +10,7 @@ import { InkCanvasHost } from "../../🧱️elements/🖋️InkCanvasHost/🟦�
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
-const fixture = JSON.parse(readFileSync(resolve(engineRoot, "🧪️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json"), "utf8")) as any;
+const fixture = JSON.parse(readFileSync(resolve(engineRoot, "🧫️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json"), "utf8")) as any;
 const schema = JSON.parse(readFileSync(resolve(engineRoot, "🧬️schema/🖋️ink-canvas-domain-interaction/🔣️.json"), "utf8"));
 
 function mountHost(activeUtility = "selectDirect") {

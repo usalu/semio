@@ -26,7 +26,10 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Drag
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Drag {} node(s)", self.ats.len()), &format!("{} Knoten(s) ziehen", self.ats.len()))
+        match self.ats.len() {
+            1 => protocol::LocalizedLabel::native("Drag 1 node", "1 Knoten ziehen"),
+            count => protocol::LocalizedLabel::native(&format!("Drag {count} nodes"), &format!("{count} Knoten ziehen")),
+        }
     }
     fn target(&self) -> Vec<String> {
         self.ats.iter().map(|a| a.layer.to_string()).collect()

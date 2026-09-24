@@ -20,12 +20,13 @@
       ]
     },
     "MutationOutcomeClass": {
+      "description": "🎯️ The protocol outcome class a direct mutation can reach — the same vocabulary as the repository test protocol's `MutationOutcomeClass`, carried verbatim by bridges and manifests.",
       "enum": [
         "applied",
-        "info",
-        "warning",
-        "error",
-        "fatal"
+        "no-op",
+        "empty",
+        "disjoint",
+        "rejected"
       ]
     },
     "MutationComposition": {

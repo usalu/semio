@@ -35,15 +35,9 @@
 //! R2004+ decoder, and assert their laws in role.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1018::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_dwg};
+use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1018::subsets::any::{dwgread_agrees, oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_dwg};
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, divergence, inverse_restores, round_trip_preserves};
 
-//#region 🔖️Kinds
-/// 🧾️ Case-local mirror of the `dwg-ac1018-any` catalog. Duplicated rather than imported: `KINDS`
-/// lives in the SUBJECT crate, which the oracle role must never link. The contract phase fails with
-/// `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list drifts from the catalog.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-version-info"];
-//#endregion 🔖️Kinds
 
 //#region 🔖️Input
 /// 🖊️ The only real, non-stub DWG committed to this repository. It is stamped `AC1024`; see the
@@ -125,6 +119,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     if kind != "no-mutation" && projection == before {
         return Err(format!("{kind:?} left the preamble projection unchanged — a mutation that is not observable proves nothing"));
     }
+    dwgread_agrees(&ctx.work_dir, "mutated.dwg", &bytes, &projection)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -143,6 +138,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let restored = oracle_apply_mutation(&mutated, &oracle_inverse_spec(&input, &spec)?)?;
     let projection = project_dwg(&restored)?;
     inverse_restores(&kind, &projection, &original)?;
+    dwgread_agrees(&ctx.work_dir, "restored.dwg", &restored, &projection)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
@@ -165,6 +161,7 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     if projection.get("version") != Some(&Json::String(FIXTURE_VERSION.to_string())) {
         return Err(format!("the preamble reader must report the stamp the file carries ({FIXTURE_VERSION}); it read {:?}", projection.get("version")));
     }
+    dwgread_agrees(&ctx.work_dir, "round-trip.dwg", &bytes, &projection)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle
@@ -256,16 +253,14 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
-/// id, so the outline's rows are enumerated here rather than its base id.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

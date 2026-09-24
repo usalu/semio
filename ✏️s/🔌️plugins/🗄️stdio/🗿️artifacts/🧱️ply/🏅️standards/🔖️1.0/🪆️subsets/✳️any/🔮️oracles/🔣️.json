@@ -34,7 +34,7 @@
     {
       "id": "semantic-ply-v1",
       "description": "PLY documents compared by wire format, in-order comments and name-keyed elements (each its own ordered property declarations and ordered rows of typed cell values). Unlike a pure mesh format, comments and element/property declarations are themselves normative here -- InsertComment/RemoveComment/AddElement/RemoveElement/SetFormat mutate exactly this surface -- so nothing here is producer freedom the way generator strings are for OBJ/STL.",
-      "tolerance": 0.00001
+      "tolerance": 1e-05
     }
   ],
   "mutationCatalogs": [
@@ -83,7 +83,8 @@
           "capability": "ply-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-element",
@@ -102,7 +103,8 @@
           "capability": "ply-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-comment",
@@ -121,7 +123,8 @@
           "capability": "ply-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-row",
@@ -140,7 +143,8 @@
           "capability": "ply-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-comment",
@@ -159,7 +163,8 @@
           "capability": "ply-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-element",
@@ -178,7 +183,8 @@
           "capability": "ply-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-row",
@@ -197,7 +203,8 @@
           "capability": "ply-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-format",
@@ -216,7 +223,8 @@
           "capability": "ply-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-row-property",
@@ -235,7 +243,9 @@
           "capability": "ply-1-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-snapshot",

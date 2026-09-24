@@ -25,7 +25,7 @@ fn sample_semio_mesh() -> SemioMeshSnapshot {
 async fn serialize_then_deserialize_round_trips_triangle_and_vertex_counts() {
     let original = sample_semio_mesh();
     let dwg = semio_framework_plugin::resolve_ready(SemioMeshToDwg::serialize(&original)).expect("serialize");
-    assert_eq!(dwg.version, DWG_CODEC_VERSION);
+    assert_eq!(dwg.version, "AC1024");
     let round_tripped = semio_framework_plugin::resolve_ready(SemioMeshFromDwg::deserialize(&dwg)).expect("deserialize");
     assert_eq!(round_tripped.meshes.len(), 1);
     assert_eq!(round_tripped.meshes[0].id, "box");

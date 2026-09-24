@@ -43,7 +43,7 @@ use semio_repo_test_host::Json;
 /// `kinds_match_the_catalog_and_the_vocabulary` below reads the committed manifest, vocabulary and
 /// feature as text and fails if any of them drift apart. The check that a kind exists as a real
 /// enum variant is the production-side test's, and only it can make that claim.
-pub const KINDS: [&str; 5] = ["no-mutation", "set-snapshot", "set-id3v2", "set-frames", "set-id3v1"];
+pub const KINDS: [&str; 4] = ["set-snapshot", "set-id3v2", "set-frames", "set-id3v1"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Layers

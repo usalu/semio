@@ -64,7 +64,13 @@ import {
   createAgentDelegationBodyV1,
   parseAgentDelegationListV1,
   parseAgentDelegationReceiptV1,
+  agentCredentialInstallRequestV1,
+  agentMcpClientConfigJsonV1,
+  agentMcpClientConfigV1,
+  AgentCredentialInstallUnavailableV1,
   AGENT_DELEGATION_PATH_V1,
+  type AgentCredentialInstallReceiptV1,
+  type AgentCredentialInstallRequestV1,
   type AgentAudienceV1,
   type AgentDelegationErrorCodeV1,
   type AgentDelegationPhaseV1,
@@ -131,6 +137,15 @@ export const hubUiLabel = registerUiTranslationBundles({
             permission: { label: { normal: "Keep the file readable by you alone — run chmod 600 on it. The agent refuses a file anyone else can read.", beginner: "Only you may read the file. Run chmod 600 on it." } },
             command: { label: { normal: "Start the agent with", beginner: "Start it with" } },
             principal: { label: { normal: "Acts as {{principal}}", beginner: "Called {{principal}}" } },
+            mcpTitle: { label: { normal: "Connect an AI client", beginner: "Use it in your AI app" } },
+            mcpInstall: { label: { normal: "Set up MCP client", beginner: "Set up" } },
+            mcpInstalling: { label: { normal: "Installing the credential for MCP clients…", beginner: "Setting up…" } },
+            mcpReady: { label: { normal: "Add this entry to your MCP client's configuration (for example .mcp.json or claude_desktop_config.json). It names a credential file only you can read — the secret itself is not in it.", beginner: "Paste this into your AI app's settings." } },
+            mcpCopy: { label: { normal: "Copy MCP configuration", beginner: "Copy" } },
+            mcpCopied: { label: { normal: "MCP configuration copied.", beginner: "Copied." } },
+            mcpUnavailable: { label: { normal: "This app cannot install the credential for you. Download the file and start the agent with the command below.", beginner: "Download the file and use the command below." } },
+            mcpFailed: { label: { normal: "The credential could not be installed. Nothing was written; download the file instead.", beginner: "That did not work. Download the file instead." } },
+            mcpRevocable: { label: { normal: "Withdrawing this agent below stops the client at once and removes the installed credential.", beginner: "Stopping the helper stops the app too." } },
             list: { label: { normal: "Agents with access", beginner: "Your AI helpers" } },
             empty: { label: { normal: "No agent has access to this space.", beginner: "No helpers yet." } },
             loading: { label: { normal: "Loading agent delegations…", beginner: "Loading…" } },
@@ -271,6 +286,15 @@ export const hubUiLabel = registerUiTranslationBundles({
             permission: { label: { normal: "Nur du darfst die Datei lesen können — führe chmod 600 darauf aus. Der Agent verweigert eine Datei, die andere lesen können.", beginner: "Nur du darfst die Datei lesen. Führe chmod 600 darauf aus." } },
             command: { label: { normal: "Starte den Agenten mit", beginner: "Starte ihn mit" } },
             principal: { label: { normal: "Handelt als {{principal}}", beginner: "Heißt {{principal}}" } },
+            mcpTitle: { label: { normal: "KI-Client verbinden", beginner: "In deiner KI-App nutzen" } },
+            mcpInstall: { label: { normal: "MCP-Client einrichten", beginner: "Einrichten" } },
+            mcpInstalling: { label: { normal: "Zugangsdaten für MCP-Clients werden installiert…", beginner: "Wird eingerichtet…" } },
+            mcpReady: { label: { normal: "Füge diesen Eintrag in die Konfiguration deines MCP-Clients ein (zum Beispiel .mcp.json oder claude_desktop_config.json). Er nennt eine Zugangsdatei, die nur du lesen kannst — das Geheimnis selbst steht nicht darin.", beginner: "Füge das in die Einstellungen deiner KI-App ein." } },
+            mcpCopy: { label: { normal: "MCP-Konfiguration kopieren", beginner: "Kopieren" } },
+            mcpCopied: { label: { normal: "MCP-Konfiguration kopiert.", beginner: "Kopiert." } },
+            mcpUnavailable: { label: { normal: "Diese App kann die Zugangsdaten nicht für dich installieren. Lade die Datei herunter und starte den Agenten mit dem Befehl unten.", beginner: "Lade die Datei herunter und nutze den Befehl unten." } },
+            mcpFailed: { label: { normal: "Die Zugangsdaten konnten nicht installiert werden. Es wurde nichts geschrieben; lade stattdessen die Datei herunter.", beginner: "Das hat nicht geklappt. Lade stattdessen die Datei herunter." } },
+            mcpRevocable: { label: { normal: "Ziehst du diesen Agenten unten zurück, stoppt der Client sofort und die installierten Zugangsdaten werden entfernt.", beginner: "Stoppst du den Helfer, stoppt auch die App." } },
             list: { label: { normal: "Agenten mit Zugang", beginner: "Deine KI-Helfer" } },
             empty: { label: { normal: "Kein Agent hat Zugang zu diesem Space.", beginner: "Noch keine Helfer." } },
             loading: { label: { normal: "Agenten-Zugänge werden geladen…", beginner: "Wird geladen…" } },
@@ -401,6 +425,12 @@ export interface HubConnectionPortV1 {
   /** 📄️ Hands the human a file to save. Separate from the clipboard port because a credential must
    * end up in a file the agent can read, not in a paste buffer. */
   saveFile?(file: Readonly<{ fileName: string; contents: string; mediaType: string }>): Promise<void>;
+  /** 🔌️ Installs one delegation's credential file owner-only where `semio-os-mcp` reads it and
+   * answers with its absolute path and this host's MCP launcher. Absent on a host that cannot write
+   * files for the human (a plain browser); the pane then offers the download and the command. */
+  installAgentCredential?(request: AgentCredentialInstallRequestV1, signal: AbortSignal): Promise<AgentCredentialInstallReceiptV1>;
+  /** 🗑️ Removes an installed credential once its delegation is withdrawn. */
+  uninstallAgentCredential?(delegationId: string): Promise<void>;
 }
 
 /** 🤖️ One refusal carrying the hub's own code, so the pane names a cause instead of a status. */
@@ -422,6 +452,16 @@ export interface HubAgentCredentialV1 {
   readonly file: Readonly<{ fileName: string; contents: string; mediaType: string }>;
   readonly command: string;
   readonly save: "idle" | "saved" | "failed";
+  /** 🔌️ The MCP client configuration for this delegation, once the host installed its credential. */
+  readonly mcpClient: HubAgentMcpClientV1;
+}
+
+/** 🔌️ Where setting up an MCP client for one delegation stands. `unavailable` is a host that cannot
+ * install files (the pane offers the download and command instead); `config` is the exact text a
+ * human pastes into their client's configuration. */
+export interface HubAgentMcpClientV1 {
+  readonly phase: "idle" | "installing" | "ready" | "copied" | "unavailable" | "failed";
+  readonly config: string | null;
 }
 
 /** 👥️ One roster row as the hub's space-administration page serves it
@@ -488,6 +528,8 @@ export interface HubConnectionValueV1 {
   createDelegation(agentLabel: string, audience: AgentAudienceV1, ttlSecs: number): void;
   downloadAgentCredential(): void;
   dismissAgentCredential(): void;
+  installAgentMcpClient(): void;
+  copyAgentMcpClientConfig(): void;
   revokeDelegation(delegationId: string): void;
 }
 
@@ -991,7 +1033,7 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
       .createAgentDelegation(owner.origin, body, abort.signal)
       .then((receipt) => {
         if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
-        setAgentCredential({ receipt, file: agentCredentialFileV1(receipt, owner.origin), command: agentCredentialCommandV1(receipt, owner.origin), save: "idle" });
+        setAgentCredential({ receipt, file: agentCredentialFileV1(receipt, owner.origin), command: agentCredentialCommandV1(receipt, owner.origin), save: "idle", mcpClient: { phase: portRef.current.installAgentCredential === undefined ? "unavailable" : "idle", config: null } });
         loadDelegations(spaceId, owner);
       })
       .catch((error: unknown) => {
@@ -1016,6 +1058,30 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
 
   const dismissAgentCredential = useCallback(() => setAgentCredential(null), []);
 
+  const installAgentMcpClient = useCallback(() => {
+    const owner = captureOperationOwner();
+    const current = agentCredential;
+    const install = portRef.current.installAgentCredential;
+    if (current === null) return;
+    const mcpClient = (next: HubAgentMcpClientV1) => setAgentCredential((value) => (value === null || value.receipt.delegationId !== current.receipt.delegationId ? value : { ...value, mcpClient: next }));
+    if (install === undefined) {
+      mcpClient({ phase: "unavailable", config: null });
+      return;
+    }
+    mcpClient({ phase: "installing", config: null });
+    void install(agentCredentialInstallRequestV1(current.receipt, owner.origin), new AbortController().signal)
+      .then((installed) => { if (operationOwnerCurrent(owner)) mcpClient({ phase: "ready", config: agentMcpClientConfigJsonV1(agentMcpClientConfigV1(current.receipt, owner.origin, installed)) }); })
+      .catch((error: unknown) => { if (operationOwnerCurrent(owner)) mcpClient({ phase: error instanceof AgentCredentialInstallUnavailableV1 ? "unavailable" : "failed", config: null }); });
+  }, [agentCredential, captureOperationOwner, operationOwnerCurrent, portRef]);
+
+  const copyAgentMcpClientConfig = useCallback(() => {
+    const config = agentCredential?.mcpClient.config ?? null;
+    const write = portRef.current.writeClipboard;
+    if (config === null || write === undefined) return;
+    const delegationId = agentCredential?.receipt.delegationId;
+    void write(config).then(() => setAgentCredential((value) => (value === null || value.receipt.delegationId !== delegationId ? value : { ...value, mcpClient: { phase: "copied", config } })));
+  }, [agentCredential, portRef]);
+
   const revokeDelegation = useCallback((delegationId: string) => {
     const owner = captureOperationOwner();
     const spaceId = watchedSpaceIdRef.current;
@@ -1036,6 +1102,7 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
       .then(() => {
         if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
         setAgentCredential((value) => (value === null || value.receipt.delegationId !== delegationId ? value : null));
+        void portRef.current.uninstallAgentCredential?.(delegationId).catch(() => undefined);
         loadDelegations(spaceId, owner);
       })
       .catch((error: unknown) => {
@@ -1083,6 +1150,8 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
     createDelegation,
     downloadAgentCredential,
     dismissAgentCredential,
+    installAgentMcpClient,
+    copyAgentMcpClientConfig,
     revokeDelegation,
   };
 }
@@ -1144,6 +1213,9 @@ export function createHubConnectionFetchPortV1(options: {
   /** 📄️ Hands the human a file to save — the one-time agent credential. Injected rather than reached
    * for, so a headless test drives the same lane a browser download does. */
   readonly saveFile?: (file: Readonly<{ fileName: string; contents: string; mediaType: string }>) => Promise<void>;
+  /** 🔌️ Installs a delegation's credential for MCP clients; see {@link HubConnectionPortV1.installAgentCredential}. */
+  readonly installAgentCredential?: (request: AgentCredentialInstallRequestV1, signal: AbortSignal) => Promise<AgentCredentialInstallReceiptV1>;
+  readonly uninstallAgentCredential?: (delegationId: string) => Promise<void>;
   /** 🎫️ The capability a previous page load minted and this context remembered, restored so a
    * reload continues the same hub session instead of asking for the password again. */
   readonly restoredCapability?: Readonly<{ token: string; userId: string }> | null;
@@ -1234,6 +1306,8 @@ export function createHubConnectionFetchPortV1(options: {
       if (response.status !== 204) throw new AgentDelegationRefusalV1(agentDelegationErrorFromResponseV1(response.status, await response.text()));
     },
     ...(options.saveFile === undefined ? {} : { saveFile: options.saveFile }),
+    ...(options.installAgentCredential === undefined ? {} : { installAgentCredential: options.installAgentCredential }),
+    ...(options.uninstallAgentCredential === undefined ? {} : { uninstallAgentCredential: options.uninstallAgentCredential }),
   };
 }
 

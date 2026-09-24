@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveHuffmanTable {
-    pub(crate) key: JpgHuffmanTableKey,
+    pub key: JpgHuffmanTableKey,
 }
 
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for RemoveHuffmanTable {
@@ -21,7 +21,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for RemoveHuffmanT
         agg_inverse(&JpgBaselineMutation::RemoveHuffmanTable(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("remove-huffman-table", "Huffmantabelle entfernen")
+        protocol::LocalizedLabel::native("Remove huffman table", "Huffman-Tabelle entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -14,6 +14,9 @@ pub mod creation;
 #[path = "🔒️file-fence/🦀️.rs"]
 mod file_fence;
 
+#[path = "📌️check-in/🦀️.rs"]
+pub mod check_in;
+
 /// 🔐️ Domain prefix for a canonical checkpoint identity.
 pub const CHECKPOINT_ID_V1_DOMAIN: &[u8] = b"semio.hub.artifact-checkpoint.v1\0";
 
@@ -100,6 +103,7 @@ impl AuthorityLimits {
 pub enum AuthorityProgressStage {
     Preflight,
     CatalogLoading,
+    GuestCodecExecuting,
     CatalogResolved,
     InputValidated,
     ApplyingOperations,
@@ -316,6 +320,13 @@ pub trait TrustedArtifactCodec: Send + Sync {
 
     /// ➡️ Applies exactly one already-accepted operation, transferring pair ownership on success.
     async fn apply_operation(&self, pair: ArtifactPair, operation: &AcceptedArtifactOperation, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError>;
+}
+
+/// 📜️ Check In is a replica fold of the hub's own ledger, separate from one-operation application:
+/// edit identity and history transitions (undo, redo, checkpoints) stay exactly the replicas'.
+pub trait TrustedArtifactReplayCodec: TrustedArtifactCodec {
+    /// 📜️ Folds one `encode_envelopes` ledger stream onto `pair`, transferring ownership on success.
+    async fn replay_envelopes(&self, pair: ArtifactPair, envelopes: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError>;
 }
 
 /// 🌱️ Creation is executable package authority, separate from ordinary codec registration.
@@ -648,6 +659,12 @@ pub mod adapters;
 
 #[path = "🔏️trusted-catalog/🦀️.rs"]
 pub mod trusted_catalog;
+
+/// 🔒️ The process-wide codec registry holds the REAL linked stdio/GIS/VCS schemas once any law assembles them, and a
+/// registration is immutable for the process lifetime. Every in-process law that registers or observes those real
+/// schemas holds this guard, so a before/after observation is never interleaved with another law's registration.
+#[cfg(all(test, feature = "native-artifact-execution"))]
+pub(crate) static REAL_LINKED_CODEC_REGISTRY: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 #[cfg(feature = "native-artifact-execution")]
 #[path = "📇️native-openable-provider/🦀️.rs"]

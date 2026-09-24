@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { shellLabel } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️fixtures", "🌐️settings-locale-panel-refresh", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🌐️settings-locale-panel-refresh", "🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🌐️settings-locale-panel-refresh", "🔣️.json"), "utf8"));
 
 function LocalizedPanels() {

@@ -2,6 +2,8 @@
   "schemaVersion": 1,
   "cases": [
     { "id": "extern-derive-and-facade-contract", "derive": "derive::MutationLeaf", "contract": "::facade::MutationLeaf", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "", "accepted": true },
+    { "id": "unrelated-external-derives-beside-genuine-derive", "derive": "Clone, lower::Codec, facade::Record, derive::MutationLeaf", "contract": "::facade::MutationLeaf", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "", "accepted": true },
+    { "id": "second-genuine-derive-route-is-rejected", "derive": "derive::MutationLeaf, facade::MutationLeaf", "contract": "::facade::MutationLeaf", "facadeSource": "pub use lower::MutationLeaf;\npub use derive::MutationLeaf;\n", "manualImpl": "", "accepted": false },
     { "id": "inherited-cargo-provider-bindings", "derive": "derive::MutationLeaf", "contract": "::facade::MutationLeaf", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "", "binding": "inherited", "accepted": true },
     { "id": "renamed-local-contract-import", "derive": "derive::MutationLeaf", "contract": "::Contract", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "use facade::MutationLeaf as Contract;\n", "accepted": true },
     { "id": "grouped-local-contract-import", "derive": "derive::MutationLeaf", "contract": "::Contract", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "use facade::{MutationLeaf as Contract};\n", "accepted": true },

@@ -1,53 +1,58 @@
-//! 🦀️ JFIF 1.01 🧱️baseline conformance-class mutation case — Rust adapter. Ticket
-//! 26/08/23/END-TO-END-TESTING-REFACTOR. Recorded no-oracle decision
-//! `jpg-jfif-1-01-baseline-conformance-class-semantics`
-//! (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🔮️oracles/🔣️.json`).
+//! 🦀️ JFIF 1.01 🧱️baseline conformance-class mutation case — Rust adapter.
 //!
-//! **Why there is no oracle here when the sibling subset has one.** `image` 0.25 is registered by
-//! `🧾️document` and is the right reference for a JPEG raster, but its public surface is pixels,
-//! dimensions and a colour type. It cannot read a SOF marker, a sample precision, a DAC flag or a
-//! DHT table, and it offers no way to write any of them — so it can neither perform nor judge a
-//! single row of this vocabulary. And even a reference that could would be measuring nothing at the
-//! byte level, because `encode_jpg` normalizes every one of these axes away on re-serialization.
-//! The evidence is therefore T.81's own tables read against this subset's `check_baseline_conformance`,
-//! plus the inverse law over the decoded snapshot.
+//! The oracle role reads the real scan's baseline axes with the registered libjpeg-turbo CLIs
+//! (`libjpeg-jpg-jfif-1-01-baseline-marker-cli`: `djpeg -v -v` for the SOFn code, the component sampling
+//! factors, the DHT tables and a DAC segment, `rdjpgcom -verbose` for the sample precision), applies
+//! each kind to those axes as ITU-T T.81 defines the field it names, and reads the class off the
+//! specification's own tables (`../../🔮️oracles/🦀️.rs`); it never consults this repository's decoder,
+//! snapshot or checker. The subject applies the same row to the decoded snapshot through
+//! `JpgBaselineMutation`. Both answer in the same conformance projection, compared field for field.
 //!
-//! **Where the assertion lives.** No oracle role is dispatched, so every law is asserted INSIDE the
-//! subject handler — and, unlike the semio-native cases in this wave, this one CAN reach the shared
-//! `⚖️law` module, because its owner sits under `✏️s/🔌️plugins/🗄️stdio` and the generated host
-//! therefore links `semio-s-plugin-stdio-test-oracle`. `inverse-<kind>` goes through
-//! `law::inverse_restores` and `identity-round-trip` through `law::reparsed_not_copied` and
-//! `law::round_trip_preserves`, so the wording of the laws is shared with the rest of the fleet
-//! rather than restated.
-//!
-//! **The one scenario that does touch bytes.** `identity-round-trip` decodes the real scan,
-//! re-serializes from the snapshot alone, and reads BOTH sides through `project_jpg_mutation` — the
-//! `🧾️document` oracle module's independent `image`-backed reader — so the geometry claim is made by a
-//! third party rather than by this repository's own codec agreeing with itself.
+//! The comparison is on axes, not bytes: `encode_jpg` writes a conforming baseline file and nothing
+//! else, so every axis is normalized away on re-serialization. The decode/re-encode law is its own
+//! case, `../🔁️round-trip-jpg-jfif-1-01-baseline`.
 
-use semio_repo_test_host::Adapter;
+use semio_repo_test_host::{Adapter, Context, Json, Outcome};
+use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::{apply, project, read_axes, Axes};
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `JpgBaselineMutation::KINDS` (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/
-/// 🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not imported, because the oracle-only build
-/// must not link the subject crate. `kinds_match_enum_variants_in_declaration_order` and
-/// `kinds_match_the_committed_catalog` in that production file keep it honest at both ends.
-#[cfg(feature = "sut")]
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-sof-marker", "set-sample-precision", "set-arithmetic", "insert-huffman-table", "remove-huffman-table", "insert-frame-component", "remove-frame-component", "set-component-sampling"];
 
 /// 🖼️ The real 2275x2560 architectural scan, shared with the `🧾️document` case rather than copied: two
 /// DQT, an SOF0 with three components, four DHT and SOS.
-#[cfg(feature = "sut")]
-const SCAN: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
+const SCAN: &str = "shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Oracle
-/// 🚫️ This case records a no-oracle decision, so the runner dispatches no oracle role at all and
-/// nothing is registered for one. The reference answers this vocabulary would need — "is this
-/// decoded document inside ITU-T T.81 Annex F's baseline class" — are the standard's own tables,
-/// read by `check_baseline_conformance` on the subject side; there is no package that holds them.
-/// Stating that here rather than registering a handler that would never run keeps the file honest
-/// about what exists.
+/// 📖️ The scan's axes as libjpeg-turbo reads them from a copy in the work directory.
+fn scan_axes(ctx: &Context) -> Result<Axes, String> {
+    read_axes(&ctx.copy_fixture(SCAN, Some("scan.jpg"))?)
+}
+
+/// 🎯️ The reference answer for one row: the axes after the kind, which must have moved unless the row
+/// is the identity baseline.
+fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let row = ctx.doc_json()?;
+    let kind = row.str("kind");
+    let base = scan_axes(ctx)?;
+    let next = apply(&base, &kind, &row.get("params").cloned().unwrap_or(Json::Object(Vec::new())))?;
+    let projection = project(&next);
+    if kind != "no-mutation" && projection == project(&base) {
+        return Err(format!("mutate-{kind}: the reference reading of the scan did not move"));
+    }
+    Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+}
+
+/// ↩️ The reference inverse: every axis the kind touched goes back to the value libjpeg-turbo read.
+fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let row = ctx.doc_json()?;
+    let kind = row.str("kind");
+    let base = scan_axes(ctx)?;
+    if kind != "no-mutation" && project(&apply(&base, &kind, &row.get("params").cloned().unwrap_or(Json::Object(Vec::new())))?) == project(&base) {
+        return Err(format!("inverse-{kind}: the forward kind left the reference reading untouched, so restoring it proves nothing"));
+    }
+    let restored = project(&base);
+    Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored))
+}
 //#endregion 🔖️Oracle
 
 //#region 🔖️Subject
@@ -58,7 +63,7 @@ mod subject {
     use semio_s_artifact_stdio_jpg::schema::snapshot::{JpgFrameComponent, JpgHuffmanClass, JpgHuffmanTable};
     use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{apply_jpg_baseline_mutation, encode_jpg_baseline_projection_json, inverse_jpg_baseline_mutation, jpg_baseline_conformance_codes, JpgBaselineMutation};
     use semio_s_artifact_stdio_jpg::schema::diff::JpgHuffmanTableKey;
-    use crate::JpgSnapshot;
+    use semio_s_artifact_stdio_jpg::JpgSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
     use semio_s_plugin_stdio_test_oracle::law;
 
@@ -146,35 +151,35 @@ mod subject {
     /// empty `code` is a positive claim, not an absence: three kinds move their axis in the
     /// direction that stays INSIDE the class, and those must raise nothing while still being
     /// observable.
-    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| {
-            let row = ctx.doc_json()?;
-            let base = decoded(ctx)?;
-            let before = jpg_baseline_conformance_codes(&base);
-            if !before.is_empty() {
-                return Err(format!("mutate-{kind}: the committed scan must start INSIDE the baseline class for a departure from it to mean anything, but it already reports {before:?}"));
-            }
-            let params = row.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-            let mutation = mutation_from_spec(kind, &params, &base)?;
-            let mut current = base.clone();
-            apply_jpg_baseline_mutation(&mut current, &mutation);
-            let after = jpg_baseline_conformance_codes(&current);
-            let expected = row.str("code");
-            if expected.is_empty() {
-                if !after.is_empty() {
-                    return Err(format!("mutate-{kind}: this row moves its axis in the direction that stays inside the class, so the verdict must stay clean, but it reports {after:?}"));
-                }
-            } else if !after.contains(&expected) {
-                return Err(format!("mutate-{kind}: the class verdict must gain {expected:?}, but it reports {after:?} — the mutation did not reach the axis its own diagnostic guards"));
-            }
-            let (was, now) = (projection(&base)?, projection(&current)?);
-            if kind != "no-mutation" {
-                law::mutation_is_observable(kind, &now, &was, &[])?;
-            } else if now != was {
-                return Err("mutate-no-mutation: the identity element moved the projection".to_string());
-            }
-            Ok(Outcome::with_raw(now.to_string().into_bytes(), now))
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        let row = ctx.doc_json()?;
+        let kind = row.str("kind");
+        let kind = kind.as_str();
+        let base = decoded(ctx)?;
+        let before = jpg_baseline_conformance_codes(&base);
+        if !before.is_empty() {
+            return Err(format!("mutate-{kind}: the committed scan must start INSIDE the baseline class for a departure from it to mean anything, but it already reports {before:?}"));
         }
+        let params = row.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
+        let mutation = mutation_from_spec(kind, &params, &base)?;
+        let mut current = base.clone();
+        apply_jpg_baseline_mutation(&mut current, &mutation);
+        let after = jpg_baseline_conformance_codes(&current);
+        let expected = row.str("code");
+        if expected.is_empty() {
+            if !after.is_empty() {
+                return Err(format!("mutate-{kind}: this row moves its axis in the direction that stays inside the class, so the verdict must stay clean, but it reports {after:?}"));
+            }
+        } else if !after.contains(&expected) {
+            return Err(format!("mutate-{kind}: the class verdict must gain {expected:?}, but it reports {after:?} — the mutation did not reach the axis its own diagnostic guards"));
+        }
+        let (was, now) = (projection(&base)?, projection(&current)?);
+        if kind != "no-mutation" {
+            law::mutation_is_observable(kind, &now, &was, &[])?;
+        } else if now != was {
+            return Err("mutate-no-mutation: the identity element moved the projection".to_string());
+        }
+        Ok(Outcome::with_raw(now.to_string().into_bytes(), now))
     }
 
     /// ↩️ The metamorphic inverse law over the real scan: applying the kind and then its OWN
@@ -182,72 +187,41 @@ mod subject {
     /// verdict with them. The two counting kinds carry the weight, because their inverse has to
     /// restore a table or a component at the INDEX it was removed from, which is why both variants
     /// carry an index at all.
-    pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| {
-            let row = ctx.doc_json()?;
-            let base = decoded(ctx)?;
-            let original = projection(&base)?;
-            let params = row.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-            let mutation = mutation_from_spec(kind, &params, &base)?;
-            let mut current = base.clone();
-            apply_jpg_baseline_mutation(&mut current, &mutation);
-            if kind != "no-mutation" && projection(&current)? == original {
-                return Err(format!("inverse-{kind}: the forward mutation left the conformance projection untouched, so restoring it proves nothing"));
-            }
-            for step in inverse_jpg_baseline_mutation(&mutation, &base) {
-                apply_jpg_baseline_mutation(&mut current, &step);
-            }
-            let restored = projection(&current)?;
-            law::inverse_restores(kind, &restored, &original)?;
-            Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored))
+    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
+        let row = ctx.doc_json()?;
+        let kind = row.str("kind");
+        let kind = kind.as_str();
+        let base = decoded(ctx)?;
+        let original = projection(&base)?;
+        let params = row.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
+        let mutation = mutation_from_spec(kind, &params, &base)?;
+        let mut current = base.clone();
+        apply_jpg_baseline_mutation(&mut current, &mutation);
+        if kind != "no-mutation" && projection(&current)? == original {
+            return Err(format!("inverse-{kind}: the forward mutation left the conformance projection untouched, so restoring it proves nothing"));
         }
+        for step in inverse_jpg_baseline_mutation(&mutation, &base) {
+            apply_jpg_baseline_mutation(&mut current, &step);
+        }
+        let restored = projection(&current)?;
+        law::inverse_restores(kind, &restored, &original)?;
+        Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored))
     }
 
-    /// 🔁️ The one scenario in this case that touches bytes. The scan is decoded into the typed
-    /// snapshot and re-serialized from that snapshot ALONE — no splice, no copy — and the result
-    /// must differ from the input, which it genuinely does: `encode_jpg` regenerates fresh Annex K
-    /// DQT/DHT tables at its own re-encode quality rather than carrying the source's forward, so
-    /// bit-identical output here would mean the input was smuggled rather than parsed. The geometry
-    /// claim is then made by the INDEPENDENT `image`-backed reader on both sides, not by this
-    /// repository's codec agreeing with itself, and the class verdict is required to survive the
-    /// round trip — which is the strongest statement this subset can make about its own encoder.
-    pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = ctx.fixture_bytes(super::SCAN)?;
-        let base = decoded(ctx)?;
-        let bytes = encode_jpg(&base).map_err(|error| format!("identity-round-trip: re-serializing the decoded scan failed: {error:?}"))?;
-        law::reparsed_not_copied(&bytes, &input)?;
-        let reparsed = decode_jpg(&bytes).map_err(|error| format!("identity-round-trip: the re-encoded scan must decode again: {error:?}"))?;
-        let verdict = jpg_baseline_conformance_codes(&reparsed);
-        if !verdict.is_empty() {
-            return Err(format!("identity-round-trip: a decode/re-encode of a conforming scan must stay inside the class, but the result reports {verdict:?}"));
-        }
-        let (was, now) = (project_jpg_mutation(&input)?, project_jpg_mutation(&bytes)?);
-        if was.str("dimensions") != now.str("dimensions") {
-            return Err(format!("identity-round-trip: the independent reader sees {} in and {} out — the re-serialization changed the image geometry", was.str("dimensions"), now.str("dimensions")));
-        }
-        let (was, now) = (projection(&base)?, projection(&reparsed)?);
-        law::round_trip_preserves(&now, &was)?;
-        Ok(Outcome::with_raw(bytes, now))
-    }
     //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
-/// id, so the loop mirrors the feature's `Examples` tables exactly. Every handler is subject-only:
-/// the recorded no-oracle decision means the runner dispatches no oracle role, and the reference
-/// answer this vocabulary would need is a reading of ITU-T T.81 rather than a package.
+/// 🧭️ Registration entry point the generated host calls. Handlers are registered under the Scenario Outline
+/// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
-    #[cfg(feature = "sut")]
-    for kind in KINDS {
-        built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
-    }
+    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("identity-round-trip", subject::round_trip);
+        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
     }
     built
 }

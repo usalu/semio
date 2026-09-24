@@ -22,7 +22,7 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for MoveFram
         agg_inverse(&SemioImageMutation::MoveFrame(self.clone()), base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("move-frame", "Rahmen verschieben")
+        protocol::LocalizedLabel::native("Move frame", "Einzelbild verschieben")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
