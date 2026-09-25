@@ -7,6 +7,7 @@ const log = (...a) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s]`,
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", args: ["--enable-unsafe-webgpu", "--enable-features=Vulkan", "--use-vulkan=swiftshader", "--use-webgpu-adapter=swiftshader", "--use-angle=swiftshader"] });
 const open = async (label) => {
 	const context = await browser.newContext({ viewport: { width: 1500, height: 900 } });
+	context.setDefaultTimeout(120_000);
 	const page = await context.newPage();
 	page.on("pageerror", (e) => log(`[${label} pageerror]`, String(e).slice(0, 300)));
 	page.on("console", (m) => { if (m.type() === "error" && !m.text().includes("GPU surface")) log(`[${label} console]`, m.text().slice(0, 300)); });
@@ -44,7 +45,7 @@ await a.page.locator('[id="sketchpad.hub.share"]').click();
 await a.page.locator('[id="sketchpad.hub.share.editor"]').click();
 const link = await (await a.page.getByTestId("sketchpad-hub-share-link-editor").elementHandle({ timeout: 30_000 })).inputValue();
 log("A editor share link", link);
-await a.page.screenshot({ path: `${out}/01-a-share-dialog.png` });
+await a.page.screenshot({ path: `${out}/01-a-share-dialog.png`, timeout: 120_000 });
 await a.page.keyboard.press("Escape");
 
 const b = await open("B");
@@ -55,8 +56,8 @@ log("B joined via share link", b.page.url());
 await until(() => hubState(b.page, kitId), (s) => s.status?.state === "synced", "B synced");
 const both = await until(async () => [await hubState(a.page, kitId), await hubState(b.page, kitId)], ([x, y]) => x.participants?.length === 2 && y.participants?.length === 2, "two participants");
 log("participants A", JSON.stringify(both[0].participants), "B", JSON.stringify(both[1].participants));
-await a.page.screenshot({ path: `${out}/02-a-two-avatars.png` });
-await b.page.screenshot({ path: `${out}/03-b-joined.png` });
+await a.page.screenshot({ path: `${out}/02-a-two-avatars.png`, timeout: 120_000 });
+await b.page.screenshot({ path: `${out}/03-b-joined.png`, timeout: 120_000 });
 
 await a.page.locator('[id="ui.search.toggle"]').click();
 await a.page.getByRole("dialog").getByPlaceholder("Search...").fill("Create design");
@@ -65,7 +66,7 @@ await until(() => app(b.page, (m, kitId) => m.getSketchpadShellController().getK
 log("B sees A's new design");
 await b.page.locator('[id="hub-activity"]').click();
 await b.page.getByText("created a design").first().waitFor({ timeout: 30_000 });
-await b.page.screenshot({ path: `${out}/04-b-activity-feed.png` });
+await b.page.screenshot({ path: `${out}/04-b-activity-feed.png`, timeout: 120_000 });
 
 const target = await app(a.page, (m, kitId) => { const kit = m.getSketchpadShellController().getKitStore(kitId).getSnapshot().kit; const design = kit.designs.find((d) => (d.pieces?.length ?? 0) > 1); return { designId: design.id, name: design.name, pieceId: design.pieces[0].id, pieceName: design.pieces[0].name, center: design.pieces[0].position?.center ?? null }; }, kitId);
 log("target design", JSON.stringify(target));
@@ -78,7 +79,7 @@ log("B diagram remote highlights", JSON.stringify(highlighted));
 log("B sees A focus", JSON.stringify((await hubState(b.page, kitId)).participants));
 await b.page.locator('[id="hub"]').click();
 await b.page.waitForTimeout(1500);
-await b.page.screenshot({ path: `${out}/05-b-remote-selection.png` });
+await b.page.screenshot({ path: `${out}/05-b-remote-selection.png`, timeout: 120_000 });
 
 const moved = await app(a.page, async (m, arg) => (await m.executeSketchpadKitCommand(arg.kitId, (kit) => kit.session.store(kit.storeId).design(arg.designId).pieces([arg.pieceId]).drag({ u: 2, v: 1 }))).ok, { kitId, designId: target.designId, pieceId: target.pieceId });
 log("A dragged piece", moved);
@@ -98,20 +99,20 @@ await app(b.page, async (m, kitId) => (await m.executeSketchpadKitCommand(kitId,
 await app(a.page, async (m, kitId) => (await m.executeSketchpadKitCommand(kitId, (kit) => kit.createDesign("Online design by Ada"))).ok, kitId);
 const offline = await until(() => hubState(b.page, kitId), (s) => s.status?.state === "offline" && s.status.pending === 1, "B offline with a queued operation", 30_000);
 log("B offline status", JSON.stringify(offline.status));
-await b.page.screenshot({ path: `${out}/06-b-offline.png` });
+await b.page.screenshot({ path: `${out}/06-b-offline.png`, timeout: 120_000 });
 await b.context.setOffline(false);
 const converged = await until(async () => [await hubState(a.page, kitId), await hubState(b.page, kitId)], ([x, y]) => x.status?.state === "synced" && y.status?.state === "synced" && y.status.pending === 0 && x.localHash === y.localHash && x.localHash === x.hubHash, "converged after reconnect", 120_000);
 const namesA = await app(a.page, (m, kitId) => m.getSketchpadShellController().getKitStore(kitId).getSnapshot().kit.designs.map((d) => d.name).filter((n) => /design by/.test(n)).sort(), kitId);
 const namesB = await app(b.page, (m, kitId) => m.getSketchpadShellController().getKitStore(kitId).getSnapshot().kit.designs.map((d) => d.name).filter((n) => /design by/.test(n)).sort(), kitId);
 log("converged", JSON.stringify(converged.map((s) => s.status)), "A designs", JSON.stringify(namesA), "B designs", JSON.stringify(namesB), "hash", converged[0].localHash);
-await b.page.screenshot({ path: `${out}/07-b-back-online.png` });
+await b.page.screenshot({ path: `${out}/07-b-back-online.png`, timeout: 120_000 });
 
 await a.page.locator('[id="hub"]').click();
 await a.page.locator('[id="sketchpad.hub.connectAi"]').click();
 await a.page.locator('[id="sketchpad.hub.ai.create"]').click();
 const claude = await (await a.page.getByTestId("sketchpad-hub-ai-claude").elementHandle({ timeout: 30_000 })).inputValue();
 log("Connect AI command", claude.replace(/Bearer [^"]+/, "Bearer <token>"));
-await a.page.screenshot({ path: `${out}/08-a-connect-ai.png` });
+await a.page.screenshot({ path: `${out}/08-a-connect-ai.png`, timeout: 120_000 });
 const agentToken = claude.match(/Bearer ([^"]+)/)[1];
 await a.page.keyboard.press("Escape");
 const sessionId = await app(a.page, (m, kitId) => m.getSketchpadHubController().kit(kitId).sessionId, kitId);
@@ -124,7 +125,7 @@ const agentActivity = await until(() => hubState(b.page, kitId), (s) => s.activi
 log("B participants with agent", JSON.stringify(agentActivity.participants));
 await b.page.locator('[id="hub-activity"]').click();
 await b.page.getByText("AI", { exact: true }).first().waitFor({ timeout: 30_000 });
-await b.page.screenshot({ path: `${out}/09-b-agent-activity.png` });
+await b.page.screenshot({ path: `${out}/09-b-agent-activity.png`, timeout: 120_000 });
 const finalHashes = await until(async () => [await hubState(a.page, kitId), await hubState(b.page, kitId)], ([x, y]) => x.localHash === x.hubHash && y.localHash === y.hubHash && x.localHash === y.localHash, "hashes equal after agent op");
 log("final hashes", finalHashes[0].localHash, finalHashes[1].localHash, finalHashes[0].hubHash, "version", finalHashes[0].status.version);
 log("final activity B", JSON.stringify((await hubState(b.page, kitId)).activity));

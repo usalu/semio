@@ -1,0 +1,11 @@
+import { SemioKitClient } from "/home/user/semio/semio/client/lib/react/index.ts";
+const payload = JSON.parse(await Bun.file(process.argv[2] ?? "mcp-design-payload.json").text());
+const client = await SemioKitClient.open({ kind: "bytes", data: new TextEncoder().encode(JSON.stringify(payload.kit)) });
+const kit = client.getSnapshot();
+const design = kit.typologies?.flatMap((t) => t.designs).find((d) => d.id === payload.design.id) ?? kit.designs?.find((d) => d.id === payload.design.id);
+const pieces = design?.pieces ?? [];
+console.log("[DEBUG] pieces", pieces.length, "withPlane", pieces.filter((p) => p.position?.plane).length, "withCenter", pieces.filter((p) => p.position?.center).length, "nonzeroOrigin", pieces.filter((p) => { const o = p.position?.plane?.origin; return o && (o.x || o.y || o.z); }).length);
+console.log("[DEBUG] conns", design?.connections?.length);
+const src = payload.kit.typologies.flatMap((t) => t.designs ?? []).find((d) => d.id === payload.design.id);
+console.log("[DEBUG] src pieces", src?.pieces?.length, JSON.stringify(src?.pieces?.[0]).slice(0, 400));
+await client.dispose();

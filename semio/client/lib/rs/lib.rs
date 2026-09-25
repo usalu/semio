@@ -994,6 +994,176 @@ pub mod geom {
         pub altitude: f64,
     }
 
+    //#region 🧮 flatten
+    /// @emoji 🧮 Connection joint: offsets along the parent connector frame (gap/shift/rise), angles in degrees (rotation/turn/tilt) and the diagram offset (u/v).
+    #[derive(Clone, Copy, Debug, Default, PartialEq)]
+    pub struct Joint {
+        pub gap: f64,
+        pub shift: f64,
+        pub rise: f64,
+        pub rotation: f64,
+        pub turn: f64,
+        pub tilt: f64,
+        pub u: f64,
+        pub v: f64,
+    }
+
+    /// @emoji 📍 Docking frame of a connector in type coordinates.
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct Dock {
+        pub point: PointInput,
+        pub direction: VectorInput,
+        pub t: f64,
+    }
+
+    impl Default for Dock {
+        fn default() -> Self {
+            Self { point: PointInput::default(), direction: VectorInput { x: 0.0, y: 0.0, z: 1.0 }, t: 0.0 }
+        }
+    }
+
+    const FLATTEN_TOLERANCE: f64 = 1e-5;
+    const FLATTEN_RADIUS: f64 = 2.697;
+    const FLATTEN_VERTICAL_V_EXTRA: f64 = 1.0;
+    const FLATTEN_HORIZONTAL_SCALE: f64 = 3.0633;
+
+    type Mat4 = crate::external_adapters::nalgebra::Matrix4<f64>;
+    type Vec3 = crate::external_adapters::nalgebra::Vector3<f64>;
+
+    fn round_tol(x: f64) -> f64 {
+        (x / FLATTEN_TOLERANCE).round() * FLATTEN_TOLERANCE
+    }
+
+    fn unit(v: Vec3) -> Vec3 {
+        let n = v.norm();
+        if n < 1e-10 {
+            Vec3::new(0.0, 0.0, 1.0)
+        } else {
+            v / n
+        }
+    }
+
+    fn quat_between(from: Vec3, to: Vec3) -> (f64, f64, f64, f64) {
+        let f = unit(from);
+        let t = unit(to);
+        let r = f.dot(&t) + 1.0;
+        let (x, y, z, w) = if r < 1e-6 {
+            if f.x.abs() > f.z.abs() {
+                (-f.y, f.x, 0.0, 0.0)
+            } else {
+                (0.0, -f.z, f.y, 0.0)
+            }
+        } else {
+            let c = f.cross(&t);
+            (c.x, c.y, c.z, r)
+        };
+        let n = (x * x + y * y + z * z + w * w).sqrt();
+        (x / n, y / n, z / n, w / n)
+    }
+
+    fn quat_axis_angle(axis: Vec3, angle: f64) -> (f64, f64, f64, f64) {
+        let a = unit(axis);
+        let (s, c) = (angle / 2.0).sin_cos();
+        (a.x * s, a.y * s, a.z * s, c)
+    }
+
+    fn quat_matrix((x, y, z, w): (f64, f64, f64, f64)) -> Mat4 {
+        let mut m = Mat4::identity();
+        m[(0, 0)] = 1.0 - 2.0 * (y * y + z * z);
+        m[(0, 1)] = 2.0 * (x * y - w * z);
+        m[(0, 2)] = 2.0 * (x * z + w * y);
+        m[(1, 0)] = 2.0 * (x * y + w * z);
+        m[(1, 1)] = 1.0 - 2.0 * (x * x + z * z);
+        m[(1, 2)] = 2.0 * (y * z - w * x);
+        m[(2, 0)] = 2.0 * (x * z - w * y);
+        m[(2, 1)] = 2.0 * (y * z + w * x);
+        m[(2, 2)] = 1.0 - 2.0 * (x * x + y * y);
+        m
+    }
+
+    fn translation(v: Vec3) -> Mat4 {
+        let mut m = Mat4::identity();
+        m[(0, 3)] = v.x;
+        m[(1, 3)] = v.y;
+        m[(2, 3)] = v.z;
+        m
+    }
+
+    fn rotate(m: &Mat4, v: Vec3) -> Vec3 {
+        m.fixed_view::<3, 3>(0, 0) * v
+    }
+
+    fn point(p: PointInput) -> Vec3 {
+        Vec3::new(p.x, p.y, p.z)
+    }
+
+    fn vector(v: VectorInput) -> Vec3 {
+        Vec3::new(v.x, v.y, v.z)
+    }
+
+    fn plane_matrix(p: &PlaneInput) -> Mat4 {
+        let x = unit(vector(p.x_axis));
+        let y = unit(vector(p.y_axis));
+        let z = unit(x.cross(&y));
+        let mut m = Mat4::identity();
+        for (column, axis) in [x, y, z, point(p.origin)].into_iter().enumerate() {
+            m[(0, column)] = axis.x;
+            m[(1, column)] = axis.y;
+            m[(2, column)] = axis.z;
+        }
+        m
+    }
+
+    /// @emoji 🧲 Plane of a child piece docked with `child` onto the `parent` connector of a piece at `parent_plane` (connector frames in type coordinates, joint in the parent connector frame).
+    pub fn child_plane(parent_plane: &PlaneInput, parent: &Dock, child: &Dock, joint: &Joint) -> PlaneInput {
+        let parent_point = point(parent.point);
+        let parent_direction = unit(vector(parent.direction));
+        let child_direction = unit(vector(child.direction));
+        let reverse_child = -child_direction;
+        let align = if parent_direction.cross(&reverse_child).norm() < 0.01 {
+            if parent_direction.z.abs() < FLATTEN_TOLERANCE {
+                quat_axis_angle(Vec3::new(0.0, 0.0, 1.0), std::f64::consts::PI)
+            } else {
+                quat_axis_angle(Vec3::new(0.0, 0.0, 1.0).cross(&parent_direction), std::f64::consts::PI)
+            }
+        } else {
+            quat_between(reverse_child, parent_direction)
+        };
+        let connector_frame = quat_matrix(quat_between(Vec3::new(0.0, 1.0, 0.0), parent_direction));
+        let gap_direction = rotate(&connector_frame, Vec3::new(0.0, 1.0, 0.0));
+        let shift_direction = rotate(&connector_frame, Vec3::new(1.0, 0.0, 0.0));
+        let rise_direction = rotate(&connector_frame, Vec3::new(0.0, 0.0, 1.0));
+        let rotation = quat_matrix(quat_axis_angle(parent_direction, -joint.rotation.to_radians()));
+        let turn_axis = rotate(&rotation, rise_direction);
+        let tilt_axis = rotate(&rotation, shift_direction);
+        let orientation = quat_matrix(quat_axis_angle(tilt_axis, joint.tilt.to_radians())) * quat_matrix(quat_axis_angle(turn_axis, joint.turn.to_radians())) * rotation * quat_matrix(align);
+        let offset = rise_direction * joint.rise + shift_direction * joint.shift + gap_direction * joint.gap;
+        let transform = plane_matrix(parent_plane) * translation(parent_point + offset) * orientation * translation(-point(child.point));
+        let column = |c: usize| (round_tol(transform[(0, c)]), round_tol(transform[(1, c)]), round_tol(transform[(2, c)]));
+        let ((xx, xy, xz), (yx, yy, yz), (ox, oy, oz)) = (column(0), column(1), column(3));
+        PlaneInput { origin: PointInput { x: ox, y: oy, z: oz }, x_axis: VectorInput { x: xx, y: xy, z: xz }, y_axis: VectorInput { x: yx, y: yy, z: yz } }
+    }
+
+    /// @emoji 🗺️ Diagram center of a child piece: pieces docked to a root at the origin circle it by the parent connector `t`, others offset by the joint `u`/`v` (vertical connectors stack, horizontal ones spread).
+    pub fn child_center(parent_center: CoordinateInput, parent: &Dock, joint: &Joint) -> CoordinateInput {
+        if parent_center.u.abs() < FLATTEN_TOLERANCE && parent_center.v.abs() < FLATTEN_TOLERANCE {
+            let angle = 2.0 * std::f64::consts::PI * parent.t;
+            return CoordinateInput { u: round_tol(FLATTEN_RADIUS * angle.sin()), v: round_tol(FLATTEN_RADIUS * angle.cos()) };
+        }
+        let (u, v) = if unit(vector(parent.direction)).z.abs() > 0.5 {
+            (parent_center.u + joint.u, parent_center.v + joint.v + FLATTEN_VERTICAL_V_EXTRA)
+        } else {
+            (parent_center.u + joint.u * FLATTEN_HORIZONTAL_SCALE, parent_center.v + joint.v * FLATTEN_HORIZONTAL_SCALE)
+        };
+        CoordinateInput { u: round_tol(u), v: round_tol(v) }
+    }
+
+    /// @emoji 🧲 Child position (plane + diagram center) docked through a connection onto a parent position.
+    pub fn child_position(parent: &PositionInput, parent_dock: &Dock, child_dock: &Dock, joint: &Joint) -> PositionInput {
+        PositionInput { center: child_center(parent.center, parent_dock, joint), plane: child_plane(&parent.plane, parent_dock, child_dock, joint) }
+    }
+    //#endregion 🧮 flatten
+
     //#region 📐 entity
     pub mod entity {
         //! 📐 `Arc` geometry nodes (target WeakEntity / Entity graph shapes); `#[Object]` impls live after [`crate::interface`].
@@ -3149,6 +3319,14 @@ pub mod kit {
             pub icon: RwLock<String>,
             /// @emoji 🔗 Resolved port pointer (`# data` on the wire).
             pub port: RwLock<Option<Arc<Port>>>,
+            /// @emoji 📍 Docking point in type coordinates.
+            pub point: RwLock<crate::geom::PointInput>,
+            /// @emoji 🧭 Docking direction (outward normal) in type coordinates.
+            pub direction: RwLock<crate::geom::VectorInput>,
+            /// @emoji 🔄 Parameter along the connector (diagram placement).
+            pub t: RwLock<f64>,
+            pub mandatory: RwLock<bool>,
+            pub props: RwLock<Vec<Prop>>,
             pub qualities: RwLock<Vec<Arc<Quality>>>,
             pub attributes: RwLock<Vec<Attribute>>,
         }
@@ -3163,6 +3341,11 @@ pub mod kit {
                     description: RwLock::new(String::new()),
                     icon: RwLock::new(String::new()),
                     port: RwLock::new(None),
+                    point: RwLock::new(crate::geom::PointInput::default()),
+                    direction: RwLock::new(crate::geom::VectorInput::default()),
+                    t: RwLock::new(0.0),
+                    mandatory: RwLock::new(false),
+                    props: RwLock::new(Vec::new()),
                     qualities: RwLock::new(Vec::new()),
                     attributes: RwLock::new(Vec::new()),
                 }
@@ -3171,39 +3354,30 @@ pub mod kit {
 
         impl Connector {
             pub async fn new(owner_type: Weak<Type>, code: String) -> Arc<Self> {
-                Arc::new(Self {
-                    id: Id::new().await,
-                    owner_type,
-                    name: RwLock::new(String::new()),
-                    code: RwLock::new(code),
-                    description: RwLock::new(String::new()),
-                    icon: RwLock::new(String::new()),
-                    port: RwLock::new(None),
-                    qualities: RwLock::new(Vec::new()),
-                    attributes: RwLock::new(Vec::new()),
-                })
+                Arc::new(Self { id: Id::new().await, owner_type, code: RwLock::new(code), ..Default::default() })
             }
 
             pub async fn new_with_external_id(owner_type: Weak<Type>, id: Id, code: String) -> Arc<Self> {
-                Arc::new(Self {
-                    id,
-                    owner_type,
-                    name: RwLock::new(code.clone()),
-                    code: RwLock::new(code),
-                    description: RwLock::new(String::new()),
-                    icon: RwLock::new(String::new()),
-                    port: RwLock::new(None),
-                    qualities: RwLock::new(Vec::new()),
-                    attributes: RwLock::new(Vec::new()),
-                })
+                Arc::new(Self { id, owner_type, name: RwLock::new(code.clone()), code: RwLock::new(code), ..Default::default() })
+            }
+
+            /// @emoji ✍️ Sets every field of this connector from a [`crate::operation::ConnectorItem`] snapshot (the port and props resolved by the caller).
+            pub async fn assign(&self, item: &crate::operation::ConnectorItem, port: Option<Arc<Port>>, props: Vec<Prop>) {
+                *self.name.write().await = item.name.clone();
+                *self.code.write().await = item.name.clone();
+                *self.description.write().await = item.description.clone().unwrap_or_default();
+                *self.icon.write().await = item.icon.clone().unwrap_or_default();
+                *self.point.write().await = item.point;
+                *self.direction.write().await = item.direction;
+                *self.t.write().await = item.t;
+                *self.mandatory.write().await = item.mandatory;
+                *self.port.write().await = port;
+                *self.props.write().await = props;
             }
 
             pub async fn compute_hash(&self) -> String {
-                let name = self.name.read().await;
-                let code = self.code.read().await;
-                let desc = self.description.read().await;
-                let icon = self.icon.read().await;
-                h(&[self.id.as_str(), name.as_str(), code.as_str(), desc.as_str(), icon.as_str()])
+                let item = crate::operation::connector_item_from_entity(self).await;
+                h(&[crate::kit_backbone::canonical_json_hash(&crate::kit_backbone::connector_item_json(&item)).as_str()])
             }
         }
 
@@ -3235,6 +3409,15 @@ pub mod kit {
             }
             pub async fn port(&self) -> Option<Arc<Port>> {
                 self.port.read().await.clone()
+            }
+            pub async fn t(&self) -> f64 {
+                *self.t.read().await
+            }
+            pub async fn mandatory(&self) -> bool {
+                *self.mandatory.read().await
+            }
+            pub async fn props(&self) -> Vec<Prop> {
+                self.props.read().await.clone()
             }
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
                 crate::gql_relay::QualityConnection::from_entities(self.qualities.read().await.clone()).await
@@ -3314,12 +3497,18 @@ pub mod kit {
                 })
             }
 
+            /// @emoji ✍️ Sets every field of this representation from a [`crate::operation::RepresentationItem`] snapshot (the file and tags resolved by the caller).
+            pub async fn assign(&self, item: &crate::operation::RepresentationItem, file: Option<File>, tags: Vec<Arc<Tag>>) {
+                *self.name.write().await = item.name.clone();
+                *self.description.write().await = item.description.clone().unwrap_or_default();
+                *self.url.write().await = item.url.clone().unwrap_or_default();
+                *self.file.write().await = file;
+                *self.tags.write().await = tags;
+            }
+
             pub async fn compute_hash(&self) -> String {
-                let url = self.url.read().await;
-                let name = self.name.read().await;
-                let desc = self.description.read().await;
-                let icon = self.icon.read().await;
-                h(&[self.id.as_str(), name.as_str(), url.as_str(), desc.as_str(), icon.as_str()])
+                let item = crate::operation::representation_item_from_entity(self).await;
+                h(&[crate::kit_backbone::canonical_json_hash(&crate::kit_backbone::representation_item_json(&item)).as_str()])
             }
 
             /// @emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
@@ -3893,11 +4082,33 @@ pub mod kit {
                     h(&[self.id.as_str(), name.as_deref().unwrap_or("")])
                 }
 
+                /// @emoji 📐 Absolute position: the stored pose of a fixed piece, else composed down the piece tree from the nearest posed ancestor through each parent connection (unposed roots sit at the world origin).
                 pub async fn compute_flat_position(&self) -> PositionInput {
                     if let Some(n) = self.position.read().await.as_ref() {
                         return n.snapshot_input().await;
                     }
-                    PositionInput::default()
+                    let mut visited = std::collections::HashSet::from([self.id.clone()]);
+                    let mut chain = Vec::new();
+                    let mut base = PositionInput::default();
+                    let mut parent = self.parent_piece.read().await.upgrade();
+                    let mut connection = self.parent_connection.read().await.upgrade();
+                    while let (Some(piece), Some(link)) = (parent, connection) {
+                        chain.push(link);
+                        if let Some(n) = piece.position.read().await.as_ref() {
+                            base = n.snapshot_input().await;
+                            break;
+                        }
+                        if !visited.insert(piece.id.clone()) {
+                            break;
+                        }
+                        parent = piece.parent_piece.read().await.upgrade();
+                        connection = piece.parent_connection.read().await.upgrade();
+                    }
+                    let mut position = base;
+                    for link in chain.iter().rev() {
+                        position = link.place_child(&position).await;
+                    }
+                    position
                 }
 
                 /// @emoji 🧰 Direct blueprint when this piece is a kind instance.
@@ -4098,7 +4309,7 @@ pub mod kit {
                     if let Some(n) = self.position.read().await.clone() {
                         return n;
                     }
-                    PositionEntity::from_position_input(PositionInput::default())
+                    PositionEntity::from_position_input(self.compute_flat_position().await)
                 }
                 #[graphql(name = "replaceableBlueprints")]
                 pub async fn replaceable_blueprints(&self) -> crate::gql_relay::BlueprintConnection {
@@ -4291,6 +4502,29 @@ pub mod kit {
             }
 
             impl Connection {
+                /// @emoji 🧲 Position of the child side piece docked onto `parent` (the parent side piece position) through both connectors and this joint.
+                pub async fn place_child(&self, parent: &crate::geom::PositionInput) -> crate::geom::PositionInput {
+                    async fn dock(side: &Side) -> crate::geom::Dock {
+                        let Some(connector) = side.connector.read().await.clone() else {
+                            return crate::geom::Dock::default();
+                        };
+                        crate::geom::Dock { point: *connector.point.read().await, direction: *connector.direction.read().await, t: *connector.t.read().await }
+                    }
+                    let parent_side = self.parent.read().await.clone();
+                    let child_side = self.child.read().await.clone();
+                    let joint = crate::geom::Joint {
+                        gap: self.gap.read().await.unwrap_or(0.0),
+                        shift: self.shift.read().await.unwrap_or(0.0),
+                        rise: self.rise.read().await.unwrap_or(0.0),
+                        rotation: self.rotation.read().await.unwrap_or(0.0),
+                        turn: self.turn.read().await.unwrap_or(0.0),
+                        tilt: self.tilt.read().await.unwrap_or(0.0),
+                        u: self.u.read().await.unwrap_or(0.0),
+                        v: self.v.read().await.unwrap_or(0.0),
+                    };
+                    crate::geom::child_position(parent, &dock(&parent_side).await, &dock(&child_side).await, &joint)
+                }
+
                 /// @emoji 🪪 Blake3 digest over `Connection` wire shape: sorted `attributes`, `parent` / `child` [`Side`] digests, optional `description`, then scalar join fields.
                 pub async fn compute_hash(&self) -> String {
                     use crate::hash::{format_number_for_hash, merkle_collection};
@@ -5799,6 +6033,7 @@ pub mod kit {
                 if let Some(folder_id) = &diff.folder_id {
                     *ty.folder_id.write().await = folder_id.clone();
                 }
+                self.apply_type_items(&ty, diff).await?;
             }
             for entity in &t.added {
                 self.apply_create_type_scoped(
@@ -5812,6 +6047,71 @@ pub mod kit {
                 )
                 .await?;
             }
+            Ok(())
+        }
+
+        /// @emoji 🧩 Applies the connector, representation and prop removals and upserts of a [`crate::operation::TypeDiff`]; existing items are updated in place so connections keep pointing at their connectors, and every referenced port joins the type's ports.
+        async fn apply_type_items(self: &Arc<Self>, ty: &Arc<r#type::Type>, diff: &crate::operation::TypeDiff) -> Result<(), crate::error::SemioError> {
+            ty.connectors.write().await.retain(|c| !diff.removed_connectors.contains(&c.id));
+            ty.representations.write().await.retain(|r| !diff.removed_representations.contains(&r.id));
+            ty.props.write().await.retain(|p| !diff.removed_props.contains(&p.id));
+            for item in &diff.connectors {
+                let port = match &item.port_id {
+                    Some(port_id) => Some(self.find_port(port_id).await.ok_or_else(|| crate::error::SemioError::not_found("Port", port_id.as_str()))?),
+                    None => None,
+                };
+                if let Some(port) = &port {
+                    let mut ports = ty.ports.write().await;
+                    if !ports.iter().any(|p| p.id == port.id) {
+                        ports.push(port.clone());
+                    }
+                }
+                let mut props = Vec::with_capacity(item.props.len());
+                for prop in &item.props {
+                    props.push(self.prop_from_item(prop).await);
+                }
+                let existing = ty.connectors.read().await.iter().find(|c| c.id == item.id).cloned();
+                let connector = match existing {
+                    Some(connector) => connector,
+                    None => {
+                        let connector = r#type::Connector::new_with_external_id(Arc::downgrade(ty), item.id.clone(), item.name.clone()).await;
+                        ty.connectors.write().await.push(connector.clone());
+                        connector
+                    }
+                };
+                connector.assign(item, port, props).await;
+            }
+            for item in &diff.representations {
+                let file = match &item.file_id {
+                    Some(file_id) => Some(self.files.read().await.iter().find(|f| &f.id == file_id).cloned().ok_or_else(|| crate::error::SemioError::not_found("File", file_id.as_str()))?),
+                    None => None,
+                };
+                let mut tags = Vec::with_capacity(item.tag_ids.len());
+                for tag_id in &item.tag_ids {
+                    if let Some(tag) = self.find_tag(tag_id).await {
+                        tags.push(tag);
+                    }
+                }
+                let existing = ty.representations.read().await.iter().find(|r| r.id == item.id).cloned();
+                let representation = match existing {
+                    Some(representation) => representation,
+                    None => {
+                        let representation = r#type::Representation::new_with_external_id(Arc::downgrade(ty), item.id.clone(), String::new()).await;
+                        ty.representations.write().await.push(representation.clone());
+                        representation
+                    }
+                };
+                representation.assign(item, file, tags).await;
+            }
+            for item in &diff.props {
+                let prop = self.prop_from_item(item).await;
+                let mut props = ty.props.write().await;
+                match props.iter_mut().find(|p| p.id == item.id) {
+                    Some(slot) => *slot = prop,
+                    None => props.push(prop),
+                }
+            }
+            ty.refresh_connector_child_weak_maps().await;
             Ok(())
         }
 
@@ -6230,6 +6530,22 @@ pub mod kit {
         }
         pub async fn type_by_external_id(&self, id: &Id) -> Option<Arc<r#type::Type>> {
             self.type_weak_by_id.read().await.get(id).and_then(|w| w.upgrade())
+        }
+
+        /// @emoji 🔌 Port by id: the instance kit types already share, else materialized from the kit families.
+        pub async fn find_port(&self, id: &Id) -> Option<Arc<r#type::Port>> {
+            for ty in self.types_flat().await.iter() {
+                if let Some(port) = ty.ports.read().await.iter().find(|p| &p.id == id) {
+                    return Some(port.clone());
+                }
+            }
+            let families = self.snapshot_families_projection.read().await.clone()?;
+            crate::kit_backbone::hydrate_kit_scope_ports_from_snapshot_value(&crate::external_adapters::serde_json::json!({ "families": families })).await.remove(id.as_str())
+        }
+
+        /// @emoji 🎚️ Live prop of a [`crate::operation::PropItem`] (`key` keeps the quality id; the quality resolves when the kit defines it).
+        pub async fn prop_from_item(&self, item: &crate::operation::PropItem) -> crate::meta::Prop {
+            crate::meta::Prop { id: item.id.clone(), key: item.quality_id.as_str().to_string(), value: item.value.clone(), unit: item.unit.clone(), quality: self.find_quality(&item.quality_id).await }
         }
 
         /// @emoji 🔎 Locate a representation by id across all kit types.
@@ -8928,17 +9244,59 @@ pub mod operation {
     #[derive(Clone, Debug, PartialEq)]
     pub struct TypeModified {
         pub type_ref: IdRef,
-        pub diff: TypeScalarDiff,
+        pub diff: TypeDiff,
     }
 
+    /// @emoji 🏠 Sparse patch of one type: scalars plus upserted (full snapshots keyed by id) and removed connectors, representations and props; removals apply before upserts.
     #[derive(Clone, Debug, Default, PartialEq)]
-    pub struct TypeScalarDiff {
+    pub struct TypeDiff {
         pub name: Option<String>,
         pub description: Option<String>,
         pub icon: Option<String>,
         pub image: Option<String>,
         pub unit: Option<String>,
         pub folder_id: Option<Option<Id>>,
+        pub connectors: Vec<ConnectorItem>,
+        pub removed_connectors: Vec<Id>,
+        pub representations: Vec<RepresentationItem>,
+        pub removed_representations: Vec<Id>,
+        pub props: Vec<PropItem>,
+        pub removed_props: Vec<Id>,
+    }
+
+    /// @emoji ⚓ One type connector snapshot (kit JSON `connectors[]` wire shape).
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct ConnectorItem {
+        pub id: Id,
+        pub name: String,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub point: crate::geom::PointInput,
+        pub direction: crate::geom::VectorInput,
+        pub t: f64,
+        pub mandatory: bool,
+        pub port_id: Option<Id>,
+        pub props: Vec<PropItem>,
+    }
+
+    /// @emoji 💾 One type representation snapshot (kit JSON `representations[]` wire shape).
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct RepresentationItem {
+        pub id: Id,
+        pub name: String,
+        pub description: Option<String>,
+        pub file_id: Option<Id>,
+        pub url: Option<String>,
+        pub tag_ids: Vec<Id>,
+    }
+
+    /// @emoji 🎚️ One prop snapshot (kit JSON `props[]` wire shape: quality reference, value and unit).
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct PropItem {
+        pub id: Id,
+        pub quality_id: Id,
+        pub value: String,
+        pub unit: Option<String>,
     }
 
     #[derive(Clone, Debug, Default, PartialEq)]
@@ -9355,6 +9713,7 @@ pub mod operation {
         MoveToFolder { folder_id: Option<Id> },
         DesignItems { pieces: Vec<PieceAdded>, connections: Vec<ConnectionAdded> },
         PiecePatch { name: Option<String>, description: Option<String>, position: Option<PositionInput> },
+        TypePatch { patch: TypeDiff },
     }
 
     /// @emoji 🧩 Normalized  operation surface: every variant is `{ scope: Scope, input: Input }`.
@@ -9385,6 +9744,7 @@ pub mod operation {
         AddPiecesAndConnectionsInDesign { scope: Scope, input: Input },
         DeletePiecesAndConnectionsInDesign { scope: Scope, input: Input },
         UpdatePieceInDesign { scope: Scope, input: Input },
+        UpdateTypeInKit { scope: Scope, input: Input },
         CreateFolder { scope: Scope, input: Input },
         DeleteFolder { scope: Scope, input: Input },
         MoveToFolder { scope: Scope, input: Input },
@@ -9418,6 +9778,7 @@ pub mod operation {
                 Operation::AddPiecesAndConnectionsInDesign { .. } => "addPiecesAndConnectionsInDesign",
                 Operation::DeletePiecesAndConnectionsInDesign { .. } => "deletePiecesAndConnectionsInDesign",
                 Operation::UpdatePieceInDesign { .. } => "updatePieceInDesign",
+                Operation::UpdateTypeInKit { .. } => "updateTypeInKit",
                 Operation::CreateFolder { .. } => "createFolder",
                 Operation::DeleteFolder { .. } => "deleteFolder",
                 Operation::MoveToFolder { .. } => "moveToFolder",
@@ -9522,7 +9883,7 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff { modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { description: description.clone(), ..Default::default() } }], ..Default::default() }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeDiff { description: description.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
@@ -9569,7 +9930,7 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff { modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { icon: icon.clone(), ..Default::default() } }], ..Default::default() }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeDiff { icon: icon.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
@@ -9598,7 +9959,7 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff { modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { image: image.clone(), ..Default::default() } }], ..Default::default() }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeDiff { image: image.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
@@ -9797,6 +10158,19 @@ pub mod operation {
                     }
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff { removed: vec![IdRef { id: design_id.clone() }], ..Default::default() }),
+                        ..Default::default()
+                    }))
+                }
+                Operation::UpdateTypeInKit { scope, input } => {
+                    let Scope::Type { type_id } = scope else {
+                        return Err(SemioError::invalid("updateTypeInKit expects Scope::Type"));
+                    };
+                    let Input::TypePatch { patch } = input else {
+                        return Err(SemioError::invalid("updateTypeInKit expects Input::TypePatch"));
+                    };
+                    validate_type_patch(kit, type_id, patch).await?;
+                    Ok(KitDiff(CanonicalKitDiff {
+                        types: Some(TypesCollectionDiff { modified: vec![TypeModified { type_ref: IdRef { id: type_id.clone() }, diff: patch.clone() }], ..Default::default() }),
                         ..Default::default()
                     }))
                 }
@@ -10050,7 +10424,7 @@ pub mod operation {
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             types: Some(TypesCollectionDiff {
-                                modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { folder_id: folder_placement, ..Default::default() } }],
+                                modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeDiff { folder_id: folder_placement, ..Default::default() } }],
                                 ..Default::default()
                             }),
                             ..Default::default()
@@ -10336,11 +10710,57 @@ pub mod operation {
                         return Err(SemioError::invalid("deleteType expects Scope::Type"));
                     };
                     let ty = ensure_type_entity(kit, type_id).await?;
-                    let owner_id = kit.workspace_kit_id().await;
-                    Ok(vec![Operation::CreateType {
-                        scope: Scope::CreateType { owner_id, type_id: type_id.clone() },
-                        input: entity_scalars_from_type(&ty).await,
-                    }])
+                    let owner_id = match ty.owner_typology.upgrade() {
+                        Some(topo) => topo.id.clone(),
+                        None => kit.workspace_kit_id().await,
+                    };
+                    let items = type_items_snapshot(&ty).await;
+                    let folder_id = ty.folder_id.read().await.clone();
+                    let scalars = entity_scalars_from_type(&ty).await;
+                    Ok(vec![
+                        Operation::CreateType { scope: Scope::CreateType { owner_id, type_id: type_id.clone() }, input: scalars },
+                        Operation::UpdateTypeInKit { scope: Scope::Type { type_id: type_id.clone() }, input: Input::TypePatch { patch: TypeDiff { folder_id: Some(folder_id), ..items } } },
+                    ])
+                }
+                Operation::UpdateTypeInKit { scope, input } => {
+                    let Scope::Type { type_id } = scope else {
+                        return Err(SemioError::invalid("updateTypeInKit expects Scope::Type"));
+                    };
+                    let Input::TypePatch { patch } = input else {
+                        return Err(SemioError::invalid("updateTypeInKit expects Input::TypePatch"));
+                    };
+                    let ty = ensure_type_entity(kit, type_id).await?;
+                    let before = type_items_snapshot(&ty).await;
+                    let mut back = TypeDiff {
+                        name: patch.name.as_ref().map(|_| String::new()),
+                        description: patch.description.as_ref().map(|_| String::new()),
+                        icon: patch.icon.as_ref().map(|_| String::new()),
+                        image: patch.image.as_ref().map(|_| String::new()),
+                        unit: patch.unit.as_ref().map(|_| String::new()),
+                        folder_id: match patch.folder_id {
+                            Some(_) => Some(ty.folder_id.read().await.clone()),
+                            None => None,
+                        },
+                        ..Default::default()
+                    };
+                    for (slot, field) in [(&mut back.name, &ty.name), (&mut back.description, &ty.description), (&mut back.icon, &ty.icon), (&mut back.image, &ty.image), (&mut back.unit, &ty.unit)] {
+                        if slot.is_some() {
+                            *slot = Some(field.read().await.clone());
+                        }
+                    }
+                    fn restore<T: Clone>(upserted: &[T], removed: &[Id], before: &[T], id_of: fn(&T) -> &Id, restores: &mut Vec<T>, removals: &mut Vec<Id>) {
+                        for item in upserted {
+                            match before.iter().find(|old| id_of(old) == id_of(item)) {
+                                Some(old) => restores.push(old.clone()),
+                                None => removals.push(id_of(item).clone()),
+                            }
+                        }
+                        restores.extend(removed.iter().filter_map(|id| before.iter().find(|old| id_of(old) == id).cloned()));
+                    }
+                    restore(&patch.connectors, &patch.removed_connectors, &before.connectors, |c| &c.id, &mut back.connectors, &mut back.removed_connectors);
+                    restore(&patch.representations, &patch.removed_representations, &before.representations, |r| &r.id, &mut back.representations, &mut back.removed_representations);
+                    restore(&patch.props, &patch.removed_props, &before.props, |p| &p.id, &mut back.props, &mut back.removed_props);
+                    Ok(vec![Operation::UpdateTypeInKit { scope: Scope::Type { type_id: type_id.clone() }, input: Input::TypePatch { patch: back } }])
                 }
                 Operation::CreateFolder { scope, .. } => {
                     let Scope::CreateFolder { folder_id, .. } = scope else {
@@ -10443,6 +10863,111 @@ pub mod operation {
         let design = kit.design_by_external_id(design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
         design.piece_by_external_id(piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))
     }
+
+    //#region 🏠 type items
+    /// @emoji 🎚️ Prop snapshot (`key` holds the quality id).
+    pub(crate) fn prop_item_from_entity(prop: &crate::meta::Prop) -> PropItem {
+        PropItem { id: prop.id.clone(), quality_id: prop.quality.as_ref().map(|q| q.id.clone()).unwrap_or_else(|| Id::from(prop.key.as_str())), value: prop.value.clone(), unit: prop.unit.clone() }
+    }
+
+    /// @emoji ⚓ Snapshot one live connector as its `connectors[]` entity.
+    pub(crate) async fn connector_item_from_entity(c: &crate::kit::r#type::Connector) -> ConnectorItem {
+        let text = |value: String| if value.is_empty() { None } else { Some(value) };
+        ConnectorItem {
+            id: c.id.clone(),
+            name: c.name.read().await.clone(),
+            description: text(c.description.read().await.clone()),
+            icon: text(c.icon.read().await.clone()),
+            point: *c.point.read().await,
+            direction: *c.direction.read().await,
+            t: *c.t.read().await,
+            mandatory: *c.mandatory.read().await,
+            port_id: c.port.read().await.as_ref().map(|port| port.id.clone()),
+            props: c.props.read().await.iter().map(prop_item_from_entity).collect(),
+        }
+    }
+
+    /// @emoji 💾 Snapshot one live representation as its `representations[]` entity.
+    pub(crate) async fn representation_item_from_entity(r: &crate::kit::r#type::Representation) -> RepresentationItem {
+        let text = |value: String| if value.is_empty() { None } else { Some(value) };
+        RepresentationItem {
+            id: r.id.clone(),
+            name: r.name.read().await.clone(),
+            description: text(r.description.read().await.clone()),
+            file_id: r.file.read().await.as_ref().map(|file| file.id.clone()),
+            url: text(r.url.read().await.clone()),
+            tag_ids: r.tags.read().await.iter().map(|tag| tag.id.clone()).collect(),
+        }
+    }
+
+    /// @emoji 📸 Connectors, representations and props of a type as upserts of a [`TypeDiff`].
+    pub(crate) async fn type_items_snapshot(ty: &crate::kit::r#type::Type) -> TypeDiff {
+        let mut connectors = Vec::new();
+        for c in ty.connectors.read().await.iter() {
+            connectors.push(connector_item_from_entity(c).await);
+        }
+        let mut representations = Vec::new();
+        for r in ty.representations.read().await.iter() {
+            representations.push(representation_item_from_entity(r).await);
+        }
+        TypeDiff { connectors, representations, props: ty.props.read().await.iter().map(prop_item_from_entity).collect(), ..Default::default() }
+    }
+
+    /// @emoji 🛂 A type patch must target an existing type, remove only existing items, keep connectors that connections use, reference known ports and files and not repeat ids.
+    async fn validate_type_patch(kit: &Arc<crate::kit::Kit>, type_id: &Id, patch: &TypeDiff) -> Result<(), SemioError> {
+        let ty = ensure_type_entity(kit, type_id).await?;
+        let before = type_items_snapshot(&ty).await;
+        fn unique<'a>(kind: &str, ids: impl Iterator<Item = &'a Id>) -> Result<(), SemioError> {
+            let mut seen = std::collections::HashSet::new();
+            for id in ids {
+                if !seen.insert(id.clone()) {
+                    return Err(SemioError::invalid(format!("{kind} {} appears twice in one type patch", id.as_str())));
+                }
+            }
+            Ok(())
+        }
+        unique("Connector", patch.connectors.iter().map(|c| &c.id).chain(patch.removed_connectors.iter()))?;
+        unique("Representation", patch.representations.iter().map(|r| &r.id).chain(patch.removed_representations.iter()))?;
+        unique("Prop", patch.props.iter().map(|p| &p.id).chain(patch.removed_props.iter()))?;
+        for (kind, removed, existing) in [
+            ("Connector", &patch.removed_connectors, before.connectors.iter().map(|c| c.id.clone()).collect::<Vec<_>>()),
+            ("Representation", &patch.removed_representations, before.representations.iter().map(|r| r.id.clone()).collect()),
+            ("Prop", &patch.removed_props, before.props.iter().map(|p| p.id.clone()).collect()),
+        ] {
+            if let Some(missing) = removed.iter().find(|id| !existing.contains(id)) {
+                return Err(SemioError::not_found(kind, missing.as_str()));
+            }
+        }
+        if !patch.removed_connectors.is_empty() {
+            for design in kit.has_designs().await.iter() {
+                for connection in design.connections.read().await.iter() {
+                    let used = connection_added_from_entity(connection).await;
+                    if let Some(side) = [used.parent, used.child].into_iter().find(|side| patch.removed_connectors.contains(&side.connector_id)) {
+                        return Err(SemioError::invalid(format!("Connector {} is used by connection {} in design {}", side.connector_id.as_str(), used.id.as_str(), design.id.as_str())));
+                    }
+                }
+            }
+        }
+        for connector in &patch.connectors {
+            if connector.name.trim().is_empty() {
+                return Err(SemioError::invalid(format!("Connector {} needs a name", connector.id.as_str())));
+            }
+            if let Some(port_id) = &connector.port_id {
+                if kit.find_port(port_id).await.is_none() {
+                    return Err(SemioError::not_found("Port", port_id.as_str()));
+                }
+            }
+        }
+        for representation in &patch.representations {
+            if let Some(file_id) = &representation.file_id {
+                if !kit.files.read().await.iter().any(|file| &file.id == file_id) {
+                    return Err(SemioError::not_found("File", file_id.as_str()));
+                }
+            }
+        }
+        Ok(())
+    }
+    //#endregion 🏠 type items
 
     //#region ⛓️ design items
     /// @emoji ⚓ Connectors exposed by a blueprint: the type's own connectors, or those of every type nested in a design blueprint.
@@ -11605,7 +12130,7 @@ pub mod kit_backbone {
             "removed": t.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
             "modified": t.modified.iter().map(|entity| json!({
                 "type": { "id": entity.type_ref.id.as_str() },
-                "diff": type_scalar_diff_wire(&entity.diff),
+                "diff": type_diff_wire(&entity.diff),
             })).collect::<Vec<Value>>(),
             "added": t.added.iter().map(type_added_wire).collect::<Vec<Value>>(),
         })
@@ -11624,25 +12149,8 @@ pub mod kit_backbone {
         })
     }
 
-    fn type_scalar_diff_wire(d: &crate::operation::TypeScalarDiff) -> crate::external_adapters::serde_json::Value {
-        use crate::external_adapters::serde_json::{Map, Value};
-        let mut m = Map::new();
-        if let Some(ref s) = d.name {
-            m.insert("name".into(), Value::String(s.clone()));
-        }
-        if let Some(ref s) = d.description {
-            m.insert("description".into(), Value::String(s.clone()));
-        }
-        if let Some(ref s) = d.icon {
-            m.insert("icon".into(), Value::String(s.clone()));
-        }
-        if let Some(ref s) = d.image {
-            m.insert("image".into(), Value::String(s.clone()));
-        }
-        if let Some(ref s) = d.unit {
-            m.insert("unit".into(), Value::String(s.clone()));
-        }
-        Value::Object(m)
+    fn type_diff_wire(d: &crate::operation::TypeDiff) -> crate::external_adapters::serde_json::Value {
+        type_diff_json(d)
     }
 
     fn designs_collection_diff_wire(d: &crate::operation::DesignsCollectionDiff) -> crate::external_adapters::serde_json::Value {
@@ -12042,6 +12550,166 @@ pub mod kit_backbone {
     }
     //#endregion ⛓️ design items json
 
+    //#region 🏠 type items json
+    /// @emoji 📦 `{ hash, items }` block of kit JSON collections.
+    fn block(items: Vec<crate::external_adapters::serde_json::Value>) -> crate::external_adapters::serde_json::Value {
+        crate::external_adapters::serde_json::json!({ "hash": KIT_BUNDLE_HASH_STUB, "items": items })
+    }
+
+    fn xyz(x: f64, y: f64, z: f64) -> crate::external_adapters::serde_json::Value {
+        crate::external_adapters::serde_json::json!({ "x": x, "y": y, "z": z })
+    }
+
+    fn xyz_from_json(v: Option<&crate::external_adapters::serde_json::Value>) -> (f64, f64, f64) {
+        let f = |key: &str| v.and_then(|o| o.get(key)).and_then(|x| x.as_f64()).unwrap_or(0.0);
+        (f("x"), f("y"), f("z"))
+    }
+
+    fn text_json(o: &mut crate::external_adapters::serde_json::Value, key: &str, value: &Option<String>) {
+        if let Some(value) = value.as_ref().filter(|s| !s.is_empty()) {
+            o[key] = crate::external_adapters::serde_json::Value::String(value.clone());
+        }
+    }
+
+    fn text_from_json(v: &crate::external_adapters::serde_json::Value, key: &str) -> Option<String> {
+        v.get(key).and_then(|x| x.as_str()).filter(|s| !s.is_empty()).map(|s| s.to_string())
+    }
+
+    fn id_list_from_json(v: Option<&crate::external_adapters::serde_json::Value>) -> Vec<crate::id::Id> {
+        v.and_then(json_array_or_block_items_ref).map(|items| items.iter().filter_map(|item| item.as_str().or_else(|| json_entity_id_ref(item)).map(id_from_str)).collect()).unwrap_or_default()
+    }
+
+    /// @emoji 🎚️ Kit JSON wire shape of one prop (`quality` ref, `value`, optional `unit`).
+    pub(crate) fn prop_item_json(p: &crate::operation::PropItem) -> crate::external_adapters::serde_json::Value {
+        let mut o = crate::external_adapters::serde_json::json!({ "id": p.id.as_str(), "quality": { "id": p.quality_id.as_str() }, "value": p.value });
+        text_json(&mut o, "unit", &p.unit);
+        o
+    }
+
+    pub(crate) fn prop_item_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::PropItem, SemioError> {
+        Ok(crate::operation::PropItem {
+            id: id_from_str(json_entity_id_ref(v).ok_or_else(|| SemioError::invalid("prop id"))?),
+            quality_id: id_from_str(v.get("quality").and_then(json_entity_id_ref).or_else(|| v.get("key").and_then(|x| x.as_str())).ok_or_else(|| SemioError::invalid("prop quality"))?),
+            value: match v.get("value") {
+                Some(crate::external_adapters::serde_json::Value::String(value)) => value.clone(),
+                Some(value) if !value.is_null() => value.to_string(),
+                _ => String::new(),
+            },
+            unit: text_from_json(v, "unit"),
+        })
+    }
+
+    fn props_from_json(v: Option<&crate::external_adapters::serde_json::Value>) -> Result<Vec<crate::operation::PropItem>, SemioError> {
+        v.and_then(json_array_or_block_items_ref).map(|items| items.iter().map(prop_item_from_json).collect()).unwrap_or(Ok(Vec::new()))
+    }
+
+    /// @emoji ⚓ Kit JSON wire shape of one type connector (geometry, port ref, props), shared by operations and projections.
+    pub(crate) fn connector_item_json(c: &crate::operation::ConnectorItem) -> crate::external_adapters::serde_json::Value {
+        let mut o = crate::external_adapters::serde_json::json!({
+            "id": c.id.as_str(),
+            "name": c.name,
+            "point": xyz(c.point.x, c.point.y, c.point.z),
+            "direction": xyz(c.direction.x, c.direction.y, c.direction.z),
+            "t": c.t,
+            "mandatory": c.mandatory,
+        });
+        text_json(&mut o, "description", &c.description);
+        text_json(&mut o, "icon", &c.icon);
+        if let Some(port_id) = &c.port_id {
+            o["port"] = crate::external_adapters::serde_json::json!({ "id": port_id.as_str() });
+        }
+        if !c.props.is_empty() {
+            o["props"] = block(c.props.iter().map(prop_item_json).collect());
+        }
+        o
+    }
+
+    pub(crate) fn connector_item_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::ConnectorItem, SemioError> {
+        let id = json_entity_id_ref(v).ok_or_else(|| SemioError::invalid("connector id"))?;
+        let (px, py, pz) = xyz_from_json(v.get("point"));
+        let (dx, dy, dz) = xyz_from_json(v.get("direction"));
+        Ok(crate::operation::ConnectorItem {
+            id: id_from_str(id),
+            name: v.get("name").and_then(|x| x.as_str()).or_else(|| v.get("code").and_then(|x| x.as_str())).unwrap_or(id).to_string(),
+            description: text_from_json(v, "description"),
+            icon: text_from_json(v, "icon"),
+            point: crate::geom::PointInput { x: px, y: py, z: pz },
+            direction: crate::geom::VectorInput { x: dx, y: dy, z: dz },
+            t: v.get("t").and_then(|x| x.as_f64()).unwrap_or(0.0),
+            mandatory: v.get("mandatory").and_then(|x| x.as_bool()).unwrap_or(false),
+            port_id: v.get("port").and_then(json_entity_id_ref).map(id_from_str),
+            props: props_from_json(v.get("props"))?,
+        })
+    }
+
+    /// @emoji 💾 Kit JSON wire shape of one type representation (file ref, url, tag refs), shared by operations and projections.
+    pub(crate) fn representation_item_json(r: &crate::operation::RepresentationItem) -> crate::external_adapters::serde_json::Value {
+        let mut o = crate::external_adapters::serde_json::json!({ "id": r.id.as_str(), "name": r.name });
+        text_json(&mut o, "description", &r.description);
+        text_json(&mut o, "url", &r.url);
+        if let Some(file_id) = &r.file_id {
+            o["file"] = crate::external_adapters::serde_json::json!({ "id": file_id.as_str() });
+        }
+        if !r.tag_ids.is_empty() {
+            o["tags"] = block(r.tag_ids.iter().map(|id| crate::external_adapters::serde_json::json!({ "id": id.as_str() })).collect());
+        }
+        o
+    }
+
+    pub(crate) fn representation_item_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::RepresentationItem, SemioError> {
+        let id = json_entity_id_ref(v).ok_or_else(|| SemioError::invalid("representation id"))?;
+        Ok(crate::operation::RepresentationItem {
+            id: id_from_str(id),
+            name: v.get("name").and_then(|x| x.as_str()).or_else(|| v.get("code").and_then(|x| x.as_str())).unwrap_or(id).to_string(),
+            description: text_from_json(v, "description"),
+            file_id: v.get("file").and_then(json_entity_id_ref).map(id_from_str),
+            url: text_from_json(v, "url").or_else(|| text_from_json(v, "uri")),
+            tag_ids: id_list_from_json(v.get("tags")),
+        })
+    }
+
+    /// @emoji 🏠 Kit JSON wire shape of a [`crate::operation::TypeDiff`] (operation persistence and diff output).
+    pub(crate) fn type_diff_json(d: &crate::operation::TypeDiff) -> crate::external_adapters::serde_json::Value {
+        let ids = |ids: &[crate::id::Id]| ids.iter().map(|id| id.as_str().to_string()).collect::<Vec<_>>();
+        let mut o = crate::external_adapters::serde_json::json!({
+            "connectors": d.connectors.iter().map(connector_item_json).collect::<Vec<_>>(),
+            "removedConnectors": ids(&d.removed_connectors),
+            "representations": d.representations.iter().map(representation_item_json).collect::<Vec<_>>(),
+            "removedRepresentations": ids(&d.removed_representations),
+            "props": d.props.iter().map(prop_item_json).collect::<Vec<_>>(),
+            "removedProps": ids(&d.removed_props),
+        });
+        for (key, value) in [("name", &d.name), ("description", &d.description), ("icon", &d.icon), ("image", &d.image), ("unit", &d.unit)] {
+            if let Some(value) = value {
+                o[key] = crate::external_adapters::serde_json::Value::String(value.clone());
+            }
+        }
+        if let Some(folder_id) = &d.folder_id {
+            o["folder"] = folder_id.as_ref().map(|id| crate::external_adapters::serde_json::json!({ "id": id.as_str() })).unwrap_or(crate::external_adapters::serde_json::Value::Null);
+        }
+        o
+    }
+
+    pub(crate) fn type_diff_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::TypeDiff, SemioError> {
+        let list = |key: &str| v.get(key).and_then(|x| x.as_array()).cloned().unwrap_or_default();
+        let string = |key: &str| v.get(key).and_then(|x| x.as_str()).map(|s| s.to_string());
+        Ok(crate::operation::TypeDiff {
+            name: string("name"),
+            description: string("description"),
+            icon: string("icon"),
+            image: string("image"),
+            unit: string("unit"),
+            folder_id: v.get("folder").map(|folder| json_entity_id_ref(folder).map(id_from_str)),
+            connectors: list("connectors").iter().map(connector_item_from_json).collect::<Result<_, _>>()?,
+            removed_connectors: id_list_from_json(v.get("removedConnectors")),
+            representations: list("representations").iter().map(representation_item_from_json).collect::<Result<_, _>>()?,
+            removed_representations: id_list_from_json(v.get("removedRepresentations")),
+            props: list("props").iter().map(prop_item_from_json).collect::<Result<_, _>>()?,
+            removed_props: id_list_from_json(v.get("removedProps")),
+        })
+    }
+    //#endregion 🏠 type items json
+
     fn kit_input_json(i: &crate::operation::Input) -> crate::external_adapters::serde_json::Value {
         use crate::operation::Input;
         match i {
@@ -12119,6 +12787,7 @@ pub mod kit_backbone {
             Input::PiecePatch { name, description, position } => crate::external_adapters::serde_json::json!({
                 "PiecePatch": { "name": name, "description": description, "position": position.as_ref().map(position_input_to_json) }
             }),
+            Input::TypePatch { patch } => crate::external_adapters::serde_json::json!({ "TypePatch": type_diff_json(patch) }),
         }
     }
 
@@ -12154,6 +12823,7 @@ pub mod kit_backbone {
             Operation::AddPiecesAndConnectionsInDesign { scope, input } => crate::external_adapters::serde_json::json!({ "AddPiecesAndConnectionsInDesign": pair(scope, input) }),
             Operation::DeletePiecesAndConnectionsInDesign { scope, input } => crate::external_adapters::serde_json::json!({ "DeletePiecesAndConnectionsInDesign": pair(scope, input) }),
             Operation::UpdatePieceInDesign { scope, input } => crate::external_adapters::serde_json::json!({ "UpdatePieceInDesign": pair(scope, input) }),
+            Operation::UpdateTypeInKit { scope, input } => crate::external_adapters::serde_json::json!({ "UpdateTypeInKit": pair(scope, input) }),
         }
     }
 
@@ -12433,6 +13103,7 @@ pub mod kit_backbone {
                     },
                 }
             }
+            "TypePatch" => Input::TypePatch { patch: type_diff_from_json(inner)? },
             other => return Err(SemioError::invalid(format!("unknown input `{other}`"))),
         })
     }
@@ -12473,6 +13144,7 @@ pub mod kit_backbone {
             "AddPiecesAndConnectionsInDesign" => Operation::AddPiecesAndConnectionsInDesign { scope, input },
             "DeletePiecesAndConnectionsInDesign" => Operation::DeletePiecesAndConnectionsInDesign { scope, input },
             "UpdatePieceInDesign" => Operation::UpdatePieceInDesign { scope, input },
+            "UpdateTypeInKit" => Operation::UpdateTypeInKit { scope, input },
             other => return Err(SemioError::invalid(format!("unknown kit operation `{other}`"))),
         })
     }
@@ -12761,15 +13433,11 @@ pub mod kit_backbone {
                     }
                     pj
                 };
+                let items = crate::operation::type_items_snapshot(t).await;
                 let connectors: Vec<crate::external_adapters::serde_json::Value> = {
                     let mut cj = Vec::new();
-                    for c in t.connectors.read().await.iter() {
-                        let cid = c.id.as_str();
-                        let cnm = c.name.read().await.clone();
-                        let mut row = crate::external_adapters::serde_json::json!({
-                            "id": cid,
-                            "name": cnm,
-                        });
+                    for (item, c) in items.connectors.iter().zip(t.connectors.read().await.iter()) {
+                        let mut row = connector_item_json(item);
                         if let Some(port) = c.port.read().await.clone() {
                             let compat_items: Vec<crate::external_adapters::serde_json::Value> = port
                                 .compatible_with
@@ -12787,31 +13455,20 @@ pub mod kit_backbone {
                     }
                     cj
                 };
-                let representations: Vec<crate::external_adapters::serde_json::Value> = {
-                    let mut rj = Vec::new();
-                    for rep in t.representations.read().await.iter() {
-                        let mut row = crate::external_adapters::serde_json::json!({
-                            "id": rep.id.as_str(),
-                            "name": rep.name.read().await.clone(),
-                        });
-                        if let Some(file) = rep.file.read().await.clone() {
-                            row["file"] = crate::external_adapters::serde_json::json!({ "id": file.id.as_str() });
-                        }
-                        let url = rep.url.read().await.clone();
-                        if !url.is_empty() {
-                            row["url"] = crate::external_adapters::serde_json::Value::String(url);
-                        }
-                        rj.push(row);
-                    }
-                    rj
-                };
-                out.push(crate::external_adapters::serde_json::json!({
+                let mut row = crate::external_adapters::serde_json::json!({
                     "id": tid,
                     "name": nm,
-                    "ports": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": ports },
-                    "connectors": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": connectors },
-                    "representations": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": representations },
-                }));
+                    "ports": block(ports),
+                    "connectors": block(connectors),
+                    "representations": block(items.representations.iter().map(representation_item_json).collect()),
+                });
+                for (key, value) in [("description", &t.description), ("icon", &t.icon), ("image", &t.image), ("unit", &t.unit)] {
+                    text_json(&mut row, key, &Some(value.read().await.clone()));
+                }
+                if !items.props.is_empty() {
+                    row["props"] = block(items.props.iter().map(prop_item_json).collect());
+                }
+                out.push(row);
             }
             out
         };
@@ -13209,72 +13866,50 @@ pub mod kit_backbone {
             }
         }
 
-        let mut connectors = Vec::new();
-        if let Some(connectors_list) = t_json.get("connectors").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
-            for c_json in connectors_list {
-                let Some(cid) = crate::kit_backbone::json_entity_id_ref(c_json) else { continue };
-                let code = c_json
-                    .get("name")
-                    .and_then(|v| v.as_str())
-                    .or_else(|| c_json.get("code").and_then(|v| v.as_str()))
-                    .unwrap_or(cid);
-                let connector = crate::kit::r#type::Connector::new_with_external_id(owner.clone(), cid.into(), code.to_string()).await;
-                if let Some(desc) = c_json.get("description").and_then(|v| v.as_str()) {
-                    *connector.description.write().await = desc.to_string();
-                }
-                if let Some(port_json) = c_json.get("port") {
-                    if let Some(pid) = crate::kit_backbone::json_entity_id_ref(port_json) {
-                        if let Some(port) = lookup_port(pid) {
-                            *connector.port.write().await = Some(port);
-                        }
-                    }
-                }
-                connectors.push(connector);
+        let kit = ty.owner_kit().await;
+        async fn props_of(kit: &Option<std::sync::Arc<crate::kit::Kit>>, items: &[crate::operation::PropItem]) -> Vec<crate::meta::Prop> {
+            let mut props = Vec::with_capacity(items.len());
+            for item in items {
+                props.push(match kit {
+                    Some(kit) => kit.prop_from_item(item).await,
+                    None => crate::meta::Prop { id: item.id.clone(), key: item.quality_id.as_str().to_string(), value: item.value.clone(), unit: item.unit.clone(), quality: None },
+                });
             }
+            props
+        }
+        for (key, slot) in [("description", &ty.description), ("icon", &ty.icon), ("image", &ty.image), ("unit", &ty.unit)] {
+            *slot.write().await = t_json.get(key).and_then(|v| v.as_str()).unwrap_or("").to_string();
+        }
+        *ty.props.write().await = props_of(&kit, &props_from_json(t_json.get("props"))?).await;
+
+        let mut connectors = Vec::new();
+        for c_json in t_json.get("connectors").and_then(crate::kit_backbone::json_array_or_block_items_ref).into_iter().flatten() {
+            let Ok(item) = connector_item_from_json(c_json) else { continue };
+            let connector = crate::kit::r#type::Connector::new_with_external_id(owner.clone(), item.id.clone(), item.name.clone()).await;
+            let port = item.port_id.as_ref().and_then(|pid| lookup_port(pid.as_str()));
+            connector.assign(&item, port, props_of(&kit, &item.props).await).await;
+            connectors.push(connector);
         }
         *ty.connectors.write().await = connectors;
 
         let mut representations = Vec::new();
-        if let Some(reps_list) = t_json.get("representations").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
-            for r_json in reps_list {
-                let Some(rid) = crate::kit_backbone::json_entity_id_ref(r_json) else {
-                    continue;
-                };
-                let rname = r_json
-                    .get("name")
-                    .and_then(|v| v.as_str())
-                    .or_else(|| r_json.get("code").and_then(|v| v.as_str()))
-                    .unwrap_or(rid);
-                let url = r_json
-                    .get("url")
-                    .and_then(|v| v.as_str())
-                    .or_else(|| r_json.get("uri").and_then(|v| v.as_str()))
-                    .unwrap_or("")
-                    .to_string();
-                let rep = crate::kit::r#type::Representation::new_with_external_id(owner.clone(), rid.into(), url).await;
-                *rep.name.write().await = rname.to_string();
-                if let Some(desc) = r_json.get("description").and_then(|v| v.as_str()) {
-                    *rep.description.write().await = desc.to_string();
+        for r_json in t_json.get("representations").and_then(crate::kit_backbone::json_array_or_block_items_ref).into_iter().flatten() {
+            let Ok(item) = representation_item_from_json(r_json) else { continue };
+            let rep = crate::kit::r#type::Representation::new_with_external_id(owner.clone(), item.id.clone(), String::new()).await;
+            let mut file = None;
+            let mut tags = Vec::new();
+            if let Some(kit) = &kit {
+                if let Some(fid) = &item.file_id {
+                    file = kit.files.read().await.iter().find(|f| &f.id == fid).cloned();
                 }
-                if let Some(icon) = r_json.get("icon").and_then(|v| v.as_str()) {
-                    *rep.icon.write().await = icon.to_string();
-                }
-                if let Some(file_json) = r_json.get("file") {
-                    if let Some(fid) = crate::kit_backbone::json_entity_id_ref(file_json) {
-                        if let Some(kit_arc) = owner
-                            .upgrade()
-                            .and_then(|ty_arc| ty_arc.owner_typology.upgrade())
-                            .and_then(|topo| topo.owner_kit.upgrade())
-                        {
-                            let files = kit_arc.files.read().await;
-                            if let Some(file) = files.iter().find(|f| f.id.as_str() == fid) {
-                                *rep.file.write().await = Some(file.clone());
-                            }
-                        }
+                for tag_id in &item.tag_ids {
+                    if let Some(tag) = kit.find_tag(tag_id).await {
+                        tags.push(tag);
                     }
                 }
-                representations.push(rep);
             }
+            rep.assign(&item, file, tags).await;
+            representations.push(rep);
         }
         *ty.representations.write().await = representations;
         ty.refresh_connector_child_weak_maps().await;
@@ -18059,7 +18694,17 @@ pub mod gql {
         }
 
         #[graphql(name = "createType")]
-        async fn create_type(&self, ctx: &Context<'_>, id: Option<Id>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_type(
+            &self,
+            ctx: &Context<'_>,
+            id: Option<Id>,
+            name: String,
+            description: Option<String>,
+            icon: Option<String>,
+            image: Option<String>,
+            unit: Option<String>,
+            #[graphql(name = "typologyId")] typology_id: Option<Id>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -18067,8 +18712,10 @@ pub mod gql {
             if transaction_id != self.change_id {
                 return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch for kit operation").await.into());
             }
-            let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
-            let owner_id = kit.workspace_kit_id().await;
+            let owner_id = match typology_id {
+                Some(typology_id) => typology_id,
+                None => rt.wip_graph.materialized_head_kit_from_ref().await.workspace_kit_id().await,
+            };
             let type_id = match id {
                 Some(id) => id,
                 None => Id::new().await,
@@ -18365,18 +19012,23 @@ pub mod gql {
     impl TypeOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, new_name);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            self.patch(ctx, crate::operation::TypeDiff { name: Some(new_name), ..Default::default() }).await
         }
         #[graphql(name = "changeDescription")]
         async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, new_description);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            self.patch(ctx, crate::operation::TypeDiff { description: Some(new_description), ..Default::default() }).await
         }
         #[graphql(name = "changeIcon")]
         async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, new_icon);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            self.patch(ctx, crate::operation::TypeDiff { icon: Some(new_icon), ..Default::default() }).await
+        }
+        #[graphql(name = "changeImage")]
+        async fn change_image(&self, ctx: &Context<'_>, #[graphql(name = "newImage")] new_image: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { image: Some(new_image), ..Default::default() }).await
+        }
+        #[graphql(name = "changeUnit")]
+        async fn change_unit(&self, ctx: &Context<'_>, #[graphql(name = "newUnit")] new_unit: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { unit: Some(new_unit), ..Default::default() }).await
         }
         #[graphql(name = "addAttribute")]
         async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
@@ -18411,25 +19063,139 @@ pub mod gql {
             let _ = (ctx, self, ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
-        #[graphql(name = "addConnector")]
-        async fn add_connector(&self, ctx: &Context<'_>, code: String, description: Option<String>, icon: Option<String>, #[graphql(name = "portId")] port_id: Option<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, code, description, icon, port_id);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+        #[graphql(name = "setConnector")]
+        async fn set_connector(&self, ctx: &Context<'_>, connector: ConnectorInput) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { connectors: vec![connector.into()], ..Default::default() }).await
+        }
+        #[graphql(name = "setConnectors")]
+        async fn set_connectors(&self, ctx: &Context<'_>, connectors: Vec<ConnectorInput>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { connectors: connectors.into_iter().map(Into::into).collect(), ..Default::default() }).await
         }
         async fn connector(&self, #[graphql(name = "id")] id: Id) -> ConnectorOperationInput {
             ConnectorOperationInput { change_id: self.change_id.clone(), type_id: self.type_id.clone(), connector_id: id }
         }
         #[graphql(name = "removeConnector")]
         async fn remove_connector(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, id);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            self.patch(ctx, crate::operation::TypeDiff { removed_connectors: vec![id], ..Default::default() }).await
         }
         #[graphql(name = "removeConnectors")]
         async fn remove_connectors(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, ids);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            self.patch(ctx, crate::operation::TypeDiff { removed_connectors: ids, ..Default::default() }).await
+        }
+        #[graphql(name = "setRepresentation")]
+        async fn set_representation(&self, ctx: &Context<'_>, representation: RepresentationInput) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { representations: vec![representation.into()], ..Default::default() }).await
+        }
+        #[graphql(name = "setRepresentations")]
+        async fn set_representations(&self, ctx: &Context<'_>, representations: Vec<RepresentationInput>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { representations: representations.into_iter().map(Into::into).collect(), ..Default::default() }).await
+        }
+        #[graphql(name = "removeRepresentation")]
+        async fn remove_representation(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { removed_representations: vec![id], ..Default::default() }).await
+        }
+        #[graphql(name = "removeRepresentations")]
+        async fn remove_representations(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { removed_representations: ids, ..Default::default() }).await
+        }
+        #[graphql(name = "setProp")]
+        async fn set_prop(&self, ctx: &Context<'_>, prop: PropInput) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { props: vec![prop.into()], ..Default::default() }).await
+        }
+        #[graphql(name = "setProps")]
+        async fn set_props(&self, ctx: &Context<'_>, props: Vec<PropInput>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { props: props.into_iter().map(Into::into).collect(), ..Default::default() }).await
+        }
+        #[graphql(name = "removeProp")]
+        async fn remove_prop(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { removed_props: vec![id], ..Default::default() }).await
+        }
+        #[graphql(name = "removeProps")]
+        async fn remove_props(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.patch(ctx, crate::operation::TypeDiff { removed_props: ids, ..Default::default() }).await
         }
     }
+
+    impl TypeOperationInput {
+        /// @emoji 🏠 Dispatches one `updateTypeInKit` operation for this type.
+        async fn patch(&self, ctx: &Context<'_>, patch: crate::operation::TypeDiff) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::UpdateTypeInKit { scope: Scope::Type { type_id: self.type_id.clone() }, input: Input::TypePatch { patch } }).await.into())
+        }
+    }
+
+    //#region 🏠 type item inputs
+    /// @emoji 🎚️ A prop (quality value) upserted by id.
+    #[derive(InputObject, Clone, Debug)]
+    #[graphql(name = "PropInput")]
+    pub struct PropInput {
+        pub id: Id,
+        #[graphql(name = "qualityId")]
+        pub quality_id: Id,
+        pub value: String,
+        pub unit: Option<String>,
+    }
+
+    impl From<PropInput> for crate::operation::PropItem {
+        fn from(p: PropInput) -> Self {
+            Self { id: p.id, quality_id: p.quality_id, value: p.value, unit: p.unit }
+        }
+    }
+
+    /// @emoji ⚓ A type connector upserted by id: docking point and direction in type coordinates, optional port and props.
+    #[derive(InputObject, Clone, Debug)]
+    #[graphql(name = "ConnectorInput")]
+    pub struct ConnectorInput {
+        pub id: Id,
+        pub name: String,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub point: crate::geom::PointInput,
+        pub direction: crate::geom::VectorInput,
+        pub t: Option<f64>,
+        pub mandatory: Option<bool>,
+        #[graphql(name = "portId")]
+        pub port_id: Option<Id>,
+        pub props: Option<Vec<PropInput>>,
+    }
+
+    impl From<ConnectorInput> for crate::operation::ConnectorItem {
+        fn from(c: ConnectorInput) -> Self {
+            Self {
+                id: c.id,
+                name: c.name,
+                description: c.description,
+                icon: c.icon,
+                point: c.point,
+                direction: c.direction,
+                t: c.t.unwrap_or(0.0),
+                mandatory: c.mandatory.unwrap_or(false),
+                port_id: c.port_id,
+                props: c.props.unwrap_or_default().into_iter().map(Into::into).collect(),
+            }
+        }
+    }
+
+    /// @emoji 💾 A type representation upserted by id: a kit file (or url) with tags.
+    #[derive(InputObject, Clone, Debug)]
+    #[graphql(name = "RepresentationInput")]
+    pub struct RepresentationInput {
+        pub id: Id,
+        pub name: String,
+        pub description: Option<String>,
+        #[graphql(name = "fileId")]
+        pub file_id: Option<Id>,
+        pub url: Option<String>,
+        #[graphql(name = "tagIds")]
+        pub tag_ids: Option<Vec<Id>>,
+    }
+
+    impl From<RepresentationInput> for crate::operation::RepresentationItem {
+        fn from(r: RepresentationInput) -> Self {
+            Self { id: r.id, name: r.name, description: r.description, file_id: r.file_id, url: r.url, tag_ids: r.tag_ids.unwrap_or_default() }
+        }
+    }
+    //#endregion 🏠 type item inputs
 
     pub struct PortOperationInput {
         pub change_id: Id,
@@ -18480,19 +19246,43 @@ pub mod gql {
     #[Object(name = "ConnectorOperationInput")]
     impl ConnectorOperationInput {
         #[graphql(name = "rename")]
-        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, new_code);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.change(ctx, |c| c.name = new_name).await
         }
         #[graphql(name = "changeDescription")]
         async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, new_description);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            self.change(ctx, |c| c.description = Some(new_description)).await
         }
         #[graphql(name = "changeIcon")]
         async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, new_icon);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            self.change(ctx, |c| c.icon = Some(new_icon)).await
+        }
+        #[graphql(name = "move")]
+        async fn r#move(&self, ctx: &Context<'_>, point: crate::geom::PointInput, direction: crate::geom::VectorInput, t: Option<f64>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            self.change(ctx, |c| {
+                c.point = point;
+                c.direction = direction;
+                c.t = t.unwrap_or(c.t);
+            })
+            .await
+        }
+    }
+
+    impl ConnectorOperationInput {
+        /// @emoji ✏️ Dispatches the current connector snapshot with `edit` applied as one `updateTypeInKit` operation.
+        async fn change(&self, ctx: &Context<'_>, edit: impl FnOnce(&mut crate::operation::ConnectorItem)) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
+            let Some(ty) = kit.type_by_external_id(&self.type_id).await else {
+                return Ok(crate::operation::CommandResponse::fail_msg(format!("Type not found: {}", self.type_id.as_str())).await.into());
+            };
+            let Some(connector) = ty.connectors.read().await.iter().find(|c| c.id == self.connector_id).cloned() else {
+                return Ok(crate::operation::CommandResponse::fail_msg(format!("Connector not found: {}", self.connector_id.as_str())).await.into());
+            };
+            let mut item = crate::operation::connector_item_from_entity(&connector).await;
+            edit(&mut item);
+            let patch = crate::operation::TypeDiff { connectors: vec![item], ..Default::default() };
+            Ok(dispatch_unsaved_kit_operation(rt, &self.change_id, crate::operation::Operation::UpdateTypeInKit { scope: Scope::Type { type_id: self.type_id.clone() }, input: Input::TypePatch { patch } }).await.into())
         }
     }
 
@@ -22149,6 +22939,50 @@ mod tests {
         let res = schema.execute(Request::new(doc).variables(Variables::from_json(json!({ "tx": tx })))).await;
         assert!(res.errors.is_empty(), "{field}: {:?}", res.errors);
         res.data.into_json().unwrap()["session"]["store"]["theKit"]["unsavedChange"]["kit"]["design"]["r"].clone()
+    }
+
+    #[test]
+    fn flatten_child_plane_docks_connectors_face_to_face_with_joint_offsets() {
+        use crate::geom::{child_center, child_plane, CoordinateInput, Dock, Joint, PlaneInput, PointInput, VectorInput};
+        let up = Dock { point: PointInput { x: 0.0, y: 0.0, z: 1.0 }, direction: VectorInput { x: 0.0, y: 0.0, z: 1.0 }, t: 0.25 };
+        let down = Dock { point: PointInput { x: 0.0, y: 0.0, z: -1.0 }, direction: VectorInput { x: 0.0, y: 0.0, z: -1.0 }, t: 0.0 };
+        let stacked = child_plane(&PlaneInput::default(), &up, &down, &Joint::default());
+        assert_eq!(stacked.origin, PointInput { x: 0.0, y: 0.0, z: 2.0 });
+        assert_eq!((stacked.x_axis.x, stacked.y_axis.y), (-1.0, -1.0), "anti-parallel connectors dock with a half turn about the stacking axis");
+        let lifted = child_plane(&PlaneInput { origin: PointInput { x: 5.0, y: 0.0, z: 0.0 }, ..PlaneInput::default() }, &up, &down, &Joint { gap: 0.5, ..Joint::default() });
+        assert_eq!(lifted.origin, PointInput { x: 5.0, y: 0.0, z: 2.5 });
+        let east = Dock { point: PointInput { x: 1.0, y: 0.0, z: 0.0 }, direction: VectorInput { x: 1.0, y: 0.0, z: 0.0 }, t: 0.0 };
+        let west = Dock { point: PointInput { x: -1.0, y: 0.0, z: 0.0 }, direction: VectorInput { x: -1.0, y: 0.0, z: 0.0 }, t: 0.0 };
+        let beside = child_plane(&PlaneInput::default(), &east, &west, &Joint::default());
+        assert_eq!(beside.origin, PointInput { x: 2.0, y: 0.0, z: 0.0 });
+        let turned = child_plane(&PlaneInput::default(), &east, &west, &Joint { rotation: 90.0, ..Joint::default() });
+        assert_eq!(turned.origin, PointInput { x: 2.0, y: 0.0, z: 0.0 });
+        assert_ne!(turned.x_axis, beside.x_axis, "rotation spins the child about the parent connector direction");
+        let circle = child_center(CoordinateInput::default(), &up, &Joint::default());
+        assert_eq!((circle.u, circle.v), (2.697, 0.0));
+        let stacked_center = child_center(CoordinateInput { u: 1.0, v: 1.0 }, &up, &Joint { u: 0.5, v: 0.0, ..Joint::default() });
+        assert_eq!((stacked_center.u, stacked_center.v), (1.5, 2.0));
+        let spread_center = child_center(CoordinateInput { u: 1.0, v: 1.0 }, &east, &Joint { u: 1.0, v: 0.0, ..Joint::default() });
+        assert_eq!((spread_center.u, spread_center.v), (4.0633, 1.0));
+    }
+
+    #[test]
+    fn flat_position_places_linked_pieces_through_their_connections() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            install_metabolism(&schema).await;
+            let res = schema
+                .execute(Request::new(format!(r#"{{ session {{ stores {{ edges {{ node {{ wip {{ theKit {{ kit {{ design(id: "{NAKAGIN}") {{ hasPieces {{ edges {{ node {{ id connectionKind flatPosition {{ center {{ u v }} plane {{ origin {{ x y z }} }} }} }} }} }} }} }} }} }} }} }} }} }}"#)))
+                .await;
+            assert!(res.errors.is_empty(), "flatPosition: {:?}", res.errors);
+            let data = res.data.into_json().unwrap();
+            let pieces = data["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["design"]["hasPieces"]["edges"].as_array().expect("pieces").clone();
+            assert_eq!(pieces.len(), 180);
+            let origins: std::collections::HashSet<String> = pieces.iter().map(|p| p["node"]["flatPosition"]["plane"]["origin"].to_string()).collect();
+            assert!(origins.len() > 170, "linked pieces get distinct placements, got {} distinct origins", origins.len());
+            let heights: Vec<f64> = pieces.iter().filter_map(|p| p["node"]["flatPosition"]["plane"]["origin"]["z"].as_f64()).collect();
+            assert!(heights.iter().cloned().fold(f64::MIN, f64::max) > 20.0, "the capsules stack up the Nakagin cores");
+        });
     }
 
     #[test]

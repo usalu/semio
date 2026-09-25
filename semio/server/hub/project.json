@@ -5,23 +5,36 @@
   "targets": {
     "setup": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "semio/server/hub",
-        "command": "cargo fetch --manifest-path Cargo.toml"
+        "command": "bun ./script.ts setup"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "semio/server/hub",
+        "command": "bun ./script.ts dev",
+        "forwardAllArgs": true
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/server/hub",
-        "command": "cargo build --release --manifest-path Cargo.toml"
+        "command": "bun ./script.ts build",
+        "forwardAllArgs": true
       }
     },
     "test": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "semio/server/hub",
-        "command": "cargo test --manifest-path Cargo.toml"
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
       }
     }
   }

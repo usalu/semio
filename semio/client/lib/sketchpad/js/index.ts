@@ -14998,6 +14998,7 @@ export async function openSketchpadMcpPayload(payload: SketchpadMcpPayload, surf
 	if (!full?.kit) throw new Error("semio/sketchpad: MCP payload carries no kit");
 	await ensureSketchpadPlatform();
 	const client = await importKit(new TextEncoder().encode(JSON.stringify(full.kit)));
+	console.log("[DEBUG] mcp kit", JSON.stringify(findDesignInKit(client.getSnapshot(), full.design?.id ?? "")?.pieces?.slice(0, 2)));
 	attachSketchpadKitStore(client.kitId, new SemioKitStore(client), { kind: "remote", navigate: false });
 	const designId = full.design?.id;
 	const path = surface !== "kit" && designId ? `/kits/${client.kitId}/designs/${designId}` : `/kits/${client.kitId}`;
