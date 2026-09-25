@@ -1,0 +1,10 @@
+{
+  "title": "Working Semio Hub Collaboration End to End",
+  "emoji": "🌐",
+  "status": "open",
+  "description": "Complete semio end to end: (1) working OS frontend (sketchpad shell with all plugins, artifacts, etc), (2) working server hub backend (db, presence, etc), (3) working collaboration between users over the hub, (4) working AI integration for users over the semio MCP (not repo MCP). Coordinate a fleet of parallel agents; other agents may work on the same files concurrently.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪a726041a7dc94e0e94be2f0ffc01e0fa"
+  ]
+}
