@@ -1,0 +1,11 @@
+import { SemioKitClient } from "/home/user/semio/semio/client/lib/react/index.ts";
+const payload = JSON.parse(await Bun.file(process.argv[2] ?? "mcp-kit-payload.json").text());
+const t0 = Date.now();
+const client = await SemioKitClient.open({ kind: "bytes", data: new TextEncoder().encode(JSON.stringify(payload.kit)) });
+const kit = client.getSnapshot();
+console.log("[DEBUG] open", Date.now() - t0, "ms", kit.id, kit.name, "typologies", kit.typologies?.map((t) => `${t.name}:${t.types.length}/${t.designs.length}`).join(","), "types", kit.types?.length, "designs", kit.designs?.length);
+const design = kit.designs?.find((d) => (d.pieces?.length ?? 0) > 0);
+console.log("[DEBUG] design", design?.name, design?.pieces?.length, String(JSON.stringify(design?.pieces?.[0])).slice(0, 300));
+const file = kit.files?.[0];
+console.log("[DEBUG] file", JSON.stringify(file), client.fileUrl(file?.id ?? "")?.slice(0, 80));
+await client.dispose();

@@ -29,6 +29,7 @@ declare module "*.json?raw" {
 
 interface ImportMetaEnv {
   readonly VITE_APP_TITLE: string;
+  readonly SEMIO_SKETCHPAD_E2E: string;
 }
 
 declare const __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__: boolean;

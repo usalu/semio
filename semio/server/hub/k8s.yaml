@@ -1,8 +1,8 @@
 # #region 🔖Header
-# 2025 Ueli Saluz <ueli@semio-tech.com>
+# 2026 Ueli Saluz <ueli@semio-tech.de>
 # AGPL-3.0
-# Kubernetes manifests for semio-hub only: Namespace, PostgreSQL StatefulSet, semio-hub Deployment, Services, Ingress. The hub binary applies DB migrations on startup; Postgres starts with an empty database.
-# Specs: kubectl apply -f k8s.yaml after replacing Secret placeholders. DATABASE_URL in the Secret must use the same credentials as POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB in ConfigMap + Secret. Hub is single-replica by default (in-process SessionDirectory).
+# Kubernetes manifests for semio-hub only: Namespace, PostgreSQL StatefulSet, semio-hub Deployment, Services, Ingress. semio-hub applies postgres/schema.sql on startup; Postgres starts with an empty database.
+# Specs: kubectl apply -f k8s.yaml after replacing Secret placeholders. DATABASE_URL in the Secret must use the same credentials as POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB in ConfigMap + Secret. The hub is single-replica (one in-process single-writer actor per session, Recreate strategy).
 # #endregion 🔖Header
 
 # #region 🔖Namespace
@@ -23,8 +23,7 @@ type: Opaque
 stringData:
   # Must match POSTGRES_PASSWORD below inside DATABASE_URL (same string in both places).
   POSTGRES_PASSWORD: "REPLACE_ME_postgres_password"
-  SEMIO_ADMIN_TOKEN: "REPLACE_ME_admin_token"
-  DATABASE_URL: "postgresql://semio:REPLACE_ME_postgres_password@postgres:5432/semio_hub"
+  DATABASE_URL: "postgres://semio:REPLACE_ME_postgres_password@postgres:5432/semio"
 # #endregion 🔖Secrets
 
 ---
@@ -35,7 +34,7 @@ metadata:
   name: semio-hub-config
   namespace: semio-hub
 data:
-  POSTGRES_DB: semio_hub
+  POSTGRES_DB: semio
   POSTGRES_USER: semio
   RUST_LOG: "semio_hub=info,tower_http=info"
 # #endregion 🔖Config
@@ -103,12 +102,12 @@ spec:
               mountPath: /var/lib/postgresql/data
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "semio", "-d", "semio_hub"]
+              command: ["pg_isready", "-U", "semio", "-d", "semio"]
             initialDelaySeconds: 5
             periodSeconds: 5
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "semio", "-d", "semio_hub"]
+              command: ["pg_isready", "-U", "semio", "-d", "semio"]
             initialDelaySeconds: 30
             periodSeconds: 20
   volumeClaimTemplates:
@@ -133,8 +132,8 @@ spec:
     app: hub
   ports:
     - name: http
-      port: 8788
-      targetPort: 8788
+      port: 8080
+      targetPort: 8080
 # #endregion 🔖HubService
 
 ---
@@ -161,20 +160,15 @@ spec:
           image: semio/semio-hub:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8788
+            - containerPort: 8080
           env:
             - name: LISTEN_ADDR
-              value: "0.0.0.0:8788"
+              value: "0.0.0.0:8080"
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: semio-hub-secrets
                   key: DATABASE_URL
-            - name: SEMIO_ADMIN_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: semio-hub-secrets
-                  key: SEMIO_ADMIN_TOKEN
             - name: RUST_LOG
               valueFrom:
                 configMapKeyRef:
@@ -182,12 +176,12 @@ spec:
                   key: RUST_LOG
           readinessProbe:
             tcpSocket:
-              port: 8788
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 5
           livenessProbe:
             tcpSocket:
-              port: 8788
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 15
           resources:
@@ -201,7 +195,7 @@ spec:
 
 ---
 # #region 🔖Ingress
-# Specs: Terminates HTTP for semio-hub (HTTP API, WebSocket, embedded /admin). Requires an ingress controller (e.g. nginx). Replace host with your cluster DNS name.
+# Specs: Terminates HTTP for semio-hub (Hub Protocol v1 HTTP API, session WebSockets, MCP at /mcp). Requires an ingress controller (e.g. nginx). Replace host with your cluster DNS name.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -223,5 +217,5 @@ spec:
               service:
                 name: hub
                 port:
-                  number: 8788
+                  number: 8080
 # #endregion 🔖Ingress

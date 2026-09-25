@@ -683,14 +683,16 @@ def login(serverUrl: str, email: str, password: str) -> dict:
 
 
 def logout(serverUrl: str) -> dict:
-    """🔓 Logout from a remote server and remove the stored token.
-    Callers MUST provide a valid server URL.
+    """🔓 Logout from a semio hub: revokes the token on the hub (best effort) and removes it locally.
     Returns {ok, serverUrl} on success.
     """
     serverUrl = serverUrl.rstrip("/")
     auth = _load_auth()
-    auth.pop(serverUrl, None)
+    entry = auth.pop(serverUrl, None)
     _save_auth(auth)
+    if entry and entry.get("token"):
+        with contextlib.suppress(requests.exceptions.RequestException):
+            requests.post(f"{serverUrl}/auth/logout", headers={"Authorization": f"Bearer {entry['token']}"}, timeout=10)
     return {"ok": True, "serverUrl": serverUrl}
 
 
@@ -720,157 +722,245 @@ def getAuthStatus(serverUrl: str) -> dict:
 
 # #endregion 🪩Auth
 
+# #region 🌐Hub
+# Hub MUST talk Hub Protocol v1 (semio/server/hub): a remote kit is one hub session, read with `GET /sessions/{id}/kit` and changed only through kit-scoped GraphQL operations (`POST /sessions/{id}/operations`) that the hub persists, versions and broadcasts to every collaborator.
+
+HUB_CLIENT_ID = f"engine:{uuid.uuid4()}"
+_HUB_OPERATION = "mutation($storeId: ID!, $changeId: ID!{declarations}) {{ session {{ store(id: $storeId) {{ theKit {{ unsavedChange(id: $changeId) {{ kit {{ {body} }} }} }} }} }} }}"
+_HUB_RESPONSE = "{ ok errors { message } }"
+
+
+class HubRequestRejected(ClientError):
+    """🚫 The semio hub rejected a request."""
+
+    def __init__(self, serverUrl: str, status: int, message: str) -> None:
+        self.serverUrl = serverUrl
+        self.status = status
+        self.message = message
+
+    def __str__(self):
+        return f"🚫 The semio hub ({self.serverUrl}) rejected the request ({self.status}): {self.message}"
+
+
+def _hub_call(serverUrl: str, method: str, path: str, body: dict | None = None, missing: Error | None = None) -> typing.Any:
+    """🌐 Authenticated JSON request to a semio hub with the stored token of `serverUrl`."""
+    serverUrl = serverUrl.rstrip("/")
+    token = getAuthToken(serverUrl)
+    try:
+        response = requests.request(method, f"{serverUrl}{path}", json=body, headers={"Authorization": f"Bearer {token}"}, timeout=300)
+        response.raise_for_status()
+        return response.json() if response.content else None
+    except requests.exceptions.ConnectionError:
+        raise ServerUnreachable(serverUrl)
+    except requests.exceptions.HTTPError as e:
+        status = e.response.status_code if e.response is not None else 0
+        if status == 401:
+            raise InvalidAuthToken(serverUrl)
+        if status == 404 and missing is not None:
+            raise missing
+        message = ""
+        with contextlib.suppress(Exception):
+            message = e.response.json().get("error", "")
+        raise HubRequestRejected(serverUrl, status, message or str(e))
+
+
+def listHubSessions(serverUrl: str) -> list[dict]:
+    """📋 Sessions (shared kits) of the logged-in person on a semio hub."""
+    return _hub_call(serverUrl, "GET", "/sessions")
+
+
+def loadHubKit(serverUrl: str, sessionId: str) -> dict:
+    """📥 `{version, hash, kit}` of a hub session; `kit` is the kit projection."""
+    return _hub_call(serverUrl, "GET", f"/sessions/{sessionId}/kit", missing=KitNotFound(f"{serverUrl.rstrip('/')}/sessions/{sessionId}"))
+
+
+def _hub_operation(declarations: str, body: str, variables: dict) -> tuple[str, dict]:
+    """🧾 One kit-scoped operation document (the hub binds `$storeId` and `$changeId`)."""
+    return _HUB_OPERATION.format(declarations=declarations, body=body), variables
+
+
+def _piece_pose(piece: dict) -> dict | None:
+    """📍 Pose (`plane` + diagram `center`) of a fixed piece, `None` for pieces placed through their parent connection."""
+    pose = piece.get("pose")
+    if not pose or not pose.get("plane"):
+        return None
+    return {"plane": {key: pose["plane"][key] for key in ("origin", "xAxis", "yAxis")}, "center": {"u": (pose.get("center") or {}).get("u", 0), "v": (pose.get("center") or {}).get("v", 0)}}
+
+
+def _piece_blueprint(piece: dict) -> str:
+    """🧷 Blueprint id (type or nested design) of a piece."""
+    return (piece.get("type") or piece.get("design") or {}).get("id", "")
+
+
+def _connection_joint(connection: dict) -> dict:
+    """📐 Joint parameters of a connection."""
+    return {key: connection[key] for key in ("gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v") if isinstance(connection.get(key), (int, float))}
+
+
+def hubOperations(before: dict, after: dict) -> list[tuple[str, dict]]:
+    """🔀 Kit-scoped hub operations that turn the working view `before` into `after`: kit rename, design creation/deletion and per design piece + connection additions, updates and removals (types are not pushed).
+    """
+    operations: list[tuple[str, dict]] = []
+    if after.get("name") and after.get("name") != before.get("name"):
+        operations.append(_hub_operation(", $name: String!", f"rename(newName: $name) {_HUB_RESPONSE}", {"name": after["name"]}))
+    before_designs = {design.get("id"): design for design in before.get("designs") or []}
+    after_designs = {design.get("id"): design for design in after.get("designs") or []}
+    for design_id in before_designs.keys() - after_designs.keys():
+        operations.append(_hub_operation(", $id: ID!", f"deleteDesign(id: $id) {_HUB_RESPONSE}", {"id": design_id}))
+    for design_id, design in after_designs.items():
+        previous = before_designs.get(design_id)
+        if previous is None:
+            operations.append(
+                _hub_operation(
+                    ", $id: ID!, $name: String!, $description: String, $icon: String, $image: String, $unit: String",
+                    f"createDesign(id: $id, name: $name, description: $description, icon: $icon, image: $image, unit: $unit) {_HUB_RESPONSE}",
+                    {"id": design_id, "name": design.get("name") or design_id, **{key: design.get(key) or None for key in ("description", "icon", "image", "unit")}},
+                )
+            )
+            previous = {"pieces": [], "connections": []}
+        operations.extend(_hub_design_operations(design_id, previous, design))
+    return operations
+
+
+def _hub_design_operations(design_id: str, before: dict, after: dict) -> list[tuple[str, dict]]:
+    """🏘 Piece and connection operations for one design (a changed connection is removed and connected again)."""
+    operations: list[tuple[str, dict]] = []
+    in_design = lambda body: f"design(id: $designId) {{ {body} }}"
+    before_pieces = {piece.get("id"): piece for piece in before.get("pieces") or []}
+    after_pieces = {piece.get("id"): piece for piece in after.get("pieces") or []}
+    before_connections = {connection.get("id"): connection for connection in before.get("connections") or []}
+    after_connections = {connection.get("id"): connection for connection in after.get("connections") or []}
+    removed_pieces = sorted(before_pieces.keys() - after_pieces.keys())
+    changed_connections = {connection_id for connection_id in before_connections.keys() & after_connections.keys() if before_connections[connection_id] != after_connections[connection_id]}
+    removed_connections = sorted(connection_id for connection_id in (before_connections.keys() - after_connections.keys()) | changed_connections if not {before_connections[connection_id]["parent"]["piece"]["id"], before_connections[connection_id]["child"]["piece"]["id"]} & set(removed_pieces))
+    if removed_pieces or removed_connections:
+        operations.append(_hub_operation(", $designId: ID!, $pieceIds: [ID!]!, $connectionIds: [ID!]!", in_design(f"deletePiecesAndConnections(pieceIds: $pieceIds, connectionIds: $connectionIds) {_HUB_RESPONSE}"), {"designId": design_id, "pieceIds": removed_pieces, "connectionIds": removed_connections}))
+    placed = set(before_pieces) - set(removed_pieces)
+    pending_pieces = [piece for piece_id, piece in after_pieces.items() if piece_id not in before_pieces]
+    pending_connections = [connection for connection_id, connection in after_connections.items() if connection_id not in before_connections or connection_id in changed_connections]
+    while pending_pieces:
+        progressed = False
+        for piece in list(pending_pieces):
+            common = {"designId": design_id, "id": piece["id"], "blueprintId": _piece_blueprint(piece), "name": piece.get("name"), "description": piece.get("description") or None}
+            pose = _piece_pose(piece)
+            parent = next((connection for connection in pending_connections if connection["child"]["piece"]["id"] == piece["id"] and connection["parent"]["piece"]["id"] in placed), None)
+            if parent is not None:
+                operations.append(
+                    _hub_operation(
+                        ", $designId: ID!, $id: ID!, $connectionId: ID!, $blueprintId: ID!, $parentPieceId: ID!, $parentConnector: String!, $childConnector: String!, $name: String, $description: String, $position: PositionInput, $joint: ConnectionJointInput",
+                        in_design(f"addChildPieceWithParentConnection(id: $id, connectionId: $connectionId, blueprintId: $blueprintId, parentPieceId: $parentPieceId, parentConnector: $parentConnector, childConnector: $childConnector, name: $name, description: $description, position: $position, joint: $joint) {_HUB_RESPONSE}"),
+                        {**common, "connectionId": parent["id"], "parentPieceId": parent["parent"]["piece"]["id"], "parentConnector": parent["parent"]["connector"]["id"], "childConnector": parent["child"]["connector"]["id"], "position": pose, "joint": _connection_joint(parent)},
+                    )
+                )
+                pending_connections.remove(parent)
+            elif pose is not None or not any(connection["child"]["piece"]["id"] == piece["id"] for connection in pending_connections):
+                operations.append(
+                    _hub_operation(
+                        ", $designId: ID!, $id: ID!, $blueprintId: ID!, $position: PositionInput!, $name: String, $description: String",
+                        in_design(f"addFixedPiece(id: $id, blueprintId: $blueprintId, position: $position, name: $name, description: $description) {_HUB_RESPONSE}"),
+                        {**common, "position": pose or {"plane": {"origin": {"x": 0, "y": 0, "z": 0}, "xAxis": {"x": 1, "y": 0, "z": 0}, "yAxis": {"x": 0, "y": 1, "z": 0}}, "center": {"u": 0, "v": 0}}},
+                    )
+                )
+            else:
+                continue
+            placed.add(piece["id"])
+            pending_pieces.remove(piece)
+            progressed = True
+        if not progressed:
+            raise ValueError(f"Pieces {[piece['id'] for piece in pending_pieces]} of design {design_id} are only connected to each other; fix one of them with a pose first.")
+    for connection in pending_connections:
+        operations.append(
+            _hub_operation(
+                ", $designId: ID!, $id: ID!, $parentPieceId: ID!, $parentConnector: String!, $childPieceId: ID!, $childConnector: String!, $joint: ConnectionJointInput",
+                in_design(f"connectPieces(id: $id, parentPieceId: $parentPieceId, parentConnector: $parentConnector, childPieceId: $childPieceId, childConnector: $childConnector, joint: $joint) {_HUB_RESPONSE}"),
+                {"designId": design_id, "id": connection["id"], "parentPieceId": connection["parent"]["piece"]["id"], "parentConnector": connection["parent"]["connector"]["id"], "childPieceId": connection["child"]["piece"]["id"], "childConnector": connection["child"]["connector"]["id"], "joint": _connection_joint(connection)},
+            )
+        )
+    for piece_id, piece in after_pieces.items():
+        previous = before_pieces.get(piece_id)
+        if previous is None:
+            continue
+        declarations, fields, variables = ", $designId: ID!, $pieceId: ID!", [], {"designId": design_id, "pieceId": piece_id}
+        for key, declaration, field, value, old in (
+            ("name", ", $name: String!", "rename(newName: $name)", piece.get("name"), previous.get("name")),
+            ("description", ", $description: String!", "changeDescription(newDescription: $description)", piece.get("description"), previous.get("description")),
+            ("position", ", $position: PositionInput!", "move(position: $position)", _piece_pose(piece), _piece_pose(previous)),
+        ):
+            if value is not None and value != old:
+                declarations += declaration
+                fields.append(f"{key}: {field} {_HUB_RESPONSE}")
+                variables[key] = value
+        if fields:
+            operations.append(_hub_operation(declarations, in_design(f"piece(id: $pieceId) {{ {' '.join(fields)} }}"), variables))
+    return operations
+
+
+def pushHubChanges(serverUrl: str, sessionId: str, before: dict, after: dict, baseVersion: int) -> dict:
+    """📤 Pushes the changes between two working views of a hub session kit as hub operations (each one persisted, versioned and broadcast). Returns {pushed, version, hash}.
+    """
+    result = {"pushed": 0, "version": baseVersion, "hash": None}
+    for query, variables in hubOperations(before, after):
+        response = _hub_call(serverUrl, "POST", f"/sessions/{sessionId}/operations", {"operationId": str(uuid.uuid4()), "clientId": HUB_CLIENT_ID, "baseVersion": result["version"], "query": query, "variables": variables})
+        result = {"pushed": result["pushed"] + 1, "version": response["version"], "hash": response["hash"]}
+    return result
+
+
+# #endregion 🌐Hub
+
 
 class RemoteStore(Store):
-    """🖥️REST-backed store that proxies kit operations to a remote semio hub.
-    Callers MUST call login() first to authenticate with the remote hub.
+    """🖥️Hub-session-backed store: a remote kit is one semio hub session addressed as `http(s)://hub/sessions/{sessionId}`.
+    Callers MUST call login() first to authenticate with the hub.
     """
 
     serverUrl: str
-    kitUri: str
+    sessionId: str
 
-    def __init__(self, uri: str, serverUrl: str, kitUri: str) -> None:
+    def __init__(self, uri: str, serverUrl: str, sessionId: str) -> None:
         super().__init__(uri)
         self.serverUrl = serverUrl
-        self.kitUri = kitUri
+        self.sessionId = sessionId
 
     @classmethod
     def fromUri(cls, uri: str) -> "RemoteStore":
-        """🔧 Construct a RemoteStore from a remote URI.
-        URI format: serverUrl + /api/kits/ + encodedKitUri
-        """
-        if "/api/kits/" not in uri:
+        """🔧 Construct a RemoteStore from `http(s)://hub/sessions/{sessionId}`."""
+        serverUrl, separator, sessionId = uri.rstrip("/").rpartition("/sessions/")
+        if not separator or not serverUrl.startswith("http") or not sessionId or "/" in sessionId:
             raise RemoteKitUriNotValid(uri)
-        idx = uri.index("/api/kits/")
-        serverUrl = uri[:idx]
-        encodedKitUri = uri[idx + len("/api/kits/") :]
-        kitUri = decode(encodedKitUri)
-        return cls(uri, serverUrl, kitUri)
-
-    def _headers(self) -> dict:
-        """📨Get authorization headers for remote requests."""
-        token = getAuthToken(self.serverUrl)
-        return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-
-    def _api_url(self, path: str = "") -> str:
-        """🌐Build API URL for a kit operation."""
-        base = f"{self.serverUrl}/api/kits/{encode(self.kitUri)}"
-        if path:
-            return f"{base}/{path}"
-        return base
+        return cls(uri, serverUrl, sessionId)
 
     def initialize(self) -> None:
-        """💻Remote kits are initialized on the server side."""
-        pass
+        """💻Hub sessions are created on the hub."""
 
     def get(self, operation: Operation) -> typing.Any:
-        """🔍 Get an entity from the remote store."""
-        kind = operation["kind"]
-        try:
-            if kind == OperationKind.KIT:
-                response = requests.get(self._api_url(), headers=self._headers(), timeout=30)
-                response.raise_for_status()
-                return KitOutput.representation_validate(response.json())
-            else:
-                raise FeatureNotYetSupported()
-        except requests.exceptions.ConnectionError:
-            raise ServerUnreachable(self.serverUrl)
-        except requests.exceptions.HTTPError as e:
-            if e.response is not None and e.response.status_code == 401:
-                raise InvalidAuthToken(self.serverUrl)
-            if e.response is not None and e.response.status_code == 404:
-                raise KitNotFound(self.kitUri)
-            raise ServerUnreachable(self.serverUrl)
+        """🔍 Working view of the session kit."""
+        if operation["kind"] != OperationKind.KIT:
+            raise FeatureNotYetSupported()
+        return _kit_working_view(loadHubKit(self.serverUrl, self.sessionId)["kit"])
 
     def put(self, operation: Operation, input: KitInput | DesignInput | TypeInput) -> typing.Any:
-        """📥 Put an entity in the remote store."""
-        kind = operation["kind"]
-        try:
-            if kind == OperationKind.KIT:
-                response = requests.put(
-                    self._api_url(),
-                    json=input.representation_dump() if hasattr(input, "representation_dump") else input,
-                    headers=self._headers(),
-                    timeout=30,
-                )
-                response.raise_for_status()
-                return None
-            elif kind == OperationKind.TYPE:
-                typeName = encode(operation.get("typeName", ""))
-                typeVariant = encode(operation.get("typeVariant", ""))
-                path = f"types/{typeName},{typeVariant}"
-                response = requests.put(
-                    self._api_url(path),
-                    json=input.representation_dump() if hasattr(input, "representation_dump") else input,
-                    headers=self._headers(),
-                    timeout=30,
-                )
-                response.raise_for_status()
-                return None
-            elif kind == OperationKind.DESIGN:
-                designName = encode(operation.get("designName", ""))
-                designVariant = encode(operation.get("designVariant", ""))
-                designView = encode(operation.get("designView", ""))
-                path = f"designs/{designName},{designVariant},{designView}"
-                response = requests.put(
-                    self._api_url(path),
-                    json=input.representation_dump() if hasattr(input, "representation_dump") else input,
-                    headers=self._headers(),
-                    timeout=30,
-                )
-                response.raise_for_status()
-                return None
-            else:
-                raise FeatureNotYetSupported()
-        except requests.exceptions.ConnectionError:
-            raise ServerUnreachable(self.serverUrl)
-        except requests.exceptions.HTTPError as e:
-            if e.response is not None and e.response.status_code == 401:
-                raise InvalidAuthToken(self.serverUrl)
-            raise ServerUnreachable(self.serverUrl)
+        """📥 Pushes a whole kit as hub operations against the current session kit."""
+        if operation["kind"] != OperationKind.KIT:
+            raise FeatureNotYetSupported()
+        state = loadHubKit(self.serverUrl, self.sessionId)
+        target = input.representation_dump() if hasattr(input, "representation_dump") else input
+        pushHubChanges(self.serverUrl, self.sessionId, _kit_working_view(state["kit"]), _kit_working_view(target), state["version"])
 
     def update(self, operation: Operation, input: str) -> typing.Any:
-        """🔄 Update an entity in the remote store."""
+        """🔄 Partial updates go through put."""
         raise FeatureNotYetSupported()
 
     def delete(self, operation: Operation) -> typing.Any:
-        """🗑 Delete an entity from the remote store."""
-        kind = operation["kind"]
-        try:
-            if kind == OperationKind.KIT:
-                response = requests.delete(self._api_url(), headers=self._headers(), timeout=30)
-                response.raise_for_status()
-                return None
-            elif kind == OperationKind.TYPE:
-                typeName = encode(operation.get("typeName", ""))
-                typeVariant = encode(operation.get("typeVariant", ""))
-                path = f"types/{typeName},{typeVariant}"
-                response = requests.delete(self._api_url(path), headers=self._headers(), timeout=30)
-                response.raise_for_status()
-                return None
-            elif kind == OperationKind.DESIGN:
-                designName = encode(operation.get("designName", ""))
-                designVariant = encode(operation.get("designVariant", ""))
-                designView = encode(operation.get("designView", ""))
-                path = f"designs/{designName},{designVariant},{designView}"
-                response = requests.delete(self._api_url(path), headers=self._headers(), timeout=30)
-                response.raise_for_status()
-                return None
-            else:
-                raise FeatureNotYetSupported()
-        except requests.exceptions.ConnectionError:
-            raise ServerUnreachable(self.serverUrl)
-        except requests.exceptions.HTTPError as e:
-            if e.response is not None and e.response.status_code == 401:
-                raise InvalidAuthToken(self.serverUrl)
-            raise ServerUnreachable(self.serverUrl)
+        """🗑 Deletes the hub session (owner only)."""
+        if operation["kind"] != OperationKind.KIT:
+            raise FeatureNotYetSupported()
+        _hub_call(self.serverUrl, "DELETE", f"/sessions/{self.sessionId}", missing=KitNotFound(self.uri))
 
 
 @functools.lru_cache
 def StoreFactory(uri: str) -> Store:
     """🏭 Get a store from the uri. This store doesn't need to exist yet as long as it can be created.
-    Callers MUST provide either an absolute local path, an http URL ending in .zip (cached), or a remote server URI.
-    Remote server URIs have the format: http(s)://server/api/kits/encodedKitUri
+    Callers MUST provide either an absolute local path, an http URL ending in .zip (cached), or a hub session URI `http(s)://hub/sessions/{sessionId}`.
     """
     if os.path.isabs(uri):
         return SqliteStore.fromUri(uri)
@@ -880,7 +970,7 @@ def StoreFactory(uri: str) -> Store:
             if not os.path.exists(path):
                 cache(uri)
             return SqliteStore.fromUri(uri, path)
-        if "/api/kits/" in uri:
+        if "/sessions/" in uri:
             return RemoteStore.fromUri(uri)
         raise RemoteKitUriNotValid(uri)
     raise LocalKitUriIsNotAbsolute(uri)
@@ -1346,10 +1436,10 @@ def _graphql_schema_file() -> pathlib.Path:
 
 
 def _openapi_schema_file() -> pathlib.Path:
-    # Path to the canonical OpenAPI document under semio/openapi/ (PyInstaller keeps openapi/ prefix).
+    # Path to the canonical OpenAPI document under semio/client/schema/openapi/ (PyInstaller keeps openapi/ prefix).
     if getattr(sys, "frozen", False):
         return pathlib.Path(sys._MEIPASS) / "openapi" / "schema.json"
-    return _engine_bundle_dir().parent / "openapi" / "schema.json"
+    return _engine_bundle_dir().parents[1] / "schema" / "openapi" / "schema.json"
 
 
 graphql_datetime_scalar = ScalarType("DateTime")
@@ -1590,7 +1680,7 @@ def _build_design_viewer_html() -> str:
     if os.path.exists(app_html_path):
         with open(app_html_path, "r", encoding="utf-8") as f:
             return f.read()
-    return """<!doctype html><html><body><p>MCP App not built. Run: npm run build:mcp-app in semio/engine</p></body></html>"""
+    return """<!doctype html><html><body><p>MCP App not built. Run: bun ./script.ts test (or dev mcp) in semio/client/bin/engine</p></body></html>"""
 
 
 def _build_kit_viewer_html() -> str:
@@ -2020,6 +2110,7 @@ _mcp_session_designs: dict[typing.Any, dict[str, typing.Any]] = {}
 _mcp_session_types: dict[typing.Any, dict[str, typing.Any]] = {}
 _mcp_session_kit_mode: dict[typing.Any, str] = {}
 _mcp_session_kit_source: dict[typing.Any, str] = {}
+_mcp_session_remote: dict[typing.Any, dict[str, typing.Any]] = {}
 _mcp_session_transactions: dict[typing.Any, Transaction] = {}
 _mcp_session_transaction_rollback: set[typing.Any] = set()
 _mcp_session_selection: dict[typing.Any, dict[str, list[str]]] = {}
@@ -2029,28 +2120,76 @@ _MCP_APP_PAYLOADS_MAX_SIZE = 100
 _mcp_app_file_blobs: dict[str, str] = {}
 
 
-def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
-    """🔳Load kit dict from a remote server via REST API.
-    Callers MUST have called login() first to authenticate with the server.
-    """
-    token = getAuthToken(serverUrl)
-    encodedKitUri = encode(kitUri)
-    try:
-        response = requests.get(
-            f"{serverUrl}/api/kits/{encodedKitUri}",
-            headers={"Authorization": f"Bearer {token}"},
-            timeout=30,
-        )
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.ConnectionError:
-        raise ServerUnreachable(serverUrl)
-    except requests.exceptions.HTTPError as e:
-        if e.response is not None and e.response.status_code == 401:
-            raise InvalidAuthToken(serverUrl)
-        if e.response is not None and e.response.status_code == 404:
-            raise KitNotFound(kitUri)
-        raise ServerUnreachable(serverUrl)
+# #region 🧱Kit Working View
+# The engine edits kits as a working view: `{hash, items}` collection blocks become lists and the typology-owned types and designs are listed flat on the kit (each keeps its `typology` reference), see semio/fixtures/stores/metabolism/wip/initialKit.
+
+
+def _unblock(value: typing.Any) -> typing.Any:
+    """🧱Recursively turn `{hash, items}` collection blocks into plain lists."""
+    if isinstance(value, dict):
+        if isinstance(value.get("items"), list) and set(value) <= {"hash", "items"}:
+            return [_unblock(item) for item in value["items"]]
+        return {key: _unblock(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_unblock(item) for item in value]
+    return value
+
+
+def _kit_working_view(kit: dict) -> dict:
+    """🪟Working view of a kit projection: plain lists and flat `types` / `designs` that remember their typology."""
+    view = _unblock(copy.deepcopy(kit))
+    types = list(view.get("types") or [])
+    designs = list(view.get("designs") or [])
+    for typology in view.get("typologies") or []:
+        for key, target in (("types", types), ("designs", designs)):
+            for entity in typology.pop(key, None) or []:
+                entity.setdefault("typology", {"id": typology.get("id")})
+                target.append(entity)
+    view["types"] = types
+    view["designs"] = designs
+    return view
+
+
+def _kit_projection(view: dict) -> dict:
+    """🧬Kit projection of a working view: types and designs nested back into their typologies (the `installProjection` wire of semio/rs)."""
+    projection = copy.deepcopy(view)
+    typologies = {typology.get("id"): {**typology, "types": [], "designs": []} for typology in projection.pop("typologies", None) or []}
+    for key in ("types", "designs"):
+        for entity in projection.pop(key, None) or []:
+            typology_id = (entity.get("typology") or {}).get("id") or "default"
+            typologies.setdefault(typology_id, {"id": typology_id, "name": "Default", "types": [], "designs": []})[key].append(entity)
+    projection["typologies"] = list(typologies.values())
+    return projection
+
+
+def _assemble_split_kit(kit_file: pathlib.Path) -> dict:
+    """🧩Inline the `types/*.type.semio.json` and `designs/*.design.semio.json` files listed in a sibling `index.semio.json` into the typologies of `kit.semio.json`."""
+    with open(kit_file, "r", encoding="utf-8") as f:
+        kit = json.load(f)
+    index_file = kit_file.parent / "index.semio.json"
+    if not index_file.exists():
+        return kit
+    with open(index_file, "r", encoding="utf-8") as f:
+        index = json.load(f)
+    files: dict[str, dict] = {}
+    for key in ("types", "designs"):
+        for entry in index.get(key) or []:
+            with open(kit_file.parent / entry["file"], "r", encoding="utf-8") as f:
+                files[entry["id"]] = json.load(f)
+    typologies = kit.get("typologies")
+    for typology in typologies.get("items", []) if isinstance(typologies, dict) else typologies or []:
+        for key in ("types", "designs"):
+            block = typology.get(key)
+            items = block.get("items", []) if isinstance(block, dict) else block or []
+            resolved = [files.get(item.get("id"), item) for item in items]
+            if isinstance(block, dict):
+                block["items"] = resolved
+            else:
+                typology[key] = resolved
+    return kit
+
+
+# #endregion 🧱Kit Working View
 
 
 def _load_reference_kit_json_for_folder(folder: pathlib.Path) -> dict | None:
@@ -2063,8 +2202,7 @@ def _load_reference_kit_json_for_folder(folder: pathlib.Path) -> dict | None:
         folder.parent / "wip" / "initialKit" / "kit.semio.json",
     ):
         if json_path.exists():
-            with open(json_path, "r", encoding="utf-8") as f:
-                return json.load(f)
+            return _kit_working_view(_assemble_split_kit(json_path))
     return None
 
 
@@ -2100,12 +2238,11 @@ def _merge_reference_kit_links(current: dict, reference: dict | None) -> dict:
 
 
 def _load_kit_from_path(path: str) -> dict:
-    """📁Load kit dict from path (JSON file or folder with .semio/kit.db or kit JSON).
+    """📁Load the working view of a kit from a path: a kit JSON file (split `kit.semio.json` + `index.semio.json` layouts are assembled), a folder with .semio/kit.db, or a store folder containing wip/initialKit/kit.semio.json.
     """
     p = pathlib.Path(path).resolve()
     if p.is_file() and p.suffix == ".json":
-        with open(p, "r", encoding="utf-8") as f:
-            return json.load(f)
+        return _kit_working_view(_assemble_split_kit(p))
     if p.is_dir():
         sqlite_path = p / KIT_LOCAL_FOLDERNAME / KIT_LOCAL_FILENAME
         if sqlite_path.exists():
@@ -2116,22 +2253,22 @@ def _load_kit_from_path(path: str) -> dict:
                 loaded_kit = kit.to_dict()
             else:
                 loaded_kit = KitOutput.representation_validate(kit).representation_dump()
-            return _merge_reference_kit_links(loaded_kit, _load_reference_kit_json_for_folder(p))
-        for name in ("wip/initialKit/kit.semio.json", "kit.semio.json", "kit.json"):
-            json_path = p / name
+            return _merge_reference_kit_links(_kit_working_view(loaded_kit), _load_reference_kit_json_for_folder(p))
+        for json_path in (p / "wip" / "initialKit" / "kit.semio.json", p / "kit.semio.json", p / "kit.json", p.parent / "kit.semio.json", p.parent / "wip" / "initialKit" / "kit.semio.json"):
             if json_path.exists():
-                with open(json_path, "r", encoding="utf-8") as f:
-                    return json.load(f)
-        for parent_json in (p.parent / "kit.semio.json", p.parent / "wip" / "initialKit" / "kit.semio.json"):
-            if parent_json.exists():
-                with open(parent_json, "r", encoding="utf-8") as f:
-                    return json.load(f)
+                return _kit_working_view(_assemble_split_kit(json_path))
     raise FileNotFoundError(f"Kit not found at path: {path}")
 
 
 def _session_id(ctx) -> typing.Any | None:
-    """🔲Get session identifier from context for per-session isolation."""
-    return ctx.session if ctx and hasattr(ctx, "session") else None
+    """🔲Per-client key of the session state: the `Mcp-Session-Id` of HTTP clients and one local session for stdio (which serves exactly one client); requests carry no stable session object since MCP 2026-07-28 (https://modelcontextprotocol.io/specification)."""
+    if not ctx or not hasattr(ctx, "session"):
+        return None
+    if not isinstance(ctx, Context):
+        return ctx.session
+    request = getattr(ctx.request_context, "request", None)
+    headers = getattr(request, "headers", None)
+    return (headers.get("mcp-session-id") if headers is not None else None) or "local"
 
 
 def _get_session_kit(ctx) -> dict[str, typing.Any]:
@@ -2149,52 +2286,23 @@ def _get_session_kit_mode(ctx) -> str:
 
 
 def _hydrate_design_from_kit_disk_if_shallow(design: dict[str, typing.Any], kit_source: str | None, design_id: str) -> dict[str, typing.Any]:
-    """▫️If the kit only lists design metadata (no pieces), load a sibling `*.design.semio.json` with the same id.
+    """▫️If the kit only lists design metadata (no pieces), load the `*.design.semio.json` with the same id from the kit folder, its `designs/` and `wip/initialKit/designs/` folders or its parent folder (working view).
     """
-    pieces = design.get("pieces") or []
-    if len(pieces) > 0:
+    if design.get("pieces") or not kit_source or kit_source == "<memory>" or kit_source.startswith(("http://", "https://")):
         return design
-    if not kit_source or kit_source in ("<memory>",):
-        return design
-    if kit_source.startswith(("http://", "https://")):
-        return design
-    try:
-        base = pathlib.Path(kit_source).resolve()
-        search_roots: list[pathlib.Path] = []
-        if base.is_file():
-            search_roots.append(base.parent)
-        elif base.is_dir():
-            search_roots.append(base)
-            search_roots.append(base.parent)
-        else:
-            return design
-        seen_dirs: set[pathlib.Path] = set()
-        best: dict[str, typing.Any] | None = None
-        best_piece_count = -1
-        for search_root in search_roots:
-            if not search_root.is_dir():
+    base = pathlib.Path(kit_source).resolve()
+    folder = base.parent if base.is_file() else base
+    best: dict[str, typing.Any] | None = None
+    for root in dict.fromkeys((folder, folder / "designs", folder / "wip" / "initialKit" / "designs", folder.parent, folder.parent / "designs")):
+        for candidate in sorted(root.glob("*.design.semio.json")) if root.is_dir() else []:
+            try:
+                with open(candidate, "r", encoding="utf-8") as f:
+                    data = _unblock(json.load(f))
+            except (OSError, ValueError):
                 continue
-            rp = search_root.resolve()
-            if rp in seen_dirs:
-                continue
-            seen_dirs.add(rp)
-            for candidate in sorted(search_root.glob("*.design.semio.json")):
-                try:
-                    with open(candidate, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                except OSError:
-                    continue
-                if not isinstance(data, dict) or data.get("id") != design_id:
-                    continue
-                n = len(data.get("pieces") or [])
-                if n > best_piece_count:
-                    best_piece_count = n
-                    best = data
-        if best is not None:
-            return best
-    except OSError:
-        return design
-    return design
+            if isinstance(data, dict) and data.get("id") == design_id and len(data.get("pieces") or []) > len((best or {}).get("pieces") or []):
+                best = data
+    return best if best is not None else design
 
 
 def _get_session_design(ctx) -> dict[str, typing.Any]:
@@ -2388,6 +2496,7 @@ def start_working_in_local_kit(path: str, ctx: Context) -> CallToolResult:
         _mcp_session_designs.pop(sid, None)
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "local"
+        _mcp_session_remote.pop(sid, None)
         _mcp_session_kit_source[sid] = path
         return _build_kit_only_app_response(kit)
     except Exception as e:
@@ -2411,6 +2520,7 @@ def start_new_kit(name: str, version: str, ctx: Context) -> CallToolResult:
         _mcp_session_designs.pop(sid, None)
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "local"
+        _mcp_session_remote.pop(sid, None)
         _mcp_session_kit_source[sid] = "<memory>"
         return _build_kit_only_app_response(kit)
     except Exception as e:
@@ -2418,45 +2528,59 @@ def start_new_kit(name: str, version: str, ctx: Context) -> CallToolResult:
 
 
 @mcp.tool(meta=_KIT_APP_RESOURCE_META)
-def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> CallToolResult:
-    """🟢Load a remote kit into the session. Requires a prior login call. Must be called before any kit operations."""
+def start_working_in_remote_kit(serverUrl: str, sessionId: str, ctx: Context) -> CallToolResult:
+    """🟢Open the kit of a semio hub session (see list_hub_sessions) in this MCP session. Requires login_to_hub first. Edit it with the design tools; finish_working_in_kit pushes every change back to the hub as operations that all collaborators receive live."""
     try:
-        kit = _load_kit_from_remote(serverUrl, kitUri)
+        state = loadHubKit(serverUrl, sessionId)
+        kit = _kit_working_view(state["kit"])
         sid = _session_id(ctx)
         _set_session_kit(ctx, kit)
         _mcp_session_designs.pop(sid, None)
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "remote"
-        _mcp_session_kit_source[sid] = f"{serverUrl}/api/kits/{encode(kitUri)}"
+        _mcp_session_kit_source[sid] = f"{serverUrl.rstrip('/')}/sessions/{sessionId}"
+        _mcp_session_remote[sid] = {"serverUrl": serverUrl.rstrip("/"), "sessionId": sessionId, "version": state["version"], "hash": state["hash"], "baseline": _clone_kit(kit)}
         return _build_kit_only_app_response(kit)
     except Exception as e:
         return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 # #region 🎎MCP Auth Tools
-# MCP Auth Tools MUST expose login, logout and status for remote server authentication.
+# MCP Auth Tools MUST expose hub login, logout, status and the session listing for remote kits.
 
 
-def mcp_login(serverUrl: str, email: str, password: str) -> dict:
-    """🎟️Login to a remote semio hub and store the auth token for subsequent remote kit operations."""
+@mcp.tool()
+def login_to_hub(serverUrl: str, email: str, password: str) -> dict:
+    """🎟️Log in to a semio hub (e.g. http://127.0.0.1:8080) and remember the token for this hub URL (auth.json in the semio user folder)."""
     try:
-        return login(serverUrl, email, password)
+        return {key: value for key, value in login(serverUrl, email, password).items() if key != "token"}
     except Exception as e:
         return {"error": str(e)}
 
 
-def mcp_logout(serverUrl: str) -> dict:
-    """➖Logout from a remote semio hub and remove the stored token."""
+@mcp.tool()
+def logout_from_hub(serverUrl: str) -> dict:
+    """➖Log out from a semio hub and forget its stored token."""
     try:
         return logout(serverUrl)
     except Exception as e:
         return {"error": str(e)}
 
 
-def mcp_auth_status(serverUrl: str) -> dict:
-    """🟣Get the authentication status for a remote semio hub."""
+@mcp.tool()
+def read_hub_auth_status(serverUrl: str) -> dict:
+    """🟣Whether a token for the semio hub is stored, and for which email."""
     try:
         return getAuthStatus(serverUrl)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def list_hub_sessions(serverUrl: str) -> dict:
+    """🗂️List the sessions (shared kits) you are a member of on a semio hub, with id, role, version and hash. Open one with start_working_in_remote_kit."""
+    try:
+        return {"sessions": listHubSessions(serverUrl)}
     except Exception as e:
         return {"error": str(e)}
 
@@ -2464,6 +2588,7 @@ def mcp_auth_status(serverUrl: str) -> dict:
 # #endregion 🎎MCP Auth Tools
 
 
+@mcp.tool()
 def validate_kit(kit: dict) -> dict:
     """🟤Validate a kit dict and return any validation problems."""
     try:
@@ -2473,6 +2598,7 @@ def validate_kit(kit: dict) -> dict:
         return {"error": str(e)}
 
 
+@mcp.tool()
 def flatten_design(kit: dict, design_id: str) -> dict:
     """⚪Flatten a design by computing absolute planes for all pieces."""
     try:
@@ -2481,6 +2607,7 @@ def flatten_design(kit: dict, design_id: str) -> dict:
         return {"error": str(e)}
 
 
+@mcp.tool()
 def get_kit_diff(before: dict, after: dict) -> dict:
     """⚫Compute the diff between two kit states."""
     try:
@@ -2489,6 +2616,7 @@ def get_kit_diff(before: dict, after: dict) -> dict:
         return {"error": str(e)}
 
 
+@mcp.tool()
 def apply_kit_diff(base: dict, diff: dict) -> dict:
     """🩵Apply a diff to a kit dict."""
     try:
@@ -2497,6 +2625,7 @@ def apply_kit_diff(base: dict, diff: dict) -> dict:
         return {"error": str(e)}
 
 
+@mcp.tool()
 def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
     """🩶Compute the inverse of a diff for undo operations."""
     try:
@@ -2505,6 +2634,7 @@ def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
         return {"error": str(e)}
 
 
+@mcp.tool()
 def get_kit_change(before: dict, after: dict) -> dict:
     """🩷Compute forward and backward diffs between two kit states for undo/redo."""
     try:
@@ -2858,11 +2988,13 @@ def add_current_design_piece_with_plane(
                     "isHidden": is_hidden,
                     "isLocked": is_locked,
                     "type": {"id": kind_id},
-                    "center": {"u": center_u, "v": center_v},
-                    "plane": {
-                        "origin": {"x": origin_x, "y": origin_y, "z": origin_z},
-                        "xAxis": {"x": x_axis_x, "y": x_axis_y, "z": x_axis_z},
-                        "yAxis": {"x": y_axis_x, "y": y_axis_y, "z": y_axis_z},
+                    "pose": {
+                        "plane": {
+                            "origin": {"x": origin_x, "y": origin_y, "z": origin_z},
+                            "xAxis": {"x": x_axis_x, "y": x_axis_y, "z": x_axis_z},
+                            "yAxis": {"x": y_axis_x, "y": y_axis_y, "z": y_axis_z},
+                        },
+                        "center": {"u": center_u, "v": center_v},
                     },
                 }
             )
@@ -3006,15 +3138,18 @@ def finish_working_in_type(ctx: Context) -> dict:
 
 @mcp.tool()
 def finish_working_in_kit(ctx: Context) -> dict:
-    """🔖Clear the current kit, design, type, mode, and source from session state."""
+    """🔖Finish the current kit: for a hub session kit every change since start_working_in_remote_kit is pushed first as hub operations (broadcast to all collaborators); then kit, design, type, mode and source are cleared from session state."""
     try:
         sid = _session_id(ctx)
+        remote = _mcp_session_remote.get(sid)
+        pushed = pushHubChanges(remote["serverUrl"], remote["sessionId"], remote["baseline"], _get_session_kit(ctx), remote["version"]) if remote else None
         _clear_session_kit(ctx)
         _mcp_session_designs.pop(sid, None)
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode.pop(sid, None)
         _mcp_session_kit_source.pop(sid, None)
-        return {"ok": True}
+        _mcp_session_remote.pop(sid, None)
+        return {"ok": True, **({"pushed": pushed} if pushed else {})}
     except Exception as e:
         return {"error": str(e)}
 
@@ -3169,9 +3304,6 @@ def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = 
     hint: dict[str, typing.Any] = {"fetchUrl": fetch_url, "mode": payload.get("mode")}
     if payload.get("surface"):
         hint["surface"] = payload["surface"]
-    if "points" in payload:
-        hint["points"] = payload["points"]
-        hint["lines"] = payload.get("lines", [])
     return CallToolResult(
         content=[
             TextContent(type="text", text=json.dumps(hint)),
@@ -3191,13 +3323,12 @@ def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = 
 
 
 def _build_kit_only_app_payload(kit: dict) -> dict[str, typing.Any]:
-    """🏺Serializable kit viewer payload (diagram lists empty; kitArtifacts populated)."""
+    """🏺Serializable kit viewer payload: kit artifacts plus the kit as rs projection wire."""
     return {
-        "points": [],
-        "lines": [],
+        "surface": "kit",
         "capabilities": {"pieceSelection": False, "connectionSelection": False},
         "kitArtifacts": _build_kit_artifact_data(kit),
-        "kit": _strip_kit_blobs(kit),
+        "kit": _app_kit_projection(kit),
     }
 
 
@@ -3228,38 +3359,16 @@ def _entity_id_ref(value: object) -> dict | None:
     return None
 
 
-def _infer_design_parent_ref(design: dict, designs: list[dict]) -> dict | None:
-    """🪢Infer omitted design parent links for exported flat variants."""
-    explicit = _entity_id_ref(design.get("parent"))
-    if explicit:
-        return explicit
-    if design.get("name") != "Flat":
-        return None
-    parent = next((item for item in designs if item.get("id") != design.get("id") and item.get("name") != "Flat" and not item.get("parent")), None)
-    return {"id": parent.get("id")} if parent and parent.get("id") else None
-
-
-def _infer_type_parent_ref(kind: dict, kinds: list[dict]) -> dict | None:
-    """🧬Infer omitted type parent links from shared family roots."""
-    explicit = _entity_id_ref(kind.get("parent"))
-    if explicit:
-        return explicit
-    if kind.get("name") == "Capsule":
-        return None
-    family_ids = {family.get("id") for family in kind.get("families", []) or [] if isinstance(family, dict) and family.get("id")}
-    if not family_ids:
-        return None
-    parent = next(
-        (
-            item
-            for item in kinds
-            if item.get("id") != kind.get("id")
-            and item.get("name") == "Capsule"
-            and family_ids.intersection({family.get("id") for family in item.get("families", []) or [] if isinstance(family, dict) and family.get("id")})
-        ),
-        None,
-    )
-    return {"id": parent.get("id")} if parent and parent.get("id") else None
+def _family_parent_ref(entity: dict, entities: list[dict], family_names: dict[str, str]) -> dict | None:
+    """🪢Parent (family prototype) of a type or design: the other member of one of its families that carries the family's name."""
+    for family in entity.get("families") or []:
+        name = family_names.get(family.get("id")) if isinstance(family, dict) else None
+        if not name or entity.get("name") == name:
+            continue
+        prototype = next((item for item in entities if item.get("id") != entity.get("id") and item.get("name") == name and any(isinstance(f, dict) and f.get("id") == family.get("id") for f in item.get("families") or [])), None)
+        if prototype and prototype.get("id"):
+            return {"id": prototype["id"]}
+    return None
 
 
 def _build_kit_artifact_data(kit: dict) -> dict:
@@ -3279,13 +3388,14 @@ def _build_kit_artifact_data(kit: dict) -> dict:
         if value:
             meta[key] = value
     designs = []
+    family_names = {family.get("id"): family.get("name") for family in kit.get("families") or [] if isinstance(family, dict)}
     kit_designs = [d for d in kit.get("designs", []) or [] if isinstance(d, dict)]
     for d in kit_designs:
         id = d.get("id")
         if not id:
             continue
         design_payload = {"id": id, "name": d.get("name", ""), "variant": d.get("variant", ""), "view": d.get("view", "")}
-        parent = _infer_design_parent_ref(d, kit_designs)
+        parent = _entity_id_ref(d.get("parent")) or _family_parent_ref(d, kit_designs, family_names)
         if parent:
             design_payload["parent"] = parent
         for key in ("description", "createdAt", "updatedAt", "unit", "icon", "image"):
@@ -3314,7 +3424,7 @@ def _build_kit_artifact_data(kit: dict) -> dict:
         if not t_id:
             continue
         type_payload = {"id": t_id, "name": t.get("name", ""), "variant": t.get("variant", "")}
-        parent = _infer_type_parent_ref(t, kit_types)
+        parent = _entity_id_ref(t.get("parent")) or _family_parent_ref(t, kit_types, family_names)
         if parent:
             type_payload["parent"] = parent
         for key in ("description", "createdAt", "updatedAt", "icon", "image"):
@@ -3346,137 +3456,6 @@ def _build_kit_artifact_data(kit: dict) -> dict:
     return meta
 
 
-def _build_diagram_data(kit: dict, design_id: str, design_diff: dict | None = None, design: dict | None = None) -> dict:
-    """🔖Compute pre-rendered diagram points and lines from kit/design data.
-    """
-    if design is None:
-        design = next((d for d in kit.get("designs", []) if d.get("id") == design_id), None)
-    if design is None:
-        return {"points": [], "lines": []}
-    design_for_diagram = designWithDiffDict(design, design_diff) if design_diff else design
-
-    # Flatten the design to get absolute piece positions.
-    # Inject the full design into kit so flattenDesignDict can find all pieces.
-    try:
-        kit_for_flatten = dict(kit)
-        kit_for_flatten["designs"] = [d for d in kit.get("designs", []) if d.get("id") != design_id] + [design_for_diagram]
-        flatten_result = flattenDesignDict(kit_for_flatten, design_id)
-    except Exception:
-        flatten_result = {}
-
-    # Build piece center map from flatten result
-    piece_centers: dict[str, dict] = {}
-    for update in flatten_result.get("pieces", {}).get("updated", []):
-        pid = update.get("id")
-        center = update.get("diff", {}).get("center")
-        if pid and center:
-            piece_centers[pid] = center
-
-    # Build piece map with positions
-    pieces = design_for_diagram.get("pieces", [])
-    piece_map: dict[str, dict] = {}
-    for p in pieces:
-        id = p.get("id")
-        if not id:
-            continue
-        center = piece_centers.get(id, p.get("center") or {"u": 0, "v": 0})
-        piece_map[id] = {"id": id, "id": p.get("id", ""), "center": center}
-
-    # Determine diff statuses
-    removed_piece_ids: set[str] = set()
-    added_piece_ids: set[str] = set()
-    modified_piece_ids: set[str] = set()
-    removed_conn_ids: set[str] = set()
-    added_conn_ids: set[str] = set()
-    modified_conn_ids: set[str] = set()
-
-    if design_diff:
-        for p in design_diff.get("pieces", {}).get("removed", []):
-            removed_piece_ids.add(p.get("id", ""))
-        for p in design_diff.get("pieces", {}).get("added", []):
-            id = p.get("id", "")
-            added_piece_ids.add(id)
-            # Include added pieces in the map with their centers
-            center = p.get("center") or {"u": 0, "v": 0}
-            piece_map[id] = {"id": id, "id": p.get("id", ""), "center": center}
-        for p in design_diff.get("pieces", {}).get("updated", []):
-            id = p.get("piece", {}).get("id", "")
-            modified_piece_ids.add(id)
-            center = p.get("diff", {}).get("center")
-            if id and center:
-                if id in piece_map:
-                    piece_map[id]["center"] = center
-                else:
-                    piece_map[id] = {"id": id, "id": p.get("piece", {}).get("id", ""), "center": center}
-        for c in design_diff.get("connections", {}).get("removed", []):
-            removed_conn_ids.add(c.get("id", ""))
-        for c in design_diff.get("connections", {}).get("added", []):
-            added_conn_ids.add(c.get("id", ""))
-        for c in design_diff.get("connections", {}).get("updated", []):
-            modified_conn_ids.add(c.get("connection", {}).get("id", ""))
-
-    # Build points
-    points = []
-    for id, pdata in piece_map.items():
-        status = "default"
-        if id in removed_piece_ids:
-            status = "removed"
-        elif id in added_piece_ids:
-            status = "added"
-        elif id in modified_piece_ids:
-            status = "modified"
-        center = pdata.get("center", {"u": 0, "v": 0})
-        points.append(
-            {
-                "id": id,
-                "id": pdata.get("id", ""),
-                "u": center.get("u", 0),
-                "v": center.get("v", 0),
-                "status": status,
-            }
-        )
-
-    # Build lines from connections
-    connections = design.get("connections", []) or design.get("_connections", []) or []
-    # Also include added connections from diff
-    if design_diff:
-        for c in design_diff.get("connections", {}).get("added", []):
-            connections = list(connections) + [c]
-
-    lines = []
-    for c in connections:
-        id = c.get("id")
-        if not id:
-            continue
-        source_id = c.get("parent", {}).get("piece", {}).get("id")
-        target_id = c.get("child", {}).get("piece", {}).get("id")
-        source = piece_map.get(source_id)
-        target = piece_map.get(target_id)
-        if not source or not target:
-            continue
-        source_center = source.get("center", {"u": 0, "v": 0})
-        target_center = target.get("center", {"u": 0, "v": 0})
-        status = "default"
-        if id in removed_conn_ids:
-            status = "removed"
-        elif id in added_conn_ids:
-            status = "added"
-        elif id in modified_conn_ids:
-            status = "modified"
-        lines.append(
-            {
-                "id": id,
-                "sourceU": source_center.get("u", 0),
-                "sourceV": source_center.get("v", 0),
-                "targetU": target_center.get("u", 0),
-                "targetV": target_center.get("v", 0),
-                "status": status,
-            }
-        )
-
-    return {"points": points, "lines": lines}
-
-
 def _enrich_design(kit: dict, design: dict, design_diff: dict | None = None) -> dict:
     """🔖Enrich design pieces with flattened plane/center data from flattenDesignDict."""
     design_id = design.get("id")
@@ -3499,24 +3478,19 @@ def _enrich_design(kit: dict, design: dict, design_diff: dict | None = None) -> 
         for p in design_for_enrichment.get("pieces", []):
             id = p.get("id")
             flat = flatten_by_id.get(id) if id else None
-            if flat:
-                ep = dict(p)
-                if flat.get("plane"):
-                    ep["plane"] = flat["plane"]
-                if flat.get("center"):
-                    ep["center"] = flat["center"]
-                enriched_pieces.append(ep)
+            if flat and flat.get("pose"):
+                enriched_pieces.append({**p, "pose": {**(p.get("pose") or {}), **flat["pose"]}})
             else:
                 enriched_pieces.append(p)
         if design_diff:
             updated_centers_by_id = {
-                update.get("piece", {}).get("id"): update.get("diff", {}).get("center")
+                update.get("piece", {}).get("id"): (update.get("diff", {}).get("pose") or {}).get("center")
                 for update in design_diff.get("pieces", {}).get("updated", [])
-                if update.get("piece", {}).get("id") and update.get("diff", {}).get("center")
+                if update.get("piece", {}).get("id") and (update.get("diff", {}).get("pose") or {}).get("center")
             }
             if updated_centers_by_id:
                 enriched_pieces = [
-                    ({**piece, "center": updated_centers_by_id[piece.get("id")]} if piece.get("id") in updated_centers_by_id else piece)
+                    ({**piece, "pose": {**(piece.get("pose") or {}), "center": updated_centers_by_id[piece.get("id")]}} if piece.get("id") in updated_centers_by_id else piece)
                     for piece in enriched_pieces
                 ]
         enriched_design = dict(design_for_enrichment)
@@ -3585,10 +3559,12 @@ def _strip_kit_blobs(kit: dict, design: dict | None = None) -> dict:
     return kit_for_ui
 
 
-# Diagram-only modes: precomputed 2D geometry only.
-_DIAGRAM_MODES = {"show-diagram", "show-diagram-diff", "select-pieces", "select-connections", "select-pieces-and-connections"}
-# Split view: design+kit for scene plus points/lines for the diagram panel (start_working_in_design / show_design / show_scene).
-_SPLIT_SCENE_DIAGRAM_MODES = {"show-design", "show-scene"}
+def _app_kit_projection(kit: dict, design: dict | None = None) -> dict:
+    """🧬Kit of an MCP App payload as rs projection wire (the viewers open it with `installProjection` and render scene and diagram from it): the session design replaces its kit entry and blobs are served over HTTP except the design's GLB/GLTF representations."""
+    view = dict(kit)
+    if design is not None:
+        view["designs"] = [{**listed, **design} if listed.get("id") == design.get("id") else listed for listed in kit.get("designs") or []]
+    return _kit_projection(_strip_kit_blobs(view, design=design))
 
 
 def _mcp_app_surface_for_mode(mode: str) -> str:
@@ -3601,9 +3577,7 @@ def _mcp_app_surface_for_mode(mode: str) -> str:
 
 
 def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> dict[str, typing.Any]:
-    """🔖Build mode-appropriate payload: diagram data for diagram modes, design/kit for scene/design modes.
-    Diagram-only modes omit kit (~2.3MB of GLB blobs) to stay under host payload truncation limits.
-    The JS diagram renderer uses Python-enriched piece centers from enriched_design instead."""
+    """🔖MCP App payload for every mode: the kit as rs projection wire, the flattened session `design` that names what to show and the optional `designDiff`."""
     kit = _get_session_kit(ctx)
     design = _get_session_design(ctx)
     enriched_design = _enrich_design(kit, design, design_diff)
@@ -3617,20 +3591,8 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
         },
         "kitArtifacts": _build_kit_artifact_data(kit),
         "design": enriched_design,
+        "kit": _app_kit_projection(kit, design),
     }
-
-    # For diagram-only modes, omit kit (saves ~2.3MB of GLB blobs).
-    # The diagram uses Python-precomputed centers from enriched_design — no kit GLBs needed.
-    if mode not in _DIAGRAM_MODES:
-        kit_for_ui = _strip_kit_blobs(kit, design=enriched_design)
-        kit_for_ui.pop("designs", None)
-        payload["kit"] = kit_for_ui
-
-    if mode in _DIAGRAM_MODES or mode in _SPLIT_SCENE_DIAGRAM_MODES:
-        diagram_data = _build_diagram_data(kit, design.get("id"), design_diff, design=design)
-        payload["points"] = diagram_data["points"]
-        payload["lines"] = diagram_data["lines"]
-
     if design_diff is not None:
         payload["designDiff"] = design_diff
 
@@ -3638,8 +3600,7 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
 
 
 def _build_app_response(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> CallToolResult:
-    """🧱MCP Apps tool response with pre-computed diagram data and structuredContent for the appropriate viewer.
-    """
+    """🧱MCP Apps tool response carrying the app payload as structuredContent for the appropriate viewer."""
     return _as_mcp_app_tool_result(_build_app_payload(mode, ctx, design_diff=design_diff, capabilities=capabilities))
 
 
@@ -3881,7 +3842,7 @@ def run(dev_mode: bool | None = None):
     if getattr(sys, "frozen", False):
         basedir = sys._MEIPASS
     else:
-        basedir = "../assets"
+        basedir = str(_engine_bundle_dir().parents[2] / "assets")
 
     icon = PySide6.QtGui.QIcon()
     icon.addFile(os.path.join(basedir, "icons/semio_512x512.png"), PySide6.QtCore.QSize(512, 512))
@@ -3923,6 +3884,7 @@ def dev():
 # #region 🥼Tests
 # Pytest suite lives in this module so the engine and tests share one unit of compilation.
 # #region 🔌Adapters
+import re
 import tempfile
 from unittest.mock import MagicMock, patch
 
@@ -3932,6 +3894,11 @@ from starlette.testclient import TestClient
 
 engine = sys.modules[__name__]
 sys.modules["engine"] = engine
+
+
+def _app_payload_design(payload: dict, design_id: str) -> dict:
+    """🧬Design `design_id` inside the rs projection wire kit of an MCP App payload."""
+    return next(design for typology in payload["kit"]["typologies"] for design in typology["designs"] if design["id"] == design_id)
 
 
 def _mcp_app_tool_payload(result: object) -> dict:
@@ -3944,7 +3911,7 @@ def _mcp_app_tool_payload(result: object) -> dict:
 # #region 👓Constants
 FIXTURES_DIR = pathlib.Path(__file__).resolve().parent.parent.parent.parent / "fixtures"
 KIT_METABOLISM_PATH = FIXTURES_DIR / "stores" / "metabolism" / "wip" / "initialKit" / "kit.semio.json"
-METABOLISM_DIR = FIXTURES_DIR / "kit" / "dev" / "metabolism"
+METABOLISM_DIR = FIXTURES_DIR / "stores" / "metabolism"
 
 # #endregion 👓Constants
 
@@ -3952,8 +3919,7 @@ METABOLISM_DIR = FIXTURES_DIR / "kit" / "dev" / "metabolism"
 # #region 🧸Fixtures
 @pytest.fixture
 def kitMetabolismJson() -> dict:
-    with open(KIT_METABOLISM_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+    return engine._load_kit_from_path(str(KIT_METABOLISM_PATH))
 
 
 @pytest.fixture
@@ -4155,7 +4121,8 @@ class TestMcp:
             assert isinstance(csp.get("connectDomains"), list) and len(csp["connectDomains"]) > 0
             assert r.meta.get("ui/csp") is csp
 
-    def test_mcp_tool_surface_keeps_only_allowed_prefixes(self):
+    def test_mcp_tool_surface_is_the_deliberate_allowlist(self):
+        """🧾The registered MCP tools are exactly the deliberate allowlist (kit/design/type sessions, selection, apps, transactions, hub auth + sessions, kit utilities)."""
         names = sorted(tool.name for tool in engine.mcp._tool_manager.list_tools())
         assert names == [
             "add_current_design_author",
@@ -4163,14 +4130,23 @@ class TestMcp:
             "add_current_design_piece",
             "add_current_design_piece_with_plane",
             "add_current_design_prop",
+            "apply_kit_diff",
             "clear_current_selection",
             "finish_working_in_design",
             "finish_working_in_kit",
             "finish_working_in_type",
+            "flatten_design",
+            "get_kit_change",
+            "get_kit_diff",
+            "inverse_kit_diff",
+            "list_hub_sessions",
+            "login_to_hub",
+            "logout_from_hub",
             "read_current_design",
             "read_current_kit",
             "read_current_selection",
             "read_current_type",
+            "read_hub_auth_status",
             "select_connections",
             "select_pieces",
             "select_pieces_and_connections",
@@ -4190,6 +4166,7 @@ class TestMcp:
             "sum_quality_in_design",
             "transaction_abort",
             "transaction_finalize",
+            "validate_kit",
         ]
 
     def test_flatten_design_tool(self, minimalKitJson: dict):
@@ -4512,15 +4489,14 @@ class TestMcp:
         assert "designs" in kit
 
     def test_start_working_in_local_kit_loads_from_metabolism_folder(self):
-        """🖼️start_working_in_local_kit loads kit from the dev metabolism fixture folder (semio/fixtures/kit/dev/metabolism)."""
+        """🖼️start_working_in_local_kit assembles the split metabolism store folder (semio/fixtures/stores/metabolism) and derives parents from family prototypes."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(METABOLISM_DIR), mock_ctx)
         assert isinstance(result, CallToolResult)
         payload = _mcp_app_tool_payload(result)
         assert "kitArtifacts" in payload
         assert "kit" in payload and isinstance(payload["kit"], dict)
-        nakagin = next(design for design in payload["kit"].get("designs", []) if design.get("id") == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
-        assert len(nakagin.get("pieces", [])) > 100
+        assert len(_app_payload_design(payload, "9a890dd4-0a9c-48ac-920a-9e62666465ef")["pieces"]) == 180
         assert payload["kitArtifacts"]["name"] == "Metabolism"
         assert payload["kitArtifacts"].get("version") == "r25.07-1"
         flat_variant = next(design for design in payload["kitArtifacts"]["designs"] if design.get("id") == "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf")
@@ -4536,11 +4512,10 @@ class TestMcp:
         assert any(design.get("name") == "Nakagin Capsule Tower" for design in kit.get("designs", []))
 
     def test_metabolism_folder_path_returns_metabolism_and_nakagin_design_scene_and_diagram(self):
-        """🔖start_working_in_local_kit(metabolism dir) exposes Metabolism; start_working_in_design(nakagin id) returns design+kit and diagram points/lines."""
+        """🔖start_working_in_local_kit(metabolism dir) exposes Metabolism; start_working_in_design(nakagin id) returns the design and the kit projection holding it."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         metabolism_path = METABOLISM_DIR.resolve()
-        workspace_default = pathlib.Path("/workspaces/semio/semio/fixtures/kit/dev/metabolism")
-        path_arg = str(workspace_default) if workspace_default.is_dir() else str(metabolism_path)
+        path_arg = str(metabolism_path)
 
         kit_result = engine.start_working_in_local_kit(path_arg, mock_ctx)
         assert isinstance(kit_result, CallToolResult)
@@ -4556,9 +4531,7 @@ class TestMcp:
         assert d_payload.get("surface") == "design"
         assert d_payload.get("design", {}).get("id") == nakagin_id
         assert len(d_payload.get("design", {}).get("pieces", [])) > 0
-        assert "kit" in d_payload and isinstance(d_payload["kit"], dict)
-        assert "points" in d_payload and isinstance(d_payload["points"], list) and len(d_payload["points"]) > 0
-        assert "lines" in d_payload and isinstance(d_payload["lines"], list) and len(d_payload["lines"]) > 0
+        assert len(_app_payload_design(d_payload, nakagin_id)["pieces"]) == 180
 
     def test_build_kit_artifact_data_preserves_parent_dependencies(self):
         """🔖_build_kit_artifact_data keeps nested design and type parent refs for breadcrumb chains."""
@@ -4634,7 +4607,7 @@ class TestMcp:
         assert abs(result.get("result") - 2349.53) < 0.01
 
     def test_start_working_in_design(self, kitMetabolismJson: dict):
-        """🔖start_working_in_design selects a design by ID from the session kit and opens the MCP app payload (scene + diagram)."""
+        """🔖start_working_in_design selects a design by ID from the session kit and opens the MCP app payload."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -4645,9 +4618,7 @@ class TestMcp:
         assert payload["mode"] == "show-design"
         assert payload.get("surface") == "design"
         assert "design" in payload and isinstance(payload["design"], dict)
-        assert "kit" in payload and isinstance(payload["kit"], dict)
-        assert "points" in payload and isinstance(payload["points"], list) and len(payload["points"]) > 0
-        assert "lines" in payload and isinstance(payload["lines"], list) and len(payload["lines"]) > 0
+        assert len(_app_payload_design(payload, design["id"])["connections"]) == 179
         assert "kitArtifacts" in payload
         assert "designs" in payload["kitArtifacts"]
         assert sid in engine._mcp_session_designs
@@ -4921,8 +4892,8 @@ class TestMcp:
         finalized = engine.transaction_finalize(mock_ctx)
         assert finalized.get("ok") is True
         current_design = engine.read_current_design(mock_ctx)
-        expected_flat_design = {key: value for key, value in expected_design.items() if key != "layers"}
-        assert current_design == expected_flat_design
+        without = lambda value, keys: {k: without(v, keys) for k, v in value.items() if k not in keys} if isinstance(value, dict) else [without(v, keys) for v in value] if isinstance(value, list) else value
+        assert without(current_design, {"hash", "families", "typology"}) == without(expected_design, {"hash", "families", "typology", "layers"})
         assert "layers" not in current_design
 
     def test_read_current_selection_default_empty(self):
@@ -4968,7 +4939,7 @@ class TestMcp:
         assert sel == {"pieceIds": [], "connectionIds": []}
 
     def test_show_design_returns_diagram_json(self, kitMetabolismJson: dict):
-        """🔖show_design returns CallToolResult with design, kit, mode=show-design, and diagram points/lines for the split viewer."""
+        """🔖show_design returns CallToolResult with design, kit projection and mode=show-design."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -4979,15 +4950,13 @@ class TestMcp:
         data = _mcp_app_tool_payload(result)
         assert data["mode"] == "show-design"
         assert "design" in data and isinstance(data["design"], dict)
-        assert "kit" in data and isinstance(data["kit"], dict)
-        assert "points" in data and isinstance(data["points"], list) and len(data["points"]) > 0
-        assert "lines" in data and isinstance(data["lines"], list) and len(data["lines"]) > 0
+        assert _app_payload_design(data, design["id"])
         assert "capabilities" in data
         assert isinstance(data.get("fetchUrl"), str)
         assert f":{engine.PORT}/api/app/payload/" in data["fetchUrl"]
 
     def test_show_diagram_returns_diagram_json(self, kitMetabolismJson: dict):
-        """🔖show_diagram returns design, mode=show-diagram and diagram data."""
+        """🔖show_diagram returns design, mode=show-diagram and the kit projection."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -4995,13 +4964,11 @@ class TestMcp:
         engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.show_diagram(mock_ctx)
         data = _mcp_app_tool_payload(result)
-        assert data["mode"] == "show-diagram"
-        assert "design" in data and isinstance(data["design"], dict)
-        assert "points" in data and isinstance(data["points"], list)
-        assert "lines" in data and isinstance(data["lines"], list)
+        assert (data["mode"], data["surface"]) == ("show-diagram", "diagram")
+        assert _app_payload_design(data, design["id"])
 
     def test_show_scene_returns_scene_data(self, kitMetabolismJson: dict):
-        """🔖show_scene returns design, kit, mode=show-scene, and diagram points/lines for context."""
+        """🔖show_scene returns design, kit projection and mode=show-scene."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5009,16 +4976,13 @@ class TestMcp:
         engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.show_scene(mock_ctx)
         data = _mcp_app_tool_payload(result)
-        assert data["mode"] == "show-scene"
-        assert "design" in data and isinstance(data["design"], dict)
-        assert "kit" in data and isinstance(data["kit"], dict)
-        assert "points" in data and isinstance(data["points"], list) and len(data["points"]) > 0
-        assert "lines" in data and isinstance(data["lines"], list) and len(data["lines"]) > 0
+        assert (data["mode"], data["surface"]) == ("show-scene", "scene")
+        assert _app_payload_design(data, design["id"])
         assert isinstance(data.get("fetchUrl"), str)
         assert f":{engine.PORT}/api/app/payload/" in data["fetchUrl"]
 
     def test_show_diff_returns_design_diff(self, kitMetabolismJson: dict):
-        """🔖show_diff returns design, kit, designDiff, mode=show-diff (no diagram points/lines)."""
+        """🔖show_diff returns design, kit projection, designDiff and mode=show-diff."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5031,11 +4995,10 @@ class TestMcp:
         assert "design" in data and isinstance(data["design"], dict)
         assert "kit" in data and isinstance(data["kit"], dict)
         assert "designDiff" in data and isinstance(data["designDiff"], dict)
-        assert "points" not in data
-        assert "lines" not in data
+        assert _app_payload_design(data, design["id"])
 
     def test_show_diagram_diff_returns_diagram_diff(self, kitMetabolismJson: dict):
-        """🔖show_diagram_diff returns design, designDiff, mode=show-diagram-diff with diagram data."""
+        """🔖show_diagram_diff returns design, designDiff, kit projection and mode=show-diagram-diff."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5047,8 +5010,7 @@ class TestMcp:
         assert data["mode"] == "show-diagram-diff"
         assert "design" in data and isinstance(data["design"], dict)
         assert "designDiff" in data and isinstance(data["designDiff"], dict)
-        assert "points" in data and isinstance(data["points"], list)
-        assert "lines" in data and isinstance(data["lines"], list)
+        assert _app_payload_design(data, design["id"])
 
     def test_shallow_kit_hydrates_nakagin_design_from_disk(self):
         """🔖metabolism.shallow.kit.semio.json lists designs without pieces; load nakagin-capsule-tower.shallow.design.semio.json by id."""
@@ -5069,8 +5031,8 @@ class TestMcp:
         )
         assert len(out.get("pieces", [])) > 50
 
-    def test_show_diff_returns_diagram_json(self, kitMetabolismJson: dict):
-        """🔖show_diff returns design data and default capabilities in structuredContent (no diagram points/lines)."""
+    def test_show_diff_returns_default_capabilities(self, kitMetabolismJson: dict):
+        """🔖show_diff returns default capabilities in structuredContent."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5078,25 +5040,11 @@ class TestMcp:
         engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.show_diff(mock_ctx)
         data = _mcp_app_tool_payload(result)
-        assert "points" not in data
-        assert "lines" not in data
         assert data["capabilities"]["pieceSelection"] is False
         assert data["capabilities"]["connectionSelection"] is False
 
-    def test_show_diagram_diff_returns_diagram_json(self, kitMetabolismJson: dict):
-        """🔖show_diagram_diff returns diagram data in structuredContent."""
-        mock_ctx = type("MockCtx", (), {"session": object()})()
-        sid = mock_ctx.session
-        engine._mcp_session_kits[sid] = kitMetabolismJson
-        design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["id"], mock_ctx)
-        result = engine.show_diagram_diff(mock_ctx)
-        data = _mcp_app_tool_payload(result)
-        assert "points" in data
-        assert "lines" in data
-
     def test_show_diagram_diff_flattens_the_diffed_design(self):
-        """🔖show_diagram_diff must flatten the design after applying the diff so diagram centers come from the diffed design."""
+        """🔖show_diagram_diff flattens the design after applying the diff while the kit keeps the undiffed design."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         kit = {
@@ -5107,15 +5055,31 @@ class TestMcp:
         engine._mcp_session_kits[sid] = kit
         engine._mcp_session_designs[sid] = kit["designs"][0]
 
-        diff = {"pieces": {"updated": [{"piece": {"id": "p-1"}, "diff": {"center": {"u": 12, "v": -4}}}]}}
+        diff = {"pieces": {"updated": [{"piece": {"id": "p-1"}, "diff": {"pose": {"center": {"u": 12, "v": -4}}}}]}}
         result = engine.show_diagram_diff(mock_ctx, design_diff=diff)
         data = _mcp_app_tool_payload(result)
 
-        points_by_id = {point["id"]: point for point in data["points"]}
-        assert points_by_id["p-1"]["u"] == 12
-        assert points_by_id["p-1"]["v"] == -4
         piece = next(piece for piece in data["design"]["pieces"] if piece["id"] == "p-1")
-        assert piece["center"] == {"u": 12, "v": -4}
+        assert piece["pose"]["center"] == {"u": 12, "v": -4}
+        assert _app_payload_design(data, "dg-1")["pieces"] == [{"id": "p-1"}]
+
+    def test_app_payload_kit_is_the_rs_projection_wire(self, kitMetabolismJson: dict):
+        """🧬Every MCP App payload carries the kit as rs projection wire (types and designs nested in their typologies, the raw session design, blobs served over HTTP) and names the design to show."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        engine._mcp_session_kits[mock_ctx.session] = kitMetabolismJson
+        nakagin = next(d for d in kitMetabolismJson["designs"] if d["name"] == "Nakagin Capsule Tower")
+        engine.start_working_in_design(nakagin["id"], mock_ctx)
+        for show, surface in ((engine.show_design, "design"), (engine.show_scene, "scene"), (engine.show_diagram, "diagram"), (engine.show_diff, "design"), (engine.show_diagram_diff, "diagram"), (engine.select_pieces, "diagram")):
+            data = _mcp_app_tool_payload(show(mock_ctx))
+            kit = data["kit"]
+            assert (data["surface"], data["design"]["id"], "types" in kit, "designs" in kit) == (surface, nakagin["id"], False, False), show.__name__
+            assert (sum(len(t["types"]) for t in kit["typologies"]), sum(len(t["designs"]) for t in kit["typologies"])) == (50, 10)
+            shown = _app_payload_design(data, nakagin["id"])
+            assert (len(shown["pieces"]), sum(1 for piece in shown["pieces"] if piece.get("pose"))) == (180, 1)
+            assert all("blob" not in file or file["name"].lower().endswith((".glb", ".gltf")) for file in kit.get("files") or [])
+            assert all(file["url"] == f"http://127.0.0.1:{engine.PORT}/api/app/files/{file['id']}" for file in kit.get("files") or [] if "blob" not in file and "url" in file)
+        kit_only = engine._build_kit_only_app_payload(kitMetabolismJson)
+        assert (kit_only["surface"], sum(len(t["designs"]) for t in kit_only["kit"]["typologies"])) == ("kit", 10)
 
     def test_show_diff_with_design_diff_adds_pieces(self, kitMetabolismJson: dict):
         """➕show_diff with design_diff includes designDiff in payload."""
@@ -5542,437 +5506,275 @@ class TestAuthCredentials:
 # #endregion ⚗️Auth Credential Management Tests
 
 
-# #region 🖲️RemoteStore Tests
+# #region 🖲️Hub Tests
+HUB = "https://hub.test"
+HUB_SESSION = "019a0000-0000-7000-8000-000000000001"
+
+
+def _hub_projection(designs: list[dict] | None = None, name: str = "Hub Kit") -> dict:
+    """🧪Hub kit projection with one typology holding a `Base` type (connectors c0, c1) and a `Storey` type (connectors b, t)."""
+    connector = lambda id, name: {"id": id, "name": name}
+    types = [
+        {"id": "base", "name": "Base", "connectors": {"hash": "h", "items": [connector("base-c0", "c0"), connector("base-c1", "c1")]}},
+        {"id": "storey", "name": "Storey", "connectors": {"hash": "h", "items": [connector("storey-b", "b"), connector("storey-t", "t")]}},
+    ]
+    return {"id": "kit", "name": name, "typologies": {"hash": "h", "items": [{"id": "typo", "name": "Typo", "types": {"hash": "h", "items": types}, "designs": {"hash": "h", "items": designs or []}}]}}
+
+
+def _hub_design() -> dict:
+    """🧪Design with a fixed root and one storey linked to it."""
+    pose = {"plane": {"origin": {"x": 0, "y": 0, "z": 0}, "xAxis": {"x": 1, "y": 0, "z": 0}, "yAxis": {"x": 0, "y": 1, "z": 0}}, "center": {"u": 0, "v": 0}}
+    return {
+        "id": "tower",
+        "name": "Tower",
+        "pieces": {"hash": "h", "items": [{"id": "root", "name": "root", "type": {"id": "base"}, "pose": pose}, {"id": "s1", "name": "s1", "type": {"id": "storey"}}]},
+        "connections": {"hash": "h", "items": [{"id": "c-root-s1", "parent": {"piece": {"id": "root"}, "connector": {"id": "base-c0"}}, "child": {"piece": {"id": "s1"}, "connector": {"id": "storey-b"}}, "rotation": 90}]},
+    }
+
+
+class _HubFake:
+    """🧪In-memory stand-in for `requests.request` against a semio hub (records calls, serves one session)."""
+
+    def __init__(self, kit: dict, version: int = 3):
+        self.kit, self.version, self.calls = kit, version, []
+
+    def __call__(self, method: str, url: str, json: dict | None = None, headers: dict | None = None, timeout: int | None = None):
+        self.calls.append((method, url, json, headers))
+        response = MagicMock()
+        response.raise_for_status.return_value = None
+        response.content = b"{}"
+        if url.endswith("/kit"):
+            response.json.return_value = {"version": self.version, "hash": f"h{self.version}", "kit": self.kit}
+        elif url.endswith("/operations"):
+            assert json["baseVersion"] == self.version and json["clientId"] == engine.HUB_CLIENT_ID
+            self.version += 1
+            response.json.return_value = {"version": self.version, "hash": f"h{self.version}", "data": {}}
+        elif url.endswith("/sessions"):
+            response.json.return_value = [{"id": HUB_SESSION, "name": "Shared", "role": "owner", "version": self.version}]
+        else:
+            response.content = b""
+        return response
+
+    def operations(self) -> list[dict]:
+        return [body for method, url, body, _ in self.calls if url.endswith("/operations")]
+
+
+def _hub_error(status: int):
+    response = MagicMock()
+    response.status_code = status
+    response.json.return_value = {"error": f"status {status}"}
+    response.raise_for_status.side_effect = engine.requests.exceptions.HTTPError(response=response)
+    return response
+
+
+class TestKitWorkingView:
+    def test_working_view_flattens_typologies_and_blocks(self):
+        """🪟A kit projection becomes a working view with plain lists and flat types/designs that remember their typology."""
+        view = engine._kit_working_view(_hub_projection([_hub_design()]))
+        assert [t["id"] for t in view["types"]] == ["base", "storey"]
+        assert view["designs"][0]["typology"] == {"id": "typo"}
+        assert [p["id"] for p in view["designs"][0]["pieces"]] == ["root", "s1"]
+        assert view["types"][0]["connectors"][0] == {"id": "base-c0", "name": "c0"}
+        assert view["typologies"] == [{"id": "typo", "name": "Typo"}]
+
+    def test_projection_nests_types_and_designs_back(self):
+        """🧬The projection of a working view nests types and designs into their typologies again."""
+        projection = engine._kit_projection(engine._kit_working_view(_hub_projection([_hub_design()])))
+        typology = projection["typologies"][0]
+        assert (typology["id"], [t["id"] for t in typology["types"]], [d["id"] for d in typology["designs"]]) == ("typo", ["base", "storey"], ["tower"])
+        assert "types" not in projection and "designs" not in projection
+
+    def test_split_metabolism_store_is_assembled(self):
+        """🧩The split metabolism store folder loads with all 50 types and 10 designs, Nakagin with 180 pieces and 179 connections."""
+        kit = engine._load_kit_from_path(str(METABOLISM_DIR))
+        nakagin = next(d for d in kit["designs"] if d["id"] == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
+        assert (len(kit["types"]), len(kit["designs"]), len(nakagin["pieces"]), len(nakagin["connections"])) == (50, 10, 180, 179)
+        assert sum(1 for piece in nakagin["pieces"] if piece.get("pose")) == 1
+
+
+class TestHubOperations:
+    def test_no_changes_no_operations(self):
+        """🟰Identical working views produce no hub operations."""
+        view = engine._kit_working_view(_hub_projection([_hub_design()]))
+        assert engine.hubOperations(view, copy.deepcopy(view)) == []
+
+    def test_changes_become_kit_scoped_operations_with_explicit_ids(self):
+        """🔀Kit rename, design create/delete and piece/connection edits become kit-scoped operations that carry every new id."""
+        before = engine._kit_working_view(_hub_projection([_hub_design(), {"id": "old", "name": "Old", "pieces": [], "connections": []}]))
+        after = copy.deepcopy(before)
+        after["name"] = "Renamed Kit"
+        after["designs"] = [d for d in after["designs"] if d["id"] != "old"]
+        tower = after["designs"][0]
+        tower["pieces"][1].update({"name": "first storey", "description": "renamed"})
+        tower["pieces"].append({"id": "s2", "name": "s2", "type": {"id": "storey"}})
+        tower["pieces"].append({"id": "s3", "name": "s3", "type": {"id": "storey"}})
+        tower["connections"] += [
+            {"id": "c-s2-s3", "parent": {"piece": {"id": "s2"}, "connector": {"id": "storey-t"}}, "child": {"piece": {"id": "s3"}, "connector": {"id": "storey-b"}}},
+            {"id": "c-s1-s2", "parent": {"piece": {"id": "s1"}, "connector": {"id": "storey-t"}}, "child": {"piece": {"id": "s2"}, "connector": {"id": "storey-b"}}, "gap": 0.5},
+            {"id": "c-loop", "parent": {"piece": {"id": "root"}, "connector": {"id": "base-c1"}}, "child": {"piece": {"id": "s3"}, "connector": {"id": "storey-t"}}},
+        ]
+        after["designs"].append({"id": "new", "name": "New", "unit": "m", "pieces": [{"id": "n1", "type": {"id": "base"}, "pose": tower["pieces"][0]["pose"]}], "connections": []})
+        operations = engine.hubOperations(before, after)
+        fields = [re.search(r"kit \{ (?:design\(id: \$designId\) \{ )?(\w+)", query).group(1) for query, _ in operations]
+        assert fields == ["rename", "deleteDesign", "addChildPieceWithParentConnection", "addChildPieceWithParentConnection", "connectPieces", "piece", "createDesign", "addFixedPiece"]
+        by_field = dict(zip(fields, [variables for _, variables in operations]))
+        assert by_field["deleteDesign"] == {"id": "old"}
+        s2 = operations[2][1]
+        assert (s2["id"], s2["connectionId"], s2["parentPieceId"], s2["parentConnector"], s2["childConnector"], s2["joint"]) == ("s2", "c-s1-s2", "s1", "storey-t", "storey-b", {"gap": 0.5})
+        assert (operations[3][1]["id"], operations[3][1]["connectionId"]) == ("s3", "c-s2-s3")
+        assert (operations[4][1]["id"], operations[4][1]["childPieceId"]) == ("c-loop", "s3")
+        assert (operations[5][1]["name"], operations[5][1]["description"]) == ("first storey", "renamed")
+        assert "rename(newName: $name)" in operations[5][0] and "changeDescription(newDescription: $description)" in operations[5][0] and "move(" not in operations[5][0]
+        assert (by_field["createDesign"]["id"], by_field["createDesign"]["unit"]) == ("new", "m")
+        assert all(query.startswith("mutation($storeId: ID!, $changeId: ID!") and "unsavedChange(id: $changeId) { kit {" in query for query, _ in operations)
+
+    def test_removed_pieces_take_their_connections(self):
+        """🗑Removing a piece and a connection is one deletePiecesAndConnections operation (connections of removed pieces are implied)."""
+        before = engine._kit_working_view(_hub_projection([_hub_design()]))
+        after = copy.deepcopy(before)
+        after["designs"][0]["pieces"] = after["designs"][0]["pieces"][:1]
+        after["designs"][0]["connections"] = []
+        [(query, variables)] = engine.hubOperations(before, after)
+        assert "deletePiecesAndConnections(pieceIds: $pieceIds, connectionIds: $connectionIds)" in query
+        assert (variables["pieceIds"], variables["connectionIds"]) == (["s1"], [])
+
+    def test_changed_connections_are_reconnected(self):
+        """🔁A connection whose joint changed is removed and connected again with the new joint."""
+        before = engine._kit_working_view(_hub_projection([_hub_design()]))
+        after = copy.deepcopy(before)
+        after["designs"][0]["connections"][0]["rotation"] = 180
+        (removal, removal_variables), (connect, connect_variables) = engine.hubOperations(before, after)
+        assert "deletePiecesAndConnections" in removal and removal_variables["connectionIds"] == ["c-root-s1"]
+        assert "connectPieces" in connect and (connect_variables["id"], connect_variables["joint"]) == ("c-root-s1", {"rotation": 180})
+
+    def test_unplaced_cycles_are_rejected(self):
+        """🔁New pieces that only hang off each other cannot be ordered and are rejected."""
+        before = engine._kit_working_view(_hub_projection([_hub_design()]))
+        after = copy.deepcopy(before)
+        design = after["designs"][0]
+        design["pieces"] += [{"id": "a", "type": {"id": "storey"}}, {"id": "b", "type": {"id": "storey"}}]
+        design["connections"] += [
+            {"id": "ab", "parent": {"piece": {"id": "a"}, "connector": {"id": "storey-t"}}, "child": {"piece": {"id": "b"}, "connector": {"id": "storey-b"}}},
+            {"id": "ba", "parent": {"piece": {"id": "b"}, "connector": {"id": "storey-t"}}, "child": {"piece": {"id": "a"}, "connector": {"id": "storey-b"}}},
+        ]
+        with pytest.raises(ValueError, match="only connected to each other"):
+            engine.hubOperations(before, after)
+
+
 class TestRemoteStore:
-    def test_from_uri_valid(self):
-        """🔖RemoteStore.fromUri parses server URL and kit URI from remote URI."""
-        uri = "https://server.com/api/kits/my-kit"
-        store = engine.RemoteStore.fromUri(uri)
-        assert store.serverUrl == "https://server.com"
-        assert store.kitUri == "my-kit"
-        assert store.uri == uri
+    def test_from_uri(self):
+        """🔖RemoteStore.fromUri parses hub URL and session id from `http(s)://hub/sessions/{id}`."""
+        store = engine.RemoteStore.fromUri(f"{HUB}/sessions/{HUB_SESSION}")
+        assert (store.serverUrl, store.sessionId, store.uri) == (HUB, HUB_SESSION, f"{HUB}/sessions/{HUB_SESSION}")
+        for invalid in (f"{HUB}/api/kits/my-kit", f"{HUB}/sessions/", f"{HUB}/sessions/{HUB_SESSION}/kit", f"ftp://x/sessions/{HUB_SESSION}"):
+            with pytest.raises(engine.RemoteKitUriNotValid):
+                engine.RemoteStore.fromUri(invalid)
 
-    def test_from_uri_with_encoded_kit(self):
-        """🔖RemoteStore.fromUri handles encoded kit URI."""
-        encodedKit = engine.encode("/path/to/kit")
-        uri = f"https://server.com/api/kits/{encodedKit}"
-        store = engine.RemoteStore.fromUri(uri)
-        assert store.serverUrl == "https://server.com"
-        assert store.kitUri == "/path/to/kit"
+    def test_get_put_delete_kit(self, tmp_path):
+        """🔖RemoteStore reads the session kit as working view, pushes a kit as operations and deletes the session."""
+        fake = _HubFake(_hub_projection([_hub_design()]))
+        with patch.object(engine, "AUTH_FILE", str(tmp_path / "auth.json")), patch("engine.requests.request", side_effect=fake):
+            engine._save_auth({HUB: {"token": "tok", "email": "user@test.com"}})
+            store = engine.RemoteStore.fromUri(f"{HUB}/sessions/{HUB_SESSION}")
+            kit = store.get({"kind": engine.OperationKind.KIT})
+            assert kit["designs"][0]["id"] == "tower" and fake.calls[0][3] == {"Authorization": "Bearer tok"}
+            kit["name"] = "Pushed"
+            kit["designs"].append({"id": "d2", "name": "D2", "pieces": [], "connections": []})
+            store.put({"kind": engine.OperationKind.KIT}, kit)
+            assert [re.search(r"kit \{ (\w+)", body["query"]).group(1) for body in fake.operations()] == ["rename", "createDesign"]
+            assert [body["baseVersion"] for body in fake.operations()] == [3, 4]
+            store.delete({"kind": engine.OperationKind.KIT})
+            assert fake.calls[-1][:2] == ("DELETE", f"{HUB}/sessions/{HUB_SESSION}")
+            for unsupported in (lambda: store.get({"kind": engine.OperationKind.TYPE}), lambda: store.update({}, "")):
+                with pytest.raises(engine.FeatureNotYetSupported):
+                    unsupported()
 
-    def test_from_uri_invalid(self):
-        """🔖RemoteStore.fromUri raises RemoteKitUriNotValid for bad URIs."""
-        with pytest.raises(engine.RemoteKitUriNotValid):
-            engine.RemoteStore.fromUri("https://server.com/bad/path")
-
-    def test_get_kit_success(self, tmp_path):
-        """🔖RemoteStore.get retrieves kit from remote server."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            mock_response = MagicMock()
-            mock_response.json.return_value = {"uri": "my-kit", "name": "TestKit", "version": "1.0.0"}
-            mock_response.raise_for_status.return_value = None
-            with patch("engine.requests.get", return_value=mock_response):
-                result = store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
-                assert result is not None
-                assert result.name == "TestKit"
-
-    def test_get_kit_unauthorized(self, tmp_path):
-        """🔖RemoteStore.get raises InvalidAuthToken on 401."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "expired-token", "email": "user@test.com"}})
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            mock_response = MagicMock()
-            mock_response.status_code = 401
-            http_error = engine.requests.exceptions.HTTPError(response=mock_response)
-            mock_response.raise_for_status.side_effect = http_error
-            with patch("engine.requests.get", return_value=mock_response):
-                with pytest.raises(engine.InvalidAuthToken):
-                    store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
-
-    def test_get_kit_not_found(self, tmp_path):
-        """🔖RemoteStore.get raises KitNotFound on 404."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            mock_response = MagicMock()
-            mock_response.status_code = 404
-            http_error = engine.requests.exceptions.HTTPError(response=mock_response)
-            mock_response.raise_for_status.side_effect = http_error
-            with patch("engine.requests.get", return_value=mock_response):
-                with pytest.raises(engine.KitNotFound):
-                    store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
-
-    def test_get_kit_connection_error(self, tmp_path):
-        """🔖RemoteStore.get raises ServerUnreachable on connection error."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            with patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
-                with pytest.raises(engine.ServerUnreachable):
-                    store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
-
-    def test_get_kit_no_auth(self, tmp_path):
-        """🔖RemoteStore.get raises AuthTokenNotFound when not logged in."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
+    def test_errors_map_to_semio_errors(self, tmp_path):
+        """🚨Hub failures map to AuthTokenNotFound, ServerUnreachable, InvalidAuthToken, KitNotFound and HubRequestRejected."""
+        store = engine.RemoteStore.fromUri(f"{HUB}/sessions/{HUB_SESSION}")
+        with patch.object(engine, "AUTH_FILE", str(tmp_path / "auth.json")):
             engine._save_auth({})
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
             with pytest.raises(engine.AuthTokenNotFound):
-                store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
-
-    def test_put_kit_success(self, tmp_path):
-        """🔖RemoteStore.put creates a kit on the remote server."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            mock_response = MagicMock()
-            mock_response.raise_for_status.return_value = None
-            with patch("engine.requests.put", return_value=mock_response):
-                result = store.put({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"}, engine.KitInput(name="TestKit", version="1.0.0"))
-                assert result is None
-
-    def test_put_type_success(self, tmp_path):
-        """🔖RemoteStore.put creates a type on the remote server."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            mock_response = MagicMock()
-            mock_response.raise_for_status.return_value = None
-            with patch("engine.requests.put", return_value=mock_response) as mock_put:
-                result = store.put(
-                    {"kind": engine.OperationKind.TYPE, "kitUri": "my-kit", "typeName": "Brick", "typeVariant": ""},
-                    engine.TypeInput(name="Brick", variant=""),
-                )
-                assert result is None
-                call_args = mock_put.call_args
-                assert "types/" in call_args[0][0]
-
-    def test_put_design_success(self, tmp_path):
-        """🔖RemoteStore.put creates a design on the remote server."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            mock_response = MagicMock()
-            mock_response.raise_for_status.return_value = None
-            with patch("engine.requests.put", return_value=mock_response) as mock_put:
-                result = store.put(
-                    {"kind": engine.OperationKind.DESIGN, "kitUri": "my-kit", "designName": "MyDesign", "designVariant": "", "designView": ""},
-                    engine.DesignInput(name="MyDesign", variant="", view=""),
-                )
-                assert result is None
-                call_args = mock_put.call_args
-                assert "designs/" in call_args[0][0]
-
-    def test_delete_kit_success(self, tmp_path):
-        """🗑️RemoteStore.delete removes a kit from the remote server."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            mock_response = MagicMock()
-            mock_response.raise_for_status.return_value = None
-            with patch("engine.requests.delete", return_value=mock_response):
-                result = store.delete({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
-                assert result is None
-
-    def test_delete_type_success(self, tmp_path):
-        """🔖RemoteStore.delete removes a type from the remote server."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            mock_response = MagicMock()
-            mock_response.raise_for_status.return_value = None
-            with patch("engine.requests.delete", return_value=mock_response) as mock_del:
-                result = store.delete({"kind": engine.OperationKind.TYPE, "kitUri": "my-kit", "typeName": "Brick", "typeVariant": ""})
-                assert result is None
-                call_args = mock_del.call_args
-                assert "types/" in call_args[0][0]
-
-    def test_delete_design_success(self, tmp_path):
-        """🔖RemoteStore.delete removes a design from the remote server."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            mock_response = MagicMock()
-            mock_response.raise_for_status.return_value = None
-            with patch("engine.requests.delete", return_value=mock_response) as mock_del:
-                result = store.delete({"kind": engine.OperationKind.DESIGN, "kitUri": "my-kit", "designName": "MyDesign", "designVariant": "", "designView": ""})
-                assert result is None
-                call_args = mock_del.call_args
-                assert "designs/" in call_args[0][0]
-
-    def test_initialize_noop(self, tmp_path):
-        """🔖RemoteStore.initialize is a no-op (server-side initialization)."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            store.initialize()  # Should not raise
-
-    def test_update_not_supported(self, tmp_path):
-        """🔁RemoteStore.update raises FeatureNotYetSupported."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
-            with pytest.raises(engine.FeatureNotYetSupported):
-                store.update({}, "")
+                store.get({"kind": engine.OperationKind.KIT})
+            engine._save_auth({HUB: {"token": "tok", "email": "user@test.com"}})
+            for side_effect, error in ((engine.requests.exceptions.ConnectionError, engine.ServerUnreachable), (lambda *a, **k: _hub_error(401), engine.InvalidAuthToken), (lambda *a, **k: _hub_error(404), engine.KitNotFound), (lambda *a, **k: _hub_error(422), engine.HubRequestRejected)):
+                with patch("engine.requests.request", side_effect=side_effect), pytest.raises(error):
+                    store.get({"kind": engine.OperationKind.KIT})
 
 
-# #endregion 🖲️RemoteStore Tests
-
-
-# #region ⛅StoreFactory Remote Tests
 class TestStoreFactoryRemote:
-    def test_store_factory_remote_uri(self, tmp_path):
-        """🔖StoreFactory returns RemoteStore for remote server URIs."""
+    def test_store_factory_routes_uris(self, tempKitPath: pathlib.Path):
+        """🏭StoreFactory returns RemoteStore for hub session URIs, SqliteStore for absolute paths and rejects the rest."""
         engine.StoreFactory.cache_clear()
-        uri = "https://server.com/api/kits/my-kit"
-        store = engine.StoreFactory(uri)
-        assert isinstance(store, engine.RemoteStore)
-        assert store.serverUrl == "https://server.com"
-        assert store.kitUri == "my-kit"
-
-    def test_store_factory_invalid_remote_uri(self):
-        """🔖StoreFactory raises RemoteKitUriNotValid for http URIs without /api/kits/."""
-        engine.StoreFactory.cache_clear()
+        assert isinstance(engine.StoreFactory(f"{HUB}/sessions/{HUB_SESSION}"), engine.RemoteStore)
+        assert isinstance(engine.StoreFactory(str(tempKitPath)), engine.SqliteStore)
         with pytest.raises(engine.RemoteKitUriNotValid):
-            engine.StoreFactory("https://server.com/some/other/path")
-
-    def test_store_factory_local_still_works(self, tempKitPath: pathlib.Path):
-        """🔖StoreFactory still returns SqliteStore for local absolute paths."""
-        engine.StoreFactory.cache_clear()
-        store = engine.StoreFactory(str(tempKitPath))
-        assert isinstance(store, engine.SqliteStore)
-
-    def test_store_factory_relative_path_raises(self):
-        """🔖StoreFactory raises LocalKitUriIsNotAbsolute for relative paths."""
-        engine.StoreFactory.cache_clear()
+            engine.StoreFactory(f"{HUB}/api/kits/my-kit")
         with pytest.raises(engine.LocalKitUriIsNotAbsolute):
             engine.StoreFactory("relative/path")
 
 
-# #endregion ⛅StoreFactory Remote Tests
-
-
-# #region 🐼MCP Auth Tools Tests
 class TestMcpAuth:
-    def test_mcp_login(self, tmp_path):
-        """🔖mcp_login calls login and returns result."""
-        auth_file = str(tmp_path / "auth.json")
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"token": "mcp-token"}
-        mock_response.raise_for_status.return_value = None
-        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.post", return_value=mock_response):
-            result = engine.mcp_login("https://server.com", "user@test.com", "pass")
-            assert result["ok"] is True
-            assert result["token"] == "mcp-token"
-
-    def test_mcp_login_error(self, tmp_path):
-        """🔖mcp_login returns error dict on connection failure."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.post", side_effect=engine.requests.exceptions.ConnectionError):
-            result = engine.mcp_login("https://unreachable.com", "user@test.com", "pass")
-            assert "error" in result
-
-    def test_mcp_logout(self, tmp_path):
-        """🔖mcp_logout calls logout and returns result."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
-            result = engine.mcp_logout("https://server.com")
-            assert result["ok"] is True
-
-    def test_mcp_auth_status_authenticated(self, tmp_path):
-        """🔖mcp_auth_status returns authenticated status."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
-            result = engine.mcp_auth_status("https://server.com")
-            assert result["authenticated"] is True
-
-    def test_mcp_auth_status_not_authenticated(self, tmp_path):
-        """🔖mcp_auth_status returns not authenticated status."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({})
-            result = engine.mcp_auth_status("https://unknown.com")
-            assert result["authenticated"] is False
+    def test_login_status_sessions_logout(self, tmp_path):
+        """🎟️login_to_hub stores the token (never returned), read_hub_auth_status reports it, list_hub_sessions lists sessions, logout_from_hub revokes it."""
+        login = MagicMock()
+        login.json.return_value = {"token": "mcp-token", "person": {"name": "Alice"}}
+        login.raise_for_status.return_value = None
+        fake = _HubFake(_hub_projection())
+        with patch.object(engine, "AUTH_FILE", str(tmp_path / "auth.json")), patch("engine.requests.post", return_value=login) as post, patch("engine.requests.request", side_effect=fake):
+            result = engine.login_to_hub(f"{HUB}/", "user@test.com", "pass")
+            assert (result["ok"], result["serverUrl"], "token" in result) == (True, HUB, False)
+            assert engine.getAuthToken(HUB) == "mcp-token"
+            assert engine.read_hub_auth_status(HUB) == {"authenticated": True, "serverUrl": HUB, "email": "user@test.com"}
+            assert engine.list_hub_sessions(HUB)["sessions"][0]["id"] == HUB_SESSION
+            assert engine.logout_from_hub(HUB) == {"ok": True, "serverUrl": HUB}
+            assert post.call_args_list[-1].args[0] == f"{HUB}/auth/logout"
+            assert engine.read_hub_auth_status(HUB)["authenticated"] is False
+            assert "error" in engine.list_hub_sessions(HUB)
+        with patch.object(engine, "AUTH_FILE", str(tmp_path / "auth.json")), patch("engine.requests.post", side_effect=engine.requests.exceptions.ConnectionError):
+            assert "error" in engine.login_to_hub(HUB, "user@test.com", "pass")
 
 
-# #endregion 🐼MCP Auth Tools Tests
-
-
-# #region 📎MCP Remote Kit Tests
 class TestMcpRemoteKit:
-    def test_start_working_in_remote_kit_success(self, tmp_path):
-        """🔖start_working_in_remote_kit fetches kit from remote server."""
-        auth_file = str(tmp_path / "auth.json")
-        kit_data = {"name": "RemoteKit", "version": "1.0.0", "designs": [], "types": []}
-        mock_response = MagicMock()
-        mock_response.json.return_value = kit_data
-        mock_response.raise_for_status.return_value = None
+    def test_open_edit_and_push_a_hub_session(self, tmp_path):
+        """🟢start_working_in_remote_kit opens a hub session kit; design tools edit it; finish_working_in_kit pushes the changes as hub operations."""
+        fake = _HubFake(_hub_projection([_hub_design()]))
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
-            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
-            result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            assert isinstance(result, CallToolResult)
-            payload = _mcp_app_tool_payload(result)
-            assert "kitArtifacts" in payload
-            sid = mock_ctx.session
-            assert sid in engine._mcp_session_kits
-            assert engine._mcp_session_kit_mode[sid] == "remote"
-            assert "/api/kits/" in engine._mcp_session_kit_source[sid]
+        sid = mock_ctx.session
+        engine._mcp_session_designs[sid] = {"id": "stale"}
+        with patch.object(engine, "AUTH_FILE", str(tmp_path / "auth.json")), patch("engine.requests.request", side_effect=fake):
+            engine._save_auth({HUB: {"token": "tok", "email": "user@test.com"}})
+            result = engine.start_working_in_remote_kit(HUB, HUB_SESSION, mock_ctx)
+            assert "kitArtifacts" in _mcp_app_tool_payload(result)
+            assert (engine._get_session_kit_mode(mock_ctx), engine._mcp_session_kit_source[sid], sid in engine._mcp_session_designs) == ("remote", f"{HUB}/sessions/{HUB_SESSION}", False)
+            assert _mcp_app_tool_payload(engine.start_working_in_design("tower", mock_ctx))["design"]["id"] == "tower"
+            assert engine.add_current_design_piece("s2", "s2", "storey", mock_ctx)["ok"] is True
+            assert engine.add_current_design_connection("c-s1-s2", "s1", "t", "s2", "b", 0, 0, 0, 0, mock_ctx)["ok"] is True
+            assert engine.start_new_design("d2", "Second", "", "m", "", "", "", "", mock_ctx)["ok"] is True
+            finished = engine.finish_working_in_kit(mock_ctx)
+            assert finished == {"ok": True, "pushed": {"pushed": 2, "version": 5, "hash": "h5"}}
+            operations = fake.operations()
+            assert [re.search(r"kit \{ (?:design\(id: \$designId\) \{ )?(\w+)", body["query"]).group(1) for body in operations] == ["addChildPieceWithParentConnection", "createDesign"]
+            child = operations[0]["variables"]
+            assert (child["id"], child["connectionId"], child["parentPieceId"], child["parentConnector"], child["childConnector"]) == ("s2", "c-s1-s2", "s1", "t", "b")
+            assert sid not in engine._mcp_session_remote and sid not in engine._mcp_session_kit_mode
 
-    def test_start_working_in_remote_kit_no_auth(self, tmp_path):
-        """🔖start_working_in_remote_kit returns error when not logged in."""
-        auth_file = str(tmp_path / "auth.json")
+    def test_errors_and_local_mode(self, tmp_path):
+        """🔖Missing login or an unreachable hub are tool errors; start_working_in_local_kit switches back to local mode."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        with patch.object(engine, "AUTH_FILE", auth_file):
+        with patch.object(engine, "AUTH_FILE", str(tmp_path / "auth.json")):
             engine._save_auth({})
-            result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            assert isinstance(result, CallToolResult)
-            assert result.is_error is True
-            assert "error" in _mcp_app_tool_payload(result)
-
-    def test_start_working_in_remote_kit_connection_error(self, tmp_path):
-        """🔖start_working_in_remote_kit returns error on connection failure."""
-        auth_file = str(tmp_path / "auth.json")
-        mock_ctx = type("MockCtx", (), {"session": object()})()
-        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
-            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
-            result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            assert isinstance(result, CallToolResult)
-            assert result.is_error is True
-            assert "error" in _mcp_app_tool_payload(result)
-
-    def test_start_working_in_remote_kit_clears_previous_state(self, tmp_path):
-        """🔖start_working_in_remote_kit clears design, type, and sets mode to remote."""
-        auth_file = str(tmp_path / "auth.json")
-        kit_data = {"name": "RemoteKit", "version": "1.0.0", "designs": [], "types": []}
-        mock_response = MagicMock()
-        mock_response.json.return_value = kit_data
-        mock_response.raise_for_status.return_value = None
-        mock_ctx = type("MockCtx", (), {"session": object()})()
-        sid = mock_ctx.session
-        engine._mcp_session_designs[sid] = {"id": "old-design"}
-        engine._mcp_session_types[sid] = {"id": "old-type"}
-        engine._mcp_session_kit_mode[sid] = "local"
-        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
-            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
-            engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            assert sid not in engine._mcp_session_designs
-            assert sid not in engine._mcp_session_types
-            assert engine._mcp_session_kit_mode[sid] == "remote"
-
-    def test_start_working_in_local_kit_sets_mode_local(self):
-        """🔖start_working_in_local_kit sets session mode to local."""
-        mock_ctx = type("MockCtx", (), {"session": object()})()
-        result = engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
-        assert isinstance(result, CallToolResult)
-        payload = _mcp_app_tool_payload(result)
-        assert "kitArtifacts" in payload
-        sid = mock_ctx.session
-        assert engine._mcp_session_kit_mode[sid] == "local"
-
-    def test_get_session_kit_mode_default(self):
-        """🔖_get_session_kit_mode returns 'local' when not set."""
-        mock_ctx = type("MockCtx", (), {"session": object()})()
-        sid = engine._session_id(mock_ctx)
-        engine._mcp_session_kit_mode.pop(sid, None)
-        mode = engine._get_session_kit_mode(mock_ctx)
-        assert mode == "local"
-
-    def test_get_session_kit_mode_remote(self, tmp_path):
-        """🔖_get_session_kit_mode returns 'remote' for remote kit sessions."""
-        auth_file = str(tmp_path / "auth.json")
-        kit_data = {"name": "RemoteKit", "version": "1.0.0", "designs": [], "types": []}
-        mock_response = MagicMock()
-        mock_response.json.return_value = kit_data
-        mock_response.raise_for_status.return_value = None
-        mock_ctx = type("MockCtx", (), {"session": object()})()
-        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
-            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
-            engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            mode = engine._get_session_kit_mode(mock_ctx)
-            assert mode == "remote"
-
-    def test_finish_working_in_kit_clears_mode_and_source(self, kitMetabolismJson: dict):
-        """🔖finish_working_in_kit clears mode and source in addition to kit, design, type."""
-        mock_ctx = type("MockCtx", (), {"session": object()})()
-        sid = mock_ctx.session
-        engine._mcp_session_kits[sid] = kitMetabolismJson
-        engine._mcp_session_kit_mode[sid] = "remote"
-        engine._mcp_session_kit_source[sid] = "https://server.com/api/kits/test"
-        result = engine.finish_working_in_kit(mock_ctx)
-        assert result["ok"] is True
-        assert sid not in engine._mcp_session_kit_mode
-        assert sid not in engine._mcp_session_kit_source
-
-    def test_all_mcp_tools_work_after_remote_kit_login(self, tmp_path):
-        """🔖All existing MCP tools work after start_working_in_remote_kit (design/type operations)."""
-        auth_file = str(tmp_path / "auth.json")
-        kit_data = {
-            "name": "RemoteKit",
-            "version": "1.0.0",
-            "designs": [
-                {"id": "d1", "name": "Design1", "pieces": [], "connections": []},
-            ],
-            "types": [
-                {"id": "t1", "name": "Type1", "connectors": []},
-            ],
-        }
-        mock_response = MagicMock()
-        mock_response.json.return_value = kit_data
-        mock_response.raise_for_status.return_value = None
-        mock_ctx = type("MockCtx", (), {"session": object()})()
-        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
-            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
-            engine.start_working_in_remote_kit("https://server.com", "remote-kit", mock_ctx)
-
-        # start_working_in_design works for remote kits
-        result = engine.start_working_in_design("d1", mock_ctx)
-        assert isinstance(result, CallToolResult)
-        payload = _mcp_app_tool_payload(result)
-        assert payload["mode"] == "show-design"
-        assert "design" in payload and isinstance(payload["design"], dict)
-        assert "kitArtifacts" in payload
-
-        # read_current_design works
-        design = engine.read_current_design(mock_ctx)
-        assert design["id"] == "d1"
-
-        # finish_working_in_design works
-        result = engine.finish_working_in_design(mock_ctx)
-        assert result["ok"] is True
-
-        # start_working_in_type works for remote kits
-        result = engine.start_working_in_type("t1", mock_ctx)
-        assert result["ok"] is True
-
-        # read_current_type works
-        t = engine.read_current_type(mock_ctx)
-        assert t["id"] == "t1"
-
-        # finish_working_in_type works
-        result = engine.finish_working_in_type(mock_ctx)
-        assert result["ok"] is True
-
-        # finish_working_in_kit clears everything
-        result = engine.finish_working_in_kit(mock_ctx)
-        assert result["ok"] is True
+            assert engine.start_working_in_remote_kit(HUB, HUB_SESSION, mock_ctx).is_error is True
+            engine._save_auth({HUB: {"token": "tok", "email": "user@test.com"}})
+            with patch("engine.requests.request", side_effect=engine.requests.exceptions.ConnectionError):
+                assert "error" in _mcp_app_tool_payload(engine.start_working_in_remote_kit(HUB, HUB_SESSION, mock_ctx))
+        engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
+        assert engine._get_session_kit_mode(mock_ctx) == "local"
+        assert mock_ctx.session not in engine._mcp_session_remote
+        assert engine.finish_working_in_kit(mock_ctx) == {"ok": True}
 
 
-# #endregion 📎MCP Remote Kit Tests
+# #endregion 🖲️Hub Tests
 
 
 # #region 🌎REST Auth Endpoints Tests
@@ -6032,62 +5834,6 @@ class TestRestAuthEndpoints:
 # #endregion 🌎REST Auth Endpoints Tests
 
 
-# #region 🐙Load Kit From Remote Tests
-class TestLoadKitFromRemote:
-    def test_load_kit_from_remote_success(self, tmp_path):
-        """🔖_load_kit_from_remote fetches kit from server."""
-        auth_file = str(tmp_path / "auth.json")
-        kit_data = {"name": "RemoteKit", "version": "1.0.0"}
-        mock_response = MagicMock()
-        mock_response.json.return_value = kit_data
-        mock_response.raise_for_status.return_value = None
-        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
-            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
-            result = engine._load_kit_from_remote("https://server.com", "my-kit")
-            assert result["name"] == "RemoteKit"
-
-    def test_load_kit_from_remote_connection_error(self, tmp_path):
-        """🔖_load_kit_from_remote raises ServerUnreachable on connection error."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
-            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
-            with pytest.raises(engine.ServerUnreachable):
-                engine._load_kit_from_remote("https://server.com", "my-kit")
-
-    def test_load_kit_from_remote_401(self, tmp_path):
-        """🔖_load_kit_from_remote raises InvalidAuthToken on 401."""
-        auth_file = str(tmp_path / "auth.json")
-        mock_response = MagicMock()
-        mock_response.status_code = 401
-        http_error = engine.requests.exceptions.HTTPError(response=mock_response)
-        mock_response.raise_for_status.side_effect = http_error
-        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
-            engine._save_auth({"https://server.com": {"token": "expired", "email": "user@test.com"}})
-            with pytest.raises(engine.InvalidAuthToken):
-                engine._load_kit_from_remote("https://server.com", "my-kit")
-
-    def test_load_kit_from_remote_404(self, tmp_path):
-        """🔖_load_kit_from_remote raises KitNotFound on 404."""
-        auth_file = str(tmp_path / "auth.json")
-        mock_response = MagicMock()
-        mock_response.status_code = 404
-        http_error = engine.requests.exceptions.HTTPError(response=mock_response)
-        mock_response.raise_for_status.side_effect = http_error
-        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
-            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
-            with pytest.raises(engine.KitNotFound):
-                engine._load_kit_from_remote("https://server.com", "my-kit")
-
-    def test_load_kit_from_remote_no_token(self, tmp_path):
-        """🔖_load_kit_from_remote raises AuthTokenNotFound without login."""
-        auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file):
-            engine._save_auth({})
-            with pytest.raises(engine.AuthTokenNotFound):
-                engine._load_kit_from_remote("https://server.com", "my-kit")
-
-
-# #endregion 🐙Load Kit From Remote Tests
 
 # #endregion 🥼Tests
 

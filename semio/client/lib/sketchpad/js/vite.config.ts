@@ -22,10 +22,10 @@ import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, type Plugin, type UserConfig } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-import { puzzle3dMeshesVitePlugin, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixtures/script.ts";
 // #endregion 🔌Adapters
 
@@ -149,6 +149,8 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
         if (fsMod.existsSync(filePath) && fsMod.statSync(filePath).isFile()) {
           if (requestedFixturePath.endsWith(".json")) {
             res.setHeader("Content-Type", "application/json");
+          } else if (requestedFixturePath.endsWith(".zip")) {
+            res.setHeader("Content-Type", "application/zip");
           }
           if (requestedFixturePath.endsWith("/kit.semio.json") && fsMod.existsSync(path.join(path.dirname(filePath), "types"))) {
             const assembled = readInitialKitFixtureFromPath(filePath);
@@ -180,9 +182,8 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
   });
 }
 
-// Vite configuration with plugins, resolve aliases, and asset serving.
-// Export MUST call defineConfig with the complete build configuration.
-export default defineConfig(async ({ mode }) => {
+/** @emoji 🧰 Sketchpad Vite config (plugins, workspace aliases, wasm and asset serving); reused by the play, docs and engine MCP App builds. */
+export async function sketchpadViteConfig(mode: string): Promise<UserConfig> {
   // 📥normal import fails in electron due to esm stuff
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
@@ -209,10 +210,8 @@ export default defineConfig(async ({ mode }) => {
         // 🧷 Point directly at `semio.js` (the wasm-bindgen entry) so we don't depend on `pkg/package.json`,
         // which `wasm-pack build --no-pack` regenerates / wipes on every rebuild. Resilient to rebuilds.
         { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg/semio.js") },
-        { find: "@semio/ui", replacement: path.resolve(__dirname, "../../../../../ui/react") },
         { find: "@ui/react", replacement: path.resolve(__dirname, "../../../../../ui/react") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
-        { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
         { find: "@semio/assets/icons", replacement: path.resolve(__dirname, "../../../../assets/index.ts") },
         { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
         { find: "@framework/core", replacement: path.resolve(__dirname, "../../../../../framework/core/index.ts") },
@@ -269,7 +268,6 @@ export default defineConfig(async ({ mode }) => {
     },
     plugins: [
       ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/assets")),
-      ...puzzle3dMeshesVitePlugin(workspaceRoot),
       stripSketchpadEmbeddedNodeTestsPlugin(),
       monorepoWorkspaceTransformPlugin(workspaceRoot),
       reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),
@@ -297,8 +295,8 @@ export default defineConfig(async ({ mode }) => {
       },
     ],
     optimizeDeps: {
-      include: ["golden-layout", "scheduler", "use-sync-external-store/shim", "use-sync-external-store/shim/with-selector", "use-sync-external-store/with-selector"],
-      exclude: ["@semio/js", "@semio/sketchpad", "@playwright/test", "playwright", "playwright-core"],
+      include: ["scheduler", "use-sync-external-store/shim", "use-sync-external-store/shim/with-selector", "use-sync-external-store/with-selector"],
+      exclude: ["@semio/js", "@semio/react", "@semio/sketchpad", "@playwright/test", "playwright", "playwright-core"],
       esbuildOptions: {
         target: "es2020",
       },
@@ -317,9 +315,8 @@ export default defineConfig(async ({ mode }) => {
     worker: {
       format: "es",
     },
-    ssr: {
-      noExternal: ["golden-layout"],
-    },
   };
-});
+}
+
+export default defineConfig(({ mode }) => sketchpadViteConfig(mode));
 // #endregion 🗄️Configuration

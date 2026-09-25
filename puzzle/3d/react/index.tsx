@@ -314,7 +314,7 @@ export function isLoadableMeshUrl(meshUrl: string | undefined): boolean {
   if (url === PLACEHOLDER_MESH_URL || url === PALETTE_DRAG_SEED_MESH_URL) {
     return false;
   }
-  return !url.includes("://") || url.startsWith("/") || url.startsWith("http://") || url.startsWith("https://");
+  return !url.includes("://") || /^(?:\/|https?:\/\/|blob:)/i.test(url);
 }
 
 export interface AttractionKind {
@@ -10218,6 +10218,10 @@ if (import.meta.vitest) {
         ],
       };
       expect(isLoadableMeshUrl(PALETTE_DRAG_SEED_MESH_URL)).toBe(false);
+      expect(isLoadableMeshUrl(PLACEHOLDER_MESH_URL)).toBe(false);
+      expect(isLoadableMeshUrl("blob:http://localhost/1c3460a")).toBe(true);
+      expect(isLoadableMeshUrl("data:model/gltf-binary;base64,AAAA")).toBe(true);
+      expect(isLoadableMeshUrl("ftp://example.com/mesh.glb")).toBe(false);
       expect(resolveObjectKindMeshUrl("Capsule q", catalogs, scene)).toBe("/meshes/capsule_q.glb");
       const dragFixture = buildPaletteObjectDragFixture("Capsule q");
       const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs, scene);

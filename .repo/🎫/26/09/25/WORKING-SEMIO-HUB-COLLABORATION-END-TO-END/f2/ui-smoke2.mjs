@@ -1,0 +1,15 @@
+import { chromium } from "/home/user/semio/node_modules/playwright/index.mjs";
+const out = process.argv[2];
+const base = process.env.SKETCHPAD_URL ?? "http://127.0.0.1:5173";
+const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
+const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+page.on("pageerror", (e) => console.log("[pageerror]", String(e).slice(0, 500)));
+await page.goto(base + "/", { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(6000);
+await page.locator('[id="ui.panelToggle.chat"]').click();
+await page.waitForTimeout(1500);
+console.log("[DEBUG] hub panel", await page.locator('[data-testid="sketchpad-hub-panel"]').count(), "auth", await page.locator('[data-testid="sketchpad-hub-auth"]').count());
+const tabs = await page.locator('[role="tab"], button[aria-controls]').evaluateAll((els) => els.map((e) => `${e.id}|${e.getAttribute("aria-label")}|${e.textContent?.trim()}`));
+console.log("[DEBUG] tabs", tabs.slice(0, 30).join(" ; "));
+await page.screenshot({ path: `${out}/smoke-chat-panel.png` });
+await browser.close();

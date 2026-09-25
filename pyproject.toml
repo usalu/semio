@@ -35,7 +35,5 @@ test = [
 [tool.pytest.ini_options]
 python_files = ["**/engine/main.py", "**/py/main.py", "test_*.py", "*_test.py", "*.test.py"]
 testpaths = ["semio/client/lib/py", "semio/client/bin/engine"]
+pythonpath = ["."]
 addopts = "--import-mode=importlib"
-
-[tool.ruff.lint.per-file-ignores]
-"conftest.py" = ["E402", "F401"]

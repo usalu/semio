@@ -2690,10 +2690,12 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 	const instanceId = model.instanceId || node.surfaceId;
 	const controller = platform ? getPlatformControllerById(platform, component.controllerId) : undefined;
 	const topologyStore = usePlatformTopologyStore(controller, instanceId);
+	const wiresGraph = instanceId.endsWith(":kit:wires");
 	const puzzle2dSelect = React.useMemo(
 		() =>
 			model.presentation === "flat"
 				? {
+						...(wiresGraph ? { graphPortMode: "normal" as const } : {}),
 						...(model.puzzle2dSelection?.length ? { selection: { ids: [...model.puzzle2dSelection] } } : {}),
 						...(model.puzzle2dHoveredId !== undefined ? { hoveredId: model.puzzle2dHoveredId } : {}),
 						onSelect: (snapshot: Puzzle2dSelectionSnapshot) => {
@@ -2704,7 +2706,7 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 						},
 					}
 				: undefined,
-		[commandBus, component.controllerId, instanceId, model.presentation, model.puzzle2dHoveredId, model.puzzle2dSelection],
+		[commandBus, component.controllerId, instanceId, model.presentation, model.puzzle2dHoveredId, model.puzzle2dSelection, wiresGraph],
 	);
 	const puzzle3dSelect = React.useMemo(
 		() =>
@@ -2747,7 +2749,7 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			<StoreProvider store={topologyStore}>
 				<FiveD
 					instanceId={instanceId}
-					liveForceGraph={instanceId.endsWith(":kit:wires")}
+					liveForceGraph={wiresGraph}
 					mode={fiveDMode}
 					puzzle2d={puzzle2dSelect}
 					puzzle3d={puzzle3dSelect}
@@ -3636,6 +3638,7 @@ export function declarativeFooterToChromeRows(items: readonly DeclarativeFooterI
 		className: item.className,
 		disabled: item.disabled,
 		icon: item.iconId ? resolveElementIcon(item.iconId) : undefined,
+		content: item.content as React.ReactNode,
 		onClick: item.controllerId && item.command ? () => bus.dispatch(item.controllerId!, item.command!, item.args) : undefined,
 	}));
 }

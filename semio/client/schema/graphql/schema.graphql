@@ -1300,6 +1300,20 @@ type ConnectionEdge {
 	node: Connection!
 }
 
+"""
+@emoji 📐 Joint parameters of a connection (all default to `0`).
+"""
+input ConnectionJointInput {
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	u: Float
+	v: Float
+}
+
 type ConnectionModification {
 	hash: String!
 }
@@ -3018,6 +3032,10 @@ type InputEdge {
 type Kit implements Entity & Node & FileSystemNode & StrongEntity {
 	id: ID!
 	hash: String!
+	"""
+	@emoji 🧾 Canonical kit projection JSON (accepted by `installProjection`; hub session snapshot wire).
+	"""
+	projection: String!
 	owner: Entity
 	owns: EntityConnection
 	checkpoint: Checkpoint
@@ -3044,19 +3062,19 @@ type Kit implements Entity & Node & FileSystemNode & StrongEntity {
 	"""
 	hasTypes: TypeConnection!
 	"""
-	@emoji 📄 Files contained in this kit.
+	@emoji 📄 Kit-root files only (matches {@link file_system_vfs::children_nodes} for {@link FileSystemNodeInterface::Kit}).
 	"""
 	hasFiles: FileConnection!
 	"""
-	@emoji 📁 Folders contained in this kit.
+	@emoji 📁 Kit-root folders only (no {@code parent_folder_id}).
 	"""
 	hasFolders: FolderConnection!
 	"""
-	@emoji 👪 Families contained in this kit.
+	@emoji 👪 Kit-root families only (not placed in a folder).
 	"""
 	hasFamilies: FamilyConnection!
 	"""
-	@emoji 🏛️ Typologies contained in this kit.
+	@emoji 🏛️ Kit-root typologies only (not placed in a folder).
 	"""
 	hasTypologies: TypologyConnection!
 	"""

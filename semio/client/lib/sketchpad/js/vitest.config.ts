@@ -16,6 +16,7 @@ export default defineConfig({
 			"@framework/core": resolve(root, "../../../../../framework/core/index.ts"),
 			"@framework/platform/core": resolve(root, "../../../../../framework/product/platform/core/index.ts"),
 			"@semio/js": resolve(root, "../../js/index.ts"),
+			"@semio/react": resolve(root, "../../react/index.ts"),
 			"@reasoning/mindmap/wires/react": resolve(root, "../../../../../reasoning/mindmap/wires/react/index.ts"),
 			"@reasoning/mindmap/react": resolve(root, "../../../../../reasoning/mindmap/react/index.tsx"),
 			"@infinite/cavas/react-renderer": resolve(root, "../../../../../infinite/cavas/react-renderer/index.tsx"),

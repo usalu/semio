@@ -3,21 +3,20 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // Specs: Vite config for building the standalone MCP App as a single HTML file.
-// Bundles React, @semio/ui, and @representationcontextprotocol/ext-apps into one inlined HTML file.
-// Summary: Vite build config bundling the MCP App into a single inlined HTML file.
+// Reuses the sketchpad Vite config (workspace aliases, wasm, tailwind, MDX) and inlines everything with vite-plugin-singlefile.
+// Summary: Vite build config bundling the @semio/sketchpad MCP App viewers into one inlined HTML file.
 
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import mdx from "@mdx-js/rollup";
-import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+import { sketchpadViteConfig } from "../../lib/sketchpad/js/vite.config.ts";
 // #endregion 🔌Adapters
 
 // #region 🪵ZodJitlessPlugin
-// Specs: Zod v4 (dependency of @representationcontextprotocol/ext-apps) uses `new Function()`
+// Specs: Zod v4 (dependency of @modelcontextprotocol/ext-apps) uses `new Function()`
 // for JIT-compiled object parsing which violates CSP `script-src` in MCP App hosts.
 // This plugin patches Zod's `allowsEval` check and `Doc.compile()` to never use
 // dynamic code generation, forcing Zod to fall back to its interpreted parser.
@@ -41,20 +40,6 @@ function zodJitlessPlugin(): Plugin {
 }
 
 // #endregion 🪵ZodJitlessPlugin
-
-// #region 🎺StubHeavyDepsPlugin
-// Specs: semio/ui/index.tsx imports 3D and semio-assets modules at module scope.
-// Stubbing those modules keeps the MCP App bundle small, but the stubs must be JSON-safe
-// (so Vite doesn't try to parse stubbed `*.json` as real JSON).
-// Summary: Stub heavy deps + semio assets (JSON-safe) to keep the MCP App fast and reliable.
-
-// NOTE: Do NOT stub `three` / `@react-three/*`.
-// `semio/ui/index.tsx` imports named exports at module scope and an ESM stub
-// that doesn't provide those exact exports can crash the bundle before React mounts.
-// We only stub semio assets and unrelated heavy deps.
-// flattenDesign uses native adjacency BFS (no cytoscape) for 2D layout (diagram centers + planes).
-// 🔧Stubbing it breaks the diagram entirely because cy.elements() returns undefined → TypeError.
-const STUBBED_PREFIXES = ["@semio/assets", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
 
 // #region 🧱MeshoptNoopPlugin
 // Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module
@@ -84,71 +69,28 @@ export default MeshoptDecoder;
 
 // #endregion 🧱MeshoptNoopPlugin
 
-function stubHeavyDepsPlugin(): Plugin {
+export default defineConfig(async ({ mode }) => {
+  const base = await sketchpadViteConfig(mode);
   return {
-    name: "stub-heavy-deps",
-    enforce: "pre",
-    resolveId(source) {
-      for (const prefix of STUBBED_PREFIXES) {
-        if (source === prefix || source.startsWith(prefix + "/")) {
-          // Vite applies its JSON plugin based on file extension; ensure stub ids don't end with ".json".
-          if (source.endsWith(".json")) {
-            return {
-              id: "\0stub-json:" + source.slice(0, -5),
-              syntheticNamedExports: true,
-            };
-          }
-          return { id: "\0stub:" + source, syntheticNamedExports: true };
-        }
-      }
-      if (source === "i18next") return path.resolve(__dirname, "stubs/i18next.js");
-      if (source === "i18next-browser-languagedetector") return { id: "\0stub:" + source, syntheticNamedExports: true };
-      if (source === "react-i18next") return path.resolve(__dirname, "stubs/react-i18next.js");
-      if (source === "react-router-dom") return path.resolve(__dirname, "stubs/react-router-dom.js");
-      return null;
+    ...base,
+    root: __dirname,
+    plugins: [meshoptNoopPlugin(), zodJitlessPlugin(), ...(base.plugins ?? []), viteSingleFile()],
+    build: {
+      ...base.build,
+      outDir: path.resolve(__dirname, "dist"),
+      emptyOutDir: true,
+      rollupOptions: {
+        ...base.build?.rollupOptions,
+        input: path.resolve(__dirname, "mcp-app.html"),
+      },
     },
-    load(id) {
-      if (id.startsWith("\0stub-json:")) return "export default {};\n";
-      if (id.startsWith("\0stub:")) return "const noop = () => noop; noop.prototype = {}; export default new Proxy(noop, { get: (_, p) => (p === '__esModule' ? true : p === 'default' ? noop : noop) });\n";
-      return null;
+    worker: {
+      format: "es",
+      rollupOptions: {
+        output: {
+          inlineDynamicImports: true,
+        },
+      },
     },
   };
-}
-
-// #endregion 🎺StubHeavyDepsPlugin
-
-export default defineConfig({
-  root: __dirname,
-  define: {
-    __SEMIO_JS_RUN_BENCHMARKS__: "false",
-    __SEMIO_JS_RUN_EMBEDDED_TESTS__: "false",
-  },
-  resolve: {
-    alias: [
-      { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../rs/pkg") },
-    ],
-  },
-  build: {
-    outDir: path.resolve(__dirname, "dist"),
-    emptyOutDir: true,
-    rollupOptions: {
-      input: path.resolve(__dirname, "mcp-app.html"),
-      onwarn(warning, warn) {
-        if (warning.code === "MISSING_EXPORT") return;
-        warn(warning);
-      },
-    },
-  },
-  plugins: [meshoptNoopPlugin(), stubHeavyDepsPlugin(), tailwindcss(), mdx(), zodJitlessPlugin(), viteSingleFile()],
-  worker: {
-    format: "es",
-    rollupOptions: {
-      output: {
-        inlineDynamicImports: true,
-      },
-    },
-  },
-  esbuild: {
-    jsx: "automatic",
-  },
 });

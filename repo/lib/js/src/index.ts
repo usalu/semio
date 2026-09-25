@@ -1063,18 +1063,28 @@ export type WasmPackWebPkg = {
 };
 
 /** 📦True when any wasm-pack input is newer than the built `.wasm` artifact. */
+/** 🦀Crate dirs reachable from {@code crateDir} through local `path = "…"` Cargo dependencies (including itself). */
+function localCargoCrateDirs(crateDir: string, seen: Set<string> = new Set()): Set<string> {
+  const dir = resolve(crateDir);
+  const manifest = join(dir, "Cargo.toml");
+  if (seen.has(dir) || !existsSync(manifest)) return seen;
+  seen.add(dir);
+  for (const match of readFileSync(manifest, "utf8").matchAll(/\bpath\s*=\s*"([^"]+)"/g)) {
+    if (match[1] && !match[1].endsWith(".rs")) localCargoCrateDirs(join(dir, match[1]), seen);
+  }
+  return seen;
+}
+
 function wasmPackInputsStale(rsDir: string, wasmPath: string): boolean {
   if (!existsSync(wasmPath)) return true;
   const wasmMtime = statSync(wasmPath).mtimeMs;
   const repoRoot = getWorkspaceRoot();
-  const inputs = [
-    join(rsDir, "lib.rs"),
-    join(rsDir, "Cargo.toml"),
-    join(rsDir, "Cargo.lock"),
-    join(repoRoot, "Cargo.toml"),
-    join(repoRoot, "Cargo.lock"),
-  ];
-  for (const input of inputs) {
+  const crateInputs = [...localCargoCrateDirs(rsDir)].flatMap((dir) =>
+    readdirSync(dir)
+      .filter((name) => name.endsWith(".rs") || name === "Cargo.toml" || name === "Cargo.lock")
+      .map((name) => join(dir, name)),
+  );
+  for (const input of [...crateInputs, join(repoRoot, "Cargo.toml"), join(repoRoot, "Cargo.lock")]) {
     if (existsSync(input) && statSync(input).mtimeMs > wasmMtime) return true;
   }
   return false;

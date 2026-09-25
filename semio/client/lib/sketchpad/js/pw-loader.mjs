@@ -13,6 +13,7 @@ const repoRoot = resolvePath(__dirname, "../../../../../");
 /** @emoji 🔀 Playwright Node loader aliases (subset of sketchpad `vite.config.ts`). */
 const RESOLVE_ALIASES = [
 	["@semio/js", resolvePath(__dirname, "../../js/index.ts")],
+	["@semio/react", resolvePath(__dirname, "../../react/index.ts")],
 	["@semio/rs-wasm", resolvePath(__dirname, "../../rs/pkg/semio.js")],
 	["@semio/sketchpad", resolvePath(__dirname, "index.ts")],
 	["@framework/core", resolvePath(repoRoot, "framework/core/index.ts")],

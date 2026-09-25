@@ -41,7 +41,6 @@ export type {
 	SetResult,
 	Unsubscribe,
 } from "@semio/js";
-export { newKitOperationId } from "@semio/js";
 
 /** @emoji 🎛️ Kit command surface handed to {@link SemioKitClient.execute} (one method per GraphQL kit command). */
 export type SemioKitCommands = JsKit;
@@ -460,7 +459,8 @@ export class SemioKitClient implements SemioKitSource {
 		private readonly fileUrls: SemioKitFileUrls,
 		private snapshot: Kit,
 	) {
-		this.detach = [session.onOperation(() => void this.refresh()), session.subscribe(() => void this.refresh())];
+		const refreshLive = () => void this.refresh().catch((error: unknown) => console.error("[semio/react] kit refresh failed", error));
+		this.detach = [session.onOperation(refreshLive), session.subscribe(refreshLive)];
 	}
 
 	/** @emoji 📥 Opens a kit into a fresh in-memory rs session (bytes / URL / empty) or a `semio-store` HTTP session. */
@@ -537,9 +537,12 @@ export class SemioKitClient implements SemioKitSource {
 					this.stale = false;
 					this.snapshot = await readSemioKitSnapshot(this.store);
 				} while (this.stale && !this.disposed);
+			} catch (error) {
+				if (!this.disposed) throw error;
 			} finally {
 				this.refreshing = null;
 			}
+			if (this.disposed) return this.snapshot;
 			for (const listener of [...this.listeners]) listener();
 			return this.snapshot;
 		})();
@@ -553,9 +556,10 @@ export class SemioKitClient implements SemioKitSource {
 		return result;
 	}
 
-	/** @emoji 🔗 Fetchable URL of a kit file's content (representation geometry, images, …). */
+	/** @emoji 🔗 Fetchable URL of a kit file's content (archive entry first, else the rs file `url` when fetchable, e.g. hub kits). */
 	fileUrl(fileId: string): string | undefined {
-		return this.fileUrls.url(fileId);
+		const url = this.fileUrls.url(fileId) ?? this.snapshot.files?.find((file) => file.id === fileId)?.url;
+		return isFetchableUrl(url) ? url : undefined;
 	}
 
 	/** @emoji 📁 Lazy virtual file system children of a kit node. */
@@ -615,3 +619,82 @@ export function useSemioKitSelector<T>(source: SemioKitSource, select: (kit: Kit
 	return select(useSemioKit(source));
 }
 //#endregion 🪝Hooks
+
+//#region 🌐Hub
+import { HubClient, HubReplica, newUuidV7, type HubJson, type HubJsonObject } from "@semio/js";
+
+export {
+	HubClient,
+	HubError,
+	HubReplica,
+	HubSessionConnection,
+	hubMcpSetup,
+	hubOperationActions,
+	isHubKitOperationDocument,
+	newUuidV7,
+} from "@semio/js";
+export type {
+	HubActivity,
+	HubAgentToken,
+	HubAuth,
+	HubClientMessage,
+	HubClientOptions,
+	HubConnectOptions,
+	HubConnectionState,
+	HubCursor,
+	HubFetch,
+	HubFocus,
+	HubHttpResponse,
+	HubJoinResult,
+	HubJson,
+	HubJsonObject,
+	HubKitState,
+	HubMember,
+	HubOperationMessage,
+	HubOperationRecord,
+	HubOperationRequest,
+	HubOperationResult,
+	HubParticipant,
+	HubParticipantKind,
+	HubPerson,
+	HubPresencePatch,
+	HubRole,
+	HubSelection,
+	HubServerMessage,
+	HubSession,
+	HubShare,
+	HubSocket,
+	HubSocketFactory,
+	HubSyncState,
+	HubSyncStatus,
+} from "@semio/js";
+
+/** @emoji 🌐 A hub session opened as a live kit: {@link SemioKitClient} bound 1:1 to a {@link HubReplica}. */
+export type SemioHubKit = Readonly<{ kit: SemioKitClient; replica: HubReplica }>;
+
+/** @emoji 🌐 Opens hub session {@code sessionId} into a fresh rs session and keeps it replicated (dispose the replica before the kit). */
+export async function openSemioHubKit(hub: HubClient, sessionId: string, clientName = "sketchpad"): Promise<SemioHubKit> {
+	const kit = await SemioKitClient.open({ kind: "empty", name: "" });
+	try {
+		const replica = await HubReplica.open({ client: hub, sessionId, store: kit.store, clientName });
+		await kit.refresh();
+		return { kit, replica };
+	} catch (error) {
+		await kit.dispose();
+		throw error;
+	}
+}
+
+/** @emoji 📤 Kit projection of a live kit for `POST /sessions` (fresh kit id, fetchable non-blob file URLs embedded so collaborators can load contents). */
+export async function semioHubKitProjection(kit: SemioKitClient, name?: string): Promise<HubJsonObject> {
+	const node = await kit.store.readKitInner("projection");
+	const projection = JSON.parse(String(node?.["projection"] ?? "{}")) as { [key: string]: HubJson };
+	const block = projection["files"] as { readonly items?: readonly { [key: string]: HubJson }[] } | undefined;
+	const files = block?.items?.map((file) => {
+		if (file["url"] != null || file["blob"] != null) return file;
+		const url = kit.fileUrl(String(file["id"] ?? ""));
+		return url && /^(?:https?:|data:)/i.test(url) ? { ...file, url } : file;
+	});
+	return { ...projection, id: newUuidV7(), ...(name ? { name } : {}), ...(files ? { files: { ...block, items: files } } : {}) };
+}
+//#endregion 🌐Hub

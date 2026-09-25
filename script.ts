@@ -339,6 +339,10 @@ export class DevScript extends Script {
       runCmd("bun", [join(this.root, "semio", "client", "bin", "engine", "script.ts"), "dev", "mcp"], { cwd: this.root });
       return;
     }
+    if (a === "hub") {
+      void this.runMcpHub();
+      return;
+    }
     if (a === "neo4j") {
       this.runMcpNeo4j(segments.slice(1));
       return;
@@ -359,6 +363,39 @@ export class DevScript extends Script {
           });
     child.on("exit", (c) => process.exit(c ?? 0));
   }
+
+  //#region 🌐HubMcp
+  /** 🌐 MCP Inspector on the collaborative semio MCP of a running hub (`SEMIO_HUB_URL`, default http://127.0.0.1:8080): uses `SEMIO_HUB_TOKEN` or signs in (registering on first use) the local dev account `SEMIO_HUB_EMAIL` / `SEMIO_HUB_PASSWORD` and mints an agent token. */
+  private async runMcpHub(): Promise<void> {
+    const hub = (process.env.SEMIO_HUB_URL ?? "http://127.0.0.1:8080").replace(/\/+$/, "");
+    const token = process.env.SEMIO_HUB_TOKEN ?? (await this.hubAgentToken(hub));
+    const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
+    const shell = process.platform === "win32";
+    const header = `Authorization: Bearer ${token}`;
+    console.log(`🌐 MCP Inspector → ${hub}/mcp (Streamable HTTP, agent token)`);
+    const child = spawn("npx", ["--yes", "@modelcontextprotocol/inspector", "--transport", "http", "--server-url", `${hub}/mcp`, "--header", shell ? JSON.stringify(header) : header], { stdio: "inherit", shell, cwd: this.root, env: { ...process.env, HOST: host } });
+    child.on("exit", (c) => process.exit(c ?? 0));
+  }
+
+  /** 🎟️ Agent token of the local dev account on a hub (Hub Protocol v1 `/auth/login`, `/auth/register`, `/auth/tokens`). */
+  private async hubAgentToken(hub: string): Promise<string> {
+    const credentials = { name: "Developer", email: process.env.SEMIO_HUB_EMAIL ?? "dev@semio.local", password: process.env.SEMIO_HUB_PASSWORD ?? "semio-dev-password" };
+    const post = (path: string, body: unknown, token?: string) =>
+      fetch(`${hub}${path}`, { method: "POST", headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body) });
+    try {
+      let login = await post("/auth/login", credentials);
+      if (login.status === 401) login = await post("/auth/register", credentials);
+      if (!login.ok) throw new Error(`${login.status} ${await login.text()}`);
+      const { token } = (await login.json()) as { token: string };
+      const agent = await post("/auth/tokens", { label: "inspector" }, token);
+      if (!agent.ok) throw new Error(`${agent.status} ${await agent.text()}`);
+      return ((await agent.json()) as { token: string }).token;
+    } catch (error) {
+      console.error(`[dev.mcp.hub] no hub at ${hub} (start 🛠️dev🏘️semio🌐hub first): ${error instanceof Error ? error.message : String(error)}`);
+      process.exit(1);
+    }
+  }
+  //#endregion 🌐HubMcp
 
   private runMcpNeo4j(neoSegments: string[]): void {
     const { nameParts, passthrough } = partitionNeo4jGraphCliArgv(neoSegments);

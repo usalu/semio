@@ -8228,6 +8228,18 @@ type DeletedPiecesAndConnectionsConnection implements EntityConnection {
 
 #region Connection
 
+input ConnectionJointInput {
+  # ConnectionJointInput
+  gap: Float # data
+  shift: Float # data
+  rise: Float # data
+  rotation: Float # data
+  turn: Float # data
+  tilt: Float # data
+  u: Float # data
+  v: Float # data
+}
+
 #region Side
 
 type Side implements StrongEntity & Entity & Node {
@@ -9016,8 +9028,11 @@ type DesignOperation {
   removeAttributes(ids: [ID!]!): Response!
   # Pieces
   addFixedPiece(id: ID, blueprintId: ID!, position: PositionInput!, name: String, description: String): Response!
-  addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: PositionInput, scale: Float): Response!
-  addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: PositionInput!, name: String, description: String, scale: Float): Response!
+  addChildPieceWithParentConnection(id: ID, connectionId: ID, blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: PositionInput, scale: Float, joint: ConnectionJointInput): Response!
+  addHangingChildPieceWithParentConnection(id: ID, connectionId: ID, blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: PositionInput!, name: String, description: String, scale: Float, joint: ConnectionJointInput): Response!
+  # Connections
+  connectPieces(id: ID, parentPieceId: ID!, parentConnector: String!, childPieceId: ID!, childConnector: String!, joint: ConnectionJointInput): Response!
+  deleteConnections(ids: [ID!]!): Response!
   piece(id: ID!): PieceOperation!
   pieces(ids: [ID!]!): PiecesOperation!
   deletePiece(id: ID!): Response!

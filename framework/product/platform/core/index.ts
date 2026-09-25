@@ -983,11 +983,19 @@ export abstract class VirtualFileSystemController extends Controller {
 			return;
 		}
 		pending.add(key);
-		void this.loadChildrenAsync(parentId, scope).then((loaded) => {
-			pending!.delete(key);
-			childrenStore.setChildren(key, loaded);
+		void this.ensureChildrenLoadedAsync(parentId, scope).finally(() => pending!.delete(key));
+	}
+
+	private childrenLoadedEmitScheduled = false;
+
+	/** @emoji 🫧 Coalesces host notifications of async child loads that settle in the same task burst into one emit (keeps renderers out of synchronous update storms). */
+	private emitChildrenLoaded(): void {
+		if (this.childrenLoadedEmitScheduled) return;
+		this.childrenLoadedEmitScheduled = true;
+		setTimeout(() => {
+			this.childrenLoadedEmitScheduled = false;
 			this.emit();
-		});
+		}, 0);
 	}
 
 	/** @emoji 📁 Like {@link ensureChildrenLoaded} but resolves when children are present (sync or async). */
@@ -1015,7 +1023,7 @@ export abstract class VirtualFileSystemController extends Controller {
 			}
 			const loaded = await this.loadChildrenAsync(parentId, scope);
 			childrenStore.setChildren(key, loaded);
-			this.emit();
+			this.emitChildrenLoaded();
 		})().finally(() => {
 			promises!.delete(key);
 		});

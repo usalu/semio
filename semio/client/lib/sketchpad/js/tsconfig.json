@@ -20,7 +20,7 @@
       "@ui/react": ["../../../../../ui/react/index.tsx"],
       "@ui/react/*": ["../../../../../ui/react/*"]
     },
-    "types": ["node", "react", "react-dom", "vite/client", "vitest/globals"]
+    "types": ["node", "react", "react-dom", "vite/client", "vitest/globals", "vitest/importMeta"]
   },
   "include": ["index.ts", "boot.tsx", "global.d.ts", "vite-env.d.ts", "../../react/index.ts"]
 }

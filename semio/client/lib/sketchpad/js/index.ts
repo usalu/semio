@@ -11,6 +11,7 @@ import {
 	type Design,
 	type Kit,
 	type Piece,
+	type Plane,
 	type Representation,
 	type SemioFileSystemChildRef,
 	type SemioFileSystemParentRef,
@@ -10728,13 +10729,20 @@ export type SketchpadMdxModule = {
 	readonly frontmatter?: Readonly<Record<string, unknown>>;
 };
 
-const SKETCHPAD_MDX_MODULE_LOADERS = import.meta.glob<SketchpadMdxModule>("./pages/**/*.mdx");
-const SKETCHPAD_MDX_MODULE_PATHS = Object.keys(SKETCHPAD_MDX_MODULE_LOADERS);
+/** @emoji 📚 Lazy MDX page loaders keyed by `./pages/…/*.mdx` (Vite glob of the host entry). */
+export type SketchpadMdxModuleLoaders = Readonly<Record<string, () => Promise<SketchpadMdxModule>>>;
+
+let sketchpadMdxModuleLoaders: SketchpadMdxModuleLoaders = {};
+
+/** @emoji 📚 Registers the docs pages (the full shell entry does; embedded viewers ship without docs). */
+export function registerSketchpadDocsPages(loaders: SketchpadMdxModuleLoaders): void {
+	sketchpadMdxModuleLoaders = loaders;
+}
 
 /** @emoji 🔍 Resolves a docs route path to a Vite MDX module key. */
 export function sketchpadResolveMdxModuleKey(docsPath: string): string | null {
 	const clean = docsPath.replace(/^\/+/, "").replace(/\.mdx$/, "");
-	const matches = SKETCHPAD_MDX_MODULE_PATHS.filter((key) => {
+	const matches = Object.keys(sketchpadMdxModuleLoaders).filter((key) => {
 		const keyPath = key.replace(/^\.\/pages\//, "").replace(/\.mdx$/, "");
 		return keyPath === clean || keyPath === `${clean}/index`;
 	});
@@ -10746,7 +10754,7 @@ export async function sketchpadLoadMdxModule(docsPath: string): Promise<Sketchpa
 	const moduleKey = sketchpadResolveMdxModuleKey(docsPath);
 	if (!moduleKey) return null;
 	try {
-		return await SKETCHPAD_MDX_MODULE_LOADERS[moduleKey]!();
+		return await sketchpadMdxModuleLoaders[moduleKey]!();
 	} catch {
 		return null;
 	}
@@ -10764,24 +10772,12 @@ export function sketchpadMdxTitle(module: SketchpadMdxModule | null, docsPath: s
 /** @emoji 📚 Builds the sketchpad docs tree from bundled MDX pages (Vite glob). */
 export function sketchpadBuildDocsRegistry(): readonly SketchpadDocSection[] {
 	const sectionMap = new Map<string, SketchpadDocPage[]>();
-	for (const modulePath of SKETCHPAD_MDX_MODULE_PATHS) {
+	for (const modulePath of Object.keys(sketchpadMdxModuleLoaders)) {
 		const relative = modulePath.replace(/^\.\/pages\//, "").replace(/\.mdx$/, "");
 		const sectionId = relative.split("/")[0] ?? "root";
 		const pages = sectionMap.get(sectionId) ?? [];
 		pages.push({ path: relative, title: sketchpadTitleFromDocPath(relative) });
 		sectionMap.set(sectionId, pages);
-	}
-	if (sectionMap.size === 0) {
-		return [
-			{
-				id: "getting-started",
-				label: "Getting started",
-				pages: [
-					{ path: "getting-started/index", title: "Getting started" },
-					{ path: "getting-started/installation", title: "Installation" },
-				],
-			},
-		];
 	}
 	return [...sectionMap.entries()]
 		.map(([id, pages]) => ({
@@ -11152,8 +11148,6 @@ function sketchpadPanelCommandButton(
 //#endregion 🔖KitHelpers
 
 //#region 🔖Topology
-const SKETCHPAD_FLAT_HANDLE_SEPARATOR = "::";
-
 /** @emoji 🔗 Re-exports {@link PLATFORM_TOPOLOGY_STORE_PREFIX} for sketchpad topology stores. */
 export const SKETCHPAD_TOPOLOGY_STORE_PREFIX = PLATFORM_TOPOLOGY_STORE_PREFIX;
 
@@ -11183,15 +11177,14 @@ function sketchpadFlatPartCenterFromTopLeft(
 	return { x: position.x + frame.width / 2, y: position.y + frame.height / 2 };
 }
 
+/** @emoji 🎥 Camera centered on the bounding box of part centers (world point at viewport center) and zoomed to fit ~720px. */
 function sketchpadFlatCameraFromPartCenters(centers: readonly { x: number; y: number }[]): SketchpadPuzzle2dFixtureV1["camera"] {
 	if (centers.length === 0) return { x: 0, y: 0, zoom: 1 };
-	const avgX = centers.reduce((sum, point) => sum + point.x, 0) / centers.length;
-	const avgY = centers.reduce((sum, point) => sum + point.y, 0) / centers.length;
-	return { x: -avgX, y: -avgY, zoom: 1 };
-}
-
-function sketchpadFlatHandleCompoundId(left: string, right: string): string {
-	return `${left}${SKETCHPAD_FLAT_HANDLE_SEPARATOR}${right}`;
+	const xs = centers.map((point) => point.x);
+	const ys = centers.map((point) => point.y);
+	const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+	const extent = Math.max(maxX - minX, maxY - minY) + 160;
+	return { x: (minX + maxX) / 2, y: (minY + maxY) / 2, zoom: Math.min(1, Math.max(0.05, 720 / extent)) };
 }
 
 function sketchpadTopologyAnchorFullId(partId: string, anchorId: string): string {
@@ -11337,23 +11330,29 @@ function sketchpadKitWiresContainmentKind(parentKind: string): RelationshipKind 
 	}
 }
 
+const SKETCHPAD_KIT_WIRES_LAYER_Y: Readonly<Record<string, number>> = {
+	kit: 0,
+	typology: 80,
+	folder: 80,
+	family: 80,
+	design: 160,
+	type: 160,
+	piece: 240,
+	connection: 280,
+	representation: 320,
+	port: 360,
+	connector: 400,
+	file: 440,
+};
+
+/** @emoji 📐 Seed position of the {@code index}-th node in a kind's layer row (kinds sharing a row share its counter). */
 function sketchpadKitWiresLayoutPosition(fileNodeKindId: string, index: number): { readonly x: number; readonly y: number } {
-	const layerY: Record<string, number> = {
-		kit: 0,
-		typology: 80,
-		folder: 80,
-		family: 80,
-		design: 160,
-		type: 160,
-		piece: 240,
-		connection: 280,
-		representation: 320,
-		port: 360,
-		connector: 400,
-		file: 440,
-	};
-	const y = layerY[fileNodeKindId] ?? 200;
+	const y = sketchpadKitWiresLayerY(fileNodeKindId);
 	return { x: (index % 12) * 96, y: y + Math.floor(index / 12) * 56 };
+}
+
+function sketchpadKitWiresLayerY(fileNodeKindId: string): number {
+	return SKETCHPAD_KIT_WIRES_LAYER_Y[fileNodeKindId] ?? 200;
 }
 
 function sketchpadKitWiresEdgeId(kind: RelationshipKind, sourceId: string, targetId: string): string {
@@ -11528,8 +11527,9 @@ export function sketchpadKitWiresFixtureFromVisible(
 	};
 
 	for (const node of visible) {
-		const kindCount = kindIndex.get(node.fileNodeKindId) ?? 0;
-		kindIndex.set(node.fileNodeKindId, kindCount + 1);
+		const rowKey = String(sketchpadKitWiresLayerY(node.fileNodeKindId));
+		const kindCount = kindIndex.get(rowKey) ?? 0;
+		kindIndex.set(rowKey, kindCount + 1);
 		const position = sketchpadKitWiresLayoutPosition(node.fileNodeKindId, kindCount);
 		identityByNodeId.set(node.id, identityId);
 		identities.push({
@@ -12050,31 +12050,50 @@ function sketchpadPieceLabel(piece: { readonly id: string; readonly name?: strin
 	return piece.name ?? type?.name ?? piece.id;
 }
 
-function sketchpadPieceDiagramUv(piece: { readonly id: string }, index: number): { readonly u: number; readonly v: number } {
-	const row = piece as {
-		readonly center?: { readonly u?: number; readonly v?: number };
-		readonly position?: { readonly center?: { readonly u?: number; readonly v?: number }; readonly plane?: { readonly origin?: { readonly x?: number; readonly y?: number } } };
-		readonly plane?: { readonly origin?: { readonly x?: number; readonly y?: number } };
-	};
-	const center = row.center ?? row.position?.center;
-	if (center && typeof center.u === "number") {
-		return { u: center.u, v: typeof center.v === "number" ? center.v : 0 };
-	}
-	const planeOrigin = row.plane?.origin ?? row.position?.plane?.origin;
-	if (planeOrigin) {
-		return { u: planeOrigin.x ?? index, v: planeOrigin.y ?? 0 };
-	}
-	return { u: (index % 8) * 1.2, v: Math.floor(index / 8) * 1.2 };
+function sketchpadPieceDiagramUv(piece: Piece, index: number): { readonly u: number; readonly v: number } {
+	const center = piece.position?.center;
+	if (center) return { u: center.u, v: center.v };
+	const origin = piece.position?.plane?.origin;
+	if (origin) return { u: origin.x, v: origin.y };
+	return { u: (index % 12) * 2, v: -Math.floor(index / 12) * 1.5 };
 }
 
-function sketchpadPieceSceneOrigin(piece: { readonly id: string }, index: number): [number, number, number] {
-	const row = piece as {
-		readonly position?: { readonly plane?: { readonly origin?: { readonly x?: number; readonly y?: number; readonly z?: number } } };
-		readonly plane?: { readonly origin?: { readonly x?: number; readonly y?: number; readonly z?: number } };
+function sketchpadPieceSceneOrigin(piece: Piece, index: number): [number, number, number] {
+	const origin = piece.position?.plane?.origin;
+	if (origin) return [origin.x, origin.y, origin.z];
+	return [(index % 12) * 4, 0, Math.floor(index / 12) * 4];
+}
+
+/** @emoji 🧭 Unit quaternion `[x, y, z, w]` of a piece plane frame (columns xAxis, yAxis, xAxis × yAxis; CAD Z-up). */
+export function sketchpadPlaneOrientation(plane: Plane | undefined): [number, number, number, number] {
+	if (!plane) return [0, 0, 0, 1];
+	const unit = (v: readonly [number, number, number]): [number, number, number] => {
+		const length = Math.hypot(v[0], v[1], v[2]);
+		return length > 1e-12 ? [v[0] / length, v[1] / length, v[2] / length] : [0, 0, 0];
 	};
-	const o = row.plane?.origin ?? row.position?.plane?.origin;
-	if (o) return [o.x ?? 0, o.y ?? 0, o.z ?? 0];
-	return [index * 2, 0, 0];
+	const x = unit([plane.xAxis.x, plane.xAxis.y, plane.xAxis.z]);
+	const y0 = unit([plane.yAxis.x, plane.yAxis.y, plane.yAxis.z]);
+	const z = unit([x[1] * y0[2] - x[2] * y0[1], x[2] * y0[0] - x[0] * y0[2], x[0] * y0[1] - x[1] * y0[0]]);
+	if (Math.hypot(...x) === 0 || Math.hypot(...z) === 0) return [0, 0, 0, 1];
+	const y: [number, number, number] = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]];
+	const [m00, m10, m20] = x;
+	const [m01, m11, m21] = y;
+	const [m02, m12, m22] = z;
+	const trace = m00 + m11 + m22;
+	if (trace > 0) {
+		const s = 0.5 / Math.sqrt(trace + 1);
+		return [(m21 - m12) * s, (m02 - m20) * s, (m10 - m01) * s, 0.25 / s];
+	}
+	if (m00 > m11 && m00 > m22) {
+		const s = 2 * Math.sqrt(1 + m00 - m11 - m22);
+		return [0.25 * s, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s];
+	}
+	if (m11 > m22) {
+		const s = 2 * Math.sqrt(1 + m11 - m00 - m22);
+		return [(m01 + m10) / s, 0.25 * s, (m12 + m21) / s, (m02 - m20) / s];
+	}
+	const s = 2 * Math.sqrt(1 + m22 - m00 - m11);
+	return [(m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s];
 }
 
 /** @emoji 🧭 Maps kit wires node ids to sketchpad routes. */
@@ -12174,14 +12193,29 @@ export function sketchpadDesignPuzzle2dFixtureFromDesign(design: Design, kit?: K
 		const uv = sketchpadPieceDiagramUv(piece, index);
 		return { x: uv.u * SKETCHPAD_TOPOLOGY_ICON_WIDTH, y: -uv.v * SKETCHPAD_TOPOLOGY_ICON_WIDTH };
 	});
+	const centerById = new Map(pieces.map((piece, index) => [piece.id, centers[index]!] as const));
+	const handlesById = new Map<string, Map<string, { readonly id: string; readonly angle: number }>>();
+	const addHandle = (pieceId: string, connectorId: string, towardPieceId: string) => {
+		const from = centerById.get(pieceId);
+		const to = centerById.get(towardPieceId);
+		if (!from || !to) return;
+		const angle = (Math.atan2(-(to.x - from.x), -(to.y - from.y)) + 2 * Math.PI) % (2 * Math.PI);
+		const handles = handlesById.get(pieceId) ?? new Map();
+		const id = sketchpadTopologyAnchorFullId(pieceId, connectorId);
+		if (!handles.has(id)) handles.set(id, { id, angle });
+		handlesById.set(pieceId, handles);
+	};
 	const edges = connections
 		.map((connection) => {
 			const { sourcePieceId, targetPieceId, sourceConnectorId, targetConnectorId } = sketchpadConnectionEndpoints(connection);
 			if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
+			if (!centerById.has(sourcePieceId) || !centerById.has(targetPieceId)) return null;
+			addHandle(sourcePieceId, sourceConnectorId, targetPieceId);
+			addHandle(targetPieceId, targetConnectorId, sourcePieceId);
 			return {
 				id: connection.id ?? `${sourcePieceId}-${targetPieceId}`,
-				source: sketchpadFlatHandleCompoundId(sourcePieceId, sourceConnectorId),
-				target: sketchpadFlatHandleCompoundId(targetPieceId, targetConnectorId),
+				source: sketchpadTopologyAnchorFullId(sourcePieceId, sourceConnectorId),
+				target: sketchpadTopologyAnchorFullId(targetPieceId, targetConnectorId),
 				edgeKind: "semio.connection",
 			};
 		})
@@ -12189,21 +12223,18 @@ export function sketchpadDesignPuzzle2dFixtureFromDesign(design: Design, kit?: K
 	return {
 		schema: "puzzle.2d.fixture/v1",
 		camera: sketchpadFlatCameraFromPartCenters(centers.length > 0 ? centers : [{ x: 0, y: 0 }]),
-		nodes: pieces.map((piece, index) => {
-			const uv = sketchpadPieceDiagramUv(piece, index);
-			return {
-				id: piece.id,
-				shape: "rectangle",
-				width: SKETCHPAD_DESIGN_DIAGRAM_NODE.width,
-				height: SKETCHPAD_DESIGN_DIAGRAM_NODE.height,
-				x: uv.u * SKETCHPAD_TOPOLOGY_ICON_WIDTH,
-				y: -uv.v * SKETCHPAD_TOPOLOGY_ICON_WIDTH,
-				text: sketchpadPieceLabel(piece, kit),
-				nodeKind: "semio.design.piece",
-				root: true,
-				handles: [],
-			};
-		}),
+		nodes: pieces.map((piece, index) => ({
+			id: piece.id,
+			shape: "rectangle",
+			width: SKETCHPAD_DESIGN_DIAGRAM_NODE.width,
+			height: SKETCHPAD_DESIGN_DIAGRAM_NODE.height,
+			x: centers[index]!.x,
+			y: centers[index]!.y,
+			text: sketchpadPieceLabel(piece, kit),
+			nodeKind: "semio.design.piece",
+			root: true,
+			handles: [...(handlesById.get(piece.id)?.values() ?? [])],
+		})),
 		edges,
 	};
 }
@@ -12217,7 +12248,7 @@ export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit
 		objectKind: "semio.design.piece",
 		meshUrl: kit ? sketchpadResolvePieceMeshUrl(piece, kit, fileUrl) : SKETCHPAD_PLACEHOLDER_MESH_URL,
 		origin: sketchpadPieceSceneOrigin(piece, index),
-		orientation: [0, 0, 0, 1] as [number, number, number, number],
+		orientation: sketchpadPlaneOrientation(piece.position?.plane),
 		scale: [1, 1, 1] as [number, number, number],
 		label: sketchpadPieceLabel(piece, kit),
 		vortices: [],
@@ -13076,6 +13107,7 @@ abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> 
 	private readonly detachRoute: () => void;
 	private readonly detachShellStore?: () => void;
 	private detachKitStore?: () => void;
+	private attachedKitStore?: SemioKitStore;
 
 	constructor(componentKind: ComponentKind, surfaceId: string, controllerId: string, initialSnapshot: TSnapshot, platform: Platform) {
 		super(componentKind, surfaceId, controllerId, initialSnapshot);
@@ -13083,6 +13115,7 @@ abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> 
 		let lastPlatformUri = platform.uri;
 		this.detachRoute = platform.subscribe(() => {
 			const nextUri = platform.uri;
+			if (this.route.kitId && getSketchpadShellController()?.getKitStore(this.route.kitId) !== this.attachedKitStore) this.attachActiveKitStore();
 			if (nextUri === lastPlatformUri) return;
 			lastPlatformUri = nextUri;
 			const nextRoute = parseSketchpadRouteScopeFromPath(nextUri);
@@ -13103,12 +13136,13 @@ abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> 
 		this.attachActiveKitStore();
 	}
 
+	/** @emoji 📎 (Re)subscribes to the routed kit store; also runs when the store instance behind the route is replaced. */
 	protected attachActiveKitStore(): void {
 		this.detachKitStore?.();
 		this.detachKitStore = undefined;
 		const { kitId } = this.route;
-		if (!kitId) return;
-		const store = getSketchpadShellController()?.getKitStore(kitId);
+		const store = kitId ? getSketchpadShellController()?.getKitStore(kitId) : undefined;
+		this.attachedKitStore = store;
 		if (store) {
 			this.detachKitStore = store.subscribe(() => {
 				this.syncTopologyForSurface();
@@ -13139,7 +13173,7 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
 		readonly vfsAppId: string,
 		platform: Platform,
 	) {
-		super("virtualFileSystem", virtualFileSystemSurfaceId(vfsAppId), SKETCHPAD_SHELL_CONTROLLER_ID, { rows: [] }, platform);
+		super("virtualFileSystem", virtualFileSystemSurfaceId(vfsAppId), SKETCHPAD_SHELL_CONTROLLER_ID, { schema: SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL, rows: [] }, platform);
 		if (vfsAppId !== SKETCHPAD_KIT_APP_ID) return;
 		const ctrl = getSketchpadShellController();
 		if (!ctrl) return;
@@ -13159,13 +13193,13 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
 	override buildSnapshot(): VirtualFileSystemModel {
 		const ctrl = getSketchpadShellController();
 		if (!ctrl) {
-			return { rows: [], emptyMessage: "Platform loading…" };
+			return { schema: SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL, rows: [], emptyMessage: "Platform loading…" };
 		}
 		if (this.vfsAppId === SKETCHPAD_KIT_APP_ID && !this.route.kitId) {
-			return { rows: [], emptyMessage: "Open a kit to browse the file system" };
+			return { schema: SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL, rows: [], emptyMessage: "Open a kit to browse the file system" };
 		}
 		if (this.vfsAppId === SKETCHPAD_DESIGN_APP_ID && (!this.route.kitId || !this.route.designId)) {
-			return { rows: [], emptyMessage: "Open a design to browse the file system" };
+			return { schema: SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL, rows: [], emptyMessage: "Open a design to browse the file system" };
 		}
 		if (this.vfsAppId === SKETCHPAD_HOME_APP_ID) {
 			const shell = ctrl.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
@@ -13699,7 +13733,9 @@ export class SketchpadShellController extends VirtualFileSystemController {
 
 	/** @emoji 🗄️ Registers a kit store on this controller (`kit:<id>`). */
 	registerKitStore(kitId: string, store: SemioKitStore, options?: { readonly kind?: string }): void {
+		const replaced = this.getKitStore(kitId) !== undefined;
 		this.provideStore(sketchpadKitStoreId(kitId), store);
+		if (replaced) this.invalidateKitVirtualFileSystem(kitId);
 		if (options?.kind) this.kitKinds.set(kitId, options.kind);
 		const openKitIds = this.shellStore.get().openKitIds;
 		if (!openKitIds.includes(kitId)) {
@@ -13775,21 +13811,24 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		const kit = store?.getSnapshot().kit;
 		if (!kit) return;
 		const generation = ++this.kitWiresSyncGeneration;
-		void this.prepareKitWiresVfsForTopology(kitId).then(() => {
-			if (generation !== this.kitWiresSyncGeneration) return;
+		const current = () => generation === this.kitWiresSyncGeneration && this.getKitStore(kitId) === store;
+		void (async () => {
+			await this.prepareKitWiresVfsForTopology(kitId);
+			if (!current()) return;
 			const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
 			const root = this.getRoot(scope);
 			const visible = sketchpadKitWiresVisibleNodes(root, this.visibleVirtualFileSystemNodes(scope));
 			const scopeKey = virtualFileSystemScopeKey(scope);
 			const vfsMeta = this.vfsNodeMetaByScope.get(scopeKey) ?? new Map();
 			const expandedDesignIds = sketchpadExpandedDesignIds(scope, this.expandedStore(scope).getSnapshot(), vfsMeta);
-			void sketchpadFetchKitWiresReferences(store!, kit, visible, expandedDesignIds, vfsMeta).then((references) => {
-				if (generation !== this.kitWiresSyncGeneration) return;
-				this.kitWiresReferenceCache.set(kitId, references);
-				const fixture = sketchpadKitWiresFixtureFromVisible(kit, kitId, visible, references, expandedDesignIds);
-				this.upsertTopologyStore(sketchpadKitWiresInstanceId(kitId), sketchpadTopologyPayloadForKitWires(fixture));
-				this.emit();
-			});
+			const references = await sketchpadFetchKitWiresReferences(store!, kit, visible, expandedDesignIds, vfsMeta);
+			if (!current()) return;
+			this.kitWiresReferenceCache.set(kitId, references);
+			const fixture = sketchpadKitWiresFixtureFromVisible(kit, kitId, visible, references, expandedDesignIds);
+			this.upsertTopologyStore(sketchpadKitWiresInstanceId(kitId), sketchpadTopologyPayloadForKitWires(fixture));
+			this.emit();
+		})().catch((error: unknown) => {
+			if (current()) console.error("[semio/sketchpad] kit wires topology failed", error);
 		});
 	}
 
@@ -13846,7 +13885,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 			return;
 		}
 		if (surfaceId === SKETCHPAD_SURFACE_DESIGN_DIAGRAM) {
-			this.upsertTopologyStore(sketchpadDesignDiagramInstanceId(kitId, designId), sketchpadTopologyPayloadForDesignDiagram(design, kit));
+			this.upsertTopologyStore(sketchpadDesignDiagramInstanceId(kitId, designId), sketchpadHubDecorateTopology(kitId, designId, sketchpadTopologyPayloadForDesignDiagram(design, kit)));
 		}
 	}
 
@@ -13939,6 +13978,11 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		const platform = getSketchpadPlatform();
 		if (!platform) return;
 		sketchpadCommitUri(platform, path);
+	}
+
+	/** @emoji 📂 Expanded-row store of a VFS scope (public for routed components). */
+	override expandedStore(scope: VirtualFileSystemScope, initial: readonly string[] = []): ReturnType<VirtualFileSystemController["expandedStore"]> {
+		return super.expandedStore(scope, initial);
 	}
 
 	protected override getSchema(scope: VirtualFileSystemScope): VirtualFileSystemSchemaModel {
@@ -14125,6 +14169,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		this.vfsNodeMetaByScope.delete(scopeKey);
 		this.childrenByScope.delete(scopeKey);
 		this.pendingChildrenLoadsByScope.delete(scopeKey);
+		this.childrenLoadPromisesByScope.delete(scopeKey);
 		if (scope.appId === SKETCHPAD_KIT_APP_ID) {
 			this.clearKitWiresVfsPrepare(rootNodeId);
 			this.kitWiresHoverStore.set(null);
@@ -14137,9 +14182,9 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		for (const appId of [SKETCHPAD_KIT_APP_ID, SKETCHPAD_DESIGN_APP_ID] as const) {
 			const scope = sketchpadVfsScope(appId);
 			const scopeKey = virtualFileSystemScopeKey(scope);
-		this.vfsNodeMetaByScope.delete(scopeKey);
-		this.childrenByScope.delete(scopeKey);
-		this.pendingChildrenLoadsByScope.delete(scopeKey);
+			this.childrenByScope.delete(scopeKey);
+			this.pendingChildrenLoadsByScope.delete(scopeKey);
+			this.childrenLoadPromisesByScope.delete(scopeKey);
 		}
 		this.kitWiresReferenceCache.delete(kitId);
 		this.clearKitWiresVfsPrepare(kitId);
@@ -14153,7 +14198,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		return super.selectedRows(scope);
 	}
 
-	protected override buildVirtualFileSystemModel(scope: VirtualFileSystemScope): VirtualFileSystemModel {
+	override buildVirtualFileSystemModel(scope: VirtualFileSystemScope): VirtualFileSystemModel {
 		const model = super.buildVirtualFileSystemModel(scope);
 		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
 			return { ...model, dragDropEnabled: false };
@@ -14487,6 +14532,7 @@ function sketchpadHomePanelTabs(): readonly SideTabSpec[] {
 	return [
 		{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", panel: "workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY },
 		{ id: "details", iconId: "semio.sketchpad.icon.details", panel: "details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY },
+		...sketchpadHubPanelTabs(),
 	];
 }
 
@@ -14495,6 +14541,7 @@ function sketchpadKitPanelTabs(): readonly SideTabSpec[] {
 		{ id: "display", iconId: "semio.sketchpad.icon.windows", panel: "display", bodyKey: SKETCHPAD_PANEL_WINDOWS_BODY },
 		{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", panel: "workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY },
 		{ id: "details", iconId: "semio.sketchpad.icon.details", panel: "details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY },
+		...sketchpadHubPanelTabs(),
 	];
 }
 
@@ -14848,15 +14895,9 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
 	}
 	sketchpadPlatformSingleton = platform;
 	sketchpadPluginHostSingleton = host;
+	sketchpadInstallHub(platform);
 	if (typeof window !== "undefined") {
 		sketchpadInstallHomeDropzone();
-	}
-	if (
-		typeof import.meta !== "undefined" &&
-		(import.meta as { env?: { DEV?: boolean; SEMIO_SKETCHPAD_E2E?: string } }).env?.DEV &&
-		!(import.meta as { env?: { SEMIO_SKETCHPAD_E2E?: string } }).env?.SEMIO_SKETCHPAD_E2E
-	) {
-		void seedSketchpadDevFixtureKitIfEmpty();
 	}
 	return platform;
 }
@@ -14875,9 +14916,793 @@ export function getSketchpadPlatform(): Platform | null {
 	return sketchpadPlatformSingleton;
 }
 
+//#region 🤖McpViewer
+import type { UiComponentHostSurfaceNode } from "@framework/platform/core";
+
+/** @emoji 🤖 Surface an MCP App viewer shows (`#root[data-mcp-viewer]` of the engine's `mcp-app.html`). */
+export type SketchpadMcpViewerSurface = "kit" | "design" | "scene" | "diagram";
+
+/** @emoji 🏷️ Viewer titles (also the MCP App `appInfo.name` and the engine resource names). */
+export const SKETCHPAD_MCP_VIEWER_TITLES: Readonly<Record<SketchpadMcpViewerSurface, string>> = {
+	kit: "semio kit viewer",
+	design: "semio design viewer",
+	scene: "semio scene viewer",
+	diagram: "semio diagram viewer",
+};
+
+/** @emoji 📨 Engine MCP App tool payload: `kit` is the rs projection (file blobs replaced by fetchable urls), `design.id` the design to show. */
+export type SketchpadMcpPayload = Readonly<{
+	mode?: string;
+	surface?: string;
+	kit?: Readonly<Record<string, unknown>>;
+	design?: Readonly<{ id?: string; name?: string }>;
+	fetchUrl?: string;
+}>;
+
+/** @emoji 🔍 Parses a viewer surface from `data-mcp-viewer` (defaults to design). */
+export function parseSketchpadMcpViewerSurface(value: string | null | undefined): SketchpadMcpViewerSurface {
+	return value === "kit" || value === "scene" || value === "diagram" ? value : "design";
+}
+
+function sketchpadMcpPayloadCandidate(value: unknown): SketchpadMcpPayload | null {
+	let parsed = value;
+	if (typeof value === "string") {
+		try {
+			parsed = JSON.parse(value);
+		} catch {
+			return null;
+		}
+	}
+	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+	const row = parsed as SketchpadMcpPayload;
+	const kit = row.kit && typeof row.kit === "object" ? row.kit : undefined;
+	const fetchUrl = typeof row.fetchUrl === "string" ? row.fetchUrl : undefined;
+	if (!kit && !fetchUrl) return null;
+	return row;
+}
+
+/** @emoji 🧾 Richest {@link SketchpadMcpPayload} of an MCP tool result (`structuredContent`, JSON text blocks, embedded resources); `null` when none. */
+export function sketchpadMcpPayloadFromToolResult(result: unknown): SketchpadMcpPayload | null {
+	if (!result || typeof result !== "object") return null;
+	const row = result as { readonly structuredContent?: unknown; readonly content?: readonly { readonly text?: unknown; readonly resource?: { readonly text?: unknown } }[] };
+	const candidates = [row.structuredContent, ...(row.content ?? []).flatMap((block) => [block.text, block.resource?.text])]
+		.map(sketchpadMcpPayloadCandidate)
+		.filter((candidate): candidate is SketchpadMcpPayload => candidate !== null);
+	const score = (payload: SketchpadMcpPayload) => (payload.kit ? 2 : 0) + (payload.design?.id ? 1 : 0);
+	return candidates.reduce<SketchpadMcpPayload | null>((best, next) => (!best || score(next) > score(best) ? next : best), null);
+}
+
+/** @emoji 🪟 Window bodies of an MCP viewer surface (kit: file system + wires, design: scene + diagram). */
+export function sketchpadMcpViewerBodies(surface: SketchpadMcpViewerSurface): readonly UiComponentHostSurfaceNode[] {
+	switch (surface) {
+		case "kit":
+			return [
+				buildVirtualFileSystemWindowBody(SKETCHPAD_SURFACE_KIT_VFS, SKETCHPAD_SHELL_CONTROLLER_ID, "vfs"),
+				buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_KIT_WIRES, SKETCHPAD_SHELL_CONTROLLER_ID, "wires"),
+			];
+		case "scene":
+			return [buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_DESIGN_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, "scene")];
+		case "diagram":
+			return [buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_DESIGN_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, "diagram")];
+		default:
+			return [
+				buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_DESIGN_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, "scene"),
+				buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_DESIGN_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, "diagram"),
+			];
+	}
+}
+
+/** @emoji 📦 Opens an MCP payload kit (rs projection) on the sketchpad platform and routes to the viewer surface; returns the route. */
+export async function openSketchpadMcpPayload(payload: SketchpadMcpPayload, surface: SketchpadMcpViewerSurface): Promise<string> {
+	const full = !payload.kit && payload.fetchUrl ? sketchpadMcpPayloadCandidate(await (await fetch(payload.fetchUrl)).json()) : payload;
+	if (!full?.kit) throw new Error("semio/sketchpad: MCP payload carries no kit");
+	await ensureSketchpadPlatform();
+	const client = await importKit(new TextEncoder().encode(JSON.stringify(full.kit)));
+	attachSketchpadKitStore(client.kitId, new SemioKitStore(client), { kind: "remote", navigate: false });
+	const designId = full.design?.id;
+	const path = surface !== "kit" && designId ? `/kits/${client.kitId}/designs/${designId}` : `/kits/${client.kitId}`;
+	navigateSketchpadTo(path);
+	return path;
+}
+
+/** @emoji 🎯 Current design selection of the sketchpad route (reported back to the MCP host). */
+export function sketchpadMcpSelection(): Readonly<{ designId: string | null; pieceIds: readonly string[]; connectionIds: readonly string[] }> {
+	const ctrl = getSketchpadShellController();
+	const route = parseSketchpadRouteScopeFromPath(ctrl?.navigationPath ?? "/");
+	return { designId: route.designId, pieceIds: ctrl?.routeSelection.pieceIds ?? [], connectionIds: ctrl?.routeSelection.connectionIds ?? [] };
+}
+//#endregion 🤖McpViewer
+
+//#region 🌐Hub
+import {
+	HubClient,
+	hubMcpSetup,
+	newUuidV7,
+	openSemioHubKit,
+	semioHubKitProjection,
+	type HubActivity,
+	type HubAgentToken,
+	type HubAuth,
+	type HubFetch,
+	type HubMember,
+	type HubParticipant,
+	type HubPerson,
+	type HubPresencePatch,
+	type HubReplica,
+	type HubRole,
+	type HubSession,
+	type HubShare,
+	type HubSocketFactory,
+	type HubSyncStatus,
+	type SemioHubKit,
+} from "@semio/react";
+import type { StoragePort } from "@framework/platform/core";
+
+//#region 🧾HubState
+export const SKETCHPAD_HUB_CONTROLLER_ID = "semio.sketchpad.hub";
+export const SKETCHPAD_HUB_STORE = "hub";
+export const SKETCHPAD_SURFACE_HUB_PANEL = "semio.sketchpad.surface.hub/v1";
+export const SKETCHPAD_SURFACE_HUB_ACTIVITY = "semio.sketchpad.surface.hub.activity/v1";
+export const SKETCHPAD_PANEL_HUB_BODY = "semio.sketchpad.panel.hub";
+export const SKETCHPAD_PANEL_HUB_ACTIVITY_BODY = "semio.sketchpad.panel.hub.activity";
+export const SKETCHPAD_HUB_ICON_ID = "semio.sketchpad.icon.hub";
+export const SKETCHPAD_HUB_ACTIVITY_ICON_ID = "semio.sketchpad.icon.hub.activity";
+export const SKETCHPAD_HUB_PRESENCE_ICON_ID = "semio.sketchpad.hub.presence";
+export const SKETCHPAD_HUB_DEFAULT_URL = "http://127.0.0.1:8080";
+const SKETCHPAD_HUB_STORAGE_URL = "semio.sketchpad.hub.url";
+const SKETCHPAD_HUB_STORAGE_TOKEN = "semio.sketchpad.hub.token";
+const SKETCHPAD_HUB_ACTIVITY_LIMIT = 200;
+const SKETCHPAD_HUB_REMOTE_PIECE_KIND = "semio.design.piece.remote";
+
+/** @emoji 🪟 Collaboration dialog currently shown by the hub panel. */
+export type SketchpadHubDialog = "share" | "connectAi" | null;
+
+/** @emoji 📰 One rendered session activity row (operation, presence change, resync). */
+export type SketchpadHubActivityEntry = Readonly<{ id: string; at: number; author: string; color: string; agent: boolean; own: boolean; text: string }>;
+
+/** @emoji 🔗 Hub session bound to an open sketchpad kit. */
+export type SketchpadHubKitState = Readonly<{
+	kitId: string;
+	sessionId: string;
+	name: string;
+	role: HubRole;
+	status: HubSyncStatus;
+	participants: readonly HubParticipant[];
+	selfId: string | null;
+	activity: readonly SketchpadHubActivityEntry[];
+	shares: readonly HubShare[];
+	members: readonly HubMember[];
+}>;
+
+/** @emoji 🌐 Hub connection, account, shared kits and live session state of the sketchpad. */
+export type SketchpadHubSnapshot = Readonly<{
+	url: string;
+	person: HubPerson | null;
+	busy: boolean;
+	error: string | null;
+	notice: string | null;
+	sessions: readonly HubSession[];
+	kits: Readonly<Record<string, SketchpadHubKitState>>;
+	dialog: SketchpadHubDialog;
+	agentToken: HubAgentToken | null;
+	pendingLink: Readonly<{ session?: string; share?: string }> | null;
+}>;
+
+/** @emoji 🌍 Injectable hub transports (tests) — defaults to the global fetch/WebSocket. */
+export type SketchpadHubTransport = Readonly<{ fetch?: HubFetch; socketFactory?: HubSocketFactory }>;
+//#endregion 🧾HubState
+
+//#region 🎨HubPresentation
+const SKETCHPAD_HUB_ACTION_PHRASES: Readonly<Record<string, string>> = {
+	createDesign: "created a design",
+	createType: "created a type",
+	createTag: "created a tag",
+	createConcept: "created a concept",
+	createQuality: "created a quality",
+	createFolder: "created a folder",
+	addFixedPiece: "added a piece",
+	addChildPieceWithParentConnection: "attached a piece",
+	addHangingChildPieceWithParentConnection: "attached a piece",
+	connectPieces: "connected pieces",
+	deletePiece: "removed a piece",
+	deletePieces: "removed pieces",
+	deletePiecesAndConnections: "removed pieces",
+	deleteConnections: "removed connections",
+	deleteDesign: "deleted a design",
+	deleteDesigns: "deleted designs",
+	deleteType: "deleted a type",
+	deleteTypes: "deleted types",
+	drag: "moved pieces",
+	move: "moved a piece",
+	rename: "renamed",
+	changeDescription: "changed a description",
+	moveToFolder: "moved into a folder",
+};
+
+/** @emoji 🗣️ Human phrase for kit operation actions (e.g. {@code ["addFixedPiece"]} → "added a piece"). */
+export function sketchpadHubActionPhrase(actions: readonly string[]): string {
+	if (actions.length === 0) return "changed the kit";
+	return actions.map((action) => SKETCHPAD_HUB_ACTION_PHRASES[action] ?? action.replace(/([A-Z])/g, " $1").toLowerCase()).join(", ");
+}
+
+/** @emoji 🧭 Where a participant is working, from its presence focus. */
+export function sketchpadHubFocusLabel(participant: HubParticipant, kit?: Kit): string {
+	const focus = participant.focus;
+	if (!focus || focus.app === "away") return "elsewhere";
+	if (focus.designId) return `Design · ${(kit && findDesignInKit(kit, focus.designId)?.name) ?? focus.designId}`;
+	if (focus.typeId) return `Type · ${(kit && findTypeInKit(kit, focus.typeId)?.name) ?? focus.typeId}`;
+	return focus.app.charAt(0).toUpperCase() + focus.app.slice(1);
+}
+
+/** @emoji 🔤 Two-letter initials for avatars. */
+export function sketchpadHubInitials(name: string): string {
+	const parts = name.trim().split(/\s+/).filter(Boolean);
+	return ((parts[0]?.[0] ?? "?") + (parts[1]?.[0] ?? parts[0]?.[1] ?? "")).toUpperCase();
+}
+
+/** @emoji 🚥 Short sync status label (`synced · v12`, `offline · 2 pending`, …). */
+export function sketchpadHubStatusLabel(status: HubSyncStatus): string {
+	const pending = status.pending > 0 ? ` · ${status.pending} pending` : "";
+	return `${status.state} · v${status.version}${pending}`;
+}
+
+/** @emoji ✳️ Remote participants' piece selections in a design (self excluded). */
+export function sketchpadHubRemoteSelections(state: SketchpadHubKitState | undefined, designId: string): readonly Readonly<{ participant: HubParticipant; pieceIds: readonly string[] }>[] {
+	if (!state) return [];
+	return state.participants
+		.filter((participant) => participant.id !== state.selfId && participant.selection?.designId === designId && participant.selection.pieceIds.length > 0)
+		.map((participant) => ({ participant, pieceIds: participant.selection!.pieceIds }));
+}
+
+/** @emoji 🖍️ Highlights pieces selected by remote participants in a flat design diagram (participant-colored node kinds + name suffix). */
+export function sketchpadHubDecorateDesignDiagram(
+	flat: Readonly<Record<string, unknown>>,
+	remote: readonly Readonly<{ participant: HubParticipant; pieceIds: readonly string[] }>[],
+): Readonly<Record<string, unknown>> {
+	if (remote.length === 0) return flat;
+	const owners = new Map<string, HubParticipant>();
+	for (const { participant, pieceIds } of remote) for (const id of pieceIds) if (!owners.has(id)) owners.set(id, participant);
+	const kinds = [...new Map([...owners.values()].map((participant) => [participant.id, participant])).values()].map((participant) => ({
+		id: `${SKETCHPAD_HUB_REMOTE_PIECE_KIND}.${participant.id}`,
+		name: participant.name,
+		color: `${participant.color}33`,
+		stroke: participant.color,
+	}));
+	const nodes = (flat["nodes"] as readonly Record<string, unknown>[] | undefined) ?? [];
+	return {
+		...flat,
+		meta: { kindCatalogs: { nodes: kinds } },
+		nodes: nodes.map((node) => {
+			const owner = owners.get(String(node["id"]));
+			return owner ? { ...node, nodeKind: `${SKETCHPAD_HUB_REMOTE_PIECE_KIND}.${owner.id}`, text: `${String(node["text"] ?? "")} · ${owner.name}` } : node;
+		}),
+	};
+}
+
+/** @emoji 🔗 Sketchpad deep link opening a hub session (`?hub=&session=`) or joining through a share token (`?hub=&share=`). */
+export function sketchpadHubLink(origin: string, hubUrl: string, target: Readonly<{ session?: string; share?: string }>): string {
+	const params = new URLSearchParams({ hub: hubUrl });
+	if (target.session) params.set("session", target.session);
+	if (target.share) params.set("share", target.share);
+	return `${origin.replace(/\/+$/, "")}/?${params.toString()}`;
+}
+//#endregion 🎨HubPresentation
+
+//#region 🎛️HubController
+let sketchpadHubControllerSingleton: SketchpadHubController | null = null;
+
+/** @emoji 🌐 Active hub controller after {@link buildSketchpadPlatform}. */
+export function getSketchpadHubController(): SketchpadHubController | null {
+	return sketchpadHubControllerSingleton;
+}
+
+/**
+ * @emoji 🤝 Real-time collaboration: hub account, shared kits (hub sessions opened as regular kits with a live {@link HubReplica}),
+ * shares, AI agent tokens, presence publishing (focus + selection) and the session activity feed.
+ */
+export class SketchpadHubController extends Controller {
+	private readonly cell: ObservableCell<SketchpadHubSnapshot>;
+	private client: HubClient;
+	private readonly bindings = new Map<string, Readonly<{ hubKit: SemioHubKit; detach: readonly (() => void)[] }>>();
+	private readonly sentPresence = new Map<string, string>();
+	private detachShell: (() => void) | null = null;
+
+	constructor(
+		commandBus: CommandBus,
+		hostNotify: () => void,
+		private readonly storage: StoragePort | null = null,
+		private readonly transport: SketchpadHubTransport = {},
+	) {
+		super(SKETCHPAD_HUB_CONTROLLER_ID, commandBus, hostNotify);
+		const url = storage?.get(SKETCHPAD_HUB_STORAGE_URL) || SKETCHPAD_HUB_DEFAULT_URL;
+		this.client = this.createClient(url, storage?.get(SKETCHPAD_HUB_STORAGE_TOKEN) ?? null);
+		this.cell = new ObservableCell<SketchpadHubSnapshot>({
+			url,
+			person: null,
+			busy: false,
+			error: null,
+			notice: null,
+			sessions: [],
+			kits: {},
+			dialog: null,
+			agentToken: null,
+			pendingLink: null,
+		});
+		this.provideStore(SKETCHPAD_HUB_STORE, this.cell);
+	}
+
+	get snapshot(): SketchpadHubSnapshot {
+		return this.cell.get();
+	}
+
+	/** @emoji 🔎 Hub session state of an open kit, if it is shared. */
+	kit(kitId: string): SketchpadHubKitState | undefined {
+		return this.cell.get().kits[kitId];
+	}
+
+	/** @emoji 🔁 Live replica of a shared kit (tests and status UIs). */
+	replica(kitId: string): HubReplica | undefined {
+		return this.bindings.get(kitId)?.hubKit.replica;
+	}
+
+	private createClient(url: string, token: string | null): HubClient {
+		return new HubClient({ url, token, ...this.transport });
+	}
+
+	private patch(next: Partial<SketchpadHubSnapshot>): void {
+		this.cell.set({ ...this.cell.get(), ...next });
+		this.emit();
+	}
+
+	private patchKit(kitId: string, next: Partial<SketchpadHubKitState>): void {
+		const current = this.cell.get().kits[kitId];
+		if (!current) return;
+		this.patch({ kits: { ...this.cell.get().kits, [kitId]: { ...current, ...next } } });
+	}
+
+	private async task<T>(work: () => Promise<T>): Promise<T> {
+		this.patch({ busy: true, error: null });
+		try {
+			return await work();
+		} catch (error) {
+			this.patch({ error: error instanceof Error ? error.message : String(error) });
+			throw error;
+		} finally {
+			this.patch({ busy: false });
+		}
+	}
+
+	run(command: string, args?: unknown): void {
+		void this.execute(command, args).catch((error) => console.warn(`[semio.sketchpad] hub ${command} failed:`, error));
+	}
+
+	/** @emoji 🎛️ Awaitable command surface behind {@link run} (panel hosts and tests). */
+	async execute(command: string, args?: unknown): Promise<unknown> {
+		const input = (args ?? {}) as Record<string, string | undefined>;
+		switch (command) {
+			case "setUrl":
+				return this.setUrl(input["url"] ?? "");
+			case "register":
+				return this.register(input["name"] ?? "", input["email"] ?? "", input["password"] ?? "");
+			case "login":
+				return this.login(input["email"] ?? "", input["password"] ?? "");
+			case "logout":
+				return this.logout();
+			case "refreshSessions":
+				return this.refreshSessions();
+			case "openSession":
+				return this.openSession(input["sessionId"] ?? "");
+			case "shareKit":
+				return this.shareKit(input["kitId"] ?? this.activeKitId() ?? "", input["name"]);
+			case "createEmptySession":
+				return this.createEmptySession(input["name"] ?? "Shared kit");
+			case "deleteSession":
+				return this.deleteSession(input["sessionId"] ?? "");
+			case "joinShare":
+				return this.joinShare(input["token"] ?? "");
+			case "createShare":
+				return this.createShare(input["kitId"] ?? this.activeKitId() ?? "", input["role"] === "viewer" ? "viewer" : "editor");
+			case "createAgentToken":
+				return this.createAgentToken(input["label"] ?? "Sketchpad AI");
+			case "refreshMembers":
+				return this.refreshMembers(input["kitId"] ?? this.activeKitId() ?? "");
+			case "resync":
+				return this.replica(input["kitId"] ?? this.activeKitId() ?? "")?.resync();
+			case "openDialog":
+				this.patch({ dialog: (input["dialog"] as SketchpadHubDialog) ?? null, agentToken: null });
+				return undefined;
+			case "closeDialog":
+				this.patch({ dialog: null });
+				return undefined;
+			default:
+				return undefined;
+		}
+	}
+
+	/** @emoji 🧭 Kit of the active route, else the first selected home kit, else the last opened kit. */
+	activeKitId(): string | null {
+		const shell = getSketchpadShellController();
+		if (!shell) return null;
+		const snapshot = shell.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
+		return parseSketchpadRouteScopeFromPath(shell.navigationPath).kitId ?? snapshot?.home.selectedKitIds[0] ?? shell.listOpenKitIds().at(-1) ?? null;
+	}
+
+	/** @emoji 🔌 Restores the stored session token, follows shell navigation for presence and handles deep links. */
+	async start(search = ""): Promise<void> {
+		const shellStore = getSketchpadShellController()?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL);
+		this.detachShell?.();
+		this.detachShell = shellStore?.subscribe(() => this.onShellChanged()) ?? null;
+		const params = new URLSearchParams(search);
+		const hub = params.get("hub");
+		if (hub) await this.setUrl(hub);
+		const session = params.get("session") ?? undefined;
+		const share = params.get("share") ?? undefined;
+		if (session || share) this.patch({ pendingLink: { session, share } });
+		if (this.client.token) {
+			try {
+				this.patch({ person: await this.client.me() });
+			} catch {
+				this.forgetToken();
+			}
+		}
+		if (this.cell.get().person) await this.afterSignIn();
+	}
+
+	private forgetToken(): void {
+		this.client.token = null;
+		this.storage?.remove(SKETCHPAD_HUB_STORAGE_TOKEN);
+		this.patch({ person: null, sessions: [] });
+	}
+
+	private remember(auth: HubAuth): void {
+		this.storage?.set(SKETCHPAD_HUB_STORAGE_TOKEN, auth.token);
+		this.patch({ person: auth.person });
+	}
+
+	private async afterSignIn(): Promise<void> {
+		await this.refreshSessions();
+		const link = this.cell.get().pendingLink;
+		if (!link) return;
+		this.patch({ pendingLink: null });
+		if (link.share) await this.joinShare(link.share);
+		else if (link.session) await this.openSession(link.session);
+	}
+
+	async setUrl(url: string): Promise<void> {
+		const next = url.trim().replace(/\/+$/, "") || SKETCHPAD_HUB_DEFAULT_URL;
+		if (next === this.client.url) return;
+		this.storage?.set(SKETCHPAD_HUB_STORAGE_URL, next);
+		this.client = this.createClient(next, null);
+		this.storage?.remove(SKETCHPAD_HUB_STORAGE_TOKEN);
+		this.patch({ url: next, person: null, sessions: [], error: null });
+	}
+
+	register(name: string, email: string, password: string): Promise<HubPerson> {
+		return this.task(async () => {
+			const auth = await this.client.register(name, email, password);
+			this.remember(auth);
+			await this.afterSignIn();
+			return auth.person;
+		});
+	}
+
+	login(email: string, password: string): Promise<HubPerson> {
+		return this.task(async () => {
+			const auth = await this.client.login(email, password);
+			this.remember(auth);
+			await this.afterSignIn();
+			return auth.person;
+		});
+	}
+
+	async logout(): Promise<void> {
+		for (const kitId of [...this.bindings.keys()]) getSketchpadShellController()?.closeKit(kitId);
+		await this.client.logout().catch(() => undefined);
+		this.forgetToken();
+	}
+
+	refreshSessions(): Promise<readonly HubSession[]> {
+		return this.task(async () => {
+			const sessions = await this.client.listSessions();
+			this.patch({ sessions });
+			return sessions;
+		});
+	}
+
+	/** @emoji 📂 Opens a hub session as a regular kit (all apps work on it) and navigates to it; reuses an open binding. */
+	openSession(sessionId: string, navigate = true): Promise<string> {
+		return this.task(async () => {
+			const open = [...this.bindings.entries()].find(([, binding]) => binding.hubKit.replica.sessionId === sessionId);
+			if (open) {
+				if (navigate) getSketchpadShellController()?.navigateTo(`/kits/${open[0]}`);
+				return open[0];
+			}
+			const hubKit = await openSemioHubKit(this.client, sessionId);
+			const kitId = this.bind(hubKit);
+			if (navigate) getSketchpadShellController()?.navigateTo(`/kits/${kitId}`);
+			void this.refreshMembers(kitId).catch(() => undefined);
+			return kitId;
+		});
+	}
+
+	/** @emoji 📤 Publishes an open kit as a new hub session (fresh kit id) and opens the shared copy. */
+	shareKit(kitId: string, name?: string): Promise<string> {
+		return this.task(async () => {
+			const client = getSketchpadShellController()?.getKitStore(kitId)?.client;
+			if (!client) throw new Error("Open a kit backed by a live session to share it");
+			const projection = await semioHubKitProjection(client, name);
+			const created = await this.client.createSession(name ?? client.getSnapshot().name ?? "Shared kit", projection);
+			await this.refreshSessions();
+			return this.openSession(created.id);
+		});
+	}
+
+	/** @emoji 🆕 Creates an empty shared kit and opens it. */
+	createEmptySession(name: string): Promise<string> {
+		return this.task(async () => {
+			const created = await this.client.createSession(name, { id: newUuidV7(), name });
+			await this.refreshSessions();
+			return this.openSession(created.id);
+		});
+	}
+
+	deleteSession(sessionId: string): Promise<void> {
+		return this.task(async () => {
+			const open = [...this.bindings.entries()].find(([, binding]) => binding.hubKit.replica.sessionId === sessionId);
+			if (open) getSketchpadShellController()?.closeKit(open[0]);
+			await this.client.deleteSession(sessionId);
+			await this.refreshSessions();
+		});
+	}
+
+	/** @emoji 🚪 Joins a session through a share token, then opens it. */
+	joinShare(token: string): Promise<string> {
+		return this.task(async () => {
+			const joined = await this.client.joinShare(token);
+			this.patch({ notice: `Joined ${joined.session.name} as ${joined.role}` });
+			await this.refreshSessions();
+			return this.openSession(joined.session.id);
+		});
+	}
+
+	/** @emoji 🔗 Creates an editor/viewer share of a shared kit and returns its sketchpad link. */
+	createShare(kitId: string, role: "editor" | "viewer"): Promise<string> {
+		return this.task(async () => {
+			const state = this.kit(kitId);
+			if (!state) throw new Error("This kit is not shared on the hub");
+			const share = await this.client.createShare(state.sessionId, role);
+			this.patchKit(kitId, { shares: [...state.shares.filter((row) => row.token !== share.token), share] });
+			return this.shareLink(share.token);
+		});
+	}
+
+	/** @emoji 🔗 Sketchpad link that joins through {@code token}. */
+	shareLink(token: string): string {
+		return sketchpadHubLink(typeof window === "undefined" ? "http://127.0.0.1:5173" : window.location.origin, this.client.url, { share: token });
+	}
+
+	refreshMembers(kitId: string): Promise<readonly HubMember[]> {
+		return this.task(async () => {
+			const state = this.kit(kitId);
+			if (!state) return [];
+			const [members, shares] = await Promise.all([this.client.members(state.sessionId), state.role === "owner" ? this.client.shares(state.sessionId) : Promise.resolve(state.shares)]);
+			this.patchKit(kitId, { members, shares });
+			return members;
+		});
+	}
+
+	/** @emoji 🤖 Creates a long-lived agent token for MCP clients (shown once in the Connect AI dialog). */
+	createAgentToken(label: string): Promise<HubAgentToken> {
+		return this.task(async () => {
+			const agentToken = await this.client.createAgentToken(label);
+			this.patch({ agentToken });
+			return agentToken;
+		});
+	}
+
+	/** @emoji 🤝 MCP endpoint + client configs for the current agent token. */
+	mcpSetup(): ReturnType<typeof hubMcpSetup> | null {
+		const token = this.cell.get().agentToken?.token;
+		return token ? hubMcpSetup(this.client.url, token) : null;
+	}
+
+	private bind(hubKit: SemioHubKit): string {
+		const { kit, replica } = hubKit;
+		const kitId = kit.kitId;
+		const info = replica.info;
+		this.patch({
+			kits: {
+				...this.cell.get().kits,
+				[kitId]: {
+					kitId,
+					sessionId: replica.sessionId,
+					name: info?.name ?? kit.getSnapshot().name ?? kitId,
+					role: info?.role ?? "viewer",
+					status: replica.status,
+					participants: replica.connection.participants,
+					selfId: replica.connection.self?.id ?? null,
+					activity: [],
+					shares: [],
+					members: [],
+				},
+			},
+		});
+		const detach = [
+			replica.onStatus((status) => this.patchKit(kitId, { status })),
+			replica.connection.onParticipants((participants) => {
+				this.patchKit(kitId, { participants, selfId: replica.connection.self?.id ?? null });
+				this.refreshRemoteHighlights(kitId);
+			}),
+			replica.connection.on("welcome", () => {
+				this.sentPresence.delete(kitId);
+				this.publishPresence();
+			}),
+			replica.connection.on("presence.joined", (message) => {
+				if (!this.kit(kitId)?.members.some((member) => member.person.id === message.participant.personId)) void this.refreshMembers(kitId).catch(() => undefined);
+			}),
+			replica.onActivity((activity) => this.appendActivity(kitId, activity)),
+		];
+		this.bindings.set(kitId, { hubKit, detach });
+		getSketchpadShellController()?.registerKitStore(kitId, new SemioKitStore(kit), { kind: "remote" });
+		return kitId;
+	}
+
+	private unbind(kitId: string): void {
+		const binding = this.bindings.get(kitId);
+		if (!binding) return;
+		this.bindings.delete(kitId);
+		this.sentPresence.delete(kitId);
+		for (const off of binding.detach) off();
+		binding.hubKit.replica.dispose();
+		const { [kitId]: _closed, ...kits } = this.cell.get().kits;
+		this.patch({ kits });
+	}
+
+	private appendActivity(kitId: string, activity: HubActivity): void {
+		const state = this.kit(kitId);
+		if (!state) return;
+		const person = (personId: string) => state.members.find((member) => member.person.id === personId)?.person;
+		const entry: SketchpadHubActivityEntry =
+			activity.kind === "operation"
+				? {
+						id: `op-${activity.version}-${activity.operationId}`,
+						at: activity.at,
+						author: activity.participant?.name ?? person(activity.personId)?.name ?? "Someone",
+						color: activity.participant?.color ?? person(activity.personId)?.color ?? "#94a3b8",
+						agent: activity.participant?.kind === "agent",
+						own: activity.own,
+						text: sketchpadHubActionPhrase(activity.actions),
+					}
+				: activity.kind === "resynced"
+					? { id: `resync-${activity.at}`, at: activity.at, author: "Sync", color: "#94a3b8", agent: false, own: false, text: `resynced to v${activity.version}` }
+					: {
+							id: `${activity.kind}-${activity.participant.id}-${activity.at}`,
+							at: activity.at,
+							author: activity.participant.name,
+							color: activity.participant.color,
+							agent: activity.participant.kind === "agent",
+							own: activity.participant.id === state.selfId,
+							text: activity.kind === "joined" ? `joined${activity.participant.kind === "agent" ? ` via ${activity.participant.client}` : ""}` : "left",
+						};
+		this.patchKit(kitId, { activity: [...state.activity, entry].slice(-SKETCHPAD_HUB_ACTIVITY_LIMIT) });
+	}
+
+	private onShellChanged(): void {
+		const open = new Set(getSketchpadShellController()?.listOpenKitIds() ?? []);
+		for (const kitId of [...this.bindings.keys()]) if (!open.has(kitId)) this.unbind(kitId);
+		this.publishPresence();
+	}
+
+	/** @emoji 📡 Publishes own focus (app, design/type) and selection to every bound session (deduplicated). */
+	publishPresence(): void {
+		const shell = getSketchpadShellController();
+		if (!shell) return;
+		const scope = parseSketchpadRouteScopeFromPath(shell.navigationPath);
+		for (const [kitId, binding] of this.bindings) {
+			const here = scope.kitId === kitId;
+			const patch: HubPresencePatch = here
+				? {
+						focus: { app: scope.designId ? "design" : scope.typeId ? "type" : "kit", designId: scope.designId, typeId: scope.typeId },
+						selection: scope.designId ? { designId: scope.designId, pieceIds: shell.routeSelection.pieceIds, connectionIds: shell.routeSelection.connectionIds } : null,
+					}
+				: { focus: { app: "away" }, selection: null };
+			const key = JSON.stringify(patch);
+			if (this.sentPresence.get(kitId) === key) continue;
+			if (binding.hubKit.replica.connection.sendPresence(patch)) this.sentPresence.set(kitId, key);
+		}
+	}
+
+	private refreshRemoteHighlights(kitId: string): void {
+		const shell = getSketchpadShellController();
+		const route = parseSketchpadRouteScopeFromPath(shell?.navigationPath ?? "/");
+		if (route.kitId !== kitId || !route.designId) return;
+		shell?.syncTopologyForSurface(SKETCHPAD_SURFACE_DESIGN_DIAGRAM, route);
+	}
+
+	override dispose(): void {
+		this.detachShell?.();
+		for (const kitId of [...this.bindings.keys()]) this.unbind(kitId);
+		super.dispose();
+	}
+}
+//#endregion 🎛️HubController
+
+//#region 🧩HubWiring
+/** @emoji 🖍️ Applies remote selection highlights to a design diagram topology payload. */
+export function sketchpadHubDecorateTopology(kitId: string, designId: string, payload: PlatformTopologyPayload): PlatformTopologyPayload {
+	const remote = sketchpadHubRemoteSelections(getSketchpadHubController()?.kit(kitId), designId);
+	return remote.length === 0 ? payload : { ...payload, flat: sketchpadHubDecorateDesignDiagram(payload.flat, remote) as Record<string, unknown> };
+}
+
+/** @emoji 📑 Collaboration + activity side tabs (right `chat` panel) for every kit-aware app. */
+export function sketchpadHubPanelTabs(): readonly SideTabSpec[] {
+	return [
+		{ id: "hub", iconId: SKETCHPAD_HUB_ICON_ID, panel: "chat", bodyKey: SKETCHPAD_PANEL_HUB_BODY, label: "Collaboration" },
+		{ id: "hub-activity", iconId: SKETCHPAD_HUB_ACTIVITY_ICON_ID, panel: "chat", bodyKey: SKETCHPAD_PANEL_HUB_ACTIVITY_BODY, label: "Activity" },
+	];
+}
+
+function sketchpadHubCommand(id: string, label: string, command: string, args?: unknown): SearchItemSpec {
+	return { id, label, category: "Hub", controllerId: SKETCHPAD_HUB_CONTROLLER_ID, command, args };
+}
+
+/** @emoji 🔎 Command palette rows for hub collaboration. */
+export function sketchpadHubCommands(): readonly SearchItemSpec[] {
+	return [
+		sketchpadHubCommand("semio.sketchpad.hub.refresh", "Hub · Refresh shared kits", "refreshSessions"),
+		sketchpadHubCommand("semio.sketchpad.hub.share", "Hub · Share current kit", "shareKit"),
+		sketchpadHubCommand("semio.sketchpad.hub.createEmpty", "Hub · Create empty shared kit", "createEmptySession", { name: "Shared kit" }),
+		sketchpadHubCommand("semio.sketchpad.hub.shareDialog", "Hub · Share links…", "openDialog", { dialog: "share" }),
+		sketchpadHubCommand("semio.sketchpad.hub.connectAi", "Hub · Connect AI…", "openDialog", { dialog: "connectAi" }),
+		sketchpadHubCommand("semio.sketchpad.hub.resync", "Hub · Resync current kit", "resync"),
+		sketchpadHubCommand("semio.sketchpad.hub.logout", "Hub · Sign out", "logout"),
+	];
+}
+
+function sketchpadHubPanelTree(sectionId: string, label: string, surfaceId: string): UiTreeNode {
+	return {
+		type: "tree",
+		sections: [{ id: sectionId, label, defaultOpen: true, items: [{ id: `${sectionId}.host`, label: "", control: buildPanelWindowBody(surfaceId, SKETCHPAD_HUB_CONTROLLER_ID, sectionId) }] }],
+	};
+}
+
+let sketchpadHubFooterContent: unknown = undefined;
+
+/** @emoji 👥 Renderer-provided footer content (presence avatars + sync status) for the hub footer item. */
+export function setSketchpadHubFooterContent(content: unknown): void {
+	sketchpadHubFooterContent = content;
+}
+
+/** @emoji 🌍 Browser `localStorage` behind {@link StoragePort} (hub URL + token). */
+function sketchpadHubBrowserStorage(): StoragePort | null {
+	if (typeof window === "undefined" || !window.localStorage) return null;
+	const storage = window.localStorage;
+	return { get: (key) => storage.getItem(key), set: (key, value) => storage.setItem(key, value), remove: (key) => storage.removeItem(key) };
+}
+
+/** @emoji 🔌 Installs the hub controller, side panel bodies, presence footer and command palette rows on the sketchpad platform. */
+export function sketchpadInstallHub(platform: Platform, options?: Readonly<{ storage?: StoragePort | null; transport?: SketchpadHubTransport; search?: string }>): SketchpadHubController {
+	sketchpadHubControllerSingleton?.dispose();
+	const controller = new SketchpadHubController(platform.commandBus, () => platform.notify(), options?.storage === undefined ? sketchpadHubBrowserStorage() : options.storage, options?.transport);
+	sketchpadHubControllerSingleton = controller;
+	registerSidePanelBody(SKETCHPAD_PANEL_HUB_BODY, () => sketchpadHubPanelTree("semio.sketchpad.hub.panel", "Collaboration", SKETCHPAD_SURFACE_HUB_PANEL));
+	registerSidePanelBody(SKETCHPAD_PANEL_HUB_ACTIVITY_BODY, () => sketchpadHubPanelTree("semio.sketchpad.hub.activity", "Activity", SKETCHPAD_SURFACE_HUB_ACTIVITY));
+	platform.globalFooterItems = [
+		...platform.globalFooterItems.filter((item) => item.id !== SKETCHPAD_HUB_PRESENCE_ICON_ID),
+		{ id: SKETCHPAD_HUB_PRESENCE_ICON_ID, text: sketchpadHubFooterContent === undefined ? "Hub" : undefined, content: sketchpadHubFooterContent, order: 90, controllerId: SKETCHPAD_HUB_CONTROLLER_ID, command: "refreshSessions" },
+	];
+	platform.commands = [...platform.commands.filter((row) => row.controllerId !== SKETCHPAD_HUB_CONTROLLER_ID), ...sketchpadHubCommands()];
+	const search = options?.search ?? (typeof window === "undefined" ? "" : window.location.search);
+	void controller.start(search).catch((error) => console.warn("[semio.sketchpad] hub start failed:", error));
+	return controller;
+}
+//#endregion 🧩HubWiring
+//#endregion 🌐Hub
+
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+	const { decodeSemioKitArchive, decodeSemioKitEnvelope, semioKitRootFromBundle } = await import("@semio/react");
 
 	describe("Semio sketchpad i18n", () => {
 		function resourceAt(path: string): unknown {
@@ -15066,7 +15891,7 @@ if (import.meta.vitest) {
 			const ctrl = new SketchpadShellController(bus, () => {});
 			const kitStore = SemioKitStore.fromSnapshot({ id: "k1", name: "A" } as Kit);
 			ctrl.registerKitStore("k1", kitStore, { kind: "temporary" });
-			expect(ctrl.getStore(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot().openKitIds).toEqual(["k1"]);
+			expect(ctrl.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot().openKitIds).toEqual(["k1"]);
 			expect(ctrl.routeSelection.pieceIds).toEqual([]);
 			expect(ctrl.getKitStore("k1")?.getSnapshot().kit.name).toBe("A");
 			expect(ctrl.getKitPersistenceKind("k1")).toBe("temporary");
@@ -15225,7 +16050,7 @@ if (import.meta.vitest) {
 			expect(ctrl.navigationPath).toBe(`/kits/${id}`);
 			expect(ctrl.getKitStore(id)?.client).toBeInstanceOf(SemioKitClient);
 			ctrl.dispose();
-		});
+		}, 120_000);
 
 		it("navigateTo syncs platform uri before onNavigate", () => {
 			const bus = new CommandBus();
@@ -15277,7 +16102,7 @@ if (import.meta.vitest) {
 				const nakagin = kit.designs?.find((design) => design.name === "Nakagin Capsule Tower");
 				expect(nakagin?.pieces?.length).toBeGreaterThan(0);
 				const volume = sketchpadDesignVolumeFixtureFromDesign(nakagin!, kit, (fileId) => client.fileUrl(fileId));
-				expect(volume.objects.some((object) => object.meshUrl.startsWith("data:"))).toBe(true);
+				expect(volume.objects.some((object) => String(object["meshUrl"]).startsWith("data:"))).toBe(true);
 			} finally {
 				await client.dispose();
 			}
@@ -15732,7 +16557,7 @@ if (import.meta.vitest) {
 			ctrl.navigateTo("/");
 			platform.uri = "/";
 			ctrl.updateHome({ ...sketchpadEmptyHomeUiState(), selectedKitIds: [kitId], expandedRowIds: ["sketchpad-home"] });
-			const details = platform.getComponent(SKETCHPAD_SURFACE_DETAILS);
+			const details = platform.getComponent(SKETCHPAD_SURFACE_DETAILS) as Component<PanelModel> | undefined;
 			details?.refresh();
 			const body = (details?.getSnapshot() as PanelModel).body;
 			const values =
@@ -15754,7 +16579,7 @@ if (import.meta.vitest) {
 			platform.uri = `/kits/${kitId}`;
 			ctrl.buildVirtualFileSystemModel(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID));
 			ctrl.setRouteSelection({ pieceIds: [], connectionIds: [], kitWiresNodeIds: [typeId], kitWiresHoveredNodeId: null });
-			const details = platform.getComponent(SKETCHPAD_SURFACE_DETAILS);
+			const details = platform.getComponent(SKETCHPAD_SURFACE_DETAILS) as Component<PanelModel> | undefined;
 			details?.refresh();
 			const body = (details?.getSnapshot() as PanelModel).body;
 			const values =
@@ -15764,17 +16589,22 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("sketchpadKitToSemioEnvelope", () => {
+	describe("semioKitToEnvelope", () => {
 		it("wraps kit in wip.initialKit", () => {
-			const envelope = sketchpadKitToSemioEnvelope({ id: "k1", name: "Demo" } as Kit);
-			expect((envelope.wip.initialKit as Kit).name).toBe("Demo");
+			const envelope = semioKitToEnvelope({ id: "k1", name: "Demo" });
+			expect(envelope.wip.initialKit.name).toBe("Demo");
 		});
 	});
 
 	describe("sketchpadResolveMdxModuleKey", () => {
-		it("resolves index and leaf docs paths", () => {
+		it("resolves index and leaf docs paths of the registered pages", () => {
+			registerSketchpadDocsPages({});
+			expect(sketchpadResolveMdxModuleKey("getting-started/index")).toBeNull();
+			expect(sketchpadBuildDocsRegistry()).toEqual([]);
+			registerSketchpadDocsPages(import.meta.glob<SketchpadMdxModule>("./pages/**/*.mdx"));
 			expect(sketchpadResolveMdxModuleKey("getting-started/index")).toMatch(/getting-started\/index\.mdx$/);
 			expect(sketchpadResolveMdxModuleKey("getting-started/installation")).toMatch(/installation\.mdx$/);
+			expect(sketchpadBuildDocsRegistry().some((section) => section.id === "getting-started")).toBe(true);
 		});
 	});
 
@@ -15935,8 +16765,8 @@ if (import.meta.vitest) {
 			const kit = {
 				id: "k",
 				types: [
-					{ id: "t1", connectors: [{ port: { id: "p1", compatiblePorts: [{ id: "p2" }] } }] },
-					{ id: "t2", connectors: [{ port: { id: "p2", compatiblePorts: [{ id: "p1" }] } }] },
+					{ id: "t1", connectors: [{ id: "c1", port: { id: "p1", compatiblePorts: [{ id: "p2" }] } }] },
+					{ id: "t2", connectors: [{ id: "c2", port: { id: "p2", compatiblePorts: [{ id: "p1" }] } }] },
 				],
 			} as Kit;
 			const fixture = sketchpadKitPuzzle2dFixtureFromKit(kit);
@@ -15951,7 +16781,7 @@ if (import.meta.vitest) {
 				types: [
 					{
 						id: "t1",
-						connectors: [{ port: { id: "p1", label: "A" } }],
+						connectors: [{ id: "c1", port: { id: "p1", label: "A" } }],
 						ports: [{ id: "p1", label: "A" }, { id: "p2", code: "B" }],
 					},
 				],
@@ -15971,7 +16801,17 @@ if (import.meta.vitest) {
 			const volume = sketchpadDesignVolumeFixtureFromDesign(design);
 			expect(volume.objects).toHaveLength(1);
 			expect(volume.objects[0]?.origin).toEqual([1, 2, 3]);
+			expect(volume.objects[0]?.orientation).toEqual([0, 0, 0, 1]);
 			expect(volume.objects[0]?.meshUrl).toBe(SKETCHPAD_PLACEHOLDER_MESH_URL);
+		});
+
+		it("orients pieces by their plane frame", () => {
+			const plane = (xAxis: Plane["xAxis"], yAxis: Plane["yAxis"]): Plane => ({ origin: { x: 0, y: 0, z: 0 }, xAxis, yAxis });
+			const close = (actual: readonly number[], expected: readonly number[]) => actual.forEach((value, index) => expect(value).toBeCloseTo(expected[index]!, 6));
+			close(sketchpadPlaneOrientation(plane({ x: 0, y: 1, z: 0 }, { x: -1, y: 0, z: 0 })), [0, 0, Math.SQRT1_2, Math.SQRT1_2]);
+			close(sketchpadPlaneOrientation(plane({ x: -1, y: 0, z: 0 }, { x: 0, y: -1, z: 0 })), [0, 0, 1, 0]);
+			close(sketchpadPlaneOrientation(plane({ x: 1, y: 0, z: 0 }, { x: 0, y: 0, z: 1 })), [Math.SQRT1_2, 0, 0, Math.SQRT1_2]);
+			expect(sketchpadPlaneOrientation(plane({ x: 0, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }))).toEqual([0, 0, 0, 1]);
 		});
 	});
 
@@ -16116,6 +16956,204 @@ if (import.meta.vitest) {
 			ctrl.dispose();
 		});
 	});
+
+	//#region 🌐HubTests
+	type HubTestMessage = import("@semio/react").HubServerMessage;
+	type HubTestClientMessage = import("@semio/react").HubClientMessage;
+	type HubTestParticipant = import("@semio/react").HubParticipant;
+	type HubTestSocketShape = import("@semio/react").HubSocket;
+
+	class HubTestSocket implements HubTestSocketShape {
+		readyState = 0;
+		onopen: ((event: unknown) => void) | null = null;
+		onmessage: ((event: { readonly data: unknown }) => void) | null = null;
+		onclose: ((event: unknown) => void) | null = null;
+		onerror: ((event: unknown) => void) | null = null;
+		readonly sent: HubTestClientMessage[] = [];
+		constructor(readonly url: string) {}
+		push(message: HubTestMessage): void {
+			if (this.readyState === 1) this.onmessage?.({ data: JSON.stringify(message) });
+		}
+		send(data: string): void {
+			this.sent.push(JSON.parse(data) as HubTestClientMessage);
+		}
+		close(): void {
+			if (this.readyState === 3) return;
+			this.readyState = 3;
+			this.onclose?.({});
+		}
+	}
+
+	const hubEventually = async <T>(read: () => T | Promise<T>, ok: (value: T) => boolean, timeoutMs = 20_000): Promise<T> => {
+		const started = Date.now();
+		for (;;) {
+			const value = await read();
+			if (ok(value)) return value;
+			if (Date.now() - started > timeoutMs) throw new Error(`hubEventually timed out: ${JSON.stringify(value)?.slice(0, 200)}`);
+			await new Promise((resolve) => setTimeout(resolve, 25));
+		}
+	};
+
+	/** @emoji 🧪 In-test hub speaking Hub Protocol v1 over one authoritative rs kit; its own local kit commands broadcast as Alice's operations. */
+	const createSketchpadTestHub = async () => {
+		const authority = await SemioKitClient.open({ kind: "empty", name: "Hub Kit" });
+		const alice = { id: "p-alice", name: "Alice", email: "alice@x.io", color: "#e6194b" };
+		const people = new Map<string, typeof alice>([["tok-alice", alice]]);
+		const log: { version: number; operationId: string; clientId: string; personId: string; query: string; variables: Record<string, unknown>; hash: string }[] = [];
+		const sockets = new Set<HubTestSocket>();
+		const aliceParticipant: HubTestParticipant = { id: "part-alice", personId: alice.id, name: alice.name, color: alice.color, kind: "human", client: "sketchpad", joinedAt: "2026-09-25T00:00:00Z" };
+		let chain: Promise<unknown> = Promise.resolve();
+		const serial = <T,>(task: () => Promise<T>): Promise<T> => {
+			const next = chain.then(task);
+			chain = next.catch(() => undefined);
+			return next;
+		};
+		const hash = async () => String((await authority.store.readKitInner("hash"))?.["hash"] ?? "");
+		const broadcast = (message: HubTestMessage) => sockets.forEach((socket) => socket.push(message));
+		const record = async (operationId: string, clientId: string, personId: string, participantId: string | null, query: string, variables: Record<string, unknown>) => {
+			const version = log.length + 1;
+			const entry = { version, operationId, clientId, personId, query, variables, hash: await hash() };
+			log.push(entry);
+			broadcast({ type: "operation", version, hash: entry.hash, operationId, clientId, participantId, personId, query, variables: variables as never });
+			return entry;
+		};
+		authority.session.onOperation((operation, envelope) => {
+			if (operation.origin !== "local" || !/unsavedChange/.test(operation.query) || (envelope.errors?.length ?? 0) > 0) return;
+			const { storeId: _storeId, changeId: _changeId, ...variables } = operation.variables;
+			void serial(() => record(newUuidV7(), "alice-client", alice.id, aliceParticipant.id, operation.query, variables));
+		});
+		const summary = async () => ({ id: "s1", name: "Shared", role: "editor", owner: { id: alice.id, name: alice.name }, version: log.length, hash: await hash(), updatedAt: "2026-09-25T00:00:00Z", participantCount: sockets.size + 1 });
+		const reply = (status: number, body?: unknown) => ({ ok: status < 400, status, text: async () => (body === undefined ? "" : JSON.stringify(body)) });
+		const fetch: import("@semio/react").HubFetch = async (url, init) => {
+			const { pathname, searchParams } = new URL(url);
+			const token = (init.headers["Authorization"] ?? "").replace("Bearer ", "");
+			const body = init.body ? (JSON.parse(init.body) as Record<string, string>) : {};
+			if (pathname === "/auth/register" || pathname === "/auth/login") {
+				const person = { id: `p-${body["email"]}`, name: body["name"] ?? "Bob", email: body["email"] ?? "", color: "#4363d8" };
+				people.set(`tok-${person.email}`, person);
+				return reply(pathname === "/auth/register" ? 201 : 200, { token: `tok-${person.email}`, person });
+			}
+			const person = people.get(token);
+			if (!person) return reply(401, { error: "unauthorized" });
+			if (pathname === "/auth/me") return reply(200, { person });
+			if (pathname === "/auth/logout") return reply(204);
+			if (pathname === "/auth/tokens") return reply(201, { token: "agent-tok", label: body["label"], kind: "agent" });
+			if (pathname === "/sessions") return reply(200, [await summary()]);
+			if (pathname === "/shares/share-1/join") return reply(200, { session: await summary(), role: "editor" });
+			if (pathname === "/sessions/s1") return reply(200, await summary());
+			if (pathname === "/sessions/s1/kit") return reply(200, await serial(async () => ({ version: log.length, hash: await hash(), kit: JSON.parse(String((await authority.store.readKitInner("projection"))?.["projection"])) })));
+			if (pathname === "/sessions/s1/members") return reply(200, [{ person: alice, role: "owner" }, { person, role: "editor" }]);
+			if (pathname === "/sessions/s1/shares" && init.method === "POST") return reply(201, { token: "share-1", role: body["role"] });
+			if (pathname === "/sessions/s1/shares") return reply(200, []);
+			if (pathname === "/sessions/s1/operations" && init.method === "GET") return reply(200, log.filter((entry) => entry.version > Number(searchParams.get("after") ?? 0)).map((entry) => ({ ...entry, participantKind: "human", createdAt: "" })));
+			if (pathname === "/sessions/s1/operations") {
+				const request = body as unknown as { operationId: string; clientId: string; query: string; variables?: Record<string, unknown> };
+				const result = await serial(async () => {
+					const changeId = await authority.store.ensureChangeId();
+					const envelope = await authority.session.executeOperation({ operationId: request.operationId, query: request.query, variables: { ...(request.variables ?? {}), storeId: authority.store.id, changeId } as never, origin: "remote" });
+					if ((envelope.errors?.length ?? 0) > 0) return null;
+					return record(request.operationId, request.clientId, person.id, null, request.query, request.variables ?? {});
+				});
+				return result ? reply(200, { version: result.version, hash: result.hash, data: null }) : reply(422, { error: "rejected" });
+			}
+			return reply(404, { error: `no route ${pathname}` });
+		};
+		const socketFactory: import("@semio/react").HubSocketFactory = (url) => {
+			const socket = new HubTestSocket(url);
+			setTimeout(() => {
+				const token = new URL(url).searchParams.get("token") ?? "";
+				const person = people.get(token)!;
+				const self: HubTestParticipant = { id: `part-${person.id}`, personId: person.id, name: person.name, color: person.color, kind: "human", client: "sketchpad", joinedAt: "2026-09-25T00:00:00Z" };
+				sockets.add(socket);
+				socket.readyState = 1;
+				socket.onopen?.({});
+				void serial(async () => socket.push({ type: "welcome", self, participants: [aliceParticipant], version: log.length, hash: await hash() }));
+			}, 1);
+			return socket;
+		};
+		return { authority, alice: aliceParticipant, log, sockets, hash, broadcast, transport: { fetch, socketFactory } };
+	};
+
+	describe("Sketchpad hub collaboration", () => {
+		it("renders hub presentation helpers", () => {
+			expect(sketchpadHubActionPhrase(["addFixedPiece"])).toBe("added a piece");
+			expect(sketchpadHubActionPhrase(["createDesign", "someNewCommand"])).toBe("created a design, some new command");
+			expect(sketchpadHubInitials("Ada Lovelace")).toBe("AL");
+			expect(sketchpadHubStatusLabel({ state: "offline", version: 4, hash: "", pending: 2, resyncs: 0, lastError: null })).toBe("offline · v4 · 2 pending");
+			expect(sketchpadHubLink("http://127.0.0.1:5173/", "http://127.0.0.1:8080", { share: "tok" })).toBe("http://127.0.0.1:5173/?hub=http%3A%2F%2F127.0.0.1%3A8080&share=tok");
+			const bob: HubTestParticipant = { id: "b", personId: "pb", name: "Bob", color: "#4363d8", kind: "human", client: "sketchpad", joinedAt: "", focus: { app: "design", designId: "d1" }, selection: { designId: "d1", pieceIds: ["p1"], connectionIds: [] } };
+			const state = { kitId: "k", sessionId: "s", name: "S", role: "owner", status: { state: "synced", version: 0, hash: "", pending: 0, resyncs: 0, lastError: null }, participants: [bob, { ...bob, id: "me" }], selfId: "me", activity: [], shares: [], members: [] } as SketchpadHubKitState;
+			const remote = sketchpadHubRemoteSelections(state, "d1");
+			expect(remote.map((row) => row.participant.name)).toEqual(["Bob"]);
+			expect(sketchpadHubFocusLabel(bob)).toBe("Design · d1");
+			const flat = sketchpadHubDecorateDesignDiagram({ nodes: [{ id: "p1", text: "Capsule" }, { id: "p2", text: "Core" }] }, remote) as { nodes: Record<string, unknown>[]; meta: { kindCatalogs: { nodes: { id: string; stroke: string }[] } } };
+			expect(flat.nodes[0]).toMatchObject({ nodeKind: "semio.design.piece.remote.b", text: "Capsule · Bob" });
+			expect(flat.nodes[1]).toEqual({ id: "p2", text: "Core" });
+			expect(flat.meta.kindCatalogs.nodes).toEqual([{ id: "semio.design.piece.remote.b", name: "Bob", color: "#4363d833", stroke: "#4363d8" }]);
+		});
+
+		it("joins a share link, replicates both ways, publishes presence and highlights remote selections", async () => {
+			const testHub = await createSketchpadTestHub();
+			const platform = await buildSketchpadPlatform();
+			const shell = getSketchpadShellController()!;
+			const values = new Map<string, string>();
+			const storage = { get: (key: string) => values.get(key) ?? null, set: (key: string, value: string) => void values.set(key, value), remove: (key: string) => void values.delete(key) };
+			const hub = sketchpadInstallHub(platform, { storage, transport: testHub.transport, search: "" });
+			try {
+				await hub.start("?hub=http://hub.test&share=share-1");
+				expect(hub.snapshot.pendingLink).toEqual({ session: undefined, share: "share-1" });
+				expect(values.get("semio.sketchpad.hub.url")).toBe("http://hub.test");
+				await hub.register("Bob", "bob@x.io", "pw");
+				const kitId = await hubEventually(() => Object.keys(hub.snapshot.kits)[0], (id) => Boolean(id));
+				expect(values.get("semio.sketchpad.hub.token")).toBe("tok-bob@x.io");
+				expect(shell.listOpenKitIds()).toContain(kitId);
+				expect(shell.navigationPath).toBe(`/kits/${kitId}`);
+				expect(hub.kit(kitId)).toMatchObject({ sessionId: "s1", name: "Shared", role: "editor" });
+				await hubEventually(() => hub.kit(kitId)?.status.state, (state) => state === "synced");
+				const socket = [...testHub.sockets][0]!;
+				await hubEventually(() => socket.sent.filter((message) => message.type === "presence").length, (count) => count >= 1);
+				expect(socket.sent.find((message) => message.type === "presence")).toMatchObject({ focus: { app: "kit" }, selection: null });
+
+				expect(await testHub.authority.execute((kit) => kit.createType("Capsule"))).toEqual({ ok: true });
+				expect(await testHub.authority.execute((kit) => kit.createDesign("Tower"))).toEqual({ ok: true });
+				const design = await hubEventually(() => shell.getKitStore(kitId)?.getSnapshot().kit.designs?.[0], (row) => row?.name === "Tower");
+				const typeId = shell.getKitStore(kitId)!.getSnapshot().kit.types![0]!.id;
+				const plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+				expect(await testHub.authority.execute((kit) => testHub.authority.store.design(design!.id).addFixedPiece(typeId, { center: { u: 0, v: 0 }, plane }, "capsule-1"))).toEqual({ ok: true });
+				const piece = await hubEventually(() => shell.getKitStore(kitId)?.getSnapshot().kit.designs?.[0]?.pieces?.[0], (row) => Boolean(row));
+				expect(hub.kit(kitId)!.activity.map((entry) => `${entry.author}: ${entry.text}`)).toEqual(["Alice: created a type", "Alice: created a design", "Alice: added a piece"]);
+
+				expect((await executeSketchpadKitCommand(kitId, (kit) => kit.createDesign("Bob's design"))).ok).toBe(true);
+				await hub.replica(kitId)!.whenIdle();
+				await hubEventually(() => testHub.log.length, (count) => count === 4);
+				expect(await hub.replica(kitId)!.localHash()).toBe(await testHub.hash());
+				expect(hub.kit(kitId)!.activity.at(-1)).toMatchObject({ own: true, text: "created a design" });
+
+				shell.navigateTo(`/kits/${kitId}/designs/${design!.id}?piece=${piece!.id}`);
+				await hubEventually(() => socket.sent.filter((message) => message.type === "presence").at(-1), (message) => (message as { selection?: { pieceIds?: string[] } } | undefined)?.selection?.pieceIds?.[0] === piece!.id);
+				expect(socket.sent.filter((message) => message.type === "presence").at(-1)).toMatchObject({ focus: { app: "design", designId: design!.id } });
+				testHub.broadcast({ type: "presence.updated", participant: { ...testHub.alice, focus: { app: "design", designId: design!.id }, selection: { designId: design!.id, pieceIds: [piece!.id], connectionIds: [] } } });
+				const flat = await hubEventually(
+					() => (shell.getStore(platformTopologyStoreId(sketchpadDesignDiagramInstanceId(kitId, design!.id))) as PlatformTopologyStore | undefined)?.getSnapshot().flat as { nodes?: { id: string; nodeKind?: string; text?: string }[] } | undefined,
+					(value) => value?.nodes?.some((node) => node.nodeKind === "semio.design.piece.remote.part-alice") ?? false,
+				);
+				expect(flat!.nodes!.find((node) => node.id === piece!.id)?.text).toBe("capsule-1 · Alice");
+
+				expect(await hub.createShare(kitId, "editor")).toContain("share=share-1");
+				await hub.createAgentToken("Claude Code");
+				expect(hub.mcpSetup()?.claudeCommand).toBe('claude mcp add --transport http semio http://hub.test/mcp --header "Authorization: Bearer agent-tok"');
+
+				shell.closeKit(kitId);
+				expect(hub.kit(kitId)).toBeUndefined();
+				expect(hub.replica(kitId)).toBeUndefined();
+			} finally {
+				hub.dispose();
+				shell.dispose();
+				await testHub.authority.dispose();
+			}
+		}, 120_000);
+	});
+	//#endregion 🌐HubTests
 }
 //#endregion 🧪Tests
 
@@ -16218,5 +17256,100 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 			await expect(page.getByText("Topology loading")).toHaveCount(0, { timeout: 60_000 });
 		});
 	});
+
+	//#region 🌐HubE2E
+	test.describe("sketchpad hub collaboration", () => {
+		type HubE2EPage = import("@playwright/test").Page;
+		const hubUrl = process.env["SEMIO_HUB_URL"];
+		const inApp = <A, R>(page: HubE2EPage, fn: (module: typeof import("./index.ts"), arg: A) => R | Promise<R>, arg: A): Promise<R> =>
+			page.evaluate(async ({ source, arg }) => {
+				const entry = "/index.ts";
+				const module: unknown = await import(/* @vite-ignore */ entry);
+				return await (new Function("module", "arg", `return (${source})(module, arg);`) as (m: unknown, a: unknown) => Promise<R>)(module, arg);
+			}, { source: fn.toString(), arg });
+		const register = async (page: HubE2EPage, name: string, email: string): Promise<void> => {
+			await page.locator('[id="ui.panelToggle.chat"]').click({ timeout: 120_000 });
+			await page.getByTestId("sketchpad-hub-name").fill(name);
+			await page.getByTestId("sketchpad-hub-email").fill(email);
+			await page.getByTestId("sketchpad-hub-password").fill(`secret-${name}`);
+			await page.locator('[id="sketchpad.hub.register"]').click();
+			await expect(page.getByTestId("sketchpad-hub-person")).toContainText(name, { timeout: 30_000 });
+		};
+		const state = (page: HubE2EPage, kitId: string) =>
+			inApp(page, async (m, kitId) => {
+				const hub = m.getSketchpadHubController()!;
+				const replica = hub.replica(kitId);
+				return { status: hub.kit(kitId)?.status, participants: hub.kit(kitId)?.participants.length ?? 0, local: replica ? await replica.localHash() : "", remote: replica ? await replica.client.sessionKit(replica.sessionId).then((kit) => kit.hash, () => "") : "" };
+			}, kitId);
+		const designNames = (page: HubE2EPage, kitId: string) => inApp(page, (m, kitId) => m.getSketchpadShellController()!.getKitStore(kitId)!.getSnapshot().kit.designs?.map((design) => design.name ?? "") ?? [], kitId);
+
+		test("two people share the metabolism kit, see each other and edit live (SEMIO_HUB_URL)", async ({ browser }) => {
+			test.skip(!hubUrl, "requires a running hub (SEMIO_HUB_URL)");
+			const unique = Date.now().toString(36);
+			const ada = await (await browser.newContext()).newPage();
+			await ada.goto(`/?hub=${encodeURIComponent(hubUrl!)}`, { waitUntil: "domcontentloaded" });
+			await register(ada, "Ada", `ada-${unique}@semio.test`);
+			await ada.locator('[id="ui.search.toggle"]').click();
+			await ada.getByRole("dialog").getByPlaceholder("Search...").fill("metabolism");
+			await ada.getByRole("dialog").getByText("Open metabolism fixture").click();
+			await expect(ada).toHaveURL(/\/kits\/[0-9a-f-]{36}/i, { timeout: 180_000 });
+			const localPath = new URL(ada.url()).pathname;
+			await ada.locator('[id="sketchpad.hub.shareActive"]').click({ timeout: 60_000 });
+			await ada.waitForFunction((previous) => location.pathname !== previous && location.pathname.startsWith("/kits/"), localPath, { timeout: 180_000 });
+			const kitId = new URL(ada.url()).pathname.split("/")[2]!;
+			await expect(ada.getByTestId("sketchpad-hub-session-status")).toContainText("synced", { timeout: 60_000 });
+			await ada.locator('[id="sketchpad.hub.share"]').click();
+			await ada.locator('[id="sketchpad.hub.share.editor"]').click();
+			const link = await ada.getByTestId("sketchpad-hub-share-link-editor").inputValue({ timeout: 30_000 });
+			expect(link).toContain(`hub=${encodeURIComponent(hubUrl!)}`);
+			await ada.keyboard.press("Escape");
+
+			const bob = await (await browser.newContext()).newPage();
+			await bob.goto(link, { waitUntil: "domcontentloaded" });
+			await register(bob, "Bob", `bob-${unique}@semio.test`);
+			await expect(bob).toHaveURL(new RegExp(`/kits/${kitId}`), { timeout: 180_000 });
+			await expect.poll(async () => [(await state(ada, kitId)).participants, (await state(bob, kitId)).participants], { timeout: 60_000 }).toEqual([2, 2]);
+			await expect(ada.getByTestId("sketchpad-hub-footer").getByTestId("sketchpad-hub-avatar")).toHaveCount(2, { timeout: 30_000 });
+
+			await ada.locator('[id="ui.search.toggle"]').click();
+			await ada.getByRole("dialog").getByPlaceholder("Search...").fill("Create design");
+			await ada.getByRole("dialog").getByText("Create design", { exact: true }).click();
+			await expect.poll(() => designNames(bob, kitId), { timeout: 60_000 }).toContain("New design");
+			await bob.locator('[id="hub-activity"]').click();
+			await expect(bob.getByTestId("basic-chat-message").filter({ hasText: "created a design" }).first()).toBeVisible({ timeout: 30_000 });
+
+			const target = await inApp(ada, (m, kitId) => {
+				const design = m.getSketchpadShellController()!.getKitStore(kitId)!.getSnapshot().kit.designs!.find((row) => (row.pieces?.length ?? 0) > 1)!;
+				return { designId: design.id, pieceId: design.pieces![0]!.id };
+			}, kitId);
+			await inApp(ada, (m, path) => m.navigateSketchpadTo(path), `/kits/${kitId}/designs/${target.designId}?piece=${target.pieceId}`);
+			await inApp(bob, (m, path) => m.navigateSketchpadTo(path), `/kits/${kitId}/designs/${target.designId}`);
+			await expect
+				.poll(() => inApp(bob, (m, arg) => (m.getSketchpadShellController()!.getStore(m.sketchpadTopologyStoreId(m.sketchpadDesignDiagramInstanceId(arg.kitId, arg.designId)))?.getSnapshot() as { flat?: { nodes?: { id: string; nodeKind?: string }[] } } | undefined)?.flat?.nodes?.find((node) => node.id === arg.pieceId)?.nodeKind ?? "", { kitId, ...target }), { timeout: 60_000 })
+				.toMatch(/^semio\.design\.piece\.remote\./);
+			expect(await inApp(ada, async (m, arg) => (await m.executeSketchpadKitCommand(arg.kitId, (kit) => kit.session.store(kit.storeId!).design(arg.designId).pieces([arg.pieceId]).drag({ u: 2, v: 1 }))).ok, { kitId, ...target })).toBe(true);
+			await expect
+				.poll(() => inApp(bob, (m, arg) => m.getSketchpadShellController()!.getKitStore(arg.kitId)!.getSnapshot().kit.designs!.find((row) => row.id === arg.designId)!.pieces!.find((piece) => piece.id === arg.pieceId)!.position?.center, { kitId, ...target }), { timeout: 60_000 })
+				.toEqual({ u: 2, v: 1 });
+
+			await bob.context().setOffline(true);
+			expect(await inApp(bob, async (m, kitId) => (await m.executeSketchpadKitCommand(kitId, (kit) => kit.createDesign("Offline by Bob"))).ok, kitId)).toBe(true);
+			expect(await inApp(ada, async (m, kitId) => (await m.executeSketchpadKitCommand(kitId, (kit) => kit.createDesign("Online by Ada"))).ok, kitId)).toBe(true);
+			await expect.poll(async () => (await state(bob, kitId)).status?.state, { timeout: 30_000 }).toBe("offline");
+			await bob.context().setOffline(false);
+			await expect
+				.poll(async () => {
+					const [a, b] = [await state(ada, kitId), await state(bob, kitId)];
+					return a.status?.state === "synced" && b.status?.state === "synced" && b.status.pending === 0 && a.local === b.local && a.local === a.remote;
+				}, { timeout: 120_000 })
+				.toBe(true);
+			expect((await designNames(bob, kitId)).filter((name) => name.endsWith("by Bob") || name.endsWith("by Ada")).sort()).toEqual(["Offline by Bob", "Online by Ada"]);
+			await ada.locator('[id="hub"]').click();
+			await ada.locator('[id="sketchpad.hub.connectAi"]').click();
+			await ada.locator('[id="sketchpad.hub.ai.create"]').click();
+			await expect(ada.getByTestId("sketchpad-hub-ai-claude")).toHaveValue(new RegExp(`^claude mcp add --transport http semio ${hubUrl!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/mcp --header "Authorization: Bearer .+"$`), { timeout: 30_000 });
+		});
+	});
+	//#endregion 🌐HubE2E
 }
 //#endregion 🧪E2E

@@ -412,7 +412,7 @@ class RemoteKitUriNotValid(ClientError):
         self.uri = uri
 
     def __str__(self):
-        return f"🌐 The remote kit URI ({self.uri}) is not valid. Expected format: http(s)://server/api/kits/encodedKitUri"
+        return f"🌐 The remote kit URI ({self.uri}) is not valid. Expected format: http(s)://hub/sessions/<sessionId>"
 
 
 class NotFound(ClientError, abc.ABC):

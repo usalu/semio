@@ -192,16 +192,11 @@ function defaultRsWasmSpecifier(): string {
   return "@semio/rs-wasm";
 }
 
-/** @emoji 🛰️ Creates a WASM-backed GraphQL executor; {@code bootstrapUri} must be {@link RS_WASM_EMPTY_STORE_URI}. */
-export async function createRsWasmGraphqlHandle(
-  bootstrapUri: string,
-  opts?: Readonly<{ wasmSpecifier?: string; wasmBytes?: Uint8Array | null }>,
-): Promise<RsWasmGraphqlHandle> {
-  if (bootstrapUri !== RS_WASM_EMPTY_STORE_URI) {
-    throw new Error(`createRsWasmGraphqlHandle: only ${RS_WASM_EMPTY_STORE_URI} is allowed; seed kit data via GraphQL after open`);
-  }
-  const wasmSpecifier = opts?.wasmSpecifier ?? defaultRsWasmSpecifier();
-  const wasmBytesPre = opts?.wasmBytes ?? (await readSemioWasmBytesFromMonorepoCandidates());
+/** @emoji 🧫 One instantiation per wasm module specifier: concurrent sessions share it (re-instantiating swaps linear memory under live handles). */
+const rsWasmModules = new Map<string, Promise<typeof import("@semio/rs-wasm")>>();
+
+async function loadRsWasmModule(wasmSpecifier: string, wasmBytes: Uint8Array | null | undefined): Promise<typeof import("@semio/rs-wasm")> {
+  const wasmBytesPre = wasmBytes ?? (await readSemioWasmBytesFromMonorepoCandidates());
   let mod: typeof import("@semio/rs-wasm");
   try {
     mod = wasmSpecifier === "@semio/rs-wasm" ? await import("@semio/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
@@ -214,6 +209,25 @@ export async function createRsWasmGraphqlHandle(
     else await mod.default();
   }
   if (typeof mod.boot === "function") mod.boot();
+  return mod;
+}
+
+/** @emoji 🛰️ Creates a WASM-backed GraphQL executor; {@code bootstrapUri} must be {@link RS_WASM_EMPTY_STORE_URI}. */
+export async function createRsWasmGraphqlHandle(
+  bootstrapUri: string,
+  opts?: Readonly<{ wasmSpecifier?: string; wasmBytes?: Uint8Array | null }>,
+): Promise<RsWasmGraphqlHandle> {
+  if (bootstrapUri !== RS_WASM_EMPTY_STORE_URI) {
+    throw new Error(`createRsWasmGraphqlHandle: only ${RS_WASM_EMPTY_STORE_URI} is allowed; seed kit data via GraphQL after open`);
+  }
+  const wasmSpecifier = opts?.wasmSpecifier ?? defaultRsWasmSpecifier();
+  let ready = rsWasmModules.get(wasmSpecifier);
+  if (!ready) {
+    ready = loadRsWasmModule(wasmSpecifier, opts?.wasmBytes);
+    rsWasmModules.set(wasmSpecifier, ready);
+    ready.catch(() => rsWasmModules.delete(wasmSpecifier));
+  }
+  const mod = await ready;
   const handleUnknown = mod.KitStoreHandle.create(bootstrapUri);
   const wasmHandle = handleUnknown instanceof Promise ? await handleUnknown : handleUnknown;
   if (wasmHandle == null || typeof (wasmHandle as { execute?: unknown }).execute !== "function") {
@@ -322,7 +336,7 @@ function graphqlWirePostBodyJson(body: {
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   if (!ms || ms <= 0) return p;
   return new Promise((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error(label)), ms);
+    const t = setTimeout(() => reject(new Error(`${label}: timed out after ${ms} ms`)), ms);
     p.then(
       (v) => {
         clearTimeout(t);
@@ -378,7 +392,52 @@ function describeWorkerThreadError(ev: globalThis.Event): string {
 
 class WorkerStringTransport {
   private nextSerial = 0;
+  private disposed = false;
+  private readonly inflight = new Set<(error: Error) => void>();
   constructor(private readonly worker: Worker) { }
+
+  /** @emoji 📨 Correlates one worker request by id; {@link dispose} rejects it instead of leaving it to time out. */
+  private request(
+    op: "execute" | "subscribe",
+    prefix: string,
+    requestJson: string,
+    onMessage: (m: { op: string; json?: string }) => void,
+    onDone: () => string,
+  ): Promise<string> {
+    if (this.disposed) return Promise.reject(new Error("semio/js: session disposed"));
+    const reqId = `${prefix}-${++this.nextSerial}-${Date.now().toString(36)}`;
+    return new Promise<string>((resolve, reject) => {
+      const settle = (error: Error | null, value?: string) => {
+        this.worker.removeEventListener("message", w);
+        this.inflight.delete(fail);
+        if (error) reject(error);
+        else resolve(value!);
+      };
+      const fail = (error: Error) => settle(error);
+      const w = (ev: MessageEvent<string>) => {
+        let m: { op: string; reqId?: string; json?: string; message?: string };
+        try {
+          m = JSON.parse(ev.data) as typeof m;
+        } catch {
+          return;
+        }
+        if (m.reqId !== reqId) return;
+        if (m.op === "done") {
+          try {
+            settle(null, onDone());
+          } catch (error) {
+            settle(error as Error);
+          }
+          return;
+        }
+        if (m.op === "error") settle(new Error(m.message ?? "worker error"));
+        else onMessage(m);
+      };
+      this.inflight.add(fail);
+      this.worker.addEventListener("message", w);
+      this.worker.postMessage(JSON.stringify({ op, reqId, body: requestJson }));
+    });
+  }
 
   init(uri: string): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -417,61 +476,38 @@ class WorkerStringTransport {
   }
 
   async execute(requestJson: string): Promise<string> {
-    const reqId = `r-${++this.nextSerial}-${Date.now().toString(36)}`;
-    return await new Promise<string>((resolve, reject) => {
-      let result: string | null = null;
-      const w = (ev: MessageEvent<string>) => {
-        let m: { op: string; reqId?: string; json?: string; message?: string };
-        try {
-          m = JSON.parse(ev.data) as typeof m;
-        } catch {
-          return;
-        }
-        if (m.reqId !== reqId) return;
+    let result: string | null = null;
+    return await this.request(
+      "execute",
+      "r",
+      requestJson,
+      (m) => {
         if (m.op === "result" && typeof m.json === "string") result = m.json;
-        if (m.op === "done") {
-          this.worker.removeEventListener("message", w);
-          if (result == null) reject(new Error("graphql: worker completed without result"));
-          else resolve(result);
-        }
-        if (m.op === "error") {
-          this.worker.removeEventListener("message", w);
-          reject(new Error(m.message ?? "worker error"));
-        }
-      };
-      this.worker.addEventListener("message", w);
-      this.worker.postMessage(JSON.stringify({ op: "execute", reqId, body: requestJson }));
-    });
+      },
+      () => {
+        if (result == null) throw new Error("graphql: worker completed without result");
+        return result;
+      },
+    );
   }
 
   async subscribe(requestJson: string, onEvent: (eventJson: string) => void): Promise<void> {
-    const reqId = `s-${++this.nextSerial}-${Date.now().toString(36)}`;
-    await new Promise<void>((resolve, reject) => {
-      const w = (ev: MessageEvent<string>) => {
-        let m: { op: string; reqId?: string; json?: string; message?: string };
-        try {
-          m = JSON.parse(ev.data) as typeof m;
-        } catch {
-          return;
-        }
-        if (m.reqId !== reqId) return;
+    await this.request(
+      "subscribe",
+      "s",
+      requestJson,
+      (m) => {
         if (m.op === "event" && typeof m.json === "string") onEvent(m.json);
-        if (m.op === "done") {
-          this.worker.removeEventListener("message", w);
-          resolve();
-        }
-        if (m.op === "error") {
-          this.worker.removeEventListener("message", w);
-          reject(new Error(m.message ?? "worker error"));
-        }
-      };
-      this.worker.addEventListener("message", w);
-      this.worker.postMessage(JSON.stringify({ op: "subscribe", reqId, body: requestJson }));
-    });
+      },
+      () => "",
+    );
   }
 
   dispose(): void {
+    this.disposed = true;
     this.worker.terminate();
+    const error = new Error("semio/js: session disposed");
+    for (const fail of [...this.inflight]) fail(error);
   }
 }
 
@@ -1849,12 +1885,6 @@ export type KitOperationMiddleware = (operation: KitOperation, next: KitOperatio
 
 /** @emoji 👂 Observes executed kit operations. */
 export type KitOperationListener = (operation: KitOperation, envelope: KitOperationEnvelope) => void;
-
-/** @emoji 🆔 Client-generated operation id (uuid). */
-export function newKitOperationId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
-  return `op-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-}
 //#endregion 🎛️KitOperationTypes
 
 /**
@@ -1963,7 +1993,7 @@ export class Session {
   }
 
   private async mutateEnvelope(body: { query: string; variables?: JsonObject }): Promise<GraphqlEnvelope<JsonValue>> {
-    return this.executeOperation({ operationId: newKitOperationId(), query: body.query, variables: body.variables ?? {}, origin: "local" });
+    return this.executeOperation({ operationId: newUuidV7(), query: body.query, variables: body.variables ?? {}, origin: "local" });
   }
   //#endregion 🎛️KitOperations
 
@@ -2538,7 +2568,7 @@ function executeSessionWriteGraphql(
   session: Session,
   body: Readonly<{ query: string; variables?: JsonObject }>,
 ): Promise<GraphqlEnvelope<JsonValue>> {
-  return session.executeOperation({ operationId: newKitOperationId(), query: body.query, variables: body.variables ?? {}, origin: "local" });
+  return session.executeOperation({ operationId: newUuidV7(), query: body.query, variables: body.variables ?? {}, origin: "local" });
 }
 
 //#region 🧬VcsEntities
@@ -5339,7 +5369,7 @@ export type HubServerMessage =
   | Readonly<{ type: "presence.left"; participantId: string }>
   | Readonly<{ type: "presence.updated"; participant: HubParticipant }>
   | HubOperationMessage
-  | Readonly<{ type: "error"; message: string }>
+  | Readonly<{ type: "error"; message: string; operationId?: string | null }>
   | Readonly<{ type: "pong" }>;
 /** @emoji 📤 Client → server websocket message. */
 export type HubClientMessage =
@@ -5363,7 +5393,7 @@ export function isHubKitOperationDocument(query: string): boolean {
   return graphqlWireOperationKind(query) === "mutation" && /unsavedChange\s*\(\s*id\s*:\s*\$changeId\s*\)\s*\{\s*kit\s*\{/.test(query);
 }
 
-const HUB_NAVIGATION_FIELDS = new Set(["session", "store", "theKit", "unsavedChange", "kit", "design", "type", "piece", "pieces", "tag", "concept", "quality", "port", "connector", "connection", "folder", "file"]);
+const HUB_NAVIGATION_FIELDS = new Set(["mutation", "session", "store", "theKit", "unsavedChange", "kit", "design", "type", "piece", "pieces", "tag", "concept", "quality", "port", "connector", "connection", "folder", "file"]);
 
 /** @emoji 🏷️ Command leaves of a kit operation document (e.g. {@code ["createDesign"]}, {@code ["drag"]}) for activity feeds. */
 export function hubOperationActions(query: string): readonly string[] {
@@ -5592,6 +5622,7 @@ export class HubSessionConnection {
   private attempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private pingTimer: ReturnType<typeof setInterval> | null = null;
+  private lastSeen = 0;
   private presenceState: HubPresencePatch = {};
   private readonly live = new Map<string, HubParticipant>();
   private readonly known = new Map<string, HubParticipant>();
@@ -5695,13 +5726,15 @@ export class HubSessionConnection {
     socket.onopen = () => {
       if (this.socket !== socket) return;
       this.attempt = 0;
+      this.lastSeen = Date.now();
       this.setState("open");
       const interval = this.options.pingIntervalMs ?? 25_000;
-      if (interval > 0) this.pingTimer = setInterval(() => this.ping(), interval);
+      if (interval > 0) this.pingTimer = setInterval(() => this.heartbeat(interval), interval);
       if (Object.keys(this.presenceState).length > 0) this.send({ type: "presence", ...this.presenceState });
     };
     socket.onmessage = (event) => {
       if (this.socket !== socket) return;
+      this.lastSeen = Date.now();
       let message: HubServerMessage;
       try {
         message = JSON.parse(String(event.data)) as HubServerMessage;
@@ -5720,6 +5753,12 @@ export class HubSessionConnection {
       this.scheduleReconnect();
     };
     socket.onerror = () => undefined;
+  }
+
+  /** @emoji 💓 Pings and drops a silent socket (no message for two intervals) so it reconnects. */
+  private heartbeat(interval: number): void {
+    if (Date.now() - this.lastSeen > 2 * interval) this.socket?.close();
+    else this.ping();
   }
 
   private receive(message: HubServerMessage): void {
@@ -5844,6 +5883,9 @@ export class HubReplica {
   private resyncing = false;
   private processing = 0;
   private flushing: Promise<void> | null = null;
+  private unreachable = false;
+  private retryAttempt = 0;
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private disposed = false;
   private chain: Promise<void>;
   private readonly own = new Map<string, HubOwnOperation>();
@@ -5894,7 +5936,7 @@ export class HubReplica {
       ? "closed"
       : this.resyncing
         ? "resyncing"
-        : connection === "offline"
+        : connection === "offline" || this.unreachable
           ? "offline"
           : connection !== "open"
             ? "connecting"
@@ -5938,6 +5980,7 @@ export class HubReplica {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    if (this.retryTimer != null) clearTimeout(this.retryTimer);
     for (const detach of this.detachers.splice(0)) detach();
     this.connection?.close();
     this.emitStatus();
@@ -6005,6 +6048,8 @@ export class HubReplica {
       const op = this.own.get(this.outbox[0]!)!;
       try {
         const result = await this.client.postOperation(this.sessionId, { operationId: op.operationId, clientId: this.clientId, baseVersion: this.version, query: op.query, variables: op.variables });
+        this.unreachable = false;
+        this.retryAttempt = 0;
         this.outbox.shift();
         op.version = result.version;
         if (op.echoed) {
@@ -6012,13 +6057,28 @@ export class HubReplica {
           void this.enqueue(() => this.verify(result.version, result.hash));
         }
       } catch (error) {
-        if (!(error instanceof HubError) || error.status === 0) return;
+        if (!(error instanceof HubError) || error.status === 0) {
+          this.unreachable = true;
+          this.scheduleRetry();
+          return;
+        }
         this.outbox.shift();
         this.own.delete(op.operationId);
         this.lastError = `operation rejected (${error.status}): ${error.message}`;
         void this.enqueue(() => this.resyncNow());
       }
     }
+  }
+
+  /** @emoji ⏲️ Retries unsent operations with exponential backoff while the hub is unreachable. */
+  private scheduleRetry(): void {
+    if (this.retryTimer != null || this.disposed) return;
+    const delay = Math.min(10_000, 500 * 2 ** this.retryAttempt);
+    this.retryAttempt += 1;
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      void this.flush();
+    }, delay);
   }
 
   private async verify(version: number, hash: string): Promise<void> {
@@ -6507,6 +6567,43 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       }
     });
 
+    it("executeOperation funnels kit mutations through composed middlewares and observers", async () => {
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const order: string[] = [];
+        const observed: KitOperation[] = [];
+        const outer = session.useOperationMiddleware(async (operation, next) => {
+          order.push(`outer:${operation.origin}`);
+          return next(operation);
+        });
+        session.useOperationMiddleware(async (operation, next) => {
+          order.push("inner");
+          return next(operation);
+        });
+        const stop = session.onOperation((operation) => observed.push(operation));
+        const kit = await (await session.stores())[0]!.wip().theKit().kit();
+        expect(await kit.rename("choke point")).toEqual({ ok: true });
+        expect(await kit.name()).toBe("choke point");
+        expect(order.slice(0, 2)).toEqual(["outer:local", "inner"]);
+        expect(observed.some((operation) => operation.query.includes("rename"))).toBe(true);
+        outer();
+        stop();
+        const before = observed.length;
+        order.length = 0;
+        await kit.rename("unobserved");
+        expect(observed.length).toBe(before);
+        expect(order.every((entry) => entry === "inner")).toBe(true);
+      } finally {
+        await session.dispose();
+      }
+    }, 120_000);
+
+    it("resolveFileSystemNode returns null for unknown kinds and typology entities", () => {
+      const session = {} as Session;
+      expect(resolveFileSystemNode(session, "store-1", { id: "x", kind: "MYSTERY" })).toBeNull();
+      expect(resolveFileSystemNode(session, "store-1", { id: "t", kind: "TYPOLOGY" })).toBeInstanceOf(Typology);
+    });
+
     it("Session.open rejects inline JSON bootstrap URI", async () => {
       await expect(Session.open('{"id":"kit-json"}')).rejects.toThrow(/installProjection/);
       await expect(Session.open("dev+json:eyJpZCI6IngifQ==")).rejects.toThrow(/installProjection/);
@@ -6649,6 +6746,380 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       }
     });
   })
+
+  //#region 🌐HubTests
+  class MockHubSocket implements HubSocket {
+    readyState = 0;
+    onopen: ((event: unknown) => void) | null = null;
+    onmessage: ((event: { readonly data: unknown }) => void) | null = null;
+    onclose: ((event: unknown) => void) | null = null;
+    onerror: ((event: unknown) => void) | null = null;
+    readonly sent: HubClientMessage[] = [];
+    constructor(readonly url: string, private readonly onSend: (socket: MockHubSocket, message: HubClientMessage) => void = () => undefined) {}
+    open(): void {
+      this.readyState = HUB_SOCKET_OPEN;
+      this.onopen?.({});
+    }
+    push(message: HubServerMessage): void {
+      this.onmessage?.({ data: JSON.stringify(message) });
+    }
+    send(data: string): void {
+      const message = JSON.parse(data) as HubClientMessage;
+      this.sent.push(message);
+      this.onSend(this, message);
+    }
+    close(): void {
+      if (this.readyState === 3) return;
+      this.readyState = 3;
+      this.onclose?.({});
+    }
+  }
+
+  const hubParticipant = (id: string, name: string, extra: Partial<HubParticipant> = {}): HubParticipant => ({
+    id,
+    personId: `person-${id}`,
+    name,
+    color: "#4363d8",
+    kind: "human",
+    client: "sketchpad",
+    joinedAt: "2026-09-25T00:00:00Z",
+    ...extra,
+  });
+
+  const kitHashOf = async (store: Store): Promise<string> => String((await store.readKitInner("hash"))?.["hash"] ?? "");
+
+  /** @emoji 🧪 In-test hub honoring Hub Protocol v1 replication semantics on its own authoritative rs store. */
+  const createFakeHub = async () => {
+    const session = await Session.openInMemory({ timeoutMs: 120_000 });
+    const store = (await session.stores())[0]!;
+    const log: HubOperationRecord[] = [];
+    const sockets = new Set<MockHubSocket>();
+    const offline = new Set<string>();
+    const httpDown = new Set<string>();
+    const participants = new Map<MockHubSocket, HubParticipant>();
+    let chain: Promise<unknown> = Promise.resolve();
+    const serial = <T>(task: () => Promise<T>): Promise<T> => {
+      const next = chain.then(task);
+      chain = next.catch(() => undefined);
+      return next;
+    };
+    const head = async () => ({ version: log.length, hash: await kitHashOf(store) });
+    const broadcast = (message: HubServerMessage) => {
+      for (const socket of sockets) if (socket.readyState === HUB_SOCKET_OPEN) socket.push(message);
+    };
+    const apply = (request: HubOperationRequest, participantId: string | null) =>
+      serial(async (): Promise<HubOperationResult> => {
+        const existing = log.find((record) => record.operationId === request.operationId);
+        if (existing) return { version: existing.version, hash: existing.hash, data: null };
+        if (!isHubKitOperationDocument(request.query) || request.query.includes("reject-me")) throw new HubError("operation rejected", 422);
+        const changeId = await store.ensureChangeId();
+        const envelope = await session.executeOperation({ operationId: request.operationId, query: request.query, variables: { ...(request.variables ?? {}), storeId: store.id, changeId } as JsonObject, origin: "remote" });
+        if (!hubEnvelopeOk(envelope)) throw new HubError("operation failed", 422);
+        const { version, hash } = { version: log.length + 1, hash: await kitHashOf(store) };
+        log.push({ version, operationId: request.operationId, clientId: request.clientId, personId: "person-a", participantKind: "human", query: request.query, variables: request.variables ?? null, hash, createdAt: new Date().toISOString() });
+        broadcast({ type: "operation", version, hash, operationId: request.operationId, clientId: request.clientId, participantId, personId: "person-a", query: request.query, variables: request.variables ?? null });
+        return { version, hash, data: envelope.data ?? null };
+      });
+    const respond = (status: number, body: unknown): HubHttpResponse => ({ ok: status < 400, status, text: async () => (body === undefined ? "" : JSON.stringify(body)) });
+    const fetchFor = (clientTag: string): HubFetch => async (url, init) => {
+      if (offline.has(clientTag) || httpDown.has(clientTag)) throw new Error("network down");
+      const path = new URL(url).pathname;
+      const kitMatch = path.match(/^\/sessions\/([^/]+)\/kit$/);
+      if (kitMatch && init.method === "GET") {
+        return respond(200, await serial(async () => ({ ...(await head()), kit: JSON.parse(String((await store.readKitInner("projection"))?.["projection"] ?? "{}")) })));
+      }
+      if (/^\/sessions\/[^/]+\/operations$/.test(path) && init.method === "POST") {
+        try {
+          return respond(200, await apply(JSON.parse(init.body ?? "{}") as HubOperationRequest, null));
+        } catch (error) {
+          return respond(error instanceof HubError ? error.status : 500, { error: String(error) });
+        }
+      }
+      if (/^\/sessions\/[^/]+\/operations$/.test(path)) {
+        const after = Number(new URL(url).searchParams.get("after") ?? 0);
+        return respond(200, log.filter((record) => record.version > after));
+      }
+      if (/^\/sessions\/[^/]+$/.test(path)) return respond(200, { id: "session-1", name: "Shared", role: "owner", ...(await head()) });
+      return respond(404, { error: "not found" });
+    };
+    const socketFactoryFor = (clientTag: string): HubSocketFactory => (url) => {
+      const socket = new MockHubSocket(url);
+      setTimeout(() => {
+        if (offline.has(clientTag)) {
+          socket.close();
+          return;
+        }
+        sockets.add(socket);
+        socket.open();
+        const self = hubParticipant(clientTag, clientTag);
+        participants.set(socket, self);
+        void serial(head).then(({ version, hash }) => {
+          socket.push({ type: "welcome", self, participants: [...participants.values()], version, hash });
+          broadcast({ type: "presence.joined", participant: self });
+        });
+      }, 1);
+      const close = socket.close.bind(socket);
+      socket.close = () => {
+        sockets.delete(socket);
+        participants.delete(socket);
+        close();
+      };
+      return socket;
+    };
+    const client = (clientTag: string) => new HubClient({ url: "http://hub.test", token: `token-${clientTag}`, fetch: fetchFor(clientTag), socketFactory: socketFactoryFor(clientTag) });
+    const setOffline = (clientTag: string, down: boolean) => {
+      if (down) {
+        offline.add(clientTag);
+        for (const socket of [...sockets]) if (socket.url.includes(`clientId=`) && participants.get(socket)?.id === clientTag) socket.close();
+      } else offline.delete(clientTag);
+    };
+    const setHttpDown = (clientTag: string, down: boolean) => void (down ? httpDown.add(clientTag) : httpDown.delete(clientTag));
+    return { session, store, log, client, setOffline, setHttpDown, head, dispose: () => session.dispose() };
+  };
+
+  const openReplica = async (hub: Awaited<ReturnType<typeof createFakeHub>>, tag: string) => {
+    const session = await Session.openInMemory({ timeoutMs: 120_000 });
+    const store = (await session.stores())[0]!;
+    const replica = await HubReplica.open({ client: hub.client(tag), sessionId: "session-1", store, connect: { pingIntervalMs: 0, backoffBaseMs: 5, backoffMaxMs: 20 } });
+    await eventually(async () => replica.status.state, (state) => state === "synced", 10_000);
+    return { session, store, replica, kit: await store.wip().theKit().kit() };
+  };
+
+  describe("semio/js hub", () => {
+    it("newUuidV7 mints time-ordered version 7 uuids", async () => {
+      const first = newUuidV7();
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      const second = newUuidV7();
+      expect(first).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      expect(second > first).toBe(true);
+    });
+
+    it("recognizes kit operation documents and their actions", () => {
+      const { query } = scopedKitMutationBody("store", "change", 'design(id: "d") { afp: addFixedPiece(id: "p", blueprintId: "t", position: { center: { u: 0, v: 0 } }) }');
+      expect(isHubKitOperationDocument(query)).toBe(true);
+      expect(isHubKitOperationDocument("mutation($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange { ok } } } } }")).toBe(false);
+      expect(hubOperationActions(query)).toEqual(["addFixedPiece"]);
+      expect(hubOperationActions(scopedKitMutationBody("s", "c", 'cD: createDesign(id: "x", name: "drag(me)")').query)).toEqual(["createDesign"]);
+      expect(hubOperationActions(scopedKitMutationBody("s", "c", 'design(id: "d") { pieces(ids: ["a"]) { drag(offset: { u: 1, v: 0 }) } }').query)).toEqual(["drag"]);
+    });
+
+    it("builds MCP client configs for agent tokens", () => {
+      const setup = hubMcpSetup("http://127.0.0.1:8080/", "tok");
+      expect(setup.endpoint).toBe("http://127.0.0.1:8080/mcp");
+      expect(setup.claudeCommand).toBe('claude mcp add --transport http semio http://127.0.0.1:8080/mcp --header "Authorization: Bearer tok"');
+      expect(JSON.parse(setup.json)).toEqual({ mcpServers: { semio: { type: "http", url: "http://127.0.0.1:8080/mcp", headers: { Authorization: "Bearer tok" } } } });
+    });
+
+    it("HubClient speaks the REST protocol with bearer auth and typed errors", async () => {
+      const calls: { url: string; method: string; headers: Readonly<Record<string, string>>; body?: string }[] = [];
+      const person: HubPerson = { id: "p1", name: "Ada", email: "ada@x.io", color: "#e6194b" };
+      const fetchMock: HubFetch = async (url, init) => {
+        calls.push({ url, ...init });
+        const reply = (status: number, body: unknown): HubHttpResponse => ({ ok: status < 400, status, text: async () => (body === undefined ? "" : JSON.stringify(body)) });
+        if (url.endsWith("/auth/register")) return reply(201, { token: "t1", person });
+        if (url.endsWith("/auth/me")) return reply(200, { person });
+        if (url.endsWith("/auth/logout")) return reply(204, undefined);
+        if (url.endsWith("/sessions") && init.method === "POST") return reply(201, { id: "s1", name: "Shared", role: "owner", version: 0, hash: "h0" });
+        if (url.includes("/operations?after=2")) return reply(200, []);
+        if (url.endsWith("/shares/abc/join")) return reply(403, { error: "share revoked" });
+        return reply(404, { error: "missing" });
+      };
+      const client = new HubClient({ url: "http://hub.test/", fetch: fetchMock, socketFactory: (url) => new MockHubSocket(url) });
+      expect((await client.register("Ada", "ada@x.io", "pw")).person).toEqual(person);
+      expect(client.token).toBe("t1");
+      expect(await client.me()).toEqual(person);
+      expect(calls.at(-1)?.headers["Authorization"]).toBe("Bearer t1");
+      expect((await client.createSession("Shared", { id: "k", name: "Kit" })).id).toBe("s1");
+      expect(JSON.parse(calls.at(-1)?.body ?? "{}")).toEqual({ name: "Shared", kit: { id: "k", name: "Kit" } });
+      expect(await client.operations("s1", 2)).toEqual([]);
+      await expect(client.joinShare("abc")).rejects.toMatchObject({ name: "HubError", status: 403, message: "share revoked" });
+      expect(client.socketUrl("s1", "c1", "sketchpad")).toBe("ws://hub.test/sessions/s1/ws?token=t1&clientId=c1&client=sketchpad");
+      await client.logout();
+      expect(client.token).toBeNull();
+      const offline = new HubClient({ url: "http://hub.test", fetch: async () => { throw new Error("ECONNREFUSED"); } });
+      await expect(offline.listSessions()).rejects.toMatchObject({ status: 0 });
+    });
+
+    it("HubSessionConnection tracks presence, types callbacks and reconnects with backoff", async () => {
+      const sockets: MockHubSocket[] = [];
+      const client = new HubClient({ url: "https://hub.test", token: "t", socketFactory: (url) => {
+        const socket = new MockHubSocket(url);
+        sockets.push(socket);
+        return socket;
+      } });
+      const connection = client.connect("s1", { clientId: "c1", pingIntervalMs: 0, backoffBaseMs: 5, backoffMaxMs: 10 });
+      const states: HubConnectionState[] = [];
+      const rosters: number[] = [];
+      const operations: HubOperationMessage[] = [];
+      connection.onState((state) => states.push(state));
+      connection.onParticipants((participants) => rosters.push(participants.length));
+      connection.on("operation", (message) => operations.push(message));
+      expect(sockets[0]!.url).toBe("wss://hub.test/sessions/s1/ws?token=t&clientId=c1&client=sketchpad");
+      expect(connection.sendPresence({ focus: { app: "design", designId: "d1" } })).toBe(false);
+      sockets[0]!.open();
+      expect(sockets[0]!.sent).toEqual([{ type: "presence", focus: { app: "design", designId: "d1" } }]);
+      sockets[0]!.push({ type: "welcome", self: hubParticipant("me", "Me"), participants: [hubParticipant("bob", "Bob")], version: 3, hash: "h3" });
+      sockets[0]!.push({ type: "presence.joined", participant: hubParticipant("bot", "Claude", { kind: "agent", client: "mcp" }) });
+      expect(connection.participants.map((p) => p.name)).toEqual(["Me", "Bob", "Claude"]);
+      sockets[0]!.push({ type: "presence.left", participantId: "bob" });
+      expect(connection.participants.map((p) => p.name)).toEqual(["Me", "Claude"]);
+      expect(connection.participant("bob")?.name).toBe("Bob");
+      sockets[0]!.push({ type: "operation", version: 4, hash: "h4", operationId: "o", clientId: "x", personId: "p", participantId: "bot", query: "mutation { x }", variables: null });
+      expect(operations.map((m) => m.version)).toEqual([4]);
+      expect(connection.sendPresence({ selection: { designId: "d1", pieceIds: ["p1"], connectionIds: [] } })).toBe(true);
+      sockets[0]!.close();
+      expect(connection.state).toBe("offline");
+      expect(connection.participants).toEqual([]);
+      await eventually(async () => sockets.length, (count) => count === 2, 2_000);
+      sockets[1]!.open();
+      expect(sockets[1]!.sent[0]).toEqual({ type: "presence", focus: { app: "design", designId: "d1" }, selection: { designId: "d1", pieceIds: ["p1"], connectionIds: [] } });
+      expect(states).toEqual(["open", "offline", "connecting", "open"]);
+      expect(rosters.length).toBeGreaterThanOrEqual(4);
+      connection.close();
+      expect(connection.state).toBe("closed");
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      expect(sockets).toHaveLength(2);
+    });
+
+    it("HubReplica replicates kit operations with deterministic ids and equal hashes", async () => {
+      const hub = await createFakeHub();
+      const a = await openReplica(hub, "alice");
+      const b = await openReplica(hub, "bob");
+      try {
+        const activity: HubActivity[] = [];
+        b.replica.onActivity((entry) => activity.push(entry));
+        expect(await a.kit.createDesign("Shared Design")).toEqual({ ok: true });
+        expect(await a.kit.createType("Capsule")).toEqual({ ok: true });
+        await a.replica.whenIdle();
+        const designsOfB = await eventually(() => b.kit.hasDesigns(), (rows) => rows.length === 1, 20_000);
+        const designsOfA = await a.kit.hasDesigns();
+        expect(designsOfB.map((d) => d.id)).toEqual(designsOfA.map((d) => d.id));
+        expect(await designsOfB[0]!.name()).toBe("Shared Design");
+        const typeId = (await eventually(() => b.kit.hasTypes(), (rows) => rows.length === 1, 20_000))[0]!.id;
+        const plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+        expect(await designsOfB[0]!.addFixedPiece(typeId, { center: { u: 1, v: 2 }, plane }, "piece-from-bob")).toEqual({ ok: true });
+        await b.replica.whenIdle();
+        const piecesOfA = await eventually(() => new Design(a.session, designsOfA[0]!.id, a.store.id).hasPieces(), (rows) => rows.length === 1, 20_000);
+        expect(piecesOfA[0]!.id).toBe((await designsOfB[0]!.hasPieces())[0]!.id);
+        await a.replica.whenIdle();
+        await b.replica.whenIdle();
+        const hubHead = await hub.head();
+        expect(hubHead.version).toBe(3);
+        expect(await kitHashOf(a.store)).toBe(hubHead.hash);
+        expect(await kitHashOf(b.store)).toBe(hubHead.hash);
+        expect(a.replica.status).toMatchObject({ state: "synced", version: 3, pending: 0, resyncs: 0 });
+        expect(b.replica.status).toMatchObject({ state: "synced", version: 3, pending: 0, resyncs: 0 });
+        expect(activity.filter((entry) => entry.kind === "operation").map((entry) => entry.kind === "operation" && [entry.own, entry.actions[0]])).toEqual([
+          [false, "createDesign"],
+          [false, "createType"],
+          [true, "addFixedPiece"],
+        ]);
+      } finally {
+        a.replica.dispose();
+        b.replica.dispose();
+        await Promise.all([a.session.dispose(), b.session.dispose(), hub.dispose()]);
+      }
+    });
+
+    it("HubReplica queues offline operations, catches up and converges", async () => {
+      const hub = await createFakeHub();
+      const a = await openReplica(hub, "alice");
+      const b = await openReplica(hub, "bob");
+      try {
+        hub.setOffline("bob", true);
+        await eventually(async () => b.replica.status.state, (state) => state === "offline", 5_000);
+        expect(await b.kit.createDesign("Offline Design")).toEqual({ ok: true });
+        expect(await a.kit.createDesign("Online Design")).toEqual({ ok: true });
+        await a.replica.whenIdle();
+        expect(b.replica.status.pending).toBe(1);
+        hub.setOffline("bob", false);
+        await eventually(async () => (await b.kit.hasDesigns()).length, (count) => count === 2, 20_000);
+        await eventually(async () => (await a.kit.hasDesigns()).length, (count) => count === 2, 20_000);
+        await eventually(async () => [a.replica.status.state, b.replica.status.state].join(), (states) => states === "synced,synced", 20_000);
+        const hubHead = await hub.head();
+        expect(hubHead.version).toBe(2);
+        expect(await kitHashOf(a.store)).toBe(hubHead.hash);
+        expect(await kitHashOf(b.store)).toBe(hubHead.hash);
+        expect(b.replica.status.pending).toBe(0);
+        hub.setHttpDown("bob", true);
+        expect(await b.kit.createDesign("Queued Design")).toEqual({ ok: true });
+        await eventually(async () => b.replica.status, (status) => status.state === "offline" && status.pending === 1, 10_000);
+        hub.setHttpDown("bob", false);
+        await eventually(async () => b.replica.status, (status) => status.state === "synced" && status.pending === 0, 20_000);
+        await eventually(async () => (await a.kit.hasDesigns()).length, (count) => count === 3, 20_000);
+        expect(await kitHashOf(a.store)).toBe((await hub.head()).hash);
+        expect(await kitHashOf(b.store)).toBe((await hub.head()).hash);
+      } finally {
+        a.replica.dispose();
+        b.replica.dispose();
+        await Promise.all([a.session.dispose(), b.session.dispose(), hub.dispose()]);
+      }
+    });
+
+    it("HubReplica resyncs on hash mismatch and on rejected operations", async () => {
+      const hub = await createFakeHub();
+      const a = await openReplica(hub, "alice");
+      const b = await openReplica(hub, "bob");
+      try {
+        const rogue = scopedKitMutationBody(b.store.id, await b.store.ensureChangeId(), `cD: createDesign(id: "${newUuidV7()}", name: "local only")`);
+        await b.session.executeOperation({ operationId: newUuidV7(), query: rogue.query, variables: rogue.variables, origin: "remote" });
+        expect((await b.kit.hasDesigns()).length).toBe(1);
+        expect(await a.kit.createType("Trigger")).toEqual({ ok: true });
+        await eventually(async () => b.replica.status.resyncs, (count) => count >= 1, 20_000);
+        await b.replica.whenIdle();
+        expect((await b.kit.hasDesigns()).length).toBe(0);
+        expect((await b.kit.hasTypes()).length).toBe(1);
+        expect(await kitHashOf(b.store)).toBe((await hub.head()).hash);
+        expect(await b.kit.createDesign("reject-me")).toEqual({ ok: true });
+        await eventually(async () => b.replica.status.resyncs, (count) => count >= 2, 20_000);
+        await b.replica.whenIdle();
+        expect((await b.kit.hasDesigns()).length).toBe(0);
+        expect(b.replica.status.lastError).toMatch(/rejected \(422\)/);
+      } finally {
+        a.replica.dispose();
+        b.replica.dispose();
+        await Promise.all([a.session.dispose(), b.session.dispose(), hub.dispose()]);
+      }
+    });
+
+    const hubUrl = process.env["SEMIO_HUB_URL"];
+    it.skipIf(!hubUrl)("replicates between two people through a real hub (SEMIO_HUB_URL)", async () => {
+      const unique = newUuidV7().slice(-12);
+      const alice = new HubClient({ url: hubUrl! });
+      const bob = new HubClient({ url: hubUrl! });
+      await alice.register("Alice", `alice-${unique}@semio.test`, "secret-alice");
+      await bob.register("Bob", `bob-${unique}@semio.test`, "secret-bob");
+      const created = await alice.createSession(`hub-it-${unique}`, { id: newUuidV7(), name: `Hub IT ${unique}` });
+      const share = await alice.createShare(created.id, "editor");
+      expect((await bob.joinShare(share.token)).role).toBe("editor");
+      const open = async (client: HubClient) => {
+        const session = await Session.openInMemory({ timeoutMs: 120_000 });
+        const store = (await session.stores())[0]!;
+        const replica = await HubReplica.open({ client, sessionId: created.id, store, clientName: "vitest", connect: { pingIntervalMs: 0 } });
+        await eventually(async () => replica.status.state, (state) => state === "synced", 20_000);
+        return { session, store, replica, kit: await store.wip().theKit().kit() };
+      };
+      const a = await open(alice);
+      const b = await open(bob);
+      try {
+        await eventually(async () => a.replica.connection.participants.length, (count) => count === 2, 20_000);
+        expect(await a.kit.createDesign("Hub Design")).toEqual({ ok: true });
+        await a.replica.whenIdle();
+        const designs = await eventually(() => b.kit.hasDesigns(), (rows) => rows.length === 1, 20_000);
+        expect(designs[0]!.id).toBe((await a.kit.hasDesigns())[0]!.id);
+        const state = await alice.sessionKit(created.id);
+        await eventually(async () => [await kitHashOf(a.store), await kitHashOf(b.store)].join(), (hashes) => hashes === `${state.hash},${state.hash}`, 20_000);
+        expect(state.version).toBe(1);
+        expect((await alice.operations(created.id, 0)).map((record) => hubOperationActions(record.query))).toEqual([["createDesign"]]);
+      } finally {
+        a.replica.dispose();
+        b.replica.dispose();
+        await alice.deleteSession(created.id);
+        await Promise.all([a.session.dispose(), b.session.dispose()]);
+      }
+    });
+  });
+  //#endregion 🌐HubTests
 }
 
 //#endregion 🧪Tests

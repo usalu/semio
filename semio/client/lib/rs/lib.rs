@@ -760,6 +760,14 @@ pub mod id {
             Self(crate::external_adapters::uuid::Uuid::now_v7().to_string())
         }
 
+        /// 🧬 Deterministic RFC 9562 v8 uuid derived from `seed` (blake3) for implicit entities that every replica must mint identically.
+        pub fn derived(seed: &str) -> Self {
+            let digest = crate::external_adapters::blake3::hash(seed.as_bytes());
+            let mut bytes = [0u8; 16];
+            bytes.copy_from_slice(&digest.as_bytes()[..16]);
+            Self(crate::external_adapters::uuid::Builder::from_custom_bytes(bytes).into_uuid().to_string())
+        }
+
         pub fn as_str(&self) -> &str {
             &self.0
         }
@@ -1584,6 +1592,11 @@ pub mod gql_relay {
     }
 
     impl Typology {
+        /// 🏛️ Deterministic id of the implicit `Default` typology of kit `kit_id` (identical on every replica).
+        pub fn default_id(kit_id: &Id) -> Id {
+            Id::derived(&format!("{}:typology:default", kit_id.as_str()))
+        }
+
         pub async fn new(owner_kit: std::sync::Weak<crate::kit::Kit>, name: String) -> std::sync::Arc<Self> {
             std::sync::Arc::new(Self {
                 id: Id::new().await,
@@ -5665,7 +5678,7 @@ pub mod kit {
                     return t.clone();
                 }
             }
-            let topo = Typology::new(Arc::downgrade(self), "Default".to_string()).await;
+            let topo = Typology::new_with_external_id(Arc::downgrade(self), Typology::default_id(&self.workspace_kit_id().await), "Default".to_string()).await;
             self.typologies.write().await.push(topo.clone());
             topo
         }
@@ -7844,6 +7857,16 @@ pub mod vcs {
         /// @emoji 🧊 Invalidate lazily materialized kit cache (abort / record operation).
         pub async fn invalidate_materialized_cache(self: &Arc<Self>) {
             *self.materialized_cache.write().await = None;
+        }
+
+        /// @emoji 🧹 Drops every recorded edit and alternative so a freshly installed baseline materializes as-is (no replay of stale changes).
+        pub async fn discard_edits(self: &Arc<Self>) {
+            self.the_kit_saved_edits.write().await.clear();
+            self.the_kit_unsaved_edits.write().await.clear();
+            self.the_kit_redo_edits.write().await.clear();
+            *self.the_kit_open_edit.write().await = Weak::new();
+            self.alternatives.write().await.clear();
+            self.invalidate_materialized_cache().await;
         }
 
         /// @emoji 🧾 SDL `TheKit.savedChanges` — [`ChangeConnection`](../../../schema/graphql/schema.golden.graphql) for this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql).
@@ -12476,9 +12499,12 @@ pub mod kit_backbone {
     //#endregion 🔖 dev_backbone_kit_operation_json
 
     //#region 🔖 dev_backbone_initial_kit_projection
-    /// @emoji 🪪 Blake3 over key-sorted canonical JSON text, independent of the `serde_json` map ordering feature (native hub and WASM agree).
+    /// @emoji 🪪 Blake3 over canonical JSON text: object keys sorted (independent of the `serde_json` map ordering feature) and entity collections (arrays of objects with an `id`) sorted by id (order-independent set hashing), so the native hub and WASM replicas agree regardless of apply order of commuting operations.
     pub fn canonical_json_hash(value: &crate::external_adapters::serde_json::Value) -> String {
         use crate::external_adapters::serde_json::Value;
+        fn entity_id(v: &Value) -> Option<&str> {
+            v.as_object()?.get("id")?.as_str()
+        }
         fn write(v: &Value, out: &mut String) {
             match v {
                 Value::Object(map) => {
@@ -12496,8 +12522,12 @@ pub mod kit_backbone {
                     out.push('}');
                 }
                 Value::Array(items) => {
+                    let mut ordered: Vec<&Value> = items.iter().collect();
+                    if !ordered.is_empty() && ordered.iter().all(|item| entity_id(item).is_some()) {
+                        ordered.sort_by(|a, b| entity_id(a).cmp(&entity_id(b)));
+                    }
                     out.push('[');
-                    for (i, item) in items.iter().enumerate() {
+                    for (i, item) in ordered.iter().enumerate() {
                         if i > 0 {
                             out.push(',');
                         }
@@ -12512,6 +12542,161 @@ pub mod kit_backbone {
         write(value, &mut text);
         crate::external_adapters::blake3::hash(text.as_bytes()).to_hex().to_string()
     }
+
+    //#region 🔖 kit meta projection
+    fn attributes_projection_value(attributes: &[crate::meta::Attribute]) -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::{json, Value};
+        Value::Array(
+            attributes
+                .iter()
+                .map(|attribute| {
+                    let mut row = json!({ "id": attribute.id.as_str(), "key": attribute.key, "value": attribute.value });
+                    if let Some(definition) = &attribute.definition {
+                        row["definition"] = Value::String(definition.clone());
+                    }
+                    row
+                })
+                .collect(),
+        )
+    }
+
+    /// @emoji 🧷 Rebuilds owner attributes from projection JSON (ids derived from the owner id when absent, so replicas agree).
+    fn attributes_from_projection_value(owner_id: &str, json: &crate::external_adapters::serde_json::Value) -> Vec<crate::meta::Attribute> {
+        json.get("attributes")
+            .and_then(json_array_or_block_items_ref)
+            .map(|rows| {
+                rows.iter()
+                    .enumerate()
+                    .filter_map(|(index, row)| {
+                        Some(crate::meta::Attribute {
+                            id: row.get("id").and_then(|v| v.as_str()).map(crate::id::Id::from).unwrap_or_else(|| crate::id::Id::derived(&format!("{owner_id}:attribute:{index}"))),
+                            key: row.get("key").and_then(|v| v.as_str())?.to_string(),
+                            value: row.get("value").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                            definition: row.get("definition").and_then(|v| v.as_str()).map(str::to_string),
+                        })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// @emoji 🏷️ Inserts the kit-owned `tags`, `concepts`, `qualities` and `authors` projection blocks (omitted when empty).
+    async fn insert_kit_meta_projection(kit: &crate::kit::Kit, root: &mut crate::external_adapters::serde_json::Map<String, crate::external_adapters::serde_json::Value>) {
+        use crate::external_adapters::serde_json::{json, Value};
+        fn optional(row: &mut Value, key: &str, value: Option<String>) {
+            if let Some(value) = value {
+                row[key] = Value::String(value);
+            }
+        }
+        fn with_attributes(mut row: Value, attributes: &[crate::meta::Attribute]) -> Value {
+            if !attributes.is_empty() {
+                row["attributes"] = attributes_projection_value(attributes);
+            }
+            row
+        }
+        let mut tags = Vec::new();
+        for tag in kit.tags.read().await.iter() {
+            let mut row = json!({ "id": tag.id.as_str(), "name": tag.name.read().await.clone() });
+            optional(&mut row, "description", tag.description.read().await.clone());
+            optional(&mut row, "icon", tag.icon.read().await.clone());
+            if let Some(order) = *tag.order.read().await {
+                row["order"] = json!(order);
+            }
+            tags.push(with_attributes(row, &tag.attributes.read().await));
+        }
+        let mut concepts = Vec::new();
+        for concept in kit.concepts.read().await.iter() {
+            let mut row = json!({ "id": concept.id.as_str(), "name": concept.name.read().await.clone() });
+            optional(&mut row, "description", concept.description.read().await.clone());
+            optional(&mut row, "icon", concept.icon.read().await.clone());
+            if let Some(order) = *concept.order.read().await {
+                row["order"] = json!(order);
+            }
+            concepts.push(with_attributes(row, &concept.attributes.read().await));
+        }
+        let mut qualities = Vec::new();
+        for quality in kit.qualities.read().await.iter() {
+            let mut row = json!({ "id": quality.id.as_str(), "key": quality.key.read().await.clone() });
+            for (key, value) in [
+                ("value", quality.value.read().await.clone()),
+                ("unit", quality.unit.read().await.clone()),
+                ("definition", quality.definition.read().await.clone()),
+                ("description", quality.description.read().await.clone()),
+                ("icon", quality.icon.read().await.clone()),
+            ] {
+                optional(&mut row, key, value);
+            }
+            qualities.push(with_attributes(row, &quality.attributes.read().await));
+        }
+        let authors: Vec<Value> = kit
+            .authors
+            .read()
+            .await
+            .iter()
+            .map(|author| {
+                let mut row = json!({ "id": author.id.as_str(), "name": author.name, "email": author.email });
+                optional(&mut row, "role", author.role.clone());
+                if let Some(rank) = author.rank {
+                    row["rank"] = json!(rank);
+                }
+                row
+            })
+            .collect();
+        for (key, items) in [("tags", tags), ("concepts", concepts), ("qualities", qualities), ("authors", authors)] {
+            if !items.is_empty() {
+                root.insert(key.into(), json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": items }));
+            }
+        }
+    }
+
+    /// @emoji 🧾 Replaces the kit-owned tags, concepts, qualities, authors and `createdAt`/`updatedAt` from projection JSON.
+    async fn hydrate_kit_meta_from_projection_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &crate::external_adapters::serde_json::Value) {
+        use crate::external_adapters::serde_json::Value;
+        let rows = |key: &str| json.get(key).and_then(json_array_or_block_items_ref).cloned().unwrap_or_default();
+        let text = |row: &Value, key: &str| row.get(key).and_then(|v| v.as_str()).map(str::to_string);
+        let order = |row: &Value| row.get("order").and_then(|v| v.as_i64()).map(|o| o as i32);
+        let owner = || crate::gql::interfaces::KitGraphParentWeak::Kit(std::sync::Arc::downgrade(kit));
+        kit.tags.write().await.clear();
+        kit.concepts.write().await.clear();
+        kit.qualities.write().await.clear();
+        kit.tag_by_id.write().await.clear();
+        kit.concept_by_id.write().await.clear();
+        kit.quality_by_id.write().await.clear();
+        for row in rows("tags") {
+            let Some(id) = json_entity_id_ref(&row) else { continue };
+            let tag = crate::meta::Tag::new_with_id(owner(), id.into(), text(&row, "name").unwrap_or_default(), text(&row, "description"), text(&row, "icon"), order(&row), attributes_from_projection_value(id, &row));
+            kit.register_tag(tag.clone()).await;
+            kit.tags.write().await.push(tag);
+        }
+        for row in rows("concepts") {
+            let Some(id) = json_entity_id_ref(&row) else { continue };
+            let concept = crate::meta::Concept::new_with_id(owner(), id.into(), text(&row, "name").unwrap_or_default(), text(&row, "description"), text(&row, "icon"), order(&row), attributes_from_projection_value(id, &row));
+            kit.register_concept(concept.clone()).await;
+            kit.concepts.write().await.push(concept);
+        }
+        for row in rows("qualities") {
+            let Some(id) = json_entity_id_ref(&row) else { continue };
+            let key = text(&row, "key").or_else(|| text(&row, "name")).unwrap_or_default();
+            let quality = crate::meta::Quality::new_with_id(owner(), id.into(), key, text(&row, "value"), text(&row, "unit"), text(&row, "definition"), text(&row, "description"), text(&row, "icon"), Vec::new(), attributes_from_projection_value(id, &row));
+            kit.register_quality(quality.clone()).await;
+            kit.qualities.write().await.push(quality);
+        }
+        *kit.authors.write().await = rows("authors")
+            .iter()
+            .filter_map(|row| {
+                Some(crate::meta::Author {
+                    id: json_entity_id_ref(row)?.into(),
+                    name: text(row, "name").unwrap_or_default(),
+                    email: text(row, "email").unwrap_or_default(),
+                    role: text(row, "role"),
+                    rank: row.get("rank").and_then(|v| v.as_i64()).map(|r| r as i32),
+                })
+            })
+            .collect();
+        *kit.created.write().await = text(json, "createdAt").map(crate::timestamp::Timestamp);
+        *kit.updated.write().await = text(json, "updatedAt").map(crate::timestamp::Timestamp);
+    }
+    //#endregion 🔖 kit meta projection
 
     pub(crate) async fn initial_kit_projection_value(kit: &crate::kit::Kit) -> crate::external_adapters::serde_json::Value {
         use crate::kit::r#type::Blueprint;
@@ -12750,6 +12935,7 @@ pub mod kit_backbone {
                 crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": files_items }),
             );
         }
+        insert_kit_meta_projection(kit, &mut root).await;
         let typologies_items: Vec<crate::external_adapters::serde_json::Value> = {
             let mut out = Vec::new();
             for topo in kit.typologies.read().await.iter() {
@@ -13132,6 +13318,7 @@ pub mod kit_backbone {
             *kit.version.write().await = Some(s.to_string());
         }
         *kit.snapshot_families_projection.write().await = json.get("families").cloned();
+        hydrate_kit_meta_from_projection_value(kit, json).await;
 
         crate::kit_backbone::hydrate_kit_folders_from_snapshot_value(kit, json).await?;
         crate::kit_backbone::hydrate_kit_files_from_snapshot_value(kit, json).await?;
@@ -13231,7 +13418,7 @@ pub mod kit_backbone {
                 hydrate_designs_block(topo, kit, &designs_arr, &mut design_shells).await?;
             }
         } else {
-            let default_topo = crate::gql_relay::Typology::new(kit_owner.clone(), "Default".to_string()).await;
+            let default_topo = crate::gql_relay::Typology::new_with_external_id(kit_owner.clone(), crate::gql_relay::Typology::default_id(&kit.workspace_kit_id().await), "Default".to_string()).await;
             let types_arr = json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
             let designs_arr = json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
             hydrate_types_block(&default_topo, kit, &types_arr, &kit_scope_ports).await?;
@@ -13295,12 +13482,6 @@ pub mod kit_backbone {
         {
             let mut slot = g.mutable_kit.write().await;
             hydrate_kit_from_initial_projection_value(&slot, &json).await?;
-            if let Some(c) = json.get("createdAt").and_then(|v| v.as_str()) {
-                *slot.created.write().await = Some(crate::timestamp::Timestamp(c.to_string()));
-            }
-            if let Some(u) = json.get("updatedAt").and_then(|v| v.as_str()) {
-                *slot.updated.write().await = Some(crate::timestamp::Timestamp(u.to_string()));
-            }
             let cloned = slot.deep_clone().await;
             *slot = cloned;
         }
@@ -14413,7 +14594,8 @@ pub mod worker {
                 let ini = self.wip_graph.mutable_kit.read().await.deep_clone().await;
                 *self.wip_graph.initial_kit.write().await = ini;
             }
-            self.wip_graph.invalidate_materialized_cache().await;
+            self.wip_graph.discard_edits().await;
+            *self.wip_kit_scope.write().await = None;
             self.wip_graph
                 .the_kit_workspace_seq
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -21903,6 +22085,240 @@ mod tests {
             assert!(design.piece_by_external_id(&crate::id::Id::from("piece-scoped-1")).await.is_some(), "piece should be addressable by scoped id");
         });
     }
+
+    //#region ⛓️ design items
+    /// @emoji 🏗️ Metabolism kit projection assembled from the split `stores/metabolism/wip/initialKit` fixture (type and design files inlined into their typologies).
+    fn metabolism_projection() -> crate::external_adapters::serde_json::Value {
+        use crate::external_adapters::serde_json::Value;
+        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/stores/metabolism/wip/initialKit");
+        let read = |p: PathBuf| -> Value { crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(&p).expect("read fixture")).expect("parse fixture") };
+        let mut kit = read(dir.join("kit.semio.json"));
+        let index = read(dir.join("index.semio.json"));
+        let mut files = std::collections::HashMap::new();
+        for key in ["types", "designs"] {
+            for entry in index[key].as_array().expect("index entries") {
+                files.insert(entry["id"].as_str().expect("id").to_string(), read(dir.join(entry["file"].as_str().expect("file"))));
+            }
+        }
+        for topo in kit["typologies"]["items"].as_array_mut().expect("typologies") {
+            for key in ["types", "designs"] {
+                for item in topo[key]["items"].as_array_mut().into_iter().flatten() {
+                    if let Some(full) = files.get(item["id"].as_str().expect("id")) {
+                        *item = full.clone();
+                    }
+                }
+            }
+        }
+        kit
+    }
+
+    const NAKAGIN: &str = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+
+    fn projection_design<'a>(projection: &'a crate::external_adapters::serde_json::Value, design_id: &str) -> &'a crate::external_adapters::serde_json::Value {
+        projection["typologies"]["items"]
+            .as_array()
+            .expect("typologies")
+            .iter()
+            .filter_map(|t| t["designs"]["items"].as_array())
+            .flatten()
+            .find(|d| d["id"] == design_id)
+            .expect("design in projection")
+    }
+
+    async fn install_metabolism(schema: &AppSchema) -> crate::external_adapters::serde_json::Value {
+        let projection = metabolism_projection();
+        let res = schema
+            .execute(Request::new(r#"mutation($json: String!) { session { store(id: "test-store") { installProjection(json: $json) { ok errors { message } } } } }"#).variables(Variables::from_json(json!({ "json": projection.to_string() }))))
+            .await;
+        assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
+        assert_eq!(res.data.into_json().unwrap()["session"]["store"]["installProjection"]["ok"], true);
+        projection
+    }
+
+    async fn kit_projection_and_hash(schema: &AppSchema) -> (crate::external_adapters::serde_json::Value, String) {
+        let res = schema.execute(Request::new("{ session { stores { edges { node { wip { theKit { kit { hash projection } } } } } } } }")).await;
+        assert!(res.errors.is_empty(), "projection: {:?}", res.errors);
+        let kit = res.data.into_json().unwrap()["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"].clone();
+        (crate::external_adapters::serde_json::from_str(kit["projection"].as_str().expect("projection")).expect("projection json"), kit["hash"].as_str().expect("hash").to_string())
+    }
+
+    /// @emoji 🎛️ Runs one kit-scoped design command inside a fresh unsaved change and returns its `{ ok errors }` payload.
+    async fn run_design_command(schema: &AppSchema, design_id: &str, field: &str) -> crate::external_adapters::serde_json::Value {
+        let tx = graphql_start_new_change(schema).await;
+        let doc = format!(r#"mutation($tx: ID!) {{ session {{ store(id: "test-store") {{ theKit {{ unsavedChange(id: $tx) {{ kit {{ design(id: "{design_id}") {{ r: {field} {{ ok errors {{ message }} }} }} }} }} }} }} }} }}"#);
+        let res = schema.execute(Request::new(doc).variables(Variables::from_json(json!({ "tx": tx })))).await;
+        assert!(res.errors.is_empty(), "{field}: {:?}", res.errors);
+        res.data.into_json().unwrap()["session"]["store"]["theKit"]["unsavedChange"]["kit"]["design"]["r"].clone()
+    }
+
+    #[test]
+    fn projection_round_trips_linked_pieces_and_connections() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let source = install_metabolism(&schema).await;
+            let (projection, _) = kit_projection_and_hash(&schema).await;
+            let design = projection_design(&projection, NAKAGIN);
+            let source_design = projection_design(&source, NAKAGIN);
+            assert_eq!(design["pieces"]["items"].as_array().unwrap().len(), source_design["pieces"]["items"].as_array().unwrap().len());
+            assert_eq!(design["connections"]["items"].as_array().unwrap().len(), source_design["connections"]["items"].as_array().unwrap().len());
+            assert_eq!(design["pieces"]["items"].as_array().unwrap().iter().filter(|p| p.get("pose").is_some()).count(), 1, "only the root piece of Nakagin is fixed");
+            let first = &source_design["connections"]["items"][0];
+            let exported = design["connections"]["items"].as_array().unwrap().iter().find(|c| c["id"] == first["id"]).expect("connection exported");
+            assert_eq!(exported["parent"]["connector"]["id"], first["parent"]["connector"]["id"]);
+            assert_eq!(exported["child"]["piece"]["id"], first["child"]["piece"]["id"]);
+            assert_eq!(exported["rotation"].as_f64(), first["rotation"].as_f64());
+        });
+    }
+
+    #[test]
+    fn design_item_commands_add_connect_update_delete_and_replay_deterministically() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let replica = crate::gql::build_schema().await;
+            let source = install_metabolism(&schema).await;
+            install_metabolism(&replica).await;
+            let design = projection_design(&source, NAKAGIN).clone();
+            let first = design["connections"]["items"][0].clone();
+            let parent_piece = first["parent"]["piece"]["id"].as_str().unwrap().to_string();
+            let child_piece = first["child"]["piece"]["id"].as_str().unwrap().to_string();
+            let child_type = design["pieces"]["items"].as_array().unwrap().iter().find(|p| p["id"] == child_piece.as_str()).unwrap()["type"]["id"].as_str().unwrap().to_string();
+            let parent_connector = first["parent"]["connector"]["id"].as_str().unwrap().to_string();
+            let child_connector = first["child"]["connector"]["id"].as_str().unwrap().to_string();
+            let commands = [
+                format!(r#"addChildPieceWithParentConnection(id: "p-new", connectionId: "c-new", blueprintId: "{child_type}", parentPieceId: "{parent_piece}", parentConnector: "{parent_connector}", childConnector: "{child_connector}", name: "added", joint: {{ rotation: 90, gap: 0.5 }})"#),
+                format!(r#"connectPieces(id: "c-extra", parentPieceId: "{child_piece}", parentConnector: "{child_connector}", childPieceId: "p-new", childConnector: "{child_connector}")"#),
+                r#"piece(id: "p-new") { rename(newName: "renamed") }"#.to_string(),
+                r#"piece(id: "p-new") { move(position: { center: { u: 1, v: 2 }, plane: { origin: { x: 0, y: 0, z: 3 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } }) }"#.to_string(),
+                r#"deleteConnections(ids: ["c-extra"])"#.to_string(),
+            ];
+            for command in &commands {
+                let (field, selection) = match command.split_once(" { ") {
+                    Some((head, rest)) if command.starts_with("piece(") => (head.to_string(), Some(rest.trim_end_matches(" }").to_string())),
+                    _ => (command.clone(), None),
+                };
+                for target in [&schema, &replica] {
+                    let payload = match &selection {
+                        Some(inner) => {
+                            let tx = graphql_start_new_change(target).await;
+                            let doc = format!(r#"mutation($tx: ID!) {{ session {{ store(id: "test-store") {{ theKit {{ unsavedChange(id: $tx) {{ kit {{ design(id: "{NAKAGIN}") {{ {field} {{ r: {inner} {{ ok errors {{ message }} }} }} }} }} }} }} }} }} }}"#);
+                            let res = target.execute(Request::new(doc).variables(Variables::from_json(json!({ "tx": tx })))).await;
+                            assert!(res.errors.is_empty(), "{command}: {:?}", res.errors);
+                            res.data.into_json().unwrap()["session"]["store"]["theKit"]["unsavedChange"]["kit"]["design"]["piece"]["r"].clone()
+                        }
+                        None => run_design_command(target, NAKAGIN, &field).await,
+                    };
+                    assert_eq!(payload["ok"], true, "{command}: {payload}");
+                }
+            }
+            let (projection, hash) = kit_projection_and_hash(&schema).await;
+            let (_, replica_hash) = kit_projection_and_hash(&replica).await;
+            assert_eq!(hash, replica_hash, "replaying the same documents with explicit ids must reproduce the kit hash");
+            let design = projection_design(&projection, NAKAGIN);
+            let piece = design["pieces"]["items"].as_array().unwrap().iter().find(|p| p["id"] == "p-new").expect("added piece");
+            assert_eq!(piece["name"], "renamed");
+            assert_eq!(piece["pose"]["plane"]["origin"]["z"], 3.0);
+            let connections = design["connections"]["items"].as_array().unwrap();
+            let added = connections.iter().find(|c| c["id"] == "c-new").expect("added connection");
+            assert_eq!(added["rotation"], 90.0);
+            assert_eq!(added["parent"]["connector"]["id"], parent_connector.as_str());
+            assert!(connections.iter().all(|c| c["id"] != "c-extra"), "deleteConnections removes the connection");
+            let failed = run_design_command(&schema, NAKAGIN, r#"connectPieces(parentPieceId: "p-new", parentConnector: "missing", childPieceId: "p-new", childConnector: "missing")"#).await;
+            assert_eq!(failed["ok"], false, "self connections are rejected: {failed}");
+            let deleted = run_design_command(&schema, NAKAGIN, r#"deletePieces(ids: ["p-new"])"#).await;
+            assert_eq!(deleted["ok"], true, "{deleted}");
+            let (after, _) = kit_projection_and_hash(&schema).await;
+            let design = projection_design(&after, NAKAGIN);
+            assert!(design["pieces"]["items"].as_array().unwrap().iter().all(|p| p["id"] != "p-new"));
+            assert!(design["connections"]["items"].as_array().unwrap().iter().all(|c| c["id"] != "c-new"), "deleting a piece removes its connections");
+        });
+    }
+    //#endregion ⛓️ design items
+
+    //#region 🌐 hub replication
+    /// @emoji 🎛️ Runs one kit-scoped command inside a fresh unsaved change and returns its `{ ok errors }` payload.
+    async fn run_kit_command(schema: &AppSchema, field: &str) -> crate::external_adapters::serde_json::Value {
+        let tx = graphql_start_new_change(schema).await;
+        let doc = format!(r#"mutation($tx: ID!) {{ session {{ store(id: "test-store") {{ theKit {{ unsavedChange(id: $tx) {{ kit {{ r: {field} {{ ok errors {{ message }} }} }} }} }} }} }} }}"#);
+        let res = schema.execute(Request::new(doc).variables(Variables::from_json(json!({ "tx": tx })))).await;
+        assert!(res.errors.is_empty(), "{field}: {:?}", res.errors);
+        res.data.into_json().unwrap()["session"]["store"]["theKit"]["unsavedChange"]["kit"]["r"].clone()
+    }
+
+    async fn install_projection_value(schema: &AppSchema, projection: &crate::external_adapters::serde_json::Value) {
+        let res = schema
+            .execute(Request::new(r#"mutation($json: String!) { session { store(id: "test-store") { installProjection(json: $json) { ok } } } }"#).variables(Variables::from_json(json!({ "json": projection.to_string() }))))
+            .await;
+        assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
+    }
+
+    /// @emoji 🪪 Canonical hashing ignores object key order and entity collection order, but not the order of plain values.
+    #[test]
+    fn canonical_json_hash_ignores_key_and_entity_order() {
+        let a = json!({ "name": "k", "items": [{ "id": "b", "v": 1 }, { "id": "a", "v": 2 }], "list": [2, 1] });
+        let b = json!({ "list": [2, 1], "items": [{ "v": 2, "id": "a" }, { "id": "b", "v": 1 }], "name": "k" });
+        let c = json!({ "list": [1, 2], "items": [{ "v": 2, "id": "a" }, { "id": "b", "v": 1 }], "name": "k" });
+        assert_eq!(crate::kit_backbone::canonical_json_hash(&a), crate::kit_backbone::canonical_json_hash(&b));
+        assert_ne!(crate::kit_backbone::canonical_json_hash(&a), crate::kit_backbone::canonical_json_hash(&c));
+    }
+
+    /// @emoji 🧬 Derived ids are stable uuids per seed, so implicit entities mint identically on every replica.
+    #[test]
+    fn derived_ids_are_deterministic_uuids() {
+        let id = crate::id::Id::derived("kit-1:typology:default");
+        assert_eq!(id, crate::id::Id::derived("kit-1:typology:default"));
+        assert_ne!(id, crate::id::Id::derived("kit-2:typology:default"));
+        assert!(crate::external_adapters::uuid::Uuid::parse_str(id.as_str()).is_ok());
+    }
+
+    /// @emoji 🔁 Replicas replaying the same documents with explicit ids reach the hub hash (incl. the implicit `Default` typology); reinstalling the hub projection discards stale local edits.
+    #[test]
+    fn replicas_converge_and_reinstall_discards_stale_edits() {
+        block_on(async {
+            let hub = crate::gql::build_schema().await;
+            let replica = crate::gql::build_schema().await;
+            let (initial, _) = kit_projection_and_hash(&hub).await;
+            install_projection_value(&replica, &initial).await;
+            for schema in [&hub, &replica] {
+                assert_eq!(run_kit_command(schema, r#"createDesign(id: "d-shared", name: "Shared")"#).await["ok"], true);
+                assert_eq!(run_kit_command(schema, r#"createType(id: "t-shared", name: "Capsule")"#).await["ok"], true);
+            }
+            let (hub_projection, hub_hash) = kit_projection_and_hash(&hub).await;
+            assert_eq!(kit_projection_and_hash(&replica).await.1, hub_hash, "same documents with explicit ids must reproduce the hub hash");
+            assert_eq!(run_kit_command(&replica, r#"createDesign(id: "d-rogue", name: "Rogue")"#).await["ok"], true);
+            assert_ne!(kit_projection_and_hash(&replica).await.1, hub_hash);
+            install_projection_value(&replica, &hub_projection).await;
+            let (resynced, resynced_hash) = kit_projection_and_hash(&replica).await;
+            assert_eq!(resynced_hash, hub_hash, "reinstalling must not replay stale edits: {resynced}");
+        });
+    }
+
+    /// @emoji 🏷️ Kit-owned tags, concepts, qualities, authors and timestamps survive installProjection, later commands (deep clones) and a hub → replica re-install.
+    #[test]
+    fn projection_round_trips_kit_meta() {
+        block_on(async {
+            let hub = crate::gql::build_schema().await;
+            let source = install_metabolism(&hub).await;
+            assert_eq!(run_kit_command(&hub, r#"createDesign(id: "d-meta", name: "Meta")"#).await["ok"], true);
+            let (projection, hash) = kit_projection_and_hash(&hub).await;
+            let ids = |value: &crate::external_adapters::serde_json::Value, key: &str| {
+                let mut ids: Vec<String> = value[key]["items"].as_array().into_iter().flatten().filter_map(|row| row["id"].as_str().map(str::to_string)).collect();
+                ids.sort();
+                ids
+            };
+            for (key, count) in [("tags", 7), ("concepts", 3), ("qualities", 53), ("authors", 1)] {
+                assert_eq!(ids(&projection, key).len(), count, "{key}");
+                assert_eq!(ids(&projection, key), ids(&source, key), "{key}");
+            }
+            assert_eq!(projection["createdAt"], source["createdAt"]);
+            assert_eq!(projection["updatedAt"], source["updatedAt"]);
+            let quality = projection["qualities"]["items"].as_array().unwrap().iter().find(|q| q["id"] == "0277667d-d058-576b-a0ac-ee48fc04728f").expect("quality");
+            assert_eq!((quality["key"].as_str(), quality["unit"].as_str()), (Some("base height"), Some("m")));
+            let replica = crate::gql::build_schema().await;
+            install_projection_value(&replica, &projection).await;
+            assert_eq!(kit_projection_and_hash(&replica).await.1, hash);
+        });
+    }
+    //#endregion 🌐 hub replication
 }
 
 //#endregion 🧪 tests

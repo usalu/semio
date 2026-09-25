@@ -775,6 +775,7 @@ export abstract class Controller {
 	readonly commandBus: CommandBus;
 	private readonly hostNotify: () => void;
 	private readonly ownedStores = new Map<string, Store<unknown>>();
+	private disposed = false;
 
 	protected constructor(id: string, commandBus: CommandBus, hostNotify: () => void) {
 		this.id = id;
@@ -783,8 +784,9 @@ export abstract class Controller {
 		commandBus.register(this);
 	}
 
+	/** @emoji 📣 Notifies the host; a disposed controller stays silent (deferred emits must not wake a torn-down host). */
 	protected emit(): void {
-		this.hostNotify();
+		if (!this.disposed) this.hostNotify();
 	}
 
 	/** @emoji 🗄️ Registers a store owned by this controller (replaces same id). */
@@ -813,6 +815,7 @@ export abstract class Controller {
 	}
 
 	dispose(): void {
+		this.disposed = true;
 		for (const store of this.ownedStores.values()) store.dispose();
 		this.ownedStores.clear();
 		this.commandBus.unregister(this.id);
@@ -1349,6 +1352,23 @@ if (import.meta.vitest) {
 			expect(ctrl.getStore<number>("count")).toBeUndefined();
 			expect(store.disposed).toBe(true);
 			ctrl.dispose();
+		});
+
+		it("stops notifying the host once disposed", () => {
+			class TCtrl extends Controller {
+				constructor(notify: () => void) {
+					super("c", new CommandBus(), notify);
+				}
+				override run(): void {
+					this.emit();
+				}
+			}
+			let notified = 0;
+			const ctrl = new TCtrl(() => notified++);
+			ctrl.run();
+			ctrl.dispose();
+			ctrl.run();
+			expect(notified).toBe(1);
 		});
 	});
 

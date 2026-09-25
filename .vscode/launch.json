@@ -210,9 +210,9 @@
       "request": "launch",
       "command": "cargo run -p semio-hub",
       "env": {
+        "LISTEN_ADDR": "127.0.0.1:8080",
         "DATABASE_URL": "postgres://semio:semio@localhost:5432/semio",
-        "RUST_LOG": "info",
-        "PORT": "8080"
+        "RUST_LOG": "semio_hub=info,tower_http=info"
       },
       "cwd": "${workspaceFolder}",
       "presentation": {
@@ -220,6 +220,34 @@
         "order": 80,
         "reveal": "always",
         "panel": "dedicated"
+      }
+    },
+    {
+      "name": "🛠️dev🏘️semio🌐hub🤖mcp",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts dev mcp hub",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "MCP Inspector",
+          "endsPattern": ":6274"
+        }
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 85
       }
     },
     {

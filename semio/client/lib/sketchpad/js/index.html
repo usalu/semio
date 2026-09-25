@@ -6,6 +6,9 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="./boot.tsx"></script>
+    <script type="module">
+      import { bootSketchpad } from "./boot.tsx";
+      void bootSketchpad();
+    </script>
   </body>
 </html>

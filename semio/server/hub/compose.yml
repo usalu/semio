@@ -1,7 +1,7 @@
 # #region 🔖Header
-# 2025 Ueli Saluz <ueli@semio-tech.com>
+# 2026 Ueli Saluz <ueli@semio-tech.de>
 # AGPL-3.0
-# Docker Compose for semio-hub only: PostgreSQL plus the Rust semio-hub binary. Schema is created by semio-hub at startup (run_migrations); no external init SQL.
+# Docker Compose for semio-hub only: PostgreSQL plus the Rust semio-hub binary built from the mounted repository. The schema (postgres/schema.sql) is applied by semio-hub at startup.
 # #endregion 🔖Header
 
 services:
@@ -10,13 +10,13 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-semio_hub}
+      POSTGRES_DB: ${POSTGRES_DB:-semio}
       POSTGRES_USER: ${POSTGRES_USER:-semio}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-semio}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-semio} -d ${POSTGRES_DB:-semio_hub}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-semio} -d ${POSTGRES_DB:-semio}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -25,30 +25,33 @@ services:
   # #endregion 🔖Postgres
 
   # #region 🔖Hub
-  # Specs: semio-hub Rust backend with embedded /admin dashboard; protect JSON admin APIs with SEMIO_ADMIN_TOKEN.
   hub:
-    image: rust:1.89-bookworm
+    image: rust:1-bookworm
     restart: unless-stopped
-    working_dir: /workspace/semio/hub
+    working_dir: /workspace/semio/server/hub
     command: ["cargo", "run", "--bin", "semio-hub"]
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-semio}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-semio_hub}
-      LISTEN_ADDR: 0.0.0.0:8788
-      SEMIO_ADMIN_TOKEN: ${SEMIO_ADMIN_TOKEN:?SEMIO_ADMIN_TOKEN required for /admin JSON APIs}
+      DATABASE_URL: postgres://${POSTGRES_USER:-semio}:${POSTGRES_PASSWORD:-semio}@postgres:5432/${POSTGRES_DB:-semio}
+      LISTEN_ADDR: 0.0.0.0:8080
+      CARGO_TARGET_DIR: /cargo-target
       RUST_LOG: ${RUST_LOG:-semio_hub=info,tower_http=info}
     volumes:
-      - ../..:/workspace
+      - ../../..:/workspace
+      - cargo_registry:/usr/local/cargo/registry
+      - cargo_target:/cargo-target
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "127.0.0.1:8788:8788"
+      - "127.0.0.1:8080:8080"
     healthcheck:
-      test: ["CMD", "bash", "-lc", "exec 3<>/dev/tcp/127.0.0.1/8788"]
+      test: ["CMD", "bash", "-lc", "exec 3<>/dev/tcp/127.0.0.1/8080"]
       interval: 10s
       timeout: 3s
-      retries: 5
+      retries: 60
   # #endregion 🔖Hub
 
 volumes:
   postgres_data:
+  cargo_registry:
+  cargo_target:

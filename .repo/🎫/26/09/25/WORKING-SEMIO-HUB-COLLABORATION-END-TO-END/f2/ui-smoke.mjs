@@ -1,0 +1,14 @@
+import { chromium } from "/home/user/semio/node_modules/playwright/index.mjs";
+const out = process.argv[2];
+const base = process.env.SKETCHPAD_URL ?? "http://127.0.0.1:5173";
+const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
+const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+page.on("console", (m) => { if (m.type() === "error" || m.text().includes("hub")) console.log("[console]", m.type(), m.text().slice(0, 300)); });
+page.on("pageerror", (e) => console.log("[pageerror]", String(e).slice(0, 500)));
+await page.goto(base + "/", { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(8000);
+console.log("[DEBUG] footer", await page.locator('[data-testid="sketchpad-hub-footer"]').count(), await page.locator('[data-testid="sketchpad-hub-footer"]').first().textContent().catch(() => null));
+const ids = await page.locator('[id^="ui.panelToggle"]').evaluateAll((els) => els.map((e) => e.id));
+console.log("[DEBUG] panel toggles", ids.join(", "));
+await page.screenshot({ path: `${out}/smoke-home.png` });
+await browser.close();

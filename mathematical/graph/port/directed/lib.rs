@@ -242,6 +242,8 @@ pub mod force_graph {
         use super::{pairwise_repulsion_on_i_from_j, Vec2};
 
         const NO_CHILD: u32 = u32::MAX;
+        /// @emoji 🎯 Below this distance / cell width bodies merge into one leaf mass instead of subdividing forever.
+        const COINCIDENT_EPSILON: f64 = 1e-9;
 
         /// 🌌 Quadtree cell: empty leaf, occupied leaf, or internal node with four children.
         #[derive(Clone, Debug)]
@@ -364,6 +366,13 @@ pub mod force_graph {
                 }
                 let p_ex = positions[ex];
                 let r_ex = radii[ex];
+                if (p_ex - pos).norm() <= COINCIDENT_EPSILON || cell_width(&tree[ni]) <= COINCIDENT_EPSILON {
+                    let mass = tree[ni].mass;
+                    tree[ni].com = (tree[ni].com * mass + pos) * (1.0 / (mass + 1.0));
+                    tree[ni].mass = mass + 1.0;
+                    tree[ni].max_r = tree[ni].max_r.max(r);
+                    return;
+                }
                 subdivide_leaf(tree, ni);
                 insert(tree, ni, ex, p_ex, r_ex, positions, radii);
                 insert(tree, ni, idx, pos, r, positions, radii);
@@ -1506,6 +1515,14 @@ mod quadrant_tests {
         engine.create_handle(11, 1, 3.14);
         engine.create_edge(100, 10, 11);
         assert_eq!(engine.render_snapshot().edges.len(), 1);
+    }
+
+    #[test]
+    fn force_graph_barnes_hut_tolerates_coincident_nodes() {
+        let nodes: Vec<serde_json::Value> = (0..300).map(|i| serde_json::json!({ "id": format!("n{i}"), "shape": "circle", "radius": 10.0, "x": 0.0, "y": 80.0, "handles": [] })).collect();
+        let fixture = serde_json::json!({ "schema": "puzzle.2d.fixture/v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": nodes, "edges": [] }).to_string();
+        let out = apply_force_graph_layout_to_fixture_v1_json(&fixture, r#"{"iterations": 3, "pairwiseRepulsionMaxBodies": 8}"#).expect("layout");
+        assert!(out.contains("n299"));
     }
 }
 // #endregion 🔖Tests

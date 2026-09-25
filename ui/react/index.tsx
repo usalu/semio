@@ -6228,13 +6228,14 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
 
   const controlledValue = (restProps as any).value;
   const rootDataState = kind === "single" && controlledValue !== undefined ? (controlledValue ? "on" : "off") : undefined;
+  const rootId = items.some((item) => (item.id ?? id) === id) ? undefined : id;
 
   const toggleGroupElement = (
     <ToggleGroupPrimitive.Root
       data-slot="toggle-group"
       data-detail-panel-control="fit"
       data-state={rootDataState}
-      id={id}
+      id={rootId}
       type={kind}
       className={cn(
         "group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden has-[_[data-slot=inline-label]]:overflow-visible h-medium divide-x",
@@ -10161,117 +10162,98 @@ export const Tree = (({
 }) as TreeComponent;
 
 // #region 🎇Basic Chat Panel
-// Shared side-panel chat UI with local-only message storage.
+// Shared side-panel chat feed rendering host-provided messages (e.g. a live collaboration session activity); composing is enabled only when the host passes `onSend`.
 // Consumers MUST provide a stable id and title per app tab.
+
+/** @emoji 💬 One message of a {@link BasicChatPanel} feed (people, agents or system events). */
+export interface BasicChatMessage {
+  readonly id: string;
+  readonly author: string;
+  readonly body: string;
+  readonly color?: string;
+  readonly badge?: string;
+  readonly timestamp?: number;
+  readonly own?: boolean;
+}
 
 interface BasicChatPanelProps extends ElementProps {
   title: string;
+  messages: readonly BasicChatMessage[];
+  emptyText?: string;
+  onSend?: (body: string) => void;
 }
 
-type BasicChatMessageRole = "assistant" | "user";
-
-interface BasicChatMessage {
-  id: string;
-  role: BasicChatMessageRole;
-  body: string;
-}
-
-const createBasicChatMessages = (id: string, title: string): BasicChatMessage[] => [
-  {
-    id: `${id}.assistant.0`,
-    role: "assistant",
-    body: `Chat is ready for ${title}.`,
-  },
-  {
-    id: `${id}.assistant.1`,
-    role: "assistant",
-    body: "Messages stay local in this panel until a connected assistant is added.",
-  },
-];
-
-export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => {
+/** @emoji 🗨️ Connected chat/activity feed: renders host messages newest-last and auto-scrolls; no local echo. */
+export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title, messages, emptyText, onSend }) => {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
-  const [messages, setMessages] = reactHostPort.useState<BasicChatMessage[]>(() => createBasicChatMessages(id, title));
   const [draft, setDraft] = reactHostPort.useState("");
-  const nextMessageIndexRef = reactHostPort.useRef(2);
-  const appendMessage = (role: BasicChatMessageRole, body: string) => {
-    const nextMessageId = `${id}.${role}.${nextMessageIndexRef.current}`;
-    nextMessageIndexRef.current += 1;
-    setMessages((previousMessages) => [
-      ...previousMessages,
-      {
-        id: nextMessageId,
-        role,
-        body,
-      },
-    ]);
-  };
-  const clearMessages = () => {
-    nextMessageIndexRef.current = 2;
-    setMessages(createBasicChatMessages(id, title));
-    setDraft("");
-  };
+  const feedRef = reactHostPort.useRef<HTMLDivElement>(null);
   const sendDraft = () => {
     const trimmedDraft = draft.trim();
-    if (!trimmedDraft) {
-      return;
-    }
-    const responsePreview = trimmedDraft.length > 72 ? `${trimmedDraft.slice(0, 69)}...` : trimmedDraft;
+    if (!trimmedDraft || !onSend) return;
     setDraft("");
-    appendMessage("user", trimmedDraft);
-    appendMessage("assistant", `Saved locally: "${responsePreview}"`);
+    onSend(trimmedDraft);
   };
 
   reactHostPort.useEffect(() => {
-    nextMessageIndexRef.current = 2;
-    setMessages(createBasicChatMessages(id, title));
-    setDraft("");
-  }, [id, title]);
+    const feed = feedRef.current;
+    if (feed) feed.scrollTop = feed.scrollHeight;
+  }, [messages.length]);
 
   return (
     <div data-testid="basic-chat-panel" className="flex h-full min-h-0 flex-col gap-single">
-      <HelperRow>{`Local chat for ${title}. Use Enter to send and Shift+Enter for a new line.`}</HelperRow>
-      <div data-testid="basic-chat-feed" className={cn("min-h-0 flex-1 overflow-y-auto rounded-[3px] border", borderClass)}>
-        <Tree
-          className="min-w-0 p-single"
-          sections={[
-            {
-              id: `${id}.messages`,
-              label: null,
-              content: messages.map((message) => (
-                <TreeRow key={message.id}>
-                  <div data-testid="basic-chat-message" data-chat-role={message.role} className="flex min-w-0 flex-col gap-[2px]">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{message.role}</span>
-                    <p className="text-xs text-foreground whitespace-pre-wrap break-words">{message.body}</p>
-                  </div>
-                </TreeRow>
-              )),
-            },
-          ]}
-        />
+      <HelperRow>{title}</HelperRow>
+      <div ref={feedRef} data-testid="basic-chat-feed" className={cn("min-h-0 flex-1 overflow-y-auto rounded-[3px] border", borderClass)}>
+        {messages.length === 0 ? (
+          <p data-testid="basic-chat-empty" className="p-single text-xs text-muted-foreground">
+            {emptyText ?? "Nothing here yet."}
+          </p>
+        ) : (
+          <Tree
+            className="min-w-0 p-single"
+            sections={[
+              {
+                id: `${id}.messages`,
+                label: null,
+                content: messages.map((message) => (
+                  <TreeRow key={message.id}>
+                    <div data-testid="basic-chat-message" data-chat-author={message.author} data-chat-own={message.own ? "true" : "false"} className="flex min-w-0 flex-col gap-[2px]">
+                      <span className="flex items-center gap-[4px] text-[10px] font-semibold tracking-wide text-muted-foreground">
+                        <span aria-hidden className="inline-block size-[8px] shrink-0 rounded-full" style={{ backgroundColor: message.color ?? "currentColor" }} />
+                        <span className="truncate">{message.author}</span>
+                        {message.badge ? <span className="rounded-[3px] border px-[3px] text-[9px] uppercase">{message.badge}</span> : null}
+                        {message.timestamp != null ? <span className="ml-auto shrink-0 font-normal">{format(message.timestamp, "HH:mm:ss")}</span> : null}
+                      </span>
+                      <p className="text-xs text-foreground whitespace-pre-wrap break-words">{message.body}</p>
+                    </div>
+                  </TreeRow>
+                )),
+              },
+            ]}
+          />
+        )}
       </div>
-      <div className="flex shrink-0 flex-col gap-single">
-        <Textarea
-          id={`${id}.draft`}
-          data-testid="basic-chat-draft"
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key !== "Enter" || event.shiftKey) {
-              return;
-            }
-            event.preventDefault();
-            sendDraft();
-          }}
-          rows={3}
-          placeholder={`Write a message for ${title.toLowerCase()}...`}
-        />
-        <div className="flex items-center justify-end gap-single">
-          <Button type="button" id={`${id}.clear`} data-testid="basic-chat-clear" text="Clear" onClick={clearMessages} />
-          <Button type="button" id={`${id}.send`} data-testid="basic-chat-send" text="Send" onClick={sendDraft} disabled={!draft.trim()} />
+      {onSend ? (
+        <div className="flex shrink-0 flex-col gap-single">
+          <Textarea
+            id={`${id}.draft`}
+            data-testid="basic-chat-draft"
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" || event.shiftKey) return;
+              event.preventDefault();
+              sendDraft();
+            }}
+            rows={3}
+            placeholder={`Write a message for ${title.toLowerCase()}...`}
+          />
+          <div className="flex items-center justify-end gap-single">
+            <Button type="button" id={`${id}.send`} data-testid="basic-chat-send" text="Send" onClick={sendDraft} disabled={!draft.trim()} />
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 };
@@ -20372,6 +20354,35 @@ if (treeVitest) {
       );
       expect(markup).toContain("Enabled");
       expect(markup).toContain("aspect-auto");
+    });
+  });
+
+  describe("BasicChatPanel", () => {
+    it("renders host messages without local echo and hides the composer without onSend", () => {
+      const markup = renderToStaticMarkup(
+        <BasicChatPanel
+          id="hub.activity"
+          title="Session activity"
+          messages={[
+            { id: "m1", author: "Ada", body: "added a piece", color: "#e6194b", timestamp: 0 },
+            { id: "m2", author: "Claude", body: "created a design", badge: "agent", own: false },
+          ]}
+        />,
+      );
+      expect(markup).toContain('data-chat-author="Ada"');
+      expect(markup).toContain('data-chat-author="Claude"');
+      expect(markup).toContain("created a design");
+      expect(markup).toContain("background-color:#e6194b");
+      expect(markup).toContain("agent");
+      expect(markup).not.toContain('data-testid="basic-chat-draft"');
+      expect(markup).not.toContain("Saved locally");
+    });
+
+    it("shows the empty text and the composer when the host accepts messages", () => {
+      const markup = renderToStaticMarkup(<BasicChatPanel id="hub.activity" title="Chat" messages={[]} emptyText="No activity yet" onSend={() => undefined} />);
+      expect(markup).toContain("No activity yet");
+      expect(markup).toContain('data-testid="basic-chat-draft"');
+      expect(markup).toContain('data-testid="basic-chat-send"');
     });
   });
 
