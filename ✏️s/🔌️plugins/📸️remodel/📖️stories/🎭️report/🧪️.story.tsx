@@ -18,8 +18,7 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { TableHost } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import type { ActionDescriptor } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { REMODEL_DEFAULT_CONFIG, REMODEL_POPULATED_SCENE } from "../🧭️coordination/🧫️fixtures/🧫️model/🟦️.ts";
-import { REMODEL_EDITOR_CONTROLLER_ID, reduceRemodelStoryAction, remodelReportTableJson, remodelWindowNode } from "../🧭️coordination/🧫️fixtures/🧫️scene/🟦️.ts";
+import { REMODEL_DEFAULT_CONFIG, REMODEL_POPULATED_SCENE, REMODEL_EDITOR_CONTROLLER_ID, reduceRemodelStoryAction, remodelReportTableJson, remodelWindowNode } from "../🧭️coordination/🟦️.ts";
 
 /** 📊️ Every dataset name `report_table_json` matches, plus the fallback probe — `"nonsense"` must land on the frame list. */
 const REPORT_TABLES = ["frames", "cameras", "tracks", "gcps", "qcStages", "matches", "nonsense"] as const;

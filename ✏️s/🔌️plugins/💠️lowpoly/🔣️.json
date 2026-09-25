@@ -2434,11 +2434,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -3413,11 +3413,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -7660,8 +7660,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "d34603f65d4dabdb6dc0979c1ab2ae2bf90b62824947e05190d35096b9681b54",
-    "coreWasmSha256": "5c383d0bef4875783b4d38d3ae91cf0a0cefb16235628480fa12f0a6fba8c6c7",
-    "descriptorSha256": "02a841292c897db612528ec35586e6eb4286e4d5db8686753d507f8242b4884f"
+    "wasmSha256": "424f5dc2f7f73b8077d7695eb39bb601e6b4a437ea35b59dd05217768715abcd",
+    "coreWasmSha256": "4093801027685b4d3f38fd6a19ec04239c375cd7ea15381d6ce68d8dc5aa137e",
+    "descriptorSha256": "d091ad9e2e0d1bdb68fcab6042e0ccf809707c880003e8207d2dca81cb8c26b4"
   }
 }

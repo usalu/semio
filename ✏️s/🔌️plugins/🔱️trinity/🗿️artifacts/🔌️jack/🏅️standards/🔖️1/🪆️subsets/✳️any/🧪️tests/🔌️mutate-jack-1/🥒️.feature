@@ -59,16 +59,17 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
   scene exactly where it was — a distinction a handler that simply compared before with after could
   not make, since both vectors commit the same before- and after-scene.
 
-  A FOURTH FINDING, and why one scenario below is RED. The committed vectors are not self-contained.
-  Their before-scene carries a composed `content` child instead of inline `nodes` and `edges`, so the
-  entities every one of them addresses are ABSENT from the snapshot that is actually committed. Seven
-  of the eight still replay, because what their outcomes really specify turns out to be that the four
-  in-place verbs answer an absent target with an accepted `mutation.no-op` while the two `delete-`
-  verbs reject one — and the reference implements exactly that, on their authority. The eighth cannot:
-  `🚫️rejects-a-node-id-the-scene-already-holds` commits a before-scene holding NO nodes at all, so the
-  id it calls a duplicate is not there and no implementation reading only what is committed can
-  refuse it. `spec-vector-create-node` is therefore left RED. Nothing was softened to hide it: the
-  fixture is the thing that needs fixing, by committing the scene the vector claims to start from.
+  A FOURTH FINDING, now closed by committing the scene each vector starts from. The committed vectors
+  are not self-contained: their before-scene carries a composed `content` child instead of inline
+  `nodes` and `edges`, so the entities every one of them addresses were ABSENT from what was
+  committed. Read that way, the in-place verbs looked as if they answered an absent target with a
+  `mutation.no-op` — a rule the Rust implementation does not have (it refuses with
+  `mutation.target-missing`) and the fixture names do not mean (`keeps-the-name-a-node-already-carries`),
+  and `🚫️rejects-a-node-id-the-scene-already-holds` could not be refused at all because the id it calls a
+  duplicate was not there. Each `spec-vector-<kind>` row therefore names the composed scene both
+  implementations seed the child with, committed beside this case: `🧩️capsule-stack.scene.json` — a
+  service shaft and a capsule joined by one edge — for the five vectors about entities that exist, and
+  `🫙️empty.scene.json` for the three about entities that do not. The vectors themselves are unchanged.
 
   @id-mutate
   @level-exhaustive
@@ -119,21 +120,22 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
     Given the committed before-scene shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
     And the committed mutation shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
     And the committed after-scene shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the composed scene both hold shared://🔌️mutate-jack-1/<scene>
     When the committed mutation is applied to the committed before-scene
       """
       {"verdict": "<verdict>"}
       """
     Then each implementation gives the committed <verdict> answer in role, and the two agree
     Examples:
-      | id                    | verdict | dir                     | fixture                                             |
-      | create-node           | refused | ➕️create-node           | 🚫️rejects-a-node-id-the-scene-already-holds           |
-      | delete-node           | refused | 🗑️delete-node           | 🚫️rejects-deleting-a-node-the-scene-never-had         |
-      | create-edge           | refused | 🌉️create-edge           | 🚫️rejects-an-edge-whose-endpoints-are-absent          |
-      | delete-edge           | refused | ✂️delete-edge           | 🚫️rejects-cutting-an-edge-the-scene-never-had         |
-      | rename-node           | noop    | ✏️rename-node           | ✏️keeps-the-name-a-node-already-carries               |
-      | move-node             | noop    | 📍️move-node             | 📍️keeps-a-node-at-the-point-it-already-occupies       |
-      | change-data-property  | noop    | 🔧️change-data-property  | 🏷️keeps-a-node-property-at-the-value-it-already-holds |
-      | remove-data-property  | noop    | 🧹️remove-data-property  | 🧹️keeps-an-edge-without-the-property-it-never-had     |
+      | id                   | verdict | dir                    | fixture                                               | scene                      |
+      | create-node          | refused | ➕️create-node          | 🚫️rejects-a-node-id-the-scene-already-holds           | 🧩️capsule-stack.scene.json |
+      | delete-node          | refused | 🗑️delete-node          | 🚫️rejects-deleting-a-node-the-scene-never-had         | 🫙️empty.scene.json         |
+      | create-edge          | refused | 🌉️create-edge          | 🚫️rejects-an-edge-whose-endpoints-are-absent          | 🫙️empty.scene.json         |
+      | delete-edge          | refused | ✂️delete-edge          | 🚫️rejects-cutting-an-edge-the-scene-never-had         | 🫙️empty.scene.json         |
+      | rename-node          | noop    | ✏️rename-node          | ✏️keeps-the-name-a-node-already-carries               | 🧩️capsule-stack.scene.json |
+      | move-node            | noop    | 📍️move-node            | 📍️keeps-a-node-at-the-point-it-already-occupies       | 🧩️capsule-stack.scene.json |
+      | change-data-property | noop    | 🔧️change-data-property | 🏷️keeps-a-node-property-at-the-value-it-already-holds | 🧩️capsule-stack.scene.json |
+      | remove-data-property | noop    | 🧹️remove-data-property | 🧹️keeps-an-edge-without-the-property-it-never-had     | 🧩️capsule-stack.scene.json |
 
   @id-identity-round-trip
   @level-long

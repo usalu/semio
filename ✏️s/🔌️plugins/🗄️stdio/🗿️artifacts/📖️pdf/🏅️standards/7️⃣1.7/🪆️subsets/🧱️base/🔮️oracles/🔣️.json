@@ -1207,7 +1207,8 @@
           "capability": "pdf-1-7-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-pattern",

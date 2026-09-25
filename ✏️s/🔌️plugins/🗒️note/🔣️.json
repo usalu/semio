@@ -4979,7 +4979,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "note.document",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -6086,7 +6086,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "note.document",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -6261,8 +6261,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "4cdf16b6e0223b7c14f9331203324febeb7c1cc340c49ca4a3c621804f880523",
-    "coreWasmSha256": "25bca31230c2ab070e5f88515fc1849164570480ca72f78628319ae610fff0dd",
-    "descriptorSha256": "60a1c06ca3339aa31eabc0f666c43aee4a15daa0592790eec334f65e2ce8f988"
+    "wasmSha256": "23cb84db3a4e7ee6913db5a31be6f6cc9459f042cd3ba8afeade280aca09c726",
+    "coreWasmSha256": "df6e273c4a7ef46a48300ac5e8635e411e729f7c213695d5c61094db9ab2224c",
+    "descriptorSha256": "ab15adea2cefb3c921165242e43f1ecf92c652867b0e130ffc118b1ceaee0ddd"
   }
 }

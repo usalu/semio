@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🎬️ The step-node semantic vocabulary: the six mutations that create, remove, reposition, reconfigure or duplicate a SequenceStep entity. Split out of ✳️any (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION) so this narrower vocabulary has a real, non-wildcard owner. `oracles`/`noOracleDecisions` for capability `sequence-1-mutate`/`sequence-1-mutate-uncarried` stay registered on ✳️any's own contribution and apply registry-wide by capability, not by subset.",
+  "_comment": "🎬️ The step-node semantic vocabulary: the six mutations that create, remove, reposition, reconfigure or duplicate a SequenceStep entity. Split out of ✳️any (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION) so this narrower vocabulary has a real, non-wildcard owner. `oracles`/`noOracleDecisions` for capability `sequence-1-mutate`/`sequence-1-mutate-json-carried` stay registered on ✳️any's own contribution and apply registry-wide by capability, not by subset.",
   "mutationCatalogs": [
     {
       "id": "sequence-1-step",
@@ -111,8 +111,9 @@
           },
           "oracleRequirements": [
             {
-              "capability": "sequence-1-mutate-uncarried",
-              "qualifyingKind": "third-party-library"
+              "capability": "sequence-1-mutate-json-carried",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-sequence-carrier-reader"
             }
           ],
           "invariants": {
@@ -257,8 +258,9 @@
           },
           "oracleRequirements": [
             {
-              "capability": "sequence-1-mutate-uncarried",
-              "qualifyingKind": "third-party-library"
+              "capability": "sequence-1-mutate-json-carried",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-sequence-carrier-reader"
             }
           ],
           "invariants": {

@@ -17,6 +17,14 @@
     "batchId": 1,
     "mutationIdPrefix": "tc-doc-"
   },
+  "growth": {
+    "editsBeforeRestart": 300,
+    "editsAfterRestart": 30,
+    "payloadBytes": 16384,
+    "distinctPaths": 32,
+    "batchIdBase": 1000,
+    "mutationIdPrefix": "tc-grow-"
+  },
   "presence": {
     "lane": "preview",
     "labelA": "author-a",

@@ -50,7 +50,7 @@ put(bundle / "🎯️outcome/🔣️.json", dump({"status": "applied"}))
 
 test = (subset / "🧬️schema/🧬️mutations/🕹️move-frame/🧪️tests/📍️moves-the-rect-frame/🦀️.rs").read_text(encoding="utf-8")
 head, _, _ = test.partition("/// ▶️")
-head = head.replace("move-frame", "rotate-frame").replace("📍️moves-the-rect-frame", scenario).replace("moves-the-rect-frame", "rotates-the-rect-frame").replace("🕹️move-frame", leaf)
+head = head.replace("🕹️move-frame", leaf).replace("move-frame", "rotate-frame").replace("📍️moves-the-rect-frame", scenario).replace("moves-the-rect-frame", "rotates-the-rect-frame")
 head = head.replace("Proves the bounds origin moves while the extent and rotation stay fixed.", "Proves the frame's rotation turns while its origin and extent stay fixed.")
 body = '''/// ▶️ `rotate-frame` writes `bounds.rotation`; origin, width and height are untouched.
 #[semio_framework_async_macros::async_test]

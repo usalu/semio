@@ -8,6 +8,7 @@
 // #endregion Header
 
 import { parseDirectorySessionAuthorityJsonV1, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, type DirectorySessionAuthorityV1 } from "../../📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
+import { parseDirectoryEventPageV1, type DirectoryEvent } from "../../📇️directory/🧬️schema/🟦️.ts";
 
 import type {
   ArtifactBootstrapControl,
@@ -239,7 +240,7 @@ function ownedDocumentRuntimeKey(documentId: string, spaceId?: string): string |
  * reserves every hub-bound document for the authenticated browser D1 transport. */
 function dispatchBackboneWorkerRequest(request: BackboneWorkerRequest, host: RustWorkerHost | null, typescriptDispatch: (request: BackboneWorkerRequest) => void = handleTsRequest): void {
   const rustDispatch = (value: BackboneWorkerRequest): void => host?.handleRequestBytes(encodeBackboneWorkerRequest(value));
-  if (request.kind === "directory-bootstrap-open" || request.kind === "directory-bootstrap-ack" || request.kind === "directory-bootstrap-reject" || request.kind === "directory-bootstrap-close") {
+  if (request.kind === "directory-bootstrap-open" || request.kind === "directory-bootstrap-ack" || request.kind === "directory-bootstrap-reject" || request.kind === "directory-bootstrap-close" || request.kind === "directory-space-open" || request.kind === "directory-space-close") {
     typescriptDispatch(request);
     return;
   }
@@ -5418,6 +5419,53 @@ function openScopedDirectory(baseUrl: string, scope: DocumentScope, since: numbe
   scopedDirectoryStreams.set(key, stream);
 }
 
+/** 📇️ Every mounted space index's directory lane, by space id. */
+const spaceDirectoryLanes = new Map<string, { readonly close: () => void }>();
+
+/** 📇️ Opens one space index's directory lane: the space's full event history from the first sealed directory page on
+ * (retried with jittered backoff through a short link loss), then every live event of that space from the global
+ * directory stream, each posted as `directory-space-events` in ascending `seq`. The space index is the shell's
+ * projection of the space's directory — it has no document scope, so it never asks for a document-scoped stream. */
+function openSpaceDirectory(baseUrl: string, spaceId: string): void {
+  closeSpaceDirectory(spaceId);
+  const abort = new AbortController();
+  let stream: { close: () => void } | null = null;
+  const lane = {
+    close: () => {
+      abort.abort(new Error("space directory closed"));
+      stream?.close();
+    },
+  };
+  spaceDirectoryLanes.set(spaceId, lane);
+  const client = new DirectoryClient(baseUrl, {
+    requestBaseUrl: "",
+    socketGrantIssuer: createSocketGrantIssuerV1({ post: (path, options) => requestSocketGrant(baseUrl, path, options?.signal) }),
+    request: browserDirectoryRequest,
+  });
+  const deliver = (events: readonly DirectoryEvent[]): void => {
+    const own = events.filter((event) => event.spaceId === spaceId);
+    if (own.length > 0 && spaceDirectoryLanes.get(spaceId) === lane) post({ kind: "directory-space-events", spaceId, events: own });
+  };
+  void (async () => {
+    let after = 0;
+    for (let more = true; more; ) {
+      const page = await retryWithJitteredBackoff(async () => parseDirectoryEventPageV1((await client.eventPage(after, { signal: abort.signal })).canonicalJson), { minMs: HUB_RECONNECT_MIN_MS, maxMs: HUB_RECONNECT_MAX_MS, signal: abort.signal });
+      deliver(page.events);
+      after = page.throughSeqInclusive;
+      more = page.hasMore;
+    }
+    if (abort.signal.aborted) return;
+    stream = client.stream(after, (message) => {
+      if (message.kind === "event") deliver([message.event]);
+    });
+  })().catch(() => undefined);
+}
+
+function closeSpaceDirectory(spaceId: string): void {
+  spaceDirectoryLanes.get(spaceId)?.close();
+  spaceDirectoryLanes.delete(spaceId);
+}
+
 function closeScopedDirectory(scope: DocumentScope): void {
   const key = scopedDirectoryKey(scope);
   scopedDirectoryStreams.get(key)?.close();
@@ -5437,6 +5485,8 @@ function closeDirectory(): void {
   directoryClient = null;
   for (const stream of scopedDirectoryStreams.values()) stream.close();
   scopedDirectoryStreams.clear();
+  for (const lane of spaceDirectoryLanes.values()) lane.close();
+  spaceDirectoryLanes.clear();
   directoryWorkerEpoch += 1;
   for (const operation of spaceArtifactCreationCatalogOperations.values()) operation.abort.abort(new Error("space artifact creation catalog: directory closed"));
   spaceArtifactCreationCatalogOperations.clear();
@@ -6984,6 +7034,12 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
       break;
     case "directory-scope-close":
       closeScopedDirectory(request.scope);
+      break;
+    case "directory-space-open":
+      openSpaceDirectory(request.baseUrl, request.spaceId);
+      break;
+    case "directory-space-close":
+      closeSpaceDirectory(request.spaceId);
       break;
     case "directory-command":
       void submitDirectoryCommand(request.requestId, request.command);

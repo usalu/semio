@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🎬️ ✳️any owns no mutation any more: the eight direct semantic vocabulary entries (six step-node kinds, two dependency-edge kinds) moved to 🪜️step and 🔗️dependency (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION) so each has a real, non-wildcard owner. This contribution keeps the shared io codecs, the whole-document schema/snapshot/diff/editor/viewer surface, and the two capability oracles below — `csv-rfc4180-reader` and the `sequence-1-mutate-uncarried` no-oracle decision both apply registry-wide by capability, not by subset, so neither moves with the mutations that reference them.",
+  "_comment": "🎬️ ✳️any owns no mutation any more: the eight direct semantic vocabulary entries (six step-node kinds, two dependency-edge kinds) moved to 🪜️step and 🔗️dependency (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION) so each has a real, non-wildcard owner. This contribution keeps the shared io codecs, the whole-document schema/snapshot/diff/editor/viewer surface, and the two carrier oracles below — `csv-rfc4180-reader` for the four row kinds and `serde-json-sequence-carrier-reader` for the four kinds only the JSON export carries — which apply registry-wide by capability, not by subset, so neither moves with the mutations that reference them.",
   "oracles": [
     {
       "id": "csv-rfc4180-reader",
@@ -37,6 +37,41 @@
       "comparisonProfiles": [
         "unordered-json-v1"
       ]
+    },
+    {
+      "id": "serde-json-sequence-carrier-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "source": {
+        "repository": "https://github.com/serde-rs/json",
+        "license": "MIT OR Apache-2.0"
+      },
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "sequence-1-mutate-json-carried"
+      ],
+      "comparisonProfiles": [
+        "semantic-sequence-carrier-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/serde_json",
+      "rationale": "🧩️ A QUALIFYING CARRIER ORACLE FOR THE FOUR KINDS THE CSV CARRIER CANNOT SEE — `move-step`, `change-step-collapsed`, `connect-steps`, `disconnect-steps` — and for exactly the same reason `csv-rfc4180-reader` qualifies for the other four: the carrier is REAL. `🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs` (`SequenceIntoJson`, fidelity `Exact`) materializes the composed scene child and writes the whole `{schema, steps, edges}` document — step `x`/`y`, the `collapsed` flag and every edge included — through real serialization, not `print_dsl`. serde_json reads those bytes into its own value tree without consulting this repository's snapshot types, so a wrong move, flag or edge surfaces as a value disagreement rather than as two halves of this repository agreeing.\n\nHOW IT IS EXERCISED. The standalone `🏭️generator/🧩️json` engine (serde_json and nothing else) writes one authored `(⬅️before.json, ➡️after.json)` pair per kind — the pair IS the expectation — and refuses a pair whose serde_json projection does not move. `🚪️io/🧪️tests/🔬️carrier-contract::the_json_carrier_pairs_hold_the_kinds_the_csv_carrier_cannot_see` loads each before-carrier into the subset, applies the kind derived from what the pair changed, exports it through `SequenceIntoJson`, reads the bytes back with serde_json and requires the committed after-carrier; the kind's own inverse must export back to the before-carrier. That law is where the APPLIED branch of these four kinds is observed at all: their leaf vectors pin only guard branches, because a content-changing diff mints a hash-addressed child handle no fixture can author.\n\nWHAT IT DOES NOT CLAIM. serde_json does not know what a sequence step means; it adjudicates the carrier's content, which for these four kinds is the whole of what they write."
     }
   ],
   "noOracleDecisions": [
@@ -44,10 +79,9 @@
       "id": "sequence-step-graph-mutation-semantics",
       "capabilities": [
         "sequence-1-dependency-mutate",
-        "sequence-1-step-mutate",
-        "sequence-1-mutate-uncarried"
+        "sequence-1-step-mutate"
       ],
-      "rationale": "PARTIALLY SUPERSEDED by the `csv-rfc4180-reader` registration, which discharges `create-step`, `delete-step`, `duplicate-step` and `edit-step-params` through this subset's real RFC 4180 export. This decision now stands only for `move-step`, `change-step-collapsed`, `connect-steps` and `disconnect-steps`, whose written fields (x/y, the collapse flag, and `edges`) no exported carrier encodes.\n\nThe survey this decision already carries is kept: the BPMN and Graphviz readers are named and declined on the substantive ground that neither models this graph. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1`, whose documents carry ports inside nodes and cascade on delete, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the eight committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-puzzle-2d-1`: an id-keyed step collection with a sibling edge collection.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen. 🩹️ NARROWED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10): every capability this decision used to list is now either genuinely discharged by a registered qualifying oracle elsewhere in this subset tree, or genuinely required by a real mutation with none registered — and a no-oracle decision may never claim the latter, since that would make an open oracle gap look handled. `capabilities` is now empty; the analysis above is kept as the historical record of how this decision's scope narrowed.",
+      "rationale": "PARTIALLY SUPERSEDED by the `csv-rfc4180-reader` registration, which discharges `create-step`, `delete-step`, `duplicate-step` and `edit-step-params` through this subset's real RFC 4180 export. This decision now stands only for `move-step`, `change-step-collapsed`, `connect-steps` and `disconnect-steps`, whose written fields (x/y, the collapse flag, and `edges`) no exported carrier encodes.\n\nThe survey this decision already carries is kept: the BPMN and Graphviz readers are named and declined on the substantive ground that neither models this graph. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1`, whose documents carry ports inside nodes and cascade on delete, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the eight committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-puzzle-2d-1`: an id-keyed step collection with a sibling edge collection.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen. 🩹️ NARROWED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10): every capability this decision used to list is now either genuinely discharged by a registered qualifying oracle elsewhere in this subset tree, or genuinely required by a real mutation with none registered — and a no-oracle decision may never claim the latter, since that would make an open oracle gap look handled. `capabilities` is now empty; the analysis above is kept as the historical record of how this decision's scope narrowed.\n\n[T12 2026-09-25] Withdrew 'sequence-1-mutate-uncarried': the four kinds it stood for (`move-step`, `change-step-collapsed`, `connect-steps`, `disconnect-steps`) ARE carried — by the exact `{schema, steps, edges}` JSON export — and now require `sequence-1-mutate-json-carried`, discharged by `serde-json-sequence-carrier-reader` and held by the carrier-contract law `the_json_carrier_pairs_hold_the_kinds_the_csv_carrier_cannot_see`. The rationale above is kept verbatim as the record of what was investigated; only the claim is withdrawn. This decision now stands for the case-level capabilities its features tag.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -109,6 +143,12 @@
         "disconnect-steps"
       ],
       "vectors": []
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-sequence-carrier-v1",
+      "description": "The `{schema, steps, edges}` JSON carrier compared as serde_json value trees: key order never significant, step and edge array order significant (a step's position in `steps` is its drawing order), numbers compared as the values they denote."
     }
   ]
 }

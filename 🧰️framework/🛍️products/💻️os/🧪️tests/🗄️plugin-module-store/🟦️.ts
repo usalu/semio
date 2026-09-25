@@ -290,7 +290,8 @@ describe("🌎️ hub plugin source on the store", () => {
       source: "hub",
     });
     expect(stale.downloads.length).toBe(noteFiles);
-    expect((await serveStoredPluginModuleFileV1(state.cache, origin, program.moduleUrl)).body).toEqual(hexBytes(fixture.bundles.noteB.contents["🗒️note/🌉️bridge.js"]));
+    const served = await serveStoredPluginModuleFileV1(state.cache, origin, program.moduleUrl);
+    expect(served.status === 200 ? served.body : null).toEqual(hexBytes(fixture.bundles.noteB.contents["🗒️note/🌉️bridge.js"]));
     const again = hub(generationB, ["noteB"], { staged: staged() });
     expect((await install(state, again, stagedEntry)).source).toBe("store");
     expect([again.downloads, again.localReads]).toEqual([[], []]);

@@ -20,19 +20,16 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
 
   ✅️ WHAT THIS CASE'S EVIDENCE ACTUALLY COVERS. Three of the four kinds are document-level scalar
   setters and are fully adjudicated, with the reference additionally asserting in role what an
-  after-snapshot comparison cannot: that each writes exactly ONE of the five members and never the
-  composed child handle.
+  after-snapshot comparison cannot: that each writes exactly ONE of the six members and never the
+  composed child handle. The fourth, `edit-text`, reaches the document's CONTENT, which the snapshot
+  carries as its persisted `text` payload: its committed vector pins `{status: no-op, messages:
+  [{level: warn, code: mutation.no-op}]}` for a text identical to that payload, and the reference
+  adjudicates exactly that — a warned no-op that moves nothing and whose inverse is empty. What no
+  committed vector shows is the other branch: what the child handle becomes when the text really does
+  change. Adding one such vector, plus the child-addressing rule, closes it.
 
-  🚧️ THREE OF THE NINE SCENARIOS ARE REFUSED BY CLAUSE, and reported rather than worked around.
-  First, `edit-text` in both roles. It is the only kind that reaches the document's actual CONTENT,
-  and the content is not here: the snapshot carries a child handle, not a body. The committed vector
-  pins `{status: applied, messages: [{level: warn, code: mutation.no-op}]}` — the verb decided the new
-  text was IDENTICAL to what the child already held — and neither the child's content nor the rule
-  that compares them is stated anywhere a second implementation can read. Nor is the other branch: no
-  committed vector shows what the handle becomes when the text really does change. Adding one vector
-  that carries the child body — the `scene` array the siblings `🌾️mutate-playbook-1` and
-  `🌵️mutate-forms-1` already put in their own doc strings — plus the child-addressing rule, closes it.
-  Second, `identity-round-trip`. The committed grammar is the repository-wide PLACEHOLDER: its whole
+  🚧️ ONE OF THE NINE SCENARIOS IS REFUSED BY CLAUSE, and reported rather than worked around.
+  `identity-round-trip`. The committed grammar is the repository-wide PLACEHOLDER: its whole
   body is `payload = OCTET+` and its header production declares `"schema" SP "writer.writer.snapshot"`, while the
   committed artifact's first line is `semio writer.writer.dsl v1` and its body is the derived record
   spelling `schema=… id=… language-id=… uri="…" text="…" document=child_id=… target="…"`: five quoted or

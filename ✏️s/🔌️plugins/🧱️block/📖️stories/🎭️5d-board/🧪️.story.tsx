@@ -24,7 +24,7 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { Board2dHost } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import type { ActionDescriptor } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { BLOCK5D_STORY_EXAMPLE_IDS, block5dBoardRenderLines, block5dStoryStateFor, buildBlock5dBoardSceneNode, reduceBlock5dStoryAction, type Block5dStoryState } from "../🧭️coordination/🧫️fixtures/🧫️scene/🟦️.ts";
+import { BLOCK5D_STORY_EXAMPLE_IDS, block5dBoardRenderLines, block5dStoryStateFor, buildBlock5dBoardSceneNode, reduceBlock5dStoryAction, type Block5dStoryState } from "../🧭️coordination/🟦️.ts";
 
 //#region StoryHost
 const BLOCK5D_STORY_CONTROLLER_ID = "block5d-story";

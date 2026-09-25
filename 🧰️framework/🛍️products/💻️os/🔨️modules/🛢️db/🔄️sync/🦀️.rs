@@ -136,6 +136,8 @@ pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: 
     let mut floor_head_seq = 0u64;
     let replay = async {
         loop {
+            records.renew_step()?;
+            decode_control.replenish(std::time::Instant::now() + db_wal::WAL_REPLAY_STEP_STALL_BOUND, db_wal::WAL_REPLAY_STEP_FUEL)?;
             let mut transaction = match records.next_transaction_step().await? {
                 db_wal::WalCommittedStep::Transaction(transaction) => transaction,
                 db_wal::WalCommittedStep::Yield => {

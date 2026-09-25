@@ -12,8 +12,29 @@ mod retained_tests {
         }
     }
 
+    /// 🪟️ The version graph never saturates: three full ledgers of changes are all recorded, each full
+    /// window folds into a checkpoint that `head` still answers, and the folded stores retire in
+    /// bounded steps — the last of them during shutdown.
+    #[semio_framework_async_macros::async_test]
+    async fn vcs_graph_rolls_full_windows_and_retires_them_in_bounded_steps() {
+        let _guard = TEST_LOCK.lock().unwrap();
+        let graph = VcsVersionGraph::new().await;
+        let document = ArtifactId("vcs-window".to_string());
+        for index in 0..vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY * 3 {
+            let change = ChangeRecord { parent: None, content_hash: pack::ContentHash([index as u8; 32]), author: ActorId("alice".to_string()), message: format!("change {index}"), timestamp_ms: index as u64 };
+            graph.record_change(&document, change).await.unwrap_or_else(|error| panic!("change {index} was refused: {error:?}"));
+        }
+        assert!(graph.head(&document, "window").await.unwrap().is_some(), "a folded window leaves its checkpoint as the head");
+        let mut steps = 0usize;
+        while graph.shutdown_step().await.unwrap() != VersionGraphShutdownStep::Complete {
+            steps += 1;
+            assert!(steps < 100_000, "folded windows retire in bounded steps");
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn vcs_store_keeps_exact_history_owners_through_changes_checkpoint_and_bounded_close() {
+        let _guard = TEST_LOCK.lock().unwrap();
         let graph = VcsVersionGraph::new().await;
         let document = ArtifactId("vcs-owner-catalog".to_string());
         let mut edit_ids = Vec::new();
@@ -47,6 +68,7 @@ mod retained_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn vcs_shutdown_error_reinstalls_exact_store_and_retry_reaches_terminal() {
+        let _guard = TEST_LOCK.lock().unwrap();
         let graph = VcsVersionGraph::new().await;
         let document = ArtifactId("vcs-shutdown-retry".to_string());
         let change = ChangeRecord { parent: None, content_hash: pack::ContentHash([7; 32]), author: ActorId("owner".to_string()), message: "before-close".to_string(), timestamp_ms: 1 };
@@ -124,6 +146,7 @@ mod retained_tests {
 
     #[test]
     fn vcs_checkpoint_derived_item_boundary_admits_31_rejects_32_and_preserves_exact_owners() {
+        let _guard = TEST_LOCK.lock().unwrap();
         let document = ArtifactId(String::new());
         let request = |count: usize| CheckpointRequest { parent_checkpoint: None, change_ids: Vec::new(), message: String::new(), authors: (0..count).map(|index| ActorId(format!("author-{index}"))).collect(), timestamp_ms: 1 };
         let accepted = request(31);

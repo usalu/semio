@@ -4,18 +4,16 @@
   "contractId": "cad-draw-projection-vectors-v1",
   "registration": {
     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
-    "sha256": "1410a74ccc87561fd4a4b91db7d503614fe21ddce8bc78dee923d8237820f3e0",
+    "sha256": "ff3562082e3209560a39417d166c417f5e651944bbbb95f3f6ef2126f997d49a",
     "schemaVersion": 1,
     "coordinates": [
       { "pointer": "/projections/*/sourceRoot", "kind": "source" },
       { "pointer": "/projections/*/destinationRoot", "kind": "destination" },
       { "pointer": "/projections/*/mappings/*/sourcePath", "kind": "source" },
-      { "pointer": "/projections/*/mappings/*/destinationPath", "kind": "destination" },
-      { "pointer": "/referenceConsumers/*/sourcePathIdentities/*", "kind": "source" },
-      { "pointer": "/projections/1/referenceEdits/*/path", "kind": "destination" }
+      { "pointer": "/projections/*/mappings/*/destinationPath", "kind": "destination" }
     ]
   },
-  "coordinateCounts": { "source": 227, "destination": 224 },
+  "coordinateCounts": { "source": 240, "destination": 240 },
   "absoluteCases": [
     { "root": "/recorded/workspace", "value": "/recorded/workspace/fixtures/source.json", "accepted": true },
     { "root": "C:/recorded/workspace", "value": "C:/recorded/workspace/fixtures/source.json", "accepted": true },

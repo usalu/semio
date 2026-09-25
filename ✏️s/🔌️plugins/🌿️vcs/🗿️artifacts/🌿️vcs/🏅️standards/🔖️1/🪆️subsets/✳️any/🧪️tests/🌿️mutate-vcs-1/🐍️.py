@@ -29,12 +29,12 @@ from semio_repo_test import Adapter, Context, Outcome
 # region 🔖️Fixtures
 _ROOT = "shared://🧬️mutations"
 VECTORS = {
-    "rename-vcs": (f"{_ROOT}/✏️rename-vcs/✏️retitles-the-document", "renameVcs"),
-    "change-counter": (f"{_ROOT}/🔢change-counter/🔢️sets-counter-to-seven", "changeCounter"),
-    "change-notes": (f"{_ROOT}/📝change-notes/📝️rewrites-the-notes", "changeNotes"),
-    "change-status": (f"{_ROOT}/🚦change-status/🔎️draft-to-review", "changeStatus"),
-    "add-tag": (f"{_ROOT}/🏷️add-tag/🏷️appends-urgent-tag", "addTag"),
-    "remove-tag": (f"{_ROOT}/🗑️remove-tag/➖️detaches-the-review-tag", "removeTag"),
+    "rename-vcs": (f"{_ROOT}/✏️rename-vcs/🧪️retitles-the-document", "renameVcs"),
+    "change-counter": (f"{_ROOT}/🔢change-counter/🧪️sets-counter-to-seven", "changeCounter"),
+    "change-notes": (f"{_ROOT}/📝change-notes/🧪️rewrites-the-notes", "changeNotes"),
+    "change-status": (f"{_ROOT}/🚦change-status/🧪️draft-to-review", "changeStatus"),
+    "add-tag": (f"{_ROOT}/🏷️add-tag/🧪️appends-urgent-tag", "addTag"),
+    "remove-tag": (f"{_ROOT}/🗑️remove-tag/🧪️detaches-the-review-tag", "removeTag"),
 }
 
 
@@ -57,7 +57,7 @@ WIRE_TAG_TO_KIND = {tag: kind for kind, (_root, tag) in VECTORS.items()}
 
 
 # region 🔖️Vocabulary
-NULL_DIFF = {"artifact": None, "schema": None, "title": None, "counter": None, "notes": None, "status": None, "tags": None, "selectedCheckpointIds": None, "locale": None}
+NULL_DIFF = {"artifact": None, "schema": None, "title": None, "counter": None, "notes": None, "status": None, "tags": None}
 
 
 def apply_rename_vcs(snapshot, payload):

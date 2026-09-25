@@ -170,7 +170,9 @@ try {
   row("5 inference_list names each service, its execution site and its commit binding", solve !== undefined && gisService !== undefined, `grid3d=${JSON.stringify({ schema: solve?.inferenceSchema, site: solve?.site ?? solve?.executionSite, commit: solve?.payload?.commit ?? null })} gis=${JSON.stringify({ schema: gisService?.inferenceSchema, site: gisService?.site ?? gisService?.executionSite, commit: gisService?.payload?.commit ?? null })}`);
 
   const openedB = await agentB.call("artifact_open", { artifactId: map.documentId });
-  const historyBefore = await agentB.request("resources/read", { uri: `semio://artifact/${map.documentId}/history` });
+  const descriptorUri = `semio://workspace/scopes/${spaceId}/${map.documentId}/descriptor`;
+  const headSeenByB = async () => Number(JSON.parse(String((await agentB!.request("resources/read", { uri: descriptorUri })).result?.contents?.[0]?.text ?? "{}"))?.view?.headSeq ?? -1);
+  const headBeforeB = await headSeenByB();
   const ledgerBefore = await hub("GET", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(map.documentId)}`, human);
   row("6 agent B holds the gis map open before anything is committed", openedB.isError !== true, `writePath=${openedB.structuredContent?.sessionDocument?.writePath} head_seq=${ledgerBefore.json?.head_seq}`);
 
@@ -211,16 +213,12 @@ try {
   }
   row("16 the hub's document ledger advanced with the committed edit", Number(ledgerAfter.json?.head_seq ?? 0) > Number(ledgerBefore.json?.head_seq ?? 0), `head_seq ${ledgerBefore.json?.head_seq}→${ledgerAfter.json?.head_seq} commit_seq ${ledgerBefore.json?.commit_seq}→${ledgerAfter.json?.commit_seq}`);
 
-  let observed: any;
-  for (let poll = 0; poll < 60; poll++) {
-    await agentB.call("artifact_open", { artifactId: map.documentId });
-    observed = await agentB.request("resources/read", { uri: `semio://artifact/${map.documentId}/history` });
-    if (String(observed.result?.contents?.[0]?.text ?? "") !== String(historyBefore.result?.contents?.[0]?.text ?? "")) break;
+  let headAfterB = await headSeenByB();
+  for (let poll = 0; poll < 60 && headAfterB <= headBeforeB; poll++) {
     await sleep(1000);
+    headAfterB = await headSeenByB();
   }
-  const before = JSON.parse(String(historyBefore.result?.contents?.[0]?.text ?? "{}"));
-  const after = JSON.parse(String(observed?.result?.contents?.[0]?.text ?? "{}"));
-  row("17 agent B, a second client, observes the committed edit", (after.appliedEditIds ?? []).length > (before.appliedEditIds ?? []).length, `appliedEditIds ${(before.appliedEditIds ?? []).length}→${(after.appliedEditIds ?? []).length}`);
+  row("17 agent B, a second client, observes the committed edit in its own authenticated view", headAfterB > headBeforeB, `${descriptorUri} headSeq ${headBeforeB}→${headAfterB}`);
   row("18 progress notifications reached the submitting client", agentA.progress.length > 0, `notifications/progress rows=${agentA.progress.length}`);
 } catch (error) {
   row("proof", false, error instanceof Error ? `${error.message}\n${error.stack}` : String(error));

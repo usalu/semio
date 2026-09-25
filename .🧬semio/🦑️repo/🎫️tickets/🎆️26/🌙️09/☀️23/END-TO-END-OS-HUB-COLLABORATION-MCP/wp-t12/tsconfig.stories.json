@@ -1,0 +1,16 @@
+{
+  "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "types": ["vite/client", "react", "react-dom"]
+  },
+  "include": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📖️stories/**/*.ts",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📖️stories/**/*.tsx",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/📖️stories/**/*.ts",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/📖️stories/**/*.tsx",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📖️stories/**/*.ts",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📖️stories/**/*.tsx"
+  ]
+}

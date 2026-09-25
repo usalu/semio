@@ -30,7 +30,7 @@ const walk = (dir: string, depth: number): void => {
   }
 };
 walk(join(repo, "✏️s/🔌️plugins"), 0);
-let bad = 0;
+const bad = new Set<string>();
 const rows: string[] = [];
 for (const owner of owners.sort()) {
   const doc = JSON.parse(readFileSync(join(owner, "🔣️.json"), "utf8"));
@@ -42,7 +42,7 @@ for (const owner of owners.sort()) {
   const shared = sha(join(target, file));
   const stagedHash = staged.get(pluginId) ?? "-";
   const ok = committed === dist && dist === shared && shared === stagedHash && activated.has(pluginId);
-  if (!ok) bad += 1;
+  if (!ok) bad.add(pluginId);
   rows.push(`${ok ? "OK  " : "DIFF"} ${pluginId.padEnd(34)} committed=${committed?.slice(0, 12)} dist=${dist.slice(0, 12)} shared=${shared.slice(0, 12)} staged=${stagedHash?.slice(0, 12)} activated=${activated.has(pluginId)}`);
 }
 for (const entry of readdirSync(modules)) {
@@ -54,10 +54,10 @@ for (const entry of readdirSync(modules)) {
   const missing = files.filter((file) => !existsSync(join(modules, entry, file)));
   const core = files.some((file) => file.endsWith("_component.core.wasm"));
   if (missing.length > 0 || !core) {
-    bad += 1;
+    bad.add(entry.replace(/^\P{L}+/u, ""));
     rows.push(`MISS ${entry} missing=${missing.length} ${missing.slice(0, 3).join(",")} coreWasmListed=${core}`);
   }
 }
 console.log(rows.join("\n"));
-console.log(`components=${owners.length} consistent=${owners.length - bad} diverged=${bad} receiptPlugins=${receipt.plugins.length} receipt=${receiptPath}`);
-process.exit(bad === 0 ? 0 : 1);
+console.log(`components=${owners.length} consistent=${owners.length - bad.size} diverged=${bad.size} receiptPlugins=${receipt.plugins.length} receipt=${receiptPath}`);
+process.exit(bad.size === 0 ? 0 : 1);

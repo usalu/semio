@@ -173,6 +173,10 @@ impl crate::os_store::ComponentDocumentCodec for FixtureComponentCodec {
     fn print_mirror<'a>(&'a self, _pack: &'a [u8], _spr: &'a [u8]) -> crate::os_store::ComponentDocumentCodecFuture<'a, crate::os_store::ArtifactTextFiles> {
         Box::pin(async move { Err(crate::os_store::VcsError::Deserialize("fixture component prints no mirror".into())) })
     }
+
+    fn genesis<'a>(&'a self, _document_id: &'a str) -> crate::os_store::ComponentDocumentCodecFuture<'a, crate::os_store::ComponentDocumentGenesis> {
+        Box::pin(async move { Err(crate::os_store::VcsError::ValidationFailed("fixture component mints no genesis".into())) })
+    }
 }
 
 /// 🧪️ A kind whose owning component a host mounted takes its identity from that component — asked the

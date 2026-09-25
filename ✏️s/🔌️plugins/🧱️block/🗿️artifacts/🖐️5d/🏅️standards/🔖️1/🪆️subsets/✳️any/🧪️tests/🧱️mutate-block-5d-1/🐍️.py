@@ -41,7 +41,7 @@ from semio_repo_test import Adapter, Outcome
 
 
 # region 🔖️Vocabulary
-MEMBERS = ("schema", "partKind", "2d", "3d", "representations", "gripKinds", "grips", "compatibility", "attributes", "authors", "camera2d", "camera3d", "meta")
+MEMBERS = ("schema", "partKind", "part2d", "part3d", "representations", "gripKinds", "grips", "compatibility", "attributes", "authors", "camera2d", "camera3d", "meta")
 """🗂️ The thirteen members `Block5dSnapshot` declares — and the cross-language projection."""
 
 PART_KIND_FIELDS = {"rename-part-kind": ("name", "newName"), "change-part-kind-label": ("label", "newLabel"), "change-part-kind-variant": ("variant", "newVariant"), "change-part-kind-description": ("description", "newDescription"), "change-part-kind-icon": ("icon", "newIcon"), "change-part-kind-unit": ("unit", "newUnit")}
@@ -143,10 +143,10 @@ def validate(document, where):
     for member, expected in WHOLE.items():
         if set(document[member]) != expected:
             raise AssertionError("%s: %s must carry exactly %r, found %r" % (where, member, sorted(expected), sorted(document[member])))
-    if document["2d"].get("shape") not in ("circle", "rectangle"):
-        raise AssertionError("%s: the 2d facet must declare a circle or a rectangle, found %r" % (where, document["2d"].get("shape")))
-    if set(document["3d"]) != {"orientation", "scale"}:
-        raise AssertionError("%s: the 3d facet must carry exactly an orientation and a scale, found %r" % (where, sorted(document["3d"])))
+    if document["part2d"].get("shape") not in ("circle", "rectangle"):
+        raise AssertionError("%s: the 2d facet must declare a circle or a rectangle, found %r" % (where, document["part2d"].get("shape")))
+    if set(document["part3d"]) != {"orientation", "scale"}:
+        raise AssertionError("%s: the 3d facet must carry exactly an orientation and a scale, found %r" % (where, sorted(document["part3d"])))
     for name, expected in RECORDS.items():
         identifiers = []
         for record in document[name]:
@@ -190,9 +190,9 @@ def apply_mutation(document, kind, payload):
         field, argument = PART_KIND_FIELDS[kind]
         document["partKind"][field] = payload[argument]
     elif kind == "update-part2d":
-        document["2d"] = rebuilt(PART_2D_FIELDS, payload)
+        document["part2d"] = rebuilt(PART_2D_FIELDS, payload)
     elif kind == "update-part3d":
-        document["3d"] = rebuilt(PART_3D_FIELDS, payload)
+        document["part3d"] = rebuilt(PART_3D_FIELDS, payload)
     elif kind in COLLECTIONS:
         member, argument = COLLECTIONS[kind]
         document[member].append(copy.deepcopy(payload[argument]))
@@ -256,9 +256,9 @@ def inverse_mutation(document, kind, payload):
         field, argument = PART_KIND_FIELDS[kind]
         return [(kind, {argument: document["partKind"][field]})]
     if kind == "update-part2d":
-        return [(kind, arguments_for(PART_2D_FIELDS, document["2d"]))]
+        return [(kind, arguments_for(PART_2D_FIELDS, document["part2d"]))]
     if kind == "update-part3d":
-        return [(kind, arguments_for(PART_3D_FIELDS, document["3d"]))]
+        return [(kind, arguments_for(PART_3D_FIELDS, document["part3d"]))]
     if kind in COLLECTIONS:
         member, argument = COLLECTIONS[kind]
         record = payload[argument]
@@ -347,20 +347,15 @@ def declares(diff, member):
     return True
 
 
-DIFF_ALIASES = {"2d": "part2d", "3d": "part3d"}
-"""🔗️ The two members whose diff arm cannot be named after them, because a field name may not start
-with a digit."""
-
-
 def footprint(kind, before, after, diff):
     """⚖️ Footprint completeness: before and after differ on exactly the members the committed diff
     declares. Restated by hand here because the Python host exposes no shared `law` module."""
     changed = [member for member in MEMBERS if before[member] != after[member]]
     for member in changed:
-        if not declares(diff, DIFF_ALIASES.get(member, member)):
+        if not declares(diff, member):
             raise AssertionError("inverse-%s: the snapshot member %r moved without the committed diff declaring it, so an undo built from that diff would not restore it" % (kind, member))
     for member in MEMBERS:
-        if declares(diff, DIFF_ALIASES.get(member, member)) and member not in changed:
+        if declares(diff, member) and member not in changed:
             raise AssertionError("inverse-%s: the committed diff declares %r, yet it is identical in both committed snapshots" % (kind, member))
 
 

@@ -7189,7 +7189,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "trinity.graph",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -14148,7 +14148,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "trinity.rewrite.rule",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -14462,8 +14462,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "353d4dfdba68c8b12a1410440cb498a198e1584c56d97983c5eeea2d3c205427",
-    "coreWasmSha256": "fc90ba12adb4918be7e144ed8320a6ba912ada552d54873c84c9650fc6e54177",
-    "descriptorSha256": "ce29f812ee685079e0518e50ef85de7c07b945776cc60e00091f075a70681429"
+    "wasmSha256": "3f9e9cf4460bd169be1efe6a36a93ea154f990dbfd3dc380ea13e197f7a8c7ca",
+    "coreWasmSha256": "679f65475abd22dc79495d9cbdc1aee6954431e8e5d95b82fb35f2aa3c43586a",
+    "descriptorSha256": "d08861930df3e39f4e6516553e9b07ee08cfcb6db4cc23390b5d75a046fa537a"
   }
 }

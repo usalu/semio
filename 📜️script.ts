@@ -1,24 +1,10 @@
 #!/usr/bin/env bun
 import { NativeDependenciesScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
-import { toolJobOwnerFactoryResolutionSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts";
-import { toolJobFactoryProofJoinSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-factory-proof-join/🟦️.ts";
-import { toolJobCooperativeMaintenanceSelfTests } from "./🧰️framework/🔨️modules/⏳️async/🤝️cooperative/🧪️tests/🔬️tool-job-cooperative-maintenance/🟦️.ts";
-import { toolJobTelemetryContentionSelfTests } from "./🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧪️tests/🔬️tool-job-telemetry-contention/🟦️.ts";
-import { toolJobMicrosecondBudgetSelfTests } from "./🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts";
-import { cadPresenceRetirementSelfTests } from "./✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts";
-import { toolJobLatestWinsSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts";
-import { storeCanonicalEditSealerSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts";
-import { canonicalErrorProgressSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts";
-import { proceduralGenerationRootSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts";
 import { flowTypedRetirementSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts";
-import { flowSelectedCopySelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts";
-import { toolJobScalarConfigCohortSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts";
 import { toolJobArtifactEnvelopeRejectionTransferSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️tool-job-artifact-envelope-rejection-transfer/🟦️.ts";
 import { toolJobPuzzleReservedRoutesSelfTests } from "./✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️tool-job-puzzle-reserved-routes/🟦️.ts";
 import { toolJobLiveFixedReplaySelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-live-fixed-replay/🟦️.ts";
 import { toolJobFemNumericalMicrocursorSelfTests } from "./✏️s/🔌️plugins/🏗️fem/🧪️tests/🔬️tool-job-fem-numerical-microcursor/🟦️.ts";
-import { toolJobCheckpointSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts";
-import { toolJobCoverageSelfTests } from "./🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️tool-job-coverage/🟦️.ts";
 import { toolJobFixedOperationRegistrySelfTests } from "./🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️tool-job-fixed-operation-registry/🟦️.ts";
 import { toolJobDrawingGestureOperationOwnerSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-drawing-gesture-operation-owner/🟦️.ts";
 import { toolJobFemLiveVisualPublicationSelfTests } from "./✏️s/🔌️plugins/🏗️fem/🧪️tests/🔬️tool-job-fem-live-visual-publication/🟦️.ts";
@@ -6555,8 +6541,13 @@ function toolJobArtifactRetainedCommandRuntimeLawExact(source: string): boolean 
 
 //#endregion 🧵️ Artifact Retained Command Checkpoint
 
+/** 🧪️ Loads the tool-job coverage self-tests on demand: they pull third-party oracles (Ajv) that no other command needs. */
+function toolJobCoverageSelfTestsModule(): Promise<typeof import("./🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️tool-job-coverage/🟦️.ts")> {
+  return import("./🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️tool-job-coverage/🟦️.ts");
+}
+
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
-function toolJobCoverageRun(root: string): ToolJobCoverageReport {
+async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> {
   toolJobSharedFrameworkActionFixtureRun(root);
   const macroFiles = new Set<string>();
   const fixtureMacroFiles = new Set<string>();
@@ -6702,7 +6693,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   } catch {
     fixedOperationFixture = undefined;
   }
-  const selfTests = toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawingGestureOperationOwnerSelfTests() + toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + (fixedOperationFixture?.results.length ?? 0) + Number(fixedOperationRustFixtureFresh);
+  const selfTests = (await toolJobCoverageSelfTestsModule()).toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawingGestureOperationOwnerSelfTests() + toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + (fixedOperationFixture?.results.length ?? 0) + Number(fixedOperationRustFixtureFresh);
   const factoryContracts: { file: string; line: number; factory: string; status: "explicit" | "missing" }[] = [];
   for (const [file, source] of allRustFiles) {
     const implementation = /impl(?:<[^>]+>)?\s+(?:semio_framework::)?ToolJobFactory\s+for\s+([^\s<{]+(?:<[^>{]+>)?)\s*\{/g;
@@ -7196,7 +7187,7 @@ export class VerifyScript extends Script {
       return;
     }
     if (segments[0] === "interactivity" && segments[1] === "tool-jobs") {
-      this.runToolJobCoverage(segments.slice(2));
+      await this.runToolJobCoverage(segments.slice(2));
       return;
     }
     if (segments[0] === "interactivity" && segments[1] === "apps") {
@@ -8546,7 +8537,7 @@ export class VerifyScript extends Script {
     if (report.failures.length > 25) console.error(`[verify interactivity apps] ${report.failures.length - 25} additional discovery or launch-registration failure(s) omitted.`);
     if (report.failures.length > 0) throw new Error(`[verify interactivity apps] ${report.failures.length} discovery or launch-registration failure(s).`);
     if (args.includes("--actions")) {
-      const toolJobs = toolJobCoverageRun(this.root);
+      const toolJobs = await toolJobCoverageRun(this.root);
       const dispositionFailures = interactivityAllAppActionDispositionFailures(report.descriptors);
       const productionFailures = interactivityAllAppActionProductionFailures(report.descriptors, toolJobs.acceptedCommandRows, toolJobs.acceptedReservedRoutes);
       const actionFailures = [...dispositionFailures, ...productionFailures];
@@ -8689,7 +8680,7 @@ export class VerifyScript extends Script {
   }
 
   /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
-  private runToolJobCoverage(args: string[]): void {
+  private async runToolJobCoverage(args: string[]): Promise<void> {
     if (args.includes("--shared-action-fixture-only")) {
       console.log(JSON.stringify(toolJobSharedFrameworkActionFixtureRun(this.root)));
       return;
@@ -8773,13 +8764,13 @@ export class VerifyScript extends Script {
       const activation = toolJobFactoryProofActivationScan(this.root);
       if (activation.failures.length > 0) throw new Error(`[verify interactivity tool-jobs] app activation factory proof scan: ${JSON.stringify(activation)}`);
       console.log(`[verify interactivity tool-jobs] exact-factory-proof-owners=${activation.owners} custom-rows=${activation.customRows} generic-rows=${activation.genericRows} clean.`);
-      console.log(`[verify interactivity tool-jobs] self-tests=${toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawingGestureOperationOwnerSelfTests() + toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + fixture.results.length + 1} clean.`);
+      console.log(`[verify interactivity tool-jobs] self-tests=${(await toolJobCoverageSelfTestsModule()).toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawingGestureOperationOwnerSelfTests() + toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + fixture.results.length + 1} clean.`);
       return;
     }
     const formatIndex = args.indexOf("--format");
     const format = formatIndex >= 0 ? args[formatIndex + 1] : "text";
     if (format !== "text" && format !== "json") throw new Error(`[verify interactivity tool-jobs] unsupported format ${JSON.stringify(format)}.`);
-    const report = toolJobCoverageRun(this.root);
+    const report = await toolJobCoverageRun(this.root);
     const outputIndex = args.indexOf("--output");
     const output = outputIndex >= 0 ? args[outputIndex + 1] : undefined;
     if (output) {
@@ -26036,20 +26027,7 @@ if (import.meta.main) {
 }
 
 export {
-  toolJobOwnerFactoryResolutionSelfTests,
-  toolJobFactoryProofJoinSelfTests,
-  toolJobCooperativeMaintenanceSelfTests,
-  toolJobTelemetryContentionSelfTests,
-  toolJobMicrosecondBudgetSelfTests,
-  cadPresenceRetirementSelfTests,
-  toolJobLatestWinsSelfTests,
-  storeCanonicalEditSealerSelfTests,
-  canonicalErrorProgressSelfTests,
-  proceduralGenerationRootSelfTests,
   flowTypedRetirementSelfTests,
-  flowSelectedCopySelfTests,
-  toolJobScalarConfigCohortSelfTests,
-  toolJobCheckpointSelfTests,
   interactivityLiveReconcileSelfTests,
   interactivityMountedLayoutTextSelfTests,
   interactivityMountedFrameTransactionSelfTests,

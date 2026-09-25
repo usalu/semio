@@ -43,12 +43,15 @@ This implementation therefore cascades, and says so; the feature's `delete-node`
 addresses a node no edge names, so the cross-language comparison never rests on the inference.
 
 **No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
-only.
+only. (2026-09-25: the carrier reader follows the committed example's record notation, and the
+absent-target rule follows the committed scenes `🧩️capsule-stack.scene.json`/`🫙️empty.scene.json` the
+vectors now start from — which is also where the subject's `mutation.target-missing` became visible.)
 """
 
 # region 🔖️Imports
 import copy
 import json
+import re
 
 from semio_repo_test import Adapter, Context, Outcome, digest
 
@@ -93,41 +96,146 @@ EDGE_MEMBERS = {"id", "kind", "source", "target", "properties"}
 # region 🔖️Carrier
 BANNER = "semio trinity.jack.dsl v1"
 
-HEX_JSON = ("camera", "nodes", "edges")
-"""#⃣ The members the carrier writes as hex of compact JSON; the rest are hex of plain UTF-8 text."""
+BARE = re.compile(r"[A-Za-z_][A-Za-z0-9_.]*")
+"""🔤️ A top-level string the carrier writes without quotes: an identifier-like token."""
+
+NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
+"""#️⃣ A bare numeric token."""
+
+
+def camel(key):
+    """🐫️ The document member a kebab-case carrier key names (`root-node-id` → `rootNodeId`)."""
+    head, *rest = key.split("-")
+    return head + "".join(word[:1].upper() + word[1:] for word in rest)
+
+
+def kebab(member):
+    """🥙️ The carrier key a document member is written under (`rootNodeId` → `root-node-id`)."""
+    return re.sub(r"[A-Z]", lambda match: "-" + match.group(0).lower(), member)
+
+
+class Reader:
+    """📖️ A cursor over the record notation: `key=value` members separated by whitespace, `{ … }` records,
+    `[ … ]` lists, quoted strings with backslash escapes, bare numbers, literals and bare tokens."""
+
+    def __init__(self, text):
+        self.text, self.at = text, 0
+
+    def skip(self):
+        while self.at < len(self.text) and self.text[self.at] in " \t\r\n":
+            self.at += 1
+
+    def peek(self):
+        self.skip()
+        return self.text[self.at] if self.at < len(self.text) else ""
+
+    def members(self, closer):
+        document = {}
+        while self.peek() not in (closer, ""):
+            equals = self.text.index("=", self.at)
+            key = self.text[self.at:equals]
+            if not re.fullmatch(r"[a-z][a-z0-9-]*|[A-Za-z_][A-Za-z0-9_]*", key):
+                raise AssertionError("carrier member key %r at offset %d is not a key" % (key, self.at))
+            self.at = equals + 1
+            document[key] = self.value()
+        if closer:
+            self.at += 1
+        return document
+
+    def value(self):
+        head = self.peek()
+        if head == "{":
+            self.at += 1
+            return self.members("}")
+        if head == "[":
+            self.at += 1
+            items = []
+            while self.peek() != "]":
+                items.append(self.value())
+            self.at += 1
+            return items
+        if head == '"':
+            out, self.at = [], self.at + 1
+            while self.text[self.at] != '"':
+                if self.text[self.at] == "\\":
+                    self.at += 1
+                    out.append({"n": "\n", "t": "\t", "r": "\r"}.get(self.text[self.at], self.text[self.at]))
+                else:
+                    out.append(self.text[self.at])
+                self.at += 1
+            self.at += 1
+            return "".join(out)
+        start = self.at
+        while self.at < len(self.text) and self.text[self.at] not in " \t\r\n}]":
+            self.at += 1
+        token = self.text[start:self.at]
+        if NUMBER.fullmatch(token):
+            return float(token)
+        return {"true": True, "false": False, "null": None}.get(token, token)
 
 
 def parse_carrier(text):
     """📖️ Reads a `trinity.jack.dsl v1` document into `(document, member-order)`.
 
-    Every member is the hex of its UTF-8 bytes; `camera`, `nodes` and `edges` are the hex of their
-    compact JSON. The order the members appear in is kept so the document can be printed back
-    exactly.
+    The carrier is the record notation the scene's text codec prints: a banner line, then the scene's
+    members as `key=value` in declaration order — kebab-case keys naming the camelCase members,
+    identifier-like strings bare and every other string quoted, `camera` a `{ … }` record and `nodes` and
+    `edges` `[ … ]` lists of records whose keys appear in the order they were written. The member
+    order is kept so the document can be printed back exactly.
     """
-    lines = text.split("\n")
-    if not lines or lines[0] != BANNER:
-        raise AssertionError("carrier banner must be %r, found %r" % (BANNER, lines[0] if lines else ""))
-    document, order = {}, []
-    for line in lines[1:]:
-        if line == "":
-            continue
-        key, separator, value = line.partition("=")
-        if separator != "=":
-            raise AssertionError("carrier line %r is not a key=value member" % line)
-        decoded = bytes.fromhex(value).decode("utf-8")
-        document[key] = json.loads(decoded) if key in HEX_JSON else decoded
-        order.append(key)
+    banner, _newline, body = text.partition("\n")
+    if banner != BANNER:
+        raise AssertionError("carrier banner must be %r, found %r" % (BANNER, banner))
+    members = Reader(body).members("")
+    document = {camel(key): value for key, value in members.items()}
     validate(document)
-    return document, order
+    return document, [camel(key) for key in members]
+
+
+def scalar(value, top):
+    """🔤️ One scalar as the carrier spells it."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if value is None:
+        return "null"
+    if isinstance(value, (int, float)):
+        return repr(float(value))
+    if top and BARE.fullmatch(value):
+        return value
+    return '"%s"' % value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
+def print_members(pairs, indent, top, lines, line):
+    """🖨️ Writes `key=value` members onto `line` at `indent`, breaking after every record and list the way
+    the carrier does, and flushes the last open line."""
+    pad = " " * indent
+    for key, value in pairs:
+        opener = line + (" " if line.strip() else pad if not line else "")
+        if isinstance(value, dict):
+            lines.append(opener + key + "={")
+            print_members(list(value.items()), indent + 2, False, lines, "")
+            lines.append(pad + "}")
+            line = ""
+        elif isinstance(value, list):
+            opener += key + "=["
+            for index, item in enumerate(value):
+                lines.append((opener + " {") if index == 0 else " {")
+                print_members(list(item.items()), indent + 2, False, lines, "")
+                lines.append(pad + "}")
+            if not value:
+                lines.append(opener + " ")
+            line = pad + "]"
+        else:
+            line = opener + key + "=" + scalar(value, top)
+    if line.strip():
+        lines.append(line)
 
 
 def print_carrier(document, order):
     """🖨️ Prints a document back in the member order the carrier used."""
-    rendered = [BANNER]
-    for key in order:
-        value = json.dumps(document[key], separators=(",", ":"), ensure_ascii=False) if key in HEX_JSON else document[key]
-        rendered.append("%s=%s" % (key, value.encode("utf-8").hex()))
-    return "\n".join(rendered) + "\n"
+    lines = [BANNER]
+    print_members([(kebab(member), document[member]) for member in order], 0, True, lines, "")
+    return "\n".join(lines) + "\n"
 
 
 # endregion 🔖️Carrier
@@ -189,18 +297,14 @@ def find(items, identifier):
 
 
 def bag(document, entity, kind):
-    """🎒️ The property bag one `entity` addresses, or `None` when it names nothing.
-
-    An ABSENT target is not a rejection for the property verbs: two committed vectors declare
-    `status: "no-op"` with a `mutation.no-op` warning against a scene that holds neither the node
-    nor the edge they name. Only the two `delete-` verbs reject an absent target, and their own
-    committed vectors say so.
-    """
+    """🎒️ The property bag one `entity` addresses; an entity the scene does not hold is refused."""
     items = document["nodes"] if entity["entity"] == "node" else document["edges"] if entity["entity"] == "edge" else None
     if items is None:
         raise AssertionError("%s: %r is neither a node nor an edge" % (kind, entity["entity"]))
     at = find(items, entity["id"])
-    return None if at is None else items[at]["properties"]
+    if at is None:
+        raise AssertionError("%s: no %s %r in the scene" % (kind, entity["entity"], entity["id"]))
+    return items[at]["properties"]
 
 
 # endregion 🔖️Document
@@ -220,10 +324,10 @@ def kind_of(mutation):
 def apply_mutation(document, mutation):
     """🧬️ Applies one typed mutation, returning `(document, no-op)`.
 
-    Five of the eight verbs have a committed vector showing that writing the value the scene already
-    holds — or naming a target the scene does not hold at all — is an accepted NO-OP rather than a
-    rejection, so this returns whether the application was one. The three structural verbs reject
-    instead, each with the code its own committed vector names.
+    Four in-place verbs have a committed vector showing that writing the value the scene already holds
+    is an accepted NO-OP rather than a change, so this returns whether the application was one. Every
+    verb refuses a target the scene does not hold, and the three structural verbs refuse their own
+    conflicts, each with the code its committed vector names.
     """
     kind = kind_of(mutation)
     result = copy.deepcopy(document)
@@ -254,26 +358,26 @@ def apply_mutation(document, mutation):
     elif kind == "rename-node":
         at = find(result["nodes"], mutation["id"])
         if at is None:
-            return result, True
+            raise AssertionError("%s: no node %r in the scene" % (kind, mutation["id"]))
         if result["nodes"][at]["name"] == mutation["new_name"]:
             return result, True
         result["nodes"][at]["name"] = mutation["new_name"]
     elif kind == "move-node":
         at = find(result["nodes"], mutation["id"])
         if at is None:
-            return result, True
+            raise AssertionError("%s: no node %r in the scene" % (kind, mutation["id"]))
         node = result["nodes"][at]
         if (node["x"], node["y"]) == (mutation["x"], mutation["y"]):
             return result, True
         node["x"], node["y"] = float(mutation["x"]), float(mutation["y"])
     elif kind == "change-data-property":
         properties = bag(result, mutation["entity"], kind)
-        if properties is None or (mutation["key"] in properties and properties[mutation["key"]] == mutation["new_value"]):
+        if mutation["key"] in properties and properties[mutation["key"]] == mutation["new_value"]:
             return result, True
         properties[mutation["key"]] = copy.deepcopy(mutation["new_value"])
     else:
         properties = bag(result, mutation["entity"], kind)
-        if properties is None or mutation["key"] not in properties:
+        if mutation["key"] not in properties:
             return result, True
         del properties[mutation["key"]]
     validate(result)
@@ -305,8 +409,6 @@ def inverse_mutation(document, mutation):
         node = document["nodes"][at]
         return {"mutation": TAGS[kind], "id": mutation["id"], "x": node["x"], "y": node["y"]}
     properties = bag(document, mutation["entity"], "inverse of %s" % kind)
-    if properties is None:
-        raise AssertionError("inverse of %s: %s %r is not in the scene" % (kind, mutation["entity"]["entity"], mutation["entity"]["id"]))
     if kind == "change-data-property":
         if mutation["key"] not in properties:
             return {"mutation": TAGS["remove-data-property"], "entity": copy.deepcopy(mutation["entity"]), "key": mutation["key"]}
@@ -373,7 +475,7 @@ def json_fixture(ctx, needle):
 
 def tower(ctx):
     """🗼️ The real committed Nakagin Capsule Tower scene, read through its own carrier."""
-    return parse_carrier(ctx.fixture_bytes(uri_in(ctx, "📚️examples")).decode("utf-8"))
+    return parse_carrier(ctx.fixture_bytes(uri_in(ctx, "asset://")).decode("utf-8"))
 
 
 def projection_of(document):
@@ -431,14 +533,17 @@ def inverse_handler(kind):
 
 
 def spec_vector_handler(kind):
-    """📐️ Replays one committed handcrafted vector. All eight are NEGATIVE, so the feature's
-    `verdict` column states which of the two refusals each one commits to: `refused` must be refused
-    outright, and `noop` must be accepted while leaving the scene exactly where it was."""
+    """📐️ Replays one committed handcrafted vector over the composed scene the feature names for it.
+    All eight are NEGATIVE, so the feature's `verdict` column states which of the two refusals each one
+    commits to: `refused` must be refused outright, and `noop` must be accepted while leaving the scene
+    exactly where it was."""
 
     def handler(ctx):
-        before = normalize(json_fixture(ctx, "⬅️before"))
+        scene = json_fixture(ctx, ".scene.json")
+        seeded = lambda committed: normalize({**committed, "nodes": scene["nodes"], "edges": scene["edges"]})
+        before = seeded(json_fixture(ctx, "⬅️before"))
         mutation = json_fixture(ctx, "🦠️mutation")
-        after = normalize(json_fixture(ctx, "➡️after"))
+        after = seeded(json_fixture(ctx, "➡️after"))
         verdict = json.loads(doc_string(ctx))["verdict"]
         if kind_of(mutation) != kind:
             raise AssertionError("spec-vector-%s: the committed vector carries a %s payload" % (kind, kind_of(mutation)))
@@ -468,7 +573,7 @@ def identity_handler(ctx):
     The projection is the scene itself, which is what lets the two languages be compared on what
     they each read out of the same real bytes.
     """
-    text = ctx.fixture_bytes(uri_in(ctx, "📚️examples")).decode("utf-8")
+    text = ctx.fixture_bytes(uri_in(ctx, "asset://")).decode("utf-8")
     document, order = parse_carrier(text)
     if document["name"] != "Nakagin Capsule Tower" or len(document["nodes"]) != 9 or len(document["edges"]) != 6:
         raise AssertionError("identity-round-trip: the committed example is the nine-node, six-edge Nakagin tower, read %r with %d node(s) and %d edge(s)" % (document.get("name"), len(document["nodes"]), len(document["edges"])))

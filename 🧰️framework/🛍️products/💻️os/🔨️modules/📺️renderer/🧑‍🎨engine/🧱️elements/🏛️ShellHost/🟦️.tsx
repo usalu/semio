@@ -211,6 +211,7 @@ import {
  * own `encode`/`decodeMutationEnvelopesPack` helpers above. */
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type MutationEnvelope, decodePresenceInteraction } from "@semio-tech/framework-replication";
 import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
+import { SpaceDirectoryHistoryV1 } from "./📇️space-directory/🟦️.ts";
 import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../👕️canvas-presence/🟦️.ts";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, quiesceSessionWorkV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
@@ -431,6 +432,7 @@ import {
   shellReducer,
   upsertLoadedProgramV1,
   localProgramsV1,
+  programPluginIdV1,
   sessionProgramsV1,
   shouldAutoStartIntroduction,
   shouldPersistIntroductionSeen,
@@ -997,6 +999,13 @@ function seededActiveWindowId(modeLayout: WindowLayoutNode): string | null {
   return dockSeedActiveWindowIdV1(modeLayoutStacksV1(modeLayout as WindowScopeLayoutNodeV1), null);
 }
 
+/** 🪪️ The plugin an invocation addresses for a program: its descriptor's own plugin id. A hub document's
+ * catalog-resolved program id (`🌎️hub-source/🔍️resolution`) is a host identity only — the guest and the hub's verified
+ * execution target know the plugin by its descriptor id, and refuse any other owner. */
+export function invocationPluginIdV1(programId: string): string {
+  return parseHubProgramIdV1(programId)?.pluginId ?? programId;
+}
+
 /** 🪟️ Builds the sole action wire shape from the exact target window instance and its owner chain. */
 function windowActionInvocation(
   session: ActiveSession,
@@ -1009,7 +1018,7 @@ function windowActionInvocation(
   const windowKindId = instances.find((instance) => instance.id === windowInstanceId)?.windowKindId ?? session.app.windowKinds.find((kind) => kind.id === windowInstanceId)?.id ?? session.app.windowKinds[0]?.id ?? "";
   return {
     address: {
-      pluginId: session.pluginId,
+      pluginId: invocationPluginIdV1(session.pluginId),
       appId: session.app.id,
       modeId: session.viewState.activeModeId ?? session.app.defaultModeId ?? session.app.modes[0]?.id ?? session.app.id,
       windowKindId,
@@ -1045,7 +1054,7 @@ function documentSourcesFromPack(pack: Uint8Array, spr: Uint8Array, ops?: string
 /** 🎛️ Builds an app-owned command wire without pretending host catalogue state is a window action. */
 function encodeAppCommandInvocation(pluginId: string, app: AppDefinition, commandId: string, args: Readonly<Record<string, unknown>>): string {
   const invocation: CommandInvocation = {
-    address: { owner: { app: { pluginId, appId: app.id } }, commandId },
+    address: { owner: { app: { pluginId: invocationPluginIdV1(pluginId), appId: app.id } }, commandId },
     arguments: { ...args },
   };
   return JSON.stringify(invocation);
@@ -1500,7 +1509,18 @@ export function selectedSpaceArtifactCreationCatalogV1(
   };
 }
 
-/** 🌱️ Converts only an exact current selected-catalog member into the closed host request. */
+/** 📇️ An opening or directory command a mounted space index asks for names the index's own space: the index is the
+ * space's directory projection and the guest's document carries no space id of its own, so an absent or empty `spaceId`
+ * is the index's scope. Any other origin, and any request that already names a space, is left exactly as it came. */
+export function spaceIndexOpeningArgsV1(args: Readonly<Record<string, unknown>> | undefined, origin: DocumentScope | undefined, indexDocumentId: string): Readonly<Record<string, unknown>> | undefined {
+  if (args === undefined || origin === undefined || origin.documentId !== indexDocumentId) return args;
+  if (typeof args.spaceId === "string" && args.spaceId.length > 0) return args;
+  return { ...args, spaceId: origin.spaceId };
+}
+
+/** 🌱️ Converts only an exact current selected-catalog member into the closed host request. The hub catalog is the
+ * authority for both halves of a member: the creation kind (`kindId`, e.g. `2d.drawing`) and the dialect whose surface
+ * opens it (`dialect.artifactKind`, e.g. `s.draw.drawing`) are independent names, never required to be equal. */
 export function spaceArtifactCreationRequestFromAction(
   actionId: string,
   args: Readonly<Record<string, unknown>> | undefined,
@@ -1513,7 +1533,7 @@ export function spaceArtifactCreationRequestFromAction(
   try {
     const choice = decodeArtifactKindChoice(args.kindChoice);
     const encoded = encodeArtifactKindChoice(choice);
-    if (encoded !== args.kindChoice || choice.kindId !== choice.dialect.artifactKind || capturedCatalog === null || currentCatalog === null
+    if (encoded !== args.kindChoice || capturedCatalog === null || currentCatalog === null
       || capturedCatalog.runtimeKey !== currentCatalog.runtimeKey || capturedCatalog.clientInstanceId !== currentCatalog.clientInstanceId
       || capturedCatalog.spaceId !== spaceId || currentCatalog.spaceId !== spaceId || capturedCatalog.catalogGenerationId !== currentCatalog.catalogGenerationId
       || !capturedCatalog.kindChoices.includes(encoded) || !currentCatalog.kindChoices.includes(encoded)) return null;
@@ -1564,7 +1584,7 @@ export function spaceArtifactCreationCatalogRefreshRequestV1(
 export function spaceArtifactCreationReadyOpening(
   message: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>,
 ): Readonly<Record<string, string>> | null {
-  if (message.phase !== "ready" || message.ready === undefined || message.ready.kindId !== message.ready.parentDialect.artifactKind) return null;
+  if (message.phase !== "ready" || message.ready === undefined) return null;
   return {
     artifactRef: `${message.ready.parentDialect.artifactKind}@${message.ready.parentDialect.standard}/${message.ready.parentDialect.subset}`,
     artifactId: message.ready.artifactId,
@@ -1923,6 +1943,13 @@ export async function runInvokeExtensionEffect(requestingPlugin: LoadedProgramSt
   return runCapturedExtensionEffect(captureExtensionCompletion(requestingPlugin, instanceId, req), extensionEntry, extensionId, capability, requestJson, `${requestingPlugin.handle.pluginId}:${instanceId}`);
 }
 
+/** 🧩️ The program an extension request of `requester` reaches: the loaded program of that plugin id for the device's own
+ * programs, the same-generation peer (`catalogModule.peers`) for a hub document's catalog-resolved program. */
+export function extensionProgramForV1(plugins: readonly LoadedProgramState[], requester: LoadedProgramState, extensionId: string): LoadedProgramState | undefined {
+  const programId = requester.catalogModule === undefined ? extensionId : requester.catalogModule.peers[extensionId];
+  return programId === undefined ? undefined : plugins.find((entry) => entry.handle.pluginId === programId);
+}
+
 /** 📨️ Resolves an extension address and serializes requests belonging to one originating instance.
  *
  * 🪪️ `extensionId` IS a loaded program's `pluginId` — the one address this shell can resolve, and the
@@ -1933,7 +1960,10 @@ export async function runInvokeExtensionEffect(requestingPlugin: LoadedProgramSt
  * `manifest.contributions` for an `extensionId` field, which no manifest has ever carried (that
  * lane is `playbookBlockKind` rows; contributed extension payloads live under
  * `manifest.topicContributions[].payload`), so it matched nothing and every flow evaluation faulted
- * `extension.missing` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+ * `extension.missing` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ *
+ * 🧩️ A hub document's catalog-resolved program addresses its extensions by plugin id too; they resolve to the programs
+ * of the SAME catalog generation (`catalogModule.peers`), never to the device's own program of that plugin. */
 export async function dispatchInvokeExtensionEffect(
   plugins: readonly LoadedProgramState[],
   requester: Pick<ActiveSession, "pluginId" | "instanceId">,
@@ -1943,7 +1973,7 @@ export async function dispatchInvokeExtensionEffect(
   const { extensionId, capability, requestJson, req } = invocation;
   const requestingPlugin = plugins.find((entry) => entry.handle.pluginId === requester.pluginId);
   if (!requestingPlugin) throw new Error("extension.requester-unavailable");
-  const extensionEntry = plugins.find((entry) => entry.handle.pluginId === extensionId);
+  const extensionEntry = extensionProgramForV1(plugins, requestingPlugin, extensionId);
   const completion = captureExtensionCompletion(requestingPlugin, requester.instanceId, req);
   const requesterActorKey = `${requester.pluginId}:${requester.instanceId}`;
   const response = await serializePerActor(requesterActorKey, () => runCapturedExtensionEffect(completion, extensionEntry, extensionId, capability, requestJson, requesterActorKey));
@@ -3050,6 +3080,22 @@ function FrameworkOsShellInner({
     if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
   }, []);
   const directoryScopedOwnersRef = useRef<Map<string, DocumentScope>>(new Map());
+  /** 📇️ The directory history of every mounted space index, by its runtime key ({@link SpaceDirectoryHistoryV1}). */
+  const spaceDirectoryHistoriesRef = useRef<Map<string, SpaceDirectoryHistoryV1>>(new Map());
+  const spaceDirectoryFoldPendingRef = useRef(false);
+  const foldSpaceDirectoryRef = useRef<() => void>(() => {});
+  /** 📇️ Collects directory events into every mounted space index's history of their space and folds the current
+   * index's full history once per turn when it changed. */
+  const collectSpaceDirectoryEvents = useCallback((events: readonly DirectoryEvent[]): void => {
+    let changed = false;
+    for (const history of spaceDirectoryHistoriesRef.current.values()) changed = history.add(events) || changed;
+    if (!changed || spaceDirectoryFoldPendingRef.current) return;
+    spaceDirectoryFoldPendingRef.current = true;
+    queueMicrotask(() => {
+      spaceDirectoryFoldPendingRef.current = false;
+      foldSpaceDirectoryRef.current();
+    });
+  }, []);
   const socketActorReadyRef = useRef<Map<string, { readonly clientInstanceId: string; resolve(actorId: string): void; reject(error: Error): void }>>(new Map());
   const [bootstrapUiByDocument, setBootstrapUiByDocument] = useState<BootstrapUiState>({});
   const [executionTargetUiByDocument, setExecutionTargetUiByDocument] = useState<ExecutionTargetUiState>({});
@@ -3371,7 +3417,11 @@ function FrameworkOsShellInner({
         return;
       }
       if (message.kind === "directory-message") {
-        if (message.message.kind === "event") dispatchDirectoryEventsRef.current([message.message.event]);
+        if (message.message.kind === "event") collectSpaceDirectoryEvents([message.message.event]);
+        return;
+      }
+      if (message.kind === "directory-space-events") {
+        collectSpaceDirectoryEvents(message.events);
         return;
       }
       if (message.kind === "directory-scope-revoked") {
@@ -3449,7 +3499,7 @@ function FrameworkOsShellInner({
         // index fold re-derives the same config snapshot from the same batch. Home is never folded:
         // its sealed page lane wakes on the broadcast instead (`dispatchDirectoryEventBatch`).
         retainDirectoryCommandResult(directoryCommandResultsRef.current, message.requestId, { kind: "receipt", receipt: message.receipt });
-        if (message.receipt.outcome === "accepted" && message.receipt.events.length > 0) dispatchDirectoryEventsRef.current(message.receipt.events);
+        if (message.receipt.outcome === "accepted" && message.receipt.events.length > 0) collectSpaceDirectoryEvents(message.receipt.events);
         return;
       }
       if (message.kind === "artifact-bootstrap-progress" || message.kind === "artifact-bootstrap-failed" || message.kind === "artifact-rebootstrap-required") {
@@ -3589,7 +3639,7 @@ function FrameworkOsShellInner({
     worker.addEventListener("messageerror", failBrowserActorActions);
     backboneWorkerRef.current = worker;
     return worker;
-  }, [cancelSpaceArtifactCreationsForRuntime, captureDialogOrigin, failDocumentBackbone, hubEnv, loadDocumentArchive, receiveDocumentBackbone, retireBrowserActorUi]);
+  }, [cancelSpaceArtifactCreationsForRuntime, captureDialogOrigin, collectSpaceDirectoryEvents, failDocumentBackbone, hubEnv, loadDocumentArchive, receiveDocumentBackbone, retireBrowserActorUi]);
 
   handleDirectoryEventPageRef.current = (message) => {
     const owner = directoryHomeOwnerRef.current;
@@ -4173,6 +4223,75 @@ function FrameworkOsShellInner({
   const cancelPluginInstalls = useCallback(() => {
     for (const abort of pluginInstallAbortsRef.current.values()) abort.abort();
   }, []);
+
+  /** 🌎️ Installs one module of a catalog generation as a hub program (`🌎️hub-source/🔍️resolution`) — from the store, this
+   * device's byte-identical staged module, or the hub — with the same install band, byte progress and cancel as every
+   * other install, and loads it beside the device's own program of that plugin. Concurrent openings join one install. */
+  const hubProgramInstallsRef = useRef(new Map<string, Promise<LoadedProgramState | null>>());
+  const installHubProgram = useCallback(
+    (generationId: string, entry: TrustedPluginModuleIndexEntryV1, peers: Readonly<Record<string, string>>): Promise<LoadedProgramState | null> => {
+      const programId = hubProgramIdV1(entry.pluginId, entry.bundleSha256);
+      const loaded = loadedPluginsRef.current.find((candidate) => candidate.handle.pluginId === programId);
+      if (loaded !== undefined) return Promise.resolve(loaded);
+      const running = hubProgramInstallsRef.current.get(programId);
+      if (running !== undefined) return running;
+      const install = (async (): Promise<LoadedProgramState | null> => {
+        if (hubPluginSource === null) return null;
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId: programId, value: "installing" });
+        const abort = new AbortController();
+        pluginInstallAbortsRef.current.set(programId, abort);
+        try {
+          const staged = registry.find((candidate) => candidate.pluginId === entry.pluginId) ?? extensionRegistry.find((candidate) => candidate.pluginId === entry.pluginId);
+          const program = await hubPluginSource.installProgram(generationId, entry, staged?.moduleUrl ?? null, { signal: abort.signal, onProgress: (progress) => notePluginInstallProgress(programId, progress) });
+          const handle = await loadPluginModuleResilient(programId, program.moduleUrl, abort.signal, entry.pluginId);
+          if (!handle) {
+            dispatch({ type: "SET_PLUGIN_STATUS", pluginId: programId, value: "failed" });
+            return null;
+          }
+          const state: LoadedProgramState = { handle, manifest: handle.manifest, catalogModule: { pluginId: entry.pluginId, generationId, bundleSha256: entry.bundleSha256, source: program.source, peers } };
+          console.info(`[os-shell] hub program ${programId} of generation ${generationId} loaded from ${program.source}`);
+          loadedPluginsRef.current = upsertLoadedProgramV1(loadedPluginsRef.current, state);
+          dispatch({ type: "UPSERT_LOADED_PLUGIN", value: state });
+          dispatch({ type: "SET_PLUGIN_STATUS", pluginId: programId, value: "loaded" });
+          return state;
+        } catch (error) {
+          if (abort.signal.aborted) console.debug(`hub program install cancelled ${programId}`);
+          else console.error("hub program unavailable", programId, error);
+          dispatch({ type: "SET_PLUGIN_STATUS", pluginId: programId, value: "failed" });
+          return null;
+        } finally {
+          notePluginInstallProgress(programId, null);
+          if (pluginInstallAbortsRef.current.get(programId) === abort) pluginInstallAbortsRef.current.delete(programId);
+        }
+      })();
+      hubProgramInstallsRef.current.set(programId, install);
+      void install.finally(() => {
+        if (hubProgramInstallsRef.current.get(programId) === install) hubProgramInstallsRef.current.delete(programId);
+      });
+      return install;
+    },
+    [hubPluginSource, registry, extensionRegistry, notePluginInstallProgress],
+  );
+
+  /** 🌎️ The program a hub document of `artifactKind` runs on: the hub catalog's current generation names the package
+   * that opens the kind; that package and its same-generation closure (dependencies, extensions) are installed as hub
+   * programs, dependencies first, and every extension is indexed under its parent program before anything activates.
+   * `null` while the hub is unreachable, when no single package opens the kind, or when an install fails. */
+  const installHubDocumentProgram = useCallback(
+    async (artifactKind: string): Promise<LoadedProgramState | null> => {
+      if (hubPluginSource === null) return null;
+      const index = await hubPluginSource.catalog(new AbortController().signal);
+      if (index === null) return null;
+      const owner = hubCatalogOwnerOfDialectV1(index, artifactKind);
+      const closure = owner === null ? null : hubCatalogClosureV1(index, owner.pluginId);
+      if (owner === null || closure === null) return null;
+      const peers: Readonly<Record<string, string>> = Object.freeze(Object.fromEntries(closure.map((entry) => [entry.pluginId, hubProgramIdV1(entry.pluginId, entry.bundleSha256)])));
+      for (const entry of closure) if ((await installHubProgram(index.generationId, entry, peers)) === null) return null;
+      for (const entry of closure) if (entry.extendsPluginId !== null) registerProgramExtensionV1(peers[entry.extendsPluginId]!, peers[entry.pluginId]!);
+      return loadedPluginsRef.current.find((candidate) => candidate.handle.pluginId === peers[owner.pluginId]) ?? null;
+    },
+    [hubPluginSource, installHubProgram],
+  );
 
   /** 🔌️ Hot-swaps an already-loaded plugin to a newly built module — mirrors the os-core kernel's
    * `PluginHost::hot_swap_plugin` contract (validate → destroy affected instances → swap → recreate the
@@ -5267,8 +5386,9 @@ function FrameworkOsShellInner({
         return fromDocument;
       },
       buildPack: (session, kinds, environment) => {
-        const loadedForScope = environment.loadedPlugins.filter((entry) => !environment.disabledExtensionIds.has(entry.handle.pluginId)).map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { topicContributions: entry.manifest.topicContributions } }));
-        const scopedContributionsJson = scopeContributionsJson(loadedForScope, session.pluginId, kinds, environment.consumedTopics);
+        const loadedForScope = environment.loadedPlugins.filter((entry) => !environment.disabledExtensionIds.has(programPluginIdV1(entry))).map((entry) => ({ pluginId: programPluginIdV1(entry), manifest: { topicContributions: entry.manifest.topicContributions } }));
+        const receiver = environment.loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
+        const scopedContributionsJson = scopeContributionsJson(loadedForScope, receiver === undefined ? session.pluginId : programPluginIdV1(receiver), kinds, environment.consumedTopics);
         return scopedContributionsJson;
       },
       install: async (session, json, kinds, environment) => {
@@ -6427,7 +6547,8 @@ function FrameworkOsShellInner({
               }
             }
           } else if (actionId.startsWith("os.directory.")) {
-            const command = directoryCommandFromAction(actionId, argsRecord);
+            const indexScope = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === baseSession.pluginId && entry.session.instanceId === baseSession.instanceId)?.scope;
+            const command = directoryCommandFromAction(actionId, spaceIndexOpeningArgsV1(argsRecord, indexScope, S_SPACE_INDEX_DOCUMENT_ID));
             if (!command) {
               refuseReplay("invalid-request", "unrecognized directory action", actionId);
             } else if (!identityRef.current) {
@@ -6439,7 +6560,8 @@ function FrameworkOsShellInner({
             }
           } else if (actionId === "os.open-artifact" || actionId === "os.open-artifact-with") {
             try {
-              const opening = await resolveArtifactOpeningWithActivationRef.current(actionId, argsRecord);
+              const indexScope = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === baseSession.pluginId && entry.session.instanceId === baseSession.instanceId)?.scope;
+              const opening = await resolveArtifactOpeningWithActivationRef.current(actionId, spaceIndexOpeningArgsV1(argsRecord, indexScope, S_SPACE_INDEX_DOCUMENT_ID));
               if (!opening) {
                 refuseReplay("router-not-ready", "artifact router is not ready", args);
                 continue;
@@ -6980,8 +7102,15 @@ function FrameworkOsShellInner({
         detach: () => retireDocumentAttachment(plugin, targetSession.instanceId, clientInstanceId),
         attach: async () => {
           if (hubBinding && scope) {
-            directoryScopedOwnersRef.current.set(runtimeKey, scope);
-            worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-open", baseUrl: hubBinding.baseUrl, scope, since: 0 }) });
+            // 📇️ The space index is the space's directory projection, not a hub document: the hub has no document scope
+            // for it (a document-scoped stream answers 404), so it folds its space's directory lane instead.
+            if (scope.documentId === S_SPACE_INDEX_DOCUMENT_ID) {
+              spaceDirectoryHistoriesRef.current.set(runtimeKey, new SpaceDirectoryHistoryV1(scope.spaceId));
+              worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-space-open", baseUrl: hubBinding.baseUrl, spaceId: scope.spaceId }) });
+            } else {
+              directoryScopedOwnersRef.current.set(runtimeKey, scope);
+              worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-open", baseUrl: hubBinding.baseUrl, scope, since: 0 }) });
+            }
             if (scope.documentId === S_SPACE_INDEX_DOCUMENT_ID && !target?.background) {
               setSpaceArtifactCreationCatalog(null);
               setSpaceArtifactCreationCatalogUi({ kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: scope.spaceId, phase: "loading" });
@@ -7096,6 +7225,11 @@ function FrameworkOsShellInner({
     setExecutionTargetUiByDocument((current) => reduceExecutionTargetUiState(current, { kind: "execution-target-cleared", documentId: entry.documentId, ...(entry.scope === undefined ? {} : { scope: entry.scope }) }));
     if (entry.scope !== undefined && directoryScopedOwnersRef.current.delete(runtimeKey)) {
       backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-close", scope: entry.scope }) });
+    }
+    const spaceDirectory = spaceDirectoryHistoriesRef.current.get(runtimeKey);
+    if (spaceDirectory !== undefined) {
+      spaceDirectoryHistoriesRef.current.delete(runtimeKey);
+      if (![...spaceDirectoryHistoriesRef.current.values()].some((history) => history.spaceId === spaceDirectory.spaceId)) backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-space-close", spaceId: spaceDirectory.spaceId }) });
     }
     const request: BackboneWorkerRequest = { kind: "close", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }) };
     backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest(request) });
@@ -8306,6 +8440,17 @@ function FrameworkOsShellInner({
     [hostConfig],
   );
   dispatchDirectoryEventsRef.current = dispatchDirectoryEventBatch;
+  /** 📇️ Folds the current session's space index over its space's FULL directory history (the guest's contract). */
+  foldSpaceDirectoryRef.current = () => {
+    const current = sessionRef.current;
+    if (current === null) return;
+    for (const [runtimeKey, entry] of openDocumentSessionsRef.current) {
+      if (entry.session.pluginId !== current.pluginId || entry.session.instanceId !== current.instanceId) continue;
+      const history = spaceDirectoryHistoriesRef.current.get(runtimeKey);
+      if (history !== undefined && history.events().length > 0) dispatchDirectoryEventBatch(history.events());
+      return;
+    }
+  };
   //#endregion 🔖️DirectoryLane
 
   const hostSessionActive = hostMode && session?.app.id === hostAppId;
@@ -8705,15 +8850,34 @@ function FrameworkOsShellInner({
    * install, one retry: a second miss is a real routing gap and surfaces as the original fault.
    */
   const installActivationOwnerAndResolve = useCallback(async (actionId: string, args: unknown): Promise<ResolvedArtifactOpeningRelay | null> => {
+    const record = args && typeof args === "object" && !Array.isArray(args) ? (args as Readonly<Record<string, unknown>>) : undefined;
+    const artifactRef = typeof record?.artifactRef === "string" ? record.artifactRef : "";
+    const openedArtifactKind = (): string => (artifactRef.includes("#") ? parseSurfaceAppId(artifactRef).dialect : parseDialectCoordinate(artifactRef)).artifactKind;
+    if (hubPluginSource !== null && record !== undefined && typeof record.spaceId === "string" && record.spaceId.length > 0) {
+      // 🌎️ A hub document runs on the module of the catalog generation that serves it, never on whatever this device
+      // staged: its program is installed from the hub catalog and it alone routes the opening.
+      let artifactKind: string;
+      try {
+        artifactKind = openedArtifactKind();
+      } catch {
+        throw new Error("opening.invalid-artifact-ref");
+      }
+      const program = await installHubDocumentProgram(artifactKind);
+      if (program === null || program.catalogModule === undefined) throw new Error(`opening.hub-program-unavailable: ${artifactKind}`);
+      const catalogPluginId = program.catalogModule.pluginId;
+      const programId = program.handle.pluginId;
+      const routed = record.pluginId === catalogPluginId ? { ...record, pluginId: programId } : record;
+      const router = AppRouter.build([{ pluginId: programId, apps: program.manifest.apps as unknown as Record<string, unknown>[], artifactKinds: program.manifest.artifactKinds, dependencies: program.manifest.dependencies }]);
+      const preferences: OpeningPreferences = { ...openingPreferences, defaults: openingPreferences.defaults.map((entry) => (entry.app.pluginId === catalogPluginId ? { ...entry, app: { ...entry.app, pluginId: programId } } : entry)) };
+      return resolveArtifactOpeningRelay(actionId, routed, router, preferences);
+    }
     const resolveNow = resolveArtifactOpeningRelayRef.current;
     try {
       return resolveNow(actionId, args);
     } catch (relayError) {
-      const record = args && typeof args === "object" && !Array.isArray(args) ? (args as Readonly<Record<string, unknown>>) : undefined;
-      const artifactRef = typeof record?.artifactRef === "string" ? record.artifactRef : "";
       let artifactKind = "";
       try {
-        artifactKind = (artifactRef.includes("#") ? parseSurfaceAppId(artifactRef).dialect : parseDialectCoordinate(artifactRef)).artifactKind;
+        artifactKind = openedArtifactKind();
       } catch {
         throw relayError;
       }
@@ -8729,7 +8893,7 @@ function FrameworkOsShellInner({
       })));
       return resolveArtifactOpeningRelay(actionId, args, installed, openingPreferences);
     }
-  }, [installPlugin, openingPreferences, hubPluginSource]);
+  }, [installPlugin, installHubDocumentProgram, openingPreferences, hubPluginSource]);
   resolveArtifactOpeningWithActivationRef.current = installActivationOwnerAndResolve;
 
   /** 👁️✏️ `PluginRuntime`'s `PluginWasmHandle` wraps the raw `exchange` ABI behind typed methods —
@@ -8762,11 +8926,12 @@ function FrameworkOsShellInner({
   const pluginHandleFor = useCallback((pluginId: string): PluginWasmHandle | undefined => loadedPlugins.find((entry) => entry.handle.pluginId === pluginId)?.handle, [loadedPlugins]);
 
   const dispatchSetDefaultApp = useCallback(
-    (dialect: ArtifactDialect, role: AppRole, app: AppRef) => {
+    (dialect: ArtifactDialect, role: AppRole, program: AppRef) => {
+      const app: AppRef = { ...program, pluginId: parseHubProgramIdV1(program.pluginId)?.pluginId ?? program.pluginId };
       const mutation: OpeningConfigMutation = { mutation: "setDefaultApp", dialect, role, app };
       setOpeningPreferences((current) => foldOpeningPreferences([mutation], current));
       const roleNum = role === "editor" ? 1 : 0;
-      void pendingAppChannelFor(app.pluginId)
+      void pendingAppChannelFor(program.pluginId)
         ?.setDefaultApp?.(dialect.artifactKind, dialect.standard, dialect.subset, roleNum, app.pluginId, app.appId)
         ?.catch((commandError) => undefined);
     },
@@ -8850,7 +9015,7 @@ function FrameworkOsShellInner({
       const owner = current === null ? null : captureEffectOwner(current, captureDialogOrigin(current));
       const canOpen = admit ?? (() => owner === null ? shellStateRef.current.pluginRuntime.session === null : isCurrentEffectOwner(owner));
       if (!canOpen()) return null;
-      let plugin = loadedPlugins.find((entry) => entry.handle.pluginId === target.pluginId);
+      let plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === target.pluginId);
       if (!plugin) {
         const outcome = await installPlugin(target.pluginId);
         if (outcome !== "loaded" && outcome !== "already-loaded") return null;
@@ -9022,10 +9187,21 @@ function FrameworkOsShellInner({
    * panel section, and what the context-menu/palette entries focus. `undefined` with no session or
    * router (nothing to list yet), and for a non-surface app — one bound to no subset, such as the
    * workflow studio — which has no dialect to open anything else against. */
+  /** 👁️✏️ A hub document's session routes "Open with…" over its own catalog closure (program ids), pins stay keyed by plugin id. */
   const openWithEntries = useMemo(() => {
     if (!session || !appRouter || !session.app.dialect) return undefined;
-    return groupOpenWithEntries(appRouter, session.app.dialect, { pluginId: session.pluginId, appId: session.app.id }, (role) => pinnedAppFor(session.app.dialect, role), pluginLabelById);
-  }, [session, appRouter, pinnedAppFor, pluginLabelById]);
+    const catalogModule = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.catalogModule;
+    if (catalogModule === undefined) return groupOpenWithEntries(appRouter, session.app.dialect, { pluginId: session.pluginId, appId: session.app.id }, (role) => pinnedAppFor(session.app.dialect, role), pluginLabelById);
+    const programs = sessionProgramsV1(loadedPlugins, session.pluginId);
+    const router = AppRouter.build(programs.map((entry): AppRouterManifest => ({ pluginId: entry.handle.pluginId, apps: entry.manifest.apps as unknown as Record<string, unknown>[], artifactKinds: entry.manifest.artifactKinds, dependencies: entry.manifest.dependencies })));
+    const labels = new Map(programs.map((entry) => [entry.handle.pluginId, entry.manifest.label || programPluginIdV1(entry)]));
+    const pinned = (role: AppRole): AppRef | undefined => {
+      const pin = pinnedAppFor(session.app.dialect, role);
+      const peer = pin === undefined ? undefined : catalogModule.peers[pin.pluginId];
+      return pin === undefined || peer === undefined ? pin : { ...pin, pluginId: peer };
+    };
+    return groupOpenWithEntries(router, session.app.dialect, { pluginId: session.pluginId, appId: session.app.id }, pinned, labels);
+  }, [session, appRouter, loadedPlugins, pinnedAppFor, pluginLabelById]);
   const hasOpenArtifactSurfaces = (openWithEntries?.viewer.length ?? 0) + (openWithEntries?.editor.length ?? 0) > 0;
 
   const transientNoticeIdRef = useRef(0);
@@ -9752,6 +9928,9 @@ function FrameworkOsShellInner({
     }
     return null;
   })();
+  useEffect(() => {
+    foldSpaceDirectoryRef.current();
+  }, [currentDocumentRuntimeKey, session?.pluginId, session?.instanceId]);
   const currentBrowserActorUi = useMemo(
     () => currentDocumentRuntimeKey === null ? undefined : browserActorUiByRuntimeKeyRef.current.get(currentDocumentRuntimeKey),
     [browserActorUiVersion, currentDocumentRuntimeKey],

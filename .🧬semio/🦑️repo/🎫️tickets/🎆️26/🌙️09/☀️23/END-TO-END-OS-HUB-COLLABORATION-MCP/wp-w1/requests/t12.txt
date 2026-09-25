@@ -72,3 +72,22 @@ Upcoming (will be appended here when landed): per-lane `*_report_json` one-line 
    fixture pairs, the lopdf generator (`🏭️generator/🔁️codec`, standalone workspace) and the subset oracle manifest
    (44 manifest mutations + 44 fixture manifests). No production code, ABI, pack schema or codec hash touched →
    no stdio rebuild needed for it.
+14. TEST-ONLY, no rebuild (13:5x–16:4x): literal outcome copies in 5 `🔬️structural-correspondence` laws settled from the
+   leaf declarations (curation, writer, gisterrain, imperative, space — fallout of my 00:41 outcome switch); gis plugin
+   surface law `gismap_viewer_never_mutates` restated for the retained-route viewer (energy's form); layout rotate-frame
+   test include paths; Python case oracles re-pointed from the retired `<leaf>/🧪️tests/<vector>` paths (layout,
+   wires, space, procedure, shooting; procedure also reads the wire's `{owner: null}` root path); os.config identity
+   case adapters (TS fixture paths, `email` instead of the retired `token`); test platform fixture rule honours
+   `deferredKinds` (+ law).
+15. TEST-ONLY (17:0x–17:3x): Python case references re-pointed / aligned — process3d, dag, home, vcs (retired or
+   emoji-renamed vector paths; vcs diff members), gismap and jack (example read through `asset://`), writer (`text`
+   member; `edit-text` no-op branch stated; feature narrative). No guest source touched.
+16. SPACE (18:1x, S15 §12 item (3), blocks G10's human-sees-agent proof + the Space journey) — crate semio-s-plugin-space
+   (semio-s-artifact-space-space, `✏️editor/🎮️commands/📇fold-directory-events`): the index document now folds the ONE space
+   its directory history names when its snapshot `space_id` is empty (the browser's local-genesis index); a non-empty
+   `space_id` still selects that space, and an empty id with two or more folded spaces emits nothing (never guesses).
+   Laws `an_index_without_a_space_id_folds_the_one_space_its_history_names` / `…_never_guesses_between_two_spaces`
+   (fold laws 5/5). Test harness: the editor unit context binds instance 1 (test-only). No descriptor, pack schema,
+   codec or ABI change. native `cargo check -p semio-s-plugin-space --lib` EXIT 0; wasm32-wasip2 check through the fleet
+   mutex EXIT 0 (18:0x, s11-t12-captures/space-wasm-1.txt). restage3 built space BEFORE this change → release + restage
+   `space` again (its committed hash a75b7a234ecd is stale).

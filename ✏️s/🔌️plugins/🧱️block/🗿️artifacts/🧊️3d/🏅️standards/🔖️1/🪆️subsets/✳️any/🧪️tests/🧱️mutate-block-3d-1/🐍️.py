@@ -122,7 +122,7 @@ def tag_of(kind):
 
 TAGS = {kind: tag_of(kind) for kind in KINDS}
 
-RECORDS = {"representations": {"id", "name", "meshUrl", "tags", "lod", "description", "attributes"}, "vortexKindExtra": {"id", "label", "color", "defaultCableKind"}, "vortices": {"id", "vortexKind", "position", "direction", "radius", "label"}, "compatibility": {"id", "source", "target", "bidirectional"}}
+RECORDS = {"representations": {"id", "name", "meshUrl", "tags", "lod", "description", "attributes"}, "vortexKindExtra": {"id", "name", "label", "color", "defaultCableKind"}, "vortices": {"id", "vortexKind", "position", "direction", "radius", "label"}, "compatibility": {"id", "source", "target", "bidirectional"}}
 """🧱️ The members each id-keyed record carries, as the committed vectors spell them."""
 
 MEASURE_MEMBERS = {"camera3d": {"position", "target", "zoom"}, "meta": {"description"}, "objectKind": {"id", "name", "label", "variant", "description", "icon", "unit"}}

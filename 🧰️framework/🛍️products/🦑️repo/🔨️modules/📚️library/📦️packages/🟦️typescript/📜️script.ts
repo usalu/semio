@@ -469,13 +469,13 @@ class TestScript extends BundleScript {
     if (segments[0] === "artifact-source-residue") {
       if (segments.length !== 1) throw new Error("Artifact source residue accepts no extra arguments");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts");
-      await runTestBudgeted(process.execPath, ["test", source, "--timeout", "120000", "-t", "rejects ignored and unplanned residual children in a projected source owner without following links"], { cwd: this.repoRoot, budgetMs: 120000 });
+      await runTestBudgeted(process.execPath, ["test", source, "--timeout", "120000", "-t", "rejects ignored and unplanned residual children in a projected source owner without following links"], { cwd: this.repoRoot, budgetMs: 120000, env: { ...process.env, SEMIO_TEST_LEVEL: "long" } });
       return;
     }
     if (segments[0] === "artifact-source-commit") {
       if (segments.length !== 1) throw new Error("Artifact source commit accepts no extra arguments");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts");
-      await runTestBudgeted(process.execPath, ["test", source, "--timeout", "120000", "-t", "rolls back and atomically applies CAD and Draw projections to an empty second plan"], { cwd: this.repoRoot, budgetMs: 120000 });
+      await runTestBudgeted(process.execPath, ["test", source, "--timeout", "120000", "-t", "rolls back and atomically applies CAD and Draw projections to an empty second plan"], { cwd: this.repoRoot, budgetMs: 120000, env: { ...process.env, SEMIO_TEST_LEVEL: "long" } });
       return;
     }
     if (segments[0] === "transaction-process-observer") {

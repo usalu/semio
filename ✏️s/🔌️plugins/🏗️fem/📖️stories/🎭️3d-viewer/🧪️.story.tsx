@@ -21,7 +21,7 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { World3dHost } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import type { ActionDescriptor } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { buildFem3dSceneNode, fem3dStoryStateFor, fem3dStructuralInstances, fem3dSummaryLines, FEM_STORY_LOCALES, FEM3D_INITIAL_VIEWPORT, FEM3D_SOLID_MESH_OMISSION, FEM3D_STORY_EXAMPLE_ID, FEM3D_CLEARED_EXAMPLE_ID, femStoryOmissions, type FemStoryLocale } from "../🧭️coordination/🧫️fixtures/🧫️scene/🟦️.ts";
+import { buildFem3dSceneNode, fem3dStoryStateFor, fem3dStructuralInstances, fem3dSummaryLines, FEM_STORY_LOCALES, FEM3D_INITIAL_VIEWPORT, FEM3D_SOLID_MESH_OMISSION, FEM3D_STORY_EXAMPLE_ID, FEM3D_CLEARED_EXAMPLE_ID, femStoryOmissions, type FemStoryLocale } from "../🧭️coordination/🟦️.ts";
 
 //#region StoryHost
 const FEM3D_VIEW_BODY_KEY = "fem3d.view.model";

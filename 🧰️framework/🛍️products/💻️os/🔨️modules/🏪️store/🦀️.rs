@@ -11021,6 +11021,15 @@ pub trait ComponentDocumentCodec: Send + Sync {
     fn pack_schema_hash(&self) -> ComponentDocumentCodecFuture<'_, [u8; 32]>;
     /// 📥️ `codec.print-mirror`: the pair's text mirror, which is also its validation fence.
     fn print_mirror<'a>(&'a self, pack: &'a [u8], spr: &'a [u8]) -> ComponentDocumentCodecFuture<'a, ArtifactTextFiles>;
+    /// 🌱️ `codec.genesis`: the zero-history document of `document_id` the component mints.
+    fn genesis<'a>(&'a self, document_id: &'a str) -> ComponentDocumentCodecFuture<'a, ComponentDocumentGenesis>;
+}
+
+/// 🌱️ One document's genesis pair as its owning component minted it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ComponentDocumentGenesis {
+    pub pack: Vec<u8>,
+    pub spr: Vec<u8>,
 }
 
 /// @emoji 🧭️ The one codec a document owner resolves for a schema: the Rust codec this binary links
@@ -11072,6 +11081,23 @@ pub async fn document_kind_codec(schema: &str) -> Result<Option<DocumentKindCode
     }
     let registry = component_document_codec_registry().read().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
     Ok(registry.get(schema).cloned().map(DocumentKindCodec::Component))
+}
+
+/// 🌱️ The genesis of `document_id` as the mounted component that owns `schema` mints it, refused
+/// unless it is a zero-history document of exactly that identity; `None` when no mounted component
+/// owns the kind. Creation authority is the component's, always — the hub's trusted catalog seeds a
+/// new artifact through the same export and the same check (`🌎️hub/🗿️artifact-authority/
+/// 🔏️trusted-catalog`, `initial_pair`) — so a host that opens a document on this genesis starts from
+/// the hub's own baseline, and every mutation it authors carries the document's identity.
+pub async fn component_document_genesis(schema: &str, document_id: &str) -> Result<Option<ComponentDocumentGenesis>, VcsError> {
+    let codec = component_document_codec_registry().read().map_err(|_| VcsError::ValidationFailed("component codec registry is unavailable".into()))?.get(schema).cloned();
+    let Some(codec) = codec else { return Ok(None) };
+    let genesis = codec.genesis(document_id).await?;
+    let log = crate::os_spr::decode_history(&genesis.spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(format!("component genesis history for {schema:?}: {error}")))?;
+    if log.doc_id != document_id || log.schema != schema || !log.edits.is_empty() || !log.transitions.is_empty() || !log.conflicts.is_empty() {
+        return Err(VcsError::ValidationFailed(format!("component genesis for {schema:?} is not a zero-history document {document_id:?}")));
+    }
+    Ok(Some(genesis))
 }
 
 /// @emoji 📜️ Reads the document schema id from an encoded `.spr` history log.

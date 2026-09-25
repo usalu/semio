@@ -12,9 +12,9 @@ Slice: WG7 (session 11). Ports: hubs 8050–8059 + inherited 7900, serves 6550�
 | 1b | Relay laws (`document_relay_tests document_backbone_effect_tests plugin_install_tests`) native run | **17/17 passed** 00:59 (`wp-wg7/generated/l3-relay-laws.txt`) |
 | 2 | Browser document actor hub `connect` (K1–K7 of g7w §8.3: async admission, dialer, host wiring, connect, socket loop, kind identity, per-replica seed) | **LANDED in kernel** 01:09 — native + wasm32 `--features sync` checks green; kernel `sync::` 64/64 (6 new fixture laws), `os_directory` 52/52 |
 | 3 | Renderer side R1–R4 (door dialer, browser wiring, lease before open, remote uri) + browser package identity | **LANDED** — native `--lib` green 02:56; **wasm32 `--lib` green 03:07** (0 errors, covers every WG7 edit incl. the 02:5x kind-codec alignment); laws 56/56 native + vitest 64/64 |
-| 4 | wasm32 browser wgpu shell: painted frame, hub sign-in, open hub document, second user sees the edit | **partial, measured** (run 5, release serve): painted frame ✓×2, browser hub sign-in ✓×2 (first attempt each), attach through the Sync card reaches the hub lease (`execution-target/manifest` 200) and is **refused by design** (`component-mismatch`: served note ≠ catalog A note). The edit ("Add Text") is proven locally. Waits on W2's catalog B (note) + a served release note of the SAME bytes |
+| 4 | wasm32 browser wgpu shell: painted frame, hub sign-in, open hub document, second user sees the edit | **partial, measured** (catalog B, serve 6552, runs c2/c3): painted frame ✓×2, browser hub sign-in ✓×2, A authors a block ✓; attach reaches the lease and is refused with `schema-mismatch` — root cause the framework's declaration tree published an empty `io.artifactSchema` (fixed 15:2x, law 12/12). Re-run waits on the WG7 stdio,gis,note catalog + hub 8050 (chain 15:34) |
 | 5 | Backlog (coordinator 00:5x): wgpu `AgentBridge` decodes agent reply (tag 10); approval overlay = React fields/countdown | tag 10 **already landed** (09-23 commit: decode arm + `AgentConversationEntry::AgentMessage`); overlay parity **LANDED** — React fixture law 21/21 ✓ (oracle), Rust `the_affordance_lines_match_the_shared_fixture_in_both_locales` ✓ (en + de), 56/56 in `b-approvals-laws.txt` (02:34) |
-| 6 | Browser-reachable defects found by the E2E, fixed with laws | **LANDED**: chrome-as-active-window fault, Sync card never republished, panel actions dispatched in the panel, remote uri parity (React C1c), K8 frame ceiling, release serve font staging |
+| 6 | Browser-reachable defects found by the E2E, fixed with laws | **LANDED**: chrome-as-active-window fault, Sync card never republished, panel actions dispatched in the panel, remote uri parity (React C1c), K8 frame ceiling, release serve font staging, declaration-tree surfaces stamp their document schema (C8.2), chrome mirror generation advances only on chrome change (a11y activations were dropped ~1/3 at idle) |
 | 7 | R8 handoff: 2 Shell source laws pinning pre-relay gating | **LANDED** — updated to the relay truth, both pass (`r7-laws.txt`) |
 
 ## Scope split with WG8 (coordinator 00:5x)
@@ -271,6 +271,61 @@ Slice: WG7 (session 11). Ports: hubs 8050–8059 + inherited 7900, serves 6550�
   Failed to execute 'compile' on 'WebAssembly': HTTP status code is not ok" — the pruned `.core.wasm` (above). Not a shell defect.
 - 13:06 `wg7-catalog-module.ts` re-queued in the wasm mutex (wrapper pid **44856**, log `s11-wg7-logs/catalog-module-c.txt`), behind W2's
   component-release hold (41766).
+- 13:24 catalog-module rebuilt in the mutex (served `wasmSha256 4567a670…` == catalog B again; `.core.wasm` back). Serve 6552 restarted (pid **67896**).
+- 13:2x run `c2` (`collab-c2-*`): painted ✓×2, **browser hub sign-in ✓×2** (first attempt, `POST /auth/sessions` 200), Add Text ✓ (A authors a
+  `Text` block); attach ✗×2 — the Sync card's Attach stayed **disabled**: the E2E set the path input before the accessibility mirror
+  had the textbox live, so the shell never received the uri. Fixed in `wg7-browser-collab.mjs` (`typeInto` retries until the mirror
+  input exists and, for the attach path, until the projection's `valueText` equals the uri; `awaitEnabled` waits for Attach to enable).
+- 13:3x run `c3` (`collab-c3-*`): B typed the uri, Attach **activated**, the shell fetched the lease (`200 POST …/execution-target/manifest`)
+  and refused it: **`document-execution-target.schema-mismatch`** (B console `frame deferred action failed`). A's sign-in missed that
+  run (the hub overlay's `ui-doc begin refused … InterruptedClose` churn, the known pill race).
+- **Root cause (framework, not the shell):** the attach passes the session app's `io.artifact_schema` as the document schema, and
+  the note editor publishes `io.artifactSchema: ""` (lease: `note.document`). Census of the release plugin modules: **~40 apps publish an
+  empty `io.artifactSchema`** — the note editor and viewer, every declaration-tree viewer, wfc, dag, puzzle 2d/5d, vcs, reasoning, …
+  `PluginBuilder::editor`/`viewer` stamp `E::DOCUMENT_SCHEMA` into an empty `io.artifact_schema` (C8.2 schema-first), but the
+  declaration tree's `editor_surface`/`viewer_surface` (`.declare_artifact(…)`, the path note uses) never did. Side effects of the
+  gap: `artifact_kind_choices` (Rust + TS) skips apps with an empty io schema, so note offered no local creation choice, and the React
+  attach fell back to the breadcrumb (`semio.note`).
+- 15:2x **fix landed** (`🔌️plugin/🦀️.rs` `editor_surface`/`viewer_surface` take `mut def` and stamp `E::`/`V::DOCUMENT_SCHEMA` when empty,
+  docstrings updated; two codemod typos in those docstrings fixed). Law `every_declared_surface_names_the_schema_it_opens`
+  (app-declarations fixture: every projected editor + viewer names its subset's schema). `cargo check -p semio-framework-plugin --lib --tests`
+  rc=0 (warnings present), laws **12/12** (`declarations::` + `schema_stamping`, `s11-wg7-logs/plugin-declarations-laws.txt`). No law
+  pinned an empty io schema (grep). Soft freeze respected: manifest string only, no guest ABI / pack schema / codec hash change; the hub
+  never reads app io. W2 told (`wp-w2/requests/wg7.txt`).
+- 15:34 the E2E needs a catalog whose note carries the fix: `wp-wg7/wg7-catalog-n.sh` (detached, pid 42680, `s11-wg7-logs/n-chain.txt`)
+  builds os-hub (hub mutex), publishes **stdio,gis,note** into `.🧬semio/🌐hub/s11-wg7-catalog-n` (wasm mutex), materializes that note for
+  serve 6552, and boots **hub 8050** on a fresh copy (`s11-wg7-hub-8050`, credentials for user1/user2, W2's hold script, state in
+  `s11-wg7-hub-8050-state`). Hub 7800 is untouched.
+- 15:3x **A's lost sign-in in c3 diagnosed**: the pill's mirror `Activate` reached the shell (`start_dispatch enter`) and nothing followed —
+  `handle_accessibility_event` refuses a chrome event whose `window_generation` is not `presented_input_epoch`, and that epoch advances on
+  EVERY presented frame. Measured at idle on 6552 (`wg7-chrome-generation-probe.mjs`, `generated/chrome-generation-probe.json`): **28 chrome
+  generations in 15 s with ONE distinct node content**, and the ARIA mirror was a generation behind in **20/60 samples** — so a screen-reader
+  or mirror activation was silently dropped about a third of the time, and the mirror's focus restore (keyed on the generation) broke every frame.
+- 15:4x **fix landed** (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`): new `presented_chrome_accessibility_generation` — the epoch at which the chrome's
+  projection last CHANGED; `acknowledge_presented_input` republishes the chrome accessibility (and advances the generation) only when the
+  projection differs; the chrome gate compares against it. Laws: the old `a_delayed_chrome_mirror_address_cannot_activate_after_its_presented_epoch_retires`
+  (which pinned the churn) is replaced by `a_mirror_address_stays_live_across_frames_that_present_the_same_chrome` and
+  `a_delayed_chrome_mirror_address_cannot_activate_after_the_chrome_changes` (the safety property kept: a changed chrome retires old addresses);
+  chrome targets in the theme-editor and palette laws address the new generation. Native `--lib --tests` check rc=0 (594 warnings);
+  **nextest 61/61** (`shell_shortcuts_palette_tests`, `theme_editor_and_accessibility_tests`, `presented_input_authority_tests`,
+  `wgpu_introspection`; `s11-wg7-logs/renderer-a11y-laws-nextest.txt`). Plain `cargo test` in one process fails 17 of these with "candidate
+  could not be sealed" — the known process-global leak (R1: nextest is the runner), not this change. Renderer wasm-release queued in the
+  wasm mutex (wrapper 55434, `s11-wg7-logs/renderer-wasm-release-a11y.txt`); it is also the wasm32 compile of this change.
+- 15:5x language-neutral contract: `🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json` `presentedChrome.generationRule` (control +
+  first / same-chrome / changed-chrome rects; note extended) with its schema (`🧬️schema/…/🔣️.json`, `$defs.rect`); both Rust laws now read
+  the rule; vitest `♿️wgpu-accessibility-interaction` **13/13** (Ajv schema validation of the fixture + rule sanity) and nextest **61/61** again.
+- 16:1x the WG7 chain's hub build finished (15:39, 1m17s); its publish ticket waits in the wasm FIFO behind W2's `restage2` hold (15:23,
+  `materialize-dev` over 51 projects, parallel 2), then the renderer wasm-release (55434). WG8 note: its open item 4 (wgpu
+  `os.create-space-artifact` kind choices) depends on `artifact_kind_choices`, which skipped every app with an empty `io.artifactSchema`
+  — the 15:2x stamp makes note/wfc/dag/… choosable.
+- 16:58 **WG7 catalog published** (33m46s): `.🧬semio/🌐hub/s11-wg7-catalog-n`, profile `local-stdio-gis-note-open-v1`, generation
+  `f6d193e1…`, note component `ac4b77f7…`, open targets `s.note.note@1/*#editor|#viewer` → `note.document`.
+- 17:09 **hub 8050 up** (`wg7-hub-8050.sh`, split out of the chain; hold **28307**, os-hub **28313**, data `s11-wg7-hub-8050`, signed binary copy
+  `s11-wg7-bin/os-hub-8050`; readyz 200). Seed (`s11-wg7-logs/seed-n-*.txt`): space **`01a0d91e-03c1-71fd-ba2e-28ee3db6c9e9`** (user1 owner,
+  user2 author), note **`artifact-ffe16f4e05776efdde9a094f3796af77`**.
+- 17:11 renderer wasm-release built with the a11y fix (11m44s, EXIT=0 — also the wasm32 compile of it). Serve 6552 restarted (pid **30112**).
+  **Runtime proof:** `wg7-chrome-generation-probe.mjs` at idle now measures **1 chrome generation in 15 s, mirror behind 0/60** (was 28 and 20/60).
+- The served-note step (catalog `ac4b77f7…` note into the durable module root) waits in the wasm FIFO behind W2's restage2 hold (825).
 
 ## Files changed (WG7)
 
@@ -301,6 +356,11 @@ Renderer `semio-framework-os-renderer-wgpu` (paths under `📺️renderer/🧑�
   `🧱️elements/🤖️AgentApprovals/🧪️tests/🔬️wgpu-unit/🦀️.rs`, `🧱️elements/🤖️AgentApprovals/🧪️tests/🧩️component/🟦️.tsx`,
   `🧪️tests/🧩️package-integration/🟦️.ts`, `🧪️tests/🫀️plugin-load-progress/🟦️.ts`.
 Kernel TS: `🧰️framework/🔨️modules/🎠️kernel/🟦️.ts` — `fetchPackageDescriptor`.
+Renderer a11y: `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` (`presented_chrome_accessibility_generation`), laws `🐚️Shell/🧪️tests/🎨️wgpu-theme-editor-and-accessibility/🦀️.rs`,
+`🐚️Shell/🧪️tests/⌨️wgpu-shell-shortcuts-palette/🦀️.rs`, fixture `🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json`, schema
+`🧬️schema/♿️wgpu-accessibility-interaction/🔣️.json`, vitest `🧪️tests/♿️wgpu-accessibility-interaction/🟦️.tsx`; probe `wp-wg7/wg7-chrome-generation-probe.mjs`.
+Plugin framework `semio-framework-plugin`: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (`editor_surface`/`viewer_surface` stamp the
+document schema), `🔌️plugin/🧪️tests/🔬️app-declarations-fixture/🦀️.rs` (law `every_declared_surface_names_the_schema_it_opens`).
 Plugin web / tooling: `🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts` (`ensureGuestSlimTypstFontsAt`,
 `guestSlimTypstFontSeed`), `…/🚀️commands/🟦️.ts` (support stages fonts), `🔌️plugin/🏗️build/📦️materialization/🟦️.ts`,
 `🔌️plugin/📦️packages/🟦️typescript/📋️project.json` (support → fonts); caching laws `🦑️repo/…/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts`,
@@ -308,11 +368,30 @@ Plugin web / tooling: `🔌️plugin/🌐️browser-bundle/🏗️materializatio
 Ticket (`wp-wg7/`): `k1-directory-admission.py`, `k2-k7-browser-actor.py`, `k4-wasm-actor.rs.txt`, `k8-frame-ceiling.py`,
 `r1-r3-browser-document-wiring.py`, `r4-remote-backbone-uri.py`, `b1-approval-affordance-parity.py`, `wg7-wasm-hold.sh`,
 `wg7-seed.ts`, `wg7-browser-collab.mjs` + probes (`wg7-keys-probe`, `wg7-command-probe`, `wg7-search-probe`,
-`wg7-order-probe`, `wg7-edit-probe`, `wg7-panel-probe`, `wg7-addtext-probe`); `wp-w1/requests/wg7.txt`.
+`wg7-order-probe`, `wg7-edit-probe`, `wg7-panel-probe`, `wg7-addtext-probe`), `wg7-catalog-module.ts`, `serve/wg7-serve.ts`,
+`serve/wg7-vite.config.ts`, `wg7-catalog-n.sh`; `wp-w1/requests/wg7.txt`, `wp-w2/requests/wg7.txt`.
 
 ## Processes (WG7)
 
 - Serve `note release (catalog-B note)` on **6552**: pid **29033** (running since 12:47; log `.🧬semio/🌐hub/s11-wg7-logs/serve-6552.log`;
   module root `.🧬semio/🌐hub/s11-wg7-catalog-modules/release/`). Earlier serves: 6550 pid 10452, 6551 pid 92356, 6552 pid 2313 — all stopped by me.
 - Inherited hub 7900 (hold 74207 / os-hub 74210): untouched (not used; the E2E runs on W2's 7800).
-- Wasm-mutex wrapper **44856** (catalog-module rebuild, queued 13:06). Killed earlier (mine): 72068, 73535.
+- Serve 6552 pid **30112** (17:11; earlier 67896, stopped). Hub **8050**: hold 28307 / os-hub 28313 (`s11-wg7-hub-8050-state/pids.txt`).
+- Chain parent 42680 stopped by me at 17:08 (the hub step moved to `wg7-hub-8050.sh`); its queued served-note mutex wrapper **21478** runs on its turn.
+- Mutex wrappers of this slice: 44856 (done 13:24). Killed earlier (mine): 72068, 73535.
+
+## From WG8 (17:4x) — genesis-on-open and the relay test case
+
+- **Genesis-on-open (native, landed, WG8 gate run 12 → 18 green):** a fresh door-created artifact answers the document socket
+  `Welcome { bootstrap: None }` (the hub db holds no command yet; the genesis lives only in the artifact store), so a guest that
+  never loaded the document authors envelopes under its **app id** (`s.block.block2d@1/*#editor`) and the document actor refuses
+  every edit as `document backbone scope mismatch`. Fix in the target-neutral `open_document` (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`):
+  a **hub-bound** open first loads `store_sync::os_store::component_document_genesis(schema, document_id)` into the guest — the
+  same `codec.genesis` export and zero-history check the hub's trusted catalog seeds the artifact from. Local ids are skipped (the
+  component refuses a genesis for a non-server-minted id). On wasm32 it applies once a `ComponentDocumentCodec` is registered for
+  the kind (native registers `OwnedComponentDocumentCodec` in `create_app`); the browser shell needs a jco-backed twin of that
+  registration (the store trait now has `genesis`) or the identity arrives some other way — please check the browser path with a
+  fresh door artifact: the editor's first `Commands` envelope must carry `documentId = artifact-…`.
+- **T12 contract rows (13):** `🐚️Shell/🧪️tests/📂️wgpu-document-relay` renamed to `🔀️wgpu-document-relay` (📂️ is one of the
+  taxonomy's generic emoji identities, so the case name and all 11 test bodies in it counted as non-canonical); `#[path]` and the
+  file's docstring emoji updated. Layout probe on the whole Shell tree: 0 findings (old name reproduces 12); relay laws 11/11.

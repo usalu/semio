@@ -5731,7 +5731,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "sourcing.curation/v1",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -5849,8 +5849,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "6e12852ab0f9738f107aac2431a48585e90fda71a6106d14950bd48904257d12",
-    "coreWasmSha256": "1b3b6a141dab7bc72cc47a76ecd6357cb866cafc3fa030f6714aa7c988609387",
-    "descriptorSha256": "fc8c98298cddf5f1d96e4c310dcddbcf248dddf1b2272c414b9a702bb1dff7cf"
+    "wasmSha256": "ea7da4ebc08ef693f048dc44540548855754519a0d0d34ee1f06811b293107fa",
+    "coreWasmSha256": "634a7e82d734d7467b1dc1b2910777bf21010b4172ecc25d073ee8c6ab9c9272",
+    "descriptorSha256": "f38c7c77fa1beb43efe3d7e97d053ad93bf2e26af64f1a99c8ec99a791adc1e3"
   }
 }

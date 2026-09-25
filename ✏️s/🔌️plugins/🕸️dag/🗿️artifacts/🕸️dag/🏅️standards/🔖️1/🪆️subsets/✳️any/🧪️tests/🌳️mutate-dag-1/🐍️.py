@@ -39,26 +39,26 @@ from semio_repo_test import Adapter, Context, Outcome
 _ROOT = "shared://🧬️mutations"
 #: 🧫️ (triad directory, fixture name, wire tag, the field the outcome's `path` names).
 VECTORS = {
-    "create-node": ("🌱create-node", "rejects-a-duplicate-node-id", "createNode", lambda p: p["node"]["id"]),
-    "delete-node": ("🗑️delete-node", "rejects-deleting-a-missing-node", "deleteNode", lambda p: p["id"]),
-    "rename-node": ("🏷️rename-node", "rejects-renaming-a-missing-node", "renameNode", lambda p: p["id"]),
-    "change-node-name": ("🔤change-node-name", "rejects-renaming-the-label-of-a-missing-node", "changeNodeName", lambda p: p["id"]),
-    "move-node": ("↔️move-node", "rejects-moving-a-missing-node", "moveNode", lambda p: p["id"]),
-    "resize-node": ("📐resize-node", "rejects-resizing-a-missing-node", "resizeNode", lambda p: p["id"]),
-    "change-node-icon": ("🖼️change-node-icon", "rejects-reiconing-a-missing-node", "changeNodeIcon", lambda p: p["id"]),
-    "change-node-abbreviation": ("🔡change-node-abbreviation", "rejects-reabbreviating-a-missing-node", "changeNodeAbbreviation", lambda p: p["id"]),
-    "change-node-operator-kind": ("🧮change-node-operator-kind", "rejects-rebinding-the-operator-of-a-missing-node", "changeNodeOperatorKind", lambda p: p["id"]),
-    "replace-node-kind": ("🔁replace-node-kind", "rejects-rekinding-a-missing-node", "replaceNodeKind", lambda p: p["id"]),
-    "replace-node-properties": ("🗃️replace-node-properties", "rejects-repropertying-a-missing-node", "replaceNodeProperties", lambda p: p["id"]),
-    "reorder-nodes": ("🔀reorder-nodes", "rejects-a-duplicate-id-in-the-order", "reorderNodes", None),
-    "connect-nodes": ("🤝️connect-nodes", "rejects-a-missing-source-node", "connectNodes", lambda p: p["source"].split("@")[0]),
-    "disconnect-nodes": ("✂️disconnect-nodes", "rejects-disconnecting-a-missing-edge", "disconnectNodes", lambda p: p["id"]),
+    "create-node": ("🌱create-node", "🧪️rejects-a-duplicate-node-id", "createNode", lambda p: p["node"]["id"]),
+    "delete-node": ("🗑️delete-node", "🧪️rejects-deleting-a-missing-node", "deleteNode", lambda p: p["id"]),
+    "rename-node": ("🏷️rename-node", "🧪️rejects-renaming-a-missing-node", "renameNode", lambda p: p["id"]),
+    "change-node-name": ("🔤change-node-name", "🧪️rejects-renaming-the-label-of-a-missing-node", "changeNodeName", lambda p: p["id"]),
+    "move-node": ("↔️move-node", "🧪️rejects-moving-a-missing-node", "moveNode", lambda p: p["id"]),
+    "resize-node": ("📐resize-node", "🧪️rejects-resizing-a-missing-node", "resizeNode", lambda p: p["id"]),
+    "change-node-icon": ("🖼️change-node-icon", "🧪️rejects-reiconing-a-missing-node", "changeNodeIcon", lambda p: p["id"]),
+    "change-node-abbreviation": ("🔡change-node-abbreviation", "🧪️rejects-reabbreviating-a-missing-node", "changeNodeAbbreviation", lambda p: p["id"]),
+    "change-node-operator-kind": ("🧮change-node-operator-kind", "🧪️rejects-rebinding-the-operator-of-a-missing-node", "changeNodeOperatorKind", lambda p: p["id"]),
+    "replace-node-kind": ("🔁replace-node-kind", "🧪️rejects-rekinding-a-missing-node", "replaceNodeKind", lambda p: p["id"]),
+    "replace-node-properties": ("🗃️replace-node-properties", "🧪️rejects-repropertying-a-missing-node", "replaceNodeProperties", lambda p: p["id"]),
+    "reorder-nodes": ("🔀reorder-nodes", "🧪️rejects-a-duplicate-id-in-the-order", "reorderNodes", None),
+    "connect-nodes": ("🤝️connect-nodes", "🧪️rejects-a-missing-source-node", "connectNodes", lambda p: p["source"].split("@")[0]),
+    "disconnect-nodes": ("✂️disconnect-nodes", "🧪️rejects-disconnecting-a-missing-edge", "disconnectNodes", lambda p: p["id"]),
 }
 
 
 def _read_json(ctx: Context, root: str, leaf: str):
     """🧫️ One declared fixture, parsed."""
-    return json.loads(ctx.fixture_bytes(f"{_ROOT}/{root}/🧪️tests/{leaf}/🔣️.json"))
+    return json.loads(ctx.fixture_bytes(f"{_ROOT}/{root}/{leaf}/🔣️.json"))
 # endregion 🔖️Fixtures
 
 

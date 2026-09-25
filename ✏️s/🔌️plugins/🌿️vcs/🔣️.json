@@ -2953,7 +2953,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "vcs.vcs",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -4060,7 +4060,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "vcs.vcs",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -21585,8 +21585,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "468ae787b50c532918f424091e66ae9f3396138a83dc889efcf86cf61458183d",
-    "coreWasmSha256": "1ad8a3c56355ed8d14f926004b9a2fcb392d7fb99b8f5ea62b35825be9fa7db7",
-    "descriptorSha256": "5f851ffe78181711540b828086e8c5b22e6af4838c83233e28f85ab424112ff9"
+    "wasmSha256": "f616fb7670a3354f58790282bd498739fd897d320056c83c3741811826bbc93a",
+    "coreWasmSha256": "1a56be8ff206db55ab9877e90e63326abd169a9f6a3cbfc381efac3997c59786",
+    "descriptorSha256": "459a9239e6962e98ee597a17dc64e6fdcd68bc4ee0a8fea37efd3438c0f0d805"
   }
 }

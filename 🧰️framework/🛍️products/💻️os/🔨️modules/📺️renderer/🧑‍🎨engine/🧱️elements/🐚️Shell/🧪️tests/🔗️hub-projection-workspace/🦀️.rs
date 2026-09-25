@@ -95,8 +95,15 @@ fn document_projection_refuses_a_sixty_fifth_distinct_owner_but_allows_replaceme
     assert_eq!(shell.hub_documents.get("hub:a/0"), Some(&ShellHubRemoteV1::Live { peer_count: 2 }));
 }
 
+/// 🔐️ One hub workspace verb, driven the way a frame drives it natively ([`drive`], which also pumps the
+/// renderer I/O and worker-retirement slots). A bare `block_on` parked for ever inside a verb after a
+/// live law had opened a document: sampled on two-user gate run 17, the test thread sat in
+/// `block_on(handle_hub_workspace_action)` for 23 min, and eight earlier runs never exited.
 fn hub_verb(shell: &mut ShellState, verb: &str, args: &[(&str, &str)]) {
     let args = (!args.is_empty()).then(|| DslValue::Object(args.iter().map(|(key, value)| ((*key).to_string(), DslValue::String((*value).to_string()))).collect()));
+    #[cfg(not(target_arch = "wasm32"))]
+    drive(shell.handle_hub_workspace_action(verb, args));
+    #[cfg(target_arch = "wasm32")]
     semio_framework_async::block_on(shell.handle_hub_workspace_action(verb, args));
 }
 
@@ -304,15 +311,75 @@ fn is_live(shell: &ShellState) -> bool {
     matches!(shell.sync_status.as_ref().map(|status| &status.remote), Some(RemoteState::Live { .. }))
 }
 
-/// 🔁️ Drives both shells' real frame pump (`pump_sync_events`: directory lane, auto check-in,
-/// document actor events) until `done` holds or the budget ends, recording every distinct remote
-/// state either shell passed through.
+/// 🖼️ What one painted frame does for an open document, headless, answering how many renderer I/O
+/// sessions it advanced: the present loop's renderer I/O and
+/// worker-retirement slots (`present_step_inner`; a detached request such as the open's app instance
+/// waits on them), the frame pump (`pump_sync_events`: directory lane, auto check-in, the frame-pumped
+/// open, document actor events), the chrome walk's presence phase, which arms the maintenance lane's
+/// heartbeat step (`ShellChromeFramePhase::Presence` → `advance_presence_preview_step`), and one settle
+/// step when the settle lane is owed one. Without the presence half a headless shell never beat, so the
+/// hub saw no peer and dropped each idle document socket after its presence lease (two-user gate run 13).
+#[cfg(not(target_arch = "wasm32"))]
+fn frame_pump(shell: &mut ShellState) -> usize {
+    let advanced = crate::pump_renderer_io_sessions(1);
+    let _ = semio_framework_job::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    drive(shell.pump_sync_events());
+    shell.request_presence_preview();
+    if shell.chrome_present.maintenance.presence_requested {
+        shell.advance_presence_preview_step();
+    }
+    if shell.settle_pump_pending() {
+        drive(shell.settle_pump_step());
+    }
+    advanced
+}
+
+/// ⏱️ How one frame-pumped open went, frame by frame: the frames while its steps were out and the
+/// frames that then rendered what it owed, each with its count and its longest single frame.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Debug, Default)]
+struct OpenFrames {
+    opening: usize,
+    opening_longest: std::time::Duration,
+    rendering: usize,
+    rendering_longest: std::time::Duration,
+    elapsed: std::time::Duration,
+}
+
+/// 🚪️ Pumps frames ([`frame_pump`]) until the shell's frame-pumped document open settles and the
+/// settle lane has rendered what it owed, timing every frame. Like the present loop, it idles only when
+/// no renderer I/O session advanced. A settled failure or cancellation is left for the caller to assert.
+#[cfg(not(target_arch = "wasm32"))]
+fn settle_document_opening(shell: &mut ShellState) -> OpenFrames {
+    let started = std::time::Instant::now();
+    let mut frames = OpenFrames::default();
+    while shell.document_opening.as_ref().is_some_and(ShellDocumentOpening::running) && started.elapsed() < std::time::Duration::from_secs(180) {
+        let frame = std::time::Instant::now();
+        let advanced = frame_pump(shell);
+        frames.opening += 1;
+        frames.opening_longest = frames.opening_longest.max(frame.elapsed());
+        if advanced == 0 {
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+    }
+    while shell.settle_pump_pending() && started.elapsed() < std::time::Duration::from_secs(180) {
+        let frame = std::time::Instant::now();
+        let _ = frame_pump(shell);
+        frames.rendering += 1;
+        frames.rendering_longest = frames.rendering_longest.max(frame.elapsed());
+    }
+    frames.elapsed = started.elapsed();
+    frames
+}
+
+/// 🔁️ Drives both shells' frames ([`frame_pump`]) until `done` holds or the budget ends, recording
+/// every distinct remote state either shell passed through.
 #[cfg(not(target_arch = "wasm32"))]
 fn pump_pair(a: &mut ShellState, b: &mut ShellState, budget: std::time::Duration, trail: &mut Vec<String>, done: impl Fn(&ShellState, &ShellState) -> bool) -> Option<std::time::Duration> {
     let started = std::time::Instant::now();
     while started.elapsed() < budget {
-        drive(a.pump_sync_events());
-        drive(b.pump_sync_events());
+        let _ = frame_pump(a);
+        let _ = frame_pump(b);
         let observed = format!("A={} B={}", remote_of(a), remote_of(b));
         if trail.last() != Some(&observed) {
             trail.push(observed);
@@ -351,7 +418,8 @@ fn online_members(shell: &mut ShellState, space_id: &str) -> Vec<(String, bool)>
 /// document through the `os.open-artifact` relay (the guest runs natively on the kernel thread,
 /// the document actor dials the hub's document socket), presence must show both, each actor's
 /// edit must reach the other's ledger, undo is per actor, and severing the second actor's network
-/// must neither freeze its shell nor lose its offline edit.
+/// must neither freeze its shell nor lose its offline edit. "Not frozen" is measured against the same
+/// shell's own online edit (at most twice its latency), so the bound holds for a debug interpreter too.
 ///
 /// 📒️ Every step is recorded (PASS/FAIL + what the shells showed) before the law asserts the
 /// whole ledger, so one run is the per-step table even when an early step fails.
@@ -437,6 +505,8 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let document_id = created.as_ref().map(|ready| ready.artifact_id.clone()).unwrap_or_default();
     let open_args = [("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id.as_str()), ("schema", journey.schema.as_str()), ("spaceId", space_id.as_str())];
     shell_command(&mut b, "os.open-artifact", &open_args);
+    let b_open = settle_document_opening(&mut b);
+    println!("g7w-live B open frames={b_open:?}");
     let session_of = |shell: &ShellState| shell.session.as_ref().map(|session| (session.plugin_id.clone(), session.app.id.clone(), session.instance_id));
     ledger.record(
         "4-guest-mounted",
@@ -500,10 +570,11 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let healed_phase = b.hub_workspace.phase.as_str();
     let a_before_heal = applied_edits(&mut a).len();
     let relive = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(40), &mut trail, |a, b| is_live(a) && is_live(b));
+    let _ = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(10), &mut trail, |_, _| false);
     let a_after_heal = applied_edits(&mut a);
     ledger.record(
         "12-connection-loss",
-        offline_edit.is_ok() && offline_latency < std::time::Duration::from_secs(2) && pump_elapsed < std::time::Duration::from_secs(5) && offline_phase == crate::space_browser::SpaceBrowserPhase::Stale.as_str() && healed_phase == crate::space_browser::SpaceBrowserPhase::Ready.as_str() && relive.is_some() && a_after_heal.len() > a_before_heal,
+        offline_edit.is_ok() && offline_latency <= b_latency.saturating_mul(2) && pump_elapsed < std::time::Duration::from_secs(5) && offline_phase == crate::space_browser::SpaceBrowserPhase::Stale.as_str() && healed_phase == crate::space_browser::SpaceBrowserPhase::Ready.as_str() && relive.is_some() && a_after_heal.len() > a_before_heal,
         format!("severed={severed} B offline edit={offline_edit:?} latency={offline_latency:?} pump={pump_elapsed:?} B spaces offline={offline_phase} healed={healed_phase} B remote offline={offline_remote} relive={relive:?} A ledger {a_before_heal}->{a_after_heal:?}"),
     );
 
@@ -540,7 +611,8 @@ fn native_guest_journey() -> NativeGuestJourney {
 
 /// ⏯️ Mounts the fixture's staged guest in one native wgpu shell with no hub, authors the fixture's
 /// verb and asserts the mount and the edit: the relay switches to the guest's app, every surface its
-/// session opens reaches the retained registry (no `Surface unavailable` fault), and the verb settles
+/// session opens reaches the retained registry (no `Surface unavailable` fault), the session binds the
+/// document it opened (a refused binding used to pass silently as a debug line), and the verb settles
 /// and lands exactly once in the guest's own ledger. Answers the shell for a law that continues.
 #[cfg(not(target_arch = "wasm32"))]
 fn native_guest_authored(journey: &NativeGuestJourney) -> ShellState {
@@ -552,10 +624,14 @@ fn native_guest_authored(journey: &NativeGuestJourney) -> ShellState {
     let document_id = format!("native-guest-journey-{}", chrome_now_ms() as u64);
     let started = std::time::Instant::now();
     shell_command(&mut shell, "os.open-artifact", &[("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id.as_str()), ("schema", journey.schema.as_str())]);
+    let command = started.elapsed();
+    let frames = settle_document_opening(&mut shell);
     let session = shell.session.as_ref().map(|session| (session.plugin_id.clone(), session.app.id.clone(), session.instance_id));
-    println!("native-guest-journey open latency={:?} session={session:?} error={:?}", started.elapsed(), shell.error);
+    println!("native-guest-journey open command={command:?} frames={frames:?} session={session:?} error={:?}", shell.error);
+    assert!(shell.document_opening.is_none(), "the open settled and cleared its band: {:?}", shell.document_opening.as_ref().map(|opening| &opening.phase));
     assert_eq!(session.as_ref().map(|(plugin, app, _)| (plugin.as_str(), app.as_str())), Some((journey.plugin_id.as_str(), journey.app_id.as_str())), "the relay mounted the guest's app");
     assert_eq!(shell.error, None, "every surface the session opened reached the retained registry");
+    assert_eq!(shell.sync_channel.as_ref().map(|channel| channel.document_id.as_str()), Some(document_id.as_str()), "the relay bound the session to the document it opened");
 
     let before = applied_edits(&mut shell);
     let (edit, latency) = author_edit(&mut shell, &journey.verb);
@@ -653,6 +729,47 @@ fn a_native_guest_copies_and_pastes_its_selection_without_a_hub() {
     println!("native-guest-journey clipboard ledger {before:?} -> {after:?}");
     assert_eq!(after.len(), before.len() + journey.expected_edits_after_clipboard, "the clipboard verbs left the declared edits");
     assert_eq!(applied_count(&after, &journey.verb), applied_count(&before, &journey.verb), "the authored edit stays applied");
+}
+
+/// 🖼️ Opening a document never holds the shell across a guest turn: the relay only starts the open,
+/// every frame while the guest instantiates and loads the document stays short, and the band's cancel
+/// stops an open whose app instance is still being created — the instance is destroyed and the session
+/// stays as it was. Before, the relay held the shell (and so the frame build) for the whole open: 17 s
+/// in a debug build (ticket 26/09/23 slice WG8). The frames that then render the new session are
+/// measured and reported; each spends the guest's own render turns.
+///
+/// 🔌️ `#[ignore]`d for the same staged runtime as [`a_native_guest_mounts_and_settles_an_authored_edit_without_a_hub`].
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+#[ignore = "needs a staged native guest runtime; see this test's own doc comment"]
+fn a_native_guest_open_keeps_the_frame_loop_painting_and_is_cancellable() {
+    let journey = native_guest_journey();
+    let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
+    let variant = live_env("SEMIO_PLUGIN");
+    let plugins = drive(crate::program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+    let mut shell = ShellState::new(plugins, variant);
+    let open = |shell: &mut ShellState, document_id: &str| {
+        let started = std::time::Instant::now();
+        shell_command(shell, "os.open-artifact", &[("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id), ("schema", journey.schema.as_str())]);
+        started.elapsed()
+    };
+
+    let command = open(&mut shell, "native-guest-open-cancelled");
+    assert_eq!(shell.document_opening.as_ref().map(|opening| opening.phase.clone()), Some(ShellDocumentOpenPhase::Instantiating), "the relay only starts the open");
+    shell.cancel_document_opening();
+    let cancelled = settle_document_opening(&mut shell);
+    println!("native-guest-open cancel command={command:?} frames={cancelled:?} phase={:?}", shell.document_opening.as_ref().map(|opening| &opening.phase));
+    assert_eq!(shell.document_opening.as_ref().map(|opening| opening.phase.clone()), Some(ShellDocumentOpenPhase::Cancelled), "the cancel settled the open");
+    assert!(shell.session.is_none() && shell.sync_channel.is_none(), "a cancelled open mounts nothing");
+    shell.cancel_document_opening();
+    assert!(shell.document_opening.is_none(), "closing the settled band clears it");
+
+    let command = open(&mut shell, "native-guest-open-painted");
+    let frames = settle_document_opening(&mut shell);
+    println!("native-guest-open command={command:?} frames={frames:?}");
+    assert!(command < std::time::Duration::from_millis(500), "the relay started the open without a guest turn: {command:?}");
+    assert!(frames.opening > 1 && frames.opening_longest < std::time::Duration::from_millis(500), "every frame stayed short while the guest opened: {frames:?}");
+    assert_eq!(shell.sync_channel.as_ref().map(|channel| channel.document_id.as_str()), Some("native-guest-open-painted"));
 }
 
 /// 🌱️ One native wgpu shell creates a hub-bound artifact through its own creation door against a

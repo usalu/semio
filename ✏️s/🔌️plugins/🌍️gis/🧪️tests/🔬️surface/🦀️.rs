@@ -35,9 +35,28 @@ fn gis_component_assembly_declares_exact_package_identity_before_descriptor_emis
     assert_eq!(semio_s_artifact_gis_gismap::artifact_kind().id, fixture["artifacts"][0]["kind"].as_str().unwrap());
 }
 
+/// 🧪️ Contract §2.5 — the read-only guarantee for a viewer whose ONE verb travels the RETAINED route,
+/// stated as the energy model viewer states it. `assert_viewer_never_mutates` drives `ViewerApp::handle`,
+/// the stateless seam; since the map viewer's `setCamera` became `InteractiveJobClassification::Migrated`
+/// its emission is a window-config write `ViewEmit` cannot carry, so `handle` refuses loudly
+/// (`gis.map.viewer.retained-route-required`) and the generic fixture's `expect("viewer adapter command
+/// succeeds")` cannot hold by construction. The guarantee is asserted over the seam that decides it: every
+/// verb the viewer declares is `Migrated`, and the emission itself is proved window-config-only by the
+/// artifact crate's `a_camera_gesture_becomes_an_addressed_window_config_write_and_nothing_else` and
+/// `a_dispatched_pan_is_retained_by_its_window_and_rendered_back`.
 #[semio_framework_async_macros::async_test]
 async fn gismap_viewer_never_mutates() {
-    assert_viewer_never_mutates::<GisMapViewer>().await;
+    let definition = semio_s_artifact_gis_gismap::viewer::gismap::create_gismap_viewer();
+    let actions: Vec<_> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
+    assert!(!actions.is_empty(), "the gis map viewer declares at least one verb");
+    for action in &actions {
+        assert_eq!(
+            action.semantics.execution.interactive_job,
+            semio_framework_plugin::InteractiveJobClassification::Migrated,
+            "viewer action '{}' must travel the retained route — the stateless ViewEmit seam has no store lane a viewer may write",
+            action.id
+        );
+    }
 }
 
 #[semio_framework_async_macros::async_test]

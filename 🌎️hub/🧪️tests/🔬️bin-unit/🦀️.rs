@@ -1067,8 +1067,8 @@ async fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelop
     }
 }
 
-/// 📌️ One stdio JSON document on a hub with the linked native codec: a genesis checkpoint, an
-/// author, a spectator, and the document's live actor.
+/// 📌️ One GIS Map document on the verified GIS profile: a genesis checkpoint, an author, a
+/// spectator, and the document's live actor.
 #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
 struct CheckInFixture {
     state: HubState,
@@ -7575,6 +7575,50 @@ mod quick {
 
 mod long {
     use super::*;
+
+    /// 📈️ A document socket keeps acknowledging commands however large its document grows: 150
+    /// chained writes over one live socket, every one `Accepted`, past each former wall of the
+    /// document store (the eighth index entry, the 64th version-graph change, the 128th replaced
+    /// value). A hub used to go silent — no Ack, no error — once a document grew past one of them.
+    #[test]
+    fn a_document_socket_keeps_acknowledging_commands_as_its_document_grows() {
+        run_socket_test(|| async {
+            const EDITS: usize = 150;
+            let state = test_state().await;
+            let token = seed_author_token(&state).await;
+            announce_document_for_test(&state, STUDIO, "socket-growth").await;
+            let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-growth".to_string())), bearer_headers(&token), State(state.clone())).await.expect("growth socket grant").0;
+            let addr = spawn_server(state.clone()).await;
+            let (mut socket, _) = connect_async(document_socket_request(&format!("ws://{addr}/scopes/{STUDIO}%2Fsocket-growth/document/ws"), &token)).await.expect("growth socket");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("growth hello");
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { .. }));
+            let mut previous: Option<protocol::MutationId> = None;
+            for index in 0..EDITS {
+                let mut envelope = sample_envelope(&format!("growth-{index}"), &WireArtifactId("socket-growth".into())).await;
+                envelope.actor = ActorId(receipt.actor_id.clone());
+                envelope.diff.payload = db::document::encode_pathmap_json(&serde_json::json!({ format!("feature-{}", index % 8): format!("{index}:{}", "g".repeat(2048)) })).await.unwrap();
+                envelope.dependencies = previous.iter().cloned().collect();
+                let batch = 10_000 + index as u64;
+                socket.send(client_binary(&ClientFrame::Commands { batch_id: batch, envelopes: vec![envelope.clone()] }, Lane::Command).await).await.expect("growth command");
+                let outcome = tokio::time::timeout(std::time::Duration::from_secs(60), async {
+                    loop {
+                        if let ServerFrame::Ack { batch_id, stages, .. } = next_server_frame_at(&mut socket, "growth ack").await {
+                            if batch_id == batch {
+                                return stages;
+                            }
+                        }
+                    }
+                })
+                .await
+                .unwrap_or_else(|_| panic!("the hub never acknowledged growth edit {index}"));
+                assert!(matches!(outcome.last(), Some(AckStage::Applied { outcome }) if matches!(outcome.as_ref(), ApplyOutcome::Accepted)), "growth edit {index}: {outcome:?}");
+                previous = Some(envelope.mutation_id);
+            }
+            let frontier = state.db.document(&db_artifact_id(&DocumentScope::new(STUDIO, "socket-growth"))).await.expect("growth handle").frontier().await.expect("growth frontier");
+            assert_eq!(frontier.commit_seq, EDITS as u64);
+        });
+    }
 
     /// 🌱️ Server-owned creation on the GIS plugin's real release component: the catalog is author-only,
     /// a stale generation or unknown kind claims nothing, two concurrent duplicates own one factory, and

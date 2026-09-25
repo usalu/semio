@@ -150,6 +150,20 @@ export function localProgramsV1(loaded: readonly LoadedProgramState[]): readonly
   return loaded.some((entry) => entry.catalogModule !== undefined) ? loaded.filter((entry) => entry.catalogModule === undefined) : loaded;
 }
 
+/** 🧩️ The programs one session's program runs with: a hub program's own catalog closure (same generation), the device's
+ * own programs for every other session. */
+export function sessionProgramsV1(loaded: readonly LoadedProgramState[], sessionProgramId: string): readonly LoadedProgramState[] {
+  const own = loaded.find((entry) => entry.handle.pluginId === sessionProgramId)?.catalogModule;
+  if (own === undefined) return localProgramsV1(loaded);
+  const peers = new Set(Object.values(own.peers));
+  return loaded.filter((entry) => peers.has(entry.handle.pluginId));
+}
+
+/** 🪪️ The plugin id a program's own descriptor names: its catalog module's plugin for a hub program, else its id. */
+export function programPluginIdV1(entry: LoadedProgramState): string {
+  return entry.catalogModule?.pluginId ?? entry.handle.pluginId;
+}
+
 /** 🔌️ Lifecycle status of one registry entry for the plugin panel (bottom-right dock): "available" —
  * registered but not (yet) loaded, including a plugin whose first build hasn't landed. Driven by
  * `installPlugin`/`reloadPlugin`/`uninstallPlugin` and the `PluginSource` subscription, not by

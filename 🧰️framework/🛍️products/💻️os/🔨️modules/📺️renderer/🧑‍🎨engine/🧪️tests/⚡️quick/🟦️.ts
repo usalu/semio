@@ -15,7 +15,9 @@ import {
 } from "../../🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx";
 import hostBootstrapFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🪪️host-bootstrap/🔣️.json";
 import { pluginAvailabilityRouteV1, pluginInstallBandTextV1, pluginInstallProgressTotalV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import { upsertLoadedProgramV1, type LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { localProgramsV1, programPluginIdV1, sessionProgramsV1, upsertLoadedProgramV1, type LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { extensionProgramForV1, invocationPluginIdV1, spaceIndexOpeningArgsV1 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
+import { SpaceDirectoryHistoryV1 } from "../../🧱️elements/🏛️ShellHost/📇️space-directory/🟦️.ts";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import valueResidentSchema from "../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json" with { type: "json" };
 
@@ -129,5 +131,42 @@ describe("renderer quick contracts", () => {
     const replaced = upsertLoadedProgramV1(loaded, program("gis", "GIS 2"));
     expect(replaced.map((entry) => (entry.manifest as unknown as { label: string }).label)).toEqual(["Space", "GIS 2"]);
     expect(loaded.map((entry) => (entry.manifest as unknown as { label: string }).label)).toEqual(["Space", "GIS"]);
+  });
+
+  it("keeps a hub document's catalog-resolved programs beside the device's own and routes their extensions inside their generation", () => {
+    const bundle = "b".repeat(64);
+    const peers = { flow: `flow@${bundle}`, "flow-extension-brep": `flow-extension-brep@${bundle}` };
+    const local = (pluginId: string) => ({ handle: { pluginId }, manifest: {} }) as unknown as LoadedProgramState;
+    const hub = (pluginId: keyof typeof peers) => ({ handle: { pluginId: peers[pluginId] }, manifest: {}, catalogModule: { pluginId, generationId: "c".repeat(64), bundleSha256: bundle, source: "hub", peers } }) as unknown as LoadedProgramState;
+    const loaded = [local("space"), local("flow"), local("flow-extension-brep"), hub("flow"), hub("flow-extension-brep")];
+    expect(localProgramsV1(loaded).map((entry) => entry.handle.pluginId)).toEqual(["space", "flow", "flow-extension-brep"]);
+    const onlyLocal = loaded.slice(0, 3);
+    expect(localProgramsV1(onlyLocal)).toBe(onlyLocal);
+    expect(sessionProgramsV1(loaded, peers.flow).map((entry) => entry.handle.pluginId)).toEqual([peers.flow, peers["flow-extension-brep"]]);
+    expect(sessionProgramsV1(loaded, "flow").map((entry) => entry.handle.pluginId)).toEqual(["space", "flow", "flow-extension-brep"]);
+    expect(loaded.map(programPluginIdV1)).toEqual(["space", "flow", "flow-extension-brep", "flow", "flow-extension-brep"]);
+    expect(extensionProgramForV1(loaded, loaded[3]!, "flow-extension-brep")?.handle.pluginId).toBe(peers["flow-extension-brep"]);
+    expect(extensionProgramForV1(loaded, loaded[1]!, "flow-extension-brep")?.handle.pluginId).toBe("flow-extension-brep");
+    expect(extensionProgramForV1(loaded, loaded[3]!, "space"), "a hub program never reaches outside its generation").toBe(undefined);
+    expect([peers.flow, "flow", "space"].map(invocationPluginIdV1), "an invocation addresses the descriptor's plugin, never the host's program id").toEqual(["flow", "flow", "space"]);
+  });
+
+  it("folds a space index over its space's full directory history, gathered once each from every lane", () => {
+    const event = (seq: number, spaceId?: string) => ({ seq, id: `e${seq}`, hlc: { physicalMs: seq, logical: 0 }, actor: { kind: "user", id: "user:u1" }, ...(spaceId === undefined ? {} : { spaceId }), body: { kind: "space.renamed", spaceId: spaceId ?? "", name: `n${seq}` }, recordedAtMs: seq }) as unknown as Parameters<SpaceDirectoryHistoryV1["add"]>[0][number];
+    const history = new SpaceDirectoryHistoryV1("space-a");
+    expect(history.add([event(5, "space-a"), event(2, "space-a"), event(3, "space-b"), event(4)])).toBe(true);
+    expect(history.add([event(2, "space-a")]), "a receipt repeating a streamed event changes nothing").toBe(false);
+    expect(history.add([event(9, "space-a"), event(7, "space-a")])).toBe(true);
+    expect(history.events().map((row) => row.seq)).toEqual([2, 5, 7, 9]);
+  });
+
+  it("names the space index's own space on an opening it asks for without one, and leaves every other opening alone", () => {
+    const index = { spaceId: "space-a", documentId: "index" };
+    const row = { artifactRef: "s.note.note@1/*", artifactId: "artifact-1", schema: "note.document" };
+    expect(spaceIndexOpeningArgsV1({ ...row, spaceId: "" }, index, "index")).toEqual({ ...row, spaceId: "space-a" });
+    expect(spaceIndexOpeningArgsV1(row, index, "index")).toEqual({ ...row, spaceId: "space-a" });
+    expect(spaceIndexOpeningArgsV1({ ...row, spaceId: "space-b" }, index, "index")).toEqual({ ...row, spaceId: "space-b" });
+    expect(spaceIndexOpeningArgsV1(row, { spaceId: "space-a", documentId: "artifact-9" }, "index")).toEqual(row);
+    expect(spaceIndexOpeningArgsV1(row, undefined, "index")).toEqual(row);
   });
 });

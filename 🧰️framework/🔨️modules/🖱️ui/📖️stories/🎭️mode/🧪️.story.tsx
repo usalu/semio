@@ -5,7 +5,6 @@
 // #region 🔌️Adapters
 import { Mode, createEvenWindowLayout, reactHostPort, uiDataLabel, type WindowLayoutAxisNode, type WindowLayoutStackNode } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import dockAxisGeometry from "../../🧫️fixtures/📐️dock-axis-geometry/🔣️.json";
 import { contentThroughGlassPlay, maximizeStackPlay, quadLayoutPlay } from "../../🧱️elements/🎨️Canvas/🧪️tests/🎭️storybook-interaction/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -24,6 +23,18 @@ function geometryModeNode(node: GeometryNode, size?: number): WindowLayoutAxisNo
   if (node.kind === "stack") return { kind: "stack", size, activeId: node.id, children: [{ kind: "window", id: node.id }] };
   return { kind: node.kind, size, children: node.children.map((child) => geometryModeNode(child.node, child.weight)) };
 }
+
+/** 📐️ The story's own three-stack scene — an 800 × 500 canvas split 35 : 65 across, the right side 70 : 30 down. The
+ * storybook geometry test (`../../🧪️tests/📚️storybook-new-stories`) measures what this story renders against its own
+ * committed oracle, so the story carries its scene and the test carries the judgement. */
+const GEOMETRY_VIEWPORT = { width: 800, height: 500 } as const;
+const GEOMETRY_LAYOUT: GeometryNode = {
+  kind: "row",
+  children: [
+    { weight: 35, node: { kind: "stack", id: "left" } },
+    { weight: 65, node: { kind: "column", children: [{ weight: 70, node: { kind: "stack", id: "right-top" } }, { weight: 30, node: { kind: "stack", id: "right-bottom" } }] } },
+  ],
+};
 
 // #region 🧪️SilhouetteVisualFixture
 const SilhouetteVisualFixture = () => (
@@ -168,16 +179,15 @@ export const EvenSplit: Story = {
 
 export const GeometryOracle: Story = {
   render: () => {
-    const { viewport, layout } = dockAxisGeometry;
     return (
-      <div data-testid="dock-axis-geometry-oracle" style={{ width: viewport.width, height: viewport.height }}>
+      <div data-testid="dock-axis-geometry-oracle" style={{ width: GEOMETRY_VIEWPORT.width, height: GEOMETRY_VIEWPORT.height }}>
         <Mode
           windows={[
             { id: "left", title: uiDataLabel("Left / Links"), iconId: "app-window", children: <Pane label="Left / Links" /> },
             { id: "right-top", title: uiDataLabel("Top / Oben"), iconId: "app-window", children: <Pane label="Top / Oben" /> },
             { id: "right-bottom", title: uiDataLabel("Bottom / Unten"), iconId: "app-window", children: <Pane label="Bottom / Unten" /> },
           ]}
-          layout={geometryModeNode(layout as GeometryNode)}
+          layout={geometryModeNode(GEOMETRY_LAYOUT)}
           activeWindowId="left"
         />
       </div>

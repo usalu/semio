@@ -107,6 +107,9 @@ test-results
 **/*.map
 **/pkg/
 **/🟨️boot.js
+**/🟦️*.js
+**/⚛️*.js
+**/📜️script.js
 **/🟦️next-env.d.ts
 **/forge.env.d.ts
 **/Palette.g.cs

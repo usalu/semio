@@ -524,11 +524,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -1243,11 +1243,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -1868,11 +1868,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -5174,7 +5174,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "sequence.sequence",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -5349,8 +5349,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "35078eb01867c9e54fa2974181e68dfd73e3b4189ae2735624f4a7854c2624ac",
-    "coreWasmSha256": "1dc70e044a0931f09d775b298103b41c2d23b4c5887e5a8cb85c99ef4c80ccc9",
-    "descriptorSha256": "9c6de8b4e2b830f793ca6a0ab5ea02c28ab756128497fb32c0e52e7d88b72f8c"
+    "wasmSha256": "c183f05bc1e9538ae589ccc200a1106f1ace49c136f4238bc23892cb3f0d7aa3",
+    "coreWasmSha256": "641505109af18f9cfe6fffba49760a8bbb54642c7842b772cf3ed724b19505b2",
+    "descriptorSha256": "6ec10fd4535b8ea484a4455d45e4747243e29b116ea4e423771775343c3f9237"
   }
 }

@@ -2468,7 +2468,19 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...forgedCatalog]))).toThrow("invalid kind fields");
       const forgedCatalogStatus = encodePackValue({ kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase: "empty" });
       expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...forgedCatalogStatus]))).toThrow("invalid owner");
-      const mismatched = encodePackValue({ ...ready, ready: { ...ready.ready!, parentDialect: { ...ready.ready!.parentDialect, artifactKind: "s.note" } } });
+      const catalogNamed: BackboneWorkerResponse = { ...ready, ready: { ...ready.ready!, kindId: "2d.drawing", artifactSchema: "drawing.document", parentDialect: { artifactKind: "s.draw.drawing", standard: "1", subset: "*" } } };
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(catalogNamed)), "a creation kind need not equal the dialect that opens it").toEqual(catalogNamed);
+      const drawingCatalog: BackboneWorkerResponse = { ...catalog, kinds: [{ kindId: "2d.drawing", schema: "drawing.document", dialect: { artifactKind: "s.draw.drawing", standard: "1", subset: "*" }, label: { en: "Editor", de: "Editor" } }] };
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(drawingCatalog))).toEqual(drawingCatalog);
+      const spaceEvent = (seq: number, spaceId = "space-a") => ({ seq, id: `event-${seq}`, hlc: { physicalMs: 1_790_000_000_000 + seq, logical: 0 }, actor: { kind: "user" as const, id: "user:u1" }, spaceId, body: { kind: "space.renamed" as const, spaceId, name: `Space ${seq}` }, recordedAtMs: 1_790_000_000_000 + seq });
+      for (const request of [{ kind: "directory-space-open", baseUrl: "http://127.0.0.1:8040", spaceId: "space-a" }, { kind: "directory-space-close", spaceId: "space-a" }] as const) expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request))).toEqual(request);
+      expect(() => decodeBackboneWorkerRequest(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...encodePackValue({ kind: "directory-space-open", spaceId: "space-a" })]))).toThrow("invalid space directory fields");
+      const spaceEvents: BackboneWorkerResponse = { kind: "directory-space-events", spaceId: "space-a", events: [spaceEvent(3), spaceEvent(7)] };
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(spaceEvents))).toEqual(spaceEvents);
+      for (const events of [[spaceEvent(7), spaceEvent(3)], [spaceEvent(3), spaceEvent(3)], [spaceEvent(3, "space-b")], []]) {
+        expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...encodePackValue({ kind: "directory-space-events", spaceId: "space-a", events })])), JSON.stringify(events.map((event) => [event.seq, event.spaceId]))).toThrow(/invalid space directory/u);
+      }
+      const mismatched = encodePackValue({ ...ready, ready: { ...ready.ready!, parentDialect: { ...ready.ready!.parentDialect, artifactKind: "" } } });
       expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...mismatched]))).toThrow("invalid ready identity");
       const overposted = encodePackValue({ ...request, descriptor: "forbidden" });
       expect(() => decodeBackboneWorkerRequest(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...overposted]))).toThrow("invalid space artifact creation fields");

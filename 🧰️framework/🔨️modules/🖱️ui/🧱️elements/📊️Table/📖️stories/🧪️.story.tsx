@@ -30,9 +30,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-import nakaginFixture from "../../🧫️fixtures/🏢️nakagin/🔣️.json";
-const { architects } = nakaginFixture;
-
 interface Person {
   id: string;
   name: string;
@@ -41,7 +38,11 @@ interface Person {
   email: string;
 }
 
-const sampleData: Person[] = architects.map((a) => ({ ...a }));
+const sampleData: Person[] = [
+  { id: "1", name: "Kisho Kurokawa", role: "Principal", email: "kurokawa@example.com" },
+  { id: "2", name: "Maki Fumihiko", role: "Metabolist", email: "maki@example.com" },
+  { id: "3", name: "Kiyonori Kikutake", role: "Metabolist", email: "kikutake@example.com" },
+];
 
 export const WithAvatars: Story = {
   args: { columns: [], data: [] },

@@ -4,7 +4,7 @@
 //! identifies and validates the kind's documents the way the hub's trusted catalog does.
 
 use super::{CompiledHandle, GuestRuntimes};
-use semio_framework_os_kernel::os_store::{ArtifactTextFiles, ComponentDocumentCodec, ComponentDocumentCodecFuture, VcsError};
+use semio_framework_os_kernel::os_store::{ArtifactTextFiles, ComponentDocumentCodec, ComponentDocumentCodecFuture, ComponentDocumentGenesis, VcsError};
 use std::sync::{Arc, OnceLock};
 
 /// ⛽️ One guest codec call's bound: the fuel cap is the runaway bound and the wall bounds the gap
@@ -61,6 +61,13 @@ impl ComponentDocumentCodec for OwnedComponentDocumentCodec {
         Box::pin(async move {
             let mirror = self.owned().codec_print_mirror(&self.compiled, &self.schema, pack, spr, GUEST_CODEC_BUDGET).await.map_err(|fault| VcsError::Deserialize(format!("component codec.print-mirror({}): {fault}", self.schema)))?;
             Ok(ArtifactTextFiles { dsl: mirror.dsl, ops: mirror.ops })
+        })
+    }
+
+    fn genesis<'a>(&'a self, document_id: &'a str) -> ComponentDocumentCodecFuture<'a, ComponentDocumentGenesis> {
+        Box::pin(async move {
+            let pair = self.owned().codec_genesis(&self.compiled, &self.schema, document_id, GUEST_CODEC_BUDGET).await.map_err(|fault| VcsError::ValidationFailed(format!("component codec.genesis({}): {fault}", self.schema)))?;
+            Ok(ComponentDocumentGenesis { pack: pair.pack, spr: pair.spr })
         })
     }
 }

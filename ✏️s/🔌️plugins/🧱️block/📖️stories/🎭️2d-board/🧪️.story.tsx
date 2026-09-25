@@ -23,7 +23,7 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { Board2dHost } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import type { ActionDescriptor } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { BLOCK2D_STORY_EXAMPLE_IDS, block2dBoardRenderLines, block2dStoryStateFor, buildBlock2dSceneNode, reduceBlock2dStoryAction, type Block2dStoryState } from "../🧭️coordination/🧫️fixtures/🧫️scene/🟦️.ts";
+import { BLOCK2D_STORY_EXAMPLE_IDS, block2dBoardRenderLines, block2dStoryStateFor, buildBlock2dSceneNode, reduceBlock2dStoryAction, type Block2dStoryState } from "../🧭️coordination/🟦️.ts";
 
 //#region StoryHost
 const BLOCK2D_STORY_CONTROLLER_ID = "block2d-story";

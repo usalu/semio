@@ -816,11 +816,17 @@ struct RunView {
     entries: Box<[RunViewEntry]>,
 }
 
+/// @emoji 🧹️ Returns every page of a run read to its arena before the owner is dropped, so a read
+/// never parks its pages as a lost owner for maintenance to reclaim later.
+fn close_run_pages(mut pages: db_storage::DbIoPages) -> Result<(), DbError> {
+    while pages.close_step()?.is_some() {}
+    drop(pages);
+    Ok(())
+}
+
 impl RunView {
-    fn close(mut self) -> Result<(), DbError> {
-        let _ = self.pages.close_step()?;
-        drop(self);
-        Ok(())
+    fn close(self) -> Result<(), DbError> {
+        close_run_pages(self.pages)
     }
 
     fn key_cmp(&self, index: usize, key: &IndexBytes) -> Result<std::cmp::Ordering, DbError> {
@@ -890,12 +896,11 @@ fn run_range_cmp(left: &db_storage::DbIoPages, left_range: RunRange, right: &db_
 }
 
 /// @emoji 👁️ Verifies one run's checksum and structure and reads its entries in place.
-async fn view_run_pages(mut pages: db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunView, DbError> {
+async fn view_run_pages(pages: db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunView, DbError> {
     match view_run_entries(&pages, expected_kind, control).await {
         Ok(entries) => Ok(RunView { pages, entries }),
         Err(error) => {
-            let _ = pages.close_step()?;
-            drop(pages);
+            close_run_pages(pages)?;
             Err(error)
         }
     }
@@ -1214,11 +1219,10 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
     }
 
     async fn run_entry_count(&self, run_id: u64, control: &mut IndexCursorControl) -> Result<u64, DbError> {
-        let mut pages = self.storage.read_run(&self.document, run_id).await?;
+        let pages = self.storage.read_run(&self.document, run_id).await?;
         let count = peek_entry_count(&pages, self.kind, control).await;
         control.grant()?;
-        let _ = pages.close_step()?;
-        drop(pages);
+        close_run_pages(pages)?;
         count
     }
 

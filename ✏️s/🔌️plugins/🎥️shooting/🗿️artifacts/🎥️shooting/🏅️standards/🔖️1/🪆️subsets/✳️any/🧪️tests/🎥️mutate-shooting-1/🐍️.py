@@ -68,7 +68,7 @@ _ROOT = "shared://🧬️mutations"
 # 📸️ The ONE before-document all thirty-one leaves share (confirmed byte-identical across all
 # thirty-one copies by this feature's own description) — read once, from where the domain already
 # keeps it, rather than a thirty-second copy.
-_BASE_URI = f"{_ROOT}/✏️rename-asset/🧪️tests/🏷️renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️.json"
+_BASE_URI = f"{_ROOT}/✏️rename-asset/🏷️renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️.json"
 
 # 🗺️ kind -> (dir, document, wire tag). The wire tag is the `"mutation"` field's own committed value.
 VECTORS = {
@@ -109,8 +109,8 @@ WIRE_TAG_TO_KIND = {tag: kind for kind, (_dir, _fixture, tag) in VECTORS.items()
 
 
 def _leaf_root(kind: str) -> str:
-    dirname, document, _tag = VECTORS[kind]
-    return f"{_ROOT}/{dirname}/🧪️tests/{fixture}"
+    dirname, fixture, _tag = VECTORS[kind]
+    return f"{_ROOT}/{dirname}/{fixture}"
 
 
 def _read_json(ctx: Context, uri: str):

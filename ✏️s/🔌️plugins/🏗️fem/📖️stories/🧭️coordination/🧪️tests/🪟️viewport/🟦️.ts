@@ -3,7 +3,7 @@ import Ajv from "ajv/dist/2020.js";
 import { applyPatch } from "fast-json-patch";
 import orbitSchema from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🔣️.json";
 import rendererGestures from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json";
-import { buildFem3dSceneNode, fem2dStoryStateFor, fem3dStoryStateFor, reduceFem2dStoryAction, reduceFem3dStoryAction } from "../../🧫️fixtures/🧫️scene/🟦️.ts";
+import { buildFem3dSceneNode, fem2dStoryStateFor, fem3dStoryStateFor, reduceFem2dStoryAction, reduceFem3dStoryAction } from "../../🟦️.ts";
 
 test("story window ownership admits and echoes the renderer's closed orbit pose", () => {
   const initial = fem3dStoryStateFor("demo", "de-DE");

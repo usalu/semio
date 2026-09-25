@@ -9,7 +9,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { referenceMediaKindFromUrl, referenceMediaPort } from "@semio-tech/ui-react";
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { decodeReferenceImage, referenceImageSourceDimensions, streamReferenceImageBitmapRows } from "../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts";
-import decodeFixture from "../../../📺️renderer/🧑‍🎨engine/🧫️fixtures/🖼️reference-image-decode/🔣️.json";
 
 import sketchUrl from "../../🖼️assets/✏️sketch/🖼️.png";
 import abbauAufbauUrl from "../../🖼️assets/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
@@ -18,6 +17,10 @@ import sitePdfUrl from "../../🖼️assets/🗺️site.pdf?url";
 
 //#region StoryHost
 type StoryReferenceMediaStatus = "loading" | "loaded" | "error";
+
+/** ⚖️ The story's own readout budget: how many pixels it samples and the channel deltas it reports as agreement. The
+ * renderer's reference-image-decode test holds the decoder to its committed oracle; this page only shows the parity live. */
+const PARITY_READOUT = { sampleCapacity: 4096, meanChannelDeltaMax: 4, maxChannelDeltaMax: 48 } as const;
 
 /** @emoji 🖼️ Loads one `infinite/fixture/*` file through the real `referenceMediaPort`, then blits the resolved texture's backing image/canvas onto a plain 2D canvas for display. */
 function ReferenceMediaPreview({ label, url, page }: { readonly label: string; readonly url: string; readonly page?: number }): ReactElement {
@@ -110,7 +113,7 @@ async function compareReferenceDecode(bytes: Uint8Array<ArrayBuffer>): Promise<s
       context.globalCompositeOperation = "copy";
       context.drawImage(react.texture.image as CanvasImageSource, 0, 0, decoded.width, decoded.height);
       const expected = context.getImageData(0, 0, decoded.width, decoded.height, { colorSpace: "srgb" }).data;
-      const stride = Math.max(4, Math.floor(expected.length / decodeFixture.oracle.sampleCapacity / 4) * 4);
+      const stride = Math.max(4, Math.floor(expected.length / PARITY_READOUT.sampleCapacity / 4) * 4);
       let samples = 0;
       let sum = 0;
       let max = 0;
@@ -127,7 +130,7 @@ async function compareReferenceDecode(bytes: Uint8Array<ArrayBuffer>): Promise<s
         return true;
       }, () => true, async () => Promise.resolve());
       const mean = sum / samples;
-      return mean <= decodeFixture.oracle.meanChannelDeltaMax && max <= decodeFixture.oracle.maxChannelDeltaMax ? `passed:${decoded.width}x${decoded.height}:mean=${mean.toFixed(3)}:max=${max}` : `failed:mean=${mean.toFixed(3)}:max=${max}`;
+      return mean <= PARITY_READOUT.meanChannelDeltaMax && max <= PARITY_READOUT.maxChannelDeltaMax ? `passed:${decoded.width}x${decoded.height}:mean=${mean.toFixed(3)}:max=${max}` : `failed:mean=${mean.toFixed(3)}:max=${max}`;
     } finally {
       decoded.close();
       react.texture.dispose();

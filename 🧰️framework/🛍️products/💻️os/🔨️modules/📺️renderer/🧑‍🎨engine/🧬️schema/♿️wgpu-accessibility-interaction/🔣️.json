@@ -6,11 +6,22 @@
     "schema": { "const": "semio.renderer.wgpu.accessibility-interaction.v1" },
     "presentedChrome": {
       "type": "object",
-      "required": ["firstEpoch", "successorEpoch", "controls"],
+      "required": ["firstEpoch", "successorEpoch", "controls", "generationRule"],
       "properties": {
         "firstEpoch": { "type": "integer", "minimum": 1 },
         "successorEpoch": { "type": "integer", "minimum": 1 },
-        "controls": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/namedId" } }
+        "controls": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/namedId" } },
+        "generationRule": {
+          "type": "object",
+          "required": ["controlId", "firstRect", "sameChromeRect", "changedChromeRect"],
+          "properties": {
+            "controlId": { "type": "string", "minLength": 1 },
+            "firstRect": { "$ref": "#/$defs/rect" },
+            "sameChromeRect": { "$ref": "#/$defs/rect" },
+            "changedChromeRect": { "$ref": "#/$defs/rect" }
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },
@@ -27,6 +38,7 @@
     }
   },
   "$defs": {
+    "rect": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" } },
     "namedId": {
       "type": "object",
       "required": ["id", "label"],

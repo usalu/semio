@@ -1,0 +1,10 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { loadCatalogTaxonomy } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { frozenCoordinateEvidenceCoordinates } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+const root = "/Users/ueli/Documents/semio";
+const contracts = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts;
+const contract = contracts["cad-draw-projection-vectors-v1"]!;
+const rows = frozenCoordinateEvidenceCoordinates(contract.path, readFileSync(join(root, contract.path)), contracts)!;
+const counts = { source: rows.filter((row) => row.kind === "source").length, destination: rows.filter((row) => row.kind === "destination").length };
+console.log(JSON.stringify(counts));

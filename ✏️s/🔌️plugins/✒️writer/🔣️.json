@@ -299,11 +299,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -3876,7 +3876,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "writer.document",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -4089,8 +4089,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "b7918ff0bd75f955044b8d5270b5d60b01ad6545be85c53ef6a16e8ac1c18bbe",
-    "coreWasmSha256": "6cd05934a69551caed6d51eb79f3ce29adf599ab920e9c3d6a4a825ce2246092",
-    "descriptorSha256": "571609b4fbfe6909e45a04388af650306df430899e6d1d4d9995556d2e9d97bb"
+    "wasmSha256": "1d89ed66d796a0e992b82186b7cc1dd2b3d7f6869db71e24c7ca70ffde0d90e0",
+    "coreWasmSha256": "9a597e4d0c7a511d09c9d059809996dba2fb7d139ee400cca900fc72eca91a6d",
+    "descriptorSha256": "45ac23ad2d2b73bd37ec7880b3766c2ae55986cc43c93ab8c7c4dc75f830bdac"
   }
 }

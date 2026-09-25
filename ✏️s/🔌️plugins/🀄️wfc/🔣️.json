@@ -4285,7 +4285,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "s.wfc.bitmap",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -5435,7 +5435,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "s.wfc.bitmap",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -9853,7 +9853,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "s.wfc.grid2d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -11232,7 +11232,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "s.wfc.grid2d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -16861,7 +16861,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "s.wfc.wfc2d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -17974,7 +17974,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "s.wfc.wfc2d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -23505,7 +23505,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "s.wfc.grid3d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -24618,7 +24618,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "s.wfc.grid3d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -30261,7 +30261,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "s.wfc.wfc3d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -31375,7 +31375,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "s.wfc.wfc3d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -32115,8 +32115,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "8372675514205127cc41356fc7def7b50a4fe87d86e3a85682cc6bee77847672",
-    "coreWasmSha256": "f35b3a62cb02cd69ed6b054469c6f8be3103f8c2f2aea17fbb99820142a04562",
-    "descriptorSha256": "3781bac8a3a4662b5c83258842a5d057f93bad5b9e0aaf963eb179136a81b907"
+    "wasmSha256": "901c06ab6772695d4c75ede96a2114bd79b0800996bea37670be13c1674a26cf",
+    "coreWasmSha256": "e6dc4fbbc22f58b50a18df6f8172c614fb916115edf1a67bf486d3dca56940b2",
+    "descriptorSha256": "c0ef68ca2152d715ee3e647d95605c3ad420e65d922491a46ad523bf9103793e"
   }
 }

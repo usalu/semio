@@ -300,11 +300,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -3395,7 +3395,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "block.2d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -3704,11 +3704,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -7491,7 +7491,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "block.3d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -7800,11 +7800,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -8427,11 +8427,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -11439,7 +11439,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "block.5d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -11857,8 +11857,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "68466cac901ff45c8dcd349306f25b562df75e42edac61bd06c61966a3fedb02",
-    "coreWasmSha256": "e89ce164f63931e6024c3ae558934caa7884364d2b369375f21364cfcf6f9962",
-    "descriptorSha256": "5ed116276a0ec6b198f7f67177d647cc62f70660f2220a7f2b9faf322ca958d7"
+    "wasmSha256": "4146fa0afe2bba7b10a6be96812109a2b58818b02810e4101f0e76fbdcd944fa",
+    "coreWasmSha256": "48c72afaa09a593d8dd786a593475af263845d51df01161ccb8edd396006c7fb",
+    "descriptorSha256": "cb44901e48c9f43c2e60225e44673b2d0446a47d6f75bf1ab55de7314231ee97"
   }
 }

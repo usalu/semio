@@ -10,15 +10,16 @@ Slice: H9 (session 11). Ports: hubs 8010–8019, serves 6510–6519. Private car
 | 1a | `gis_map_abandoned_pre_witness…` flake root cause | DONE: root cause = the Preflight commit turn was the only turn that did not yield, so the approval could race through assembly, journal and publication inside one manual poll; the law then saw the test publisher's injected attempt-0 `Storage`. Fix: `Preflight` yields like every other turn. Before: 1/1000 alone, 6/3000 under load. After: **0/3000** under load (see Item 1a) |
 | 2 | Store writes that can fail (O2-5b) | DONE: verified already fixed (W3d); one silent caller fixed (agent-delegation revoke → `503 directory-unavailable`); law `credential_sign_in_reports_a_failing_instance_session_store` **PASS** |
 | 3 | Declared authorization (O2-10) | DONE: one schema-first policy (`HubAccessPolicyV1`), one authority `hub_access_permits`, every hub gate routed through it; Rust laws **2/2** (113 vectors) + TS/Ajv **2/2**; removed member → 403 on the live job and `authority-changed` on the running Check In |
-| 4 | db gates (in-process `--lib` + nextest) | DONE: root cause found + fixed. In-process `--lib` failed 2 of 4 runs under load (19 and 1 failures); cause = lost wake in artifact-runner retirement (see Item 4). After fix: in-process **705/705 ×6**, nextest **705/705** |
+| 4 | db gates (in-process `--lib` + nextest) | PARTIAL: the retirement-hook lost wake was found and fixed (deterministic law). nextest **705/705**. Plain in-process runs still flake under load from a separate, pre-existing cause (backend-control retirement starvation on the shared test pool; see the Item g note), so the earlier "6/6 in-process" was not proof |
 | 5 | Observability live leg (document socket open/close + presence in two-client e2e) | DONE: two-client e2e on my hub **:8010** (W2's binary, catalog A copy in `wp-h9/catalog-a`, own temp data root) **2/2 PASS** in 347 s; 27 trace lines Ajv-valid + declared; document socket open (`upgrade`, ok) / close (`closed`, cancelled) share `requestId r000000000011`; presence join 2 / leave 2 / expiry 1; `server.shutdown:ok` (`generated/two-client-sqlite-1.txt`, `two-client-sqlite-receipt.json`) |
 | 6 | Gates: hub quick + long, os-hub-ts vitest, pg/neo4j | DONE: hub nextest `long` **346/346** (1 skipped), `quick` **337/337** (10 skipped), `os-hub-ts` vitest **19 passed / 2 skipped** (5 files), live WAL-writer fence sqlite/postgres/neo4j **3/3**, directory live lanes postgres **12/12**, neo4j **7/7**, corpus 6/6 (inside the all-features run) |
-| a | P0-1 creation law on a real genesis-capable guest; DB4 document lane pg/neo4j | PARTIAL: **P1-1 verified stale** (live: my e2e created and co-edited an `s.note.note` document — note is not in the native provider table — on catalog A via its guest codec; unlinked packages get an empty native closure). No hardcoded gate blocks a kind (the only literal fence is W2's `local-stdio-gis-open-v1` profile-id check, which only constrains a profile of that exact id). **P0-1 BLOCKED:** a real genesis-capable guest from this tree does not exist yet. My 14-export ABI means the 09-24 release components are refused; the only current-tree GIS component is the 226 MB dev build (03:11), too heavy to compile inside a debug unit law. It needs W2's `component-release` rebuild. The DB4 pg/neo4j document lane is blocked the same way (needs a current-tree catalog plus a pg/neo4j binary) |
+| a | P0-1 creation law on a real genesis-capable guest; DB4 document lane pg/neo4j | **P0-1 DONE**: `space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_backed` now runs genesis on the GIS plugin's real release component built from this tree (`verified_gis_map_release_profile`; nx `test-all-features` depends on `@semio-tech/gis-plugin:component-release`) and **PASSES in-process on sqlite** (208 s, moved to `long`). P1-1 verified stale. DB4 document lane pg/neo4j: running in the growth e2e (Item g) |
 | b | P2-2 `Database::shutdown` on every exit path; restart < 1 s on all backends | PARTIAL: code DONE (every exit after `connect_db` closes the database, see Item b). Live, db level: WAL-writer fence `release-admits-contender` + `process-exit-releases` **3/3 backends**. Live, hub level sqlite: SIGTERM→exit **298 ms**, close code 1012, `server.shutdown:ok database=closed`, reopen on the first attempt. Hub-level pg/neo4j restart probe needs a current-tree catalog (same block as a) |
 | c | P2-1 `HubSagas` decision (real saga or delete) | DECIDED — keep the drain, empty saga set (see Item c) |
+| g | Writes refused once a document grows (~20 map edits, even after restart; C10) | DONE (root causes + laws), live e2e running: three stacked bounds in the db engine, see Item g |
 | d | P2-4 hub suite with postgres/neo4j features (live-database-lanes) full count | DONE: `cargo test -p semio-hub --all-features` full count **372/375** (lib 225/227, bin 147/148; Docker live lanes included). Fixed in this pass: approval retry 409 (Item d), trusted-publication crash law ENOTDIR (Item d). Remaining 3: the P0-1 creation law (blocked, row a) and 2 trusted-catalog laws that pass alone but race on the process-wide codec registry in-process (W2's area, already flagged in `wp-w2.md` §2.1) |
-| e | Local-bootstrap pipe: 64 exchanges per run, then the hub exits (W2) | DONE (law): the replay set is now bounded per 15 s validity window, and every per-request refusal is answered with a signed `reject` — see Item e |
-| f | A hub still loading its catalog ignores pipe EOF (W2) | DONE (law): a pump owns the pipe from hello onward and raises `closed` on EOF; startup cancels the catalog load and exits cleanly — see Item e |
+| e | Local-bootstrap pipe: 64 exchanges per run, then the hub exits (W2) | DONE (law + live): the replay set is bounded per 15 s window, and every refusal is a signed answer. Live on this tree's binary + catalog B: a 70-exchange burst in 145 ms → **64 issued, 6 `resource-limit`**; the hub stays up (`/readyz` 200) and issues again after the window. See Item e |
+| f | A hub still loading its catalog ignores pipe EOF (W2) | DONE (law + live): a loading hub with pipe EOF → **exit 0 in 70 ms**, `server.shutdown cancelled launcher-closed-during-catalog-load database=unopened` (catalog B, this tree's binary). See Item e |
 
 ## Landing (guest ABI, 00:56 → 01:13)
 
@@ -228,6 +229,74 @@ under the membership fence, so there is no multi-step saga to run. Recorded on t
   A manifest-level kind must equal its app's dialect, and dialects must be canonical `s.…`. The three Check In laws
   therefore moved onto the verified GIS Map profile (`check_in_map_edits`), under `integration-fixtures`. All 3 pass
   again, and the `check-in-check` native phase now builds with `integration-fixtures`.
+
+## Item g — "hub refuses every change once a document grows" (C10)
+
+Reproduced in `db` with `a_document_keeps_accepting_edits_as_it_grows_across_restart` (fs storage, `Profile::Prod`,
+400 edits × 24 KB, full shutdown + reopen, 60 more). It hit three independent bounds in turn:
+
+1. **Index runs outgrew one operation (edit 11).**
+   - `db_index` decoded a run into one page writer *per key and per value*, all charged to the run's read operation.
+     The per-operation credit is 16 controls and 64 pages, so a run of ≥ 8 entries could not be loaded.
+   - The auto-merge always folded the two oldest runs, so the oldest run grew by one entry per edit.
+   - Every submit records into the command, inverse, actor-seq and frontier indexes, so once any run reached 8 entries
+     the document refused every write: `DB I/O aggregate admission exhausted`. The run is durable, so a restart hit the
+     same wall at once.
+   - **Fix:** runs are read *in place* (`RunView`: byte ranges over the run's own pages; one read costs its pages, never
+     a page per entry). Merges copy key/value bytes straight from the source pages (`encode_run_from_views`).
+   - A merge never grows a run past `MAX_RUN_ENTRIES`. It takes the oldest adjacent pair among the newest
+     `max_runs_before_merge + 1` runs whose entries fit one run, and tombstones are dropped only with the oldest run.
+     This is crash-safe (write older, then delete newer), so full runs simply accumulate.
+   - `get` is a binary search in place. `FrontierIndex::latest`, `ActorSeqIndex::latest_for_actor` and
+     `ProjectionIndex::latest_at_or_before` use the new newest-first `last_live_in_range` instead of materializing
+     every entry. `scan_prefix` streams and materializes only live matches.
+   - Run pages are closed to the arena instead of being parked as lost owners.
+2. **The version graph saturated at 64 edits.**
+   - `VcsVersionGraph` (the in-memory per-document hash history the commit pipeline feeds) is an `ArtifactStore` with
+     the fixed 64-edit ledger, and nothing compacted it. Edit 64 failed with `edit history ledger is saturated`, and it
+     failed *after* the WAL append.
+   - **Fix:** a bounded window. When the ledger is full, the graph folds into one checkpoint, retires the store to its
+     terminal witness (driven by progress) and continues on a fresh store from the folded hash. `head` falls back to
+     the folded checkpoint.
+3. **Replaced state values were never retired (edit ~123).**
+   - `DocumentState::apply_entries` parks every replaced or removed value in the global retirement slots, but
+     `artifact_state_retirement_maintenance_step` was only ever called by tests.
+   - Each parked value keeps its own I/O operation (128 per process), so after about 125 overwrites across all
+     documents, every write in the process was refused: `DB I/O process aggregate credit exhausted`.
+   - **Fix:** every state apply drives the retirements until nothing is parked.
+
+4. **The window rollover itself must not run inside one commit turn.**
+   - The first live growth e2e (sqlite, postgres and neo4j alike) stopped acknowledging at the 65th edit: no Ack, no
+     error.
+   - A hub law, `a_document_socket_keeps_acknowledging_commands_as_its_document_grows` (150 chained commands over one
+     live socket), reproduced it in 3 of 4 runs.
+   - The backtrace showed the artifact runner dropping the commit turn while `roll_window_when_full` held a
+     half-closed store (about 5 000 close steps). The store's Drop assertion then panicked on a pool worker.
+   - **Fix:** the folded store is handed to its `VcsStoreCell` (`retiring`). Each later change advances it by at most
+     256 close steps, and shutdown drains the rest. Nothing is held by a droppable future.
+   - New vcs law `vcs_graph_rolls_full_windows_and_retires_them_in_bounded_steps` (3 × 64 changes, head answered,
+     bounded shutdown).
+   - The two vcs laws that claim the process-global admission now take the suite's `TEST_LOCK`.
+
+**Measured:**
+- db growth law, fs: **passes** (400 + 60 edits across restart, 430 s in a debug build, about 0.7–1 s per edit from
+  the first edit, so it is not growing).
+- db growth law, sqlite (150 edits): **passes**.
+- Both db growth laws are in `long`.
+- vcs laws **13/13**.
+- Index laws 30/30.
+- db nextest (non-long) **706/706**.
+- Hub socket growth law: **8 runs, 0 panics**; 5 completed (**5/5 pass**) and 3 were cut by my own 110 s bound under
+  load 26 (84–113 s each).
+- Hub nextest `long` **355/355**, including the growth law, and `quick` **345/345** (17:16–17:19).
+- Live: the two-client e2e now grows its note document with 300 × 16 KB chained edits before the SIGTERM restart and
+  30 after it, on sqlite, postgres and neo4j (rerun on the fixed binary, running).
+
+**Open, pre-existing:** plain in-process `cargo test -p …-db --lib` still flakes under load — 4 of 6 runs this
+afternoon, and also with my state-retirement drain disabled (bisect). Every failure is `db I/O backend control capacity
+exhausted` (64 backends per process, retired by maintenance on the shared 2-worker test pool). This morning's
+19-failure cascade had the same failing-law set, so my earlier "6/6 after the retirement fix" was a lucky streak, not
+proof of that fix. nextest (one process per law) is unaffected.
 
 ## Log
 - 00:56 landing row announced; 01:13 all native + wasm32 checks green (`generated/abi-*.txt`).

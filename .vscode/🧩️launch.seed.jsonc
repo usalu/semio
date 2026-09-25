@@ -3324,6 +3324,17 @@
       }
     },
     {
+      "name": "🧹clean🧩️taxonomy🧪️artifact-source-residue",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-artifact-source-residue --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.194
+      }
+    },
+    {
       "name": "🧹clean🧩️taxonomy🔖️readme-current-source-revision",
       "type": "node-terminal",
       "request": "launch",
@@ -3343,6 +3354,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 410.197
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️artifact-source-commit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-artifact-source-commit --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.198
       }
     },
     {

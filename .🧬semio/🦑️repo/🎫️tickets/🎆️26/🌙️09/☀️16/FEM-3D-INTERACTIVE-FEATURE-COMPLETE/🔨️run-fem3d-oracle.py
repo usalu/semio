@@ -91,7 +91,7 @@ def run_case(name):
     print("== %s (%d scenarios)" % (name, len(scenarios)))
     for scenario_id, names in scenarios:
         fixtures = [("shared://" + name + "/" + fixture, os.path.relpath(os.path.join(SUBSETS, "📈️analysis", "🧫️fixtures", name, fixture), REPO)) for fixture in names]
-        handler = adapter.handler(scenario_id, "oracle")
+        handler = adapter.handler({"id": scenario_id}, "oracle")
         if handler is None:
             failures.append((scenario_id, "no oracle handler is registered"))
             continue

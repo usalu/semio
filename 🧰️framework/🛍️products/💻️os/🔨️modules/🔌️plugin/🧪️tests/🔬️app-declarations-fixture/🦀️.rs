@@ -332,6 +332,14 @@ pub(crate) mod fixture {
         artifact_app_laws::assert_declaration_tree_registers_all("testkit", build_declaration()).await;
     }
 
+    #[test]
+    fn every_declared_surface_names_the_schema_it_opens() {
+        let projected = project_artifact_declarations(&[build_declaration()]);
+        let opened: Vec<(AppRole, &str)> = projected.app_defs.iter().map(|(app, _)| (app.definition.role, app.definition.io.artifact_schema.as_str())).collect();
+        let expected: Vec<(AppRole, &str)> = ["semio.testkit.w1c-fixture.std1-any/v1", "semio.testkit.w1c-fixture.std1-strict/v1", "semio.testkit.w1c-fixture.std2-any/v1"].into_iter().flat_map(|schema| [(AppRole::Editor, schema), (AppRole::Viewer, schema)]).collect();
+        assert_eq!(opened, expected);
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn a_conflicting_declaration_leaves_zero_rows_behind() {
         let mut invalid = build_declaration();

@@ -125,7 +125,7 @@ async fn artifact_authority_drop_transfers_parked_terminal_job_to_registered_clo
     authority.handoff.driver.store(ArtifactRunnerDriver::Parked as u8, std::sync::atomic::Ordering::Release);
     *authority.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) =
         Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, Box::new(|| panic!("parked terminal job must be retired, not executed after authority Drop"))));
-    let done = authority._done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("artifact retirement fixture owns its exact terminal acknowledgement");
+    let done = authority.take_terminal_signal().expect("artifact retirement fixture owns its exact terminal acknowledgement");
     let retirement = authority.retirement.as_ref().expect("artifact retirement fixture owns its reservation");
     let (index, generation) = (retirement.index, retirement.generation);
     let handoff = authority.handoff.clone();
@@ -237,7 +237,7 @@ async fn artifact_engine_close_fault_retries_on_bounded_timer_backoff_until_term
     let handoff = authority.handoff.clone();
     let retirement = authority.retirement.as_ref().expect("artifact engine close-fault fixture owns one retirement reservation");
     let (index, generation) = (retirement.index, retirement.generation);
-    let done = authority._done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("artifact engine close-fault fixture owns its terminal acknowledgement");
+    let done = authority.take_terminal_signal().expect("artifact engine close-fault fixture owns its terminal acknowledgement");
     handoff.close_faults.store(3, std::sync::atomic::Ordering::Release);
     drop(authority);
     done.await.expect("the pool timer did not drive the faulted close to its terminal acknowledgement");
@@ -257,7 +257,7 @@ async fn artifact_engine_close_fault_exhausts_its_budget_then_polls_only_on_read
     let handoff = authority.handoff.clone();
     let retirement = authority.retirement.as_ref().expect("artifact engine close-fault fixture owns one retirement reservation");
     let (index, generation) = (retirement.index, retirement.generation);
-    let done = authority._done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("artifact engine close-fault fixture owns its terminal acknowledgement");
+    let done = authority.take_terminal_signal().expect("artifact engine close-fault fixture owns its terminal acknowledgement");
     handoff.close_faults.store(usize::MAX, std::sync::atomic::Ordering::Release);
     drop(authority);
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
@@ -291,7 +291,7 @@ async fn artifact_engine_close_fault_cancel_stops_the_timer_until_readmission() 
     let handoff = authority.handoff.clone();
     let retirement = authority.retirement.as_ref().expect("artifact engine close-fault fixture owns one retirement reservation");
     let (index, generation) = (retirement.index, retirement.generation);
-    let done = authority._done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("artifact engine close-fault fixture owns its terminal acknowledgement");
+    let done = authority.take_terminal_signal().expect("artifact engine close-fault fixture owns its terminal acknowledgement");
     handoff.close_faults.store(usize::MAX, std::sync::atomic::Ordering::Release);
     drop(authority);
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);

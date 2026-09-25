@@ -40,3 +40,56 @@ async fn sequence_carrier_contracts_match_the_json_oracle() {
         assert_eq!(decoded, inferred);
     }
 }
+
+/// 📤️ The subset's real JSON export of `snapshot`, read back with serde_json.
+async fn exported_carrier(snapshot: &SequenceSnapshot) -> serde_json::Value {
+    let IoPayload::Binary(bytes) = export::json::v_rfc8259::any::SequenceIntoJson::serialize(snapshot).await.expect("json export").value else { panic!("binary json export") };
+    serde_json::from_slice(&bytes).expect("the export parses in serde_json")
+}
+
+/// 🧩️ The committed serde_json carrier pairs (`🪜️step`/`🔗️dependency` `🧫️fixtures/<kind>/`), written by the
+/// standalone `🏭️generator/🧩️json` engine, are held against this subset's REAL `{schema, steps, edges}`
+/// export: each kind the CSV carrier cannot see is derived from what the pair changed, applied, exported
+/// through `SequenceIntoJson` and read back with serde_json, and must equal the committed after-carrier;
+/// its own inverse must export back to the before-carrier. The leaf vectors pin only the guard branches
+/// (a content-changing diff mints a hash-addressed child handle no fixture can author), so these pairs are
+/// where the applied branch of all four kinds is observed.
+#[semio_framework_async_macros::async_test]
+async fn the_json_carrier_pairs_hold_the_kinds_the_csv_carrier_cannot_see() {
+    use crate::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
+    let pairs = [
+        ("move-step", include_str!("../../../../🪜️step/🧫️fixtures/📍️move-step/⬅️before.json"), include_str!("../../../../🪜️step/🧫️fixtures/📍️move-step/➡️after.json")),
+        ("change-step-collapsed", include_str!("../../../../🪜️step/🧫️fixtures/🗂️change-step-collapsed/⬅️before.json"), include_str!("../../../../🪜️step/🧫️fixtures/🗂️change-step-collapsed/➡️after.json")),
+        ("connect-steps", include_str!("../../../../🔗️dependency/🧫️fixtures/🔗️connect-steps/⬅️before.json"), include_str!("../../../../🔗️dependency/🧫️fixtures/🔗️connect-steps/➡️after.json")),
+        ("disconnect-steps", include_str!("../../../../🔗️dependency/🧫️fixtures/✂️disconnect-steps/⬅️before.json"), include_str!("../../../../🔗️dependency/🧫️fixtures/✂️disconnect-steps/➡️after.json")),
+    ];
+    let carrier = |text: &str| -> serde_json::Value { serde_json::from_str(text).expect("committed carrier parses in serde_json") };
+    for (kind, before_text, after_text) in pairs {
+        let (before, after) = (carrier(before_text), carrier(after_text));
+        let steps = |value: &serde_json::Value| value["steps"].as_array().expect("steps").clone();
+        let edges = |value: &serde_json::Value| value["edges"].as_array().expect("edges").clone();
+        let payload = match kind {
+            "move-step" | "change-step-collapsed" => {
+                let moved = steps(&after).into_iter().zip(steps(&before)).find(|(now, was)| now != was).expect("the pair changes one step").0;
+                match kind {
+                    "move-step" => serde_json::json!({"mutation": "moveStep", "id": moved["id"], "x": moved["x"], "y": moved["y"]}),
+                    _ => serde_json::json!({"mutation": "changeStepCollapsed", "id": moved["id"], "collapsed": moved["collapsed"]}),
+                }
+            }
+            "connect-steps" => {
+                let edge = edges(&after).into_iter().find(|edge| !edges(&before).contains(edge)).expect("the pair adds one edge");
+                serde_json::json!({"mutation": "connectSteps", "id": edge["id"], "from": edge["from"], "to": edge["to"]})
+            }
+            _ => {
+                let edge = edges(&before).into_iter().find(|edge| !edges(&after).contains(edge)).expect("the pair removes one edge");
+                serde_json::json!({"mutation": "disconnectSteps", "id": edge["id"]})
+            }
+        };
+        let mutation: SequenceMutation = pack::from_json_str(&payload.to_string()).unwrap_or_else(|error| panic!("{kind}: derived payload decodes: {error:?}"));
+        let base = SequenceSnapshot::from_host_snapshot(pack::from_json_str::<SequenceHostSnapshot>(before_text).expect("before-carrier decodes"));
+        let applied = apply_sequence_mutation(&base, &mutation).unwrap_or_else(|error| panic!("{kind}: applies: {error:?}"));
+        assert_eq!(exported_carrier(&applied).await, after, "{kind}: the exported carrier after the mutation differs from the committed after-carrier");
+        let undone = inverse_sequence_mutation(&base, &mutation).iter().fold(applied, |current, step| apply_sequence_mutation(&current, step).unwrap_or_else(|error| panic!("{kind}: inverse step applies: {error:?}")));
+        assert_eq!(exported_carrier(&undone).await, before, "{kind}: the exported carrier after the inverse differs from the committed before-carrier");
+    }
+}

@@ -10633,7 +10633,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "remodeling.scene",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -10987,8 +10987,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "89184d3c42d3ac37a47001e02e34c52f8ffa58b04ef75e6638a929146e072243",
-    "coreWasmSha256": "c97104a9d721f2817785bfe4736a644be9a62e2753cd1daf27fba94b35c85496",
-    "descriptorSha256": "94b7ffb9f91b4a61e6c8ddd841b0b6a25f1ac0230fe90275099758a8a51af916"
+    "wasmSha256": "a57f279d250b985a14f8416533a3b798a93fa1d5f2876fbe5bcb1c88ae6a5878",
+    "coreWasmSha256": "f235596bdc9d12c03b40057e479aa6ad6dc0508fd75c81a74ddddab5bee7581f",
+    "descriptorSha256": "c387cc6478f7179cd303d6f892ece4ce66bdaf552d65894cab996e522662fd43"
   }
 }

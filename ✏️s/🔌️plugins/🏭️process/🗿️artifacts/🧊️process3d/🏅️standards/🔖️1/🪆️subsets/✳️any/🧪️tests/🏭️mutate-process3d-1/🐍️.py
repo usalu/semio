@@ -60,7 +60,7 @@ VECTORS = {
 
 
 def _read_json(ctx: Context, root: str, fixture: str, leaf: str):
-    return json.loads(ctx.fixture_bytes(f"{_ROOT}/{root}/🧪️tests/{fixture}/{leaf}/🔣️.json"))
+    return json.loads(ctx.fixture_bytes(f"{_ROOT}/{root}/{fixture}/{leaf}/🔣️.json"))
 # endregion 🔖️Fixtures
 
 

@@ -207,6 +207,8 @@ fn db_io_operation_slot(ledger: &DbIoOperationLedger, operation: u64) -> Option<
     ledger.slots.iter().position(|slot| slot.operation == operation && slot.generation != 0)
 }
 
+static DEBUG_RESERVE_SITES: std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<u64, String>>> = std::sync::LazyLock::new(Default::default);
+
 fn db_io_operation_reserve(initial: DbIoCredit) -> Result<u64, DbError> {
     if !db_io_credit_within_limits(initial, false) {
         return Err(DbError::LimitExceeded("db_io operation aggregate credit"));
@@ -214,6 +216,17 @@ fn db_io_operation_reserve(initial: DbIoCredit) -> Result<u64, DbError> {
     let mut ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let totals = ledger.totals.checked_add(initial).ok_or(DbError::LimitExceeded("db_io process aggregate credit"))?;
     if ledger.free_len == 0 || ledger.next_operation == u64::MAX || ledger.next_generation == u64::MAX || !db_io_credit_within_limits(totals, true) {
+        eprintln!("[DEBUG] reserve refused free_len={} totals={:?} initial={:?} limits pages={} bytes={} items={} controls={}", ledger.free_len, ledger.totals, initial, DB_IO_TOTAL_PAGES, DB_IO_PROCESS_BYTES, DB_IO_PROCESS_ITEM_CREDIT, DB_IO_PROCESS_CONTROL_CREDIT);
+        let sites = DEBUG_RESERVE_SITES.lock().unwrap();
+        let mut shown = std::collections::BTreeSet::new();
+        for slot in ledger.slots.iter().filter(|slot| slot.generation != 0) {
+            eprintln!("[DEBUG]   slot op={} backend={} task={} leases={} live={:?}", slot.operation, slot.backend_owner, slot.task_attached, slot.result_leases, slot.live);
+            if shown.insert((slot.live.pages, slot.backend_owner)) {
+                if let Some(site) = sites.get(&slot.operation) {
+                    eprintln!("[DEBUG]   site for op={}:\n{}", slot.operation, site);
+                }
+            }
+        }
         return Err(DbError::Unavailable("DB I/O process aggregate credit exhausted".to_string()));
     }
     let slot = ledger.free[ledger.free_read];
@@ -221,6 +234,7 @@ fn db_io_operation_reserve(initial: DbIoCredit) -> Result<u64, DbError> {
     ledger.free_len -= 1;
     let operation = ledger.next_operation;
     ledger.next_operation += 1;
+    DEBUG_RESERVE_SITES.lock().unwrap().insert(operation, std::backtrace::Backtrace::force_capture().to_string());
     let generation = ledger.next_generation;
     ledger.next_generation += 1;
     ledger.slots[slot as usize] = DbIoOperationCreditSlot { generation, operation, live: initial, result_leases: 0, task_attached: false, backend_owner: false, #[cfg(test)] owner: DB_IO_LEDGER_OWNER.with(std::cell::Cell::get) };
@@ -257,7 +271,6 @@ fn db_io_operation_add(operation: u64, credit: DbIoCredit) -> Result<(), DbError
     let operation_total = ledger.slots[index].live.checked_add(credit).ok_or(DbError::LimitExceeded("db_io operation aggregate credit"))?;
     let process_total = ledger.totals.checked_add(credit).ok_or(DbError::LimitExceeded("db_io process aggregate credit"))?;
     if !db_io_credit_within_limits(operation_total, false) || !db_io_credit_within_limits(process_total, true) {
-        eprintln!("[DEBUG] h9 db_io add refused op={operation_total:?} process={process_total:?} credit={credit:?} bt={}", std::backtrace::Backtrace::force_capture());
         return Err(DbError::Unavailable("DB I/O aggregate admission exhausted".to_string()));
     }
     ledger.slots[index].live = operation_total;

@@ -19,7 +19,12 @@ Status legend: **measured** = ran here, capture named; **unverified** = read fro
 | 5 | UX bar: WCAG default light palette, en/de chrome, keyboard, mobile/tablet, persisted customization | **measured**: palettes AA (8 pairs fixed, both themes, both appearances); Marketplace/recovery chrome localized + lint now scans the shell elements; Tab traversal restored (0 → 18 stops), chip focus ring, focus moves into an opened program; phone/tablet usable, no horizontal scroll; appearance persists across reload | §5 |
 | 6 | re-run full matrix after W2 full restage | **measured** on the 05:58 restage: en 60/75, de 60/75, viewers 67/70, S3 probe 5/5, refused de ✓ | §6 |
 | 7 | option (a): trusted plugin module bundle — schema, hub routes, bootstrap, hub `PluginSource`, live proof | **measured live** on S15's hub 8040 (stdio+gis+note v3 catalog built by the bootstrap from this tree): note absent locally → opening a new hub note installs note from the hub (24.5 MB verified with progress) → opens → addBlock/undo/redo ✓; a later session on the same device installs from the device (0 network bytes, 12/12 module requests from the HTTP cache). Laws green (Rust 40/40 + 6, TS 36/36, kernel 89/89, quick 9/9). Found + fixed on the way: install-then-route read a stale plugin set. Canonical hub 7800 (W2's catalog B, published 11:44 with this step) serves 9 plugin modules, all 198 files re-verified by the shell's own verifier | §10 |
-| 8 | G10 §9: transient boot error (~1 s) on `s` boots | **root-caused + fixed + probe**: boot install unstamped → connect-time snapshot replayed as a hot-swap of the host plugin; stamped installs drop the replay. Probe 0/16 error frames (was 4/4 without the fix) | §11 |
+| 8 | G10 §9: transient boot error (~1 s) on `s` boots | **root-caused + fixed + probe**: boot install unstamped → connect-time snapshot replayed as a hot-swap of the host plugin; stamped installs drop the replay. Probe 0/16 error frames (was 4/4 without the fix); re-measured 17:3x on the current tree 0/8 | §11 |
+| 9 | durable local-first store for hub-installed plugin modules (Cache Storage + service worker, re-verify every load, persist, eviction/quota notices en/de, GC) | **measured live** on 8040: every hub program commits to the store; a later session loads from it with **0** hub files; an evicted 14.9 MB core is reinstalled alone with the en/de notice; a band cancel at 19.4/29.0 MB commits nothing; laws os **459/459** | §12, §13 |
+| 10 | design decision: a hub document's module is resolved by the serving catalog generation (hub programs `pluginId@bundleSha256`; staged module used only when byte-identical) | **measured live** on 8040 (catalog B) with STALE staging: draw, writer, note × en + de create → open → edit/undo/redo on the hub's module, **0** "document target changed"; identical staging → **local** (0 hub files); never staged → **hub**; later session → **store**. Laws: resolution fixture + Ajv/`node:crypto`, hub `extendsPluginId` 40/40, quick 12/12, engine 696/696. **7800 blocked** on W2's os-hub rebuild | §13 |
+| 11 | shell refused catalog kinds whose kind id ≠ dialect (`2d.drawing` → `s.draw.drawing`); probe kind picker | **fixed + laws**; kind picker lists catalog B's 12 kinds and creates draw/writer/note | §13 |
+| 12 | G10 4b / C10 F5: Space app index empty, `documents/index/socket-grants` 404 | **root-caused (3-link chain), host links fixed + laws** (space lane, full-history fold, index space fill; 0× 404 measured); guest link (index `space_id` never set → fold selects no space) **requested** from T12/W2 | §13 |
+| 13 | re-run the full matrix after T12's guest fixes and W2's restage | **waiting**: W2 restage3 materializing at 17:5x; 7800 proof chain armed (auto-runs when 7800 serves the new index) | §6, §13 |
 
 ## 0. Infrastructure (measured)
 
@@ -384,7 +389,20 @@ hub-only-plugin gap of §4.
 | `💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/{🟦️.ts,🧬️schema/🟦️.ts}` (new) | hub `PluginSource`; TS twin of the contract |
 | `💻️os/🧪️tests/🧩️plugin-module-bundle/🟦️.ts` (new), os vitest config | fixture + Ajv oracle + hub-source laws (36) |
 | `…/🧱️elements/🏛️ShellHost/🟦️.tsx`, `🛠️ShellHelpers/🟦️.tsx`, `🐚️Shell/🟦️.tsx` | local-first multiplex with the hub source; awaited acquisition under the install abort; byte progress band; stamped installs (boot race); ref advances with the upsert |
-| `…/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts` | +3 laws (boot stamp, progress text en/de, upsert) |
+| `…/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts` | +3 laws (boot stamp, progress text en/de, upsert); +4 (hub programs beside local ones + extension routing + invocation plugin id, space directory history, index opening space) |
+| **store (§12)** `💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/{🟦️.ts,🗄️store/🟦️.ts,👷️service-worker/🟦️.ts,🧬️schema/{🔣️.json,🟦️.ts},🧫️fixtures/🗄️store/🔣️.json}` | Cache Storage store + service worker, re-verify every load, locks, persist, notices, GC; `installProgram` (store / local / hub) |
+| `💻️os/🧪️tests/🗄️plugin-module-store/🟦️.ts` (new), os vitest config | store fixture replay + hub source flows incl. `installProgram` |
+| `🧑‍💻dev/🔌️vite-plugins/🟦️.ts`, `🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts`, `🧑‍💻dev/🚚️distribution/📇️layout.json` | `Service-Worker-Allowed: /` for the store worker; distribution row |
+| **resolution (§13)** `…/🌎️hub-source/🔍️resolution/🟦️.ts` (new), `…/🧫️fixtures/🔍️resolution/🔣️.json` (new), `💻️os/🧪️tests/🔍️plugin-module-resolution/🟦️.ts` (new) | hub program ids, staged roots, source decision, dialect owner, same-generation closure; law + oracles |
+| `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/{🧬️schema/{🔣️.json,🦀️.rs},🦀️.rs,🧩️plugin-module/🦀️.rs,🧫️fixtures/🧩️plugin-module/🔣️.json,🧪️tests/🔬️unit/🦀️.rs}` | index entry `dialectArtifactKinds` + `extendsPluginId` (required on the wire), validation, fixture cases |
+| `🧰️framework/🔨️modules/🎠️kernel/🟦️.ts`, `…/🎠️kernel/🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts` | `ActivationRegistry.registerExtension`, `manifestPluginId` on activation manifest entries; cascade law |
+| `…/🧱️elements/🔌️PluginRuntime/🟦️.tsx`, `🛠️ShellHelpers/🟦️.tsx` | `loadPluginModule(…, manifestPluginId)`, `registerProgramExtensionV1` |
+| `…/🧱️elements/🐚️Shell/🟦️.tsx` | `catalogModule`, `localProgramsV1`, `sessionProgramsV1`, `programPluginIdV1` |
+| `…/🧱️elements/🏛️ShellHost/🟦️.tsx` | `installHubProgram`/`installHubDocumentProgram`, hub opening path, local-program aggregates, open-with over the closure, `invocationPluginIdV1`, `extensionProgramForV1`, creation kind≠dialect, space lane + history fold, `spaceIndexOpeningArgsV1` |
+| `…/🏛️ShellHost/📇️space-directory/🟦️.ts` (new) | `SpaceDirectoryHistoryV1` |
+| `💻️os/🟦️.ts`, `💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts` | worker wire `directory-space-open/close`, `directory-space-events`, `parseDirectoryEventV1`; catalog/ready parsers no longer equate kind and dialect |
+| `💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts` | space directory lane (sealed pages + global stream), TS routing |
+| `💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts`, `…/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts` | laws: space lane wire, catalog-named ready/catalog, create + open `2d.drawing` |
 
 ## 9. Processes started
 
@@ -407,7 +425,19 @@ hub-only-plugin gap of §4.
 | 52664 | front 6542 (`s15-unstaged-front.ts`) | stopped ~12:20 by pid |
 | 57502 (→ vite), 57503 | serve 6543 → hub 7800, front 6544 | stopped ~12:20 by pid |
 
-No process of this slice is running (checked: ports 6540–6544 and 8040 answer nothing). Restart recipe: `S_OS_PORT=6540 S_LOCAL_ONLY=1 SEMIO_VITE_HMR=0 NX_DAEMON=false bun nx
+Session 11 afternoon (running while §12/§13 are proven):
+
+| pid | what | state |
+|---|---|---|
+| 47658 → 47661 | hold + os-hub 8040 (catalog B copy, binary from the tree with `dialectArtifactKinds` + `extendsPluginId`), data root `.🧬semio/🌐hub/s11-s15-hub-8040` | running |
+| 53261 → 53295 | serve 6541 → hub 8040 (dev lane staged from the current tree = stale against catalog B) | running |
+| 40510 → 40573 | serve 6543 → hub 7800 (waiting for W2's os-hub rebuild) | running |
+| 53262 | front 6542 (`unregister` draw: a shell built without draw) | stopped 17:5x by pid |
+| 7314 | front 6544 (`mirror` note: staged note = catalog B's bundle) | stopped 17:5x by pid |
+| (chain) | `s15-proof-chain-7800.sh` (nohup): polls 7800's index every 30 s for ≤ 3 h, then runs draw + writer × en + de through serve 6543 | waiting for W2's os-hub rebuild |
+
+Browser profiles of the proofs (a later session on the same device): `.🧬semio/🌐hub/s11-s15-profiles/<run>`.
+Earlier in the session: no process of this slice was running at ~12:20 (checked: ports 6540–6544 and 8040 answered nothing). Restart recipe: `S_OS_PORT=6540 S_LOCAL_ONLY=1 SEMIO_VITE_HMR=0 NX_DAEMON=false bun nx
 run @semio-tech/framework-os-dev:serve-s-react-dev --excludeTaskDependencies` (repo root); hub lane: `S_OS_PORT=6541
 S_HUB_URL=http://127.0.0.1:7800 SEMIO_VITE_HMR=0 bun ./📜️script.ts serve s react dev` in `🧑‍💻dev/📦️packages/🟦️typescript`;
 then `bun wp-s15/s15-matrix.mjs http://127.0.0.1:6540/ --tag <t> [--locale de] [--roles viewer] [--resume]`.
@@ -560,3 +590,108 @@ boot install so the connect-time snapshot of the build it loaded is a replay, ne
 **Measured** on serve 6540: with the fix **0 error frames in 16 boots** (`s` en×5 + de×5, `?plugin=note` en×3 + de×3;
 `generated/s15-boot-probe-s-2.json`, `…-note-2.json`); the same probe with the stamp reverted **4/4 boots with an error frame**
 (`generated/s15-boot-probe-s-unstamped.json`). The `[DEBUG]` line is removed.
+
+**Sweep note (12:19–12:35).** The external low-disk cleanup deleted every capture cited in §10 and §11 (`wp-s15/generated/`). The numbers
+above were read from them before the sweep. Re-measured on the current tree (17:3x): boot probe on serve 6541 **0 error frames in 8 boots**
+(en×4, de×4; `generated/s15-boot-probe-s-3.json`); hub trusted-catalog laws **40/40** (`generated/s15-hub-laws-lib-2.txt`); the hub
+proofs of §10 are superseded by §13 (same catalog B, hub programs).
+
+## 12. Durable local-first store for hub-installed plugin modules (coordinator item 1)
+
+**Mechanism (one).** Cache Storage cache `semio-plugin-module-store-v1`, content-addressed: `blob/<sha256>` (files shared across bundles),
+`manifest/<bundleSha256>`, `record/<generationId>/<bundleSha256>` written LAST (a record always names a complete bundle). A module service
+worker (scope `/`, `Service-Worker-Allowed: /` from the dev server and the distribution layout) serves `/_semio/plugin-modules/<generation>/
+<bundle>/<path>` and re-verifies record → manifest (sha256) → file (length + sha256 + BLAKE3) on EVERY load; a corrupt entry is deleted and
+answered 404. Web Locks: a shared `semio.plugin-module:<bundle>` per bundle a page runs, the exclusive `semio.plugin-module-store` for
+commits and GC. `navigator.storage.persist()` after the first commit. Notices en/de: "reinstalling" (a stored bundle lost a file) and
+"quota exceeded" (commit refused, nothing half-written). GC removes records of superseded generations no page holds, then unreferenced blobs.
+
+**Schema-first.** `🌎️hub-source/🧬️schema/🔣️.json` (`PluginModuleStoreV1` constants, `PluginModuleStoreRecordV1`, `HubProgramIdV1`,
+`PluginModuleSourceV1`), TS twin in `🧬️schema/🟦️.ts`.
+
+**Laws.** `💻️os/🧪️tests/🗄️plugin-module-store/🟦️.ts` replays `🧫️fixtures/🗄️store/🔣️.json` (8 serve cases: every file, media types,
+tampered file/manifest, missing file, other generation, unlisted path; 4 collection cases) with Ajv as the record oracle, plus the hub
+source flows (install once with byte progress then 0 downloads; reinstall notice; offline from the device; quota notice; GC while held).
+os suite **459/459** (includes the resolution law of §13).
+
+**Live** (hub 8040, catalog B): every hub program in §13 lands in the store (`records: ["e8167ce8ed3e/<bundle>"]`, 22 blobs, page
+controlled by the store's worker); the second-session and eviction rows are in §13's table.
+
+## 13. A hub document runs on the module of the catalog generation that serves it (coordinator design decision)
+
+**Rule.** A hub document's plugin module is resolved by the hub catalog generation that serves it, never by what the device staged. It runs
+on its own **hub program** `pluginId@bundleSha256` (`HubProgramIdV1`), loaded from the store's verified copy of that generation's bundle,
+beside the device's own program of the same plugin (local documents keep the local plugin). The bytes come from the first source holding
+the bundle's exact content (`🌎️hub-source/🔍️resolution`): **store** (the generation's bundle is complete on this device), **local** (every
+file of the bundle is byte-identical — length, SHA-256, BLAKE3 — in the staged module; compared module directory first, stopping at the
+first difference), **hub** otherwise (differing, missing, or another entry). The hub program's closure is resolved in the SAME
+generation: dependencies first, extensions (new index field `extendsPluginId`) indexed under their parent program before anything
+activates, extension requests routed to same-generation peers.
+
+**Host changes.** `loadPluginModule(programId, url, signal, manifestPluginId)` (descriptor identity checked against the plugin id, every
+host key is the program id; `ActivationRegistry.registerExtension`, `manifestPluginId` in extension activation events); hub programs are
+marked `catalogModule` and kept out of routing, the launcher, contributions, app registrations and the dialect index
+(`localProgramsV1`), a hub session's contributions/"Open with…" come from its own closure (`sessionProgramsV1`); every invocation
+addresses the descriptor's plugin id (`invocationPluginIdV1`) — the verified execution target refused the program id as
+`command owner mismatch` (measured, fixed); an opening from a space index goes through `installHubDocumentProgram` (hub path when the
+opening names a space) with the install band, byte progress and cancel of every install.
+
+**Creation fixes found on the way (catalog B).** The hub catalog names a creation kind and the dialect that opens it independently
+(`2d.drawing` → `s.draw.drawing`, `text.document` → `s.writer.writer`). Three shell rules demanded they be equal and refused catalog B:
+the worker-wire catalog parser (the kind picker stayed empty — "Artifact kinds are unavailable", pageerror `invalid kind identity`), the
+ready-status parser and `spaceArtifactCreationRequestFromAction`/`spaceArtifactCreationReadyOpening`. All removed; laws in
+`🧪️backbone-envelope-io` (a catalog-named ready and catalog decode) and `engine-contract` (create + open `2d.drawing`). The probe opens
+the select trigger by keyboard (`button#kindChoice`; a forced click landed on the tree row) and picks by index (the hub labels every
+kind "Editor"/"Editor" — hub-side label defect, routed below).
+
+**Space index empty (G10 4b / C10 F5, coordinator item).** Root cause is a chain of three: (1) the shell opened a document-scoped
+directory stream for the pseudo-document `index` → hub 404 (no descriptor; and such a stream carries only that document's events);
+(2) the guest folds the FULL history of its space but the shell sent single events; (3) the index document's `space_id` is never set in
+the browser (local genesis `""`), so the guest's fold finds no space. S15 fixed (1) + (2) in the host: worker space lane
+(`directory-space-open/close` → sealed `/directory/event-page/v1` from 0, then the global stream, `directory-space-events`), a per-index
+seq-deduplicated history folded whole (`📇️space-directory`, law in quick), and an empty `spaceId` on openings and directory commands
+from the index filled from its scope (`spaceIndexOpeningArgsV1`, law). Measured: 0× `documents/index/socket-grants` 404 (was 26 per
+visit), the history arrives and is folded (8 → 11 events). (3) is guest source → requested (`wp-w1/requests/s15.txt` 16:3x, T12/W2).
+
+**Laws.** `💻️os/🧪️tests/🔍️plugin-module-resolution/🟦️.ts` replays `🌎️hub-source/🧫️fixtures/🔍️resolution/🔣️.json`
+(generator `wp-s15/s15-plugin-module-resolution-fixture.ts`): 12 source cases (matching, matching + extra files, differing core,
+differing vendor, longer bridge, missing file, missing staging, other entry, stored-complete × 2, stored-incomplete + matching /
+differing), 3 program ids + 7 hostile ids, 5 staged roots, 8 closure cases (dependency, extensions, cycle, missing), 4 owner cases;
+oracles: Ajv (`HubProgramIdV1`, index) and `node:crypto` SHA-256 per staged file. Store law gains the three `installProgram` flows
+(stale staging → hub, identical staging → local with 0 downloads, missing / other entry → hub). Hub index `extendsPluginId`: hub lib
+`trusted_catalog` **40/40** (index fixture 13 cases incl. extension, extends outside dependencies, missing/blank extends). Renderer quick
+**12/12**, renderer long (every engine suite) **2055/2055 in 105 files** (`generated/s15-engine-long-1.txt`), framework kernel **189/189** (+ `registerExtension` cascade law),
+os **459/459**, `tsc` (os) clean except the pre-existing `🔗️hub-projection` test error.
+
+**Live (hub 8040 = catalog B `e8167ce8…`, serve 6541 = dev lane staged from the current tree, i.e. STALE against catalog B: local draw
+component `f95d2d6a…` vs catalog `476fe9c0…`, writer `b7918ff0…` vs `5b6af71b…`).** Every row: the Space app's Create action (kind picker
+opened by keyboard, kind by catalog index), the creation saga opens the new hub document, then the probe's sweep dispatches a rail verb,
+undo and redo on it. Captures `wp-s15/generated/s15-hub-document-<run>.txt` (+ `-console.txt`), probe `wp-s15/s15-hub-journey.mjs`,
+chains `s15-proof-chain{,-de,-evict,-cancel}.sh`.
+
+| run | locale | device | hub program source | hub files fetched | edit / undo / redo | "document target changed" |
+|---|---|---|---|---|---|---|
+| `draw-en-4` | en | stale staging | **hub** (24.5 MB verified, band + cancel) | 22 | `addLayer` ✓ / ✓ / ✓ (edits 0→1→0→1) | 0 |
+| `writer-en-3` | en | stale staging | **hub** (29.0 MB) | 22 | `setText` ✓ / ✓ / ✓ | 0 |
+| `note-en-5` | en | stale staging | **hub** | 22 | `addBlock` ✓ / ✓ / ✓ | 0 |
+| `note-de-2` | de | stale staging | **hub** ("Plugin wird geladen note · 24,5 von 24,5 MB geprüft") | 22 | `addBlock` ✓ / ✓ / ✓ | 0 |
+| `draw-de-2` | de | stale staging | **hub** | 22 | `addLayer` ✓ / ✓ / ✓ | 0 |
+| `writer-de-1` | de | stale staging | **hub** ("… 29,0 von 29,0 MB geprüft") | 22 | `setText` ✓ / ✓ / ✓ | 0 |
+| `note-en-store` | en | same profile as `note-en-5` (later session) | **store** | **0** | `addBlock` ✓ / ✓ / ✓ | 0 |
+| `note-en-mirror` | en | front 6544: staged note = the bundle's bytes | **local** (24.5 MB verified from the staged files) | **0** (index + manifest only) | `addBlock` ✓ / ✓ / ✓ | 0 |
+| `draw-en-unstaged` | en | front 6542: draw never staged nor registered | **hub** | 22 | `addLayer` ✓ / ✓ / ✓ | 0 |
+| `draw-de-unstaged` | de | front 6542 | **hub** | 22 | open blocked by hub 8040 DB I/O credit exhaustion (below) | 0 |
+| `note-en-evict` / `note-de-evict` | en / de | store with the core (14.9 MB) evicted | **hub**, notice "Plugin note was incomplete on this device and is being reinstalled." / "… war auf diesem Gerät unvollständig und wird neu installiert." | **1** (only the evicted core) | open blocked by hub DB I/O credit (below) | 0 |
+| `writer-cancel-en` / `-de` | en / de | fresh profile, band cancel at 19.4 of 29.0 MB | — | cancelled | store stays empty (0 records, 0 blobs); saga: "created, but it could not be opened … Open artifact" / "… konnte aber nicht geöffnet werden …" | 0 |
+
+Persistence: `navigator.storage.persist()` is requested after each commit; headless Chromium answers `persisted: false` (no engagement),
+so the store relies on the reinstall path above when the browser evicts.
+
+**Findings routed, not S15-owned.** (a) Hub 8040 (binary from the tree) reached `DB I/O process aggregate credit exhausted` after ~20
+documents: opens then loop on rebootstrap (`sync conflict … unavailable`) — the hub DB I/O budget (C10's earlier blocker, H9). (b) An
+app command issued in a second window kind of an actor-bound document (note's `note-navigator`, `noteShellCommand`) is refused by the
+worker as `command owner mismatch`: the verified execution target admits only its own surface's window kind (`fields.surface.windowKindId`)
+— C10's browser-actor lane. (c) The hub creation catalog labels every kind with its editor APP label ("Editor"/"Editor"): the picker cannot
+tell `2d.drawing` from `text.document`; a localized per-kind label source is missing (manifest `ArtifactKindSpec.name` is one plain string)
+— hub/guest descriptor owners. (d) 7800 (canonical catalog B) still runs the binary without `dialectArtifactKinds`/`extendsPluginId`: the
+7800 run waits for W2's os-hub rebuild (`wp-w1/requests/s15.txt` 13:0x + 13:4x).

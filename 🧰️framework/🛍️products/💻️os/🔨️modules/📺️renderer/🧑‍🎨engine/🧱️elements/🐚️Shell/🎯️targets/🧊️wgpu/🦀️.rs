@@ -706,6 +706,65 @@ pub enum ShellPluginInstallPhase {
     Failed(String),
 }
 
+/// 🚪️ Where the one frame-pumped document open stands: the guest's app instance is being created,
+/// the document's genesis is being loaded into it, or the open settled as cancelled or failed — a
+/// settled record stays until the user closes its band, like a settled plugin install.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ShellDocumentOpenPhase {
+    Instantiating,
+    Seeding,
+    Cancelled,
+    Failed(String),
+}
+
+/// 📨️ What one detached open step answered.
+enum ShellDocumentOpenAnswer {
+    Instantiated(u32),
+    Seeded,
+}
+
+/// 🎯️ The document half of an open: what the relay asked for.
+struct ShellDocumentOpenTarget {
+    document_id: String,
+    schema: String,
+}
+
+/// 🧷️ An open whose host half is prepared — the prior document retired, the socket surface and
+/// execution target bound — waiting for the guest to hold the document before its actor binds.
+struct ShellPreparedDocumentOpen {
+    document_id: String,
+    schema: String,
+    bindings: Vec<PersistenceBinding>,
+    backbone_uri: Option<String>,
+    hub_bound: bool,
+    plugin: ProgramBridgeEntry,
+    session: ActiveSession,
+}
+
+/// 🚪️ The one document open this shell runs at a time (`os.open-artifact`), advanced by the frame pump
+/// ([`ShellState::advance_document_opening`]). Every guest turn it waits on — the app instance, the
+/// genesis load — runs detached ([`ShellDetached`]), so the frame loop keeps building frames, painting
+/// this open's band (phase, step, elapsed, cancel) and taking input while the guest works; before, the
+/// whole open held the shell for ~17 s in a debug build (ticket 26/09/23 slice WG8).
+pub struct ShellDocumentOpening {
+    pub label: String,
+    pub phase: ShellDocumentOpenPhase,
+    pub cancel_requested: bool,
+    pub started_at_ms: f64,
+    plugin_id: String,
+    app: AppDefinition,
+    document: Option<ShellDocumentOpenTarget>,
+    pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, String>>>,
+    prepared: Option<ShellPreparedDocumentOpen>,
+}
+
+impl ShellDocumentOpening {
+    /// ⏳️ Whether a step is still out; a settled record only waits for its band to be closed.
+    pub fn running(&self) -> bool {
+        matches!(self.phase, ShellDocumentOpenPhase::Instantiating | ShellDocumentOpenPhase::Seeding)
+    }
+}
+
 /// 🎬️ One retained lazy plugin install. Minted by [`ShellState::install_plugin`], cleared by the same
 /// call once it settles; `cancel` is the token every step of the install checks, so a cancel that
 /// arrives mid-read stops the install at the next step boundary rather than after it has committed.
@@ -1481,6 +1540,77 @@ fn assert_shell_chrome_build_state_is_send() {
     assert_send::<ShellChromeBuildState>();
 }
 //#endregion 🔖️ChromeThreadBoundary
+
+//#region 🧵️ShellDetached
+/// 🧵️ One request the shell hands off and never waits on: the future owns everything it touches and
+/// runs on the shared pool (native) or the page's executor (browser), and the frame pump only asks,
+/// once per frame, whether it answered — so the guest turn behind it never holds the shell, and with it
+/// the frame build, checked out.
+struct ShellDetached<T> {
+    answer: std::sync::Arc<std::sync::Mutex<Option<T>>>,
+}
+
+impl<T: 'static> ShellDetached<T> {
+    #[cfg(not(target_arch = "wasm32"))]
+    fn spawn(request: impl std::future::Future<Output = T> + Send + 'static) -> Self
+    where
+        T: Send,
+    {
+        let answer = std::sync::Arc::new(std::sync::Mutex::new(None));
+        let slot = answer.clone();
+        crate::spawn_app_task(async move {
+            let value = request.await;
+            *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(value);
+        });
+        Self { answer }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn spawn(request: impl std::future::Future<Output = T> + 'static) -> Self {
+        let answer = std::sync::Arc::new(std::sync::Mutex::new(None));
+        let slot = answer.clone();
+        crate::spawn_app_task(async move {
+            let value = request.await;
+            *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(value);
+        });
+        Self { answer }
+    }
+
+    /// 📬️ The answer, once, if it has arrived.
+    fn take(&self) -> Option<T> {
+        self.answer.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()
+    }
+}
+
+/// 🌱️ Loads the genesis the owning component mints for a hub document into the guest instance, off
+/// the shell ([`store_sync::os_store::component_document_genesis`]); a document bound to no hub keeps
+/// the guest's own document.
+async fn seed_document_genesis(plugin: ProgramBridgeEntry, instance_id: u32, schema: String, document_id: String, hub_bound: bool) -> Result<(), String> {
+    if !hub_bound {
+        return Ok(());
+    }
+    match store_sync::os_store::component_document_genesis(&schema, &document_id).await.map_err(|error| format!("document genesis: {error}"))? {
+        Some(genesis) => plugin.load_app_document_pack(instance_id, &genesis.pack, &genesis.spr).await.map_err(|error| format!("document genesis load: {error}")),
+        None => Ok(()),
+    }
+}
+/// 🖼️ Guest documents rendered off the shell for one owed refresh, keyed by surface id, each with the
+/// host effects its render returned.
+type ShellRenderedSurfaces = HashMap<String, (Result<UiDocumentLease, String>, Vec<semio_framework::kernel::Effect>)>;
+
+/// 🖼️ Renders the guest bodies one owed refresh names, in order, off the shell: every render is the
+/// guest's own turn, so the settle lane hands them off ([`ShellState::advance_owed_refresh`]) and the
+/// frame loop keeps building frames while they run.
+async fn render_surfaces_detached(program: ProgramBridgeEntry, instance_id: u32, jobs: Vec<(String, String, ViewModel)>) -> ShellRenderedSurfaces {
+    let mut rendered = HashMap::with_capacity(jobs.len());
+    for (surface_id, body_key, view) in jobs {
+        let mut effects = Vec::new();
+        let document = program.render_with_document(instance_id, &surface_id, &body_key, &view, None, Some(&mut effects)).await;
+        rendered.insert(surface_id, (document, effects));
+    }
+    rendered
+}
+//#endregion 🧵️ShellDetached
 
 #[cfg(not(target_arch = "wasm32"))]
 /// 🔄️ A retained-waker future polled once per shared-pool turn; no worker waits for completion.
@@ -3065,6 +3195,7 @@ pub struct ShellSettlePump {
     crossings: u64,
     traced: Option<ShellSettleStep>,
     watches: HashMap<String, ShellSettleWatch>,
+    rendering: Option<ShellDetached<ShellRenderedSurfaces>>,
 }
 
 /// ⏳️ The progress witness the wedge watchdog compares across frames — every counter a producer moves
@@ -3556,6 +3687,9 @@ pub struct ShellState {
     /// what chrome reads; its `cancel` is what [`Self::cancel_plugin_install`] fires. Never persisted,
     /// never a document command.
     pub plugin_install: Option<ShellPluginInstall>,
+    /// 🚪️ The ONE document open in flight or settled, advanced by the frame pump
+    /// ([`Self::advance_document_opening`]) and painted as its own band with a cancel control.
+    pub document_opening: Option<ShellDocumentOpening>,
     /// 🪪️ The verified execution-target lease fields for the open document. Native document opening
     /// retains only a canonical surface-id preference today — `document_socket_surface_from_descriptor`
     /// was deliberately downgraded from a forgeable partial authority by the execution-target-lease
@@ -3672,6 +3806,10 @@ pub struct ShellState {
     presented_input_geometry: PresentedInputGeometry,
     presented_input_geometry_staging: PresentedInputGeometry,
     presented_chrome_accessibility: Vec<ui_contract::AccessibilityProjectionNode>,
+    /// ♿️ The presented epoch at which `presented_chrome_accessibility` last CHANGED — the generation the
+    /// ARIA mirror addresses the chrome by. It advances with the projection, not with every presented
+    /// frame, so a mirror that lags one idle frame still addresses the live chrome.
+    presented_chrome_accessibility_generation: u64,
     /// 🪟️ The pane-overlay chip rows this frame's windows registered, held back until every window
     /// BODY has been walked and registered before the first docked panel.
     ///
@@ -6235,6 +6373,7 @@ impl ShellState {
             #[cfg(not(target_arch = "wasm32"))]
             inference_port_status: None,
             plugin_install: None,
+            document_opening: None,
             #[cfg(not(target_arch = "wasm32"))]
             document_execution_target_lease: None,
             #[cfg(not(target_arch = "wasm32"))]
@@ -6282,6 +6421,7 @@ impl ShellState {
             presented_input_geometry: PresentedInputGeometry::default(),
             presented_input_geometry_staging: PresentedInputGeometry::default(),
             presented_chrome_accessibility: Vec::new(),
+            presented_chrome_accessibility_generation: 0,
             pane_overlay_hits: Vec::new(),
             chrome_floor_scope: None,
             retained_hover_window: None,
@@ -7242,6 +7382,13 @@ impl ShellState {
     /// per-surface loop, never ahead of it, so a skipped surface keeps the exact document it already
     /// owns instead of being retired and never re-minted.
     pub async fn refresh_ui(&mut self, ask: UiDirtyScope) -> Result<(), String> {
+        self.refresh_ui_rendered(ask, ShellRenderedSurfaces::new()).await
+    }
+
+    /// 🖼️ [`Self::refresh_ui`] with the guest bodies some of whose renders already happened off the
+    /// shell: a surface found in `rendered` takes that document, every other wanted surface renders
+    /// here, and a rendered document no longer wanted is handed back by its own `Drop`.
+    async fn refresh_ui_rendered(&mut self, ask: UiDirtyScope, mut rendered_surfaces: ShellRenderedSurfaces) -> Result<(), String> {
         let mut latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::latest_frame_authority(), crate::frame_latency::FrameLatencyStage::ShellRefresh, 1);
         let scope = core::mem::replace(&mut self.owed_refresh_scope, UiDirtyScope::None).merged_with(ask);
         let Some(session) = self.session.clone() else {
@@ -7274,7 +7421,14 @@ impl ShellState {
                 Self::debug_log(&format!("[DEBUG] wgpu-shell render begin surface={window_id} body={}", kind.body_key));
                 let render_started = Self::instant_now_ms();
                 Self::declare_boot_subphase(&format!("shell-boot:render:{window_id}"), "enter", 0.0);
-                match program.render_with_document(session.instance_id, &window_id, &kind.body_key, &window_view, None, Some(&mut refresh_effects)).await {
+                let document = match rendered_surfaces.remove(&window_id) {
+                    Some((document, mut effects)) => {
+                        refresh_effects.append(&mut effects);
+                        document
+                    }
+                    None => program.render_with_document(session.instance_id, &window_id, &kind.body_key, &window_view, None, Some(&mut refresh_effects)).await,
+                };
+                match document {
                     Ok(document) => {
                         self.window_ui.insert(window_id.clone(), document);
                     }
@@ -7315,7 +7469,14 @@ impl ShellState {
             Self::debug_log(&format!("[DEBUG] wgpu-shell render begin surface={tab_id} body={body_key}"));
             let render_started = Self::instant_now_ms();
             Self::declare_boot_subphase(&format!("shell-boot:render:{tab_id}"), "enter", 0.0);
-            match program.render_with_document(session.instance_id, &tab_id, &body_key, &panel_view, None, Some(&mut refresh_effects)).await {
+            let document = match rendered_surfaces.remove(&tab_id) {
+                Some((document, mut effects)) => {
+                    refresh_effects.append(&mut effects);
+                    document
+                }
+                None => program.render_with_document(session.instance_id, &tab_id, &body_key, &panel_view, None, Some(&mut refresh_effects)).await,
+            };
+            match document {
                 Ok(document) => {
                     let reveal = tab_id == FRAMEWORK_PANEL_TAB_TOOL_RUN_ID && tool_run_panel_reveals(&mut self.tool_run_panel_runs, &document)?;
                     self.panel_documents.insert(tab_id.clone(), document);
@@ -9377,7 +9538,11 @@ impl ShellState {
     /// continuously, so a `try_recv` poll suffices and no `EventLoopProxy` wake is needed.
     /// `RemoteMutations` are force-applied via `apply_mutations` (idempotent by operation id), which also covers
     /// idle frames where the sandboxed store never pumps its `ChannelBackbone` on its own. Returns
-    /// whether anything changed (and a re-render was issued).
+    /// whether anything changed. Only a change to the guest's document refreshes the guest's bodies: a
+    /// status, bootstrap or conflict change republishes the host-owned Sync panel, and a presence roster
+    /// is painted from shell state by the footer on the next frame. Refreshing every guest body per
+    /// presence frame (ten per second per peer) held each pump for 3.4–5.6 s in a debug build and froze
+    /// the shell while a peer was online (ticket 26/09/23 slice WG8, two-user gate run 15).
     pub async fn pump_sync_events(&mut self) -> bool {
         use tokio::sync::broadcast::error::TryRecvError;
         #[cfg(not(target_arch = "wasm32"))]
@@ -9391,6 +9556,7 @@ impl ShellState {
         // 📌️ ticket §C5 item 2 — the auto check-in poll, folded into the same every-frame pump for the
         // identical reason (no timer wheel exists in this shell; see `auto_checkin_should_fire`'s doc).
         self.poll_auto_checkin().await;
+        let directory_changed = self.advance_document_opening().await || directory_changed;
         if let Some(error) = self.sync_terminal_fault.take() {
             Self::debug_log(&format!("[DEBUG] wgpu shell retired document-backbone owner after terminal fault: {error}"));
             let _ = self.detach_sync_backbone_internal().await;
@@ -9417,6 +9583,8 @@ impl ShellState {
         let instance_id = owner.instance_id;
         let plugin = self.plugins.iter().find(|entry| entry.plugin_id == owner.plugin_id).cloned();
         let mut changed = directory_changed;
+        let mut document_changed = false;
+        let mut sync_panel_changed = false;
         for event in events {
             match event {
                 ArtifactEvent::RemoteMutations { envelopes } => {
@@ -9426,7 +9594,10 @@ impl ShellState {
                         // dedicated kernel thread instead of in-process here; `.await` is the only
                         // change this call site needs (`pump_sync_events` was already `async fn`).
                         match plugin.apply_mutations(instance_id, &operations).await {
-                            Ok(()) => changed = true,
+                            Ok(()) => {
+                                changed = true;
+                                document_changed = true;
+                            }
                             Err(error) => Self::debug_log(&format!("[DEBUG] wgpu shell apply_mutations failed: {error}")),
                         }
                     }
@@ -9442,7 +9613,10 @@ impl ShellState {
                             }
                         };
                         match plugin.load_app_document_archive(instance_id, &archive).await {
-                            Ok(()) => changed = true,
+                            Ok(()) => {
+                                changed = true;
+                                document_changed = true;
+                            }
                             Err(error) => Self::debug_log(&format!("[DEBUG] wgpu shell load_app_document_archive failed: {error}")),
                         }
                     }
@@ -9450,6 +9624,7 @@ impl ShellState {
                 ArtifactEvent::BootstrapProgress { received_bytes, total_bytes, received_chunks, total_chunks } => {
                     self.sync_bootstrap_progress = Some((received_bytes, total_bytes, received_chunks, total_chunks));
                     changed = true;
+                    sync_panel_changed = true;
                 }
                 ArtifactEvent::Status(status) => {
                     if let Some(document_key) = self.sync_channel.as_ref().map(|channel| shell_hub_document_key(&channel.document_key)) {
@@ -9457,6 +9632,7 @@ impl ShellState {
                     }
                     self.sync_status = Some(status);
                     changed = true;
+                    sync_panel_changed = true;
                 }
                 ArtifactEvent::Presence { peers } => {
                     // 👥️ ticket §5 — shell-LOCAL roster (deliberately NOT the shared kernel
@@ -9468,6 +9644,7 @@ impl ShellState {
                 ArtifactEvent::Conflict(_) => {
                     self.sync_card_kind = Some("conflict".into());
                     changed = true;
+                    sync_panel_changed = true;
                 }
                 // 👥️ Peer session identity (actor + colour), sent once per connection. The sync
                 // actor already stamps it onto outbound heartbeats itself, so the shell has
@@ -9487,6 +9664,7 @@ impl ShellState {
                                     let controller_id = self.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
                                     self.queue_host_effects(&controller_id, remaining);
                                     changed = true;
+                                    document_changed = true;
                                 }
                                 Err(error) => self.sync_terminal_fault = Some(error),
                             }
@@ -9514,9 +9692,12 @@ impl ShellState {
             let _ = self.detach_sync_backbone_internal().await;
             self.sync_card_kind = Some("conflict".into());
             changed = true;
+            document_changed = true;
         }
-        if changed {
+        if document_changed {
             let _ = self.refresh_ui(UiDirtyScope::Full).await;
+        } else if sync_panel_changed {
+            let _ = self.republish_shell_panel_document(FRAMEWORK_SYNC_PANEL_TAB_ID);
         }
         changed
     }
@@ -9994,7 +10175,23 @@ impl ShellState {
     /// card's manual attach (`backbone_uri` names what the card shows) and by the identity-driven
     /// space-index auto-bind on the `/spaces/{id}` route (§6). One body on both targets: the only
     /// platform split is [`document_bindings_admitted`], refused before any actor exists.
+    ///
+    /// 🌱️ A hub document's guest opens on the genesis its owning component mints for `document_id`
+    /// ([`store_sync::os_store::component_document_genesis`], the hub's own creation baseline) before
+    /// its document actor exists, so every mutation it authors names the document it opened and a later
+    /// archive or tail from that actor lands on the same baseline (ticket 26/09/23 slice WG8, gate run 12).
+    /// Only a hub binding names a server-minted artifact id; the component refuses a genesis for any other
+    /// identity (`artifact genesis identity is not a server-minted artifact id`).
     async fn open_document(&mut self, document_id: String, schema: String, bindings: Vec<PersistenceBinding>, surface: Option<String>, backbone_uri: Option<String>) -> Result<(), String> {
+        let prepared = self.prepare_document_open(document_id, schema, bindings, surface, backbone_uri).await?;
+        seed_document_genesis(prepared.plugin.clone(), prepared.session.instance_id, prepared.schema.clone(), prepared.document_id.clone(), prepared.hub_bound).await?;
+        self.finish_document_open(prepared).await?;
+        self.refresh_ui(UiDirtyScope::Full).await
+    }
+
+    /// 🧷️ The host half of an open, before the guest holds the document: the mounted document is
+    /// checkpointed and retired, the socket surface and the execution target bound.
+    async fn prepare_document_open(&mut self, document_id: String, schema: String, bindings: Vec<PersistenceBinding>, surface: Option<String>, backbone_uri: Option<String>) -> Result<ShellPreparedDocumentOpen, String> {
         document_bindings_admitted(SHELL_DOCUMENT_TRANSPORTS, &bindings)?;
         let session = self.session.clone().ok_or("session missing")?;
         let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
@@ -10007,10 +10204,18 @@ impl ShellState {
         self.checkpoint_before_detach().await;
         self.detach_sync_backbone_internal().await?;
         self.presence_surface = surface;
-        let actor_uri = format!("actor://{document_id}");
-        let actor = self.current_shell_actor(session.instance_id);
         bind_wgpu_document_socket_surface(&self.document_host, &document_id, &schema, &bindings, &plugin, &session.app, &window_kind_id)?;
         self.bind_document_execution_target(&document_id, &schema, &bindings, &plugin, &session.app, &window_kind_id).await?;
+        let hub_bound = bindings.iter().any(|binding| matches!(binding, PersistenceBinding::Hub { .. }));
+        Ok(ShellPreparedDocumentOpen { document_id, schema, bindings, backbone_uri, hub_bound, plugin, session })
+    }
+
+    /// 🔗️ Binds the prepared document once the guest holds it: the document actor opens, the guest's
+    /// backbone binds to it and the history projection re-seeds. The caller owes the refresh.
+    async fn finish_document_open(&mut self, prepared: ShellPreparedDocumentOpen) -> Result<(), String> {
+        let ShellPreparedDocumentOpen { document_id, schema, bindings, backbone_uri, plugin, session, .. } = prepared;
+        let actor_uri = format!("actor://{document_id}");
+        let actor = self.current_shell_actor(session.instance_id);
         let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor }).await;
         let events = self.document_host.subscribe_key(&channels.document_key).await;
         let binding_generation = self.mint_sync_binding_generation()?;
@@ -10047,7 +10252,7 @@ impl ShellState {
         }
         self.sync_card_kind = None;
         self.refresh_history_snapshot().await;
-        self.refresh_ui(UiDirtyScope::Full).await
+        Ok(())
     }
 
     /// 🪪️ The kind identity of a hub document whose schema this process resolves no codec for (neither
@@ -11270,6 +11475,13 @@ impl ShellState {
                 self.open_created_hub_artifact().await;
                 return true;
             }
+            if operation.opening == HubArtifactOpening::Opening && !self.document_opening.as_ref().is_some_and(ShellDocumentOpening::running) {
+                let opened = operation.ready.as_ref().is_some_and(|ready| self.sync_channel.as_ref().is_some_and(|channel| channel.document_id == ready.artifact_id));
+                if let Some(current) = self.hub_workspace.creation.operation.as_mut() {
+                    current.opening = if opened { HubArtifactOpening::Opened } else { HubArtifactOpening::Failed };
+                }
+                return true;
+            }
             return false;
         }
         let Some(client) = self.directory_client.clone() else { return false };
@@ -11323,7 +11535,9 @@ impl ShellState {
 
     /// 🚪️ Opens a ready artifact through the ordinary document-open relay, bound to its space, with
     /// the dialect and schema the hub's receipt names; the relay resolves and mounts the owning app.
-    /// The opening is `Opened` only when this shell's document binding names the created artifact.
+    /// The relay's open is frame-pumped, so the door stays `Opening` until it settles, and is `Opened`
+    /// only when this shell's document binding then names the created artifact
+    /// ([`Self::pump_hub_artifact_creation`]).
     async fn open_created_hub_artifact(&mut self) {
         let Some((ready, space_id)) = self.hub_workspace.creation.operation.as_ref().and_then(|operation| operation.ready.clone().map(|ready| (ready, operation.space_id.clone()))) else { return };
         if let Some(operation) = self.hub_workspace.creation.operation.as_mut() {
@@ -11332,10 +11546,6 @@ impl ShellState {
         let dialect = semio_framework::ArtifactDialect { artifact_kind: ready.parent_dialect.artifact_kind.clone(), standard: ready.parent_dialect.standard.clone(), subset: ready.parent_dialect.subset.clone() };
         let args = serde_json::json!({ "artifactRef": dialect.to_coordinate(), "documentId": ready.artifact_id, "schema": ready.artifact_schema, "spaceId": space_id });
         self.handle_open_artifact_relay("os.open-artifact", Some(&args)).await;
-        let opened = self.sync_channel.as_ref().is_some_and(|channel| channel.document_id == ready.artifact_id);
-        if let Some(operation) = self.hub_workspace.creation.operation.as_mut() {
-            operation.opening = if opened { HubArtifactOpening::Opened } else { HubArtifactOpening::Failed };
-        }
     }
 
     fn persist_hub_connection_book(&self) {
@@ -11634,6 +11844,11 @@ impl ShellState {
                 return;
             }
         };
+        if self.document_opening.as_ref().is_some_and(ShellDocumentOpening::running) {
+            let is_de = self.locale_id == "de";
+            self.show_transient_notice(shell_chrome_string("document.open.busy", is_de), semio_framework::Severity::Info, Some("document.open.busy"));
+            return;
+        }
         if let Some(space_id) = target.space_id {
             self.open_space_id = Some(space_id);
         }
@@ -11651,20 +11866,140 @@ impl ShellState {
             },
             _ => self.resolve_activation_owner_app(&target.dialect, target.role).await,
         };
-        if let Some((plugin_id, app)) = switch {
-            if let Err(error) = self.switch_to_app(&plugin_id, app).await {
-                Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact could not switch to {plugin_id}: {error}"));
-                return;
+        let document = match (target.document_id, target.schema) {
+            (Some(document_id), Some(schema)) => Some(ShellDocumentOpenTarget { document_id, schema }),
+            _ => None,
+        };
+        match switch {
+            Some((plugin_id, app)) if !self.session.as_ref().is_some_and(|session| session.plugin_id == plugin_id && session.app.id == app.id) => {
+                let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == plugin_id).cloned() else {
+                    Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact could not switch to {plugin_id}: program missing"));
+                    return;
+                };
+                let label = app.label.resolve(self.active_terminology(), self.active_locale()).to_string();
+                let app_id = app.id.clone();
+                let pending = ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated) });
+                self.document_opening = Some(ShellDocumentOpening { label, phase: ShellDocumentOpenPhase::Instantiating, cancel_requested: false, started_at_ms: chrome_now_ms(), plugin_id, app, document, pending: Some(pending), prepared: None });
+            }
+            _ => {
+                if let Some(document) = document {
+                    self.begin_document_seed(document).await;
+                }
             }
         }
-        let (Some(document_id), Some(schema)) = (target.document_id, target.schema) else {
+    }
+
+    /// 🌱️ Starts the document half of an open in the mounted session: the host half is prepared on
+    /// this turn, and the guest's genesis load runs detached; [`Self::advance_document_opening`] binds the
+    /// document once it answers. A preparation that fails settles the open as failed.
+    async fn begin_document_seed(&mut self, document: ShellDocumentOpenTarget) {
+        let Some(session) = self.session.clone() else {
+            self.fail_document_opening("document open has no mounted session".to_string());
             return;
         };
+        let label = session.app.label.resolve(self.active_terminology(), self.active_locale()).to_string();
+        let opening = self.document_opening.take();
         let (bindings, surface) = self.default_bindings_for_current_session();
-        if let Err(error) = self.open_document(document_id, schema, bindings, surface, None).await {
-            Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact relay failed: {error}"));
-            let is_de = self.locale_id == "de";
-            self.show_transient_notice(shell_chrome_string("open-artifact.document-failed", is_de), semio_framework::Severity::Warning, Some("open-artifact.document-failed"));
+        let prepared = match self.prepare_document_open(document.document_id, document.schema, bindings, surface, None).await {
+            Ok(prepared) => prepared,
+            Err(error) => {
+                self.document_opening = opening;
+                self.fail_document_opening(error);
+                return;
+            }
+        };
+        let pending = ShellDetached::spawn({
+            let (plugin, instance_id, schema, document_id, hub_bound) = (prepared.plugin.clone(), prepared.session.instance_id, prepared.schema.clone(), prepared.document_id.clone(), prepared.hub_bound);
+            async move { seed_document_genesis(plugin, instance_id, schema, document_id, hub_bound).await.map(|()| ShellDocumentOpenAnswer::Seeded) }
+        });
+        let mut opening = opening.unwrap_or_else(|| ShellDocumentOpening { label, phase: ShellDocumentOpenPhase::Seeding, cancel_requested: false, started_at_ms: chrome_now_ms(), plugin_id: session.plugin_id.clone(), app: session.app.clone(), document: None, pending: None, prepared: None });
+        opening.phase = ShellDocumentOpenPhase::Seeding;
+        opening.pending = Some(pending);
+        opening.prepared = Some(prepared);
+        self.document_opening = Some(opening);
+    }
+
+    /// ⏭️ Advances the retained open by the one detached step that answered, if any: an instance mounts
+    /// as the session (or is destroyed when the open was cancelled), a seeded document binds, and every
+    /// render the open owes goes to the settle lane. Called once per frame from [`Self::pump_sync_events`];
+    /// answers whether the open moved.
+    async fn advance_document_opening(&mut self) -> bool {
+        let Some(answer) = self.document_opening.as_ref().and_then(|opening| opening.pending.as_ref()).and_then(ShellDetached::take) else { return false };
+        let Some(mut opening) = self.document_opening.take() else { return false };
+        opening.pending = None;
+        match answer {
+            Ok(ShellDocumentOpenAnswer::Instantiated(instance_id)) => {
+                if opening.cancel_requested {
+                    if let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == opening.plugin_id) {
+                        program.destroy_app(instance_id);
+                    }
+                    opening.phase = ShellDocumentOpenPhase::Cancelled;
+                    self.document_opening = Some(opening);
+                    return true;
+                }
+                self.install_app_session(&opening.plugin_id, opening.app.clone(), instance_id);
+                self.owe_refresh(UiDirtyScope::Full);
+                self.owe_settle();
+                match opening.document.take() {
+                    Some(document) => {
+                        self.document_opening = Some(opening);
+                        self.begin_document_seed(document).await;
+                    }
+                    None => self.document_opening = None,
+                }
+            }
+            Ok(ShellDocumentOpenAnswer::Seeded) => {
+                let Some(prepared) = opening.prepared.take() else {
+                    self.document_opening = Some(opening);
+                    self.fail_document_opening("seeded document open lost its prepared owner".to_string());
+                    return true;
+                };
+                if opening.cancel_requested {
+                    opening.phase = ShellDocumentOpenPhase::Cancelled;
+                    self.document_opening = Some(opening);
+                    return true;
+                }
+                match self.finish_document_open(prepared).await {
+                    Ok(()) => {
+                        self.owe_refresh(UiDirtyScope::Full);
+                        self.owe_settle();
+                    }
+                    Err(error) => {
+                        self.document_opening = Some(opening);
+                        self.fail_document_opening(error);
+                        return true;
+                    }
+                }
+            }
+            Err(error) => {
+                self.document_opening = Some(opening);
+                self.fail_document_opening(error);
+            }
+        }
+        true
+    }
+
+    /// 🧯️ Settles the open as failed, out loud: its band keeps the reason and the notice names it.
+    fn fail_document_opening(&mut self, error: String) {
+        Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact relay failed: {error}"));
+        let is_de = self.locale_id == "de";
+        self.show_transient_notice(shell_chrome_string("open-artifact.document-failed", is_de), semio_framework::Severity::Warning, Some("open-artifact.document-failed"));
+        if let Some(opening) = self.document_opening.as_mut() {
+            opening.phase = ShellDocumentOpenPhase::Failed(error);
+            opening.pending = None;
+            opening.prepared = None;
+        }
+    }
+
+    /// 🛑️ Cancels the open in flight, or clears a settled record. The phase moves only when the step in
+    /// flight answers: an instance created after the cancel is destroyed, a seeded document never binds.
+    pub fn cancel_document_opening(&mut self) {
+        if self.document_opening.as_ref().is_some_and(|opening| !opening.running()) {
+            self.document_opening = None;
+            return;
+        }
+        if let Some(opening) = self.document_opening.as_mut() {
+            opening.cancel_requested = true;
         }
     }
 
@@ -12459,13 +12794,22 @@ impl ShellState {
                 return Ok(());
             }
         }
+        let instance_id = program.create_app(&app.id).await?;
+        self.install_app_session(plugin_id, app, instance_id);
+        self.refresh_ui(UiDirtyScope::Full).await
+    }
+
+    /// 🪪️ Mounts `instance_id` of `app` as this shell's session: the retained Home hands back its view
+    /// state first, then the session and its first window become current. The synchronous tail of
+    /// [`Self::switch_to_app`], shared with the frame-pumped open ([`Self::advance_document_opening`]),
+    /// which renders on the settle lane instead of inline.
+    fn install_app_session(&mut self, plugin_id: &str, app: AppDefinition, instance_id: u32) {
         #[cfg(not(target_arch = "wasm32"))]
         if let (Some(home), Some(current)) = (self.directory_home.as_mut(), self.session.as_ref()) {
             if home.is_instance(&current.plugin_id, current.instance_id) {
                 home.view_state = current.view_state.clone();
             }
         }
-        let instance_id = program.create_app(&app.id).await?;
         let view_state = ViewModel {
             active_mode_id: Some(app.default_mode_id.clone()),
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
@@ -12485,7 +12829,6 @@ impl ShellState {
         };
         self.active_window_id = Some(app.window_kinds.first().id.clone());
         self.session = Some(ActiveSession { plugin_id: plugin_id.to_string(), instance_id, app, view_state });
-        self.refresh_ui(UiDirtyScope::Full).await
     }
 
     async fn apply_shell_uri(&mut self, uri: &str) -> Result<(), String> {
@@ -13413,7 +13756,9 @@ impl ShellState {
         crate::interpreter::progress_presented_input_candidate(witness.0, input)
     }
 
-    /// 🏁️ Promotes one GPU-accepted frame's complete input authority in one runtime lock.
+    /// 🏁️ Promotes one GPU-accepted frame's complete input authority in one runtime lock. The chrome's
+    /// accessibility publication is replaced (and its generation advanced) only when its projection
+    /// changed, so the mirror's addresses stay valid across frames that present the same chrome.
     pub(crate) fn acknowledge_presented_input(&mut self, input: &mut InputState<ActionDescriptor>, witness: PresentedInputCandidateWitness) -> bool {
         if !self.presented_input_candidate_matches(witness) {
             return false;
@@ -13432,8 +13777,12 @@ impl ShellState {
         // ♿️ The chrome's accessible names ride the SAME promotion as its hit registry (packet W15d)
         // — a production path, not a diagnostics one, so an assistive technology reads the chrome
         // whether or not `SEMIO_RUNTIME_DIAGNOSTICS` is armed.
-        self.presented_chrome_accessibility = self.chrome_accessibility_nodes(input.hits());
-        crate::interpreter::note_chrome_accessibility(self.presented_input_epoch, self.presented_chrome_accessibility.clone());
+        let chrome_accessibility = self.chrome_accessibility_nodes(input.hits());
+        if self.presented_chrome_accessibility_generation == 0 || chrome_accessibility != self.presented_chrome_accessibility {
+            self.presented_chrome_accessibility = chrome_accessibility;
+            self.presented_chrome_accessibility_generation = witness.0;
+            crate::interpreter::note_chrome_accessibility(witness.0, self.presented_chrome_accessibility.clone());
+        }
         crate::interpreter::note_chrome_hit_registry(input.hits(), &self.retained_hit_windows);
         crate::interpreter::note_chrome_surfaces(&self.chrome_surface_census());
         true
@@ -13879,7 +14228,7 @@ impl ShellState {
             }
             return Ok(true);
         }
-        if target.window_generation != self.presented_input_epoch {
+        if target.window_generation != self.presented_chrome_accessibility_generation {
             return Ok(false);
         }
         if !self.presented_chrome_accessibility.iter().any(|node| node.node_id == target.node_id && node.key == target.node_key) {
@@ -14696,16 +15045,59 @@ impl ShellState {
             }
         };
         self.window_topology_journal_dispatch_owed = false;
-        if worked > 0 || !self.owed_refresh_scope.asks_for_nothing() {
-            if !self.owed_refresh_scope.asks_for_nothing() {
-                if let Err(error) = self.refresh_ui(UiDirtyScope::None).await {
-                    Self::debug_log(&format!("[DEBUG] wgpu-shell settle pump refresh failed: {error}"));
-                }
+        if worked > 0 || !self.owed_refresh_scope.asks_for_nothing() || self.settle_pump.rendering.is_some() {
+            if !self.owed_refresh_scope.asks_for_nothing() || self.settle_pump.rendering.is_some() {
+                self.advance_owed_refresh().await;
             }
             self.settle_pump.owed = true;
             return ShellSettleStep::Drained;
         }
         self.settle_pump_cross().await
+    }
+
+    /// 🖼️ The settle lane's owed refresh without holding the shell across a guest turn: the first step
+    /// hands the guest bodies the owed scope names to one detached render ([`render_surfaces_detached`])
+    /// and returns; a later step, once they answered, runs the refresh with those documents
+    /// ([`Self::refresh_ui_rendered`]). Before, the whole refresh ran inside one step: every body's
+    /// render turn held the frame build — 3.5 s per full refresh of a block2d session in a debug build
+    /// (ticket 26/09/23 slice WG8).
+    async fn advance_owed_refresh(&mut self) {
+        if let Some(rendering) = self.settle_pump.rendering.as_ref() {
+            let Some(rendered) = rendering.take() else { return };
+            self.settle_pump.rendering = None;
+            if let Err(error) = self.refresh_ui_rendered(UiDirtyScope::None, rendered).await {
+                Self::debug_log(&format!("[DEBUG] wgpu-shell settle pump refresh failed: {error}"));
+            }
+            return;
+        }
+        let Some(session) = self.session.clone() else {
+            if let Err(error) = self.refresh_ui(UiDirtyScope::None).await {
+                Self::debug_log(&format!("[DEBUG] wgpu-shell settle pump refresh failed: {error}"));
+            }
+            return;
+        };
+        let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };
+        self.drain_retained_document_arenas();
+        self.sync_dock();
+        let scope = self.owed_refresh_scope.clone();
+        let view_state = self.live_view_state(&session);
+        let mut jobs = Vec::new();
+        for (window_id, window_kind_id) in self.dock.window_instances() {
+            let Some(kind) = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id) else { continue };
+            if !scope.wants_window_body(&kind.body_key) {
+                continue;
+            }
+            if let Some(window_view) = view_state.for_window_instance(&window_id) {
+                jobs.push((window_id, kind.body_key.clone(), window_view));
+            }
+        }
+        let panel_view = view_state.for_panel();
+        for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
+            if let Some(body_key) = tab.body_key.as_deref().filter(|body_key| scope.wants_panel_body(body_key)) {
+                jobs.push((tab.id().to_string(), body_key.to_string(), panel_view.clone()));
+            }
+        }
+        self.settle_pump.rendering = Some(ShellDetached::spawn(render_surfaces_detached(program, session.instance_id, jobs)));
     }
 
     /// 🫀️ The crossing half of a step: fund every producer that is still advancing, and drive a
@@ -21442,6 +21834,48 @@ fn plugin_install_action_rect(band: Rect, action_label: &str, theme: &Theme) -> 
 
 //#endregion 🎬️PluginInstallBand
 
+//#region 🚪️DocumentOpenBand
+/// 🆔️ The open band's own control: a real cancel while a step is out
+/// ([`ShellState::cancel_document_opening`]), a close once the open settled.
+const DOCUMENT_OPEN_CANCEL_CONTROL_ID: &str = "shell.document-open.cancel";
+
+/// 🔢️ The steps an open takes (the app instance, then the document), for the band's `step/total`.
+const DOCUMENT_OPEN_STEPS: u8 = 2;
+
+/// 🗣️ The band's message: phase, which app, step and elapsed seconds while it runs; a failure appends
+/// its own reason. English first, German through [`shell_chrome_string`].
+fn document_opening_banner_text(opening: &ShellDocumentOpening, now_ms: f64, is_de: bool) -> String {
+    let (key, step) = match opening.phase {
+        ShellDocumentOpenPhase::Instantiating => ("document.open.instantiating", Some(1)),
+        ShellDocumentOpenPhase::Seeding => ("document.open.seeding", Some(DOCUMENT_OPEN_STEPS)),
+        ShellDocumentOpenPhase::Cancelled => ("document.open.cancelled", None),
+        ShellDocumentOpenPhase::Failed(_) => ("document.open.failed", None),
+    };
+    let head = format!("{} {}", shell_chrome_string(key, is_de), opening.label);
+    match (&opening.phase, step) {
+        (ShellDocumentOpenPhase::Failed(reason), _) => format!("{head}: {reason}"),
+        (_, Some(step)) => format!("{head} · {step}/{DOCUMENT_OPEN_STEPS} · {} s", ((now_ms - opening.started_at_ms).max(0.0) / 1000.0).floor() as u64),
+        _ => head,
+    }
+}
+
+/// 🎨️ `(border, fill, text)` for one phase, the same severity map every shell banner uses.
+fn document_opening_tone(phase: &ShellDocumentOpenPhase, theme: &Theme) -> (Rgba, Rgba, Rgba) {
+    match phase {
+        ShellDocumentOpenPhase::Instantiating | ShellDocumentOpenPhase::Seeding => transient_notice_tone(semio_framework::Severity::Info, theme),
+        ShellDocumentOpenPhase::Cancelled => transient_notice_tone(semio_framework::Severity::Warning, theme),
+        ShellDocumentOpenPhase::Failed(_) => transient_notice_tone(semio_framework::Severity::Error, theme),
+    }
+}
+
+/// 📐️ The band's rect: the plugin-install band's geometry, one band height and gap further down, so
+/// an open that installs its plugin shows both.
+fn document_opening_rect(message: &str, action_label: &str, width: f32, theme: &Theme) -> Rect {
+    let band = plugin_install_rect(message, action_label, width, theme);
+    Rect::new(band.x, band.y + band.h + PLUGIN_INSTALL_TOP_GAP, band.w, band.h)
+}
+//#endregion 🚪️DocumentOpenBand
+
 /// 🔒️ Frozen fault codes the dispatch funnel recognises — the exact strings the guest raises
 /// (`🔌️plugin/🦀️.rs`'s `viewer.read-only`, and the mutation-outcomes contract's `mutation.rejected`),
 /// which is also what React's `SURFACE_FAULT_CODES.ViewerReadOnly`/`MUTATION_REJECTED_FAULT_CODE`
@@ -23061,6 +23495,9 @@ enum ShellChromeFramePhase {
     /// 🎬️ The lazy plugin-install band — the one long-running phase the shell itself owns (every
     /// other one belongs to a guest job), painted under the notice with its own cancel control.
     PluginInstall,
+    /// 🚪️ The frame-pumped document open's band — phase, step, elapsed time and its cancel control —
+    /// painted under the plugin-install band while the guest instantiates and loads the document.
+    DocumentOpen,
     TreeDrag,
     TutorialGesture,
     Error,
@@ -23150,6 +23587,7 @@ impl ShellChromeFramePhase {
             Self::AgentApprovals => "AgentApprovals",
             Self::TransientNotice => "TransientNotice",
             Self::PluginInstall => "PluginInstall",
+            Self::DocumentOpen => "DocumentOpen",
             Self::TreeDrag => "TreeDrag",
             Self::TutorialGesture => "TutorialGesture",
             Self::Error => "Error",
@@ -23434,6 +23872,12 @@ impl ShellState {
             }
             ShellChromeFramePhase::PluginInstall => {
                 if !self.render_plugin_install_step(&mut cursor.child, overlay, atlas, input, theme, w) {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::DocumentOpen);
+            }
+            ShellChromeFramePhase::DocumentOpen => {
+                if !self.render_document_opening_step(&mut cursor.child, overlay, atlas, input, theme, w) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::TreeDrag);
@@ -26179,6 +26623,53 @@ impl ShellState {
         false
     }
 
+    /// 🚪️ Paints the frame-pumped document open's band: which app, which phase, the step and the time
+    /// it has taken, and the control that stops it. A settled `Cancelled`/`Failed` record stays until the
+    /// user closes it, exactly like the plugin-install band above it.
+    fn render_document_opening_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
+        let Some(opening) = self.document_opening.as_ref() else { return true };
+        let is_de = self.locale_id == "de";
+        let action_label = shell_chrome_string(if opening.running() { "document.open.cancel" } else { "common.close" }, is_de);
+        let message = document_opening_banner_text(opening, chrome_now_ms(), is_de);
+        let (border, fill, text_color) = document_opening_tone(&opening.phase, theme);
+        let band = document_opening_rect(&message, action_label, width, theme);
+        let action = plugin_install_action_rect(band, action_label, theme);
+        let hair = theme.stroke_hairline;
+        match cursor.scalar {
+            0 => overlay.push_rounded([band.x, band.y, band.w, band.h], fill, theme.border_radius),
+            1..=4 => {
+                let edge = match cursor.scalar {
+                    1 => [band.x, band.y, band.w, hair],
+                    2 => [band.x, band.y + band.h - hair, band.w, hair],
+                    3 => [band.x, band.y, hair, band.h],
+                    _ => [band.x + band.w - hair, band.y, hair, band.h],
+                };
+                overlay.push_solid(edge, border);
+            }
+            5 | 6 => {
+                let (value, x, max_w) = if cursor.scalar == 5 { (message.as_str(), band.x + theme.padding_standard, (action.x - band.x - theme.padding_standard * 2.0).max(1.0)) } else { (action_label, action.x, action.w.max(1.0)) };
+                let baseline = band.y + (band.h + theme.font_size_small) * 0.5 - 1.0;
+                match chrome_text_complete_step(overlay, atlas, value, x, baseline, max_w, theme.font_size_small, text_color, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        self.error = Some("Shell document open band text exceeded the retained glyph boundary".to_string());
+                        cursor.glyph.reset();
+                    }
+                }
+            }
+            7 => input.register_hit(HitTarget { rect: action, event: None, control_id: Some(DOCUMENT_OPEN_CANCEL_CONTROL_ID.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            8 => {
+                if self.chrome_build.clicked_this_frame && action.contains(input.pointer_x, input.pointer_y) {
+                    self.cancel_document_opening();
+                }
+            }
+            _ => return true,
+        }
+        cursor.scalar += 1;
+        false
+    }
+
     /// 🛂️ Resolves this frame's administration sheet from the retained operation alone — packet
     /// W15e. `None` means no operation is live, which is exactly when React mounts nothing.
     ///
@@ -27981,6 +28472,18 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("plugin.install.failed", true) => "Plugin konnte nicht geladen werden",
         ("plugin.install.cancel", false) => "Cancel",
         ("plugin.install.cancel", true) => "Abbrechen",
+        ("document.open.instantiating", false) => "Starting",
+        ("document.open.instantiating", true) => "Wird gestartet:",
+        ("document.open.seeding", false) => "Loading the document in",
+        ("document.open.seeding", true) => "Dokument wird geladen in",
+        ("document.open.cancelled", false) => "Opening cancelled:",
+        ("document.open.cancelled", true) => "Öffnen abgebrochen:",
+        ("document.open.failed", false) => "Could not open",
+        ("document.open.failed", true) => "Konnte nicht geöffnet werden:",
+        ("document.open.cancel", false) => "Cancel",
+        ("document.open.cancel", true) => "Abbrechen",
+        ("document.open.busy", false) => "Another document is still opening",
+        ("document.open.busy", true) => "Ein anderes Dokument wird noch geöffnet",
         ("open-artifact.document-failed", false) => "Opened the app, but its document could not be attached here",
         ("open-artifact.document-failed", true) => "App geöffnet, aber das Dokument konnte hier nicht angehängt werden",
         ("surface.faulted", false) => "Surface unavailable",
@@ -29095,7 +29598,7 @@ mod chrome_maintenance_pressure_tests;
 mod plugin_install_tests;
 
 #[cfg(test)]
-#[path = "../../🧪️tests/📂️wgpu-document-relay/🦀️.rs"]
+#[path = "../../🧪️tests/🔀️wgpu-document-relay/🦀️.rs"]
 mod document_relay_tests;
 
 //#region 🎨️ThemeDocumentModel

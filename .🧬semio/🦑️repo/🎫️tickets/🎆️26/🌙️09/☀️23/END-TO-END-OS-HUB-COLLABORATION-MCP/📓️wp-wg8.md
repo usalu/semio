@@ -11,7 +11,7 @@ Captures: `wp-wg8/generated/`. Inheritance: `.tmp-ticket-0918/📓️g7w-…md` 
 | 1 | B1 — native kernel turn never returns after a real guest boots | **FIXED, law green (measured 05:39)**: `a_native_guest_mounts_and_settles_an_authored_edit_without_a_hub ... ok` — open 14.6 s (debug interpreter), every surface admitted, backbone bind receipt accepted, `addHandleKind` once in 3.6 s |
 | 1b | §1.4 — native reserved-tool jobs (undo, redo, selection, clipboard) spawned but never stepped | **FIXED, one mechanism with React + guest (07:3x)**: 4/4 native journey laws green in 5 consecutive runs (edit, undo, redo, select-all + copy + paste; `generated/journey-{17..21}.raw.txt`), new shard law, kernel fixture laws (Rust 7/7, TS) — §1.4 |
 | 2 | B2 — native document actor resolves a guest-owned kind through the mounted component's `codec` interface | **LANDED, laws green** (store resolution law, sync `componentIdentity` fixture law, 190 kernel sync/channel/client laws); **live `Live` not run** — needs a hub catalog carrying block (§2, §6) |
-| 3 | `hub-live-collaboration-check` steps 4–12 green (runner: **WG8**, per WG7's scope split) | **NOT RUN.** 11:44 W2 published catalog B (`e8167ce8…`, block component `0d1a9bcd…` = dist's) and is restarting 7800. **Blocker (11:52):** the native runtime needs block's release descriptor for that component (the staged one is 01:55's, `hashes.wasmSha256` mismatch → `publish block2d release` refuses); `materialize-release --exclude-task-dependencies` is queued in the wasm mutex behind W2's `warm rest` hold (25 packages, since 11:44; `generated/block-materialize-2.txt`). Coordinator: W2 could run it inside its hold to unblock the gate now. Before: Hub 7800 serves catalog A (no block); W2's `--packages all` publish follows 34 `component-release` builds (started 05:57; stdio 11 min, gis > 19 min) — hours away. Law updated and ready (creates its document through the door, step 4a; reads the shared fixture, step 11 uses the fixture's undo); runner `wp-wg8/run-collab-live.sh` (§6). Step 11 (undo) is expected green now that §1.4 landed. W2 re-planned to catalog B (stdio, gis, note, animate, block, writer, draw, puzzle, wfc): batch B built 07:22–08:18 (block's component `0d1a9bcd…`, 07:55); the first `publish w2-catalog-b` ended rc=1 at 08:34 (`browser actor artifact: closed byte bound`, `wp-w2/generated/publish-w2-catalog-b.txt`); WG8 waits for W2's Hub Handoff. Second publish 10:30–10:39 rc=1: `codec.pack-schema-hash(kit.catalog)` on block → `guest fault plugin.internal: artifact codec schema is owned by no app of this bundle` (block declares the plugin-level kind `kit.catalog`, owned by no app). **Measured for W2 (10:4x):** the current tree's emitter (`cargo build -p semio-framework-plugin-describe`) answers W2's own block component (`0d1a9bcd…`) correctly — `codecs … --kinds kit.catalog=kit.catalog,block.2d=block.2d` → 1 row (`block.2d` pack hash `1869126a…`) + 1 unowned (`generated/block-codecs.json`), exactly the `UNOWNED_ARTIFACT_CODEC_SCHEMA` rule of `🖨️describe/🛂️descriptor-emission`. The guest fault text is identical, so the likely difference is the bootstrap's `<target>/debug/semio-framework-plugin-describe` build (the staged `component.wasm` was cleaned, so its bytes were not compared) |
+| 3 | `hub-live-collaboration-check` steps 1–12 green (runner: **WG8**, per WG7's scope split) | **GREEN (17:0x), all 12 steps, test exits 0 in 209 s** on hub 7800 catalog B (runId `345ceda4…`, generation `e8167ce8…`): `two_live_wgpu_shells_collaborate_on_one_hub_document ... ok` (`.🧬semio/🌐hub/s11-wg8-captures/collab-live-18.raw.txt`). Five native defects fixed on the way, each measured first (§3) |
 | 4 | G-P1-3 — wgpu artifact-creation door (schema-first, progress + cancel, en + de) | **DONE, live-proven (05:42)**: a native wgpu shell created a hub artifact from its own door on hub 7800 — catalog ready (gis, note), `accepted → preparing → ready` in 53.7 s, `artifact-db290b13…`; 4 fixture laws green (§4) |
 
 ## Coordination (read me, WG7 / coordinator)
@@ -192,6 +192,27 @@ when a step publication arrived, else it is the loud "shard produced no outcome"
 - Laws (written, not run yet): store `a_kind_resolves_to_its_linked_codec_before_its_mounted_component`; sync
   `a_mounted_component_codec_is_the_kind_identity_before_any_lease` (fixture `componentIdentity`).
 
+## 3. The 12-step gate on catalog B — runs 1–18 and five native fixes
+
+Runner `wp-wg8/run-collab-live.sh` (block2d release runtime staged from W2's catalog component `0d1a9bcd…`; the release
+descriptor was rematerialized at 12:18, so the publish verb accepts it). Captures moved to the durable
+`.🧬semio/🌐hub/s11-wg8-captures/` after the 12:19 cleanup deleted `generated/` (runs 1–4 lost; their findings are below).
+
+| run | result | measured cause → fix |
+|---|---|---|
+| 1 | 1–5 ✓, 6 ✗ (sockets stay `Connecting`) | `there is no reactor running` panic on a pool worker at the hub dial (`🏪️store/🔄️sync`): the native document actor took whatever Tokio runtime its spawner was inside, and a wgpu shell spawns from a plain thread. **Fix:** `document_socket_io_reactor()` — one current-thread I/O+time reactor on its own `semio-document-io` thread, entered only while an actor is polled. Law `a_hub_dial_polled_off_any_runtime_is_driven_by_the_document_socket_reactor` (kernel `os_store::sync` 67/67) |
+| 5–8 | 1–6 ✓ (**B2 `Live` proven**: native codec hash `1869126a…` = hub pin), 8 ✓, 11 ✓; 7, 9, 10, 12 ✗ | every authored edit refused by the document actor as `document backbone scope mismatch`: the guest's envelopes carried `document_id = s.block.block2d@1/*#editor` (its app id) — a fresh door artifact answers the socket `Bootstrap::None`, so nothing ever gave the guest the document's identity. **Fix:** the store contract gains `ComponentDocumentCodec::genesis` + `component_document_genesis(schema, id)` (zero-history check identical to the hub's `initial_pair`); the host adapter calls `codec.genesis`; `open_document` loads that genesis into the guest before its actor exists — the hub seeds the artifact from the same export. Law `a_document_opens_on_the_genesis_its_owning_component_mints_for_its_identity` |
+| 13 | 1–6, 8, 9, 11 ✓; 7, 10, 12 ✗ | no presence heartbeat ever reached the hub: the native shell beats in the chrome walk's presence phase, which a headless law never runs, so the hub closed each idle socket after its presence lease (reconnect every 30 s) and B's edit waited out A's backoff. **Fix (law):** `frame_pump` = what one painted frame does for a document (sync pump + the presence phase → `advance_presence_preview_step`) |
+| 14–15 | 1–11 ✓; 12 ✗ (pump 31 s / 7 s for a 3 s window) | `[DEBUG]` timing: every pump carrying a presence or status event called `refresh_ui(Full)` — every guest body re-rendered ten times a second per peer, 3.4–5.6 s per pump in debug. **Fix:** `pump_sync_events` refreshes guest bodies only when the guest's document changed (remote mutations, archive, backbone effects, terminal fault); status/bootstrap/conflict republish the host-owned Sync panel; presence is footer state painted next frame |
+| 16 | 1–11 ✓; 12 ✗ (A's ledger read 0.8 s after relive) | the law read A before B's outbox flushed; now it pumps 10 s after relive, as steps 9–10 do. "Not frozen" is measured against the same shell's online edit (≤ 2×), not a 2 s constant a debug interpreter never meets |
+| 5–17 | 8 of these runs never exited | sampled (run 17): the test thread parked for 23 min in `block_on(handle_hub_workspace_action)`; `hub_verb` now uses `drive` (pumps renderer I/O + worker retirements like the frame does). The hung test processes were mine; stopped by pid |
+| **18** | **12/12 ✓, exit 0** | step 6 Live in 3.4 s, 7 both rosters online, 8 A authors (3.9 s), 9 B ingests, 10 B authors + A ingests, 11 per-actor undo propagates (`apply` false on B), 12 offline edit 4.6 s (online 6.4 s), pump 3.0 s, Stale → Ready, relive 0.1 s, A ingests the offline edit |
+
+Also measured, not fixed here (routed): opening a document runs inside the frame pump (the door's `Ready` open held one
+pump for ~20 s in debug: guest mount + genesis + manifest) — the native `os.open-artifact` relay should become a retained
+operation like the creation itself; the native presence peer carries no app presence pack (no bounded ephemeral snapshot
+API natively yet, the state React publishes when its snapshot misses the bound).
+
 ## 4. G-P1-3 — the wgpu artifact-creation door
 
 - Directory client (kernel, target-neutral): `🔌️client/🌱️space-artifact-creation/🦀️.rs` —
@@ -254,6 +275,12 @@ the same operation on wgpu — it needs the Rust twin of React's `encodeArtifact
 | 07:3x | renderer `kernel_runtime program_bridge typed_result` laws | parallel: 8 product-replay laws abort on a poisoned process-wide registry (pre-existing: shared registries); serially `kernel_runtime::semantic_document_tests` **34/34** (`laws-renderer-{3,4}.txt`); program-bridge + typed-page laws green |
 | 07:3x | React package `typecheck` (PluginRuntime uses the kernel constant) | exit 0 |
 | 08:0x | native journey runs 22–23 (outlier hunt, `[DEBUG] wg8` timing, reverted after) | 23: 4/4; 22: 3/4, the 4th open hit W2 rewriting block's component (above) |
+| 12:1x–17:1x | two-user gate runs 1–18 on 7800 catalog B (captures from run 5 in `.🧬semio/🌐hub/s11-wg8-captures/`) | **run 18: 12/12, exit 0** (§3) |
+| 16:5x | `cargo test -p semio-framework-os-kernel --lib --features sync,ureq -- os_store::sync os_store::component` | 448/448 ×2 (one earlier run: `retained_readiness_wake_after_turn_release_is_observed_once` missed its 1 s deadline under load; alone and ×3 in the suite green) |
+| 17:1x | native journey run 24 (genesis-seeded opens) | 4/4 (`s11-wg8-captures/journey-24.raw.txt`) |
+| 17:1x | renderer `chrome_maintenance sync_card hub_projection_workspace_tests hub_connection:: sync_panel presence` | 71/71 (`laws-renderer-5.txt`) |
+| 17:2x | plugin host `shard:: component` | `shard::` 69/69; `component::` 220/225 — the 5 failures sweep stale staged components on disk (`target-g8/…/semio_s_plugin_note.wasm`: pre-H9 owned ABI; `replay-envelopes` missing), not these edits (`laws-plugin-host-4.txt`) |
+| 17:2x | wasm32 gates (`wasm-checks-2.sh`: framework+kernel wasip2, kernel `sync` unknown-unknown, renderer unknown-unknown) | queued in the wasm mutex behind W2's `warm rest` hold and WG7 (`s11-wg8-captures/check-wasm-5.txt`) |
 
 ## Files (WG8)
 
@@ -265,6 +292,12 @@ Paths relative to `🧰️framework/🛍️products/💻️os/🔨️modules/` u
 - `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/{🦀️.rs,🟦️.ts}` — `FRAMEWORK_RESERVED_JOB_KIND` (Rust + TS twin);
   fixture `🧫️fixtures/🧵️spawned-job-drive/🔣️.json` (`reservedKind`) + both runners in `🧪️tests/🧵️spawned-job-drive`.
 - `🔌️plugin/🦀️.rs` — `app::FRAMEWORK_RESERVED_JOB_KIND` re-exports the kernel constant.
+- Gate (§3): `🏪️store/🔄️sync/🦀️.rs` — `document_socket_io_reactor` (+ law in `🧪️tests/🔬️native-actor-retained-turn-fixtures`);
+  `🏪️store/🦀️.rs` — `ComponentDocumentCodec::genesis`, `ComponentDocumentGenesis`, `component_document_genesis` (+ law in
+  `🧪️tests/🔬️unit`, `FixtureComponentCodec::genesis` in `🔄️sync/🧪️tests/🔬️document-socket-connect`); `🔌️plugin/🖥️host/🧬️component-codec`
+  — `genesis`; `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` — `open_document` opens on the component genesis, `pump_sync_events`
+  refreshes guest bodies only on document changes; `🐚️Shell/🧪️tests/🔗️hub-projection-workspace` — `frame_pump`, `hub_verb`
+  via `drive`, step 12 ingest window and relative freeze bound.
 - `📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx` — the React reserved drive reads the kernel constant.
 - `📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎠️runtime/🦀️.rs` — `ParallelRuntime::take_shard_failure`.
 - `🏃️run/🦀️.rs` — resumes a preempted actor.
@@ -310,7 +343,10 @@ Paths relative to `🧰️framework/🛍️products/💻️os/🔨️modules/` u
 - `75765` journey run 1, `24132`/`33624`/`44282`/`52569`/`62155` journey runs 2–6 (each exits by itself).
 - `87049` block2d `materialize-release` (exited 01:55, rc 0; component sha256 `7d4bb1ed…`, native runtime republished).
 - `44189`, `73318`, `9716` wasm32 checks (all exited green). `2629`, `3335`, `6859`, `9609` journey runs 11–14 (exited).
-- Journey runs 15–21 (06:5x–07:3x, `nohup`, each exited by itself).
+- Journey runs 15–24 (each exited by itself). Gate runs 5, 7, 8, 12, 13, 14, 16, 17 hung after their ledger (test harness
+  `block_on`, §3); stopped by pid 17:0x (zsh + cargo + test binary of each). Run 18 exited by itself. My block
+  `materialize-release` mutex waiter (11:52) was cancelled after the descriptor turned out rematerialized at 12:18.
+- `wasm-checks-2.sh` queued in the wasm mutex (17:17, detached).
 - No hub or serve started by WG8 (the live door law used W2's hub 7800 as a client).
 
 ## Log
@@ -326,13 +362,15 @@ Paths relative to `🧰️framework/🛍️products/💻️os/🔨️modules/` u
   build is block `materialize-release` through the wasm mutex (01:36–01:55, `generated/block-release-1.txt`); WG8's journey
   runs build only the renderer test binary. The native runtime needs the block **release** component (the 88 MB dev one
   exceeds the 64 MiB execution-target bound); WG8 republishes it from W2's `component-release` once W2's final pass lands it.
+- 10:2x–17:2x gate: W2 catalog B publish failed twice (10:39 codec probe, 11:11 space-creation JSON), published 11:44, 7800
+  ready 11:50, killed by the 12:19 low-disk cleanup, back 12:45 (runId `345ceda4…`); gate runs 1–18, five fixes, run 18 green.
 - 06:4x–07:4x §1.4: shard reports admitted job turns, renderer drives reserved jobs (runs 15–16 red: seed checkpoint
   overflow found through the new retained-failure report), live-only reserved seeds + kernel constant, redo and
   select-all/copy/paste laws; runs 17–21 all green; 2 latency outliers timed, not recurring.
 
 ## 6. Next (for the coordinator)
 
-1. **Catalog with block, early.** Ask W2 to publish a catalog that carries block as soon as block's `component-release`
+1. **Done: the gate is green on catalog B** (§3). Was: **Catalog with block, early.** Ask W2 to publish a catalog that carries block as soon as block's `component-release`
    is built (e.g. `--packages stdio,gis,note,draw,writer,puzzle,block` into a copy served on WG8's hub 8090, or on
    7800) instead of after all 34. Then: `@semio-tech/block-plugin:materialize-release` through the wasm mutex (so the
    release descriptor matches W2's component) and `zsh .tmp-ticket/wp-wg8/run-collab-live.sh` (optionally
@@ -346,5 +384,10 @@ Paths relative to `🧰️framework/🛍️products/💻️os/🔨️modules/` u
    `try_lock`); they pass with `--test-threads=1`. Pre-existing; worth a serial guard.
 4. `os.create-space-artifact` (the Space-index guest's create dialog) on wgpu → the same door operation (needs the Rust
    twin of React's kind-choice encoding).
-5. `wp-wg8/target` is kept for the collaboration run; delete it once item 1 is done.
+5. `wp-wg8/target` is kept (coordinator); it is no longer needed for the gate.
+6. **WG7 / React parity (not measured by WG8):** a fresh door artifact answers the document socket `Bootstrap::None`, so any
+   host whose guest opens without the document's genesis authors under the wrong document id. Worth one check on the wasm32
+   wgpu shell (WG7) — `open_document` is target-neutral, so it now seeds there too once a component codec is registered —
+   and on React. Presence is timer-driven in React already. The native `os.open-artifact`
+   open inside the frame pump (~20 s in debug) wants a retained operation (§3).
 

@@ -538,7 +538,7 @@ fn accessibility_activation_updates_settings_switch_and_active_tab_projection() 
     let initial = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("settings projection");
     assert_eq!(initial.checked, Some(false));
     let target =
-        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_input_epoch, node_id: initial.node_id, node_key: initial.key };
+        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: initial.node_id, node_key: initial.key };
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("settings activation"));
     assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].checked, Some(true), "the Settings branch switch reflects its now-visible anchor");
 
@@ -549,7 +549,7 @@ fn accessibility_activation_updates_settings_switch_and_active_tab_projection() 
     let general = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("general projection");
     assert_eq!(general.selected, Some(false));
     let target =
-        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_input_epoch, node_id: general.node_id, node_key: general.key };
+        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: general.node_id, node_key: general.key };
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("general activation"));
     assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].selected, Some(true), "the activated General leaf publishes aria-selected=true");
     let expected: Vec<&str> = selection["expectedPath"].as_array().expect("expected path").iter().map(|id| id.as_str().expect("path id")).collect();
@@ -592,7 +592,7 @@ fn chrome_accessibility_dispatch_validates_current_identity_and_activates_once()
     let node = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("search projection");
     let target = ui_render::AccessibilityTarget {
         window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: shell.presented_input_epoch,
+        window_generation: shell.presented_chrome_accessibility_generation,
         node_id: node.node_id,
         node_key: node.key.clone(),
     };
@@ -610,8 +610,7 @@ fn chrome_accessibility_dispatch_validates_current_identity_and_activates_once()
     assert!(shell.search_open, "a mismatched node id and key cannot activate another control");
 }
 
-#[test]
-fn a_delayed_chrome_mirror_address_cannot_activate_after_its_presented_epoch_retires() {
+fn settings_toggle_shell() -> ShellState {
     let mut shell = ShellState::new(Vec::new(), String::new());
     shell.dock_tabs.tabs_mut(PanelAnchor::BottomRight).push(DockTabNode::branch(
         FRAMEWORK_SETTINGS_PANEL_ID,
@@ -620,37 +619,56 @@ fn a_delayed_chrome_mirror_address_cannot_activate_after_its_presented_epoch_ret
         0,
         vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General", "settings", 0)],
     ));
+    shell
+}
+
+fn generation_rule_hit(rect_key: &str) -> HitTarget<ActionDescriptor> {
+    let rule = &accessibility_fixture()["presentedChrome"]["generationRule"];
+    let rect = rule[rect_key].as_array().expect("generation rule rect").iter().map(|value| value.as_f64().expect("rect component") as f32).collect::<Vec<_>>();
+    HitTarget { rect: Rect::new(rect[0], rect[1], rect[2], rect[3]), event: None, control_id: Some(rule["controlId"].as_str().expect("generation rule control").to_string()), kind: HitKind::Toggle, drag_axis: None, drag_data: None }
+}
+
+fn settings_toggle_address(shell: &ShellState, input: &InputState<ActionDescriptor>) -> ui_render::AccessibilityTarget {
+    let control = accessibility_fixture()["presentedChrome"]["generationRule"]["controlId"].as_str().expect("generation rule control").to_string();
+    let node = shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == control).expect("Settings mirror node");
+    ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key }
+}
+
+#[test]
+fn a_mirror_address_stays_live_across_frames_that_present_the_same_chrome() {
+    let mut shell = settings_toggle_shell();
     let mut input = InputState::default();
-    let settings_hit = || HitTarget {
-        rect: Rect::new(1.0, 2.0, 30.0, 20.0),
-        event: None,
-        control_id: Some("ui.panelToggle.settings".to_string()),
-        kind: HitKind::Toggle,
-        drag_axis: None,
-        drag_data: None,
-    };
-    input.register_hit(settings_hit());
+    input.register_hit(generation_rule_hit("firstRect"));
     shell.publish_retained_hit_registry(&mut input);
-    let initial_epoch = shell.presented_input_epoch;
-    let initial = shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "ui.panelToggle.settings").expect("first accepted Settings mirror node");
-    let delayed = ui_render::AccessibilityTarget {
-        window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: initial_epoch,
-        node_id: initial.node_id,
-        node_key: initial.key,
-    };
+    let (initial_epoch, delayed) = (shell.presented_input_epoch, settings_toggle_address(&shell, &input));
 
     while input.retire_hit_step() {}
-    input.register_hit(settings_hit());
+    input.register_hit(generation_rule_hit("sameChromeRect"));
     shell.publish_retained_hit_registry(&mut input);
-    assert!(shell.presented_input_epoch > initial_epoch, "the successor mirror owns a distinct accepted epoch");
-    assert!(!semio_framework_async::block_on(shell.handle_accessibility_event(&delayed, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("delayed Settings activation"));
-    assert!(!shell.anchor_open(PanelAnchor::BottomRight), "a delayed address cannot mutate the successor frame");
+    assert!(shell.presented_input_epoch > initial_epoch, "every presented frame owns its own input epoch");
+    assert_eq!(shell.presented_chrome_accessibility_generation, delayed.window_generation, "an unchanged chrome keeps the generation the mirror addresses");
+    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&delayed, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("idle-frame Settings activation"));
+    assert!(shell.anchor_open(PanelAnchor::BottomRight), "a mirror one idle frame behind still activates the live control exactly once");
+}
 
-    let successor = shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "ui.panelToggle.settings").expect("successor Settings mirror node");
-    let current = ui_render::AccessibilityTarget { window_generation: shell.presented_input_epoch, node_id: successor.node_id, node_key: successor.key, ..delayed };
+#[test]
+fn a_delayed_chrome_mirror_address_cannot_activate_after_the_chrome_changes() {
+    let mut shell = settings_toggle_shell();
+    let mut input = InputState::default();
+    input.register_hit(generation_rule_hit("firstRect"));
+    shell.publish_retained_hit_registry(&mut input);
+    let delayed = settings_toggle_address(&shell, &input);
+
+    while input.retire_hit_step() {}
+    input.register_hit(generation_rule_hit("changedChromeRect"));
+    shell.publish_retained_hit_registry(&mut input);
+    assert!(shell.presented_chrome_accessibility_generation > delayed.window_generation, "a changed chrome projection owns a new generation");
+    assert!(!semio_framework_async::block_on(shell.handle_accessibility_event(&delayed, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("delayed Settings activation"));
+    assert!(!shell.anchor_open(PanelAnchor::BottomRight), "a delayed address cannot mutate the changed chrome");
+
+    let current = settings_toggle_address(&shell, &input);
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&current, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("current Settings activation"));
-    assert!(shell.anchor_open(PanelAnchor::BottomRight), "the current accepted mirror address activates exactly once");
+    assert!(shell.anchor_open(PanelAnchor::BottomRight), "the current mirror address activates exactly once");
 }
 
 #[test]
@@ -690,7 +708,7 @@ fn a_constrained_settings_strip_retains_all_semantic_tabs_and_reveals_an_accessi
     let tail = semantic.iter().find(|node| node.key == tail_id).expect("semantic tail tab");
     let target = ui_render::AccessibilityTarget {
         window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: shell.presented_input_epoch,
+        window_generation: shell.presented_chrome_accessibility_generation,
         node_id: tail.node_id,
         node_key: tail.key.clone(),
     };

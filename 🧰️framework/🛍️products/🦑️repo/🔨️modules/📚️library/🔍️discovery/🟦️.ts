@@ -179,19 +179,7 @@ export interface SemanticDescendantFixedFileNode {
   readonly fixedFilenameContractId: string;
 }
 
-/** 🚪️ One source-only package leaf projected to a configurable canonical entry. */
-export interface SemanticDescendantConfigurableEntryFileNode {
-  readonly sourcePathSegments: readonly Readonly<{ kindId: string; literal: string }>[];
-  readonly destinationPathSegments: readonly Readonly<{ kindId: string; literal: string }>[];
-  readonly nodeType: "file";
-  readonly configurableEntry: Readonly<{
-    contractId: string;
-    sourceFilename: string;
-    configurationReferences: readonly Readonly<{ fixedFilenameContractId: string; adapter: "json" | "toml"; structuredLocation: string }>[];
-  }>;
-}
-
-export type SemanticDescendantNode = SemanticDescendantDirectoryNode | SemanticDescendantKindFileNode | SemanticDescendantFixedFileNode | SemanticDescendantConfigurableEntryFileNode;
+export type SemanticDescendantNode = SemanticDescendantDirectoryNode | SemanticDescendantKindFileNode | SemanticDescendantFixedFileNode;
 
 /** ↔️ Exactly-one group within an otherwise required descendant bundle. */
 export interface SemanticDescendantAlternative {
@@ -449,7 +437,7 @@ export interface SemanticPolicyStateCoordinateContract {
   readonly preserveNonCoordinateBytes: true;
 }
 
-export type SemanticPathProjectionReferenceConsumerForm = "path-reference" | "artifact-catalog-glob" | "artifact-catalog-prose:root-marker" | "artifact-catalog-prose:relative-root" | "artifact-catalog-prose:interaction-glob" | "artifact-catalog-prose:catalog-grammar";
+export type SemanticPathProjectionReferenceConsumerForm = "path-reference" | "artifact-catalog-glob" | "artifact-catalog-prose:root-marker" | "artifact-catalog-prose:relative-root" | "artifact-catalog-prose:category-glob" | "artifact-catalog-prose:catalog-grammar";
 
 /** 🔭️ One external projection consumer admitted by exact path, adapter, form, and stale marker. */
 export interface SemanticPathProjectionReferenceConsumerContract {
@@ -2449,23 +2437,12 @@ export interface SemanticPathProjectionMapping {
   readonly destinationPath: string;
 }
 
-/** 🔗️ One structured configuration reference required by a configurable projected entry. */
-export interface SemanticPathProjectionReferenceEdit {
-  readonly path: string;
-  readonly adapter: "json" | "toml";
-  readonly structuredLocation: string;
-  readonly oldValue: string;
-  readonly newValue: string;
-  readonly preimageHash: string;
-}
-
 /** 📊️ Fail-closed projection result; mappings are exposed only when problems is empty. */
 export interface SemanticPathProjectionAuthority {
   readonly contractId: string;
   readonly sourceRoot: string;
   readonly destinationRoot: string;
   readonly mappings: readonly SemanticPathProjectionMapping[];
-  readonly referenceEdits: readonly SemanticPathProjectionReferenceEdit[];
   readonly destinationDirectoryCount: number;
   readonly destinationNodeCount: number;
   readonly mappingDigest: string;
@@ -2629,28 +2606,6 @@ function projectionFileMappingDigest(mappings: readonly SemanticPathProjectionMa
   return createHash("sha256").update(mappings.map(({ sourcePath, destinationPath }) => `${sourcePath}\0${destinationPath}`).join("\n")).digest("hex");
 }
 
-/** 🧭️ Renders one repository-relative path without platform separators. */
-function projectionRelativePath(fromDirectory: string, toPath: string): string {
-  const from = fromDirectory.split("/");
-  const to = toPath.split("/");
-  let shared = 0;
-  while (shared < from.length && shared < to.length && from[shared] === to[shared]) shared++;
-  return [...from.slice(shared).map(() => ".."), ...to.slice(shared)].join("/");
-}
-
-/** 🔎️ Reads one exact structured configuration value without accepting aliases. */
-function projectionStructuredValue(content: string, adapter: "json" | "toml", structuredLocation: string): unknown {
-  if (adapter === "json") {
-    let value: unknown = JSON.parse(content);
-    for (const segment of structuredLocation.split(".")) value = typeof value === "object" && value !== null ? (value as Record<string, unknown>)[segment] : undefined;
-    return value;
-  }
-  const separator = structuredLocation.lastIndexOf(".");
-  if (separator < 1 || separator === structuredLocation.length - 1) return undefined;
-  const body = tomlTableBody(content, structuredLocation.slice(0, separator));
-  return body === undefined ? undefined : tomlTableValues(body)[structuredLocation.slice(separator + 1)];
-}
-
 /** 🧾️ Validates and renders either the CAD manifest catalog or Draw exact command bundle without writes. */
 export function semanticPathProjectionAuthority(options: SemanticPathProjectionAuthorityOptions, taxonomy: Taxonomy = loadTaxonomy()): SemanticPathProjectionAuthority {
   const root = renderArtifactPathProjectionRoot(options, taxonomy);
@@ -2672,7 +2627,6 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
   const actualSourceDirectories = options.nodes.filter((node) => node.nodeKind === "directory").map((node) => node.path).sort(projectionByteCompare);
   if (expectedSourceDirectories.join("\0") !== actualSourceDirectories.join("\0")) problems.push("Projection source directories must be exactly those owned by source files.");
   const candidateMappings: SemanticPathProjectionMapping[] = [];
-  const configurableEntries: { sourcePath: string; destinationPath: string; configurationReferences: SemanticDescendantConfigurableEntryFileNode["configurableEntry"]["configurationReferences"] }[] = [];
   if (contract && root.destinationRoot) {
     const catalog = taxonomy.semanticPathProjectionCatalogContracts[contract.catalogContractId];
     if (catalog && "contractKind" in catalog && catalog.contractKind === "distributed-json-manifest-catalog") {
@@ -2749,18 +2703,12 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
       else {
         const expectedSourceNodes = new Set<string>();
         for (const node of descendant.requiredNodes) {
-          const sourceParent = ("configurableEntry" in node ? node.sourcePathSegments : node.pathSegments).map((segment) => segment.literal);
+          const sourceParent = node.pathSegments.map((segment) => segment.literal);
           const destinationRelativePath = semanticDescendantNodeRelativePath(node, taxonomy);
           let sourceRelativePath = sourceParent.join("/");
           if (node.nodeType === "file") {
-            if ("kindId" in node) {
-              const kind = taxonomy.fileKinds[node.kindId];
-              sourceRelativePath = [...sourceParent, node.sourceFilename ?? canonicalFilenameForKind(node.kindId, taxonomy)].join("/");
-            } else if ("fixedFilenameContractId" in node) sourceRelativePath = [...sourceParent, fixedContractFilename(taxonomy.fixedFilenameContracts[node.fixedFilenameContractId]!)].join("/");
-            else sourceRelativePath = [...sourceParent, node.configurableEntry.sourceFilename].join("/");
-            const mapping = { sourcePath: `${options.sourceRoot}/${sourceRelativePath}`, destinationPath: `${root.destinationRoot}/${destinationRelativePath}` };
-            candidateMappings.push(mapping);
-            if ("configurableEntry" in node) configurableEntries.push({ ...mapping, configurationReferences: node.configurableEntry.configurationReferences });
+            sourceRelativePath = [...sourceParent, "kindId" in node ? node.sourceFilename ?? canonicalFilenameForKind(node.kindId, taxonomy) : fixedContractFilename(taxonomy.fixedFilenameContracts[node.fixedFilenameContractId]!)].join("/");
+            candidateMappings.push({ sourcePath: `${options.sourceRoot}/${sourceRelativePath}`, destinationPath: `${root.destinationRoot}/${destinationRelativePath}` });
           }
           expectedSourceNodes.add(destinationLayout ? destinationRelativePath ? `${root.destinationRoot}/${destinationRelativePath}` : root.destinationRoot : sourceRelativePath ? `${options.sourceRoot}/${sourceRelativePath}` : options.sourceRoot);
         }
@@ -2771,40 +2719,6 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
     } else problems.push(`Projection catalog ${JSON.stringify(contract.catalogContractId)} has the wrong authority kind.`);
   }
   candidateMappings.sort((left, right) => projectionByteCompare(left.sourcePath, right.sourcePath));
-  const candidateReferenceEdits: SemanticPathProjectionReferenceEdit[] = [];
-  for (const entry of configurableEntries) for (const reference of entry.configurationReferences) {
-    const fixedContract = taxonomy.fixedFilenameContracts[reference.fixedFilenameContractId];
-    const manifestFilename = fixedContract && fixedContractFilename(fixedContract);
-    const sourceManifestPath = manifestFilename ? `${entry.sourcePath.slice(0, entry.sourcePath.lastIndexOf("/"))}/${manifestFilename}` : "";
-    const manifestMapping = candidateMappings.find(({ sourcePath }) => sourcePath === sourceManifestPath);
-    const manifestNode = pathOwners.get(destinationLayout ? manifestMapping?.destinationPath ?? "" : sourceManifestPath);
-    if (!fixedContract || !manifestMapping || manifestNode?.nodeKind !== "file" || manifestNode.content === undefined) {
-      problems.push(`Configurable entry ${JSON.stringify(entry.sourcePath)} is missing its exact configuration manifest mapping.`);
-      continue;
-    }
-    const oldValue = projectionRelativePath(sourceManifestPath.slice(0, sourceManifestPath.lastIndexOf("/")), entry.sourcePath);
-    const newValue = projectionRelativePath(manifestMapping.destinationPath.slice(0, manifestMapping.destinationPath.lastIndexOf("/")), entry.destinationPath);
-    let actualValue: unknown;
-    try {
-      actualValue = projectionStructuredValue(manifestNode.content, reference.adapter, reference.structuredLocation);
-    } catch {
-      actualValue = undefined;
-    }
-    if (actualValue !== (destinationLayout ? newValue : oldValue)) {
-      problems.push(`Configuration reference ${JSON.stringify(`${destinationLayout ? manifestMapping.destinationPath : sourceManifestPath}:${reference.structuredLocation}`)} must resolve exactly to ${JSON.stringify(destinationLayout ? newValue : oldValue)}.`);
-      continue;
-    }
-    if (destinationLayout) continue;
-    candidateReferenceEdits.push({
-      path: manifestMapping.destinationPath,
-      adapter: reference.adapter,
-      structuredLocation: reference.structuredLocation,
-      oldValue,
-      newValue,
-      preimageHash: createHash("sha256").update(manifestNode.content).digest("hex"),
-    });
-  }
-  candidateReferenceEdits.sort((left, right) => projectionByteCompare(`${left.path}\0${left.structuredLocation}`, `${right.path}\0${right.structuredLocation}`));
   const destinationDirectories = root.destinationRoot ? projectionDirectories(root.destinationRoot, candidateMappings.map(({ destinationPath }) => destinationPath)) : [];
   const destinationNodes = [...destinationDirectories.map((path) => ({ path, nodeKind: "directory" as const })), ...candidateMappings.map(({ destinationPath: path }) => ({ path, nodeKind: "file" as const }))];
   problems.push(...artifactProjectionPathProblems(destinationNodes, options.occupiedPaths ?? [], taxonomy));
@@ -2814,7 +2728,6 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
     sourceRoot: options.sourceRoot,
     destinationRoot: root.destinationRoot,
     mappings: accepted ? candidateMappings : [],
-    referenceEdits: accepted ? candidateReferenceEdits : [],
     destinationDirectoryCount: accepted ? destinationDirectories.length : 0,
     destinationNodeCount: accepted ? destinationNodes.length : 0,
     mappingDigest: accepted ? projectionFileMappingDigest(candidateMappings) : "",
@@ -2825,17 +2738,12 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
 
 /** 📏️ Derives a descendant node's canonical relative suffix from directory and physical file kinds. */
 export function semanticDescendantNodeRelativePath(node: SemanticDescendantNode, taxonomy: Taxonomy = loadTaxonomy()): string {
-  const parent = ("configurableEntry" in node ? node.destinationPathSegments : node.pathSegments).map((segment) => segment.literal);
+  const parent = node.pathSegments.map((segment) => segment.literal);
   if (node.nodeType === "directory") return parent.join("/");
   if ("kindId" in node) return [...parent, canonicalPrimaryFilenameForKind(node.kindId, taxonomy)].join("/");
-  if ("fixedFilenameContractId" in node) {
-    const contract = taxonomy.fixedFilenameContracts[node.fixedFilenameContractId];
-    if (!contract) throw new Error(`Unknown fixed filename contract ${JSON.stringify(node.fixedFilenameContractId)}.`);
-    return [...parent, fixedContractFilename(contract)].join("/");
-  }
-  const entry = taxonomy.configurableEntryContracts[node.configurableEntry.contractId];
-  if (!entry) throw new Error(`Unknown configurable entry contract ${JSON.stringify(node.configurableEntry.contractId)}.`);
-  return [...parent, entry.filename].join("/");
+  const contract = taxonomy.fixedFilenameContracts[node.fixedFilenameContractId];
+  if (!contract) throw new Error(`Unknown fixed filename contract ${JSON.stringify(node.fixedFilenameContractId)}.`);
+  return [...parent, fixedContractFilename(contract)].join("/");
 }
 
 /** 🧭️ Context required to enforce a fixed contract's scope beyond its path pattern. */
@@ -4320,9 +4228,8 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   }
 
   const validateDescendantNode = (node: SemanticDescendantNode, key: string, rootKindId: string): string | null => {
-    const configurable = "configurableEntry" in node;
-    const authorityKey = node.nodeType === "file" ? "kindId" in node ? "kindId" : "fixedFilenameContractId" in node ? "fixedFilenameContractId" : "configurableEntry" : "kindId";
-    exactKeys(node, configurable ? ["sourcePathSegments", "destinationPathSegments", "nodeType", authorityKey] : ["pathSegments", "nodeType", authorityKey, ...("sourceFilename" in node ? ["sourceFilename"] : [])], key);
+    const authorityKey = node.nodeType === "file" && !("kindId" in node) ? "fixedFilenameContractId" : "kindId";
+    exactKeys(node, ["pathSegments", "nodeType", authorityKey, ...("sourceFilename" in node ? ["sourceFilename"] : [])], key);
     const validateSegments = (segments: readonly Readonly<{ kindId: string; literal: string }>[] | unknown, field: string): void => {
       if (!Array.isArray(segments)) {
         problems.push(`${key}.${field} must be an array.`);
@@ -4336,10 +4243,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
         parentKindId = segment.kindId;
       }
     };
-    if (configurable) {
-      validateSegments(node.sourcePathSegments, "sourcePathSegments");
-      validateSegments(node.destinationPathSegments, "destinationPathSegments");
-    } else validateSegments(node.pathSegments, "pathSegments");
+    validateSegments(node.pathSegments, "pathSegments");
     if (node.nodeType === "directory") {
       if (!projectionDirectoryKinds[node.kindId]) problems.push(`${key}.kindId is not a directory kind.`);
       const expected = node.pathSegments.at(-1)?.kindId ?? rootKindId;
@@ -4347,25 +4251,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     } else if (node.nodeType === "file") {
       if ("kindId" in node && !taxonomy.fileKinds[node.kindId]) problems.push(`${key}.kindId is not a file kind.`);
       else if ("kindId" in node && node.sourceFilename !== undefined && (node.sourceFilename !== node.sourceFilename.normalize("NFC") || /[\\/]/u.test(node.sourceFilename) || !node.sourceFilename.startsWith(taxonomy.fileKinds[node.kindId]!.emoji) || fileKindIdForSourcePath(node.sourceFilename, taxonomy) !== node.kindId)) problems.push(`${key}.sourceFilename must be one NFC basename resolving to kindId.`);
-      else if ("fixedFilenameContractId" in node && !taxonomy.fixedFilenameContracts[node.fixedFilenameContractId]) problems.push(`${key}.fixedFilenameContractId is missing.`);
-      else if (configurable) {
-        exactKeys(node.configurableEntry, ["contractId", "sourceFilename", "configurationReferences"], `${key}.configurableEntry`);
-        const entry = taxonomy.configurableEntryContracts[node.configurableEntry.contractId];
-        if (!entry) problems.push(`${key}.configurableEntry.contractId is missing.`);
-        else if (node.configurableEntry.sourceFilename !== node.configurableEntry.sourceFilename.normalize("NFC") || /[\\/]/u.test(node.configurableEntry.sourceFilename) || fileKindIdForSourcePath(node.configurableEntry.sourceFilename, taxonomy) !== entry.fileKindId) problems.push(`${key}.configurableEntry.sourceFilename must be one NFC basename resolving to the entry file kind.`);
-        if (!Array.isArray(node.configurableEntry.configurationReferences) || node.configurableEntry.configurationReferences.length === 0) problems.push(`${key}.configurableEntry.configurationReferences must be non-empty.`);
-        const actualConfigurationSources: string[] = [];
-        for (const [index, reference] of (node.configurableEntry.configurationReferences ?? []).entries()) {
-          const scope = `${key}.configurableEntry.configurationReferences[${index}]`;
-          exactKeys(reference, ["fixedFilenameContractId", "adapter", "structuredLocation"], scope);
-          const fixed = taxonomy.fixedFilenameContracts[reference.fixedFilenameContractId];
-          const filename = fixed && fixedContractFilename(fixed);
-          if (!fixed || fixed.scope.kind !== "package-root" || fixed.scope.ecosystemId !== entry?.ecosystemId) problems.push(`${scope}.fixedFilenameContractId must own the same package ecosystem.`);
-          if ((reference.adapter === "toml" ? !filename?.endsWith(".toml") : reference.adapter === "json" ? !filename?.endsWith(".json") : true) || !/^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+$/u.test(reference.structuredLocation)) problems.push(`${scope} must declare an exact structured adapter location.`);
-          if (filename) actualConfigurationSources.push(`${filename}:${reference.structuredLocation}`);
-        }
-        if (entry && actualConfigurationSources.sort().join("\0") !== [...entry.configurationSources].sort().join("\0")) problems.push(`${key}.configurableEntry.configurationReferences must cover every declared configuration source exactly once.`);
-      }
+      else if (!("kindId" in node) && !taxonomy.fixedFilenameContracts[node.fixedFilenameContractId]) problems.push(`${key}.fixedFilenameContractId is missing.`);
     } else problems.push(`${key}.nodeType must be directory or file.`);
     try {
       return `${node.nodeType}:${semanticDescendantNodeRelativePath(node, taxonomy)}`;
@@ -4698,7 +4584,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     const identities = new Set<string>();
     const patterns = new Set<string>();
     const adapters = ["rust", "typescript", "json", "toml"];
-    const forms: readonly SemanticPathProjectionReferenceConsumerForm[] = ["path-reference", "artifact-catalog-glob", "artifact-catalog-prose:root-marker", "artifact-catalog-prose:relative-root", "artifact-catalog-prose:interaction-glob", "artifact-catalog-prose:catalog-grammar"];
+    const forms: readonly SemanticPathProjectionReferenceConsumerForm[] = ["path-reference", "artifact-catalog-glob", "artifact-catalog-prose:root-marker", "artifact-catalog-prose:relative-root", "artifact-catalog-prose:category-glob", "artifact-catalog-prose:catalog-grammar"];
     for (const [id, contract] of Object.entries(taxonomy.semanticPathProjectionReferenceConsumerContracts)) {
       const scope = `semanticPathProjectionReferenceConsumerContracts[${JSON.stringify(id)}]`;
       kebabId(id, `${scope} id`);

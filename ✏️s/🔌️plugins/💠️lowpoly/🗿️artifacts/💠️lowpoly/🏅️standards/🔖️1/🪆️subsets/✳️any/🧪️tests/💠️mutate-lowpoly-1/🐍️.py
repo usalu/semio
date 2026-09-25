@@ -24,11 +24,13 @@ carrier.
   EXTERNALLY — the payload is `{"MoveObject": {…}}`, a PascalCase variant name as the single key,
   where every sibling subset in this repository tags internally with a `"mutation"` member; that
   `edit-paint-layer` splices base64 RUNS into the layer's pixel buffer at byte offsets, overwriting in
-  place and never resizing it; and that `create-mesh` carries a `meshWorkspace` argument the snapshot
-  does not hold at all.
+  place and never resizing it; and that `create-mesh` carries a `meshWorkspace` argument which, when
+  non-empty, becomes the object's persisted `meshContent` — the half-edge-mesh JSON the handle hashes —
+  while `delete-mesh` clears both, so each undo carries the content back.
 
 **No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
-only. All seventeen kinds are adjudicated and none is refused: the mesh child handle carries the
+only. (The 2026-09-25 `meshContent` alignment followed the committed `create-mesh` after-snapshot;
+that `delete-mesh` clears it was read off the subject's leaf, because no committed vector shows it.) All seventeen kinds are adjudicated and none is refused: the mesh child handle carries the
 caller's own `childId`, so nothing here depends on a content-addressing function no specification
 states.
 """
@@ -47,8 +49,9 @@ from semio_repo_test import Adapter, Outcome
 MEMBERS = ("schema", "objects")
 """🗂️ The two members `LowpolySnapshot` declares — and the cross-language projection."""
 
-OBJECT_MEMBERS = {"id", "name", "transform", "smoothShading", "mesh", "paintLayers"}
-"""🧊 The members each object carries, as the committed vectors spell them."""
+OBJECT_MEMBERS = {"id", "name", "transform", "smoothShading", "mesh", "paintLayers", "meshContent"}
+"""🧊 The members each object carries, as the committed vectors spell them — `meshContent` being the
+persisted half-edge-mesh JSON the `mesh` handle hashes."""
 
 LAYER_MEMBERS = {"name", "visible", "opacity", "blendMode", "pixels"}
 """🎨 The members each paint layer carries. It has no id: the stack is addressed by INDEX."""
@@ -176,9 +179,13 @@ def apply_mutation(document, kind, payload):
         member, argument = TRANSFORM_FIELDS[kind]
         document["objects"][object_at(document, payload["id"], kind, "mutate")]["transform"][member] = copy.deepcopy(payload[argument])
     elif kind == "create-mesh":
-        document["objects"][object_at(document, payload["id"], kind, "mutate")]["mesh"] = {"childId": payload["childId"], "target": copy.deepcopy(payload["target"])}
+        record = document["objects"][object_at(document, payload["id"], kind, "mutate")]
+        record["mesh"] = {"childId": payload["childId"], "target": copy.deepcopy(payload["target"])}
+        if payload["meshWorkspace"]:
+            record["meshContent"] = payload["meshWorkspace"]
     elif kind == "delete-mesh":
-        document["objects"][object_at(document, payload["id"], kind, "mutate")]["mesh"] = None
+        record = document["objects"][object_at(document, payload["id"], kind, "mutate")]
+        record["mesh"], record["meshContent"] = None, ""
     elif kind == "insert-paint-layer":
         record = document["objects"][object_at(document, payload["objectId"], kind, "mutate")]
         index = payload.get("index")
@@ -218,16 +225,12 @@ def inverse_mutation(document, kind, payload):
     if kind in TRANSFORM_FIELDS:
         member, argument = TRANSFORM_FIELDS[kind]
         return [(kind, {"id": payload["id"], argument: copy.deepcopy(document["objects"][object_at(document, payload["id"], kind, "inverse")]["transform"][member])})]
-    if kind == "create-mesh":
-        held = document["objects"][object_at(document, payload["id"], kind, "inverse")]["mesh"]
+    if kind in ("create-mesh", "delete-mesh"):
+        record = document["objects"][object_at(document, payload["id"], kind, "inverse")]
+        held = record["mesh"]
         if held is None:
-            return [("delete-mesh", {"id": payload["id"]})]
-        return [(kind, {"id": payload["id"], "childId": held["childId"], "target": copy.deepcopy(held["target"]), "meshWorkspace": ""})]
-    if kind == "delete-mesh":
-        held = document["objects"][object_at(document, payload["id"], kind, "inverse")]["mesh"]
-        if held is None:
-            return []
-        return [("create-mesh", {"id": payload["id"], "childId": held["childId"], "target": copy.deepcopy(held["target"]), "meshWorkspace": ""})]
+            return [("delete-mesh", {"id": payload["id"]})] if kind == "create-mesh" else []
+        return [("create-mesh", {"id": payload["id"], "childId": held["childId"], "target": copy.deepcopy(held["target"]), "meshWorkspace": record["meshContent"]})]
     if kind == "insert-paint-layer":
         index = payload.get("index")
         record = document["objects"][object_at(document, payload["objectId"], kind, "inverse")]

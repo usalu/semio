@@ -297,6 +297,21 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(rows).toContainEqual({ actorId: "actor-1::p1-ext", pluginId: "p1-ext", resident: true, shard: 0 });
     });
 
+    it("registerExtension() cascades a program outside the build-time catalog exactly like a catalog extension, once per pair", async () => {
+      const shardClient = fakeShardClient();
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+      const parent = `p1@${"a".repeat(64)}`, extension = `p1-ext@${"a".repeat(64)}`;
+      registry.registerManifest({ pluginId: parent, moduleUrl: "https://x/_semio/plugin-modules/g/b/p1/🌉️bridge.js", caps: [], manifestPluginId: "p1" });
+      registry.registerManifest({ pluginId: extension, moduleUrl: "https://x/_semio/plugin-modules/g/c/p1-ext/🌉️bridge.js", caps: [], manifestPluginId: "p1-ext" });
+      registry.registerExtension(parent, extension);
+      registry.registerExtension(parent, extension);
+
+      await registry.activate(parent, "actor-1", "manual");
+
+      expect(registry.runtimeMetricsActorRows().map((row) => [row.actorId, row.pluginId]).sort()).toEqual([["actor-1", parent], [`actor-1::${extension}`, extension]]);
+      expect(registry.manifestFor(parent)?.manifestPluginId).toBe("p1");
+    });
+
     it("a plugin with no registered extensions activates with no cascade side effects", async () => {
       const shardClient = fakeShardClient();
       const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });

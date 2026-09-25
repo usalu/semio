@@ -49,7 +49,7 @@ type Fixture = {
     readonly requiredControlId: string;
     readonly pointerRects: readonly { readonly id: string; readonly x: number; readonly y: number; readonly width: number; readonly height: number }[];
   };
-  readonly presentedChrome: { readonly firstEpoch: number; readonly successorEpoch: number; readonly controls: readonly { readonly id: string; readonly label: string }[] };
+  readonly presentedChrome: { readonly firstEpoch: number; readonly successorEpoch: number; readonly controls: readonly { readonly id: string; readonly label: string }[]; readonly generationRule: { readonly controlId: string; readonly firstRect: readonly number[]; readonly sameChromeRect: readonly number[]; readonly changedChromeRect: readonly number[] } };
   readonly settingsTabStrip: { readonly availableWidth: number; readonly activeId: string; readonly tabs: readonly { readonly id: string; readonly label: string }[]; readonly tailIds: readonly string[] };
   readonly events: readonly { readonly id: string; readonly dom: { readonly type: string; readonly value?: string }; readonly wire: WireEvent; readonly expected: { readonly accepted: boolean; readonly focusedNodeId: number; readonly actions: number; readonly value?: string } }[];
   readonly rejections: readonly { readonly id: string; readonly wire: WireEvent; readonly current: (Pick<Address, "windowGeneration" | "nodeId" | "nodeKey"> & Partial<Pick<Address, "windowId">>) | null; readonly reason: string }[];
@@ -168,6 +168,10 @@ describe("wgpu accessibility interaction contract", () => {
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(accessibilityInteractionSchema);
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.presentedChrome.successorEpoch).toBeGreaterThan(fixture.presentedChrome.firstEpoch);
+    const rule = fixture.presentedChrome.generationRule;
+    expect(fixture.presentedChrome.controls.map((control) => control.id)).toContain(rule.controlId);
+    expect(rule.sameChromeRect).toEqual(rule.firstRect);
+    expect(rule.changedChromeRect).not.toEqual(rule.firstRect);
     expect(new Set(fixture.settingsTabStrip.tabs.map((tab) => tab.id)).size).toBe(fixture.settingsTabStrip.tabs.length);
   });
 

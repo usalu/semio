@@ -3,24 +3,32 @@
   "contractId": "draw-source-scenario-input-v1",
   "producerContext": {
     "generatorId": "plugin-registry",
-    "compilerRoots": ["📜️script.ts"],
+    "compilerRoots": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"],
+    "runtimeModules": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs"],
+    "runtimeData": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json"],
+    "runtimeReceiptCatalogs": [{ "manifestPath": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json", "ownerRoot": "✏️s/🔌️plugins/🗄️stdio", "receiptPathField": "protocol_path" }],
     "workspaceInputs": ["package.json", "nx.json", "📋️project.json", ".gitignore"],
-    "runtimePackages": ["nx", "@nx/js", "@nxlv/python"],
+    "runtimePackages": ["nx", "@nx/js", "@nxlv/python", "typescript", "@iarna/toml"],
     "authority": "current-exact-no-follow-static-closure",
     "workspaceBindings": "fixture-local",
     "initialOutputs": "actual-generator-before-baseline",
-    "registryNodeCount": 10
+    "registryNodeCount": 16
   },
   "launchSeed": {
     "path": ".vscode/🧩️launch.seed.jsonc",
     "format": "jsonc",
-    "content": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n    \"@generated:draw-fixture-host:react\"\n  ],\n  \"compounds\": [],\n\n  // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated\n  // output); see 🖥️launch.ts readSeed() for the exact split contract this marker line supports.\n  \"devLaunchers\": {\n    \"draw-fixture-host\": {\n      \"namePrefix\": \"🧪️draw-fixture-host\",\n      \"order\": 390,\n      \"command\": \"bun nx run @semio-tech/plugin-registry:check-generated\",\n      \"reactEnv\": { \"FIXTURE_PORT\": \"{PORT}\" },\n      \"reactServerReadyAction\": { \"pattern\": \"ready:(\\\\d+)\", \"uriFormat\": \"http://localhost:{PORT}\" }\n    }\n  }\n}\n"
+    "content": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n    \"@generated:draw-fixture-host:react\",\n    \"@generated:draw-fixture-host:wgpu\"\n  ],\n  \"compounds\": [],\n\n  // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated\n  // output); see 🚀️launch/🟦️.ts readSeed() for the exact split contract this marker line supports.\n  \"devLaunchers\": {\n    \"draw-fixture-host\": {\n      \"namePrefix\": \"🧪️draw-fixture-host\",\n      \"order\": 390,\n      \"wgpuOrder\": 390.1,\n      \"env\": { \"FIXTURE_PORT\": \"{PORT}\" }\n    }\n  }\n}\n"
+  },
+  "deploymentCatalog": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json",
+    "format": "json",
+    "content": "{\n  \"version\": 1,\n  \"modules\": [\n    { \"pluginId\": \"draw-fixture-host\", \"directoryName\": \"🧪️draw-fixture-host\" }\n  ]\n}\n"
   },
   "catalogContext": [
     {
       "path": "✏️s/🔌️plugins/🧪️draw-fixture-host/📦️packages/🦀️rust/Cargo.toml",
       "format": "toml",
-      "content": "[package]\nname = \"draw-fixture-host\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"📚️library/🦀️.rs\"\n\n[package.metadata.component]\npackage = \"semio:draw-fixture-host\"\n\n[package.metadata.semio]\nrole = \"plugin\"\nhost = { landing = \"fixture-landing\", shell = \"fixture-shell\" }\n\n[[package.metadata.semio.playground]]\nvariant = \"draw-fixture-host\"\nports = { react = 6197, wgpu = 6198 }\n"
+      "content": "[package]\nname = \"draw-fixture-host\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"📚️library/🦀️.rs\"\ncrate-type = [\"cdylib\"]\n\n[package.metadata.component]\npackage = \"semio:draw-fixture-host\"\n\n[package.metadata.semio]\nrole = \"plugin\"\nhost = { landing = \"fixture-landing\", shell = \"fixture-shell\" }\n\n[[package.metadata.semio.playground]]\nvariant = \"draw-fixture-host\"\nports = { react = 6197, wgpu = 6198 }\n"
     },
     {
       "path": "✏️s/🔌️plugins/🧪️draw-fixture-host/📦️packages/🦀️rust/📚️library/🦀️.rs",
@@ -34,12 +42,11 @@
     "content": "#[path = \"../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs\"]\nmod cad_interaction_spec;\n"
   },
   "cadConsumerMount": {
-    "sourcePath": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
     "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
     "meaning": "unchanged-live-cad-bytes-in-authored-canonical-fixture-context"
   },
   "owner": {
-    "artifactId": "🖍️draw",
+    "artifactId": "🖍️drawing",
     "standardVersion": "1",
     "subsetId": "any",
     "commandDirectoryName": "🖱️canvas-pointer-down"
@@ -48,7 +55,7 @@
     {
       "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
       "format": "toml",
-      "content": "[package]\nname = \"semio-s-plugin-draw-fsm-macros\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\nproc-macro = true\npath = \"🦀️.rs\"\n"
+      "content": "[package]\nname = \"semio-s-plugin-draw-fsm-macros\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\nproc-macro = true\npath = \"../../🦀️.rs\"\n"
     },
     {
       "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json",
@@ -58,22 +65,17 @@
     {
       "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts",
       "format": "typescript",
-      "content": "import { dirname } from \"node:path\";\nexport const packageRoot = dirname(import.meta.path);\n"
-    },
-    {
-      "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/🦀️.rs",
-      "format": "rust",
-      "content": "extern crate proc_macro;\n#[path = \"../../🦀️.rs\"]\nmod component;\n#[proc_macro]\npub fn fixture(input: proc_macro::TokenStream) -> proc_macro::TokenStream { component::expand(input) }\n"
+      "content": "#!/usr/bin/env bun\n/** ✨️ `@semio-tech/drawing-fsm-macros` router: `bun ./📜️script.ts test`. */\nimport { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from \"@semio-tech/repo-lib\";\n\nclass TestScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    const { rest } = resolveTestLevel(segments);\n    await runCargoTestBudgeted([\"semio-s-plugin-draw-fsm-macros\"], this.repoRoot, rest);\n  }\n}\n\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\n\nawait runBundleScriptMain(router, import.meta.url, { defaultCommand: \"test\" });\n"
     },
     {
       "path": "🔄️fsm/✨️macros/🦀️.rs",
       "format": "rust",
-      "content": "pub fn expand(input: proc_macro::TokenStream) -> proc_macro::TokenStream { input }\n"
+      "content": "extern crate proc_macro;\n#[proc_macro]\npub fn fixture(input: proc_macro::TokenStream) -> proc_macro::TokenStream { input }\n"
     },
     {
       "path": "🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
       "format": "toml",
-      "content": "[package]\nname = \"semio-s-plugin-draw-fsm\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"🦀️.rs\"\n\n[dependencies]\nfsm_macros = { path = \"../../✨️macros/📦️packages/🦀️rust\", package = \"semio-s-plugin-draw-fsm-macros\" }\n"
+      "content": "[package]\nname = \"semio-s-plugin-draw-fsm\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"../../🦀️.rs\"\n\n[dependencies]\nfsm_macros = { path = \"../../✨️macros/📦️packages/🦀️rust\", package = \"semio-s-plugin-draw-fsm-macros\" }\n"
     },
     {
       "path": "🔄️fsm/📦️packages/🦀️rust/📋️project.json",
@@ -83,12 +85,7 @@
     {
       "path": "🔄️fsm/📦️packages/🦀️rust/📜️script.ts",
       "format": "typescript",
-      "content": "import { dirname } from \"node:path\";\nexport const packageRoot = dirname(import.meta.path);\n"
-    },
-    {
-      "path": "🔄️fsm/📦️packages/🦀️rust/🦀️.rs",
-      "format": "rust",
-      "content": "#[path = \"../../🦀️.rs\"]\nmod component;\npub use component::transition;\n"
+      "content": "#!/usr/bin/env bun\n/** 🎭️ `@semio-tech/drawing-fsm` router: `bun ./📜️script.ts test`. */\nimport { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from \"@semio-tech/repo-lib\";\n\nclass TestScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    const { rest } = resolveTestLevel(segments);\n    await runCargoTestBudgeted([\"semio-s-plugin-draw-fsm\"], this.repoRoot, rest);\n  }\n}\n\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\n\nawait runBundleScriptMain(router, import.meta.url, { defaultCommand: \"test\" });\n"
     },
     {
       "path": "🔄️fsm/🦀️.rs",
@@ -108,7 +105,7 @@
       "content": "[workspace]\nresolver = \"2\"\nmembers = [\n  \"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust\",\n  \"{{sourceRoot}}/🔄️fsm/✨️macros/📦️packages/🦀️rust\",\n]\n"
     },
     {
-      "path": "../🖍️draw-source-scenario/🔣️.json",
+      "path": "🔒️dependencies.json",
       "format": "json",
       "content": "{\n  \"schemaVersion\": 1,\n  \"entries\": [\n    { \"id\": \"fsm-macros\", \"users\": [\"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"proc-macro2\", \"users\": [\"{{sourceRoot}}/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"quote\", \"users\": [\"{{sourceRoot}}/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"async\", \"users\": [\"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"dispatch\", \"users\": [\"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"syn\", \"users\": [\"{{sourceRoot}}/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"serde\", \"users\": [\"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust/Cargo.toml\"] },\n    { \"id\": \"serde-json\", \"users\": [\"{{sourceRoot}}/🔄️fsm/📦️packages/🦀️rust/Cargo.toml\"] }\n  ]\n}\n"
     },
@@ -118,19 +115,19 @@
       "content": "[package]\nname = \"draw-source-consumer\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"📚️library/🦀️.rs\"\n\n[dependencies]\nfsm = { path = \"../../{{artifactSourceRoot}}/🔄️fsm/📦️packages/🦀️rust\", package = \"semio-s-plugin-draw-fsm\" }\n"
     },
     {
-      "path": "🧪️tests/🦀️reference.rs",
+      "path": "🧪️tests/🧪️reference/🦀️.rs",
       "format": "rust",
       "content": "#[path = \"../../{{artifactSourceRoot}}/🦀️.rs\"]\nmod command;\npub fn invoke(value: u32) -> u32 { command::pointer_down(value) }\n"
     },
     {
       "path": "📜️script.ts",
       "format": "typescript",
-      "content": "declare const root: string;\ndeclare function policyReadFileSafe(root: string, path: string): string;\nconst drawEditorSources = [\n  \"__SCOPE__/{{artifactSourceRoot}}/🦀️.rs\",\n].map((file) => policyReadFileSafe(root, file));\nexport { drawEditorSources };\n"
+      "content": "import { readFileSync } from \"node:fs\";\nimport { join } from \"node:path\";\nimport { BundleScript, ScriptRouter, runBundleScriptMain } from \"@semio-tech/repo-lib\";\n\n/** 🖍️ Reads the Draw editor command source the workspace router depends on. */\nclass SourcesScript extends BundleScript {\n  async run(): Promise<void> {\n    const drawEditorSources = [\n      \"__SCOPE__/{{artifactSourceRoot}}/🦀️.rs\",\n    ].map((file) => readFileSync(join(this.repoRoot, file), \"utf8\"));\n    console.log(drawEditorSources.length);\n  }\n}\n\nconst router = new ScriptRouter(import.meta.dir).register(\"sources\", SourcesScript);\n\nawait runBundleScriptMain(router, import.meta.url, { defaultCommand: \"sources\" });\n"
     }
   ],
   "retention": {
     "fixtureOwnerSegments": ["🧪️tests"],
-    "transactionTicketSegments": ["🎫️ticket"],
+    "transactionTicketSegments": [".🧬semio", "🎫️ticket"],
     "parentSegments": ["📓️draw-source-scenarios", "🧪️runs"],
     "recordFilename": "📝️.md",
     "disposition": "retain-all-until-reviewed",
@@ -144,12 +141,8 @@
   },
   "oracle": {
     "sourceDirectoryCount": 7,
-    "destinationDirectoryCount": 9,
-    "destinationNodeCount": 20,
-    "configuration": [
-      { "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml", "sourceEntry": "🦀️.rs", "destinationEntry": "📚️library/🦀️.rs" },
-      { "path": "🔄️fsm/📦️packages/🦀️rust/Cargo.toml", "sourceEntry": "🦀️.rs", "destinationEntry": "📚️library/🦀️.rs" }
-    ],
+    "destinationDirectoryCount": 7,
+    "destinationNodeCount": 16,
     "workspaceMemberCount": 2,
     "dependencyUserCount": 8,
     "projectCwdCount": 8,
@@ -162,8 +155,7 @@
       "packageName": "draw-source-consumer",
       "libraryEntry": "📚️library/🦀️.rs",
       "moduleName": "cad_interaction_spec",
-      "moduleTarget": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs",
-      "canonicalModuleTarget": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs"
+      "moduleTarget": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs"
     }
   }
 }

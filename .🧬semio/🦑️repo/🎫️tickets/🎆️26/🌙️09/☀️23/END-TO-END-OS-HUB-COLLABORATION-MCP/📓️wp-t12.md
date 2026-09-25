@@ -2,7 +2,7 @@
 
 Slice: T12 (session 11). Captures: **`.🧬semio/🌐hub/s11-t12-captures/`** (re-measured; see below). Inputs: `.tmp-ticket/wp-t12/*`. Ports 8060–8069 / 6560–6569.
 
-> ⚠️ **12:19–12:35 low-disk sweep.** An external cleanup deleted the whole `.tmp-ticket/wp-t12/` folder (inputs, `generated/`, `backup/`, `target/`). The 43 inputs were restored byte-exact from the git index (read with `git show :path`, no git state touched); the jack additions made after the last auto-stage (vectors 35–38, decisions, harness arms) were rebuilt from the committed fixtures and this report. `generated/editor-survey.json` (derived from T11's deleted `wp-t11/generated/editor-paths-0.json`) is gone and not rebuildable; its registrations are committed. Every capture this report cites is re-measured by `wp-t12/remeasure.sh` into `.🧬semio/🌐hub/s11-t12-captures/<step>.txt` (started 12:47); capture names below that end in `-N.txt` refer to the lost originals, their re-measurement is the step of the same topic in that folder.
+> ⚠️ **12:19–12:35 low-disk sweep.** An external cleanup deleted the whole `.tmp-ticket/wp-t12/` folder (inputs, `generated/`, `backup/`, `target/`). The 43 inputs were restored byte-exact from the git index (read with `git show :path`, no git state touched); the jack additions made after the last auto-stage (vectors 35–38, decisions, harness arms) were rebuilt from the committed fixtures and this report. `generated/editor-survey.json` (derived from T11's deleted `wp-t11/generated/editor-paths-0.json`) is gone and not rebuildable; its registrations are committed. Every capture this report cites is re-measured by `wp-t12/remeasure.sh` into `.🧬semio/🌐hub/s11-t12-captures/<step>.txt` (started 12:47); capture names below that end in `-N.txt` refer to the lost originals, their re-measurement is the step of the same topic in that folder. **Re-measurement complete: §8.**
 Inherits: T10 (`📓️wp-t10.md`, `wp-t10/`), T11 (`📓️wp-t11.md`, `wp-t11/`), T5, T8, T9.
 
 ## Status
@@ -12,13 +12,13 @@ Inherits: T10 (`📓️wp-t10.md`, `wp-t10/`), T11 (`📓️wp-t11.md`, `wp-t11/
 | 0. **S15 guest defects (coordinator priority, 07:1x)**: stdio ×9, curation ×2, trinity ×2, norm ×2, gis viewer, generation2d viewer, vcs viewer | **all fixed at the root, each with a law** (§S): stdio kit verbs registered + artifact publication authority (9 live laws), curation numeric args, norm snapshot decode, generation2d viewer owners (+6 preventive viewers, + draw), gis viewer camera lane, vcs viewer document row, trinity patchNodes/rail verbs. Native lib tests green per crate; **one wasm32-wasip2 check of all 15 touched guest plugins EXIT 0 (95 s, fleet mutex)**. Every package recorded in `wp-w1/requests/t12.txt` (items 4–9) | `wp-s15` matrix, `wp-w1/requests/s15.txt`, `check-s15-wasm-1.txt` |
 | 1a. Landing: T10 outcome switch (`switch.py` + `manifest-align.py --write`), compile-atomic | **landed, green** (§1). Standalone bridges: the check sweep was stopped (5/37 green) because every bridge is regenerated for state-lane surfaces (§3) and rebuilt by the next inventory | `switch-apply.txt`, `check-switch-1.txt`, `check-switch-wasm-1.txt`, `tsc-switch-2.txt`, `check-switch-bridges-2.txt` |
 | 1b. Landing: T11 frozen follow-ups | **landed, green, "T12 landing done" 01:08** (§2): binary one name `replace-byte-range`; dwg ac1018 duplicate leaves deleted; jpg/tiff baseline leaf fields `pub`. W2 messaged | `check-followups-1.txt`, `check-followups-oracle-1.txt`, `check-followups-wasm-1.txt` |
-| 2. pdf 1.7 base runtime-only 44 | pending | |
-| 3. Editor/viewer state-lane vocabularies (T11 §1: 39 real) | **in progress** (§3). Vectors: **86/86 measured, 0 findings** after the fix below (`editor-measure-2.txt`). Landed + checked: kernel `mutation_report_json` (`check-kernel-helper-1.txt`), `law::vector` in the stdio test-oracle crate (unit tests **5/5**, `test-law-vector-1.txt`). Harness built; vectors measured. **Bug found and fixed:** architect presence/config and imperative config wiped their record to defaults on an identical re-apply (§3a; `check-noop-1.txt`, W2 request filed). Not yet: registration generator run, bridges regenerated, cases run; trinity's 5 wait on a taxonomy move + private paths | `editor-survey.json`, `editor-vectors.json`, `editor-measure-1.txt` |
-| 4. Inventories + contract rerun (target 0 high) | **in progress** (§4). Contract high rows **141 → 126** so far (12:51): state-lane fixtures keyed by surface (8 wildcard rows gone), stdio step cc6's stale hand-written subset bridge removed (3 outcome rows), gisterrain terrain config declared (capability without manifest gone), generation2d update-camera fixture re-copied byte-verbatim from its physical vector (2 digest rows), trinity jack's 4 state lanes registered. Remaining 126 split by owner in §4 | `contract` / `inventory` steps in the captures folder, `contract-4-rows-1251.json` |
+| 2. pdf 1.7 base runtime-only 44 | **done** (§6): the 44 kinds production dispatch offered without a manifest row are declared; lopdf writes one before/after pair per kind (60/60 observable, byte-reproducible, reader probe re-qualified 120/120 directions); 44 laws apply each kind, WRITE it with the subset's writer, read it back and require lopdf's after-document, then require the inverse to write back to the before-document: **44/44, crate lib 502/502**. Two laws needed two steps (a shading pattern's shading is its own collection item) — finding F3 | `pdf-lopdf-vectors-1/2/3.txt`, `pdf-lib.txt` |
+| 3. Editor/viewer state-lane vocabularies (T11 §1: 39 real) | **done for 35 + gis camera; trinity rewriting blocked (F1)** (§3). Re-measured after the sweep: harness build EXIT 0, `editor-measure` EXIT 0, law::vector 5/5. Earlier state: Vectors: **86/86 measured, 0 findings** after the fix below (`editor-measure-2.txt`). Landed + checked: kernel `mutation_report_json` (`check-kernel-helper-1.txt`), `law::vector` in the stdio test-oracle crate (unit tests **5/5**, `test-law-vector-1.txt`). Harness built; vectors measured. **Bug found and fixed:** architect presence/config and imperative config wiped their record to defaults on an identical re-apply (§3a; `check-noop-1.txt`, W2 request filed). Since landed: 35 vocabularies registered (589 files), all 36 bridges regenerated, inventory clean; trinity's 5 wait on a taxonomy move + private paths (F1) | `editor-survey.json`, `editor-vectors.json`, `editor-measure-1.txt` |
+| 4. Inventories + contract rerun (target 0 high) | **high 141 → 54, every T12-owned row gone** (§4). The 54 left: 31 story/benchmark fixture imports, 13 wgpu Shell test-layout rows, 8 sequence carrier-fixture rows, 1 fem3d digest (peers, attributed in §4) and trinity rewriting's window vocabulary (F1, a taxonomy decision). Medium 108: 107 surveyed `justified-reference-gap` + cad's deferral. Earlier step (12:51) was 141 → 126: state-lane fixtures keyed by surface (8 wildcard rows gone), stdio step cc6's stale hand-written subset bridge removed (3 outcome rows), gisterrain terrain config declared (capability without manifest gone), generation2d update-camera fixture re-copied byte-verbatim from its physical vector (2 digest rows), trinity jack's 4 state lanes registered. Remaining 126 split by owner in §4 | `contract` / `inventory` steps in the captures folder, `contract-4-rows-1251.json` |
 | 5. remodeling wall-clock laws (5) | **fixed by root cause, 1301/1301 under load 18–21** (§5) | `lib-remodel-1.txt` (before: 2 red), `lib-remodel-serial-1.txt`, `remodel-probe-1.txt`, `lib-remodel-2.txt` |
 | 6. raster concurrency flake | **fixed by root cause, 5/5 runs 228/228** (was 227/1): standalone control credits come from an explicit `RasterStandaloneControlPool`; production uses the process pool, each saturation law owns a private pool, and a snapshot root hands its pool to the inner retirement (`wp-t12/raster-pool.py`) | `check-raster-pool-1.txt`, `lib-raster-1.txt`, `lib-raster-2-5.txt` |
-| 7. Lib tests of every touched plugin | pending | |
-| 8. Coordinator add-on: per-plugin `test quick` for gis, lowpoly, mathematical, wfc, fem, architect (audit P1-7) | **done** — **gis green** (native codec receipts 2 + hostile 8; nextest 10/10; 758 s, almost all build; the 09-23 document-id fixture drift is gone). **lowpoly red, 2/3: `descriptor_is_fresh`** — the committed `🛂️.descriptor.semio` (09-24 16:32) differs from the live one in 4 bytes: `semantics.effects.destructive` of two actions and one `policy.approval` (peer action-semantics edits since; the 09-23 `ENOENT .tmp-wp-c3` is gone). Regenerating descriptors is W2's describe-all, so it is left to the rebuild. **mathematical green** (nextest 4/4, 623 s; the 09-23 budget timeout was build time). **wfc 27/28: `descriptor_is_fresh`** — the committed descriptor predates G10's landed `InferenceCommitBinding` (the inference `payload` object gained a field: 6 vs 5 members at byte 13 184); same class as lowpoly, refreshed by W2's describe-all. **fem green** (5/5, 545 s), **architect green** (3/3, 355 s). Net: 4/6 green; the 09-23 budget timeouts were build time under fleet load, not tests; lowpoly/wfc wait only on W2's descriptor refresh | `test-quick-<plugin>.txt` |
+| 7. Lib tests of every touched plugin | **re-measured after the sweep** (`remeasure.txt`, `followup.txt` in the captures folder): see §8 for the per-crate table. One red was mine: the 00:41 outcome switch rewrote leaf `outcomeClasses` but left the literal copies in 5 `🔬️structural-correspondence` laws (curation, writer, gisterrain, imperative, space) — settled from the declarations (`wp-t12/structural-outcomes.py`) | `test-curation.txt` (red), `followup-lib-*.txt` |
+| 8. Coordinator add-on: per-plugin `test quick` for gis, lowpoly, mathematical, wfc, fem, architect (audit P1-7) | **re-measured 14:3x: 6/6 green** (lowpoly and wfc after W2's descriptor refresh; gis after the fix below). gis was red once, and it was mine: `gismap_viewer_never_mutates` drove the generic `assert_viewer_never_mutates`, whose `expect("viewer adapter command succeeds")` cannot hold for a viewer whose only verb is a retained window-config write (S15's gis camera lane, `handle` refuses by design). The gis surface law now states the guarantee over the seam that decides it, exactly as the energy viewer's does: every verb the map viewer declares is `Migrated` (`followup-quick-gis.txt`, 10/10). Earlier run (03:xx): **gis green** (native codec receipts 2 + hostile 8; nextest 10/10; 758 s, almost all build; the 09-23 document-id fixture drift is gone). **lowpoly red, 2/3: `descriptor_is_fresh`** — the committed `🛂️.descriptor.semio` (09-24 16:32) differs from the live one in 4 bytes: `semantics.effects.destructive` of two actions and one `policy.approval` (peer action-semantics edits since; the 09-23 `ENOENT .tmp-wp-c3` is gone). Regenerating descriptors is W2's describe-all, so it is left to the rebuild. **mathematical green** (nextest 4/4, 623 s; the 09-23 budget timeout was build time). **wfc 27/28: `descriptor_is_fresh`** — the committed descriptor predates G10's landed `InferenceCommitBinding` (the inference `payload` object gained a field: 6 vs 5 members at byte 13 184); same class as lowpoly, refreshed by W2's describe-all. **fem green** (5/5, 545 s), **architect green** (3/3, 355 s). Net: 4/6 green; the 09-23 budget timeouts were build time under fleet load, not tests; lowpoly/wfc wait only on W2's descriptor refresh | `test-quick-<plugin>.txt` |
 
 ## S. S15 guest defects
 
@@ -99,6 +99,35 @@ Fix (`wp-t12/whole-record-noop.py`): the leaves return `MutationOutcome::new(bas
 Guest rebuild requested in `wp-w1/requests/t12.txt`. The generation3d config vectors were wrong on my side (the preview
 camera is `{position,target,fov}`, not six scalars) and were corrected, not the code.
 
+## 4. Contract: 141 → 54 high, and who owns the 54
+
+Measured by `test-contract` (captures `contract.txt` 14:30, `followup-contract.txt`; rows `contract-rows.json`,
+`followup-contract-rows.json`). What removed the 87 rows T12 owned, each by fixing the evidence or the declaration,
+never by exempting a row:
+
+| rows | fix |
+|---:|---|
+| 44 `runtime-only-mutation` pdf 1.7 base | §6 |
+| 12 state-lane wildcard/outcome/capability rows | §3 (surface-keyed fixtures, cc6 stale bridge removed, gisterrain terrain config declared) |
+| 9 `mutation-without-fixture` os.config ui-preferences | §7a: catalog `os-config-ui-preferences-1-any` over the 18 committed per-kind quintets + the claiming host case |
+| 7 `fixture-generator-unregistered` jpg | Pillow generator ledger (`wp-t12/jpg-pillow-generator.py`) |
+| 5 `mutation-without-fixture` cad object kinds | §7d: the fixture rule now honours the catalog's own `deferredKinds` (the debt stays visible once, as cad's medium `mutation-kinds-deferred`); F2 |
+| 3 energy/remodel coverage rows | `mutationCoverageBreaches` counts a row named by a registered vector scenario id for that vector's kind |
+| 3 layout `rotate-frame` | §7c |
+| 2 generation2d digests | fixtures re-copied byte-verbatim from the physical vector |
+| 1 remodel `mutation-kind-undeclared` (136 rows) | §7b |
+| 1 trinity jack vocabulary | its 4 state lanes registered |
+
+**The 54 that remain are not T12's:**
+
+| rows | owner | what it is |
+|---:|---|---|
+| 31 `production-fixture-dependency` | remodel stories (12), fem stories (6), block stories (5), ui stories/elements (3), os dev benchmarks + `🧑‍💻dev` script (3), infinite + IconRenderHost stories (2) | `📖️stories/…/🧪️.story.tsx` and dev benchmarks import `🧫️fixtures` data; the rule wants it under `📚️examples` or out of fixtures — each owner's move |
+| 13 wgpu Shell test layout | WG7/WG8 (`🐚️Shell/🧪️tests/📂️wgpu-document-relay`, `🎯️targets/🧊️wgpu/🦀️.rs:29097`) | 11 inline test bodies, 1 non-canonical `#[path]`, 1 case name |
+| 8 sequence carrier fixtures | sequence owner | generator oracle `serde-json-sequence-carrier-reader` and profile `semantic-sequence-carrier-v1` referenced but not registered |
+| 1 fem3d digest | fem owner | `expected.results.json` rehashed after a benchmark change |
+| 1 trinity rewriting window vocabulary | trinity owner (F1) | needs a taxonomy move before it can be registered |
+
 ## 5. Remodeling wall-clock laws
 
 **Measured first.** The ticket-local probe (`wp-t12/remodel-probe`, production `BoundedStillDecoder`, debug build, serial)
@@ -121,7 +150,138 @@ four steps can no longer fail on one slow step — exactly as production would n
 **Result:** `cargo test -p semio-s-artifact-remodel-remodeling --lib` 1301/1301 (load 18–21), helper law 1/1. Test-only
 change (the helper is `#[cfg(test)]`); no guest rebuild needed.
 
+## 6. pdf 1.7 base: the 44 kinds nobody declared
+
+Ticket 26/09/18/PDF-ARTIFACT-SPEC-COMPLETE widened `PdfMutation` from 16 to 60 kinds (page boxes and user unit,
+content operators and annotations by index, fonts/images/forms/graphics states/shadings/patterns/colour spaces/property
+lists, embedded files, outlines, named destinations, page labels, output intents, AcroForm, optional content, viewer
+settings, metadata, document id, encryption, catalog extras). Production dispatch offered all 60; the manifest owned
+16, and the 44 had one test each (`semantic_identity_is_owned_by_this_leaf`).
+
+- **Declared** (schema-first): 44 manifest rows, outcomes and variant read from each leaf's own `🔣️.json`.
+- **Independent evidence**: the lopdf engine (`🏭️generator/🔁️codec`, depends on `lopdf` and nothing else) got an
+  arrangement and a COS edit per kind (resources on the first page, catalog entries and name trees, trailer `/ID`,
+  RC4-128 encryption) and a projection that renders every page dictionary, the catalog, the trailer `/ID` and whether the
+  file was encrypted. 60/60 pairs observable; the 16 existing pairs regenerate byte-identically; two consecutive runs
+  diff equal after one fix — lopdf fills the 16 arbitrary `/U` padding bytes (ISO 32000-1 Algorithm 5) at random, the
+  engine zeroes them through the COS API. Reader probe re-qualified: (before,before) equal 60/60, (before,after)
+  unequal 60/60. 44 fixture manifests from the generator's own `manifests` command.
+- **Laws** (`🧬️schema/🧬️mutations/🧪️tests/⚖️lopdf-vectors`, #[cfg(test)]): decode lopdf's before/after through the
+  subset's reader, derive the payload from what lopdf changed, apply, **write with the subset's writer, read back**,
+  require lopdf's after-document on every typed lane (the retained COS carrier is writer freedom), then apply the
+  inverse steps and require the before-document. **42/44 green on the first run**; set-pattern and remove-pattern needed
+  two steps because the reader lifts a shading pattern's inline shading into its own collection item (`P9Shading`) —
+  the laws now apply SetShading+SetPattern / RemovePattern+RemoveShading; the single-step behaviour is finding F3.
+  Final: **44/44, crate lib 502/502** (`pdf-lopdf-vectors-3.txt`, `pdf-lib.txt`).
+- Nothing in production changed (no stdio rebuild; `wp-w1/requests/t12.txt` item 13).
+
+## 7. Other rows and defects closed this afternoon
+
+**7a. os.config ui-preferences.** The 18 per-kind quintets existed; no catalog registered them and no case claimed them.
+Catalog `os-config-ui-preferences-1-any` (9 kinds × `sets-*`/`keeps-*`), host case `🎨️mutate-os-config-ui-preferences`
+(feature, Rust + TS adapters: each `sets-*` row must move exactly its declared member, each `keeps-*` row must raise one
+`mutation.no-op` Warning and move nothing, inverses restore the before-record, a round trip reads locale, driver scale and
+keybinding off the typed value), taxonomy member name. TS subject 28/28; Rust subject in §8.
+**The identity sibling's TS adapter was broken**: it read `🧪️tests/<name>` fixture dirs that do not exist (6/6 errored)
+and both adapters still asserted a session `token` (`session-ada-0001`, `user-ada`) the `Identity` record no longer has
+(it carries `email`); both fixed against the committed record.
+
+**7b. remodel.** `mutate-remodeling-1` named its rows `<kind>-realworld`, `-noop`, `-missing` …, which the catalog does
+not declare (1 high row listing 100 scenarios). Every row now carries the registered scenario id of the vector its
+`vector` column runs (`wp-t12/remodel-row-ids.py`: 136 mutate + 136 inverse rows, unambiguous and unique per role; the
+vector-less commit-reconstruction rows keep their kind id), and both adapters' lists follow. Python oracle 275/275 at
+exhaustive; Rust subject in §8.
+
+**7c. layout `rotate-frame`** (added 09-23 without evidence): quintet from move-frame's committed before-document, leaf
+vector test (#[cfg(test)] mount), catalog vector, two case rows, both adapters (`wp-t12/layout-rotate-frame.py`).
+
+**7d. Test platform** (`🧪️test/🟦️.ts`, tsc 0 errors; platform suite 115/117 — the 2 reds are F7):
+- `mutationCoverageBreaches`: a row named by a registered vector scenario id covers that vector's kind (exact match
+  through `vectors[]`, never a prefix).
+- `mutationFixtureBreaches`: a kind the capability's catalog defers is not reported a second time; law
+  `a kind the capability's catalog lists in deferredKinds is left to mutation-kinds-deferred, and only that kind`
+  (9/9 in its block).
+
+**7e. My own fallout.** The 00:41 outcome switch left 17 literal outcome copies in 5 structural-correspondence laws
+(§8); settled from the declarations. My S15 gis camera lane made the plugin's generic viewer law unsatisfiable (§Status 8);
+restated as the energy viewer's retained-route law.
+
+## 8. Re-measured tests (after the 12:19 sweep)
+
+`remeasure.sh` (12:47–14:36) and `followup.sh` (15:24–) in `wp-t12/`, captures `<step>.txt` / `followup-<step>.txt`.
+
+| check | result |
+|---|---|
+| native `cargo check` of the 134 switch crates `--lib --tests` | EXIT 0 |
+| native check of the 16 S15 plugin crates | EXIT 0 |
+| wasm32-wasip2 check: replication, cad + the 16 S15 plugins (fleet mutex) | EXIT 0 |
+| tsc on the test platform + the new host case | 0 errors |
+| stdio test-oracle crate `--features oracles`; `law::vector` | EXIT 0; 5/5 |
+| stdio kit crates (7) | green |
+| curation lib | red (outcome literals, §7e) → **154/154** |
+| norm (3 crates), S15 viewers (8 crates, `viewer` filter), gismap, vcs, trinity jack + rewriting, architect + imperative | green |
+| raster lib ×5 | 5/5 green |
+| remodeling lib; remodel probe | green; EXIT 0 |
+| vector harness build; editor measure | EXIT 0; EXIT 0 |
+| writer lib; gisterrain lib; space lib | **176/176; 55/55; 51/51** |
+| pdf lib; lopdf vector laws | **502/502; 44/44** |
+| layout lib | red once (my rotate-frame test's include paths carried move-frame's emoji; the codemod replaced `move-frame` before `🕹️move-frame`) → fixed in file and script → **399/399** incl. the 4 rotate-frame vector laws |
+| test quick gis, lowpoly, mathematical, wfc, fem, architect | 6/6 green (gis after §Status 8) |
+| case `🎨️mutate-os-config-ui-preferences` (Rust + TS) | **56/56, parity 28/28** |
+| case `🎚️mutate-os-config-identity` (Rust + TS) | **12/12, parity 6/6** (TS was 0/6 before §7a) |
+| case `📸️mutate-remodeling-1` (Rust + Python) | **550/550, parity 275/275** |
+| case `📐️mutate-layout-1` | Rust subject 53/53; Python oracle was 30/53 — 11 kinds read the retired `<leaf>/🧪️tests/<vector>` fixture paths; fixed to the feature's `🧫️fixtures` vectors → **105/106, parity 52/53** (`identity-round-trip` is subject-only by the adapters' own design: the example is `.dsl.semio` and the reference carries no DSL codec) |
+| Python oracles with the same rot (`wp-t12/oracle-vector-paths.py` + hand edits) | wires 0/21 → **20/21**, space 0/9 → **8/9**, procedure 0/9 → **8/9** (also the wire's `{owner: null, slot: null}` root path), shooting 0/63 → **62/63** (also a NameError: `_leaf_root` bound `document` and read `fixture`), process3d 1/33 → **32/33**, dag 1/29 → **28/29**, home 1/3 → **2/3**, vcs 1/13 → **12/13** (plus two diff members `VcsDiff` no longer has), gismap 36/37 → **37/37** (example read through its `asset://` URI); each remaining row is the subject-only round trip. writer 6/9 → case **17/18, parity 8/9**: the snapshot's new `text` member, and `edit-text`'s no-op branch is now adjudicated because the body is carried (feature narrative updated); the last row is the placeholder-grammar refusal |
+| lopdf pdf engine rebuilt; 60 pairs regenerated | identical to the committed fixtures |
+| platform suite (bun) | 115/117 (F7) |
+
+### 8b. Repo-wide oracle sweep
+
+Because three Python references of plugins I had touched turned out 0/N (retired fixture paths), I ran every
+case's reference role once (`test-oracle` at exhaustive, 506 cases, 7 090 rows) — **`📓️wp-t12-oracle-sweep.md`**
+has the per-case table. After the fixes above: Python 111 cases, 37 with non-passing rows; Rust 90 / 6;
+TypeScript 128 / 2. The remainder is owners' work, bucketed there (document shape drift, scenario id drift,
+behaviour disagreements, declared refusals, oracle-only runs of byte-decoding references).
+
+## Findings
+
+- **F1 trinity rewriting** — its window vocabulary sits at `✏️editor/🪟️window/🎚️config`, outside the surface grammar
+  `<✏️editor|👁️viewer>[/🎭️modes/<mode>[/🪟️windows/<window>]]/<lane>`; registering it needs the owner to move the window
+  config under `🎭️modes/<mode>/🪟️windows/<window>/🎚️config` (a production taxonomy move).
+- **F2 cad object kinds** — no wire vector can exist while the pane's child materialization is absent from every codec;
+  the real fix is a persisted child resolver (`store::LinkResolver`/`ChildStoreFactory`), after the freeze.
+- **F3 pdf set-pattern** — accepts a pattern whose shading id names no shading; the writer emits it with an
+  unresolvable shading (re-read as `shading: ""`) and the outcome is still `applied` (outcomeClasses `["applied"]`).
+  remove-pattern leaves the lifted `<id>Shading` behind, so a round trip writes one extra `/Shading` resource. Proposed:
+  refuse (`rejected`) and remove the owned shading — leaf outcome and lift/lower decisions for the pdf owner.
+- **F4** `artifact_app_laws::assert_viewer_never_mutates` cannot serve retained-route viewers (energy, gis): a refusal
+  emits nothing and should satisfy "never mutates". Not edited now: every guest links that crate and W2 is restaging.
+- **F5** the os.config host cases say `🎚️config` "has no crate of its own"; `semio-framework-os-config` exists since
+  09-08. Moving all four cases to `🎚️config/🧪️tests` in one pass needs a taxonomy member kind for that owner.
+- **F6** (earlier) ~80 stdio editors expose editable-kit verbs without bridges (bcf `set-cell` is a no-op); JSON
+  `set-node` always writes strings (S15 staged `"\"S15\""`); unused imports in stdio set-snapshot inverse files; the
+  Pillow ledger says 11.3.0 while the generator ran 12.2.0.
+- **F7** the platform test `every committed case satisfies the frozen contract` asserts zero rows of every priority, so
+  it is red on the 107 surveyed medium rows; `clean safety` hit its 5 s timeout under fleet load.
+- **F8 jack's Python reference** still decodes the retired hex-member `trinity.jack.dsl v1` carrier, while the
+  committed scene (`🖼️assets/🎬️demo/🗣️.dsl.semio`, 09-24) is the nested record notation: 17 rows error with
+  `non-hexadecimal number found in fromhex()`, and `spec-vector-create-node` disagrees (the vector declares a
+  refusal, the reference applies). A reader/printer for the record notation is the fix (iso16757/vdi3805 refuse by
+  clause for the same notation).
+- **F9** the oracle phase is the only place these references run; nothing in the contract notices a reference that
+  reads a retired path — 9 cases read retired fixture paths (most of them 0/N). A contract rule that resolves every `shared://`/`asset://`
+  URI a reference builds against the case's plan would catch the whole class statically.
+
 ## Processes (pids)
+
+- 12:47 `remeasure.sh` (nohup, mine; ALL_DONE 14:36); 15:24 `followup.sh` (nohup, mine; ALL_DONE 16:15); both left no process.
+- One overlap against my own rule: at 13:24–13:29 the pdf laws (foreground) ran while the remeasure's queued wasm32 check
+  got the fleet mutex — two T12 cargos for ~5 min. No other overlap.
+- The 16:0x wait loop was moved to background by the tool timeout; it only polled a file and exited.
+- `inventory` in the follow-up exited 1 on ONE bridge (animate): a peer's 15:52 edit of
+  `🔌️plugin/🖥️host/🧬️component-codec/🦀️.rs` did not compile at that moment (E0407/E0432); every other inventory
+  row matched (0 differences) and the contract used animate's 14:28 inventory. Re-run alone at 16:3x once the
+  peer's edit compiled: animate 3 surfaces, 0 differences (`inventory-animate.txt`) — the inventory is clean.
 
 - native switch check 57805/57807 (exited 0)
 - wasm switch check (mutex) exited 0
@@ -139,3 +299,18 @@ change (the helper is `#[cfg(test)]`); no guest rebuild needed.
 - dwg: `🖊️dwg/🦀️.rs`, `4️⃣ac1018/…/🧬️mutations/🦀️.rs`, new `…/🧬️mutations/🧪️tests/🔬️fixture/🦀️.rs`, deleted `…/📸️set-snapshot/`, `…/🏷️set-version-info/`.
 - jpg/tiff: 15 leaf `🦀️.rs` under the two `🧱️baseline` subsets.
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json` (regenerated).
+- S15 (§S) and state lanes (§3): see `wp-w1/requests/t12.txt` items 4–12 and `editor-register.py`'s 589 files.
+- pdf (§6), under `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/`:
+  `🏭️generator/🔁️codec/🦀️.rs`, `🏭️generator/🔁️codec/🏗️generate/🦀️.rs`, `🏭️generator/📜️script.ts`,
+  `🔮️oracles/🔣️.json`, `🧬️schema/🧬️mutations/🦀️.rs` (test mount), new `🧬️schema/🧬️mutations/🧪️tests/⚖️lopdf-vectors/🦀️.rs`,
+  44 new `🧫️fixtures/<leaf>/{⬅️before,➡️after}.pdf`.
+- os.config (§7a): `🧰️framework/🛍️products/💻️os/🎚️config/🔮️oracles/🔣️.json`; new
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🎨️mutate-os-config-ui-preferences/{🥒️.feature,🦀️.rs,🟦️.ts}`;
+  `…/🧪️tests/🎚️mutate-os-config-identity/{🥒️.feature,🦀️.rs,🟦️.ts}`; `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json` (one member name).
+- remodel (§7b): `✏️s/🔌️plugins/📸️remodel/…/✳️any/🧪️tests/📸️mutate-remodeling-1/{🥒️.feature,🦀️.rs,🐍️.py}`.
+- layout (§7c): the 11 files listed by `layout-rotate-frame.py`, the rotate-frame test's include paths, `📐️mutate-layout-1/🐍️.py` (oracle paths).
+- test platform (§7d): `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts`, `…/🧪️test/🧬️schema/🔣️.json`, `…/🧪️test/🧪️tests/🧪️test-platform/🟦️.ts`.
+- structural laws (§7e): `🧪️tests/🔬️structural-correspondence/🦀️.rs` of sourcing-curation, writer, gis-gisterrain, imperative-procedure, space-space.
+- gis: `✏️s/🔌️plugins/🌍️gis/🧪️tests/🔬️surface/🦀️.rs`.
+- Python oracles: `📡️mutate-wires-1`, `🪐️mutate-s-space-1`, `🛟️mutate-procedure-1`, `🎥️mutate-shooting-1` (`🐍️.py` each).
+- Ticket inputs: `wp-t12/{remeasure.sh,followup.sh,catalog-problems.ts,remodel-row-ids.py,structural-outcomes.py,oracle-vector-paths.py,layout-rotate-frame.py,pdf-kinds.json,tsconfig.t12.json}`.

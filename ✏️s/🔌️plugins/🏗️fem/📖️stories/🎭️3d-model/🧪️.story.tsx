@@ -35,7 +35,7 @@ import {
   reduceFem3dStoryAction,
   type Fem3dStoryState,
   type FemStoryLocale,
-} from "../🧭️coordination/🧫️fixtures/🧫️scene/🟦️.ts";
+} from "../🧭️coordination/🟦️.ts";
 
 //#region StoryHost
 const FEM3D_MODEL_BODY_KEY = "fem3d.play.model";

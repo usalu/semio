@@ -100,3 +100,40 @@ async fn folding_events_for_a_different_space_is_a_no_op() {
     assert!(result.config_mutations.is_empty(), "unrelated-space events never touch this space's config");
     assert!(result.artifact_mutations.is_empty());
 }
+
+/// 🪐️ An index opened in the browser is a local genesis document whose `space_id` is still empty; the shell
+/// hands it the history of the one space it indexes, and that space's members and visibility must land.
+#[semio_framework_async_macros::async_test]
+async fn an_index_without_a_space_id_folds_the_one_space_its_history_names() {
+    let snapshot = view_for("");
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&snapshot, &history);
+    let config_snapshot = SpaceIndexConfig::default();
+    let cfg = ConfigView { snapshot: &config_snapshot, window: None };
+    let events = vec![
+        event(1, DirectoryEventBody::UserCreated { user_id: "u-1".into(), email: "a@example.com".into(), display_name: "Alice".into() }, None),
+        event(2, DirectoryEventBody::SpaceCreated { space_id: "space-1".into(), name: "Space 1".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Private, owner_user_id: "u-1".into() }, Some("space-1")),
+        event(3, DirectoryEventBody::MemberUpserted { space_id: "space-1".into(), user_id: "u-1".into(), role: DirectorySpaceRole::Author }, Some("space-1")),
+    ];
+    let result = handle(&FoldDirectoryEvents { events_json: pack::to_json_string(&events) }, &doc, &cfg).expect("fold");
+    let [SpaceIndexConfigMutation::Snapshot { config }] = result.config_mutations.as_slice() else { panic!("one config snapshot, got {:?}", result.config_mutations) };
+    assert_eq!(config.visibility, "private");
+    assert_eq!(config.members.iter().map(|member| member.email.as_str()).collect::<Vec<_>>(), ["a@example.com"]);
+}
+
+/// 🪐️ With no `space_id` of its own, an index handed a history naming two spaces cannot know which one it
+/// indexes and must leave its config alone.
+#[semio_framework_async_macros::async_test]
+async fn an_index_without_a_space_id_never_guesses_between_two_spaces() {
+    let snapshot = view_for("");
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&snapshot, &history);
+    let config_snapshot = SpaceIndexConfig::default();
+    let cfg = ConfigView { snapshot: &config_snapshot, window: None };
+    let events = vec![
+        event(1, DirectoryEventBody::SpaceCreated { space_id: "space-1".into(), name: "Space 1".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-1")),
+        event(2, DirectoryEventBody::SpaceCreated { space_id: "space-2".into(), name: "Space 2".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-2")),
+    ];
+    let result = handle(&FoldDirectoryEvents { events_json: pack::to_json_string(&events) }, &doc, &cfg).expect("fold");
+    assert!(result.config_mutations.is_empty(), "an ambiguous history never selects a space");
+}

@@ -18,7 +18,7 @@ Inherits: R1–R7, O1/O1b/O1c, G18 compile health, build-infra audit. Coordinato
 | 2 | workspace `cargo check --workspace --all-targets --keep-going --message-format=short` | run 1 (01:22, EXIT 101): 3 crates red. Run 2 (02:02, EXIT 101): 5 crates red. **Run 3 (06:45–06:57, EXIT 101): 2 crates red** — `semio-framework-os` lib test (my host-unit edit vs. the peer's `vcs.edits` → `ArtifactHistoryLedger`; fixed right after, `os-host-check-2.txt` EXIT 0) and `semio-framework-repo-cli` bin `repo` (**NEW**, see classification). Every plugin, hub, MCP and renderer crate compiled. **Run 4 (09-25 10:55–11:02): EXIT 0** — `Finished`, 0 `could not compile`, after the repo-cli restoration (round 2 §1) | `generated/ws-check-{1,2,3}-errors.txt`, `ws-check-4.txt` |
 | 3 | framework/os crate lib tests (nextest `--profile quick`, private target) | kernel `--features sync,ureq` **1207/1207**; db `--all-features` **770/770** (+2 `#[ignore]` Docker lanes); replication+trace+pack+async+geometry+actor+hash 741/743 → actor fixed → **actor 126/126** (others green in that run); framework+os-run+plugin-host+os host 549/555: the 6 left are all **needs W2 rebuild** (staged guests predate H9's `codec.replay-envelopes` ABI); `semio-framework-os-flow` 37 → **1 red** (§Flow, 260/261 after the 2 held fixes landed 12:00; the 1 needs W2's flow bindings publish) | `kernel-nextest-1.txt`, `db-nextest-1.txt`, `batch1-nextest-1.txt`, `actor-nextest-2.txt`, `batch2-nextest-1.txt`, `batch2b-nextest-1.txt`, `flow-nextest-5.txt` |
 | 3w | renderer-wgpu:test (audit P1-4) | **cargo 1386/1388 (7 skipped), vitest 399/399 (38 files)**. The audit's "~89 failures" is stale (R1: 1372/1372 on 09-24). The 2 reds are Shell source laws that pin `#[cfg(not(wasm32))]`/`#[cfg(wasm32)] … Detached` gating of the browser sync backbone and footer pill — exactly what WG7's browser-actor hub `connect` changes (Shell wgpu target, in flight) → **handed to WG7**: `💓️chrome-maintenance-pressure` `no_chrome_maintenance_lane_arms_itself_without_pressure`, `🌓️appearance-tour-and-footer-pills` `the_footer_pills_are_not_gated_off_the_browser_build` | `wgpu-nextest-1.txt`, `wgpu-vitest-1.txt` |
-| 4 | root `test quick` (`bun nx run workspace:test-quick`, 869 tasks) green + exit code propagates cargo failures | **Round 2 (13:16): repo-lib `test quick` 611 pass / 83 levelled / 2 fail (JCO staging → W2) in 155 s** (§repo-lib). Unbailed root census deferred until W2's full publish (869 tasks would starve its builds). **Exit code: PROVEN.** A failing cargo run propagates: `nx run semio-framework-os-flow-core:test-quick` → nextest FAIL → script `process.exit` → nx **EXIT 1** (`flow-nx-test-quick-1.txt`); the root target fails on any failed dependency: `--parallel=1 --nxBail` run stopped on `@semio-tech/repo-lib:test-quick` with **EXIT 130** (bail interrupt) (`root-test-quick-1.txt`). **Green: NOT MET** — first red in fan-out order is `@semio-tech/repo-lib` (~30 red bun laws: repo tooling — JCO/flow compiler boundaries, package handoff, commit/micro-commit, command budgets, Nx transport), repo-tooling owner = **NEW**. A full unbailed census is not run: the fan-out includes `os-hub:test-quick` (hub mutex, H9) and `semio-tech-play:test-quick` (peer), which a single sweep must not run unguarded. Gate gap fixed: the flow crate's 261 laws were in no `test-quick` (project had only `test`) → `test-quick`/`test-long`/`test-exhaustive` added | `generated/root-test-quick-1.txt`, `flow-nx-test-quick-1.txt` |
+| 4 | root `test quick` (`bun nx run workspace:test-quick`, 869 tasks) green + exit code propagates cargo failures | **Round 3 (18:0x): repo-lib `test quick` 612 pass / 85 levelled / 2 fail (JCO staging → W2), typecheck EXIT 0; normalization family at `long` 69/69; repo-lib `test long` 691 pass / 1 levelled exhaustive / 7 fail in 508 s (JCO x2 → W2, discovery x3 + layering x2 → rename slice)** (`s11-r8-captures/repo-lib-test-quick-10.txt`, `repo-lib-typecheck-8.txt`, `norm-long-4.txt`, `repo-lib-test-long-2.txt`). Round 2 (13:16): 611 / 83 / 2 (§repo-lib). Unbailed root census deferred until W2's full publish (869 tasks would starve its builds). **Exit code: PROVEN.** A failing cargo run propagates: `nx run semio-framework-os-flow-core:test-quick` → nextest FAIL → script `process.exit` → nx **EXIT 1** (`flow-nx-test-quick-1.txt`); the root target fails on any failed dependency: `--parallel=1 --nxBail` run stopped on `@semio-tech/repo-lib:test-quick` with **EXIT 130** (bail interrupt) (`root-test-quick-1.txt`). **Green: NOT MET** — first red in fan-out order is `@semio-tech/repo-lib` (~30 red bun laws: repo tooling — JCO/flow compiler boundaries, package handoff, commit/micro-commit, command budgets, Nx transport), repo-tooling owner = **NEW**. A full unbailed census is not run: the fan-out includes `os-hub:test-quick` (hub mutex, H9) and `semio-tech-play:test-quick` (peer), which a single sweep must not run unguarded. Gate gap fixed: the flow crate's 261 laws were in no `test-quick` (project had only `test`) → `test-quick`/`test-long`/`test-exhaustive` added | `generated/root-test-quick-1.txt`, `flow-nx-test-quick-1.txt` |
 | P1-6 | launch-registration resolver probe | **PASS**: launch.json 437 configs, 197 `nx run` pairs, 0 unresolved, 0 duplicates, 3/3 compounds resolve; committed launch.json byte-identical to a fresh render; seed 281 rows + 89 `@generated:` placeholders, 0 unresolved/duplicates | `launch-resolver-3.txt`, probe `wp-r8/r8-launch-resolver.ts` |
 | P2-7 | K2 ownership-gate census (presentation-react, print, actor/cold-pair) | **all three collect and run green**: `@semio-tech/presentation-react` 147/147 (3 files; its default `test` ran at the 15 s fundamental budget and was killed → floored at `quick` like the O1b suites); `@semio-tech/print` `test` EXIT 0 (starts again; the command-boundary law counted Bun built-in `bun:sqlite` as an external package → `bun:` treated like `node:`, fixture updated); `🎭️actor/📥️cold-pair` in `@semio-tech/framework` 188/188 (4 files, suite listed by name) | `presentation-react-test-2.txt`, `print-test-2.txt`, `framework-vitest-1.txt` |
 
@@ -240,6 +240,86 @@ Still red in quick (2): **JCO physical matrix** (interface filename boundaries, 
 `🧑‍💻dev/🔌️plugin-modules` staging, last staged 09-15 (wfc never staged; reasoning/remodel/stdio wasm missing; 112 stale
 interface files). Needs W2's os-dev restage; on a fresh clone the tree does not exist, so these belong behind the staging step.
 
+### Coordinator round 3 (15:2x): (a) Next typecheck, (b) Node strip-only framework, (c) normalization rebuild
+
+**(a) DONE — second typecheck pass 26 → 0** (`bun ./📜️script.ts typecheck` EXIT 0, both programs; `s11-r8-captures/repo-lib-typecheck-6.txt`).
+Root cause: the coordinator's Next tsconfig (`include: **/*.ts`) type-checked the package's tooling router `📜️script.ts`, pulling the whole
+repo-lib under Next's globals (`ProcessEnv.NODE_ENV` required, DOM `ReadableStream` without async iteration). Fixes: Next program excludes
+`📜️script.ts`, the repo program lists it in `files` (verified with `--listFilesOnly`: in repo 1×, in Next 0×); `.next/type/**` typo →
+`.next/types/**`; env overlays typed `Partial<NodeJS.ProcessEnv>` (`devToolingEnv`, `orchestratorBudgetOpts`, `daemonBudgetOpts`,
+`playPollingEnv`, `frameworkOsPlaygroundDevEnv`, transaction-v2 child), `repoToolCacheEnv` defaults its base to `process.env`; the Binaryen
+download reads the body with a reader (cancelled on failure) instead of `for await`. The remaining path into the Next program is the
+framework's in-source-test dynamic imports, which is by design.
+
+**(b) DONE — `@semio-tech/framework` and `@semio-tech/framework-os` load under Node strip-only** (384 / 244 exports). The native surface is
+what vite/vitest configs externalize (their bundler inlines relative imports and leaves bare specifiers to Node): measured over all 44 config
+modules = exactly these two package entries. Their static runtime closures (61 / 80 files) had 15 TypeScript-only constructs (parameter
+properties) in `⏯️tool-run`, `🎠️kernel` (2 classes), `💻️os/🟦️.ts` (2), `💡️inference/🚪️opening`, `📇️directory/🧬️schema`,
+`📡️replication/…/local-interaction/📡️transport` → explicit fields. New law `🧪️tests/✂️node-native-typescript/🟦️.ts` (+ fixture/schema,
+imported by workspace-contract, quick, ~20 s): 9 syntax vectors judged alike by Node's own `module.stripTypeScriptTypes` and TypeScript
+`erasableSyntaxOnly`+`verbatimModuleSyntax`; the config-externalized entry set equals the declared set; every entry's live closure has no
+strip-only finding and `node --experimental-strip-types` imports it (exit 0). The playground port module now loads under Node too (cad 6020).
+Repo-wide census for the later slice: 1396 parameter properties outside the native surface (plugins 1254, os 83, repo 33, ui 17, hub 7,
+replication 3) + 155 value imports of types + 3 enums + 1 value namespace (`🧊️3d`) — only loadable through a bundler; not needed today.
+Real consumer check: `bun nx run @semio-tech/framework-os-dev:test-quick` loads its config and runs (159 pass / 4 fail). The 4 are peers':
+`🚀️local-hub/🏃️execution` (O3/C10, 12:37) imports the repo-lib barrel into the vite config graph (60 modules > 40; denied module), and
+ShellHost's new `?worker&url` import breaks the law's esbuild oracle → routed.
+
+**(c) DONE — normalization family at `long`: 69/69 green** (was 35 red / 34 green; `s11-r8-captures/norm-long-4.txt`).
+Captures: CAD/Draw subset `norm-draw-6.txt` (27/27), whole workspace-contract at `long` `wc-long-1.txt`, gate `repo-lib-test-long-2.txt`
+(691 / 1 / 7 in 508 s; the 7 reds are JCO x2, discovery x3, layering x2).
+
+| Area | Root cause | Fix |
+|---|---|---|
+| CAD golden (frozen mapping) | 09-05 path-budget renames (`a01.json`, `t-*.json`, `…-8a1d88.json`) and per-file emoji names (`🌙️arc.json`) broke the stem-identity binding; the tree now uses `🌉️` and `🕹️` | Rebuilt on the current names (`wp-r8/cad-projection-rebuild.py`): 229 authored `🔣️<stem>.json` sources, semantic stems recovered from rename history, `liveBindings` (source-root-relative `{source, live}`) bind every live carrier exactly; taxonomy interactions rule `🕹️interactions`; digest `b474…2d8f` |
+| Draw golden and scenario | artifact renamed `🖍️draw` → `🖍️drawing`, projection applied | 9-member authored scenario, no live Draw reads; strict-union law checks the live applied destination tree (tests excluded) |
+| Live CAD consumers in the fixture | consumer code names the live carriers; the fixture holds the authored sources | mounted content is rebound through `liveBindings`; the interaction spec's `🧪️tests/🔬️unit` child is mounted (the root join and 12 includes live there since 09-08) |
+| Engine: Rust comment prose | recognizer hard-coded `🎬️interactions/*.json` | any declared category, and the directory form `…/*/🕹️interactions/`; form renamed `interaction-glob` → `category-glob` (taxonomy, discovery type, normalization) |
+| Engine: Rust root join | rewrote a `CARGO_MANIFEST_DIR` join relative to the file directory (`../../../📚️examples/…`, one level off) | suffix substitution of the artifact-relative source root, base-agnostic (`../../📚️examples/🪆️1-any/🏗️models`) |
+| Engine: kind-only findings | 09-12 added `taxonomy/kind-only-basename` to every leaf, so a plan that moves the leaf to a kind-only path stayed blocked | findings resolved by a planned kind-only move no longer block |
+| Taxonomy | legacy `🦀️component.rs`/`🟦️component.ts` aliases in the CAD consumer contracts; `🔬️unit` test cases unregistered; `test-fixture-asset` inferred from a bare stem made every stem under a test case ambiguous | aliases removed; spec contract covers its unit child; `🔬️unit` added to `members-of-tests`; `test-fixture-asset` `inferWithoutEmoji: false` |
+| Draw producer fixture | producer changed since the scenario was authored: nx runs through the bootstrap script, nx plugins import revisioned modules and read policy, the cargo command script and 26 stdio codec receipts; registry needs a deployment catalog row, `cdylib`, current devLauncher format, validator-clean routers | scenario declares `compilerRoots` = the package.json `nx` entry, `runtimeModules`, `runtimeData`, `runtimeReceiptCatalogs`, runtime packages `typescript`/`@iarna/toml`, an authored `deploymentCatalog`; host `cdylib`; seed with `wgpuOrder`/`env`; routers import `@semio-tech/repo-lib`; kind-only `🧪️tests/🧪️reference/🦀️.rs`; registry output 16 nodes. The launch law runs the generator from an isolated copy of its captured closure. `📏️field-parity` imports its type with `import type` |
+| 13 laws with mangled fixture paths | the 09-02 kind-only rename (`21fbcd3538`) rewrote `"🧪️X/<k>.ext"` → `"<k>X.ext"` and `🧪️X/CACHEDIR.TAG` → `XCACHEDIR.TAG` in the law file | restored against `21fbcd3538^` (planner laws keep their deliberate legacy inputs; admission laws use canonical kind-only inputs); package-glue fixture made kind-only |
+| Law truths that changed | scope below a gitlink is refused (source admission, 09-01); phases follow source admission (`tracked-enumeration` before `setup`, plus `source-observation`); no descendant contract has configurable entries any more | gitlink law renamed and asserts the refusal; phase and cancellation laws list the actual phases; the schema-boundary law checks closed descendant-node keys |
+| Generator preview fixture | fixtures live in `tmpdir()` since 09-09, so `bun nx` found no nx; its script was not a command router | implementation in `🧪️generator/🟦️.ts`, router in `📜️script.ts`; nx and repo-lib linked |
+| Apply rederivation | laws planned with an explicit source ticket and applied without it (empty directories dropped; the source-authority laws passed for the wrong reason) | apply passes `explicitTicketDir` equal to the plan's ticket |
+
+Also: `discoverOwners` laws (whole-repo walk, timed out at 5 s under load) are levelled `long`; the census parity law
+(`discoverPackageProblems` vs `buildSemanticCensus`, 883 s measured) is levelled `exhaustive` — alone it filled the 900 s `long`
+budget and the gate killed the file (`repo-lib-test-long-1.txt`). Whole workspace-contract file at
+`long`: the only reds are JCO x2 (W2 staging), discovery x3 and layering x2 (dedicated slice). A plain `bun test` run shows 21 more
+reds with `SEMIO_TEST_ARTIFACT_DIR is required`; with the gate's environment they are 24/24.
+
+### Decision 3 — tree-wide breakdown for the dedicated rename slice (after W2's final publish)
+
+**648 discovery problems** (`s11-r8-captures/discovery-census-1.txt`, `discoverPackageProblems` on the live tree):
+
+| Root cause | Count | Top offenders |
+|---|---|---|
+| `packaging-violation`: file has no exact fixed/configurable contract or file-kind identity (159); directory not an allowed package directory (82) | 241 | repo modules 85 (`🧪️test/📦️packages` 38, `🖥️server/🎛️coordinator` 18), stdio 40 (`📖️pdf` 11, `🧿️semio` 8), os modules 20, ui 17, animate 17, hub 9 |
+| `manifest-without-marker`: package manifest without a semio role marker | 190 | stdio 74 (`📖️pdf` 12, `🧿️semio` 9), repo modules 29, os modules 15, cad 5, draw 5 |
+| `package-implementation`: authored implementation inside `📦️packages/<lang>` | 181 | repo modules 93 (every module's Rust/Go twin: graphql, tree, providers, workspace, tickets, languages, test-runner 4 each; `⌨️cli` 9), os modules 12, ui 5, presentation 5 |
+| `unknown-role` | 26 | role `library` x22 (repo modules' twin packages), `artifact` x2 (flow, dag), `test` x2 |
+| `package-role-unresolved` | 9 | repo modules 5, ui dotnet styling 4 |
+| `target-inside-package-boundary` | 1 | `🎤️presentation/📦️packages/🟦️typescript/🎯️targets` |
+
+Suggested order: (1) decide the Go/Rust twin package convention (register role `library` or move twin implementations out
+of `📦️packages`); this clears about 150; (2) add role markers mechanically (190); (3) stdio artifact packages (114) with T12;
+(4) the rest per owner. Discovery also sees a new plugin owner `✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react` (peer).
+
+**Layering ratchet** (`🧅️layering.json`, 44 entries): 255 files carry 6698 references to implementation areas
+(`✏️s`, `🌎️hub`, `♻️mit-bestand`, `🏢️semio-tech`) beyond their baseline. The largest are `📚️library/🔣️schema-catalog.json` 3067,
+the CAD/Draw golden 480 (it names CAD/Draw paths by nature; the owner-level fix moves golden and scenario into the plugins),
+root `Cargo.toml` 293, root `📜️script.ts` 279 (baseline 138), `🧼️remaining-package-purity-authority` fixture 252 and the
+`🧑‍💻dev` distribution bundle 128. By area: repo library 81 files, os dev 42, os plugin 17, renderer 17, mcp 12. `🌎️hub` being an
+implementation area makes every framework reference to the hub count.
+
+**Related tree-wide drift found this round:**
+- `members-of-tests` registers 1311 test-case names, but the tree has 4560 `🧪️tests/🔬️*` directories, 308 `⛔️`, 296 `✅️`
+  and 259 `🧩️`. Only `🔬️unit` is registered now (3285 dirs). A registry refresh belongs to the slice.
+- The 09-02 rename mangled fixture paths in about 35 more workspace-contract laws that still pass, among them UI-host
+  metadata, resident native metadata and capability facets. Restore them against `21fbcd3538^` in the same slice.
+
 ### ui-contract retirement laws (U5 §7 hand-off) — diagnosis, fix scheduled after W2's handoff
 
 `semio-framework-ui-contract --lib`: **172/197, 25 red** (`ui-contract-1.txt`; same set with U5's edits reverted, per U5).
@@ -262,16 +342,22 @@ ui runtime `runtime_tree_retirement_*` twins.
 - **W2**: os-dev `🔌️plugin-modules` restage (JCO physical-matrix laws; wfc never staged) + flow guests and flow_core bindings in the full
   catalog (request appended 12:0x). Hub data of W2/S15/C10 under the ticket folder is untracked and not ignored (Windows 260-unit
   checkout law flagged 60+ paths at 11:30; green again at 13:16).
-- **Coordinator decision**: the normalization-engine family (35 red at `long`) pins a completed CAD/Draw migration authority; re-derive
-  it against the renamed CAD examples or retire it with the migration. The repo module family's Go/Rust twins keep implementation inside
-  `📦️packages/<lang>` (396 non-plugin census problems) — a taxonomy decision (Go cannot leave its module directory).
+- **Coordinator decision (open)**: the repo module family's Go/Rust twins keep implementation inside `📦️packages/<lang>`
+  (about 150 of the 648 census problems) — a taxonomy decision (Go cannot leave its module directory). The normalization
+  family is rebuilt and green (round 3 (c)).
+- **CAD owner**: the live CAD example tree matches neither the catalog's source contract (`🔣️<stem>.json`) nor its destination
+  (`🕹️<stem>/🔣️.json`): per-file emojis (`🌙️arc.json`) and path-budget carriers (`a04.json`). A real CAD normalization run needs the
+  authored names first; the rebuilt golden records them (`liveBindings`).
+- **Repo tooling**: `configurableEntry` descendant nodes have no users since the Draw bundle became declaration-only, and the
+  two validators disagree (normalization counts a configurable node twice in `realizedNodeCount`, discovery once): remove the
+  machinery or reconcile it. Stale generator `inputPatterns` (tolerant, non-blocking): `dev-distribution-bundle`
+  (`🚚️distribution/📐️schema.json`, `🔐️inputs.schema.json`, `🧬️manifest.schema.json`), `wgpu-frame-worker` (Trunk.toml,
+  `🌐️.html`, tests, kernel seam).
 - **T12/S15 (plugins)**: 252 plugin discovery problems (fem 31 …); stdio fixtures still carry codemod-split `🧪️test/🦀️s.rs` names
   (`📜️direct-mutation-contract`, jpg/bmp/png/tiff, txt unit test).
-- Hygiene seen, not done: tracked stale `🟦️.js` twins of repo-lib modules (09-19 auto-commit of a tsc emit, 1 MB each); `[DEBUG]` lines in
+- Hygiene seen, not done: 48 tracked stale `.js` twins from a 09-19 auto-commit of a tsc emit (`03b1a41483`, 67 added, 65 next to
+  their `.ts`; repo 21, os 11, demonstrator 19, ui/actor/assets 10; e.g. `🔍️discovery/🟦️.js` 1 MB, unreferenced); `[DEBUG]` lines in
   ui host source oracles and ~14 other library laws.
-- Seen, not mine to change now: `@semio-tech/framework` no longer loads under Node `--experimental-strip-types` (TypeScript parameter
-  properties, e.g. `📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts:11`, `💻️os/🟦️.ts:3602`), so any strip-only consumer of the playground
-  port module fails before reaching it; Bun and esbuild-bundled Vite configs are unaffected.
 - Held until W2's full publish (soft freeze): ui-contract `PagedList` accrual fix (13 `release_empty_page` callers incl. pack
   retained catalogs, ui reconcile, flow retained, ui-contract retirement) + ui runtime `runtime_tree_retirement_*`; the unbailed root
   `test quick` census.
@@ -298,6 +384,21 @@ ui runtime `runtime_tree_retirement_*` twins.
   (+schemas); `🌱️value/🧬️schema/🔣️.json` (`U64`); `💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/*.js` (15, re-vendored 0.25.0);
   `🌉️mcp/🧪️tests/🧪️resolvemcpbinarypath/🟦️.ts`; removed an empty stray `$PWD/` tree under `🔌️plugin/📇️registry/`.
 - Held flow fixes (12:00): `🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🦀️.rs`, `🌊️flow/🌿️vcs/🦀️.rs`.
+- Round 3 (15:20–18:1x), all under `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/` unless noted:
+  - (a) coordinator `…/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json`, `🦑️repo/tsconfig.json`; `🏃️process/🌿️environment/🟦️.ts`,
+    `🏃️process/🟦️.ts`, `🟦️.ts` (env overlays), `🧪️tests/🔄️transaction-v2/🟦️.ts`, `⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts`.
+  - (b) parameter properties → fields: `🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts`, `…/🎠️kernel/🟦️.ts`, `🧰️framework/🛍️products/💻️os/🟦️.ts`,
+    `💻️os/🔨️modules/💡️inference/🚪️opening/🟦️.ts`, `💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts`,
+    `🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts`; new law `🧪️tests/✂️node-native-typescript/🟦️.ts`
+    + `🧫️fixtures/✂️node-native-typescript/🔣️.json` + `🧬️schema/✂️node-native-typescript/🔣️.json`.
+  - (c) `🧹️normalization/🟦️.ts` (category-glob prose, root join, kind-only move filter), `🔍️discovery/🟦️.ts` (form name),
+    `🔣️taxonomy.json` (CAD interactions rule, plugin-registry inputs, CAD consumer contracts, `🔬️unit`, `test-fixture-asset`),
+    `🧫️fixtures/📐️cad-draw-path-projection/🔣️.json`, `🧫️fixtures/🖍️draw-source-scenario/🔣️.json` + `🧬️schema/🖍️draw-source-scenario/🔣️.json`,
+    `🧬️schema/🗿️artifact/⚖️laws/📏️field-parity/🟦️.ts`, `🧪️tests/🔬️workspace-contract/🟦️.ts`, `📦️packages/🟦️typescript/📜️script.ts`
+    (source-residue/commit routes run at `long`), root `📜️script.ts` (13 dead re-exports removed, tool-job coverage self-tests
+    loaded lazily), `.vscode/🧩️launch.seed.jsonc` + `.vscode/launch.json` (two restored artifact-source launchers).
+  - Ticket inputs: `wp-r8/cad-projection-rebuild.py`, `draw-projection-rebuild.py`, `law-diff.py`, `law-diff2.py`,
+    `law-corruption-scan.py`, `launch-closure-probe.ts`, `router-validator-probe.ts`.
 
 - TS/fixtures: `🧑‍💻dev/🧫️fixtures/🦀️wasm-profile-policy/🧬️v1/🔣️.json`; registry tests `🚀️launch`, `✅️catalog-complete`,
   `🎮️playground-session` (`[DEBUG]` removal); renderer `🧬️schema/{🔣️.json,🟦️.ts}` + `🏛️ShellHost/🧭️opening/🧫️fixtures/📍️scope/🔣️.json`;

@@ -303,11 +303,11 @@
                 "label": {
                   "native": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   },
                   "reuse": {
                     "en": "Hover",
-                    "de": "Hover"
+                    "de": "Darüberfahren"
                   }
                 },
                 "kind": "interaction",
@@ -3203,7 +3203,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "reasoning.wires.fixture",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -4318,7 +4318,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "reasoning.wires.fixture",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -4512,8 +4512,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "62b94e35e7160c9081c6392bb0e1eeae35fc80445564e8c7d91cb0ad435d4791",
-    "coreWasmSha256": "1b481556a47612a8f4e8830264fdd5360d21496a3dc2060ee4fb31257cac6d3e",
-    "descriptorSha256": "31b110c822b05ab5e5a1ebb56f78ca7d41a58e0d29e13d8b74fe0e4dbdc513b4"
+    "wasmSha256": "839ea62783f371e2fdca7d46b4624725f330c26001afcdcb084b8a8ea0637517",
+    "coreWasmSha256": "aae26dca817a0b4754ff2b7b3d023f85a3c16f4f303098e05984b45fb608e772",
+    "descriptorSha256": "27da7a843b072ed19abcd11307ccf4b278cfa67362c5f58731952493579e0b97"
   }
 }

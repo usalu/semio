@@ -1276,7 +1276,7 @@ pub fn pair_mount_error_to_gateway(error: CanonicalPairMountError) -> GatewayErr
         CanonicalPairMountError::ResourceLimit => GatewayErrorCode::BudgetExceeded,
         CanonicalPairMountError::InvalidResponse(_) => GatewayErrorCode::PreconditionFailed,
         CanonicalPairMountError::Unauthorized => GatewayErrorCode::PermissionDenied,
-        CanonicalPairMountError::DeadlineExceeded | CanonicalPairMountError::DescriptorUnavailable | CanonicalPairMountError::InFlight | CanonicalPairMountError::StaleCompletion | CanonicalPairMountError::Unavailable => GatewayErrorCode::PluginUnavailable,
+        CanonicalPairMountError::DeadlineExceeded | CanonicalPairMountError::DescriptorUnavailable | CanonicalPairMountError::StaleCompletion | CanonicalPairMountError::Unavailable => GatewayErrorCode::PluginUnavailable,
     };
     let gateway = GatewayError::new(code, error.to_string());
     if matches!(code, GatewayErrorCode::PluginUnavailable) {

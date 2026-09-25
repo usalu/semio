@@ -64,10 +64,10 @@ PROGRAMS = {
 # region 🔖️Fixtures
 _ROOT = "shared://🧬️mutations"
 VECTORS = {
-    "create-step": (f"{_ROOT}/🌱create-step/🧪️tests/rejects-a-duplicate-step-id-at-the-root-path", "createStep", True),
-    "delete-step": (f"{_ROOT}/🗑️delete-step/🧪️tests/rejects-a-root-step-id-addressed-inside-a-branch-body", "deleteStep", True),
-    "reorder-steps": (f"{_ROOT}/🔀reorder-steps/🧪️tests/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place", "reorderSteps", False),
-    "edit-step-params": (f"{_ROOT}/🔧edit-step-params/🧪️tests/warns-that-step-1-already-carries-the-requested-params", "editStepParams", False),
+    "create-step": (f"{_ROOT}/🌱create-step/🧪️rejects-a-duplicate-step-id-at-the-root-path", "createStep", True),
+    "delete-step": (f"{_ROOT}/🗑️delete-step/🧪️rejects-a-root-step-id-addressed-inside-a-branch-body", "deleteStep", True),
+    "reorder-steps": (f"{_ROOT}/🔀reorder-steps/🧪️warns-that-an-over-clamped-index-leaves-the-tail-step-in-place", "reorderSteps", False),
+    "edit-step-params": (f"{_ROOT}/🔧edit-step-params/🧪️warns-that-step-1-already-carries-the-requested-params", "editStepParams", False),
 }
 
 
@@ -103,9 +103,10 @@ def find_step_anywhere(steps, step_id):
 
 
 def resolve_scope(program, path_ref):
-    """🧭 The ONE step list a `pathRef` addresses — root for `{}`, or the named `slot` of the branch
-    body owned by `owner` (found anywhere in the tree). `None` if the owner does not exist."""
-    if not path_ref:
+    """🧭 The ONE step list a `pathRef` addresses — root for `{}` or the wire's `{owner: null, slot: null}`,
+    or the named `slot` of the branch body owned by `owner` (found anywhere in the tree). `None` if the
+    owner does not exist."""
+    if not path_ref or path_ref.get("owner") is None:
         return program.get("steps", [])
     owner = find_step_anywhere(program.get("steps", []), path_ref["owner"])
     if owner is None:

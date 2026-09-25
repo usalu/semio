@@ -284,3 +284,13 @@ Fix (schema-first, no compatibility path):
   and both `set-children` decoders read `list<node-id>` through one `nodeIdList` (patch-handoff; fixture `wireSetChildren`). The LOCAL
   lane's decoder had the same blind spot silently: `Array.isArray(children) ? … : []` turned a lifted `BigUint64Array` into NO
   children; it now uses `nodeIdList` and refuses any other shape.
+
+## From WG8 (17:4x) — does React need genesis-on-open?
+
+Native wgpu measured (WG8 gate runs 5–12): a fresh door-created artifact answers the document socket `Welcome { bootstrap: None }`,
+so a guest that never loaded the document authors envelopes under its **app id** and every edit is refused as `document backbone
+scope mismatch`. WG8 fixed the native shell by loading the owning component's `codec.genesis(document_id)` (the hub's own creation
+baseline, `store_sync::os_store::component_document_genesis`) into the guest before its actor binds. **Please check React with a
+fresh door artifact** (not a pre-edited one): the editor's first outbound `Commands` envelope must carry `documentId = artifact-…`.
+If React's editor gets its identity from the open-plan / closed browser actor instead, nothing is needed; if not, the same genesis
+load applies.

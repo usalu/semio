@@ -370,7 +370,8 @@ pub struct TrustedPluginModuleIndexEntryV1 {
     /// built the plugin finds the package that opens a kind.
     pub dialect_artifact_kinds: Vec<String>,
     /// 🧩️ The plugin an extension package extends (its first declared dependency), `None` for a plugin: how a shell
-    /// activates a hub-resolved plugin's extensions from the same generation.
+    /// activates a hub-resolved plugin's extensions from the same generation. Required on the wire (`null` for a plugin).
+    #[serde(deserialize_with = "Option::deserialize")]
     pub extends_plugin_id: Option<String>,
     pub bundle_sha256: String,
     pub bundle_byte_length: u64,

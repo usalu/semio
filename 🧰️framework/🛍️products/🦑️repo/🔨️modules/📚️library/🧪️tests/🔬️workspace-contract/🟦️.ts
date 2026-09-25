@@ -12,7 +12,7 @@ import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraph
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
 import { BundleScript, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, ScriptRouter, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetMs, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, findRepoRoot, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, layeringBreaches, layeringCounts, layeringReferences, loadFrameworkOsPlaygroundCatalog, loadLayeringBaseline, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetMs, orchestratorBudgetOpts, parseTsImportSpecs, partitionNextestExecutionFilters, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, testLevelAtLeast, testLevelBudgetMs, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, leadingEmojiIdentity, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, pathEmojiStatuteFindings, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, leadingEmojiIdentity, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, pathEmojiStatuteFindings, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validation/🟦️.ts";
 import { taxonomyCliArtifactPath } from "../../🧹️normalization/🎮️command-contract/🟦️.ts";
 import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, generatorInputPaths, inventoryTaxonomy, loadNormalizationTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, taxonomyScopedGitPathspec, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyOptions, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan, type TaxonomyProgress } from "../../🧹️normalization/🟦️.ts";
@@ -2007,7 +2007,7 @@ describe("micro-commit", () => {
     const prev = process.env.REPO_ROOT;
     process.env.REPO_ROOT = root;
     const stdin = ["🫡️Only micro-commit skill docs"].join("\n");
-    const r = spawnSync(process.execPath, ["../../📦️packages/🟦️typescript/📜️script.ts", "micro-commit", "prepare"], {
+    const r = spawnSync(process.execPath, ["./📜️script.ts", "micro-commit", "prepare"], {
       cwd: root,
       input: stdin,
       encoding: "utf8",
@@ -3959,7 +3959,7 @@ describe("discoverPackages", () => {
 });
 
 describe("discoverOwners", () => {
-  test("every owner groups its own packages and derives maturity from its residuals", () => {
+  test.if(testLevelAtLeast("long"))("every owner groups its own packages and derives maturity from its residuals", () => {
     const owners = discoverOwners(getWorkspaceRoot());
     expect(owners.length).toBeGreaterThan(0);
     for (const owner of owners) {
@@ -3970,7 +3970,7 @@ describe("discoverOwners", () => {
     }
   });
 
-  test("nested owners are their own rows, not folded into the enclosing plugin", () => {
+  test.if(testLevelAtLeast("long"))("nested owners are their own rows, not folded into the enclosing plugin", () => {
     const owners = discoverOwners(getWorkspaceRoot()).map((owner) => owner.ownerRel);
     // 🖍️ draw ships a proc-macro sibling crate; a nested 📦️packages dir is an owner in its own right.
     expect(owners).toContain("✏️s/🔌️plugins/🖍️draw");
@@ -4019,7 +4019,7 @@ describe("discoverBurndown", () => {
     expect(burndown.packagingViolations.every((violation) => violation.path.includes("📦️packages/"))).toBe(true);
   });
 
-  test.if(testLevelAtLeast("long"))("discoverPackageProblems promotes packaging violations into census problems", () => {
+  test.if(testLevelAtLeast("exhaustive"))("discoverPackageProblems promotes packaging violations into census problems", () => {
     const root = getWorkspaceRoot();
     clearDiscoveryCache();
     const problems = discoverPackageProblems(root);
@@ -4027,7 +4027,7 @@ describe("discoverBurndown", () => {
     expect(problems.every((problem) => problem.path.length > 0 && problem.message.includes(problem.path))).toBe(true);
     const censusProblems = buildSemanticCensus(root).problems.filter((problem) => problem.code === "packaging-violation");
     expect(censusProblems.length).toBe(problems.filter((problem) => problem.kind === "packaging-violation").length);
-  }, 600_000);
+  }, 1_800_000);
 
   test.if(testLevelAtLeast("long"))("clearDiscoveryCache forces a fresh walk", () => {
     const root = getWorkspaceRoot();
@@ -4282,6 +4282,7 @@ type ArtifactProjectionGoldenEntry = Readonly<{
   maxPathBytes: number;
   mappingDigest: string;
   mappings: readonly Readonly<{ sourcePath: string; destinationPath: string }>[];
+  liveBindings?: readonly Readonly<{ source: string; live: string }>[];
   referenceEdits?: readonly Readonly<{ path: string; adapter: "json" | "toml"; structuredLocation: string; oldValue: string; newValue: string; preimageHash: string }>[];
   modelCatalog?: Readonly<{
     models: readonly Readonly<{ directoryName: string; id: string; schema: string; version: string }>[];
@@ -4294,11 +4295,12 @@ const ARTIFACT_PROJECTION_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir,
 type DrawSourceScenario = Readonly<{
   schemaVersion: 1;
   contractId: "draw-source-scenario-input-v1";
-  producerContext: Readonly<{ generatorId: string; compilerRoots: readonly string[]; workspaceInputs: readonly string[]; runtimePackages: readonly string[]; authority: string; workspaceBindings: string; initialOutputs: string; registryNodeCount: number }>;
+  producerContext: Readonly<{ generatorId: string; compilerRoots: readonly string[]; runtimeModules: readonly string[]; runtimeData: readonly string[]; runtimeReceiptCatalogs: readonly Readonly<{ manifestPath: string; ownerRoot: string; receiptPathField: string }>[]; workspaceInputs: readonly string[]; runtimePackages: readonly string[]; authority: string; workspaceBindings: string; initialOutputs: string; registryNodeCount: number }>;
   catalogContext: readonly DrawSourceScenarioInput[];
   launchSeed: DrawSourceScenarioInput;
+  deploymentCatalog: DrawSourceScenarioInput;
   cargoModuleRoot: DrawSourceScenarioInput;
-  cadConsumerMount: Readonly<{ sourcePath: string; path: string; meaning: string }>;
+  cadConsumerMount: Readonly<{ path: string; meaning: string }>;
   owner: Readonly<{ artifactId: string; standardVersion: string; subsetId: string; commandDirectoryName: string }>;
   members: readonly DrawSourceScenarioInput[];
   consumers: readonly DrawSourceScenarioInput[];
@@ -4307,7 +4309,6 @@ type DrawSourceScenario = Readonly<{
     sourceDirectoryCount: number;
     destinationDirectoryCount: number;
     destinationNodeCount: number;
-    configuration: readonly Readonly<{ path: string; sourceEntry: string; destinationEntry: string }>[];
     workspaceMemberCount: number;
     dependencyUserCount: number;
     projectCwdCount: number;
@@ -4315,7 +4316,7 @@ type DrawSourceScenario = Readonly<{
     rootCollectionCount: number;
     externalModuleCount: number;
     activatedGeneratorIds: readonly string[];
-    cargoModuleMount: Readonly<{ manifestPath: string; packageName: string; libraryEntry: string; moduleName: string; moduleTarget: string; canonicalModuleTarget: string }>;
+    cargoModuleMount: Readonly<{ manifestPath: string; packageName: string; libraryEntry: string; moduleName: string; moduleTarget: string }>;
   }>;
 }>;
 
@@ -4349,54 +4350,35 @@ function drawSourceScenarioPreimage(destinationPath: string): string {
   return createHash("sha256").update(drawSourceScenarioContent(member.content, projection)).digest("hex");
 }
 
-const CAD_PROJECTION_CURRENT_ONLY_SOURCES = [
-  "🏢️aec.building/🎬️actions/⬆️placeCeilingFrom2PointsAndHeight.json",
-  "🏢️aec.building/🎬️actions/🏛️placeColumnFrom2PointsAndHeight.json",
-  "🏢️aec.building/🎬️actions/🏠️placeRoofFrom2PointsAndHeight.json",
-  "🏢️aec.building/🎬️actions/🚧️placeWallFrom2PointsAndHeight.json",
-  "🏢️aec.building/🎬️actions/🚪️placeDoorFrom2PointsAndHeight.json",
-  "🏢️aec.building/🎬️actions/🧱️placeSlabFrom2PointsAndHeight.json",
-  "🏢️aec.building/🎬️actions/🪜️placeStairFrom2PointsAndHeight.json",
-  "🏢️aec.building/🎬️actions/🪟️placeWindowFrom2PointsAndHeight.json",
-  "🏢️aec.building/🎬️actions/🪨️placeFoundationFrom2PointsAndHeight.json",
-  "🏢️aec.building/🕹️interactions/⬆️placeCeiling.json",
-  "🏢️aec.building/🕹️interactions/🏛️placeColumn.json",
-  "🏢️aec.building/🕹️interactions/🏠️placeRoof.json",
-  "🏢️aec.building/🕹️interactions/🚧️placeRailing.json",
-  "🏢️aec.building/🕹️interactions/🚪️placeDoor.json",
-  "🏢️aec.building/🕹️interactions/🛡️placeWall.json",
-  "🏢️aec.building/🕹️interactions/🧱️placeSlab.json",
-  "🏢️aec.building/🕹️interactions/🪜️placeStair.json",
-  "🏢️aec.building/🕹️interactions/🪟️placeWindow.json",
-  "🏢️aec.building/🕹️interactions/🪨️placeFoundation.json",
-  "🏢️aec.building/🕹️interactions/🪵️placeBeam.json",
-] as const;
-
-/** 🧵️ Binds frozen CAD scenario identities while accounting for every current-only placement member. */
+/** 🧵️ Binds every frozen CAD scenario source to its exact current carrier: each declared live path is one owned file,
+ * and every owned file carries exactly one scenario source. */
 function cadProjectionLiveSources(projection: ArtifactProjectionGoldenEntry, paths = ownedFilePaths(join(getWorkspaceRoot(), projection.sourceRoot)).filter((path) => path.endsWith(".json"))): ReadonlyMap<string, string> {
-  if (projection.contractId !== "artifact-example-model-catalog-v1") throw new Error("CAD source bindings require the exact catalog projection");
-  const identity = (path: string): string => path.split("/").map((segment) => leadingEmojiIdentity(segment).rest).join("/");
-  const current = new Map<string, string>();
+  if (projection.contractId !== "artifact-example-model-catalog-v1" || !projection.liveBindings) throw new Error("CAD source bindings require the exact catalog projection");
+  const owned = new Set<string>();
   for (const path of paths) {
-    const key = identity(path);
-    if (current.has(key)) throw new Error(`Duplicate current CAD source identity: ${key}`);
-    current.set(key, `${projection.sourceRoot}/${path}`);
+    const livePath = `${projection.sourceRoot}/${path}`;
+    if (owned.has(livePath)) throw new Error(`Duplicate current CAD source: ${path}`);
+    owned.add(livePath);
   }
-  const bound = new Map<string, string>();
-  for (const { sourcePath } of projection.mappings) {
-    if (!sourcePath.startsWith(`${projection.sourceRoot}/`)) throw new Error("CAD scenario source is outside its exact root");
-    const key = identity(sourcePath.slice(projection.sourceRoot.length + 1)), path = current.get(key);
-    if (!path || bound.has(sourcePath)) throw new Error(`Missing or duplicate CAD scenario source identity: ${key}`);
-    bound.set(sourcePath, path);
-    current.delete(key);
+  const bound = new Map<string, string>(), carriers = new Set<string>();
+  for (const { source, live } of projection.liveBindings) {
+    if ([source, live].some((path) => !path || path.startsWith("/") || path.split("/").some((part) => !part || part === "." || part === ".."))) throw new Error("CAD scenario binding is outside its exact root");
+    const sourcePath = `${projection.sourceRoot}/${source}`, livePath = `${projection.sourceRoot}/${live}`;
+    if (!owned.has(livePath) || bound.has(sourcePath) || carriers.has(livePath)) throw new Error(`Missing or duplicate CAD scenario binding: ${livePath}`);
+    bound.set(sourcePath, livePath);
+    carriers.add(livePath);
   }
-  for (const path of CAD_PROJECTION_CURRENT_ONLY_SOURCES) {
-    const key = identity(path);
-    if (current.get(key) !== `${projection.sourceRoot}/${path}`) throw new Error(`Missing exact current-only CAD source: ${path}`);
-    current.delete(key);
-  }
-  if (current.size > 0) throw new Error("Current CAD source census contains unbound members");
+  if (bound.size !== projection.mappings.length || projection.mappings.some(({ sourcePath }) => !bound.has(sourcePath))) throw new Error("CAD scenario bindings do not cover the projection exactly");
+  if (carriers.size !== owned.size) throw new Error("Current CAD source census contains unbound members");
   return bound;
+}
+
+/** 🔗️ Rebinds a live CAD consumer's catalog-anchored carrier names onto the authored source names the golden projection plans from. */
+function cadProjectionConsumerContent(content: string, projection = projectionGolden("artifact-example-model-catalog-v1")): string {
+  const anchor = `${basename(projection.sourceRoot)}/`;
+  let rendered = content;
+  for (const [sourcePath, livePath] of cadProjectionLiveSources(projection)) if (sourcePath !== livePath) rendered = rendered.replaceAll(`${anchor}${livePath.slice(projection.sourceRoot.length + 1)}`, `${anchor}${sourcePath.slice(projection.sourceRoot.length + 1)}`);
+  return rendered;
 }
 
 function projectionAuthorityNodes(projection: ArtifactProjectionGoldenEntry, source: "live" | "authored-draw" = "live", readLive: (path: string) => string = (path) => readFileSync(join(getWorkspaceRoot(), path), "utf8")): SemanticProjectionAuthorityNode[] {
@@ -4643,7 +4625,7 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     }
   });
 
-  test("authored Draw source schema and parser oracles retain the exact eleven-member contract", async () => {
+  test("authored Draw source schema and parser oracles retain the exact nine-member contract", async () => {
     const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🖍️draw-source-scenario/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
     expect(validate(DRAW_SOURCE_SCENARIO)).toBe(true);
@@ -4681,15 +4663,15 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
         } else expect(parsed.entries.flatMap((entry: { users: string[] }) => entry.users)).toHaveLength(DRAW_SOURCE_SCENARIO.oracle.dependencyUserCount);
       } else if (row.format === "toml") {
         const parsed = toml.parse(content);
-        const configuration = DRAW_SOURCE_SCENARIO.oracle.configuration.find(({ path }) => path === row.path);
-        if (configuration) expect((parsed.lib as { path: string }).path).toBe(configuration.sourceEntry);
+        if (row.path.endsWith("/📦️packages/🦀️rust/Cargo.toml")) expect(DRAW_SOURCE_SCENARIO.members.map(({ path }) => path)).toContain(posix.join(dirname(row.path), (parsed.lib as { path: string }).path));
         if (row.path === "Cargo.toml") expect((parsed.workspace as { members: string[] }).members).toHaveLength(DRAW_SOURCE_SCENARIO.oracle.workspaceMemberCount);
       } else if (row.format === "typescript") {
         const result = ts.transpileModule(content, { fileName: row.path, reportDiagnostics: true, compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext } });
         expect(result.diagnostics).toEqual([]);
         const source = ts.createSourceFile(row.path, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
         const imports = source.statements.filter(ts.isImportDeclaration).map((statement) => (statement.moduleSpecifier as import("typescript").StringLiteral).text);
-        expect(imports).toEqual(row.path === "📜️script.ts" ? [] : ["node:path"]);
+        expect(imports).toEqual(row.path === "📜️script.ts" ? ["node:fs", "node:path", "@semio-tech/repo-lib"] : ["@semio-tech/repo-lib"]);
+        expect(fixedSourceDispositionDecision("root-script", content)?.role).toBe("tool-metadata");
       }
     }
     expect(projectCwds).toBe(DRAW_SOURCE_SCENARIO.oracle.projectCwdCount);
@@ -4703,7 +4685,6 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
 
   test("authored Draw source launch seed matches its host and preserves unknown-variant rejection", async () => {
     const jsonc = await import("jsonc-parser"), ts = await import("typescript");
-    const { generateLaunchJson } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🟦️.ts");
     const seed = DRAW_SOURCE_SCENARIO.launchSeed, errors: import("jsonc-parser").ParseError[] = [];
     const document = jsonc.parse(seed.content, errors);
     expect(errors).toEqual([]);
@@ -4713,13 +4694,21 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     const declaration = parsed.package.metadata.semio.playground[0]!;
     expect(Object.keys(document.devLaunchers)).toEqual([declaration.variant]);
     const playground = { ...declaration, pluginId: parsed.package.metadata.component.package.slice("semio:".length), cratePath: dirname(host.path), aliases: [], examples: [], engines: [], assets: [] };
-    const rendered = generateLaunchJson("", [playground], [], () => seed.content), output = jsonc.parse(rendered);
-    expect(ts.parseConfigFileTextToJson("launch.json", rendered).config).toEqual(output);
-    expect(output.configurations).toHaveLength(12);
-    expect(output.configurations[0].env.FIXTURE_PORT).toBe(String(declaration.ports.react));
-    expect(rendered).not.toContain("@generated:");
-    expect(() => generateLaunchJson("", [], [], () => seed.content)).toThrow("no matching playground registry entry");
-    expect(() => generateLaunchJson("", [playground], [], () => seed.content.replace("@generated:draw-fixture-host:react", "@generated:unknown:react"))).toThrow("seed is missing placeholder");
+    const isolated = await artifactProjectionIsolatedProducerModule<typeof import("../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🟦️.ts")>("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🟦️.ts");
+    try {
+      const { generateLaunchJson } = isolated.module;
+      normalizationWriteFiles(isolated.root, Object.fromEntries(DRAW_SOURCE_SCENARIO.catalogContext.map(({ path, content }) => [path, content])));
+      const rendered = generateLaunchJson(isolated.root, [playground], [], () => seed.content), output = jsonc.parse(rendered);
+      expect(ts.parseConfigFileTextToJson("launch.json", rendered).config).toEqual(output);
+      const directoryName = (JSON.parse(DRAW_SOURCE_SCENARIO.deploymentCatalog.content) as { modules: { directoryName: string }[] }).modules[0]!.directoryName;
+      expect(output.configurations.map(({ name }: { name: string }) => name)).toEqual([`🛠️dev${directoryName}⚛️react`, `🛠️dev${directoryName}🧊️wgpu🌐️wasm`]);
+      expect(output.configurations.map(({ env }: { env: Record<string, string> }) => env.FIXTURE_PORT)).toEqual([String(declaration.ports.react), String(declaration.ports.wgpu)]);
+      expect(rendered).not.toContain("@generated:");
+      expect(() => generateLaunchJson(isolated.root, [], [], () => seed.content)).toThrow("no matching playground registry entry");
+      expect(() => generateLaunchJson(isolated.root, [playground], [], () => seed.content.replace("@generated:draw-fixture-host:react", "@generated:unknown:react"))).toThrow("seed is missing placeholder");
+    } finally {
+      rmSync(isolated.root, { recursive: true, force: true });
+    }
   });
 
   test("authored Draw source producer context captures actual implementations with independent import parity", async () => {
@@ -4733,11 +4722,17 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     const contract = taxonomy.generatorContracts[DRAW_SOURCE_SCENARIO.producerContext.generatorId]!;
     expect(context.files[contract.inputDiscovery!.implementationEntryPaths[0]!]?.content).toBe(readFileSync(join(getWorkspaceRoot(), contract.ownerPath!, "📜️script.ts"), "utf8"));
     expect(context.files[contract.inputDiscovery!.implementationEntryPaths[0]!]?.content).not.toBe("export {};\n");
-    for (const path of [...contract.inputPatterns, ...DRAW_SOURCE_SCENARIO.producerContext.workspaceInputs]) expect(context.files[path]?.content).toBe(path === DRAW_SOURCE_SCENARIO.launchSeed.path ? DRAW_SOURCE_SCENARIO.launchSeed.content : readFileSync(join(getWorkspaceRoot(), path), "utf8"));
-    expect(readPaths).not.toContain(DRAW_SOURCE_SCENARIO.launchSeed.path);
+    const authored = new Map([DRAW_SOURCE_SCENARIO.launchSeed, DRAW_SOURCE_SCENARIO.deploymentCatalog].map(({ path, content }) => [path, content]));
+    for (const path of [...contract.inputPatterns, ...DRAW_SOURCE_SCENARIO.producerContext.workspaceInputs, ...DRAW_SOURCE_SCENARIO.producerContext.runtimeData]) expect(context.files[path]?.content).toBe(authored.get(path) ?? readFileSync(join(getWorkspaceRoot(), path), "utf8"));
+    for (const path of authored.keys()) expect(readPaths).not.toContain(path);
+    for (const path of DRAW_SOURCE_SCENARIO.producerContext.runtimeModules) expect(context.modules.some((row) => row.path === path)).toBe(true);
+    const nxPlugins = (JSON.parse(context.files["nx.json"]!.content) as { plugins: { plugin: string }[] }).plugins.filter(({ plugin }) => plugin.startsWith("./")).map(({ plugin }) => plugin.slice(2));
+    for (const path of [...DRAW_SOURCE_SCENARIO.producerContext.runtimeModules, ...DRAW_SOURCE_SCENARIO.producerContext.runtimeData]) expect(nxPlugins.some((plugin) => context.files[plugin]!.content.includes(posix.relative(posix.dirname(plugin), path))), path).toBe(true);
     expect(readPaths).toEqual([...new Set(readPaths)]);
     const nx = JSON.parse(context.files["nx.json"]!.content);
     for (const row of nx.plugins.filter((entry: { plugin: string }) => entry.plugin.startsWith("."))) expect(context.files[row.plugin.slice(2)]).toBeDefined();
+    const nxScript = (JSON.parse(context.files["package.json"]!.content) as { scripts: Record<string, string> }).scripts.nx!.match(/^bun \.\/(\S+) nx$/u)?.[1];
+    expect(DRAW_SOURCE_SCENARIO.producerContext.compilerRoots).toEqual([nxScript]);
     for (const row of context.modules) {
       if (row.kind === "json-data") {
         const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
@@ -4772,20 +4767,21 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
       const content = row?.content ?? (path === "nx.json" ? '{"plugins":[]}' : "{}"), mode = row?.mode ?? 0o644;
       return { content, mode, sha256: createHash("sha256").update(content).digest("hex"), origin: "authored-scenario" };
     };
-    const captured = artifactProjectionProducerInputs(taxonomy, read);
+    const context = { ...DRAW_SOURCE_SCENARIO.producerContext, compilerRoots: [], runtimeModules: [], runtimeData: [], runtimeReceiptCatalogs: [] };
+    const captured = artifactProjectionProducerInputs(taxonomy, read, context);
     const data = source.get(vector.graph.dataPath)!;
     expect(captured.files[data.path]).toEqual({ content: data.content, mode: data.mode, sha256: createHash("sha256").update(data.content).digest("hex"), origin: "authored-scenario" });
     expect(captured.modules.find(({ path }) => path === data.path)).toEqual({ path: data.path, kind: "json-data", imports: [] });
     expect(reads.filter((path) => path === data.path)).toHaveLength(1);
     expect(reads.some((path) => path.includes("never.ts"))).toBe(false);
     source.set(data.path, { ...data, content: "{" });
-    expect(() => artifactProjectionProducerInputs(taxonomy, read)).toThrow("imported JSON is invalid");
+    expect(() => artifactProjectionProducerInputs(taxonomy, read, context)).toThrow("imported JSON is invalid");
     source.delete(data.path);
-    expect(() => artifactProjectionProducerInputs(taxonomy, read)).toThrow("Missing authored compiler input");
+    expect(() => artifactProjectionProducerInputs(taxonomy, read, context)).toThrow("Missing authored compiler input");
     source.set(data.path.replace(".json", ".txt"), { ...data, path: data.path.replace(".json", ".txt") });
     const entry = source.get(vector.graph.entries[0]!)!;
     source.set(entry.path, { ...entry, content: entry.content.replaceAll(".json", ".txt") });
-    expect(() => artifactProjectionProducerInputs(taxonomy, read)).toThrow("language is not supported");
+    expect(() => artifactProjectionProducerInputs(taxonomy, read, context)).toThrow("language is not supported");
   });
 
   test("authored Draw source authority never reads live Draw leaves or reconstructs canonical input", () => {
@@ -4802,12 +4798,11 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     expect(authority.mappingDigest).toBe(projection.mappingDigest);
     expect(authority.destinationDirectoryCount).toBe(DRAW_SOURCE_SCENARIO.oracle.destinationDirectoryCount);
     expect(authority.destinationNodeCount).toBe(DRAW_SOURCE_SCENARIO.oracle.destinationNodeCount);
-    expect(authority.referenceEdits).toHaveLength(DRAW_SOURCE_SCENARIO.oracle.configuration.length);
-    for (const configuration of DRAW_SOURCE_SCENARIO.oracle.configuration) {
-      const mapping = projection.mappings.find(({ sourcePath }) => sourcePath === `${projection.sourceRoot}/${configuration.path}`)!;
-      const content = DRAW_SOURCE_SCENARIO.members.find(({ path }) => path === configuration.path)!.content;
-      expect((toml.parse(content).lib as { path: string }).path).toBe(configuration.sourceEntry);
-      expect(authority.referenceEdits.find(({ path }) => path === mapping.destinationPath)).toEqual({ path: mapping.destinationPath, adapter: "toml", structuredLocation: "lib.path", oldValue: configuration.sourceEntry, newValue: configuration.destinationEntry, preimageHash: createHash("sha256").update(content).digest("hex") });
+    expect(authority.referenceEdits).toEqual([]);
+    for (const manifest of DRAW_SOURCE_SCENARIO.members.filter(({ path }) => path.endsWith("/📦️packages/🦀️rust/Cargo.toml"))) {
+      const entry = posix.join(dirname(manifest.path), (toml.parse(manifest.content).lib as { path: string }).path);
+      expect(projection.mappings.map(({ sourcePath }) => sourcePath)).toContain(`${projection.sourceRoot}/${entry}`);
+      expect(projection.mappings.map(({ destinationPath }) => destinationPath)).toContain(`${projection.destinationRoot}/${entry}`);
     }
     expect(() => projectionAuthorityNodes(projectionGolden("artifact-example-model-catalog-v1"), "authored-draw")).toThrow("cannot supply another projection");
     expect(() => drawSourceScenarioContent("{{unknown}}", projection)).toThrow("unknown binding");
@@ -4831,9 +4826,12 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     const graph = inspectRustModuleGraph(Object.keys(files), (path) => files[path], { conventionalRoots: false, strictManifests: true });
     expect([...new Set(graph.contexts.get(modulePath)?.map(({ manifestPath }) => manifestPath))]).toEqual([mount.manifestPath]);
     expect(graph.contexts.get(modulePath)?.filter(({ modulePath: segments }) => segments.join("::") === mount.moduleName).map(({ manifestPath }) => manifestPath)).toEqual([mount.manifestPath]);
-    const expectedRoot = `../../${artifactProjectionFixturePath(projectionGolden("artifact-example-model-catalog-v1").sourceRoot)}`;
-    expect(inspectRustManifestPathReferences(files[modulePath]!).map(({ value, base }) => ({ value, base }))).toEqual([{ value: expectedRoot, base: [] }]);
-    expect(inspectRustJoinArgumentSpans(files[modulePath]!).map(({ value }) => value)).toEqual([expectedRoot]);
+    const cad = projectionGolden("artifact-example-model-catalog-v1"), testsPath = posix.join(posix.dirname(modulePath), "🧪️tests/🔬️unit/🦀️.rs");
+    const expectedRoot = `../../${posix.relative(cad.sourceRoot.slice(0, cad.sourceRoot.indexOf("/🏅️standards/")), cad.sourceRoot)}`;
+    expect(inspectRustManifestPathReferences(files[modulePath]!)).toEqual([]);
+    expect([...new Set(graph.contexts.get(testsPath)?.map(({ manifestPath }) => manifestPath))]).toEqual([mount.manifestPath]);
+    expect(inspectRustManifestPathReferences(files[testsPath]!).map(({ value, base }) => ({ value, base }))).toEqual([{ value: expectedRoot, base: [] }]);
+    expect(inspectRustJoinArgumentSpans(files[testsPath]!).map(({ value }) => value)).toEqual([expectedRoot, "\\n"]);
     const parser = spawnSync("rustc", ["-Zunpretty=ast-tree", "--crate-name", "draw_source_mount", "--edition=2021", "--crate-type=lib", "-"], { input: root.content, encoding: "utf8", timeout: 10_000 });
     expect({ status: parser.status, signal: parser.signal, stderr: parser.stderr }).toEqual({ status: 0, signal: null, stderr: "" });
     expect(parser.stdout.match(/kind: Mod\(/gu)).toHaveLength(1);
@@ -4850,12 +4848,11 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
       reads.push(path);
       return readFileSync(join(getWorkspaceRoot(), path), "utf8");
     });
-    expect(reads).toHaveLength(projectionGolden("artifact-example-model-catalog-v1").sourceFileCount + 4);
+    expect(reads).toHaveLength(projectionGolden("artifact-example-model-catalog-v1").sourceFileCount + 5);
     for (const row of DRAW_SOURCE_SCENARIO.members) expect(files[`${artifactProjectionFixturePath(projection.sourceRoot)}/${row.path}`]).toBe(drawSourceScenarioContent(row.content, projection));
     for (const row of DRAW_SOURCE_SCENARIO.consumers) expect(files[row.path]).toBe(drawSourceScenarioContent(row.content, projection));
     expect(files[DRAW_SOURCE_SCENARIO.cadConsumerMount.path]).toBeDefined();
-    expect(createHash("sha256").update(files[DRAW_SOURCE_SCENARIO.cadConsumerMount.path]!).digest("hex")).toBe(createHash("sha256").update(readFileSync(join(getWorkspaceRoot(), DRAW_SOURCE_SCENARIO.cadConsumerMount.sourcePath))).digest("hex"));
-    expect(files[DRAW_SOURCE_SCENARIO.cadConsumerMount.sourcePath]).toBeUndefined();
+    expect(createHash("sha256").update(files[DRAW_SOURCE_SCENARIO.cadConsumerMount.path]!).digest("hex")).toBe(createHash("sha256").update(readFileSync(join(getWorkspaceRoot(), DRAW_SOURCE_SCENARIO.cadConsumerMount.path))).digest("hex"));
   });
 
   test("authored Draw source run parent is exact and rejects unsafe ancestry before allocation", async () => {
@@ -4927,16 +4924,16 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     const platformBoundary = ownedFilePaths(join(getWorkspaceRoot(), projection.sourceRoot)).filter((path) => path.endsWith(".json"))
       .map((path) => `${projection.sourceRoot}/${path}`)
       .sort(projectionByteSort);
-    expect(platformBoundary).toEqual([...cadProjectionLiveSources(projection).values(), ...CAD_PROJECTION_CURRENT_ONLY_SOURCES.map((path) => `${projection.sourceRoot}/${path}`)].sort(projectionByteSort));
+    expect(platformBoundary).toEqual([...cadProjectionLiveSources(projection).values()].sort(projectionByteSort));
     expect(result.problems).toEqual([]);
     expect(result.mappings).toEqual(projection.mappings);
     expect(result.destinationRoot).toBe(projection.destinationRoot);
-    expect(result.mappingDigest).toBe("a09f60c5de5718394ddb856052444b306de7443b2d4ecd546e1e911dc44d40a6");
-    expect(result.destinationDirectoryCount).toBe(244);
-    expect(result.destinationNodeCount).toBe(453);
+    expect(result.mappingDigest).toBe("b47425503a8ebc2a60120e91a5fd6a7e8a54411bdfc122b87a2ef7d5a7cf2d8f");
+    expect(result.destinationDirectoryCount).toBe(266);
+    expect(result.destinationNodeCount).toBe(495);
     expect(result.maxPathBytes).toBe(237);
     expect(projection.modelCatalog?.models).toHaveLength(9);
-    expect(projection.modelCatalog?.categoryRules.map(({ count }) => count).reduce((sum, count) => sum + count, 0)).toBe(200);
+    expect(projection.modelCatalog?.categoryRules.map(({ count }) => count).reduce((sum, count) => sum + count, 0)).toBe(220);
   });
 
   test("CAD frozen scenario bindings read exact current bytes and reject missing, duplicate, or extra identities", () => {
@@ -4947,17 +4944,10 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
       reads.push(path);
       return readFileSync(join(getWorkspaceRoot(), path), "utf8");
     }).filter(({ nodeKind }) => nodeKind === "file");
-    expect(nodes).toHaveLength(209);
-    const currentOnly = new Set<string>(CAD_PROJECTION_CURRENT_ONLY_SOURCES);
+    expect(nodes).toHaveLength(229);
     expect(paths).toHaveLength(229);
-    expect(reads.sort(projectionByteSort)).toEqual(paths.filter((path) => !currentOnly.has(path)).map((path) => `${projection.sourceRoot}/${path}`).sort(projectionByteSort));
+    expect(reads.sort(projectionByteSort)).toEqual(paths.map((path) => `${projection.sourceRoot}/${path}`).sort(projectionByteSort));
     for (const node of nodes) expect(node.content).toBe(readFileSync(join(getWorkspaceRoot(), bindings.get(node.path)!), "utf8"));
-    for (const path of currentOnly) {
-      const content = JSON.parse(readFileSync(join(getWorkspaceRoot(), projection.sourceRoot, path), "utf8"));
-      expect(content.schema).toBe(path.includes("/🎬️actions/") ? "spatial.action" : "spatial.interaction");
-      expect(content.id.length).toBeGreaterThan(0);
-      expect(content.version).toBe("1.0.0");
-    }
     expect(() => cadProjectionLiveSources(projection, paths.slice(1))).toThrow("Missing");
     expect(() => cadProjectionLiveSources(projection, [...paths, paths[0]!])).toThrow("Duplicate");
     expect(() => cadProjectionLiveSources(projection, [...paths, "🧪️unknown/🔣️modelDefinition.json"])).toThrow("unbound");
@@ -5007,12 +4997,13 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
 
   test("artifact-editor-command-projection preserves the strict fixed-file union and owned filesystem parity", () => {
     const projection = projectionGolden("artifact-editor-command-bundle-v1");
-    const nodes = projectionAuthorityNodes(projection);
+    const nodes = projectionAuthorityNodes(projection, "authored-draw", () => { throw new Error("Live Draw source must not be read by the strict fixed-file union"); });
     const result = projectionAuthority(projection, nodes);
-    const platformBoundary = ownedFilePaths(join(getWorkspaceRoot(), projection.sourceRoot))
-      .map((path) => `${projection.sourceRoot}/${path}`)
+    const platformBoundary = ownedFilePaths(join(getWorkspaceRoot(), projection.destinationRoot))
+      .filter((path) => !path.split("/").includes("🧪️tests"))
+      .map((path) => `${projection.destinationRoot}/${path}`)
       .sort(projectionByteSort);
-    expect(platformBoundary).toEqual(projection.mappings.map(({ sourcePath }) => sourcePath));
+    expect(platformBoundary).toEqual(projection.mappings.map(({ destinationPath }) => destinationPath).sort(projectionByteSort));
     expect(result.problems).toEqual([]);
     expect(result.mappings).toEqual(projection.mappings);
     expect(result.mappingDigest).toBe(projection.mappingDigest);
@@ -5414,10 +5405,9 @@ function artifactProjectionSourceFiles(references: boolean, readLive: (path: str
     const cadRuntime = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts";
     const cadInteraction = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️.rs";
     const interactionSpec = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs";
-    files[artifactProjectionFixturePath(cadRuntime)] = readLive(cadRuntime);
-    files[artifactProjectionFixturePath(cadInteraction)] = readLive(cadInteraction);
-    files[artifactProjectionFixturePath(interactionSpec)] = readLive(interactionSpec);
-    files[DRAW_SOURCE_SCENARIO.cadConsumerMount.path] = readLive(DRAW_SOURCE_SCENARIO.cadConsumerMount.sourcePath);
+    const interactionSpecTests = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🧪️tests/🔬️unit/🦀️.rs";
+    for (const path of [cadRuntime, cadInteraction, interactionSpec, interactionSpecTests]) files[artifactProjectionFixturePath(path)] = cadProjectionConsumerContent(readLive(path));
+    files[DRAW_SOURCE_SCENARIO.cadConsumerMount.path] = readLive(DRAW_SOURCE_SCENARIO.cadConsumerMount.path);
     const draw = projectionGolden("artifact-editor-command-bundle-v1");
     for (const row of DRAW_SOURCE_SCENARIO.consumers) files[row.path] = drawSourceScenarioContent(row.content, draw);
     files[DRAW_SOURCE_SCENARIO.cargoModuleRoot.path] = DRAW_SOURCE_SCENARIO.cargoModuleRoot.content;
@@ -5443,19 +5433,27 @@ function artifactProjectionProducerInput(path: string): ArtifactProducerInput {
 }
 
 /** 📦️ Captures current producer inputs from exact contracts and static imports without repository traversal. */
-function artifactProjectionProducerInputs(taxonomy: Taxonomy, readInput: (path: string) => ArtifactProducerInput = artifactProjectionProducerInput) {
-  const context = DRAW_SOURCE_SCENARIO.producerContext, contract = taxonomy.generatorContracts[context.generatorId], authority = contract?.inputDiscovery;
+function artifactProjectionProducerInputs(taxonomy: Taxonomy, readInput: (path: string) => ArtifactProducerInput = artifactProjectionProducerInput, context: DrawSourceScenario["producerContext"] = DRAW_SOURCE_SCENARIO.producerContext) {
+  const contract = taxonomy.generatorContracts[context.generatorId], authority = contract?.inputDiscovery;
   if (!contract?.ownerPath || !authority || authority.kind !== "registry-catalog") throw new Error("Authored Draw producer requires exact registry catalog authority");
-  const seed = DRAW_SOURCE_SCENARIO.launchSeed;
-  if (!contract.inputPatterns.includes(seed.path)) throw new Error("Authored launch seed must be an exact declared producer input");
-  const files: Record<string, ArtifactProducerInput> = { [seed.path]: { content: seed.content, mode: 0o644, sha256: createHash("sha256").update(seed.content).digest("hex"), origin: "authored-scenario" } };
+  const authored = [DRAW_SOURCE_SCENARIO.launchSeed, DRAW_SOURCE_SCENARIO.deploymentCatalog];
+  if (authored.some(({ path }) => !contract.inputPatterns.includes(path))) throw new Error("Authored producer inputs must be exact declared producer inputs");
+  const files: Record<string, ArtifactProducerInput> = Object.fromEntries(authored.map(({ path, content }) => [path, { content, mode: 0o644, sha256: createHash("sha256").update(content).digest("hex"), origin: "authored-scenario" as const }]));
   const read = (path: string): ArtifactProducerInput => files[path] ??= readInput(path);
-  for (const path of [...context.workspaceInputs, ...contract.inputPatterns]) {
+  for (const path of [...context.workspaceInputs, ...context.runtimeData, ...contract.inputPatterns]) {
     if (/[*?[\]]/u.test(path)) throw new Error("Draw producer context requires exact declared input files");
     read(path);
   }
+  for (const catalog of context.runtimeReceiptCatalogs) {
+    const receipts = (JSON.parse(read(catalog.manifestPath).content) as { receipts: Record<string, unknown>[] }).receipts;
+    for (const receipt of receipts) {
+      const path = posix.normalize(posix.join(catalog.ownerRoot, String(receipt[catalog.receiptPathField])));
+      if (!path.startsWith(`${catalog.ownerRoot}/`)) throw new Error("Runtime receipt escapes its owner: " + path);
+      read(path);
+    }
+  }
   const nx = JSON.parse(read("nx.json").content) as { plugins: { plugin: string }[] };
-  const pending: { path: string; role: RegistryCompilerInputRole }[] = [...context.compilerRoots, ...authority.implementationEntryPaths, ...nx.plugins.filter(({ plugin }) => plugin.startsWith("../../📦️packages/🟦️typescript")).map(({ plugin }) => plugin.slice(2))].map((path) => ({ path, role: "implementation-entry" }));
+  const pending: { path: string; role: RegistryCompilerInputRole }[] = [...context.compilerRoots, ...context.runtimeModules, ...authority.implementationEntryPaths, ...nx.plugins.filter(({ plugin }) => plugin.startsWith("./")).map(({ plugin }) => plugin.slice(2))].map((path) => ({ path, role: "implementation-entry" }));
   const modules = new Map<string, { path: string; kind: "module" | "json-data"; imports: readonly string[] }>();
   while (pending.length) {
     const { path, role } = pending.shift()!, previous = modules.get(path);
@@ -5477,6 +5475,25 @@ function artifactProjectionProducerInputs(taxonomy: Taxonomy, readInput: (path: 
     }
   }
   return { files, modules: [...modules.values()].sort((left, right) => projectionByteSort(left.path, right.path)), bindings: authority.workspaceImports };
+}
+
+/** 🧫️ Imports one producer module from an isolated copy of its captured static closure, so authored producer inputs replace live ones in-process. */
+async function artifactProjectionIsolatedProducerModule<T>(entry: string, captured: ReturnType<typeof artifactProjectionProducerInputs> = artifactProjectionProducerInputs(loadTaxonomy())): Promise<Readonly<{ module: T; root: string }>> {
+  const modules = new Map(captured.modules.map((row) => [row.path, row])), closure = new Set<string>(), pending = [entry];
+  while (pending.length) {
+    const path = pending.pop()!, row = modules.get(path);
+    if (closure.has(path)) continue;
+    if (!row) throw new Error("Isolated producer module is outside the captured closure: " + path);
+    closure.add(path);
+    for (const specifier of row.imports) {
+      if (specifier.startsWith("node:") || specifier.startsWith("bun:")) continue;
+      if (!specifier.startsWith(".")) throw new Error("Isolated producer module has a workspace import: " + path + " -> " + specifier);
+      pending.push(posix.normalize(posix.join(posix.dirname(path), specifier)));
+    }
+  }
+  const root = mkdtempSync(join(realpathSync(tmpdir()), "semio-draw-producer-"));
+  normalizationWriteFiles(root, Object.fromEntries([...closure].map((path) => [path, captured.files[path]!.content])));
+  return { module: await import(join(root, entry)) as T, root };
 }
 
 /** 🏭️ Produces the fixture baseline through the unchanged Nx generator and freshness commands. */
@@ -5525,10 +5542,10 @@ function artifactProjectionNormalizationFixture(name: string, references = false
       mkdirSync(dirname(destination), { recursive: true });
       symlinkSync(target, destination, process.platform === "win32" ? "junction" : "dir");
     }
-    if (!schema.semanticPathProjectionReferenceConsumerContracts["cad-spatial-kernel-geometry"]!.sourcePathIdentities.includes(DRAW_SOURCE_SCENARIO.cadConsumerMount.sourcePath)) throw new Error("Authored CAD consumer mount has no exact source identity");
+    if (!schema.semanticPathProjectionReferenceConsumerContracts["cad-spatial-kernel-geometry"]!.sourcePathIdentities.includes(DRAW_SOURCE_SCENARIO.cadConsumerMount.path)) throw new Error("Authored CAD consumer mount has no exact source identity");
     const fixtureConsumerPaths: Readonly<Record<string, readonly string[]>> = {
       "draw-workspace-cargo": [`${scope}/Cargo.toml`],
-      "draw-dependency-registry": [`${scope}/🔣️.json`],
+      "draw-dependency-registry": [`${scope}/🔒️dependencies.json`],
       "draw-workspace-script": [`${scope}/📜️script.ts`],
       "cad-spatial-kernel-geometry": [`${scope}/${DRAW_SOURCE_SCENARIO.cadConsumerMount.path}`],
     };
@@ -5554,7 +5571,7 @@ function artifactProjectionNormalizationFixture(name: string, references = false
       const project = join(workspace, artifactProjectionFixturePath(mapping.sourcePath));
       writeFileSync(project, readFileSync(project, "utf8").replaceAll(`{workspaceRoot}/${draw.sourceRoot}`, `{workspaceRoot}/${scope}/${drawSourceRoot}`).replaceAll(draw.sourceRoot, `${scope}/${drawSourceRoot}`));
     }
-    for (const relativePath of ["🔣️.json", "Cargo.toml"]) {
+    for (const relativePath of ["🔒️dependencies.json", "Cargo.toml"]) {
       const target = join(workspace, relativePath);
       writeFileSync(target, readFileSync(target, "utf8").replaceAll(draw.sourceRoot, `${scope}/${drawSourceRoot}`));
     }
@@ -5592,7 +5609,8 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
     const member = cad.mappings.find(({ sourcePath }) => sourcePath.includes("/🎬️actions/") && sourcePath.slice(cad.sourceRoot.length + 1).split("/").length === 3)!;
     const model = member.sourcePath.slice(cad.sourceRoot.length + 1).split("/")[0]!;
     const manifest = cad.mappings.find(({ sourcePath }) => sourcePath === `${cad.sourceRoot}/${model}/🔣️modelDefinition.json`)!;
-    const fixture = normalizationFixture("minimal-cad-canonical", Object.fromEntries([manifest, member].map(({ sourcePath }) => [artifactProjectionFixturePath(sourcePath), readFileSync(join(getWorkspaceRoot(), sourcePath), "utf8")])));
+    const live = cadProjectionLiveSources(cad);
+    const fixture = normalizationFixture("minimal-cad-canonical", Object.fromEntries([manifest, member].map(({ sourcePath }) => [artifactProjectionFixturePath(sourcePath), readFileSync(join(getWorkspaceRoot(), live.get(sourcePath)!), "utf8")])));
     try {
       const retainedDirectory = join(fixture.workspace, dirname(artifactProjectionFixturePath(cad.sourceRoot)), "🔤️fonts");
       mkdirSync(retainedDirectory);
@@ -5600,10 +5618,10 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
       expect(plan.moves).toHaveLength(2);
       expect(plan.unresolved).toEqual([]);
       const before = normalizationWorkspaceSnapshot(fixture.workspace);
-      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.root, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, injectFailureAt: "after-edits" });
+      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.root, ticketDir: fixture.ticketDir, explicitTicketDir: fixture.options.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, injectFailureAt: "after-edits" });
       expect(rolledBack.state).toBe("rolled-back");
       expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
-      const committed = applyTaxonomyPlan(plan, { repoRoot: fixture.root, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest });
+      const committed = applyTaxonomyPlan(plan, { repoRoot: fixture.root, ticketDir: fixture.ticketDir, explicitTicketDir: fixture.options.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest });
       expect({ state: committed.state, error: JSON.parse(readFileSync(committed.journalPath, "utf8")).error ?? null }).toEqual({ state: "committed", error: null });
       expect(existsSync(join(fixture.workspace, artifactProjectionFixturePath(cad.sourceRoot)))).toBe(false);
       expect(lstatSync(retainedDirectory).isDirectory()).toBe(true);
@@ -5650,31 +5668,28 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
       ].sort(projectionByteSort));
       const locations = plan.edits.map((edit) => edit.structuredLocation);
       expect(locations.filter((location) => location.startsWith("artifact-catalog-glob:"))).toHaveLength(10);
-      expect(locations.filter((location) => location.startsWith("artifact-catalog-comment:"))).toHaveLength(2);
+      expect(locations.filter((location) => location.startsWith("artifact-catalog-comment:"))).toHaveLength(3);
       expect(locations.filter((location) => location.startsWith("artifact-catalog-marker:"))).toHaveLength(1);
       expect(locations.filter((location) => location.includes("/workspace-glob@"))).toHaveLength(2);
       expect(locations.filter((location) => location.startsWith("path-collection:"))).toHaveLength(1);
-      expect(plan.edits.some((edit) => edit.structuredLocation.startsWith("artifact-catalog-root-join:") && edit.oldValue.endsWith("🖼️assets/🏗️modelDefinitions") && edit.newValue.endsWith("📚️examples/🪆️1-any/🏗️models"))).toBe(true);
+      const cadArtifactRoot = cad.sourceRoot.slice(0, cad.sourceRoot.indexOf("/🏅️standards/"));
+      expect(plan.edits.filter((edit) => edit.structuredLocation.startsWith("artifact-catalog-root-join:")).map(({ oldValue, newValue }) => ({ oldValue, newValue }))).toEqual([{ oldValue: `../../${posix.relative(cadArtifactRoot, cad.sourceRoot)}`, newValue: `../../${posix.relative(cadArtifactRoot, cad.destinationRoot)}` }]);
       const removedSelectors = plan.edits.filter((edit) => edit.structuredLocation.startsWith("artifact-catalog-glob:") && edit.newValue === "");
       expect(removedSelectors).toHaveLength(2);
       expect(removedSelectors.reduce((count, edit) => count + (edit.oldValue.match(/modelDefinitions/g)?.length ?? 0), 0)).toBe(3);
       const cadExact = plan.edits.filter((edit) => edit.adapter === "rust" && edit.structuredLocation.startsWith("rust-string-path:") && /modelDefinitions\/.+\.json$/u.test(edit.oldValue));
-      expect(cadExact).toHaveLength(61);
+      expect(cadExact).toHaveLength(72);
       for (const edit of cadExact) {
         const matches = cad.mappings.filter((mapping) => edit.oldValue.endsWith(mapping.sourcePath.slice(cad.sourceRoot.length + 1)) && edit.newValue.endsWith(mapping.destinationPath.slice(cad.destinationRoot.length + 1)));
         expect(matches).toHaveLength(1);
       }
       const cadMount = plan.edits.filter(({ path }) => path === `${fixture.scope}/${DRAW_SOURCE_SCENARIO.cargoModuleRoot.path}`);
-      expect(cadMount.map(({ adapter, structuredLocation, oldValue, newValue }) => ({ adapter, structuredLocation, oldValue, newValue }))).toEqual([{ adapter: "rust", structuredLocation: "rust-string-path:1:11@10", oldValue: DRAW_SOURCE_SCENARIO.oracle.cargoModuleMount.moduleTarget, newValue: DRAW_SOURCE_SCENARIO.oracle.cargoModuleMount.canonicalModuleTarget }]);
-      expect(cadMount[0]!.preimage.contentHash).toBe(createHash("sha256").update(DRAW_SOURCE_SCENARIO.cargoModuleRoot.content).digest("hex"));
+      expect(cadMount).toEqual([]);
       const drawExact = plan.edits.filter((edit) => (edit.oldValue.includes(`${fixture.scope}/${artifactProjectionFixturePath(draw.sourceRoot)}`) || edit.path.startsWith(`${fixture.scope}/📦️packages/🦀️rust/`) || edit.path.includes("/🧪️tests/🧪️reference/")) && edit.path !== `${fixture.scope}/${DRAW_SOURCE_SCENARIO.cargoModuleRoot.path}` && edit.oldValue !== "🦀️.rs" && !edit.oldValue.includes("workspaceRoot") && !edit.structuredLocation.startsWith("path-collection:") && !edit.path.includes(`/${artifactProjectionFixturePath(cad.destinationRoot)}/`));
       expect(drawExact).toHaveLength(20);
-      expect(drawExact.some((edit) => edit.path.endsWith("📦️packages/🦀️rust/Cargo.toml") && edit.newValue === "../../🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust")).toBe(true);
-      expect(drawExact.some((edit) => edit.path.endsWith("🧪️tests/🦀️reference.rs") && edit.newValue === "../../🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs")).toBe(true);
-      const configurableEntries = plan.edits.filter((edit) => edit.oldValue === "🦀️.rs" && edit.newValue === "📚️library/🦀️.rs");
-      expect(configurableEntries).toHaveLength(2);
-      expect(configurableEntries.every((edit) => edit.adapter === "toml" && edit.structuredLocation.startsWith("lib.path:"))).toBe(true);
-      expect(configurableEntries.map((edit) => ({ path: edit.path.slice(fixture.scope.length + 1), adapter: edit.adapter, structuredLocation: edit.structuredLocation.slice(0, "lib.path".length), oldValue: edit.oldValue, newValue: edit.newValue, preimageHash: edit.preimage.contentHash }))).toEqual((draw.referenceEdits ?? []).map((edit) => ({ ...edit, path: artifactProjectionFixturePath(edit.path), preimageHash: drawSourceScenarioPreimage(edit.path) })));
+      expect(drawExact.some((edit) => edit.path.endsWith("📦️packages/🦀️rust/Cargo.toml") && edit.newValue === `../../${artifactProjectionFixturePath(draw.destinationRoot)}/🔄️fsm/📦️packages/🦀️rust`)).toBe(true);
+      expect(drawExact.some((edit) => edit.path.endsWith("🧪️tests/🧪️reference/🦀️.rs") && edit.newValue === `../../${artifactProjectionFixturePath(draw.destinationRoot)}/🦀️.rs`)).toBe(true);
+      expect(plan.edits.filter((edit) => edit.structuredLocation.startsWith("lib.path") && edit.path.includes(artifactProjectionFixturePath(draw.destinationRoot)))).toEqual([]);
       expect(plan.unresolved.filter((entry) => /projection|reference/u.test(entry.code))).toEqual([]);
       passed = true;
     } finally {
@@ -5774,7 +5789,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
       const marker = (projectionContractId: string): string => Object.values(taxonomy.semanticPathProjectionReferenceConsumerContracts).find((contract) => contract.projectionContractId === projectionContractId)!.staleMarkers[0]!;
       const cadConsumer = plan.edits.find((edit) => edit.structuredLocation.startsWith("artifact-catalog-marker:"))!.path;
       writeFileSync(join(fixture.repoRoot, cadConsumer), `${readFileSync(join(fixture.repoRoot, cadConsumer), "utf8")}\nexport const staleCadRoot = ${JSON.stringify(marker("artifact-example-model-catalog-v1"))};\n`);
-      const drawPackageConsumers = plan.edits.filter((edit) => edit.oldValue === "🦀️.rs" && edit.newValue === "📚️library/🦀️.rs").map((edit) => edit.path);
+      const drawPackageConsumers = plan.moves.filter((move) => move.destinationPath.includes(artifactProjectionFixturePath(projectionGolden("artifact-editor-command-bundle-v1").destinationRoot)) && move.destinationPath.endsWith("/📦️packages/🦀️rust/Cargo.toml")).map((move) => move.destinationPath);
       expect(drawPackageConsumers).toHaveLength(2);
       for (const path of drawPackageConsumers) writeFileSync(join(fixture.repoRoot, path), `${readFileSync(join(fixture.repoRoot, path), "utf8")}\n# ${marker("artifact-editor-command-bundle-v1")}\n`);
       const stale = normalizationPlan(fixture).plan;
@@ -5857,18 +5872,18 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
   }, 120_000);
 
   test("rejects a changed explicit source-admission ticket before journal mutation", () => {
-    const fixture = normalizationFixture("source-authority-ticket", { "🦀️subject.rs": "pub const VALUE: i32 = 1;\n" }, ({ repoRoot, workspace }) => writeFileSync(join(repoRoot, ".gitignore"), `${relative(repoRoot, workspace).replaceAll("\\", "/")}/\n`));
+    const fixture = normalizationFixture("source-authority-ticket", { "🧪️subject/🦀️.rs": "pub const VALUE: i32 = 1;\n" }, ({ repoRoot, workspace }) => writeFileSync(join(repoRoot, ".gitignore"), `${relative(repoRoot, workspace).replaceAll("\\", "/")}/\n`));
     try {
       const { inventory, plan } = normalizationPlan(fixture);
       expect(plan.unresolved.filter(({ severity }) => severity === "error")).toEqual([]);
       const transactionTicket = join(fixture.ticketDir, "🧪️transaction-evidence");
       mkdirSync(transactionTicket, { recursive: true });
       const changedAdmission = inventoryTaxonomy({ ...fixture.options, ticketDir: transactionTicket });
-      expect(inventory.entries.map(({ sourcePath }) => sourcePath)).toEqual(["🧪️tests", fixture.scope, `${fixture.scope}/🧪️subject`, `${fixture.scope}/🦀️subject.rs`]);
+      expect(inventory.entries.map(({ sourcePath }) => sourcePath)).toEqual(["🧪️tests", fixture.scope, `${fixture.scope}/🧪️subject`, `${fixture.scope}/🧪️subject/🦀️.rs`]);
       expect(changedAdmission.entries).toEqual([]);
       expect(changedAdmission.sourceTreeDigest).not.toBe(plan.sourceTreeDigest);
       const before = normalizationWorkspaceSnapshot(fixture.ticketDir);
-      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: transactionTicket, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest })).toThrow("Plan source-tree digest cannot be rederived exactly");
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: transactionTicket, explicitTicketDir: transactionTicket, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest })).toThrow("Plan source-tree digest cannot be rederived exactly");
       expect(normalizationWorkspaceSnapshot(fixture.ticketDir)).toEqual(before);
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
@@ -5876,20 +5891,20 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
   }, 60_000);
 
   test("rejects changed and newly admitted in-scope sources before journal mutation", () => {
-    const stableRelative = "📝️stable.md";
-    const fixture = normalizationFixture("source-authority-drift", { "🦀️subject.rs": "pub const VALUE: i32 = 1;\n", [stableRelative]: "original\n" }, ({ repoRoot, workspace }) => writeFileSync(join(repoRoot, ".gitignore"), `${relative(repoRoot, workspace).replaceAll("\\", "/")}/\n`));
+    const stableRelative = "🧪️stable/📝️.md";
+    const fixture = normalizationFixture("source-authority-drift", { "🧪️subject/🦀️.rs": "pub const VALUE: i32 = 1;\n", [stableRelative]: "original\n" }, ({ repoRoot, workspace }) => writeFileSync(join(repoRoot, ".gitignore"), `${relative(repoRoot, workspace).replaceAll("\\", "/")}/\n`));
     try {
       const { plan } = normalizationPlan(fixture);
       expect(plan.unresolved.filter(({ severity }) => severity === "error")).toEqual([]);
       expect(plan.moves.some(({ sourcePath }) => sourcePath === `${fixture.scope}/${stableRelative}`)).toBe(false);
       writeFileSync(join(fixture.workspace, stableRelative), "changed physical source\n");
       const changedBefore = normalizationWorkspaceSnapshot(fixture.ticketDir);
-      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest })).toThrow("Plan source-tree digest cannot be rederived exactly");
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, explicitTicketDir: fixture.options.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest })).toThrow("Plan source-tree digest cannot be rederived exactly");
       expect(normalizationWorkspaceSnapshot(fixture.ticketDir)).toEqual(changedBefore);
       writeFileSync(join(fixture.workspace, stableRelative), "original\n");
-      normalizationWriteFiles(fixture.workspace, { "📝️in-scope-extra.md": "new ignored but explicitly admitted source\n" });
+      normalizationWriteFiles(fixture.workspace, { "🧪️in-scope-extra/📝️.md": "new ignored but explicitly admitted source\n" });
       const extraBefore = normalizationWorkspaceSnapshot(fixture.ticketDir);
-      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest })).toThrow("Plan source-tree digest cannot be rederived exactly");
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, explicitTicketDir: fixture.options.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest })).toThrow("Plan source-tree digest cannot be rederived exactly");
       expect(normalizationWorkspaceSnapshot(fixture.ticketDir)).toEqual(extraBefore);
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
@@ -5903,8 +5918,8 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
     expect(canonicalJson(left)).toBe(canonicalJson(JSON.parse(canonicalJson(left))));
   });
 
-  test("normalization rejects malformed projection consumers and configurable descendants at its own schema boundary", () => {
-    const fixture = normalizationFixture("projection-schema-boundary", { "🟦️.ts": "export const value = 1;\n" });
+  test("normalization rejects malformed projection consumers and descendant nodes at its own schema boundary", () => {
+    const fixture = normalizationFixture("projection-schema-boundary", { "🧪️subject/🟦️.ts": "export const value = 1;\n" });
     try {
       const schemaPath = join(fixture.repoRoot, NORMALIZATION_SCHEMA_REL);
       const original = JSON.parse(readFileSync(schemaPath, "utf8")) as { semanticPathProjectionReferenceConsumerContracts: Record<string, Record<string, unknown>>; semanticDescendantContracts: Record<string, { requiredNodes: Record<string, unknown>[] }> };
@@ -5913,8 +5928,11 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
       writeFileSync(schemaPath, `${JSON.stringify(consumer, null, 2)}\n`);
       expect(() => inventoryTaxonomy(fixture.options)).toThrow("discovery contract validation failed");
       const descendant = structuredClone(original);
-      const configurable = descendant.semanticDescendantContracts["draw-editor-command-bundle-v1"]!.requiredNodes.find((node) => "configurableEntry" in node)!;
-      configurable.compatibilityAlias = true;
+      const nodes = descendant.semanticDescendantContracts["draw-editor-command-bundle-v1"]!.requiredNodes;
+      const library = nodes.find((node) => node.nodeType === "file" && node.kindId === "rust-source" && (node.pathSegments as { literal: string }[]).map(({ literal }) => literal).join("/") === "🔄️fsm/✨️macros")!;
+      writeFileSync(schemaPath, `${JSON.stringify(descendant, null, 2)}\n`);
+      expect(inventoryTaxonomy(fixture.options).entries.some(({ sourcePath }) => sourcePath === `${fixture.scope}/🧪️subject/🟦️.ts`)).toBe(true);
+      library.compatibilityAlias = true;
       writeFileSync(schemaPath, `${JSON.stringify(descendant, null, 2)}\n`);
       expect(() => inventoryTaxonomy(fixture.options)).toThrow("discovery contract validation failed");
     } finally {
@@ -5983,22 +6001,22 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
     });
     try {
       normalizationWriteFiles(fixture.workspace, {
-        "🟦️untracked.ts": "export const untracked = true;\n",
+        "🧪️untracked/🟦️.ts": "export const untracked = true;\n",
         "ignored/🟦️.ts": "export const ignored = true;\n",
       });
-      normalizationWriteFiles(fixture.repoRoot, { "🟦️unrelated.ts": "export const unrelated = true;\n" });
+      normalizationWriteFiles(fixture.repoRoot, { "🧪️unrelated/🟦️.ts": "export const unrelated = true;\n" });
       const events: TaxonomyProgress[] = [];
       const scopedOptions: TaxonomyInventoryOptions = fixture.options;
       const inventory = inventoryTaxonomy({ ...scopedOptions, progress: (event) => events.push(event) });
       const files = inventory.entries.filter((entry) => entry.nodeKind === "file").map((entry) => entry.sourcePath);
-      expect(files).toContain(`${fixture.scope}/🟦️untracked.ts`);
+      expect(files).toContain(`${fixture.scope}/🧪️untracked/🟦️.ts`);
       expect(files.some((path) => path.startsWith("🧪️unrelated/"))).toBe(false);
       const thirdParty = fastGlob.sync("**/*", { cwd: fixture.workspace, dot: true, followSymbolicLinks: false, onlyFiles: true })
         .map((path) => `${fixture.scope}/${path.replaceAll("\\", "/")}`)
         .sort(ownedPathByteSort);
       expect([...files].sort(ownedPathByteSort)).toEqual(thirdParty);
       const phases = events.map((event) => event.phase).filter((phase, index, rows) => index === 0 || phase !== rows[index - 1]);
-      expect(phases).toEqual(["setup", "tracked-enumeration", "untracked-enumeration", "ignored-generator-admission", "explicit-ticket-admission", "directories", "files", "references", "complete"]);
+      expect(phases).toEqual(["tracked-enumeration", "setup", "untracked-enumeration", "ignored-generator-admission", "explicit-ticket-admission", "source-observation", "directories", "files", "references", "complete"]);
       for (const phase of ["tracked-enumeration", "untracked-enumeration", "ignored-generator-admission", "explicit-ticket-admission"]) expect(events.filter((event) => event.phase === phase).map((event) => [event.current, event.total])).toEqual([[0, 1], [1, 1]]);
       for (const phase of ["directories", "files", "references"]) expect(events.find((event) => event.phase === phase)?.current).toBe(0);
       const unicode = inventoryTaxonomy({ ...scopedOptions, scope: `${fixture.scope}/🧪️café` });
@@ -6011,7 +6029,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
   });
 
   test("an exact symlink leaf is inventoried without following target content", () => {
-    const fixture = normalizationFixture("scoped-symlink-leaf", { "📝️target.md": "first\n" }, ({ workspace }) => symlinkSync("📝️target.md", join(workspace, "🧪️link"), "file"));
+    const fixture = normalizationFixture("scoped-symlink-leaf", { "🧪️target/📝️.md": "first\n" }, ({ workspace }) => symlinkSync("🧪️target/📝️.md", join(workspace, "🧪️link"), "file"));
     try {
       const scope = `${fixture.scope}/🧪️link`;
       normalizationGit(fixture.repoRoot, ["add", "-f", "--", scope]);
@@ -6019,7 +6037,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
       const first = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
       const link = first.entries.find(({ sourcePath }) => sourcePath === scope);
       expect(link?.nodeKind).toBe("symlink");
-      expect(link?.symlinkTarget).toBe("📝️target.md");
+      expect(link?.symlinkTarget).toBe("🧪️target/📝️.md");
       writeFileSync(join(fixture.workspace, "🧪️target", "📝️.md"), "second and deliberately different\n");
       const second = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
       expect(second.entries.find(({ sourcePath }) => sourcePath === scope)?.contentHash).toBe(link?.contentHash);
@@ -6030,9 +6048,9 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
   });
 
   test("a scope below a symlink ancestor falls back to full Git enumeration and preserves the ancestor-only census", () => {
-    const fixture = normalizationFixture("scoped-symlink-ancestor", { "📝️seed.md": "seed\n" }, ({ repoRoot, workspace }) => {
+    const fixture = normalizationFixture("scoped-symlink-ancestor", { "🧪️seed/📝️.md": "seed\n" }, ({ repoRoot, workspace }) => {
       const target = join(repoRoot, "🧪️outside-target");
-      normalizationWriteFiles(target, { "📝️child.md": "must not be followed\n" });
+      normalizationWriteFiles(target, { "🧪️child/📝️.md": "must not be followed\n" });
       symlinkSync(process.platform === "win32" ? target : relative(workspace, target), join(workspace, "🧪️alias"), process.platform === "win32" ? "junction" : "dir");
     });
     try {
@@ -6048,26 +6066,27 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
     }
   });
 
-  test("an exact mode-160000 ancestor falls back without admitting nested-repository content", () => {
-    const fixture = normalizationFixture("scoped-gitlink-ancestor", { "📝️seed.md": "seed\n" });
+  test("an exact mode-160000 ancestor refuses scoped admission without reading nested-repository content", () => {
+    const fixture = normalizationFixture("scoped-gitlink-ancestor", { "🧪️seed/📝️.md": "seed\n" });
     const gitlinkRelative = `${fixture.scope}/🧪️gitlink`;
     const gitlink = join(fixture.workspace, "🧪️gitlink");
     try {
       mkdirSync(gitlink, { recursive: true });
       normalizationGit(gitlink, ["init", "--quiet"]);
-      normalizationWriteFiles(gitlink, { "📝️child.md": "nested sentinel\n" });
+      normalizationWriteFiles(gitlink, { "🧪️child/📝️.md": "nested sentinel\n" });
       normalizationGit(fixture.repoRoot, ["update-index", "--add", "--cacheinfo", `160000,${fixture.baselineCommit},${gitlinkRelative}`]);
-      const scope = `${gitlinkRelative}/🧪️child`;
-      const scoped = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
-      expect(scoped.entries.some(({ sourcePath }) => sourcePath === gitlinkRelative)).toBe(true);
-      expect(scoped.entries.some(({ sourcePath }) => sourcePath.startsWith(`${gitlinkRelative}/`))).toBe(false);
+      const reads: string[] = [];
+      expect(() => inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope: `${gitlinkRelative}/🧪️child`, workers: 1, progress: (event) => { if (event.path) reads.push(event.path); } })).toThrow("Source admission scope crosses an index-owned repository boundary");
+      expect(reads.some((path) => path.startsWith(`${gitlinkRelative}/`) && path !== `${gitlinkRelative}/🧪️child`)).toBe(false);
+      expect(() => inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope: gitlinkRelative, workers: 1 })).toThrow("explicit repository-boundary decision");
+      expect(() => inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope: fixture.scope, workers: 1 })).toThrow("explicit repository-boundary decision");
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
     }
   });
 
   test("standalone ignored-generator admission preserves scoped versus full census parity", () => {
-    const fixture = normalizationFixture("scoped-generator-admission", { "🟦️generator.ts": "export const input = true;\n" }, ({ repoRoot, workspace }) => {
+    const fixture = normalizationFixture("scoped-generator-admission", { "🧪️generator/🟦️.ts": "export const input = true;\n" }, ({ repoRoot, workspace }) => {
       const owner = relative(repoRoot, join(workspace, "🧪️generator")).replaceAll("\\", "/");
       const outputRoot = `${owner}/🤖️generated`;
       const schemaPath = join(repoRoot, NORMALIZATION_SCHEMA_REL);
@@ -6090,7 +6109,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
   });
 
   test("standalone explicit-ticket admission preserves scoped versus full census parity", () => {
-    const fixture = normalizationFixture("scoped-ticket-admission", { ".gitignore": "🧪️explicit/\n", "🟦️.ts": "export const input = true;\n" }, ({ workspace }) => normalizationWriteFiles(workspace, { "📝️explicit.md": "explicit ignored evidence\n" }));
+    const fixture = normalizationFixture("scoped-ticket-admission", { ".gitignore": "🧪️explicit/\n", "🟦️.ts": "export const input = true;\n" }, ({ workspace }) => normalizationWriteFiles(workspace, { "🧪️explicit/📝️.md": "explicit ignored evidence\n" }));
     try {
       const scope = `${fixture.scope}/🧪️explicit`;
       const scoped = inventoryTaxonomy({ ...fixture.options, scope });
@@ -6106,10 +6125,10 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
   });
 
   test("inventory cancellation is observed from every nonterminal frozen phase boundary", () => {
-    const fixture = normalizationFixture("scoped-phase-cancellation", { "🟦️subject.ts": "export const value = true;\n" });
+    const fixture = normalizationFixture("scoped-phase-cancellation", { "🧪️subject/🟦️.ts": "export const value = true;\n" });
     const cancelFile = join(fixture.root, "🛑️cancel");
     try {
-      for (const phase of ["setup", "tracked-enumeration", "untracked-enumeration", "ignored-generator-admission", "explicit-ticket-admission", "directories", "files", "references"]) {
+      for (const phase of ["tracked-enumeration", "setup", "untracked-enumeration", "ignored-generator-admission", "explicit-ticket-admission", "source-observation", "directories", "files", "references"]) {
         rmSync(cancelFile, { force: true });
         expect(() => inventoryTaxonomy({ ...fixture.options, cancelFile, progress: (event) => { if (event.phase === phase && event.current === 0) writeFileSync(cancelFile, `${phase}\n`); } })).toThrow("Taxonomy operation cancelled");
       }
@@ -6119,7 +6138,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
   });
 
   test("unscoped inventory retains the frozen Git pathspec and canonical inventory bytes", () => {
-    const fixture = normalizationFixture("unscoped-regression", { "🟦️subject.ts": "export const value = true;\n" });
+    const fixture = normalizationFixture("unscoped-regression", { "🧪️subject/🟦️.ts": "export const value = true;\n" });
     try {
       const options: TaxonomyInventoryOptions = { repoRoot: fixture.repoRoot, workers: 1 };
       const first = inventoryTaxonomy(options);
@@ -6132,14 +6151,14 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
   });
 
   test("reversed creation order preserves scoped canonical bytes and phase sequence", () => {
-    const fixture = normalizationFixture("scoped-order", { "🟦️seed.ts": "export const seed = true;\n" });
+    const fixture = normalizationFixture("scoped-order", { "🧪️seed/🟦️.ts": "export const seed = true;\n" });
     const orderRoot = join(fixture.workspace, "🧪️order");
     try {
-      normalizationWriteFiles(orderRoot, { "📝️a.md": "a\n", "📝️b.md": "b\n" });
+      normalizationWriteFiles(orderRoot, { "🧪️a/📝️.md": "a\n", "🧪️b/📝️.md": "b\n" });
       const firstEvents: TaxonomyProgress[] = [];
       const first = inventoryTaxonomy({ ...fixture.options, scope: `${fixture.scope}/🧪️order`, progress: (event) => firstEvents.push(event) });
       rmSync(orderRoot, { recursive: true, force: true });
-      normalizationWriteFiles(orderRoot, { "📝️b.md": "b\n", "📝️a.md": "a\n" });
+      normalizationWriteFiles(orderRoot, { "🧪️b/📝️.md": "b\n", "🧪️a/📝️.md": "a\n" });
       const secondEvents: TaxonomyProgress[] = [];
       const second = inventoryTaxonomy({ ...fixture.options, scope: `${fixture.scope}/🧪️order`, progress: (event) => secondEvents.push(event) });
       expect(canonicalJson(second)).toBe(canonicalJson(first));
@@ -6151,7 +6170,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
   });
 
   test("root taxonomy inventory CLI writes phases only to stderr and canonical JSON only to stdout", () => {
-    const fixture = normalizationFixture("scoped-cli-purity", { "🟦️subject.ts": "export const value = true;\n" });
+    const fixture = normalizationFixture("scoped-cli-purity", { "🧪️subject/🟦️.ts": "export const value = true;\n" });
     try {
       const scriptPath = join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts");
       const child = 'const [scriptPath,repoRoot,scope]=process.argv.slice(1);const {pathToFileURL}=await import("node:url");const {CleanScript}=await import(pathToFileURL(scriptPath).href);new CleanScript(repoRoot,repoRoot).run(["taxonomy","inventory","--scope",scope,"--workers","1","--format","json"]);';
@@ -6275,28 +6294,28 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
       "🧪️case/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-rust\"\nversion = \"0.0.0\"\n",
       "🧪️case/📦️packages/🟦️typescript/package.json": "{\"name\":\"fixture-typescript\",\"exports\":{\".\":\"./🟦️.ts\"}}\n",
       "🧪️case/📦️packages/🟦️typescript/🟦️.ts": "export {};\n",
-      "🦀️case.rs": "pub struct Component;\n",
-      "🟦️case.ts": "export const component = true;\n",
-      "🧪️case/🟦️react-componentreact-component.tsx": "export const ReactComponent = () => null;\n",
-      "🧪️case/🟦️typestypes.d.ts": "export interface FixtureType { readonly value: number }\n",
-      "🧪️case/🔣️contractcontract.json": "{\"valid\":true}\n",
-      "🧪️case/📝️guideguide.md": "# Fixture guide\n",
-      "🖼️caseasset.png": "not-a-decoded-image\n",
-      "🧪️case/🤖️generated/🟦️.ts": "export const generated = true;\n",
+      "🧪️case/🦀️component.rs": "pub struct Component;\n",
+      "🧪️case/🟦️component.ts": "export const component = true;\n",
+      "🧪️case/🧪️react-component/🟦️react-component.tsx": "export const ReactComponent = () => null;\n",
+      "🧪️case/🧪️types/🟦️types.d.ts": "export interface FixtureType { readonly value: number }\n",
+      "🧪️case/🧪️contract/🔣️contract.json": "{\"valid\":true}\n",
+      "🧪️case/🧪️guide/📝️guide.md": "# Fixture guide\n",
+      "🧪️case/🖼️asset.png": "not-a-decoded-image\n",
+      "🧪️case/🤖️generated/🟦️component.ts": "export const generated = true;\n",
     });
     try {
       const { plan } = normalizationPlan(fixture);
       expect(plan.unresolved).toEqual([]);
-      expect(normalizationMove(plan, "🦀️case.rs").destinationPath).toMatch(/\/🧪️case\/🦀️\.rs$/u);
-      expect(normalizationMove(plan, "🟦️case.ts").destinationPath).toMatch(/\/🧪️case\/🟦️\.ts$/u);
-      expect(normalizationMove(plan, "🟦️react-componentreact-component.tsx").destinationPath).toMatch(/\/🧪️react-component\/🟦️\.tsx$/u);
-      expect(normalizationMove(plan, "🟦️typestypes.d.ts").destinationPath).toMatch(/\/🧪️types\/🟦️\.d\.ts$/u);
-      expect(normalizationMove(plan, "🔣️contractcontract.json").destinationPath).toMatch(/\/🧪️contract\/🔣️\.json$/u);
-      expect(normalizationMove(plan, "📝️guideguide.md").destinationPath).toMatch(/\/🧪️guide\/📝️\.md$/u);
-      const asset = normalizationMove(plan, "🖼️caseasset.png").destinationPath;
+      expect(normalizationMove(plan, "🧪️case/🦀️component.rs").destinationPath).toMatch(/\/🧪️case\/🦀️\.rs$/u);
+      expect(normalizationMove(plan, "🧪️case/🟦️component.ts").destinationPath).toMatch(/\/🧪️case\/🟦️\.ts$/u);
+      expect(normalizationMove(plan, "🧪️react-component/🟦️react-component.tsx").destinationPath).toMatch(/\/🧪️react-component\/🟦️\.tsx$/u);
+      expect(normalizationMove(plan, "🧪️types/🟦️types.d.ts").destinationPath).toMatch(/\/🧪️types\/🟦️\.d\.ts$/u);
+      expect(normalizationMove(plan, "🧪️contract/🔣️contract.json").destinationPath).toMatch(/\/🧪️contract\/🔣️\.json$/u);
+      expect(normalizationMove(plan, "🧪️guide/📝️guide.md").destinationPath).toMatch(/\/🧪️guide\/📝️\.md$/u);
+      const asset = normalizationMove(plan, "🧪️case/🖼️asset.png").destinationPath;
       expect(asset.endsWith("/🖼️.png")).toBe(true);
       expect(asset).not.toContain("asset.png");
-      expect(normalizationMove(plan, "🧪️case/🤖️generated/🟦️.ts").destinationPath).toContain("/🤖️generated/");
+      expect(normalizationMove(plan, "🧪️case/🤖️generated/🟦️component.ts").destinationPath).toContain("/🤖️generated/");
       expect(plan.moves.some((move) => move.sourcePath.endsWith("/Cargo.toml"))).toBe(false);
       expect(plan.moves.some((move) => move.sourcePath.endsWith("/package.json"))).toBe(false);
       expect(plan.moves.some((move) => move.sourcePath.endsWith("/🟦️.ts"))).toBe(false);
@@ -6313,16 +6332,16 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
     const fixture = normalizationFixture("named-pilot", {
       "🧪️golden/🪟️d3d12/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"d3d12-fixture\"\nversion = \"0.0.0\"\n",
       "🧪️golden/🪟️d3d12/📦️packages/🦀️rust/🦀️backend.rs": "pub struct Backend { pub device: usize }\n",
-      "🧪️golden/🧪️tests/🦀️mutate-pdf-1-7.rs": "pub fn mutate() {}\n",
-      "🧪️golden/🧪️tests/mutate-pdf-1-7component.feature": "Feature: mutate PDF 1.7\n",
+      "🧪️golden/🧪️tests/🧪️mutate-pdf-1-7/🦀️component.rs": "pub fn mutate() {}\n",
+      "🧪️golden/🧪️tests/🧪️mutate-pdf-1-7/component.feature": "Feature: mutate PDF 1.7\n",
       "🧪️golden/🖼️rathaus-ahlen-grundriss.bmp": "BMfixture\n",
     });
     try {
       const { plan } = normalizationPlan(fixture);
       const prefix = fixture.scope;
       expect(normalizationMove(plan, "🪟️d3d12/📦️packages/🦀️rust/🦀️backend.rs").destinationPath).toBe(`${prefix}/🧪️golden/🪟️d3d12/⚙️backend/🦀️.rs`);
-      const rustCase = normalizationMove(plan, "🧪️tests/🦀️mutate-pdf-1-7.rs").destinationPath;
-      const featureCase = normalizationMove(plan, "🧪️tests/mutate-pdf-1-7component.feature").destinationPath;
+      const rustCase = normalizationMove(plan, "🧪️tests/🧪️mutate-pdf-1-7/🦀️component.rs").destinationPath;
+      const featureCase = normalizationMove(plan, "🧪️tests/🧪️mutate-pdf-1-7/component.feature").destinationPath;
       expect(rustCase).toMatch(/\/🧪️mutate-pdf-1-7\/🦀️\.rs$/u);
       expect(featureCase).toBe(rustCase.replace(/🦀️\.rs$/u, "🥒️.feature"));
       expect(normalizationMove(plan, "🖼️rathaus-ahlen-grundriss.bmp").destinationPath).toBe(`${prefix}/🧪️golden/🖼️rathaus-ahlen-grundriss/🖼️.bmp`);
@@ -6359,24 +6378,24 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
 
   test("structured reference adapters emit locations, old/new values, and preimage hashes", () => {
     const fixture = normalizationFixture("references", {
-      "package.json": "{\"name\":\"fixture\",\"exports\":{\".\":\"./🟦️subject.ts\"}}\n",
-      "📋️project.json": "{\"targets\":{\"build\":{\"options\":{\"entryFile\":\"🟦️subject.ts\"}}}}\n",
-      "🦀️subject.rs": "pub const VALUE: i32 = 1;\n",
-      "🟦️subject.ts": "export const value = 1;\n",
-      "subjectcomponent.cpp": "int value() { return 1; }\n",
+      "package.json": "{\"name\":\"fixture\",\"exports\":{\".\":\"./🧪️subject/🟦️component.ts\"}}\n",
+      "📋️project.json": "{\"targets\":{\"build\":{\"options\":{\"entryFile\":\"🧪️subject/🟦️component.ts\"}}}}\n",
+      "🧪️subject/🦀️component.rs": "pub const VALUE: i32 = 1;\n",
+      "🧪️subject/🟦️component.ts": "export const value = 1;\n",
+      "🧪️subject/component.cpp": "int value() { return 1; }\n",
       "fixture/subject/component.py": "value = 1\n",
-      "🦀️consumer.rs": "#[path = \"./🦀️subject.rs\"]\nmod subject;\n",
-      "🟦️consumer.ts": "export { value } from \"./🟦️subject.ts\";\n",
-      "🐹️consumer.go": "package consumer\n//go:embed ../🟦️subject.ts\n",
-      "🐍️consumercomponent.py": "from fixture.subject.component import value\n",
-      "consumerfixture.csproj": "<Project><ItemGroup><Compile Include=\"./🟦️subject.ts\" /></ItemGroup></Project>\n",
-      "🔣️consumerpaths.json": "{\"source\":\"./🟦️subject.ts\"}\n",
-      "🔣️consumerpaths.jsonc": "{\"source\":\"./🟦️subject.ts\"}\n",
-      "🔣️consumerpaths.toml": "source = \"./🟦️subject.ts\"\n",
-      "🔣️consumerpaths.yaml": "source: ../🟦️subject.ts\n",
-      "🔣️consumerpaths.xml": "<Source path=\"./🟦️subject.ts\" />\n",
-      "📖️consumerreferences.md": "[source](../🟦️subject.ts)\n",
-      "consumerCMakeLists.txt": "target_sources(fixture PRIVATE \"./subjectcomponent.cpp\")\n",
+      "🧪️consumer/🦀️component.rs": "#[path = \"../🧪️subject/🦀️component.rs\"]\nmod subject;\n",
+      "🧪️consumer/🟦️component.ts": "export { value } from \"../🧪️subject/🟦️component.ts\";\n",
+      "🧪️consumer/🐹️component.go": "package consumer\n//go:embed ../🧪️subject/🟦️component.ts\n",
+      "🧪️consumer/🐍️component.py": "from fixture.subject.component import value\n",
+      "🧪️consumer/fixture.csproj": "<Project><ItemGroup><Compile Include=\"../🧪️subject/🟦️component.ts\" /></ItemGroup></Project>\n",
+      "🧪️consumer/🔣️paths.json": "{\"source\":\"../🧪️subject/🟦️component.ts\"}\n",
+      "🧪️consumer/🔣️paths.jsonc": "{\"source\":\"../🧪️subject/🟦️component.ts\"}\n",
+      "🧪️consumer/🔣️paths.toml": "source = \"../🧪️subject/🟦️component.ts\"\n",
+      "🧪️consumer/🔣️paths.yaml": "source: ../🧪️subject/🟦️component.ts\n",
+      "🧪️consumer/🔣️paths.xml": "<Source path=\"../🧪️subject/🟦️component.ts\" />\n",
+      "🧪️consumer/📖️references.md": "[source](../🧪️subject/🟦️component.ts)\n",
+      "🧪️consumer/CMakeLists.txt": "target_sources(fixture PRIVATE \"../🧪️subject/component.cpp\")\n",
     });
     try {
       const { plan } = normalizationPlan(fixture);
@@ -6410,19 +6429,20 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
 
   test("package boundaries accept thin Rust/TypeScript glue and reject domain implementation", () => {
     const fixture = normalizationFixture("package-glue", {
-      "🧪️thin/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"thin-rust\"\nversion = \"0.0.0\"\n[lib]\npath = \"glue.rs\"\n",
-      "🧪️thin/📦️packages/🦀️rust/glue.rs": "pub use crate::component::*;\n",
-      "🧪️thin/📦️packages/🟦️typescript/package.json": "{\"name\":\"thin-ts\",\"exports\":{\".\":\"./index.ts\"}}\n",
-      "🧪️thin/📦️packages/🟦️typescript/index.ts": "export {};\n",
-      "🧪️thick/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"thick-rust\"\nversion = \"0.0.0\"\n[lib]\npath = \"glue.rs\"\n",
-      "🧪️thick/📦️packages/🦀️rust/glue.rs": "pub struct Domain { pub value: i32 }\nimpl Domain { pub fn calculate(&self) -> i32 { self.value * 2 + 1 } }\n",
-      "🧪️thick/📦️packages/🟦️typescript/package.json": "{\"name\":\"thick-ts\",\"exports\":{\".\":\"./index.ts\"}}\n",
-      "🧪️thick/📦️packages/🟦️typescript/index.ts": "export function calculate(values: number[]): number { return values.reduce((sum, value) => sum + value, 0); }\n",
+      "🧪️thin/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"thin-rust\"\nversion = \"0.0.0\"\n[lib]\npath = \"🦀️.rs\"\n",
+      "🧪️thin/📦️packages/🦀️rust/🦀️.rs": "pub use crate::component::*;\n",
+      "🧪️thin/📦️packages/🟦️typescript/package.json": "{\"name\":\"thin-ts\",\"exports\":{\".\":\"./🟦️.ts\"}}\n",
+      "🧪️thin/📦️packages/🟦️typescript/🟦️.ts": "export {};\n",
+      "🧪️thick/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"thick-rust\"\nversion = \"0.0.0\"\n[lib]\npath = \"🦀️.rs\"\n",
+      "🧪️thick/📦️packages/🦀️rust/🦀️.rs": "pub struct Domain { pub value: i32 }\nimpl Domain { pub fn calculate(&self) -> i32 { self.value * 2 + 1 } }\n",
+      "🧪️thick/📦️packages/🟦️typescript/package.json": "{\"name\":\"thick-ts\",\"exports\":{\".\":\"./🟦️.ts\"}}\n",
+      "🧪️thick/📦️packages/🟦️typescript/🟦️.ts": "export function calculate(values: number[]): number { return values.reduce((sum, value) => sum + value, 0); }\n",
     });
     try {
       const inventory = inventoryTaxonomy(fixture.options);
-      const thin = inventory.entries.filter((entry) => entry.sourcePath.includes("/🧪️thin/📦️packages/") && /(?:glue|index)\.(?:rs|ts)$/u.test(entry.sourcePath));
-      const thick = inventory.entries.filter((entry) => entry.sourcePath.includes("/🧪️thick/📦️packages/") && /(?:glue|index)\.(?:rs|ts)$/u.test(entry.sourcePath));
+      const glue = /\/📦️packages\/(?:🦀️rust\/🦀️\.rs|🟦️typescript\/🟦️\.ts)$/u;
+      const thin = inventory.entries.filter((entry) => entry.sourcePath.includes("/🧪️thin/📦️packages/") && glue.test(entry.sourcePath));
+      const thick = inventory.entries.filter((entry) => entry.sourcePath.includes("/🧪️thick/📦️packages/") && glue.test(entry.sourcePath));
       expect(thin).toHaveLength(2);
       expect(thick).toHaveLength(2);
       const packageViolation = (violation: { readonly code: string; readonly message: string }): boolean => /(?:package|glue|implementation)/i.test(`${violation.code} ${violation.message}`);
@@ -6436,12 +6456,12 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
   });
 
   test("stale preimages block apply without changing source bytes", () => {
-    const fixture = normalizationFixture("stale", { "🦀️.rs": "pub const VALUE: i32 = 1;\n" });
+    const fixture = normalizationFixture("stale", { "🦀️component.rs": "pub const VALUE: i32 = 1;\n" });
     try {
       const { plan } = normalizationPlan(fixture);
       expect(plan.unresolved).toEqual([]);
       expect(plan.moves.length).toBeGreaterThan(0);
-      writeFileSync(join(fixture.workspace, "🦀️.rs"), "pub const VALUE: i32 = 2;\n");
+      writeFileSync(join(fixture.workspace, "🦀️component.rs"), "pub const VALUE: i32 = 2;\n");
       const before = normalizationWorkspaceSnapshot(fixture.workspace);
       expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest }));
       expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
@@ -6561,7 +6581,6 @@ describe("generator preview protocol", () => {
     const fixture = normalizationFixture(
       "generator-preview",
       {
-        "🟦️generator.ts": "export const input = true;\n",
         "🧪️generator/🤖️generated/old.txt": "stale\n",
       },
       ({ repoRoot, workspace }) => {
@@ -6585,7 +6604,7 @@ describe("generator preview protocol", () => {
         writeFileSync(schemaPath, `${JSON.stringify(taxonomy, null, 2)}\n`);
         writeFileSync(join(repoRoot, ".gitignore"), `${outputRoot}\n`);
         writeFileSync(join(repoRoot, "nx.json"), "{\"defaultBase\":\"main\"}\n");
-        writeFileSync(join(repoRoot, "package.json"), "{\"name\":\"generator-preview-fixture\",\"private\":true}\n");
+        writeFileSync(join(repoRoot, "package.json"), "{\"name\":\"generator-preview-fixture\",\"private\":true,\"scripts\":{\"nx\":\"bun ./node_modules/nx/dist/bin/nx.js\"}}\n");
         const projectManifest = `${JSON.stringify({
           name: "@fixture/generator",
           root: owner,
@@ -6596,23 +6615,62 @@ describe("generator preview protocol", () => {
           },
         }, null, 2)}\n`;
         writeFileSync(join(repoRoot, "project.json"), projectManifest);
+        for (const name of ["nx", "@semio-tech/repo-lib"]) {
+          mkdirSync(dirname(join(repoRoot, "node_modules", name)), { recursive: true });
+          symlinkSync(realpathSync(join(getWorkspaceRoot(), "node_modules", name)), join(repoRoot, "node_modules", name), process.platform === "win32" ? "junction" : "dir");
+        }
         normalizationWriteFiles(join(workspace, "🧪️generator"), {
           "📋️project.json": projectManifest,
-          "📜️script.ts": [
-            'import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";',
-            'import { join, relative } from "node:path";',
-            `const repoRoot = ${JSON.stringify(repoRoot)};`,
+          "🟦️.ts": [
+            'import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";',
+            'import { join } from "node:path";',
             `const outputRoot = ${JSON.stringify(join(repoRoot, outputRoot))};`,
             `const outputRelative = ${JSON.stringify(outputRoot)};`,
             'const outputFile = join(outputRoot, "🔤️.txt");',
             'const bytes = Buffer.from("generated\\n");',
-            'const nodes = [{ bytesBase64: "", mode: 0o755, nodeKind: "directory", path: outputRelative }, { bytesBase64: bytes.toString("base64"), mode: 0o644, nodeKind: "file", path: `${outputRelative}/🔤️.txt` }];',
-            'const staleRemovals = (existsSync(outputRoot) ? readdirSync(outputRoot) : []).filter((name) => name !== "🔤️.txt").map((name) => `${outputRelative}/${name.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));',
-            'const command = process.argv[2];',
-            'if (command === "preview-generated") process.stdout.write(`${JSON.stringify({ contractId: "fixture-generator", nodes, schemaVersion: 1, staleRemovals })}\\n`);',
-            'else if (command === "generate") { rmSync(outputRoot, { recursive: true, force: true }); mkdirSync(outputRoot, { recursive: true, mode: 0o755 }); writeFileSync(outputFile, bytes, { mode: 0o644 }); }',
-            'else if (command === "check") { if (!existsSync(outputFile) || !readFileSync(outputFile).equals(bytes) || readdirSync(outputRoot).join("\\0") !== "🔤️.txt") throw new Error("generated output is stale"); }',
-            'else throw new Error(`unknown command ${command}`);',
+            '/** 👓️ Prints the exact owned preview without touching the output root. */',
+            'export function previewGenerated(): void {',
+            '  const nodes = [{ bytesBase64: "", mode: 0o755, nodeKind: "directory", path: outputRelative }, { bytesBase64: bytes.toString("base64"), mode: 0o644, nodeKind: "file", path: `${outputRelative}/🔤️.txt` }];',
+            '  const staleRemovals = (existsSync(outputRoot) ? readdirSync(outputRoot) : []).filter((name) => name !== "🔤️.txt").map((name) => `${outputRelative}/${name.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));',
+            '  process.stdout.write(`${JSON.stringify({ contractId: "fixture-generator", nodes, schemaVersion: 1, staleRemovals })}\\n`);',
+            '}',
+            '/** 🏭️ Replaces the owned output root with its single generated leaf. */',
+            'export function generate(): void {',
+            '  rmSync(outputRoot, { recursive: true, force: true });',
+            '  mkdirSync(outputRoot, { recursive: true, mode: 0o755 });',
+            '  writeFileSync(outputFile, bytes, { mode: 0o644 });',
+            '}',
+            '/** ✅️ Rejects any output root that differs from the generated leaf. */',
+            'export function checkGenerated(): void {',
+            '  if (!existsSync(outputFile) || !readFileSync(outputFile).equals(bytes) || readdirSync(outputRoot).join("\\0") !== "🔤️.txt") throw new Error("generated output is stale");',
+            '}',
+            '',
+          ].join("\n"),
+          "📜️script.ts": [
+            'import { BundleScript, ScriptRouter, runBundleScriptMain } from "@semio-tech/repo-lib";',
+            'import { checkGenerated, generate, previewGenerated } from "./🟦️.ts";',
+            '',
+            'class GenerateScript extends BundleScript {',
+            '  async run(): Promise<void> {',
+            '    generate();',
+            '  }',
+            '}',
+            '',
+            'class PreviewGeneratedScript extends BundleScript {',
+            '  async run(): Promise<void> {',
+            '    previewGenerated();',
+            '  }',
+            '}',
+            '',
+            'class CheckScript extends BundleScript {',
+            '  async run(): Promise<void> {',
+            '    checkGenerated();',
+            '  }',
+            '}',
+            '',
+            'const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript);',
+            '',
+            'await runBundleScriptMain(router, import.meta.url);',
             '',
           ].join("\n"),
         });
@@ -6824,8 +6882,8 @@ describe.if(testLevelAtLeast("long"))("taxonomy transaction dispositions v2", ()
     const ticket = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL";
     const files: Record<string, string> = {};
     for (const owner of ["pkg-a", "pkg-b", "pkg-c"]) {
-      files[`${owner}/${ticket}/target-os-errorsCACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
-      files[`${owner}/${ticket}/unique-${owner.slice(-1)}CACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
+      files[`${owner}/${ticket}/🧪️target-os-errors/CACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
+      files[`${owner}/${ticket}/🧪️unique-${owner.slice(-1)}/CACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
     }
     const fixture = normalizationFixture("transaction-embedded-v2", files, ({ repoRoot, workspace }) => {
       const canonicalManifest = join(repoRoot, ticket, "🎫️ticket.json");

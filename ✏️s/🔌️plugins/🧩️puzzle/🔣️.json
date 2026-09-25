@@ -9982,7 +9982,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "puzzle.2d.fixture",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -11090,7 +11090,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "puzzle.2d.fixture",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -19382,7 +19382,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "puzzle.3d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -29138,7 +29138,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "puzzle.5d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -30288,7 +30288,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "puzzle.5d",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -30974,8 +30974,8 @@
     }
   ],
   "hashes": {
-    "wasmSha256": "4533c4af36896a2b09a7de79a3e856e92f51f3c9fbd6b5db1c7073b3cf7a55dd",
-    "coreWasmSha256": "03100e08f6d9d548134aee950f3c7973d4323f2725c8b102281848b09a131b21",
-    "descriptorSha256": "446fbe9a01b432c00f12a0e7af977f763086fcd784cde3838bc8a389cd82ca6b"
+    "wasmSha256": "c91349c5b30f4f8710b04f0859db23762b932d6d2c78866d01aa7e0395f21375",
+    "coreWasmSha256": "255f5c7ba619867b797a6689aaebf353235795e71318374e6b2f4ab5091d5094",
+    "descriptorSha256": "6bfade563391c2175eda335a17667ec60889e2ba28d7c493d2c0f4d1346ef659"
   }
 }

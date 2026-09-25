@@ -1,6 +1,7 @@
 #!/bin/zsh
 # 🧵️ W2 (coordinator 07:2x): component-release 3 at a time for distinct packages inside ONE wasm hold per batch, then catalog B
-# (stdio,gis,note,animate,block,writer,draw,puzzle,wfc) on the rebuilt os-hub, then the rest, then the full catalog.
+# (stdio,gis,note,animate,block,writer,draw,puzzle,wfc → w2-catalog-b2) on the rebuilt os-hub, then the rest, then the full catalog.
+# Markers and logs live in .🧬semio/🌐hub/w2-logs (outside the ticket `generated` sweep).
 # Nx caches every package that succeeded, so a failed batch re-runs only the failed ones.
 # usage: zsh w2-release-par.sh [from-phase: b-warm|b-publish|rest-warm|all-publish]
 set -u
@@ -12,7 +13,7 @@ unset CARGO_TARGET_DIR CARGO_BUILD_TARGET_DIR
 export CARGO_INCREMENTAL=0 NX_DAEMON=false
 PHASES=(b-warm b-publish rest-warm all-publish)
 from=${1:-b-warm}; go=0
-B_WARM=(block writer draw puzzle wfc)
+B_WARM=(stdio gis note animate block writer draw puzzle wfc)
 REST=(dag raster architect cad demonstrator energy fem flow forms imperative layout lowpoly mathematical norm playbook procedural process reasoning remodel sequence shooting sourcing space trinity vcs)
 warm() {
   local label=$1; shift
@@ -42,7 +43,7 @@ for phase in "${PHASES[@]}"; do
   [ "$phase" = "$from" ] && go=1; [ $go -eq 1 ] || continue
   case $phase in
     b-warm) warm b "${B_WARM[@]}" || exit 1 ;;
-    b-publish) publish w2-catalog-b "stdio,gis,note,animate,block,writer,draw,puzzle,wfc" || exit 1 ;;
+    b-publish) publish w2-catalog-b2 "stdio,gis,note,animate,block,writer,draw,puzzle,wfc" || exit 1 ;;
     rest-warm) warm rest "${REST[@]}" || exit 1 ;;
     all-publish) publish w2-catalog-all all || exit 1 ;;
   esac

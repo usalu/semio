@@ -628,14 +628,7 @@ interface SemanticDescendantFixedFileNode {
   readonly fixedFilenameContractId: string;
 }
 
-interface SemanticDescendantConfigurableEntryFileNode {
-  readonly sourcePathSegments: readonly Readonly<{ kindId: string; literal: string }>[];
-  readonly destinationPathSegments: readonly Readonly<{ kindId: string; literal: string }>[];
-  readonly nodeType: "file";
-  readonly configurableEntry: Readonly<{ contractId: string; sourceFilename: string; configurationReferences: readonly Readonly<{ fixedFilenameContractId: string; adapter: "json" | "toml"; structuredLocation: string }>[] }>;
-}
-
-type SemanticDescendantNode = SemanticDescendantKindNode | SemanticDescendantFixedFileNode | SemanticDescendantConfigurableEntryFileNode;
+type SemanticDescendantNode = SemanticDescendantKindNode | SemanticDescendantFixedFileNode;
 
 interface SemanticDescendantAlternative {
   readonly id: string;
@@ -1195,23 +1188,6 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
         return { kindId, literal };
       });
     };
-    if (spec.nodeType === "file" && spec.configurableEntry !== undefined) {
-      const sourcePathSegments = parseSegments(spec.sourcePathSegments, `${name}.sourcePathSegments`);
-      const destinationPathSegments = parseSegments(spec.destinationPathSegments, `${name}.destinationPathSegments`);
-      const configurable = record(spec.configurableEntry, `${name}.configurableEntry`);
-      const contractId = requiredString(configurable.contractId, `${name}.configurableEntry.contractId`);
-      const contract = configurableEntryContracts[contractId];
-      const sourceFilename = requiredString(configurable.sourceFilename, `${name}.configurableEntry.sourceFilename`).normalize("NFC");
-      if (!contract || /[\\/]/u.test(sourceFilename) || sourceFilename !== basename(sourceFilename)) throw new Error(`Taxonomy v7 ${name}.configurableEntry is not a registered source basename`);
-      if (!Array.isArray(configurable.configurationReferences) || configurable.configurationReferences.length === 0) throw new Error(`Taxonomy v7 ${name}.configurableEntry.configurationReferences must not be empty`);
-      const configurationReferences = configurable.configurationReferences.map((value, index) => {
-        const reference = record(value, `${name}.configurableEntry.configurationReferences[${index}]`);
-        const fixedFilenameContractId = requiredString(reference.fixedFilenameContractId, `${name}.configurableEntry.configurationReferences[${index}].fixedFilenameContractId`);
-        if (!fixedFilenameContracts[fixedFilenameContractId] || reference.adapter !== "json" && reference.adapter !== "toml") throw new Error(`Taxonomy v7 ${name}.configurableEntry.configurationReferences[${index}] is invalid`);
-        return { fixedFilenameContractId, adapter: reference.adapter, structuredLocation: requiredString(reference.structuredLocation, `${name}.configurableEntry.configurationReferences[${index}].structuredLocation`) } as const;
-      });
-      return { sourcePathSegments, destinationPathSegments, nodeType: "file", configurableEntry: { contractId, sourceFilename, configurationReferences } };
-    }
     const pathSegments = parseSegments(spec.pathSegments, `${name}.pathSegments`);
     if (spec.nodeType === "directory") {
       const kindId = requiredString(spec.kindId, `${name}.kindId`);
@@ -1254,14 +1230,12 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
       if (alternative.mode !== "exactly-one" || !Array.isArray(alternative.nodes) || alternative.nodes.length < 2) throw new Error(`Taxonomy v7 semanticDescendantContracts.${id} alternative must contain exactly-one candidates`);
       return { id: requiredString(alternative.id, `semanticDescendantContracts.${id}.exclusiveAlternatives[${index}].id`), mode: "exactly-one" as const, nodes: alternative.nodes.map((node, nodeIndex) => parseDescendantNode(node, `semanticDescendantContracts.${id}.exclusiveAlternatives[${index}].nodes[${nodeIndex}]`)) };
     });
-    const realizedRequiredCount = requiredNodes.length + requiredNodes.filter((node) => "configurableEntry" in node).length;
-    if (!Number.isSafeInteger(spec.realizedNodeCount) || spec.realizedNodeCount !== realizedRequiredCount + exclusiveAlternatives.length) throw new Error(`Taxonomy v7 semanticDescendantContracts.${id}.realizedNodeCount is invalid`);
+    if (!Number.isSafeInteger(spec.realizedNodeCount) || spec.realizedNodeCount !== requiredNodes.length + exclusiveAlternatives.length) throw new Error(`Taxonomy v7 semanticDescendantContracts.${id}.realizedNodeCount is invalid`);
     const reserve = record(spec.pathBudgetReserve, `semanticDescendantContracts.${id}.pathBudgetReserve`);
     const suffix = (node: SemanticDescendantNode): string => {
-      const segments = ("configurableEntry" in node ? node.destinationPathSegments : node.pathSegments).map((segment) => segment.literal);
+      const segments = node.pathSegments.map((segment) => segment.literal);
       if (node.nodeType === "file") {
-        if ("configurableEntry" in node) segments.push(configurableEntryContracts[node.configurableEntry.contractId].filename);
-        else if ("kindId" in node) {
+        if ("kindId" in node) {
           segments.push(canonicalPrimaryFilenameForKind(node.kindId, root as unknown as DiscoveryTaxonomy));
         } else if ("fixedFilenameContractId" in node) segments.push(posix.basename(fixedFilenameContracts[node.fixedFilenameContractId].pathPattern));
         else throw new Error(`Taxonomy v7 semanticDescendantContracts.${id} file authority is invalid`);
@@ -1477,7 +1451,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
   }
   if (canonicalJson(Object.keys(semanticOwnedFileProjectionContracts)) !== canonicalJson(["artifact-empty-facet-primary-markdown-v1", "readme-license-owner-leaves-v1", "ticket-document-primary-markdown-v1", "ticket-important-history-markdown-v1", "ticket-important-markdown-v1"])) throw new Error("Taxonomy v7 semanticOwnedFileProjectionContracts must contain the exact artifact-facet, README/LICENSE, ticket-document, active, and history contracts");
   const semanticPathProjectionReferenceConsumerContracts: Record<string, SemanticPathProjectionReferenceConsumerContract> = {};
-  const referenceConsumerForms = new Set<SemanticPathProjectionReferenceConsumerForm>(["path-reference", "artifact-catalog-glob", "artifact-catalog-prose:root-marker", "artifact-catalog-prose:relative-root", "artifact-catalog-prose:interaction-glob", "artifact-catalog-prose:catalog-grammar"]);
+  const referenceConsumerForms = new Set<SemanticPathProjectionReferenceConsumerForm>(["path-reference", "artifact-catalog-glob", "artifact-catalog-prose:root-marker", "artifact-catalog-prose:relative-root", "artifact-catalog-prose:category-glob", "artifact-catalog-prose:catalog-grammar"]);
   const referenceConsumerAdapters = new Set<SemanticPathProjectionReferenceConsumerContract["adapters"][number]>(["rust", "typescript", "json", "toml"]);
   const referenceConsumerIdentities = new Set<string>();
   for (const [id, value] of Object.entries(projectionConsumerRows)) {
@@ -3720,10 +3694,10 @@ function rustTokens(path: string, content: string, index?: ReferencePathIndex): 
       if (!/[/.]/u.test(value)) continue;
       rows.push({ adapter: "rust", structuredLocation: lineLocation(content, tokenStart, "rust-comment-path"), start: tokenStart, end: tokenStart + value.length, value });
     }
-    const catalog = fragment.match(/(🖼️assets\/🏗️modelDefinitions\/\*\/🎬️interactions\/\*\.json)/u);
+    const catalog = fragment.match(/((?:📚️examples\/)?🖼️assets\/🏗️modelDefinitions\/\*\/([^/\s`*]+)\/(\*\.json)?)/u);
     if (catalog) {
       const tokenStart = start + fragment.indexOf(catalog[1]);
-      rows.push({ adapter: "rust", structuredLocation: lineLocation(content, tokenStart, "artifact-catalog-comment"), start: tokenStart, end: tokenStart + catalog[1].length, value: catalog[1], rewriteKind: "artifact-catalog-prose", rewriteData: { form: "interaction-glob" } });
+      rows.push({ adapter: "rust", structuredLocation: lineLocation(content, tokenStart, "artifact-catalog-comment"), start: tokenStart, end: tokenStart + catalog[1].length, value: catalog[1], rewriteKind: "artifact-catalog-prose", rewriteData: { form: "category-glob", category: catalog[2]!, members: catalog[3] ? "json" : "directory" } });
     }
   }
   return rows;
@@ -4876,7 +4850,6 @@ interface ArtifactReferenceProjection {
   readonly rationaleRule: ArtifactProjectionRationale;
   readonly catalog: SemanticDistributedJsonManifestCatalogContract | SemanticExactOwnerVectorsCatalogContract;
   readonly mappings: readonly Readonly<{ sourcePath: string; destinationPath: string }>[];
-  readonly authorityReferenceEdits: readonly Readonly<{ path: string; adapter: "json" | "toml"; structuredLocation: string; oldValue: string; newValue: string; preimageHash: string }>[];
   readonly authorityProblems: readonly string[];
 }
 
@@ -4895,7 +4868,7 @@ function artifactReferenceProjections(inventory: TaxonomyInventory, moves: reado
       const authority = semanticPathProjectionAuthority({ artifactRoot: location.artifactRoot, contractId: id, sourceRoot: location.sourceRoot, nodes: artifactProjectionAuthorityNodes(inventory.repoRoot, location.sourceRoot, entries, taxonomy) }, taxonomy.discoverySchema);
       const orderedMappings = mappings.sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
       const mappingProblems = canonicalJson(orderedMappings) === canonicalJson(authority.mappings) ? [] : ["Planned artifact mappings do not equal the schema projection authority"];
-      rows.push({ id, artifactRoot: location.artifactRoot, sourceRoot: location.sourceRoot, destinationRoot: rendered.destinationRoot, rationaleRule: contract.rationaleRule, catalog, mappings: orderedMappings, authorityReferenceEdits: authority.referenceEdits, authorityProblems: [...rendered.problems, ...authority.problems, ...mappingProblems] });
+      rows.push({ id, artifactRoot: location.artifactRoot, sourceRoot: location.sourceRoot, destinationRoot: rendered.destinationRoot, rationaleRule: contract.rationaleRule, catalog, mappings: orderedMappings, authorityProblems: [...rendered.problems, ...authority.problems, ...mappingProblems] });
     }
   }
   return rows.sort((left, right) => generatorPathCompare(left.sourceRoot, right.sourceRoot) || left.id.localeCompare(right.id));
@@ -4912,7 +4885,7 @@ function artifactReferenceForm(token: ReferenceToken): SemanticPathProjectionRef
   if (token.rewriteKind === "artifact-catalog-glob") return "artifact-catalog-glob";
   if (token.rewriteKind !== "artifact-catalog-prose") return null;
   const form = token.rewriteData?.form;
-  return form === "root-marker" || form === "relative-root" || form === "interaction-glob" || form === "catalog-grammar" ? `artifact-catalog-prose:${form}` : null;
+  return form === "root-marker" || form === "relative-root" || form === "category-glob" || form === "catalog-grammar" ? `artifact-catalog-prose:${form}` : null;
 }
 
 function registeredArtifactConsumers(context: ArtifactReferenceProjection, referencePath: string, token: ReferenceToken, taxonomy: LoadedTaxonomy): readonly string[] {
@@ -4991,10 +4964,13 @@ function artifactStructuralReferenceRewrite(referencePath: string, token: Refere
   const root = posix.relative(selected.artifactRoot, selected.destinationRoot);
   if (token.rewriteData?.form === "root-marker") return { newValue: `${root}/` };
   if (token.rewriteData?.form === "relative-root") {
-    const value = posix.relative(dirname(referencePath), selected.destinationRoot);
-    return { newValue: value.startsWith(".") ? value : `./${value}` };
+    const source = posix.relative(selected.artifactRoot, selected.sourceRoot);
+    return token.value === source || token.value.endsWith(`/${source}`) ? { newValue: `${token.value.slice(0, token.value.length - source.length)}${root}` } : { problem: `${selected.id} root join ${token.value} does not end at its artifact source root` };
   }
-  if (token.rewriteData?.form === "interaction-glob") return { newValue: `${root}/*/🎬️interactions/*/🔣️.json` };
+  if (token.rewriteData?.form === "category-glob") {
+    const category = token.rewriteData.category ?? "";
+    return selected.catalog.categoryRules.some((rule) => rule.sourceDirectoryName === category) ? { newValue: `${root}/*/${category}/${token.rewriteData.members === "json" ? "*/🔣️.json" : ""}` } : { problem: `${selected.id} has no catalog category ${category}` };
+  }
   if (token.rewriteData?.form === "catalog-grammar") {
     const members = selected.catalog.categoryRules.map((rule) => `${rule.sourceDirectoryName}/<member>/🔣️.json`).sort(generatorPathCompare);
     return { newValue: `${root}/<model>/{${members.join(",")},🔣️.json}` };
@@ -5398,15 +5374,6 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
     }
   }
   const semanticLocationMatches = (actual: string, expected: string): boolean => actual === expected || actual.startsWith(`${expected}:`) || actual.startsWith(`${expected}@`);
-  for (const context of artifactContexts) {
-    const requirements = context.authorityReferenceEdits;
-    const concrete = edits.filter((edit) => requirements.some((required) => edit.path === required.path && edit.adapter === required.adapter && semanticLocationMatches(edit.structuredLocation, required.structuredLocation)));
-    for (const required of requirements) {
-      const matches = concrete.filter((edit) => edit.path === required.path && edit.adapter === required.adapter && semanticLocationMatches(edit.structuredLocation, required.structuredLocation) && edit.oldValue === required.oldValue && edit.newValue === required.newValue && edit.preimage.contentHash === required.preimageHash);
-      if (matches.length !== 1) unresolved.push(violation("projection-reference-authority-invalid", required.path, `${context.id} requires exactly one ${required.adapter} ${required.structuredLocation} edit with its declared values and preimage; found ${matches.length}`));
-    }
-    if (concrete.length !== requirements.length) unresolved.push(violation("projection-reference-authority-invalid", context.sourceRoot, `${context.id} declares ${requirements.length} configuration reference edits but planning produced ${concrete.length}`));
-  }
   return { edits: edits.sort(referenceEditCompare), editTargets, resultHashes, resultSizes, unresolved: stableViolations(unresolved) };
 }
 
@@ -7894,8 +7861,9 @@ export function planTaxonomy(inventory: TaxonomyInventory, options: TaxonomyPlan
   const symlinks = planSymlinkTargetEdits(inventory, taxonomy, options);
   const destinationAncestors = destinationAncestorPreimages(inventory.repoRoot, [...moves.map((entry) => entry.destinationPath), ...embedded.relocations.map((entry) => entry.destinationPath), ...symlinks.edits.map((entry) => entry.finalPath), ...generators.regenerations.flatMap((entry) => entry.outputRoots)]);
   const ownedSymlinks = new Set(symlinks.edits.map((entry) => entry.sourcePath));
+  const kindOnlyMoves = new Set(moves.filter((move) => !implementationLeafBasenameFinding(move.destinationPath, taxonomy.discoverySchema)).map((move) => move.sourcePath));
   const unresolved: TaxonomyViolation[] = [
-    ...inventory.violations.filter((entry) => entry.severity === "error" && !isProperScopeAncestor(entry.path, inventory.scope) && !isEmbedded(entry.path) && generatorContractsForOutputPath(entry.path, taxonomy).length === 0 && !(entry.code === "symlink-absolute-target" && ownedSymlinks.has(entry.path)) && !(entry.code === "trailing-dot-or-space" && ownedRemovals.has(entry.path))),
+    ...inventory.violations.filter((entry) => entry.severity === "error" && !isProperScopeAncestor(entry.path, inventory.scope) && !isEmbedded(entry.path) && generatorContractsForOutputPath(entry.path, taxonomy).length === 0 && !(entry.code === "symlink-absolute-target" && ownedSymlinks.has(entry.path)) && !(entry.code === "trailing-dot-or-space" && ownedRemovals.has(entry.path)) && !(entry.code === "taxonomy/kind-only-basename" && kindOnlyMoves.has(entry.path))),
     ...references.unresolved,
     ...generators.violations,
     ...symlinks.violations,

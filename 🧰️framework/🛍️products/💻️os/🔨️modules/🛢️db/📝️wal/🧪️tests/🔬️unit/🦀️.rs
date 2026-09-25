@@ -160,7 +160,7 @@ async fn write_committed_fixture(storage: &impl WalStorage, row: &serde_json::Va
                 writer.commit_and_flush(storage, &writer_permit, DurabilityClass::Fsync).await.unwrap();
             }
         }
-        previous = Some(writer.tip_chain_hash().await.unwrap());
+        previous = Some(writer.tip_chain_hash().unwrap());
         while writer.close_step().unwrap() {}
         if segment["state"] == "sealed" {
             storage.seal(&writer_permit, index as u64).await.unwrap();
@@ -488,7 +488,7 @@ async fn wal_recovery_abort_capacity_exact_and_plus_one_preserves_source() {
             assert_eq!(report.recovered_abort_tx_id, Some(7));
             assert_eq!(storage.segment_len(&document, 0).await.unwrap(), db_storage::DB_IO_MAX_READ_BYTES);
             assert_no_committed_transaction(&storage, &document).await;
-            let tip = wal.active.tip_chain_hash().await.unwrap();
+            let tip = wal.active.tip_chain_hash().unwrap();
             let receipt = submit_one(&storage, &mut wal, WalRecord::Command(retained(b"successor").await), DurabilityClass::Fsync, 2).await;
             assert_eq!((receipt.segment_index, receipt.tx_id), (1, 8));
             assert_eq!(storage.segment_state(&document, 0).await.unwrap(), db_storage::WalSegmentState::Sealed);
@@ -992,27 +992,34 @@ async fn recovery_seed(storage: &MemoryStorage, document: &ArtifactId) -> Artifa
 async fn wal_recovery_preserves_neutral_committed_prefixes() {
     let fixture = recovery_fixture();
     let input: Vec<u8> = (0..49_152).map(|index| ((index * 17 + 3) % 251) as u8).collect();
-    let mut source = SharedBuf::try_new().unwrap();
-    pack::PackSink::write_all(&mut source, &input).await.unwrap();
+    let source = SharedBuf::at(0);
+    let mut sink = source.clone();
+    let mut cursor = 0;
+    for chunk in [1_000usize, 15_384, 32_768] {
+        source.admit(chunk as u64).unwrap();
+        pack::PackSink::write_all(&mut sink, &input[cursor..cursor + chunk]).await.unwrap();
+        cursor += chunk;
+    }
+    assert_eq!(cursor, input.len());
     for row in fixture["fragmentCopies"].as_array().unwrap() {
         let offset = row["offset"].as_u64().unwrap() as usize;
         let length = row["length"].as_u64().unwrap() as usize;
         let mut copied = source.copy_range(offset, length).await.unwrap();
         assert_eq!(wal_crc_range(&copied, 0, length, &mut control()).unwrap(), row["crc32c"].as_u64().unwrap() as u32);
-        let prefix = copy_verified_prefix(&copied, length as u64, &mut control()).await.unwrap();
         let mut actual = vec![0; length];
-        prefix.read_exact(0, &mut actual).await.unwrap();
+        source.read_exact(offset, &mut actual).await.unwrap();
         assert_eq!(actual, input[offset..offset + length]);
-        while lock(&prefix.0).close_step().unwrap().is_some() {
-            semio_framework_async::yield_once().await;
-        }
         while copied.close_step().unwrap().is_some() {
             semio_framework_async::yield_once().await;
         }
     }
-    while lock(&source.0).close_step().unwrap().is_some() {
+    drop(sink);
+    while source.release_step().unwrap() {
         semio_framework_async::yield_once().await;
     }
+    assert_eq!(pack::PackSink::position(&source).await, input.len() as u64, "a released window keeps its position");
+    let mut byte = [0u8; 1];
+    assert!(source.read_exact(0, &mut byte).await.is_err(), "flushed bytes leave the window");
     let document = doc(fixture["document"].as_str().unwrap()).await;
     let seed = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
     let mut seeded = recovery_seed(&seed, &document).await;
@@ -1077,7 +1084,7 @@ async fn wal_recovery_matches_neutral_lifecycle_without_prefix_replacement() {
                 wal.active.append_record(&WalRecord::TxCommit { tx_id: u64::MAX, record_count: 0 }, 4).await.unwrap();
                 wal.force_flush(&storage).await.unwrap();
             }
-            let tip = wal.active.tip_chain_hash().await.unwrap();
+            let tip = wal.active.tip_chain_hash().unwrap();
             wal.close().await.unwrap();
             let writer = storage.acquire_writer(&document).await.unwrap();
             match name {

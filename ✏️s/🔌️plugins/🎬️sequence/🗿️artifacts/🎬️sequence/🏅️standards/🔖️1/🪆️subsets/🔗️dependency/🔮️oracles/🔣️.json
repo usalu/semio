@@ -63,8 +63,9 @@
           },
           "oracleRequirements": [
             {
-              "capability": "sequence-1-mutate-uncarried",
-              "qualifyingKind": "third-party-library"
+              "capability": "sequence-1-mutate-json-carried",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-sequence-carrier-reader"
             }
           ],
           "invariants": {
@@ -91,8 +92,9 @@
           },
           "oracleRequirements": [
             {
-              "capability": "sequence-1-mutate-uncarried",
-              "qualifyingKind": "third-party-library"
+              "capability": "sequence-1-mutate-json-carried",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-sequence-carrier-reader"
             }
           ],
           "invariants": {

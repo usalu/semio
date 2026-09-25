@@ -5,6 +5,11 @@
 //! logic here — the shell is expected to pass the FULL event history it holds for this space each
 //! dispatch (this command carries no cursor of its own, so a partial/delta batch would silently
 //! regress the folded members/visibility).
+//!
+//! The folded space is the index document's own `space_id` when it has one. An index opened in the
+//! browser is a local genesis document whose `space_id` is still empty, and the shell hands it exactly
+//! the history of the one space it indexes — so an empty id selects the ONE space that history names,
+//! and a history naming several spaces is left alone rather than guessed.
 
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
@@ -35,7 +40,12 @@ fn visibility_str(visibility: DirectorySpaceVisibility) -> &'static str {
 pub fn handle(payload: &FoldDirectoryEvents, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     let events: Vec<DirectoryEvent> = pack::from_json_str(&payload.events_json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.directory.decode"), error.to_string()))?;
     let model = semio_framework_plugin::resolve_ready(fold_all(DirectoryReadModel::default(), &events));
-    let Some(space) = model.spaces.get(&doc.snapshot.space_id) else {
+    let selected = match doc.snapshot.space_id.as_str() {
+        "" if model.spaces.len() == 1 => model.spaces.values().next(),
+        "" => None,
+        space_id => model.spaces.get(space_id),
+    };
+    let Some(space) = selected else {
         return Ok(Emit::default());
     };
     let next = SpaceIndexConfig {

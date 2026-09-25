@@ -3,15 +3,15 @@
 mutations, in Python, serving as this case's differential oracle.
 
 **Why a second implementation and not a third-party library.** A `writer` document holds no prose. It
-is a HANDLE RECORD: an id, a language id, a URI, and a composed child handle into an
-`s.stdio.semio@v1/document`. Nothing outside this repository models an editor document whose body is
+is a HANDLE RECORD: an id, a language id, a URI, the persisted body `text`, and a composed child handle
+into an `s.stdio.semio@v1/document`. Nothing outside this repository models an editor document whose body is
 a child artifact addressed by content, and none of them reads `.dsl.semio`. That a semio-native
 mutation algebra IS adjudicable was settled in this same wave by the fifteen `📕️norm` references and
 the nineteen `🧿️semio` ones.
 
 **What it was written from.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the five members.
+* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the six members.
 * rule 1 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`
   — `rename-<artifact>` for the identity field, `change-<field>` per remaining scalar.
 * the four committed `(before, mutation, after, outcome)` vectors.
@@ -21,8 +21,9 @@ only.
 
 **WHAT THIS CASE'S EVIDENCE ACTUALLY COVERS, stated rather than implied.** Three of the four kinds are
 document-level scalar setters and are fully adjudicated here. The fourth, `edit-text`, is the only
-one that reaches the document's actual CONTENT — and its committed vector pins a `mutation.no-op`
-against a body this snapshot does not carry. It is refused; see `UNSTATED_REASON`.
+one that reaches the document's actual CONTENT; its committed vector pins a `mutation.no-op` against
+the body the snapshot now carries as `text`, which is adjudicated here. Its changed-text branch
+re-addresses the child handle by a rule nothing committed states, and is refused; see `BODY_REASON`.
 """
 
 # region 🔖️Imports
@@ -35,24 +36,17 @@ from semio_repo_test import Adapter, Outcome
 
 
 # region 🔖️Vocabulary
-MEMBERS = ("schema", "id", "languageId", "uri", "document")
-"""🗂️ The five members `WriterSnapshot` declares — and the cross-language projection."""
+MEMBERS = ("schema", "id", "languageId", "uri", "text", "document")
+"""🗂️ The six members `WriterSnapshot` declares — and the cross-language projection."""
 
 SCALARS = {"rename-writer": ("id", "newId"), "change-uri": ("uri", "newUri"), "change-language": ("languageId", "newLanguageId")}
 """✏️ The three document-level scalar setters of rule 1."""
 
-UNSTATED = {"edit-text"}
-"""🚧️ The one kind this implementation refuses to state — see `UNSTATED_REASON`."""
-
-UNSTATED_REASON = (
-    "this implementation refuses this kind rather than guessing it. `edit-text` writes the document's BODY, and this snapshot does not carry the body: "
-    "it carries a composed child handle `{childId, target}` into an `s.stdio.semio@v1/document`. The committed vector pins "
-    "`{status: no-op, messages: [{level: warn, code: mutation.no-op}]}` — the verb decided the new text was IDENTICAL to what the child already held "
-    "— and neither the child's content nor the rule that compares them is stated anywhere a second implementation can read. Nor is the other branch: "
-    "no committed vector shows what the handle becomes when the text really does change, so the child-addressing function is unstated in the same way "
-    "`mutate-program-1` reports over `knowledge`/`benchmarks`, `mutate-note-1` over `edit-block-text` and `mutate-block-3d-1` over `catalog`. Adding "
-    "one vector that carries the child body — the `scene` array `mutate-playbook-1` and `mutate-forms-1` already put in their own doc strings — plus "
-    "the child-addressing rule, closes it."
+BODY_REASON = (
+    "this implementation states `edit-text` only where the committed evidence does. The snapshot carries the body as the persisted `text` "
+    "payload, so an edit whose text equals it is a warned `mutation.no-op` that moves nothing — the one branch the committed vector pins. A "
+    "CHANGED text also re-addresses the composed child handle `{childId, target}` into an `s.stdio.semio@v1/document`, and no committed vector "
+    "or document states what the handle becomes; adding one vector whose text really changes, plus the child-addressing rule, closes it."
 )
 
 KINDS = ("rename-writer", "change-uri", "change-language", "edit-text")
@@ -71,7 +65,7 @@ TAGS = {kind: tag_of(kind) for kind in KINDS}
 
 # region 🔖️Document
 def validate(document, where):
-    """✅️ Holds the document to the shape the committed vectors agree on: five members and a
+    """✅️ Holds the document to the shape the committed vectors agree on: six members and a
     well-formed composed child handle."""
     if set(document) != set(MEMBERS):
         raise AssertionError("%s: a writer document must carry exactly %r, found %r" % (where, sorted(MEMBERS), sorted(document)))
@@ -85,9 +79,11 @@ def validate(document, where):
 
 # region 🔖️Verbs
 def apply_mutation(document, kind, payload):
-    """🦠️ Applies one kind."""
-    if kind in UNSTATED:
-        raise AssertionError("mutate-%s: %s" % (kind, UNSTATED_REASON))
+    """🦠️ Applies one kind; `edit-text` only on its no-op branch (`BODY_REASON`)."""
+    if kind == "edit-text":
+        if payload["text"] != document["text"]:
+            raise AssertionError("mutate-edit-text: %s" % BODY_REASON)
+        return copy.deepcopy(document)
     member, argument = SCALARS[kind]
     document = copy.deepcopy(document)
     document[member] = payload[argument]
@@ -95,9 +91,11 @@ def apply_mutation(document, kind, payload):
 
 
 def inverse_mutation(document, kind, payload):
-    """↩️ The kind's OWN inverse, expressed in this same closed vocabulary."""
-    if kind in UNSTATED:
-        raise AssertionError("inverse-%s: %s" % (kind, UNSTATED_REASON))
+    """↩️ The kind's OWN inverse, expressed in this same closed vocabulary; a no-op `edit-text` has none."""
+    if kind == "edit-text":
+        if payload["text"] != document["text"]:
+            raise AssertionError("inverse-edit-text: %s" % BODY_REASON)
+        return []
     member, argument = SCALARS[kind]
     return [(kind, {argument: document[member]})]
 # endregion 🔖️Verbs
@@ -121,7 +119,7 @@ def equals_committed(kind, produced, committed):
 
 
 def touches_one(kind, before, after):
-    """🎯️ Each of the three scalar setters writes exactly ONE of the five members, and never the
+    """🎯️ Each of the three scalar setters writes exactly ONE of the six members, and never the
     composed child handle."""
     moved = [member for member in MEMBERS if before[member] != after[member]]
     if moved != [SCALARS[kind][0]]:
@@ -176,8 +174,8 @@ def outcome_of(payload):
 # region 🔖️Handlers
 def mutate_handler(kind):
     """🎯️ Applies one kind to its committed before-snapshot and asserts, in role, the committed
-    after-snapshot, that the vector raised no diagnostic, and that the verb wrote exactly its own
-    member."""
+    after-snapshot, the committed diagnostics, and that a scalar setter wrote exactly its own member
+    while a no-op body edit moved nothing."""
 
     def handler(ctx):
         spec = doc_json(ctx)
@@ -189,10 +187,14 @@ def mutate_handler(kind):
         validate(before, "mutate-%s" % kind)
         applied = apply_mutation(before, kind, payload_of(ctx, kind))
         validate(applied, "mutate-%s" % kind)
-        if declared_codes(outcome):
-            raise AssertionError("mutate-%s: the committed outcome declares %r, but a scalar setter over a member this snapshot holds raises nothing" % (kind, declared_codes(outcome)))
+        expected = ["mutation.no-op"] if kind == "edit-text" else []
+        if declared_codes(outcome) != expected:
+            raise AssertionError("mutate-%s: the committed outcome declares %r, but this kind over this vector raises %r" % (kind, declared_codes(outcome), expected))
         equals_committed(kind, applied, after)
-        touches_one(kind, before, applied)
+        if kind == "edit-text":
+            restores(kind, applied, before)
+        else:
+            touches_one(kind, before, applied)
         return outcome_of(applied)
 
     return handler

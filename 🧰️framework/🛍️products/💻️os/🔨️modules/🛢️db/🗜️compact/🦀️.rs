@@ -1159,6 +1159,7 @@ async fn committed_compaction_horizons<S: db_storage::WalStorage>(storage: &S, d
         }
         loop {
             compaction_opportunity(cancelled).await?;
+            replay.renew_step()?;
             match replay.next_transaction_step().await? {
                 db_wal::WalCommittedStep::Transaction(mut transaction) => {
                     let segment_index = transaction.segment_index();

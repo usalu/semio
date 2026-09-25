@@ -22,7 +22,7 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { World3dHost } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import type { ActionDescriptor } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { BLOCK5D_STORY_EXAMPLE_IDS, admitBlockStoryRepresentations, block5dStoryStateFor, block5dWorldRenderLines, blockStoryActionArgs, buildBlock5dWorldSceneNode, reduceBlock5dStoryAction, type Block5dStoryState } from "../🧭️coordination/🧫️fixtures/🧫️scene/🟦️.ts";
+import { BLOCK5D_STORY_EXAMPLE_IDS, admitBlockStoryRepresentations, block5dStoryStateFor, block5dWorldRenderLines, blockStoryActionArgs, buildBlock5dWorldSceneNode, reduceBlock5dStoryAction, type Block5dStoryState } from "../🧭️coordination/🟦️.ts";
 
 //#region StoryHost
 const BLOCK5D_STORY_CONTROLLER_ID = "block5d-story";

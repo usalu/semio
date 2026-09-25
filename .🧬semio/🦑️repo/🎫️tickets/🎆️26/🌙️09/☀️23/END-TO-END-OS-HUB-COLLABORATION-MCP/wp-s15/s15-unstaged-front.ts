@@ -6,10 +6,21 @@
  * lane's websockets — passes through unchanged.
  * With `unregister` the plugin is also dropped from every served local registry module (the generated plugin targets,
  * the playground rows and the session's plugin list): a shell built without the plugin at all.
- * usage: bun s15-unstaged-front.ts <listenPort> <serveOrigin> <moduleDirectory> <pluginId> [unregister] */
+ * With `mirror` the plugin stays staged, but every staged file its hub catalog bundle names (its module directory and the
+ * vendored files) answers with the hub bundle's own bytes: a device whose staged module IS the catalog's.
+ * usage: bun s15-unstaged-front.ts <listenPort> <serveOrigin> <moduleDirectory> <pluginId> [unregister|mirror] */
 const [listen = "6542", upstream = "http://127.0.0.1:6541", directory = "🗒️note", pluginId = "note", mode = ""] = process.argv.slice(2);
 const registryRow = new RegExp(`^\\s*\\{ (?:variant: "[^"]+", )?pluginId: "${pluginId}", .*$`, "u");
 const blocked = `/🔌️plugin-modules/${directory}/`;
+const hubModules = `${upstream}/_semio/hub/trusted-catalog/plugin-modules`;
+const mirrored = new Map<string, string>();
+if (mode === "mirror") {
+  const index = await (await fetch(hubModules)).json() as { modules: { pluginId: string; bundleSha256: string }[] };
+  const bundleSha256 = index.modules.find((row) => row.pluginId === pluginId)!.bundleSha256;
+  const manifest = await (await fetch(`${hubModules}/${bundleSha256}`)).json() as { files: { path: string }[] };
+  for (const file of manifest.files) mirrored.set(`/🔌️plugin-modules/${file.path}`, `${hubModules}/${bundleSha256}/${file.path.split("/").map(encodeURIComponent).join("/")}`);
+  console.log(`mirror ${pluginId} bundle ${bundleSha256} (${mirrored.size} files)`);
+}
 type Tunnel = { readonly url: string; readonly protocols: string[]; upstream?: WebSocket; readonly queue: (string | ArrayBuffer | Uint8Array)[] };
 const withoutPlugin = (line: string): string => {
   if (!line.startsWith("data: ")) return line;
@@ -32,7 +43,13 @@ Bun.serve<Tunnel>({
       const accepted = server.upgrade(request, { data: { url: `${upstream.replace(/^http/u, "ws")}${url.pathname}${url.search}`, protocols, queue: [] }, headers: protocols.length > 0 ? { "Sec-WebSocket-Protocol": protocols[0]! } : undefined });
       return accepted ? undefined : new Response("upgrade failed", { status: 400 });
     }
-    if (path.startsWith(blocked)) return new Response("not staged on this device", { status: 404 });
+    const mirror = mirrored.get(path);
+    if (mirror !== undefined) {
+      const bytes = new Uint8Array(await (await fetch(mirror)).arrayBuffer());
+      const type = path.endsWith(".js") ? "text/javascript; charset=utf-8" : path.endsWith(".wasm") ? "application/wasm" : path.endsWith(".json") ? "application/json" : "application/octet-stream";
+      return new Response(request.method === "HEAD" ? null : bytes, { headers: { "content-type": type, "content-length": String(bytes.byteLength), "cache-control": "no-store" } });
+    }
+    if (mode !== "mirror" && path.startsWith(blocked)) return new Response("not staged on this device", { status: 404 });
     const headers = new Headers(request.headers);
     headers.delete("accept-encoding");
     const response = await fetch(`${upstream}${url.pathname}${url.search}`, { method: request.method, headers, body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer(), redirect: "manual" });
@@ -46,7 +63,7 @@ Bun.serve<Tunnel>({
       return new Response(kept, { status: response.status, headers: outHeaders });
     }
     if (!streaming || response.body === null) return new Response(request.method === "HEAD" ? null : new Uint8Array(await response.arrayBuffer()), { status: response.status, headers: outHeaders });
-    if (path !== "/🔌️plugin-modules/watch") return new Response(response.body, { status: response.status, headers: outHeaders });
+    if (path !== "/🔌️plugin-modules/watch" || mode === "mirror") return new Response(response.body, { status: response.status, headers: outHeaders });
     outHeaders.delete("content-length");
     const decoder = new TextDecoder(), encoder = new TextEncoder();
     let pending = "";
@@ -84,4 +101,4 @@ Bun.serve<Tunnel>({
     },
   },
 });
-console.log(`unstaged-front ${listen} → ${upstream} (without ${pluginId}${mode === "unregister" ? ", unregistered" : ""})`);
+console.log(`unstaged-front ${listen} → ${upstream} (${mode === "mirror" ? `${pluginId} staged as the hub's bundle` : `without ${pluginId}${mode === "unregister" ? ", unregistered" : ""}`})`);

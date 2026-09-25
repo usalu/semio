@@ -877,13 +877,107 @@ impl GroupCommitPolicy {
 //#endregion 🔖️GroupCommit
 
 //#region 🔖️Sink
-/// @emoji 🪞️ A `pack::PackSink` over shared fixed DB I/O pages. `protocol::SprWriter`
-/// owns one retained-writer control; `SegmentWriter` retains another to flush the unflushed suffix to
-/// `db_storage::WalStorage` — `SprWriter` has no public accessor for its private `sink` field, and
-/// holding the buffer open for a segment's lifetime also lets recovery retain the exact verified
-/// prefix while `SprWriter::resume_verified` continues its original commit chain.
+/// @emoji 📐️ Pages one active segment's tail window may ever hold: the window never outgrows the
+/// readable segment it belongs to.
+const WAL_TAIL_WINDOW_PAGES: usize = (db_storage::DB_IO_MAX_READ_BYTES as usize).div_ceil(db_storage::DB_IO_PAGE_BYTES);
+
+/// @emoji 🔢️ Writers one tail window may chain under its one I/O operation. Each new writer is at
+/// least as large as the whole window before it, so this many always reach `WAL_TAIL_WINDOW_PAGES`.
+const WAL_TAIL_WINDOW_WRITERS: usize = 6;
+
+const _: () = assert!(1 << (WAL_TAIL_WINDOW_WRITERS - 1) >= WAL_TAIL_WINDOW_PAGES);
+
+/// @emoji 🪟️ The unflushed tail of one active WAL segment, held in fixed DB I/O pages only while
+/// records wait for their commit and flush. `base` is the absolute segment offset of the window's
+/// first byte: everything before it is durable in `WalStorage` and no longer in memory, so an idle
+/// document holds no I/O pages at all. Holding the whole segment image instead charged every mounted
+/// document a full operation's pages for as long as it stayed mounted, and a process could not mount
+/// its sixteenth document.
+struct WalTailWindow {
+    base: u64,
+    writers: [Option<db_storage::DbIoPageWriter>; WAL_TAIL_WINDOW_WRITERS],
+    capacities: [usize; WAL_TAIL_WINDOW_WRITERS],
+}
+
+impl WalTailWindow {
+    fn at(base: u64) -> Self {
+        Self { base, writers: std::array::from_fn(|_| None), capacities: [0; WAL_TAIL_WINDOW_WRITERS] }
+    }
+
+    fn written(&self) -> usize {
+        self.writers.iter().flatten().map(db_storage::DbIoPageWriter::len).sum()
+    }
+
+    fn len(&self) -> u64 {
+        self.base + self.written() as u64
+    }
+
+    fn admit(&mut self, bytes: u64) -> Result<(), DbError> {
+        let bytes = usize::try_from(bytes).map_err(|_| DbError::LimitExceeded("wal tail window admission"))?;
+        let reserved = self.capacities.iter().sum::<usize>();
+        let free = (reserved * db_storage::DB_IO_PAGE_BYTES).checked_sub(self.written()).ok_or_else(|| DbError::Internal("WAL tail window wrote past its pages".to_string()))?;
+        if bytes <= free {
+            return Ok(());
+        }
+        let needed = (bytes - free).div_ceil(db_storage::DB_IO_PAGE_BYTES);
+        let pages = needed.max(reserved).min(WAL_TAIL_WINDOW_PAGES.saturating_sub(reserved));
+        let slot = self.writers.iter().position(Option::is_none);
+        let Some(slot) = slot.filter(|_| pages >= needed) else { return Err(DbError::LimitExceeded("wal tail window")) };
+        let writer = match self.writers.iter().flatten().next() {
+            Some(first) => db_storage::DbIoPageWriter::try_reserve_for_operation(first.operation(), pages),
+            None => db_storage::DbIoPageWriter::try_reserve(pages),
+        }
+        .map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+        self.writers[slot] = Some(writer);
+        self.capacities[slot] = pages;
+        Ok(())
+    }
+
+    fn write_step(&mut self, bytes: &[u8]) -> Result<usize, DbError> {
+        for (writer, capacity) in self.writers.iter_mut().zip(self.capacities) {
+            let Some(writer) = writer.as_mut() else { break };
+            if writer.len() < capacity * db_storage::DB_IO_PAGE_BYTES {
+                return writer.write_fragment(bytes);
+            }
+        }
+        Err(DbError::LimitExceeded("wal tail window admission"))
+    }
+
+    fn read_step(&self, offset: u64, output: &mut [u8]) -> Result<usize, DbError> {
+        let relative = offset.checked_sub(self.base).ok_or_else(|| DbError::Internal("WAL tail window no longer holds a flushed offset".to_string()))?;
+        let mut relative = usize::try_from(relative).map_err(|_| DbError::LimitExceeded("wal tail window offset"))?;
+        for writer in self.writers.iter().flatten() {
+            if relative < writer.len() {
+                return writer.read_fragment(relative, output);
+            }
+            relative -= writer.len();
+        }
+        Ok(0)
+    }
+
+    fn release_step(&mut self) -> Result<bool, DbError> {
+        for writer in self.writers.iter_mut().rev().flatten() {
+            if writer.close_step()?.is_some() {
+                return Ok(true);
+            }
+        }
+        self.base = self.len();
+        self.writers = std::array::from_fn(|_| None);
+        self.capacities = [0; WAL_TAIL_WINDOW_WRITERS];
+        Ok(false)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.writers.iter().flatten().all(db_storage::DbIoPageWriter::terminal_is_empty)
+    }
+}
+
+/// @emoji 🪞️ A `pack::PackSink` over one segment's `WalTailWindow`. `protocol::SprWriter` owns one
+/// clone and `SegmentWriter` another to flush the unflushed suffix to `db_storage::WalStorage` —
+/// `SprWriter` has no public accessor for its private `sink` field. Every write is admitted first
+/// (`admit`), so a full process budget refuses a transaction before any of its bytes exist.
 #[derive(Clone)]
-struct SharedBuf(std::sync::Arc<std::sync::Mutex<db_storage::DbIoPageWriter>>);
+struct SharedBuf(std::sync::Arc<std::sync::Mutex<WalTailWindow>>);
 
 /// @emoji 🩹️ Recovers a poisoned lock instead of panicking — one panicking document actor must
 /// never turn every other document's WAL access into a cascading panic (mirrors `db_storage`'s
@@ -895,22 +989,32 @@ fn lock<T>(mutex: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
 }
 
 impl SharedBuf {
-    // 🚫️async: E1 pure constructor — see `lock`
-    fn try_new() -> Result<Self, DbError> {
-        let writer = db_storage::DbIoPageWriter::try_reserve(db_storage::DB_IO_OPERATION_PAGES).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
-        Ok(Self(std::sync::Arc::new(std::sync::Mutex::new(writer))))
+    /// @emoji 📍️ An empty window whose next byte lands at absolute segment offset `base`.
+    fn at(base: u64) -> Self {
+        Self(std::sync::Arc::new(std::sync::Mutex::new(WalTailWindow::at(base))))
     }
 
-    // 🚫️async: E1 pure accessor — see `lock`
     fn len(&self) -> u64 {
-        lock(&self.0).len() as u64
+        lock(&self.0).len()
+    }
+
+    /// @emoji 🎟️ Ensures the next `bytes` written fit the window's pages, growing it by one writer
+    /// under the window's own I/O operation when they do not.
+    fn admit(&self, bytes: u64) -> Result<(), DbError> {
+        lock(&self.0).admit(bytes)
+    }
+
+    /// @emoji 🧺️ Returns one flushed page (or writer shell) to the process budget; `false` once the
+    /// window is empty again and rebased past everything it held.
+    fn release_step(&self) -> Result<bool, DbError> {
+        lock(&self.0).release_step()
     }
 
     fn close_step(&mut self) -> Result<bool, DbError> {
         if std::sync::Arc::strong_count(&self.0) != 1 {
             return Err(DbError::Internal("WAL retained buffer still has a writer clone".to_string()));
         }
-        Ok(lock(&self.0).close_step()?.is_some())
+        self.release_step()
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -923,7 +1027,7 @@ impl SharedBuf {
         let mut fragment = [0u8; db_storage::DB_IO_PAGE_BYTES];
         while copied < len {
             let requested = (len - copied).min(fragment.len());
-            let read = lock(&self.0).read_fragment(offset + copied, &mut fragment[..requested])?;
+            let read = lock(&self.0).read_step((offset + copied) as u64, &mut fragment[..requested])?;
             if read == 0 {
                 return Err(DbError::Corrupt("WAL retained page range ended early".to_string()));
             }
@@ -945,7 +1049,7 @@ impl SharedBuf {
     async fn read_exact(&self, offset: usize, output: &mut [u8]) -> Result<(), DbError> {
         let mut copied = 0;
         while copied < output.len() {
-            let read = lock(&self.0).read_fragment(offset + copied, &mut output[copied..])?;
+            let read = lock(&self.0).read_step((offset + copied) as u64, &mut output[copied..])?;
             if read == 0 {
                 return Err(DbError::Corrupt("WAL retained page read ended early".to_string()));
             }
@@ -960,7 +1064,11 @@ impl pack::PackSink for SharedBuf {
     async fn write_all(&mut self, bytes: &[u8]) -> Result<(), pack::PackError> {
         let mut cursor = 0;
         while cursor < bytes.len() {
-            cursor += lock(&self.0).write_fragment(&bytes[cursor..]).map_err(|error| pack::PackError::Io(error.to_string()))?;
+            let written = lock(&self.0).write_step(&bytes[cursor..]).map_err(|error| pack::PackError::Io(error.to_string()))?;
+            if written == 0 {
+                return Err(pack::PackError::Io("WAL tail window accepted no bytes".to_string()));
+            }
+            cursor += written;
             semio_framework_async::yield_once().await;
         }
         Ok(())
@@ -1977,6 +2085,12 @@ pub enum WalCommittedStep<'cursor, 'storage, S: db_storage::WalStorage> {
     Done,
 }
 
+/// ⏱️ How long one committed-transaction step of a whole-document replay may make no progress.
+pub const WAL_REPLAY_STEP_STALL_BOUND: std::time::Duration = std::time::Duration::from_secs(30);
+
+/// ⛽️ Fuel one committed-transaction step of a whole-document replay may spend.
+pub const WAL_REPLAY_STEP_FUEL: usize = 1_000_000;
+
 /// 🤝️ Keeps the source segment and current decoded body borrowed until explicit retirement.
 pub struct WalCommittedTransaction<'cursor, 'storage, S: db_storage::WalStorage> {
     cursor: &'cursor mut WalCommittedCursor<'storage, S>,
@@ -1990,6 +2104,14 @@ pub enum WalCommittedRecordStep<'record> {
 }
 
 impl<'storage, S: db_storage::WalStorage> WalCommittedCursor<'storage, S> {
+    /// ⏱️ Renews the stall bound for the next committed transaction of a whole-document replay, so
+    /// the replay's total length follows its document's size and only a step that makes no progress
+    /// for `WAL_REPLAY_STEP_STALL_BOUND` fails. A single wall-clock budget for the whole replay made
+    /// every large enough document unopenable after a crash.
+    pub fn renew_step(&mut self) -> Result<(), DbError> {
+        self.replenish(std::time::Instant::now() + WAL_REPLAY_STEP_STALL_BOUND, WAL_REPLAY_STEP_FUEL)
+    }
+
     /// 🗂️ Lists retained segments, including header-only segments; admission completes during replay.
     pub fn segment_indices(&self) -> &[u64] {
         self.raw.segments.as_slice()
@@ -2257,43 +2379,6 @@ async fn validate_wal_prefix(
     Ok(WalValidatedPrefix { records, next_tx_id: gate.next_tx_id, incomplete_active_tx })
 }
 
-async fn copy_verified_prefix(pages: &db_storage::DbIoPages, end: u64, control: &mut WalCursorControl) -> Result<SharedBuf, DbError> {
-    let buf = SharedBuf::try_new()?;
-    let result = async {
-        let mut remaining = usize::try_from(end).map_err(|_| DbError::LimitExceeded("wal prefix end"))?;
-        for fragment in pages.fragments() {
-            if remaining == 0 {
-                break;
-            }
-            control.grant()?;
-            let count = remaining.min(fragment.len());
-            let mut written = 0;
-            while written < count {
-                let progress = lock(&buf.0).write_fragment(&fragment[written..count])?;
-                if progress == 0 {
-                    return Err(DbError::LimitExceeded("wal retained prefix writer"));
-                }
-                written += progress;
-                semio_framework_async::yield_once().await;
-            }
-            remaining -= count;
-            semio_framework_async::yield_once().await;
-        }
-        if remaining != 0 {
-            return Err(DbError::Corrupt("wal verified prefix ended early".to_string()));
-        }
-        Ok(())
-    }
-    .await;
-    if let Err(error) = result {
-        while lock(&buf.0).close_step()?.is_some() {
-            semio_framework_async::yield_once().await;
-        }
-        return Err(error);
-    }
-    Ok(buf)
-}
-
 fn exact_prior_tip(prior: WalPriorChainTip) -> Result<Option<[u8; 32]>, DbError> {
     match prior {
         WalPriorChainTip::Genesis => Ok(None),
@@ -2305,9 +2390,10 @@ fn exact_prior_tip(prior: WalPriorChainTip) -> Result<Option<[u8; 32]>, DbError>
 
 //#region 🔖️Segment
 /// @emoji 📦️ The live write path for exactly one WAL segment: an in-memory `protocol::SprWriter`
-/// over a `SharedBuf`, plus how much of that buffer has actually been flushed (durably appended)
-/// to `db_storage::WalStorage` so far. Held open for the segment's entire lifetime (see
-/// `SharedBuf`'s doc for why) — sealed and replaced by a fresh one on rotation.
+/// over a `SharedBuf` tail window, plus how much of the segment has been flushed (durably appended)
+/// to `db_storage::WalStorage` so far. The writer lives as long as the segment — sealed and
+/// replaced by a fresh one on rotation — while the window holds pages only between an admitted
+/// append and its flush.
 struct SegmentWriter {
     document: ArtifactId,
     index: u64,
@@ -2372,7 +2458,8 @@ impl SegmentWriter {
         now_ms: u64,
         control: &mut WalCursorControl,
     ) -> Result<Self, DbError> {
-        let mut buf = SharedBuf::try_new()?;
+        let mut buf = SharedBuf::at(0);
+        buf.admit(protocol::format::HEADER_SIZE as u64)?;
         let writer = match protocol::SprWriter::begin(buf.clone(), &segment_write_options()).await.map_err(protocol_err) {
             Ok(writer) => writer,
             Err(error) => {
@@ -2414,7 +2501,8 @@ impl SegmentWriter {
     /// crash before the segment records anything else).
     async fn begin(storage: &impl db_storage::WalStorage, permit: &db_storage::WalWriterPermit, document: ArtifactId, index: u64, prev_chain_hash: Option<[u8; 32]>, now_ms: u64) -> Result<Self, DbError> {
         storage.create_segment(permit, index).await?;
-        let mut buf = SharedBuf::try_new()?;
+        let mut buf = SharedBuf::at(0);
+        buf.admit(protocol::format::HEADER_SIZE as u64)?;
         let writer = match protocol::SprWriter::begin(buf.clone(), &segment_write_options()).await.map_err(protocol_err) {
             Ok(writer) => writer,
             Err(error) => {
@@ -2442,6 +2530,7 @@ impl SegmentWriter {
     }
 
     async fn append_record(&mut self, record: &WalRecord, now_ms: u64) -> Result<u64, DbError> {
+        self.buf()?.admit(wal_frame_bytes(record.retained_shape().1)?)?;
         let offset = record.write_retained(self.writer_mut()?).await?;
         if self.pending_records == 0 {
             self.oldest_pending_at_ms = Some(now_ms);
@@ -2461,15 +2550,16 @@ impl SegmentWriter {
         Ok(self.buf()?.len())
     }
 
-    /// @emoji ⛓️ Physically commits (`SprWriter::commit`, hash-chaining everything pending) and
-    /// flushes the newly-committed suffix to `WalStorage::append` + `sync(class)` — the group-
-    /// commit primitive `ArtifactWal::submit`/`force_flush`/`rotate` all funnel through. A no-op
-    /// (`Ok(None)`) if nothing is pending.
+    /// @emoji ⛓️ Physically commits (`SprWriter::commit`, hash-chaining everything pending),
+    /// flushes the newly-committed suffix to `WalStorage::append` + `sync(class)` and hands the
+    /// flushed tail window's pages back — the group-commit primitive `ArtifactWal::submit`/
+    /// `force_flush`/`rotate` all funnel through. A no-op (`Ok(None)`) if nothing is pending.
     async fn commit_and_flush(&mut self, storage: &impl db_storage::WalStorage, permit: &db_storage::WalWriterPermit, class: DurabilityClass) -> Result<Option<u64>, DbError> {
         self.ensure_open()?;
         if self.pending_records == 0 {
             return Ok(None);
         }
+        self.buf()?.admit(protocol::format::COMMIT_FRAME_LEN)?;
         let commit = self.writer_mut()?.commit().await.map_err(protocol_err);
         let commit_offset = match commit {
             Ok(offset) => offset,
@@ -2489,6 +2579,9 @@ impl SegmentWriter {
             }
             self.flushed_len = new_len;
             storage.sync(permit, self.index, class).await?;
+            while self.buf()?.release_step()? {
+                semio_framework_async::yield_once().await;
+            }
             Ok(())
         }
         .await;
@@ -2505,26 +2598,13 @@ impl SegmentWriter {
         }
     }
 
-    /// @emoji ⛓️ The chain_hash of this segment's last commit (falling back to `blake3(header)` if
-    /// nothing has committed beyond the segment's own header write, which `begin` always performs,
-    /// so this should never actually hit that branch in practice — handled honestly rather than
-    /// assumed away). Used by `ArtifactWal::rotate` to seed the next segment's
-    /// `WAL_SEGMENT_HEADER.prev_chain_hash`.
-    async fn tip_chain_hash(&self) -> Result<[u8; 32], DbError> {
+    /// @emoji ⛓️ The chain_hash of this segment's last commit (`blake3(header)` if nothing has
+    /// committed beyond the segment's own header write, which `begin` always performs). Used by
+    /// `ArtifactWal::rotate` to seed the next segment's `WAL_SEGMENT_HEADER.prev_chain_hash`; the
+    /// writer carries it, because the committed bytes themselves have already left the tail window.
+    fn tip_chain_hash(&self) -> Result<[u8; 32], DbError> {
         self.ensure_open()?;
-        let commit_len = protocol::format::COMMIT_FRAME_LEN as usize;
-        if self.buf()?.len() < commit_len as u64 {
-            return Err(DbError::Corrupt("WAL retained pages contain no commit frame".to_string()));
-        }
-        let commit_offset = self.buf()?.len() as usize - commit_len;
-        let mut frame_bytes = [0u8; protocol::format::COMMIT_FRAME_LEN as usize];
-        self.buf()?.read_exact(commit_offset, &mut frame_bytes).await?;
-        let mut cursor = protocol::FrameCursor::new(&frame_bytes, 0).await;
-        let frame = cursor.next_frame().await.map_err(protocol_err)?.ok_or_else(|| DbError::Corrupt("expected a commit frame while sealing wal segment".to_string()))?;
-        if frame.kind != protocol::wire::REC_COMMIT {
-            return Err(DbError::Corrupt(format!("expected REC_COMMIT at the recovered commit offset, found kind {:#x}", frame.kind)));
-        }
-        Ok(protocol::format::parse_commit_payload(frame.payload().await).map_err(protocol_err)?.chain_hash)
+        Ok(self.writer.as_ref().ok_or(DbError::Closed)?.committed_chain_hash())
     }
 
     fn close_step(&mut self) -> Result<bool, DbError> {
@@ -2560,6 +2640,12 @@ const DEFAULT_MAX_SEGMENT_BYTES: u64 = db_storage::DB_IO_MAX_READ_BYTES;
 fn wal_frame_bytes(payload: usize) -> Result<u64, DbError> {
     let body = (payload as u64).checked_add(2).ok_or(DbError::LimitExceeded("wal frame bytes"))?;
     body.checked_add(wal_varint_len(body) as u64 + 8).ok_or(DbError::LimitExceeded("wal frame bytes"))
+}
+
+/// @emoji 🎟️ Bytes one submitted transaction adds to its segment: its framed records plus the
+/// commit that may seal them.
+fn wal_submit_reservation(records: &WalRecordBatch) -> Result<u64, DbError> {
+    wal_transaction_frame_bytes(records)?.checked_add(protocol::format::COMMIT_FRAME_LEN).ok_or(DbError::LimitExceeded("wal transaction reservation"))
 }
 
 fn wal_transaction_frame_bytes(records: &WalRecordBatch) -> Result<u64, DbError> {
@@ -2797,8 +2883,7 @@ impl ArtifactWal {
                             return Err(DbError::LimitExceeded("wal recovery abort exceeds retained segment budget"));
                         }
                     }
-                    let buf = copy_verified_prefix(&pages, end, control).await?;
-                    let mut segment = SegmentWriter::resume_existing_verified(document.clone(), index, buf, span).await?;
+                    let mut segment = SegmentWriter::resume_existing_verified(document.clone(), index, SharedBuf::at(end), span).await?;
                     let repair = async {
                         control.grant()?;
                         if tail != 0 {
@@ -2813,7 +2898,7 @@ impl ArtifactWal {
                             segment.append_record(&WalRecord::TxAbort { tx_id }, now_ms).await?;
                             segment.commit_and_flush(storage, permit, DurabilityClass::Fsync).await?;
                         }
-                        segment.tip_chain_hash().await
+                        segment.tip_chain_hash()
                     }
                     .await;
                     let tip = match repair {
@@ -2885,7 +2970,7 @@ impl ArtifactWal {
     /// readable-segment bound without consuming a transaction id or beginning storage I/O.
     pub(crate) fn preflight_submit(&self, records: &WalRecordBatch) -> Result<bool, DbError> {
         self.active.ensure_open()?;
-        let reservation = wal_transaction_frame_bytes(records)?.checked_add(protocol::format::COMMIT_FRAME_LEN).ok_or(DbError::LimitExceeded("wal transaction reservation"))?;
+        let reservation = wal_submit_reservation(records)?;
         self.next_tx_id.checked_add(1).ok_or(DbError::LimitExceeded("wal transaction sequence"))?;
         if self.active.total_len()?.checked_add(reservation).ok_or(DbError::LimitExceeded("wal segment reservation"))? <= db_storage::DB_IO_MAX_READ_BYTES {
             return Ok(false);
@@ -2909,6 +2994,7 @@ impl ArtifactWal {
         if rotate {
             self.rotate(storage, now_ms).await?;
         }
+        self.active.buf()?.admit(wal_submit_reservation(records)?)?;
         let tx_id = self.next_tx_id;
         self.next_tx_id = next_tx_id;
         let segment_index = self.active.index;
@@ -2962,7 +3048,7 @@ impl ArtifactWal {
         self.active.ensure_open()?;
         let following_index = self.next_segment_index.checked_add(1).ok_or(DbError::LimitExceeded("wal segment sequence"))?;
         self.active.commit_and_flush(storage, self.writer.as_ref().ok_or(DbError::Closed)?, DurabilityClass::Fsync).await?;
-        let chain_hash = self.active.tip_chain_hash().await?;
+        let chain_hash = self.active.tip_chain_hash()?;
         let sealed_index = self.active.index;
         let sealed = storage.seal(self.writer.as_ref().ok_or(DbError::Closed)?, sealed_index).await;
         self.active.poison();

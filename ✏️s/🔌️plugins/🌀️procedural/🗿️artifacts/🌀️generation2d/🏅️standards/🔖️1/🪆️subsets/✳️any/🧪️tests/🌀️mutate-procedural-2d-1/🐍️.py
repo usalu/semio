@@ -53,7 +53,7 @@ from semio_repo_test import Adapter, Outcome
 
 
 # region 🔖️Vocabulary
-MEMBERS = ("fixture", "generation")
+MEMBERS = ("hostSnapshot", "generation")
 """🗂️ The two members the snapshot declares — and the cross-language projection."""
 
 FIXTURE_MEMBERS = {"schema", "camera", "widgets", "synapses", "layout"}
@@ -106,7 +106,7 @@ def validate(document, where):
     rule."""
     if set(document) != set(MEMBERS):
         raise AssertionError("%s: the document must carry exactly %r, found %r" % (where, sorted(MEMBERS), sorted(document)))
-    fixture, generation = document["fixture"], document["generation"]
+    fixture, generation = document["hostSnapshot"], document["generation"]
     if set(fixture) != FIXTURE_MEMBERS:
         raise AssertionError("%s: the fixture half must carry exactly %r, found %r" % (where, sorted(FIXTURE_MEMBERS), sorted(fixture)))
     if set(generation) != GENERATION_MEMBERS:
@@ -139,7 +139,7 @@ def apply_mutation(document, kind, payload):
     """🦠️ Applies one kind. Every committed vector of this subset declares `status: applied`, so an
     address the document does not hold is an error rather than a rejection outcome."""
     document = copy.deepcopy(document)
-    fixture, generation = document["fixture"], document["generation"]
+    fixture, generation = document["hostSnapshot"], document["generation"]
     if kind == "create-widget":
         index = payload.get("index")
         fixture["widgets"].insert(len(fixture["widgets"]) if index is None else index, copy.deepcopy(payload["widget"]))
@@ -187,7 +187,7 @@ def inverse_mutation(document, kind, payload):
     SELECTS — exact only when the removed generation was trailing and selected, which is a property of
     the closed vocabulary rather than of an implementation, and is exactly what the committed vector
     exercises."""
-    fixture, generation = document["fixture"], document["generation"]
+    fixture, generation = document["hostSnapshot"], document["generation"]
     if kind == "create-widget":
         return [("delete-widget", {"id": payload["widget"]["id"]})]
     if kind == REPLACE_WIDGET:
@@ -355,7 +355,7 @@ def identity_handler(ctx):
     committed = ctx.fixture_bytes(uri)
     document = json.loads(committed.decode("utf-8"))
     validate(document, "identity-round-trip")
-    fixture, generation = document["fixture"], document["generation"]
+    fixture, generation = document["hostSnapshot"], document["generation"]
     if not fixture["widgets"] or not generation["generations"]:
         raise AssertionError("identity-round-trip: the committed document must carry widgets and a generation history")
     if len(fixture["layout"]) >= len(fixture["widgets"]):

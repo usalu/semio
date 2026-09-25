@@ -20,7 +20,7 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { Canvas2dHost } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import type { ActionDescriptor } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { buildFem2dSceneNode, fem2dStructureLayers, fem2dStoryStateFor, fem2dSummaryLines, FEM_STORY_LOCALES, FEM2D_DEFAULT_CAMERA, FEM2D_MESH_PREVIEW_OMISSION, FEM2D_STORY_EXAMPLE_ID, femStoryOmissions, type FemStoryLocale } from "../🧭️coordination/🧫️fixtures/🧫️scene/🟦️.ts";
+import { buildFem2dSceneNode, fem2dStructureLayers, fem2dStoryStateFor, fem2dSummaryLines, FEM_STORY_LOCALES, FEM2D_DEFAULT_CAMERA, FEM2D_MESH_PREVIEW_OMISSION, FEM2D_STORY_EXAMPLE_ID, femStoryOmissions, type FemStoryLocale } from "../🧭️coordination/🟦️.ts";
 
 //#region StoryHost
 const FEM2D_VIEW_BODY_KEY = "fem2d.view.model";

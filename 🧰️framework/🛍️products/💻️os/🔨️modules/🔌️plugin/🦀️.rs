@@ -35087,10 +35087,12 @@ pub mod app {
         /// ✏️ Builds an editor `SurfaceDeclaration` from `E` — `def` is `Editor::builder(E::DIALECT)
         /// ...build_definition()`, same as `PluginBuilder::editor::<E>`. `rights: Rights::Write`
         /// signals the commit walk to attach BOTH Read and Write document capabilities (baseline Read
-        /// always, plus Write when `rights == Rights::Write`) — see `capaasync bility_rows_for`. The
+        /// always, plus Write when `rights == Rights::Write`) — see `capability_rows_for`. The
         /// concrete app retains `E::Members`, so a composed editor keeps its typed child fleet in every
-        /// bundle that declares this subset.
-        pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
+        /// bundle that declares this subset. Schema-first (C8.2), exactly as `PluginBuilder::editor`:
+        /// an empty `io.artifact_schema` is stamped with `E::DOCUMENT_SCHEMA`, so the manifest names the
+        /// document this surface opens and a shell attaching a hub document checks the lease against it.
+        pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(mut def: AppDefinition) -> SurfaceDeclaration<PA> {
             // 🚫️async: E4 fn-pointer slot
             fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: &AppDefinition) -> PA {
                 PA::from(resolve_ready(VcsArtifactApp::<EditorApp<E>, E::Members>::with_registry_on_bus(EditorApp::<E>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production())))
@@ -35100,12 +35102,16 @@ pub mod app {
             fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
                 E::app_schema()
             }
+            if def.io.artifact_schema.is_empty() {
+                def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
+            }
             SurfaceDeclaration { definition: def, factory: factory::<E, PA>, app_schema: app_schema::<E>, mutation_roster: None, rights: Rights::Write }
         }
 
         /// 👁️ Viewer twin of `editor_surface` — `rights: Rights::Read` (baseline Read only, contract
-        /// §2.3 clause 4: a viewer's document store attaches Read onasync ly, never Write).
-        pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
+        /// §2.3 clause 4: a viewer's document store attaches Read only, never Write), and the same
+        /// schema-first stamp from `V::DOCUMENT_SCHEMA`.
+        pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(mut def: AppDefinition) -> SurfaceDeclaration<PA> {
             // 🚫️async: E4 fn-pointer slot
             fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: &AppDefinition) -> PA {
                 PA::from(resolve_ready(VcsArtifactApp::<ViewerApp<V>, V::Members>::with_registry_on_bus(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production())))
@@ -35113,6 +35119,9 @@ pub mod app {
             // 🚫️async: E4 fn-pointer slot — see `editor_surface`'s `app_schema` doc.
             fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
                 V::app_schema()
+            }
+            if def.io.artifact_schema.is_empty() {
+                def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
             }
             SurfaceDeclaration { definition: def, factory: factory::<V, PA>, app_schema: app_schema::<V>, mutation_roster: None, rights: Rights::Read }
         }

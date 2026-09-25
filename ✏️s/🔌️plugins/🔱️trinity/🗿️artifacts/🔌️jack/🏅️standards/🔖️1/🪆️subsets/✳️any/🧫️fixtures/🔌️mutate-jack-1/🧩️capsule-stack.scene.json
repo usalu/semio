@@ -1,0 +1,53 @@
+{
+  "schema": "trinity.graph",
+  "manifestId": "nakagin",
+  "nodes": [
+    {
+      "id": "shaft",
+      "kind": "Piece",
+      "name": "Service Shaft",
+      "x": 0.0,
+      "y": 0.0,
+      "width": 80.0,
+      "height": 40.0,
+      "properties": {},
+      "ports": [
+        {
+          "id": "out-a",
+          "kind": "Connector",
+          "direction": "out",
+          "properties": {}
+        }
+      ]
+    },
+    {
+      "id": "capsule-a",
+      "kind": "Piece",
+      "name": "Capsule A",
+      "x": 120.0,
+      "y": -40.0,
+      "width": 80.0,
+      "height": 40.0,
+      "properties": {
+        "label": "Capsule A"
+      },
+      "ports": [
+        {
+          "id": "in-a",
+          "kind": "Connector",
+          "direction": "in",
+          "properties": {}
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "shaft-to-capsule-a",
+      "kind": "Connection",
+      "source": "shaft@out-a",
+      "target": "capsule-a@in-a",
+      "properties": {}
+    }
+  ]
+}

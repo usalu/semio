@@ -1521,7 +1521,7 @@
     },
     "cad-draw-projection-vectors-v1": {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
-      "sha256": "1410a74ccc87561fd4a4b91db7d503614fe21ddce8bc78dee923d8237820f3e0",
+      "sha256": "ff3562082e3209560a39417d166c417f5e651944bbbb95f3f6ef2126f997d49a",
       "schemaVersion": 1,
       "coordinates": [
         {
@@ -1538,14 +1538,6 @@
         },
         {
           "pointer": "/projections/*/mappings/*/destinationPath",
-          "kind": "destination"
-        },
-        {
-          "pointer": "/referenceConsumers/*/sourcePathIdentities/*",
-          "kind": "source"
-        },
-        {
-          "pointer": "/projections/1/referenceEdits/*/path",
           "kind": "destination"
         }
       ]
@@ -4366,6 +4358,7 @@
       "emoji": "🖼️",
       "slugPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
       "allowEmojiOnly": false,
+      "inferWithoutEmoji": false,
       "parentKindIds": [
         "test-case",
         "test-fixture-member"
@@ -14877,6 +14870,7 @@
         "🔗️joins-room-a-to-room-b-beside",
         "🔗️joins-slot-a-to-slot-c",
         "🔬️grid-job-drive",
+        "🔬️unit",
         "🔲️mutate-grid2d-1",
         "🔳️puts-the-hole-back-into-the-problem",
         "🕳️cuts-the-pinned-corner-out-of-the-problem",
@@ -16789,11 +16783,11 @@
           "memberDirectoryEmoji": "🎬️"
         },
         {
-          "sourceDirectoryName": "🎬️interactions",
+          "sourceDirectoryName": "🕹️interactions",
           "directoryKindId": "interactions",
           "sourceShape": "direct-semantic-json",
           "manifestSchema": "spatial.interaction",
-          "memberDirectoryEmoji": "🎬️"
+          "memberDirectoryEmoji": "🕹️"
         },
         {
           "sourceDirectoryName": "🏷️attributeDefinitions",
@@ -17345,7 +17339,7 @@
       "projectionContractId": "artifact-example-model-catalog-v1",
       "consumerIdentity": "cad-editor-interaction",
       "ownership": "external",
-      "sourcePathPattern": "^(?:✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component\\.rs|✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️\\.rs)$",
+      "sourcePathPattern": "^✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️\\.rs$",
       "sourcePathIdentities": [
         "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️.rs"
       ],
@@ -17353,7 +17347,8 @@
         "rust"
       ],
       "supportedForms": [
-        "path-reference"
+        "path-reference",
+        "artifact-catalog-prose:category-glob"
       ],
       "staleMarkers": [
         "🖼️assets/🏗️modelDefinitions"
@@ -17363,7 +17358,7 @@
       "projectionContractId": "artifact-example-model-catalog-v1",
       "consumerIdentity": "cad-editor-runtime",
       "ownership": "external",
-      "sourcePathPattern": "^(?:✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component\\.ts|✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️\\.ts)$",
+      "sourcePathPattern": "^✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️\\.ts$",
       "sourcePathIdentities": [
         "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts"
       ],
@@ -17382,16 +17377,17 @@
       "projectionContractId": "artifact-example-model-catalog-v1",
       "consumerIdentity": "cad-interaction-spec",
       "ownership": "external",
-      "sourcePathPattern": "^(?:✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component\\.rs|✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️\\.rs)$",
+      "sourcePathPattern": "^✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/(?:🦀️\\.rs|🧪️tests/🔬️unit/🦀️\\.rs)$",
       "sourcePathIdentities": [
-        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs"
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs",
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🧪️tests/🔬️unit/🦀️.rs"
       ],
       "adapters": [
         "rust"
       ],
       "supportedForms": [
         "path-reference",
-        "artifact-catalog-prose:interaction-glob",
+        "artifact-catalog-prose:category-glob",
         "artifact-catalog-prose:relative-root"
       ],
       "staleMarkers": [
@@ -17493,7 +17489,7 @@
       "projectionContractId": "artifact-example-model-catalog-v1",
       "consumerIdentity": "cad-spatial-kernel-geometry",
       "ownership": "external",
-      "sourcePathPattern": "^✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️(?:component)?\\.ts$",
+      "sourcePathPattern": "^✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️\\.ts$",
       "sourcePathIdentities": [
         "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts"
       ],
@@ -28452,14 +28448,14 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/📐️schema.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧰️framework-catalog/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/📐️directory.schema.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
       ],

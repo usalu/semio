@@ -4857,6 +4857,31 @@ pub mod vcs_integration {
     //#region 🔖️Store
     type HashStore = store::ArtifactStore<HashProjection, HashMutation>;
 
+    /// @emoji 🪟️ Close steps one change (or one shutdown step) spends retiring folded version-graph
+    /// windows: a full 64-edit window retires in about 5 000 steps, so it is gone well within the next
+    /// window while no single commit turn carries it.
+    const VCS_WINDOW_RETIREMENT_STEPS_PER_TURN: usize = 256;
+
+    /// @emoji 🧹️ Advances the oldest retiring window by at most `steps` close steps, dropping it once
+    /// its terminal witness holds. It stays owned by the cell between turns, never by a future that
+    /// could be dropped mid-close.
+    fn retire_window_steps(retiring: &mut Vec<HashStore>, steps: usize) -> Result<(), DbError> {
+        for _ in 0..steps {
+            let Some(store) = retiring.first_mut() else { return Ok(()) };
+            match store::SpaceMember::close_owned_step(store, 1, VCS_OPERATION_BYTES as usize).map_err(|error| DbError::Internal(format!("vcs window retirement: {error}")))? {
+                store::SnapshotRetirementStep::Pending { .. } => {}
+                store::SnapshotRetirementStep::Blocked => return Ok(()),
+                store::SnapshotRetirementStep::Complete => {
+                    if !store::SpaceMember::close_owned_terminal_is_empty(store) {
+                        return Err(DbError::Internal("vcs window retirement completed without a terminal store witness".to_string()));
+                    }
+                    drop(retiring.remove(0));
+                }
+            }
+        }
+        Ok(())
+    }
+
     const VCS_OPERATION_ITEMS: usize = 64;
     const VCS_OPERATION_PAGE_BYTES: u64 = 16 * 1024;
     const VCS_OPERATION_PAGES: u64 = 4;
@@ -4977,6 +5002,7 @@ pub mod vcs_integration {
     struct VcsStoreCellState {
         store: Option<HashStore>,
         rolled_checkpoint: Option<String>,
+        retiring: Vec<HashStore>,
         busy_generation: Option<u64>,
         waiters: [Option<VcsStoreWaiter>; VCS_OPERATION_ITEMS],
     }
@@ -4990,7 +5016,7 @@ pub mod vcs_integration {
     impl VcsStoreCell {
         fn new() -> Self {
             Self {
-                state: Mutex::new(VcsStoreCellState { store: None, rolled_checkpoint: None, busy_generation: None, waiters: std::array::from_fn(|_| None) }),
+                state: Mutex::new(VcsStoreCellState { store: None, rolled_checkpoint: None, retiring: Vec::new(), busy_generation: None, waiters: std::array::from_fn(|_| None) }),
                 #[cfg(test)]
                 shutdown_failures: std::sync::atomic::AtomicUsize::new(0),
             }
@@ -5029,6 +5055,10 @@ pub mod vcs_integration {
                 let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                 if state.busy_generation.is_some() || state.waiters.iter().any(Option::is_some) {
                     return Err(DbError::Conflict("VCS store still has a retained operation during shutdown".to_string()));
+                }
+                if !state.retiring.is_empty() {
+                    retire_window_steps(&mut state.retiring, VCS_WINDOW_RETIREMENT_STEPS_PER_TURN)?;
+                    return Ok(false);
                 }
                 let Some(store) = state.store.take() else { return Ok(true) };
                 store
@@ -5162,8 +5192,9 @@ pub mod vcs_integration {
         }
 
         /// @emoji 🪟️ Keeps a document's version graph a bounded window: when its store's applied-edit
-        /// ledger is full, every applied change is folded into one checkpoint, the store is retired and
-        /// a fresh store starts from the folded hash. The graph then answers `merge_base`/`head` within
+        /// ledger is full, every applied change is folded into one checkpoint, the folded store is handed
+        /// to its cell for bounded retirement (`retire_window_steps`) and a fresh store starts from the
+        /// folded hash. The graph then answers `merge_base`/`head` within
         /// the current window (`head` falls back to the last folded checkpoint); history older than the
         /// window is the durable WAL's, never this in-memory graph's. A full ledger used to refuse every
         /// later change — after the change was already durable in the WAL.
@@ -5175,23 +5206,22 @@ pub mod vcs_integration {
             let folded = self.store_mut().current_checkpoint_id().map(str::to_string);
             let latest_hash = self.store_mut().envelope().vcs.initial_snapshot.latest_hash;
             let latest_hash = self.store_mut().snapshot().map_or(latest_hash, |snapshot| snapshot.latest_hash);
+            let retired = self.store.take().expect("vcs store lease owner already returned");
+            self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).retiring.push(retired);
             let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection { latest_hash }, None);
             let mut fresh = store::ArtifactStore::new(envelope).await.map_err(map_vcs_error)?;
             fresh.install_document_store_owners_exact(<HashProjection as store::MemberStoreOwner<HashMutation>>::member_store_owners());
-            let mut retired = self.store.replace(fresh).expect("vcs store lease owner already returned");
-            loop {
-                match store::SpaceMember::close_owned_step(&mut retired, 1, VCS_OPERATION_BYTES as usize).map_err(|error| DbError::Internal(format!("vcs window retirement: {error}")))? {
-                    store::SnapshotRetirementStep::Complete => break,
-                    store::SnapshotRetirementStep::Pending { .. } => semio_framework_async::yield_once().await,
-                    store::SnapshotRetirementStep::Blocked => return Err(DbError::Internal("vcs window retirement blocked".to_string())),
-                }
-            }
-            if !store::SpaceMember::close_owned_terminal_is_empty(&retired) {
-                return Err(DbError::Internal("vcs window retirement completed without a terminal store witness".to_string()));
-            }
-            drop(retired);
+            self.store = Some(fresh);
             self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).rolled_checkpoint = folded;
             Ok(())
+        }
+
+        /// 🧹️ Advances the folded windows' retirement by a bounded number of close steps — work that
+        /// used to run to completion inside one commit turn, where a turn dropped mid-way dropped a
+        /// half-closed store.
+        fn advance_retirements(&self) -> Result<(), DbError> {
+            let mut state = self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            retire_window_steps(&mut state.retiring, VCS_WINDOW_RETIREMENT_STEPS_PER_TURN)
         }
 
         fn rolled_checkpoint(&self) -> Option<String> {
@@ -5262,6 +5292,7 @@ pub mod vcs_integration {
                 let admission = record_credit(document, &change).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
                 let mut lease = self.store(document, &admission).await?;
                 lease.roll_window_when_full(document).await?;
+                lease.advance_retirements()?;
                 let ChangeRecord { content_hash, author, message, timestamp_ms, .. } = change;
                 let operation = HashMutation { hash: content_hash.0, author: Some(protocol::ActorId(author.0)), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, timestamp_ms)) };
                 let mutations = Vec::from([operation]);
@@ -7900,28 +7931,67 @@ struct DatabaseDocumentMountReply {
     handles: Arc<std::sync::atomic::AtomicUsize>,
 }
 
-/// 🎫️ Counts the caller-held `ArtifactHandle`s of one mounted document. Database shutdown blocks
-/// on these only; internal retained owners that still share the authority retire on their own.
+/// 🎫️ Counts the caller-held `ArtifactHandle`s of one mounted document. The last one to drop
+/// unmounts the document: its `Ready` slot becomes `Closing` and its authority retires, so a
+/// document holds its WAL writer, retained state and version graph only while someone holds it, and
+/// the mount capacity bounds concurrently open documents instead of every document a process ever
+/// opened. A mount that finds the slot `Closing` waits for that retirement before it replays the
+/// WAL. Leases are only ever created under the registry lock. Database shutdown blocks on these
+/// only; internal retained owners that still share the authority retire on their own.
 struct ArtifactHandleLease {
     handles: Arc<std::sync::atomic::AtomicUsize>,
+    registry: std::sync::Weak<Mutex<DatabaseDocumentMountRegistry>>,
+    document: String,
 }
 
 impl ArtifactHandleLease {
-    fn new(handles: Arc<std::sync::atomic::AtomicUsize>) -> Self {
+    fn new(handles: Arc<std::sync::atomic::AtomicUsize>, registry: std::sync::Weak<Mutex<DatabaseDocumentMountRegistry>>, document: String) -> Self {
         handles.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-        Self { handles }
+        Self { handles, registry, document }
+    }
+
+    fn unmount_idle(&self) {
+        let Some(registry) = self.registry.upgrade() else { return };
+        let retired = {
+            let mut registry = registry.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let idle = matches!(registry.slots.get(&self.document), Some(DatabaseDocumentMountSlot::Ready(reply)) if Arc::ptr_eq(&reply.handles, &self.handles));
+            if !idle || self.handles.load(std::sync::atomic::Ordering::Acquire) != 0 {
+                return;
+            }
+            let Some(DatabaseDocumentMountSlot::Ready(reply)) = registry.slots.remove(&self.document) else { return };
+            if let Some(terminal) = reply.authority.take_terminal_signal() {
+                registry.slots.insert(self.document.clone(), DatabaseDocumentMountSlot::Closing { terminal });
+            }
+            reply
+        };
+        drop(retired);
     }
 }
 
 impl Clone for ArtifactHandleLease {
     fn clone(&self) -> Self {
-        Self::new(self.handles.clone())
+        Self::new(self.handles.clone(), self.registry.clone(), self.document.clone())
     }
 }
 
 impl Drop for ArtifactHandleLease {
     fn drop(&mut self) {
-        self.handles.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+        if self.handles.fetch_sub(1, std::sync::atomic::Ordering::AcqRel) == 1 {
+            self.unmount_idle();
+        }
+    }
+}
+
+/// 📓️ A durable group journal sink that keeps its document mounted for as long as it lives, like
+/// the `ArtifactHandle` it came from.
+struct ArtifactHandleJournalSinkV1 {
+    sink: Box<dyn store::durable_group::DurableOwnedGroupJournalSinkV1>,
+    _lease: ArtifactHandleLease,
+}
+
+impl store::durable_group::DurableOwnedGroupJournalSinkV1 for ArtifactHandleJournalSinkV1 {
+    fn begin_commit(&mut self, decision_pack: Vec<u8>, decision_sha256: String) -> Box<dyn store::durable_group::DurableOwnedGroupJournalCommitV1> {
+        self.sink.begin_commit(decision_pack, decision_sha256)
     }
 }
 
@@ -7999,6 +8069,7 @@ enum DatabaseDocumentMountPoll {
 enum DatabaseDocumentMountSlot {
     Opening { generation: u64, owner: Arc<DatabaseDocumentMountOwner>, waiters: [Option<DatabaseDocumentMountWaiter>; DATABASE_DOCUMENT_MOUNT_WAITERS] },
     Ready(DatabaseDocumentMountReply),
+    Closing { terminal: db_actor::ReplyReceiver<()> },
 }
 
 struct DatabaseDocumentMountRegistry {
@@ -8683,6 +8754,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
 
     async fn run_document_mount(
         _live: DatabaseMountFutureLiveGuardV1,
+        predecessor: Option<db_actor::ReplyReceiver<()>>,
         pool: Arc<WorkerPool>,
         pool_use: Arc<WorkerPoolUse>,
         storage: Arc<db_storage::DbBackend>,
@@ -8696,6 +8768,9 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         emit: Arc<E>,
         #[cfg(test)] mount_catalog_published_hook: Arc<Mutex<Option<DatabaseDocumentMountPublishedHook>>>,
     ) -> Result<DatabaseDocumentMountReply, DatabaseDocumentMountFailure> {
+        if let Some(predecessor) = predecessor {
+            let _ = predecessor.await;
+        }
         let mut create = !catalog_known && policy != DatabaseDocumentMountPolicy::Open;
         if create {
             if let Err(error) = Self::publish_mount_catalog(DatabaseMountFutureLiveGuardV1::new(), pool.clone(), pool_use.clone(), storage.clone(), catalog.clone(), document.clone()).await {
@@ -8735,7 +8810,28 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         Ok(DatabaseDocumentMountReply { authority: Arc::new(authority), handles: Arc::new(std::sync::atomic::AtomicUsize::new(0)) })
     }
 
+    /// 🔁️ Mounts until a handle is adopted. A mount whose document went idle and started closing
+    /// between its reply and its adoption mounts again, then as an open of the document it created.
     async fn mount_document(&self, document: protocol::ArtifactId, policy: DatabaseDocumentMountPolicy) -> Result<ArtifactHandle, DatabaseDocumentOpenRejected> {
+        let mut policy = policy;
+        loop {
+            if let Some(handle) = self.mount_document_once(document.clone(), policy).await? {
+                return Ok(handle);
+            }
+            if policy == DatabaseDocumentMountPolicy::Create {
+                policy = DatabaseDocumentMountPolicy::Open;
+            }
+        }
+    }
+
+    fn adopt_mount(&self, document: &protocol::ArtifactId, handles: &Arc<std::sync::atomic::AtomicUsize>, registry: &DatabaseDocumentMountRegistry) -> Option<ArtifactHandleLease> {
+        match registry.slots.get(&document.0) {
+            Some(DatabaseDocumentMountSlot::Ready(ready)) if Arc::ptr_eq(&ready.handles, handles) => Some(ArtifactHandleLease::new(handles.clone(), Arc::downgrade(&self.open_artifacts), document.0.clone())),
+            _ => None,
+        }
+    }
+
+    async fn mount_document_once(&self, document: protocol::ArtifactId, policy: DatabaseDocumentMountPolicy) -> Result<Option<ArtifactHandle>, DatabaseDocumentOpenRejected> {
         let pool_use = self.require_open_use()?;
         let _pool_use_site = DatabasePoolUseSiteGuardV1::new(&DATABASE_POOL_USE_MOUNT_WAIT_LIVE);
         let catalog_known = self.catalog.lock().expect("db_engine: catalog mutex poisoned").entries.iter().any(|entry| entry.document == document);
@@ -8748,8 +8844,9 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                     return Err(DbError::AlreadyExists(format!("document {} already exists", document.0)).into());
                 }
                 let completion = completion.clone();
+                let lease = self.adopt_mount(&document, &completion.handles, &registry);
                 drop(registry);
-                return Ok(ArtifactHandle { authority: completion.authority, _lease: ArtifactHandleLease::new(completion.handles), document, pool: self.pool.clone() });
+                return Ok(lease.map(|lease| ArtifactHandle { authority: completion.authority, _lease: lease, document, pool: self.pool.clone() }));
             }
             if let Some(DatabaseDocumentMountSlot::Opening { generation, owner, waiters }) = registry.slots.get_mut(&document.0) {
                 let Some(slot) = waiters.iter().position(Option::is_none) else {
@@ -8767,9 +8864,18 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                     return Err(DbError::NotFound(format!("document {} not found", document.0)).into());
                 }
                 let generation = registry.take_generation()?;
+                let predecessor = match registry.slots.remove(&document.0) {
+                    Some(DatabaseDocumentMountSlot::Closing { terminal }) => Some(terminal),
+                    Some(other) => {
+                        registry.slots.insert(document.0.clone(), other);
+                        return Err(DbError::Internal("database document-mount slot changed under its lock".to_string()).into());
+                    }
+                    None => None,
+                };
                 let (reply, raw_receiver) = db_actor::oneshot();
                 let future = Box::pin(Self::run_document_mount(
                     DatabaseMountFutureLiveGuardV1::new(),
+                    predecessor,
                     self.pool.clone(),
                     pool_use,
                     self.storage.clone(),
@@ -8806,7 +8912,11 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         }
         let result = reply.await.map_err(DatabaseDocumentOpenRejected::Database)?;
         let result = result.map_err(DatabaseDocumentOpenRejected::Database)?;
-        Ok(ArtifactHandle { authority: result.authority, _lease: ArtifactHandleLease::new(result.handles), document, pool: self.pool.clone() })
+        let lease = {
+            let registry = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned");
+            self.adopt_mount(&document, &result.handles, &registry)
+        };
+        Ok(lease.map(|lease| ArtifactHandle { authority: result.authority, _lease: lease, document, pool: self.pool.clone() }))
     }
 
     /// 🪴️ Admits the exact create-document catalog transaction before any catalog owner is copied.
@@ -8868,11 +8978,25 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             self.closing_authority.take();
             return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, remaining_authorities: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len() });
         }
+        let closing = {
+            let mut registry = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned");
+            let document = registry.slots.iter().find_map(|(document, slot)| matches!(slot, DatabaseDocumentMountSlot::Closing { .. }).then(|| document.clone()));
+            document.and_then(|document| registry.slots.remove(&document).map(|slot| (document, slot)))
+        };
+        if let Some((document, slot)) = closing {
+            let DatabaseDocumentMountSlot::Closing { mut terminal } = slot else { return Err(DbError::Internal("selected closing mount was not closing".to_string())) };
+            let retired = std::future::poll_fn(|context| std::task::Poll::Ready(std::pin::Pin::new(&mut terminal).poll(context).is_ready())).await;
+            if !retired {
+                self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").slots.insert(document, DatabaseDocumentMountSlot::Closing { terminal });
+                semio_framework_async::yield_once().await;
+            }
+            return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, remaining_authorities: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len() });
+        }
         let opening = {
             let registry = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned");
             registry.slots.values().find_map(|slot| match slot {
                 DatabaseDocumentMountSlot::Opening { owner, .. } => Some(owner.clone()),
-                DatabaseDocumentMountSlot::Ready(_) => None,
+                DatabaseDocumentMountSlot::Ready(_) | DatabaseDocumentMountSlot::Closing { .. } => None,
             })
         };
         if let Some(owner) = opening {
@@ -10683,7 +10807,7 @@ impl ArtifactHandle {
     /// 📓️ Creates the typed Store journal port backed by this document authority's
     /// already-retained WAL writer; no generic command submission or second permit is exposed.
     pub fn durable_group_journal_sink(&self, now_ms: u64) -> Box<dyn store::durable_group::DurableOwnedGroupJournalSinkV1> {
-        self.authority.durable_group_journal_sink(now_ms)
+        Box::new(ArtifactHandleJournalSinkV1 { sink: self.authority.durable_group_journal_sink(now_ms), _lease: self._lease.clone() })
     }
 
     /// 🧭 Replays committed fixed-three decisions through this document's existing actor and WAL

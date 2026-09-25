@@ -11,11 +11,11 @@ use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️rotate-frame/🌀️rotates-the-rect-frame/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️rotate-frame/🌀️rotates-the-rect-frame/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️rotate-frame/🌀️rotates-the-rect-frame/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️rotate-frame/🌀️rotates-the-rect-frame/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕹️rotate-frame/🌀️rotates-the-rect-frame/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates-the-rect-frame/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates-the-rect-frame/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates-the-rect-frame/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates-the-rect-frame/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates-the-rect-frame/🎯️outcome/🔣️.json");
 
 fn before() -> LayoutSnapshot {
     dsl::os_pack::from_json_str(BEFORE).expect("rotate-frame/rotates-the-rect-frame: before snapshot decodes")

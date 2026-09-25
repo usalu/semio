@@ -2734,7 +2734,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "semio.equation/v1",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -2852,8 +2852,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "4567d70598e43e3b2cd15832cca297b6e6c8fdac5808a9639c086a6cf3ad661b",
-    "coreWasmSha256": "df8625f042432448fecb4f066f58d00b432f195a8a9f2a3a7774543ebf7ab419",
-    "descriptorSha256": "9f21f9078ffe0f52ebc267672e868bb8d5757e17f62ce734ad924c872cbcba7a"
+    "wasmSha256": "1bf034256d4a9f5e608fba86c38647997e9c7d15f46a0ff695be6be9595aaf9f",
+    "coreWasmSha256": "a049c4391813199e7757eac5644e78a3e1ae896acec8bce47cd5ebd8cd5b224f",
+    "descriptorSha256": "c31918a5345b27f2dce34435b4e39022152df83ae97312b794a0e84f0820821d"
   }
 }

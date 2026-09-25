@@ -55,6 +55,8 @@ describe("two-client document collaboration fixture", () => {
     expect(fixture.command.diffSchema).toBe("db.pathmap.v1");
     expect(fixture.shutdown.closeCode).toBe(1012);
     expect(fixture.shutdown.restartWithinMs).toBe(1000);
+    expect(fixture.growth.editsBeforeRestart).toBeGreaterThan(fixture.growth.distinctPaths * 4);
+    expect(fixture.growth.payloadBytes).toBeGreaterThanOrEqual(16384);
     expect(fixture.expectations.gracefulShutdownClosesSocketsAndReleasesWriters).toBe(true);
     expect(fixture.expectations.crashReleasesWritersPerBackendContract).toBe(true);
   });
@@ -399,6 +401,46 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         const mutationId2 = `${fixture.command.mutationIdPrefix}2`;
         a.socket.send(encodeClientFrame({ Commands: { batch_id: fixture.command.batchId + 1, envelopes: [{ ...envelope, mutation_id: mutationId2, diff: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue({ value: "two-client-a2" })) } }] } }, "command"));
         await waitFrame(a, (f) => "Ack" in f && f.Ack.batch_id === fixture.command.batchId + 1, "Ack2");
+        let hubOutput = (): string => run.output();
+        const grow = async (holder: Holder, from: number, count: number, parent: string): Promise<string> => {
+          let previous = parent;
+          for (let index = from; index < from + count; index++) {
+            const growthId = `${fixture.growth.mutationIdPrefix}${index}`;
+            const batchId = fixture.growth.batchIdBase + index;
+            const value = { [`grow-${index % fixture.growth.distinctPaths}`]: `${index}:${"g".repeat(fixture.growth.payloadBytes)}` };
+            holder.socket.send(
+              encodeClientFrame(
+                {
+                  Commands: {
+                    batch_id: batchId,
+                    envelopes: [
+                      {
+                        mutation_id: growthId,
+                        document_id: documentId,
+                        actor: holder.actor,
+                        dependencies: [previous],
+                        diff: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue(value)) },
+                        inverse: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue({})) },
+                        timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 },
+                      },
+                    ],
+                  },
+                },
+                "command",
+              ),
+            );
+            const grown = await waitFrame(holder, (f) => "Ack" in f && f.Ack.batch_id === batchId, `growth Ack ${index}`, 60_000).catch(async (error: Error) => {
+              const closed = await Promise.race([holder.closed, sleep(10).then(() => undefined)]);
+              throw new Error(`${error.message} socket=${closed ? `closed ${closed.code} ${closed.reason}` : "open"}\nhub-output:\n${hubOutput().slice(-12000)}`);
+            });
+            expect(JSON.stringify(grown.Ack.stages), `growth edit ${index}: ${JSON.stringify(grown.Ack)}`).toContain("Accepted");
+            previous = growthId;
+          }
+          return previous;
+        };
+        const grownAt = Date.now();
+        const lastGrown = await grow(a, 0, fixture.growth.editsBeforeRestart, mutationId2);
+        const growthMsBeforeRestart = Date.now() - grownAt;
         const b2 = await openSocket(await mint("b-re", tokenB), resume);
         const recovered =
           b2.frames.some((f) => "Commands" in f && f.Commands.envelopes?.some((e: any) => e.mutation_id === mutationId2)) ||
@@ -415,6 +457,8 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           console.log(`[two-client] backend=${backend} ${key}=${JSON.stringify(value)}`);
           if (process.env.HUB_E2E_RECEIPT) writeFileSync(process.env.HUB_E2E_RECEIPT, JSON.stringify(receipt, null, 2));
         };
+        note("growthEditsAcceptedBeforeRestart", fixture.growth.editsBeforeRestart);
+        note("growthMsBeforeRestart", growthMsBeforeRestart);
         const fenceRelease = writerFence.backends.find((row: any) => row.backend === backend)?.crashRelease as string | undefined;
         const exitOf = (hubRun: typeof run, ms: number) =>
           new Promise<{ code: number | null; signal: string | null }>((resolve, reject) => {
@@ -509,6 +553,9 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           expect(spaces.some((r: any) => r?.space?.id === spaceId)).toBe(true);
           const a3 = await openSocket(await mint("a-restart", tokenA2));
           note("reopenedOnFirstAttemptAfterSigterm", true);
+          hubOutput = () => run2.output();
+          await grow(a3, fixture.growth.editsBeforeRestart, fixture.growth.editsAfterRestart, lastGrown);
+          note("growthEditsAcceptedAfterRestart", fixture.growth.editsAfterRestart);
           const gracefulReopenMs = Date.now() - sigtermAt;
           note("sigtermToReopenedWelcomeFirstAttemptMs", gracefulReopenMs);
           expect(a3.welcome.server_frontier.document_id ?? a3.welcome.server_frontier.documentId).toBe(documentId);

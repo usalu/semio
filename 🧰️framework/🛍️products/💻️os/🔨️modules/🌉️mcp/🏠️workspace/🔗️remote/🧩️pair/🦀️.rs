@@ -190,7 +190,6 @@ pub enum CanonicalPairMountError {
     DeadlineExceeded,
     Unauthorized,
     DescriptorUnavailable,
-    InFlight,
     StaleCompletion,
     ResourceLimit,
     InvalidResponse(&'static str),
@@ -204,7 +203,6 @@ impl std::fmt::Display for CanonicalPairMountError {
             Self::DeadlineExceeded => "canonical pair receipt exceeded its deadline",
             Self::Unauthorized => "canonical pair authority was revoked",
             Self::DescriptorUnavailable => "canonical pair descriptor is unavailable",
-            Self::InFlight => "a canonical pair receipt is already in flight",
             Self::StaleCompletion => "canonical pair receipt was superseded",
             Self::ResourceLimit => "canonical pair receipt exceeded its fixed memory budget",
             Self::InvalidResponse(detail) => detail,
@@ -267,10 +265,10 @@ struct LoadingReceipt {
     completion: tokio::sync::watch::Sender<PairCompletion>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 enum PairCompletion {
     Pending,
-    Published,
+    Published(CanonicalPairMountIdentity),
     Failed,
 }
 
@@ -367,12 +365,12 @@ impl CanonicalPairActor {
         };
     }
 
+    /// 🤝️ Opens the one receipt a scope loads under, or joins the receipt already loading it: every
+    /// concurrent reader of a scope waits for the same fetch, and a reader that expects an exact identity
+    /// checks it against what that receipt publishes instead of being refused while it is in flight.
     fn begin(&mut self, generation: u64, scope: &DocumentScope, expected: Option<&CanonicalPairMountIdentity>, parent_cancel: &CancelToken) -> Result<PairBegin, CanonicalPairMountError> {
         if let Some(loading) = self.loadings.get(scope) {
-            return match (expected, loading.expected.as_ref()) {
-                (Some(expected), Some(active)) if expected == active => Ok(PairBegin::Join(loading.completion.subscribe())),
-                _ => Err(CanonicalPairMountError::InFlight),
-            };
+            return Ok(PairBegin::Join(loading.completion.subscribe()));
         }
         if !matches!(self.state, CanonicalPairActorState::DescriptorReady | CanonicalPairActorState::Mounted | CanonicalPairActorState::Loading) {
             return Err(CanonicalPairMountError::DescriptorUnavailable);
@@ -463,7 +461,7 @@ impl CanonicalPairActor {
             }
             mount
         };
-        loading.completion.send_replace(PairCompletion::Published);
+        loading.completion.send_replace(PairCompletion::Published(mount.identity.clone()));
         self.mounted = Some(mount.clone());
         self.state = if self.loadings.is_empty() { CanonicalPairActorState::Mounted } else { CanonicalPairActorState::Loading };
         self.progress = CanonicalPairMountProgress { stage: CanonicalPairMountStage::Mounted, completed: 1, total: 1 };
@@ -555,8 +553,8 @@ impl HubRemoteBinding {
         let receipt = match self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner).begin(authority_generation, scope, expected, &context.cancel)? {
             PairBegin::Owner(receipt) => receipt,
             PairBegin::Join(receiver) => {
-                wait_for_equal_receipt(receiver, context, operation_now_ms, started).await?;
-                let mount = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner).cached(expected.expect("only exact full identities join")).ok_or(CanonicalPairMountError::StaleCompletion)?;
+                let published = wait_for_published_receipt(receiver, context, operation_now_ms, started).await?;
+                let mount = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner).cached(expected.unwrap_or(&published)).ok_or(CanonicalPairMountError::StaleCompletion)?;
                 return self.finish_mount_return(mount, binding_generation, authority_generation, scope, &descriptor_digest_v1, wall_now_ms);
             }
         };
@@ -765,11 +763,11 @@ fn validate_expected_identity(identity: &CanonicalPairMountIdentity, hub_origin:
     Ok(())
 }
 
-async fn wait_for_equal_receipt(mut completion: tokio::sync::watch::Receiver<PairCompletion>, context: &OperationContext, operation_now_ms: u64, started: std::time::Instant) -> Result<(), CanonicalPairMountError> {
+async fn wait_for_published_receipt(mut completion: tokio::sync::watch::Receiver<PairCompletion>, context: &OperationContext, operation_now_ms: u64, started: std::time::Instant) -> Result<CanonicalPairMountIdentity, CanonicalPairMountError> {
     loop {
         checkpoint(context, receipt_now(operation_now_ms, started))?;
-        match *completion.borrow_and_update() {
-            PairCompletion::Published => return Ok(()),
+        match completion.borrow_and_update().clone() {
+            PairCompletion::Published(identity) => return Ok(identity),
             PairCompletion::Failed => return Err(CanonicalPairMountError::StaleCompletion),
             PairCompletion::Pending => {}
         }

@@ -317,6 +317,11 @@ function directoryEventPageNestedShapes(body: Record<string, unknown>): void {
   }
 }
 
+/** 📇️ Validates one directory event outside a page (the space index lane's events), by the page's own event rules. */
+export function parseDirectoryEventV1(value: unknown): DirectoryEvent {
+  return directoryEventPageEvent(value);
+}
+
 function directoryEventPageEvent(value: unknown): DirectoryEvent {
   const event = directoryEventPageObject(value, ["seq", "id", "hlc", "actor", "body", "recordedAtMs"], ["spaceId", "userId"]);
   directoryEventPageInteger(event.seq, true);

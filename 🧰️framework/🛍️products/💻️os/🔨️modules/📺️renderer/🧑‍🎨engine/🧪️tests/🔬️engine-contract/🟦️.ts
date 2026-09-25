@@ -724,6 +724,28 @@ describe("Space artifact creation host owner", () => {
     expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice.replace('"kindId":"s.gis.gismap"', '"kindId":"forged"'), name: "Shared Map" }, "space-a", requestId, catalogAuthority, catalogAuthority)).toBeNull();
   });
 
+  it("creates and opens a catalog member whose creation kind differs from the dialect that opens it", () => {
+    const drawing = '{"kindId":"2d.drawing","schema":"drawing.document","dialect":{"artifactKind":"s.draw.drawing","standard":"1","subset":"*"},"label":{"en":"Editor","de":"Editor"}}';
+    const drawingCatalog = { ...catalog, kinds: [JSON.parse(drawing)] };
+    const drawingAuthority = captureSpaceArtifactCreationCatalogAuthorityV1(drawingCatalog, catalogStatus, catalogOrigin)!;
+    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: drawing, name: "Plan" }, "space-a", requestId, drawingAuthority, drawingAuthority)).toEqual({
+      kind: "space-artifact-create",
+      requestId,
+      spaceId: "space-a",
+      expectedCatalogGenerationId: drawingAuthority.catalogGenerationId,
+      kindId: "2d.drawing",
+      name: "Plan",
+    });
+    expect(spaceArtifactCreationReadyOpening({
+      kind: "space-artifact-creation-status",
+      requestId,
+      spaceId: "space-a",
+      catalogGenerationId: drawingAuthority.catalogGenerationId,
+      phase: "ready",
+      ready: { artifactId: `artifact-${"6".repeat(32)}`, kindId: "2d.drawing", artifactSchema: "drawing.document", parentDialect: { artifactKind: "s.draw.drawing", standard: "1", subset: "*" } },
+    })).toEqual({ artifactRef: "s.draw.drawing@1/*", artifactId: `artifact-${"6".repeat(32)}`, spaceId: "space-a", schema: "drawing.document" });
+  });
+
   it("admits only an exact captured and live catalog generation member", () => {
     expect(directoryExport("SpaceArtifactCreationCatalogAuthorityV1")(artifactCreationCatalogAuthorityFixture)).toBe(true);
     const withoutMember = { ...catalogAuthority, kindChoices: [] };

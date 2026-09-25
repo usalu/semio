@@ -473,7 +473,7 @@ async fn canonical_pair_receipt_preflights_streams_cancels_expires_and_never_res
         PairBegin::Owner(_) => panic!("equal receipt joins"),
     };
     binding.invalidate_stream();
-    assert_eq!(wait_for_equal_receipt(joined, &ctx, 1, std::time::Instant::now()).await.unwrap_err(), CanonicalPairMountError::StaleCompletion);
+    assert_eq!(wait_for_published_receipt(joined, &ctx, 1, std::time::Instant::now()).await.unwrap_err(), CanonicalPairMountError::StaleCompletion);
     binding.pair_actor.lock().unwrap().cancel_receipt(&owner);
     assert_eq!(binding.canonical_pair_test_stats().0, CanonicalPairActorState::Refreshing, "stale cleanup must not resurrect DescriptorReady after invalidation");
     assert_eq!(binding.canonical_pair_test_stats().1, 0);
@@ -487,4 +487,33 @@ async fn canonical_pair_receipt_preflights_streams_cancels_expires_and_never_res
     };
     assert_eq!(binding.observe_stream_message(&semio_framework_os_kernel::os_directory::DirectoryStreamMessage::RebootstrapRequired { control }), HubStreamObservation::RefreshRequired);
     assert_eq!(binding.canonical_pair_test_stats().0, CanonicalPairActorState::Refreshing);
+}
+
+#[tokio::test]
+async fn every_reader_of_a_loading_scope_joins_its_one_receipt_and_learns_what_it_published() {
+    let contract = fixture();
+    let scope = DocumentScope::new(contract["binding"]["spaceId"].as_str().unwrap(), contract["binding"]["documentId"].as_str().unwrap());
+    let ctx = context(10_000);
+    let binding = ready_binding(i64::MAX);
+    let authority = binding.authority_generation.load(Ordering::SeqCst);
+    let identity = |checkpoint: &str| CanonicalPairMountIdentity {
+        hub_origin: "https://hub.invalid".into(),
+        authority_generation: authority,
+        scope: scope.clone(),
+        descriptor_digest_v1: contract["binding"]["descriptorDigest"].as_str().unwrap().into(),
+        active_checkpoint_id: checkpoint.into(),
+        etag: contract["valid"]["etag"].as_str().unwrap().into(),
+        catalog_generation: Some(9),
+    };
+    let published = identity(contract["binding"]["checkpointId"].as_str().unwrap());
+    let other = identity(&"f".repeat(64));
+    let begin = |expected: Option<&CanonicalPairMountIdentity>| binding.pair_actor.lock().unwrap().begin(authority, &scope, expected, &ctx.cancel).unwrap();
+    let PairBegin::Owner(owner) = begin(None) else { panic!("the first reader of a scope owns its receipt") };
+    let PairBegin::Join(unexpecting) = begin(None) else { panic!("a reader with no expectation joins the loading receipt") };
+    let PairBegin::Join(expecting) = begin(Some(&other)) else { panic!("a reader expecting another identity joins too, and checks it after") };
+    binding.pair_actor.lock().unwrap().loadings.get(&scope).unwrap().completion.send_replace(PairCompletion::Published(published.clone()));
+    assert_eq!(wait_for_published_receipt(unexpecting, &ctx, 1, std::time::Instant::now()).await.unwrap(), published);
+    assert_eq!(wait_for_published_receipt(expecting, &ctx, 1, std::time::Instant::now()).await.unwrap(), published);
+    binding.pair_actor.lock().unwrap().cancel_receipt(&owner);
+    assert_eq!(binding.canonical_pair_test_stats().1, 0);
 }

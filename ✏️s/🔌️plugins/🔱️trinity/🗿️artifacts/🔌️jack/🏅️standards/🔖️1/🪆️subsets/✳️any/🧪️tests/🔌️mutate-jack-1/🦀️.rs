@@ -34,6 +34,7 @@ const KINDS: &[&str] = &["create-node", "delete-node", "create-edge", "delete-ed
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::mutations::text::{apply_trinity_graph_mutation_reporting, decode_trinity_graph_mutation_json, inverse_trinity_graph_mutation_steps, TrinityGraphMutation};
+    use semio_s_artifact_trinity_jack::materialize_jack_content;
     use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::{decode_jack_snapshot_json, encode_jack_snapshot_json, jack_scene_summary, parse_jack_dsl, print_jack_dsl, JackSnapshot};
 
     //#region 🔖️Plan
@@ -67,16 +68,17 @@ mod subject {
         decode_trinity_graph_mutation_json(text).map_err(|error| format!("mutate-jack-1: the {label} payload for {kind:?} must decode: {error}"))
     }
 
-    /// 📤️ The comparable members of one scene, defaulting an absent `nodes`/`edges`/`rootNodeId` to
-    /// the empty one — which is how the specification vectors write a scene with neither.
+    /// 📤️ The comparable members of one scene, read from the host JSON shape that carries the composed
+    /// child's real `nodes` and `edges`, reading an absent or null `rootNodeId` as the empty one.
     fn projection(snapshot: &JackSnapshot) -> Result<Json, String> {
-        let whole = parse_json(&encode_jack_snapshot_json(snapshot))?;
+        let whole = parse_json(&snapshot.to_json().map_err(|error| format!("mutate-jack-1: the scene must encode with its composed child's nodes and edges: {error:?}"))?)?;
         let mut entries = Vec::new();
         for name in MEMBERS {
-            let value = whole.get(name).cloned().unwrap_or(match *name {
-                "nodes" | "edges" => Json::Array(Vec::new()),
-                _ => Json::String(String::new()),
-            });
+            let value = match (whole.get(name), *name) {
+                (Some(Json::Null) | None, "nodes" | "edges") => Json::Array(Vec::new()),
+                (Some(Json::Null) | None, _) => Json::String(String::new()),
+                (Some(value), _) => value.clone(),
+            };
             entries.push(((*name).to_string(), value));
         }
         Ok(Json::Object(entries))
@@ -88,7 +90,7 @@ mod subject {
 
     /// 🗣️ The real committed tower, with its composed child resolved by the parse itself.
     fn tower(ctx: &Context) -> Result<JackSnapshot, String> {
-        let parsed = parse_jack_dsl(&fixture_text(ctx, "📚️examples")?)?;
+        let parsed = parse_jack_dsl(&fixture_text(ctx, "asset://")?)?;
         let summary = jack_scene_summary(&parsed);
         if !summary.contains("jack_orphan") || !summary.contains("e-jack-prune") {
             return Err(format!("mutate-jack-1: the committed tower must resolve its composed child to the nine-piece scene these payloads address, got {summary}"));
@@ -152,15 +154,19 @@ mod subject {
     }
 
     /// 📐️ Replays one committed handcrafted vector, read through the plan's declared fixtures — the
-    /// same three files the Python reference reads. All eight are NEGATIVE, so the feature's
+    /// same four files the Python reference reads: the vector's three and the composed scene the feature
+    /// names for it, seeded into the before- and after-snapshot's own content child. All eight are NEGATIVE, so the feature's
     /// `verdict` column states which refusal each commits to: `refused` must raise a fault and leave
     /// the document alone, `noop` must be ACCEPTED while leaving it alone. Both additionally require
     /// that the content-addressed child handle was NOT re-minted — without it a refusal that quietly
     /// rebuilt the child would look clean.
     pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let base = snapshot_of(&fixture_text(ctx, "⬅️before")?, "committed before", kind)?;
-            let expected = snapshot_of(&fixture_text(ctx, "➡️after")?, "committed after", kind)?;
+            let scene = JackSnapshot::from_json(&fixture_text(ctx, ".scene.json")?).map_err(|error| format!("spec-vector-{kind}: the declared composed scene must decode: {error:?}"))?;
+            let mut base = snapshot_of(&fixture_text(ctx, "⬅️before")?, "committed before", kind)?;
+            let mut expected = snapshot_of(&fixture_text(ctx, "➡️after")?, "committed after", kind)?;
+            materialize_jack_content(&mut base.content, scene.nodes(), scene.edges());
+            materialize_jack_content(&mut expected.content, scene.nodes(), scene.edges());
             let vector = mutation_of(&fixture_text(ctx, "🦠️mutation")?, "committed vector", kind)?;
             let verdict = ctx.doc_json()?.str("verdict");
             let mut replayed = base.clone();
@@ -189,15 +195,15 @@ mod subject {
         }
     }
 
-    /// 🔁️ The real committed tower through its own DSL carrier. `.jack.dsl.semio` is a fixed-layout
-    /// record grammar whose field values are hex-encoded, with no writer freedom at all, and the
-    /// committed example is this codec's own output, committed as such. The wave's usual "output
+    /// 🔁️ The real committed tower through its own DSL carrier. `.jack.dsl.semio` is the codec's own
+    /// record notation, with no writer freedom at all, and the committed example is this codec's own
+    /// output, committed as such. The wave's usual "output
     /// must not equal input" tripwire therefore does not apply and would be the wrong law here; the
     /// byte-exact law is asserted instead, together with a scene check a parser returning an
     /// unresolved child cannot satisfy. The projection is what the Python reference read out of the
     /// SAME committed bytes.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = fixture_text(ctx, "📚️examples")?;
+        let text = fixture_text(ctx, "asset://")?;
         let parsed = parse_jack_dsl(&text)?;
         let summary = jack_scene_summary(&parsed);
         for piece in ["jack_orphan", "jack_prune", "jack_spare", "ci_t_f8_b_c0"] {
@@ -216,7 +222,7 @@ mod subject {
         if printed != text {
             let at = printed.as_bytes().iter().zip(text.as_bytes().iter()).position(|(one, other)| one != other);
             return Err(format!(
-                "exact-bytes law violated: `.jack.dsl.semio` is a fixed-layout hex-encoded record grammar and the committed example is this codec's own output, so the re-printed text was required to reproduce it — {} byte(s) out against {} byte(s) in{}",
+                "exact-bytes law violated: `.jack.dsl.semio` is this codec's own record notation and the committed example is its own output, so the re-printed text was required to reproduce it — {} byte(s) out against {} byte(s) in{}",
                 printed.len(),
                 text.len(),
                 match at {

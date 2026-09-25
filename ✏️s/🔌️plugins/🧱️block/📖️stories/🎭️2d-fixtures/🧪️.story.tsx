@@ -19,7 +19,7 @@ import { useMemo, type ReactElement } from "react";
 
 import { Board2dHost } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { BLOCK2D_STORY_EXAMPLE_IDS, block2dBoardRenderLines, block2dStoryStateFor, buildBlock2dSceneNode } from "../🧭️coordination/🧫️fixtures/🧫️scene/🟦️.ts";
+import { BLOCK2D_STORY_EXAMPLE_IDS, block2dBoardRenderLines, block2dStoryStateFor, buildBlock2dSceneNode } from "../🧭️coordination/🟦️.ts";
 
 //#region StoryHost
 function Block2dFixturePane({ exampleId }: { readonly exampleId: string }): ReactElement {

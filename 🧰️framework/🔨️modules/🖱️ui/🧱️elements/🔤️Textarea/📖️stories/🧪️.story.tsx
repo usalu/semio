@@ -10,8 +10,8 @@
 
 import { Textarea } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
-import nakaginFixture from "../../🧫️fixtures/🏢️nakagin/🔣️.json";
-const { nakagin } = nakaginFixture;
+
+const NAKAGIN_DESCRIPTION = "The digital shadow of the former Nakagin Capsule Tower — a mixed-use residential and office tower designed by architect Kisho Kurokawa in Shimbashi, Tokyo. Completed in 1972, it exemplified Japanese Metabolism.";
 
 // 📝️#region 🎏️Textarea
 const meta = {
@@ -31,7 +31,7 @@ const defaultArgs = {
   id: "textarea-default",
   placeholder: "Describe the design configuration, spatial relationships, and architectural intent...",
   placeholderId: "textarea.placeholder",
-  defaultValue: nakagin.description.slice(0, 140),
+  defaultValue: NAKAGIN_DESCRIPTION.slice(0, 140),
   rows: 4,
   lazy: true,
   showLabel: true,

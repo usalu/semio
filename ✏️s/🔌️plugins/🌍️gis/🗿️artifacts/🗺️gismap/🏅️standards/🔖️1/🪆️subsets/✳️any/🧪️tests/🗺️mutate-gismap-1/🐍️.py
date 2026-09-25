@@ -432,7 +432,7 @@ def identity_handler(ctx):
     The projection is the document itself, which is what lets the two languages be compared on what
     they each read out of the same real bytes.
     """
-    text = ctx.fixture_bytes(uri_in(ctx, "📚️examples")).decode("utf-8")
+    text = ctx.fixture_bytes(uri_in(ctx, "asset://")).decode("utf-8")
     document, tail = parse_carrier(text)
     printed = print_carrier(document, tail)
     if printed != text:

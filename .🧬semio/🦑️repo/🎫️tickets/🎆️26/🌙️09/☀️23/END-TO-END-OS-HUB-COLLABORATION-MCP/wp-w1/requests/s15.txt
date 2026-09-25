@@ -62,3 +62,19 @@ S15 (13:4x) — ADDENDUM to the 13:0x request (still hub binary only, no catalog
   activate a hub-resolved plugin's extensions from the SAME generation (coordinator design decision: hub documents run the catalog's
   modules). Schema + Rust + TS + fixtures in the tree. Please build os-hub from the tree AFTER this line and restart 7800 on the same
   catalog B data root; append a line here when it is ready.
+S15 (16:3x) — GUEST REQUEST (space plugin, crate of `✏️s/🔌️plugins/🪐️space`), root cause of G10 4b / C10 F5 "the Space app lists no
+  documents" (coordinator item routed to S15). Measured on hub 8040 (catalog B): three defects in a chain; S15 fixed the two host ones:
+  (1) HOST, fixed: the shell opened a DOCUMENT-scoped directory stream for the space index pseudo-document `index`
+      (`POST /directory/spaces/{s}/documents/index/socket-grants` → 404: the hub has no descriptor for `index`, and a document-scoped
+      stream would carry only that document's events anyway). Now a space lane: worker `directory-space-open/close` pages the sealed
+      `/directory/event-page/v1` history from 0 and follows the global stream, posting `directory-space-events` for that space (0× 404).
+  (2) HOST, fixed: the guest's `fold-directory-events` folds the FULL history of its space (`fold_all` from the empty model), but the shell
+      sent single live events / receipt events → no space in the model → no change. The shell now keeps each mounted index's full,
+      seq-deduplicated history and folds all of it (measured: 8 → 11 events folded).
+  (3) GUEST, open: the index document's `SSpaceSnapshot.space_id` is never set in the browser (the index is a local genesis document,
+      `space_id: ""`), so `fold-directory-events` finds `model.spaces.get("") == None` and emits nothing → the table stays empty. The
+      shell now fills an empty `spaceId` from the index's scope on `os.open-artifact[-with]` and `os.directory.*` replays (openArtifact,
+      invite, remove, visibility, share-link work), but the fold is inside the guest. Proposed fix (guest source, no ABI/pack change):
+      in `🎮️commands/📇fold-directory-events/🦀️.rs` select `doc.snapshot.space_id` when non-empty, else the ONE space the folded history
+      names (`model.spaces.len() == 1`, which is exactly what the shell passes). Law: fold of a one-space history into an index whose
+      snapshot space id is empty yields that space's members/visibility/indexed rows. Please route to T12 (guest fixes) and restage `space`.

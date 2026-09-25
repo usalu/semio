@@ -2188,7 +2188,6 @@ mod native_actor {
                     false
                 }
                 ArtifactActorMsg::DocumentBackbone { message } => {
-                    eprintln!("[DEBUG] wg8 actor backbone actor={:x} bytes={} space={:?}", self.hlc_seed, message.len(), self.hub_space_id);
                     let envelopes = match decode_document_backbone_message_exact(&message) {
                         Ok(envelopes) if envelopes.iter().all(|envelope| envelope.document_id.0 == self.document_id) => envelopes,
                         Ok(envelopes) => {
@@ -2200,9 +2199,7 @@ mod native_actor {
                             return false;
                         }
                     };
-                    eprintln!("[DEBUG] wg8 actor backbone decoded actor={:x} envelopes={}", self.hlc_seed, envelopes.len());
                     if let Err(reason) = self.document_backbone_retention.retain(message.len(), &envelopes) {
-                        eprintln!("[DEBUG] wg8 actor backbone retention refused actor={:x} {reason}", self.hlc_seed);
                         self.reject_document_backbone(reason, vec![envelopes.len().min(u8::MAX as usize) as u8]);
                         return false;
                     }
@@ -2859,7 +2856,6 @@ mod native_actor {
         }
 
         async fn on_hub_frame(&mut self, frame: ServerFrame) {
-            eprintln!("[DEBUG] wg8 hub recv actor={:x} {}", self.hlc_seed, format!("{frame:?}").chars().take(160).collect::<String>());
             match frame {
                 ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
                     self.requeue_pending_batches();
@@ -3038,7 +3034,6 @@ mod native_actor {
         }
 
         async fn relay_operations_to_hub(&mut self, envelopes: &[MutationEnvelope]) {
-            eprintln!("[DEBUG] wg8 actor relay actor={:x} envelopes={} expired={} socket_actor={:?}", self.hlc_seed, envelopes.len(), self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()), self.socket_actor);
             if envelopes.is_empty() {
                 return;
             }
@@ -3052,7 +3047,6 @@ mod native_actor {
                 return;
             };
             if !self.socket_actor_confirmed || self.semio_hub.is_none() || self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
-                eprintln!("[DEBUG] wg8 actor outbox actor={:x} confirmed={} hub={} bootstrap={} tail={}", self.hlc_seed, self.socket_actor_confirmed, self.semio_hub.is_some(), self.artifact_bootstrap.is_some(), self.required_tail_frontier.is_some());
                 self.queue_outbox(envelopes.iter().cloned());
                 return;
             }
@@ -3069,7 +3063,6 @@ mod native_actor {
         }
 
         async fn send_client_frame(&mut self, frame: ClientFrame, lane: Lane) {
-            eprintln!("[DEBUG] wg8 hub send actor={:x} connected={} {}", self.hlc_seed, self.semio_hub.is_some(), format!("{frame:?}").chars().take(160).collect::<String>());
             let bytes = encode_client_frame(&frame, lane).await;
             self.send_raw(Message::Binary(bytes.into())).await;
         }
@@ -3139,7 +3132,6 @@ mod native_actor {
         }
 
         async fn set_remote_state(&mut self, state: RemoteState) {
-            eprintln!("[DEBUG] wg8 hub state actor={:x} {state:?}", self.hlc_seed);
             self.remote_state = state;
             self.emit_status_if_changed().await;
         }

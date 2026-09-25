@@ -1,6 +1,6 @@
 {
   "schema": "semio.renderer.wgpu.accessibility-interaction.v1",
-  "note": "A language-neutral, node-addressed accessibility interaction contract. Every event carries the stable window id, the retained window instance generation, the published node id, and the node key that must still identify that node. The renderer rejects an absent window, a retired generation, or an id/key mismatch before focus, activation, or value routing. No row contains pointer coordinates: assistive technology addresses the semantic node directly.",
+  "note": "A language-neutral, node-addressed accessibility interaction contract. Every event carries the stable window id, the retained window instance generation, the published node id, and the node key that must still identify that node. The renderer rejects an absent window, a retired generation, or an id/key mismatch before focus, activation, or value routing. No row contains pointer coordinates: assistive technology addresses the semantic node directly. The shell chrome's generation advances only when its projection changes (presentedChrome.generationRule): a successor frame presenting the same chrome keeps every mirror address live, a changed chrome retires them.",
   "limits": {
     "windowIdBytes": 512,
     "nodeKeyBytes": 512,
@@ -335,7 +335,13 @@
     "controls": [
       { "id": "ui.panelToggle.display", "label": "Display" },
       { "id": "ui.panelToggle.settings", "label": "Settings" }
-    ]
+    ],
+    "generationRule": {
+      "controlId": "ui.panelToggle.settings",
+      "firstRect": [1, 2, 30, 20],
+      "sameChromeRect": [1, 2, 30, 20],
+      "changedChromeRect": [41, 2, 30, 20]
+    }
   },
   "settingsTabStrip": {
     "availableWidth": 300,

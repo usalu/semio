@@ -23,7 +23,7 @@ import { documentCheckInStatusFromValueV1, type DocumentCheckInStatusV1 } from "
 export { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
 import { parseInferencePortClosedV1, parseInferencePortOpeningRequestV1, parseInferencePortOpeningResultV1, type InferencePortClosedV1, type InferencePortOpeningResultV1 } from "./🔨️modules/💡️inference/🚪️opening/🟦️.ts";
 import type { ArtifactFrontier, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, GisMapInferencePortCodeV1, GisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, canonicalDirectoryCommandV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, parseDirectoryEventPageV1, parseGisMapInferencePortStatusV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, canonicalDirectoryCommandV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, parseDirectoryEventPageV1, parseDirectoryEventV1, parseGisMapInferencePortStatusV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, directoryAdministrationCommandAllowedV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
@@ -758,6 +758,9 @@ function parseBackboneWorkerWire<T>(wire: Uint8Array, decode: (value: unknown) =
   return decode(decodePackValue(wire.subarray(1)));
 }
 
+/** 📇️ The most events one `directory-space-events` message carries: one sealed directory page's raw rows. */
+export const DIRECTORY_SPACE_EVENTS_MAX_PER_MESSAGE = DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS;
+
 /** @emoji 🧵️ Encodes a {@link BackboneWorkerRequest} for the wasm `store_worker` (`handleRequestBytes`). */
 export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uint8Array {
   const wire =
@@ -794,6 +797,13 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
     const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
     if (clientInstanceId === null) throw new Error("backbone worker request: invalid check-in client instance id");
     return { kind: "document-check-in", requestId, clientInstanceId, scope };
+  }
+  if (parsed.kind === "directory-space-open" || parsed.kind === "directory-space-close") {
+    const open = parsed.kind === "directory-space-open";
+    if (Object.keys(parsed).sort().join(",") !== (open ? "baseUrl,kind,spaceId" : "kind,spaceId")) throw new Error("backbone worker request: invalid space directory fields");
+    const spaceId = workerWireCreationIdentityV1(parsed.spaceId);
+    if (spaceId === null || (open && (typeof parsed.baseUrl !== "string" || parsed.baseUrl.length === 0 || parsed.baseUrl.length > 2048))) throw new Error("backbone worker request: invalid space directory owner");
+    return open ? { kind: "directory-space-open", baseUrl: parsed.baseUrl as string, spaceId } : { kind: "directory-space-close", spaceId };
   }
   if (parsed.kind === "space-artifact-creation-catalog-open") {
     if (Object.keys(parsed).sort().join(",") !== "clientInstanceId,kind,spaceId") throw new Error("backbone worker request: invalid creation catalog fields");
@@ -861,6 +871,14 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
     return { ...parseBrowserActorActionResultV1(response), clientInstanceId };
   }
   if (parsed.kind === "space-artifact-creation-status") return parseSpaceArtifactCreationStatusV1(parsed);
+  if (parsed.kind === "directory-space-events") {
+    if (Object.keys(parsed).sort().join(",") !== "events,kind,spaceId") throw new Error("backbone worker response: invalid space directory fields");
+    const spaceId = workerWireCreationIdentityV1(parsed.spaceId);
+    if (spaceId === null || !Array.isArray(parsed.events) || parsed.events.length === 0 || parsed.events.length > DIRECTORY_SPACE_EVENTS_MAX_PER_MESSAGE) throw new Error("backbone worker response: invalid space directory owner");
+    const events = parsed.events.map((value) => parseDirectoryEventV1(value));
+    if (events.some((event, index) => event.spaceId !== spaceId || (index > 0 && events[index - 1]!.seq >= event.seq))) throw new Error("backbone worker response: invalid space directory events");
+    return { kind: "directory-space-events", spaceId, events };
+  }
   if (parsed.kind === "document-check-in-status") {
     if (Object.keys(parsed).sort().join(",") !== "clientInstanceId,kind,scope,status") throw new Error("backbone worker response: invalid check-in status fields");
     const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
@@ -1083,11 +1101,13 @@ export function parseSpaceArtifactCreationStatusV1(value: unknown): SpaceArtifac
     artifactKind = workerWireCreationIdentityV1(parentDialect.artifactKind),
     standard = workerWireDialectComponentV1(parentDialect.standard),
     subset = workerWireDialectComponentV1(parentDialect.subset);
-  if (artifactId === null || kindId === null || artifactSchema === null || artifactKind === null || standard === null || subset === null || artifactKind !== kindId) throw new Error("space artifact creation status: invalid ready identity");
+  if (artifactId === null || kindId === null || artifactSchema === null || artifactKind === null || standard === null || subset === null) throw new Error("space artifact creation status: invalid ready identity");
   return { kind: "space-artifact-creation-status", requestId, spaceId, catalogGenerationId, phase, ready: { artifactId, kindId, artifactSchema, parentDialect: { artifactKind, standard, subset } } };
 }
 
-/** 🗂️ Validates the presentation-only selected-current creation catalog from the worker. */
+/** 🗂️ Validates the presentation-only selected-current creation catalog from the worker. A member's creation kind
+ * (`kindId`, e.g. `2d.drawing`) and the dialect whose surface opens it (`dialect.artifactKind`, e.g. `s.draw.drawing`)
+ * are the hub catalog's two independent names; neither is derived from the other here. */
 export function parseSpaceArtifactCreationCatalogV1(value: unknown): SpaceArtifactCreationCatalogV1 {
   if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("space artifact creation catalog: invalid record");
   const row = value as Readonly<Record<string, unknown>>;
@@ -1112,7 +1132,7 @@ export function parseSpaceArtifactCreationCatalogV1(value: unknown): SpaceArtifa
       subset = workerWireDialectComponentV1(dialect.subset),
       en = workerWireTextV1(label.en),
       de = workerWireTextV1(label.de);
-    if (kindId === null || schema === null || artifactKind !== kindId || standard === null || subset === null || en === null || de === null) throw new Error("space artifact creation catalog: invalid kind identity");
+    if (kindId === null || schema === null || artifactKind === null || standard === null || subset === null || en === null || de === null) throw new Error("space artifact creation catalog: invalid kind identity");
     return { kindId, schema, dialect: { artifactKind, standard, subset }, label: { en, de } };
   });
   if (kinds.some((entry, index) => index > 0 && kinds[index - 1]!.kindId >= entry.kindId)) throw new Error("space artifact creation catalog: invalid order");
@@ -1257,6 +1277,11 @@ export type BackboneWorkerRequest =
   | { readonly kind: "directory-bootstrap-close"; readonly bootstrapEpoch: number }
   | { readonly kind: "directory-scope-open"; readonly baseUrl: string; readonly scope: DocumentScope; readonly since: number }
   | { readonly kind: "directory-scope-close"; readonly scope: DocumentScope }
+  /** 📇️ A mounted space index's directory lane: its space's full event history (sealed pages from the first event),
+   * then every live event of that space. The space index is the shell's projection of a space's directory, not a hub
+   * document, so it has no document scope and no document-scoped stream. */
+  | { readonly kind: "directory-space-open"; readonly baseUrl: string; readonly spaceId: string }
+  | { readonly kind: "directory-space-close"; readonly spaceId: string }
   | { readonly kind: "directory-command"; readonly requestId: string; readonly command: DirectoryCommand }
   | { readonly kind: "directory-command-cancel"; readonly requestId: string }
   | { readonly kind: "space-artifact-creation-catalog-open"; readonly clientInstanceId: string; readonly spaceId: string }
@@ -1331,6 +1356,8 @@ export type BackboneWorkerResponse =
   | ({ readonly kind: "directory-event-page"; readonly canonicalJson: string } & DirectoryEventPageAckV1 & { readonly afterSeqExclusive: number; readonly hasMore: boolean })
   | { readonly kind: "directory-bootstrap-failed"; readonly bootstrapEpoch: number; readonly code: "unauthorized" | "cancelled" | "transport" | "invalid-page"; readonly retryable: boolean }
   | { readonly kind: "directory-scope-revoked"; readonly scope: DocumentScope }
+  /** 📇️ Events of one space for its mounted index lane, in ascending `seq` (history first, then live). */
+  | { readonly kind: "directory-space-events"; readonly spaceId: string; readonly events: readonly DirectoryEvent[] }
   | { readonly kind: "directory-command-receipt"; readonly requestId: string; readonly receipt: DirectoryCommandReceiptV1 }
   | { readonly kind: "directory-command-failed"; readonly requestId: string; readonly code: DirectoryCommandErrorCodeV1 }
   | SpaceArtifactCreationCatalogV1

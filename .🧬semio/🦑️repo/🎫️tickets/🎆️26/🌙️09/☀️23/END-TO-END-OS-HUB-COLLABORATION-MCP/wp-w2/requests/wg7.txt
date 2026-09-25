@@ -1,0 +1,9 @@
+WG7 -> W2 (15:35): framework fix landed in semio-framework-plugin (🔌️plugin/🦀️.rs `editor_surface`/`viewer_surface`):
+declaration-tree surfaces now stamp an empty `io.artifact_schema` with the type's DOCUMENT_SCHEMA (C8.2 parity with
+PluginBuilder::editor/viewer). Before: ~40 apps (note editor+viewer, every declaration-tree viewer, wfc, dag, puzzle2d/5d, ...)
+published `io.artifactSchema: ""`, so a shell attaching a hub note got `document-execution-target.schema-mismatch`
+(lease "note.document" vs ""). Effect for you: every declaration-tree guest's descriptor changes (manifest string only; no guest
+ABI, pack schema or codec hash change), so plugin `🔣️.json` descriptors re-describe and the next catalog carries it.
+Not affected: the hub (reads codec rows/kinds, never app io). WG7 is publishing its own stdio,gis,note catalog into
+`.🧬semio/🌐hub/s11-wg7-catalog-n` and runs hub 8050 on it (hub + wasm mutex, FIFO) for the browser E2E; 7800 is untouched.
+Please build `--packages all` from a tree that has this change.

@@ -237,3 +237,20 @@ Every package is selectable (`TRUSTED_BOOTSTRAP_ALL_PACKAGES`, 34 plugins; exten
 - 13:23 **priority restage (coordinator):** the sweep deleted 15 plugins' dev wasm, so the staged `s` guests no longer match. I stopped rest-warm (dag, raster, architect
   had completed; their Nx/cargo units are kept) and launched `w2-restage.sh`: describe-all in one wasm hold (Nx re-describes only changed components, 2 parallel) →
   generate → check → activate-s-react-dev → verify, with logs in `.🧬semio/🌐hub/w2-logs/restage-*.txt`. It is queued behind WG7, T12 and c10 in the wasm FIFO. Then rest-warm → `--packages all`.
+- 14:32 restage: describe-all rc=0 (4137 s), generate rc=0, check rc=0, activate rc=0 (41 s), **verify rc=1**. Root causes: (1) `activate-s-react-dev` depends only on the
+  `s` host plugin's (space) component-dev/materialize-dev. It stages whatever is already materialized ("60 completed components"), so the other 59 kept their 05:5x
+  dist/staged modules while describe had moved committed + shared wasm-dev to the new tree (59 DIFF). (2) The 12:1x sweep deleted 15 plugins' `dist/component-dev`
+  and 13 staged `*_component.core.wasm` (`dist=-`, MISS). Nothing was ever "never produced". (3) The verify double-counted a component that was both DIFF and MISS
+  (`consistent=-12`): it now counts distinct components. **Fix:** the restage runs `nx run-many -t materialize-dev` for every component in one hold after describe
+  (component-dev reuses the describe unit), then generate → check → activate → verify (`w2-restage.sh <tag> materialize`). 15:23 launched (`restage2`).
+- 16:24 restage2 materialize: 58/60 rc=0. demonstrator and vcs `component-dev` failed on transient build-dir file errors (`failed to create file encoder: No such file
+  or directory` in `semio-s-artifact-stdio-semio`), nx rc=130. The retry (restage3) was queued behind WG7 (16:24–17:11) and has held the lock since 17:11. Its materialize is recompiling
+  most components again: peers' edits to shared crates since 15:23 invalidate the component-dev units. Measured, not assumed: the nx log shows fresh
+  `component-dev` runs, not cache hits.
+- Plan after the verify (coordinator + G10): release B packages from this tree (`w2-release-par.sh`, B list = stdio, gis, note, animate, block, writer, draw, puzzle, wfc; markers in
+  `.🧬semio/🌐hub/w2-logs`) → publish **w2-catalog-b2** → restart 7800 ONCE on the current-tree os-hub with a fresh data root (fresh
+  `inference/gis-map-jobs.sqlite3`, for G10's 8 MiB stack + inference fixes) → rest → `--packages all`.
+- 18:15 restage3: materialize-all rc=0 (5944 s, all 60), generate/check/activate rc=0. **Verify: every staged module and `core.wasm` is present, and dist == staged for 60/60.**
+  But committed == shared (the 13:24–14:32 describe) ≠ dist (the 16:25–18:04 component-dev) for all 60: peers' shared-crate edits landed between the two runs, so the
+  descriptors describe an older build. The verify counts 60 distinct components now (`consistent=0 diverged=60`, no more negatives). 18:1x restage4: describe-all again, which reuses the
+  units component-dev just built wherever the tree hasn't moved, then materialize (Nx cache hits for the unchanged ones), generate, check, activate, verify.

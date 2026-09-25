@@ -459,9 +459,9 @@ impl<S: PackSink> SprWriter<S> {
         Ok(Self { sink, running_chain_hash: chain_0, pending_chain_hasher, pending_records_len: 0, pending_record_count: 0, next_commit_seq: 1, last_commit_offset: None })
     }
 
-    /// ▶️ Resumes without rewriting a header or committed byte. The caller must retain the same
-    /// fully verified prefix in the sink and its exclusive storage authority; the consumed span is
-    /// protocol metadata, not permission to append to arbitrary storage.
+    /// ▶️ Resumes without rewriting a header or committed byte. The sink must be positioned at the
+    /// end of the fully verified prefix, and the caller must hold exclusive storage authority over
+    /// it; the consumed span is protocol metadata, not permission to append to arbitrary storage.
     pub async fn resume_verified(sink: S, span: retained::VerifiedSprSpan) -> Result<Self, ProtocolError> {
         let position = sink.position().await;
         if position != span.end() {
@@ -485,6 +485,13 @@ impl<S: PackSink> SprWriter<S> {
     /// @emoji 📍️ Current absolute write position — the offset the next record/commit will start at.
     pub async fn position(&self) -> u64 {
         self.sink.position().await
+    }
+
+    /// @emoji 🔗️ The chain hash of the last commit — `chain_0 = blake3(header)` before the first, the
+    /// verified span's chain after `resume_verified`. Records written since that commit do not move it,
+    /// so a sink that has already handed its committed bytes to storage can still link a successor.
+    pub fn committed_chain_hash(&self) -> [u8; 32] {
+        self.running_chain_hash
     }
 
     pub async fn begin_identity_record(&mut self, kind: u8, critical: bool, payload_len: usize) -> Result<SprIdentityRecord<'_, S>, ProtocolError> {

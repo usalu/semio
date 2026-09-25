@@ -23,8 +23,7 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { Canvas2dHost } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import type { ActionDescriptor } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { REMODEL_DEFAULT_CONFIG, REMODEL_POPULATED_SCENE, type RemodelConfig } from "../🧭️coordination/🧫️fixtures/🧫️model/🟦️.ts";
-import { REMODEL_EDITOR_CONTROLLER_ID, reduceRemodelStoryAction, remodelFramesLayersJson, remodelWindowNode } from "../🧭️coordination/🧫️fixtures/🧫️scene/🟦️.ts";
+import { REMODEL_DEFAULT_CONFIG, REMODEL_POPULATED_SCENE, type RemodelConfig, REMODEL_EDITOR_CONTROLLER_ID, reduceRemodelStoryAction, remodelFramesLayersJson, remodelWindowNode } from "../🧭️coordination/🟦️.ts";
 
 /** 🎞️ Every (stream, frame) pair the populated document offers as a cursor target, plus the unset cursor. */
 const CURSOR_CHOICES: readonly { readonly id: string; readonly cursor: RemodelConfig["frameCursor"] }[] = [

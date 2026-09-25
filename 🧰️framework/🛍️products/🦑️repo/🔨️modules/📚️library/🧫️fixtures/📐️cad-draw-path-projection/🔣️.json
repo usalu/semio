@@ -1,44 +1,6 @@
 {
   "schemaVersion": 1,
   "mappingDigestAlgorithm": "sha256-source-nul-destination-lines-v1",
-  "referencePreimageHashAlgorithm": "sha256-bytes-v1",
-  "referenceConsumers": [
-    {
-      "id": "cad-spatial-kernel-geometry",
-      "projectionContractId": "artifact-example-model-catalog-v1",
-      "sourcePathIdentities": [
-        "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts",
-        "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts"
-      ],
-      "adapter": "typescript",
-      "form": "artifact-catalog-prose:root-marker",
-      "staleMarker": "🖼️assets/🏗️modelDefinitions"
-    },
-    {
-      "id": "draw-dependency-registry",
-      "projectionContractId": "artifact-editor-command-bundle-v1",
-      "sourcePathIdentities": ["🔒️dependencies.json"],
-      "adapter": "json",
-      "form": "path-reference",
-      "staleMarker": "🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down"
-    },
-    {
-      "id": "draw-workspace-cargo",
-      "projectionContractId": "artifact-editor-command-bundle-v1",
-      "sourcePathIdentities": ["Cargo.toml"],
-      "adapter": "toml",
-      "form": "path-reference",
-      "staleMarker": "🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down"
-    },
-    {
-      "id": "draw-workspace-script",
-      "projectionContractId": "artifact-editor-command-bundle-v1",
-      "sourcePathIdentities": ["📜️script.ts"],
-      "adapter": "typescript",
-      "form": "path-reference",
-      "staleMarker": "🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down"
-    }
-  ],
   "projections": [
     {
       "contractId": "artifact-example-model-catalog-v1",
@@ -49,11 +11,11 @@
       "profileDirectoryName": "🪆️1-any",
       "sourceRoot": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions",
       "destinationRoot": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models",
-      "sourceFileCount": 209,
-      "destinationDirectoryCount": 244,
-      "destinationNodeCount": 453,
+      "sourceFileCount": 229,
+      "destinationDirectoryCount": 266,
+      "destinationNodeCount": 495,
       "maxPathBytes": 237,
-      "mappingDigest": "a09f60c5de5718394ddb856052444b306de7443b2d4ecd546e1e911dc44d40a6",
+      "mappingDigest": "b47425503a8ebc2a60120e91a5fd6a7e8a54411bdfc122b87a2ef7d5a7cf2d8f",
       "modelCatalog": {
         "catalogContractId": "cad-model-catalog-v1",
         "descendantContractId": "cad-model-catalog-bundle-v1",
@@ -62,14 +24,14 @@
         "requiredVersion": "1.0.0",
         "models": [
           {
-            "directoryName": "🏛️aec.building.structure",
-            "id": "aec.building.structure",
+            "directoryName": "🌉️aec.building.structure.classic",
+            "id": "aec.building.structure.classic",
             "schema": "spatial.modelDefinition",
             "version": "1.0.0"
           },
           {
-            "directoryName": "🏛️aec.building.structure.classic",
-            "id": "aec.building.structure.classic",
+            "directoryName": "🏛️aec.building.structure",
+            "id": "aec.building.structure",
             "schema": "spatial.modelDefinition",
             "version": "1.0.0"
           },
@@ -122,14 +84,7 @@
             "sourceShape": "direct-semantic-json",
             "manifestSchema": "spatial.action",
             "memberEmoji": "🎬️",
-            "count": 88
-          },
-          {
-            "sourceDirectoryName": "🎬️interactions",
-            "sourceShape": "direct-semantic-json",
-            "manifestSchema": "spatial.interaction",
-            "memberEmoji": "🎬️",
-            "count": 49
+            "count": 97
           },
           {
             "sourceDirectoryName": "🏷️attributeDefinitions",
@@ -167,6 +122,13 @@
             "count": 1
           },
           {
+            "sourceDirectoryName": "🕹️interactions",
+            "sourceShape": "direct-semantic-json",
+            "manifestSchema": "spatial.interaction",
+            "memberEmoji": "🕹️",
+            "count": 60
+          },
+          {
             "sourceDirectoryName": "🗂️typologies",
             "sourceShape": "nested-fixed-json",
             "manifestSchema": "spatial.typology",
@@ -177,92 +139,92 @@
       },
       "mappings": [
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromCurveAndHeight.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFromCurveAndHeight/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromCurveAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromSurface.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFromSurface/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromSurface.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFrom2PointsAndHeight.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFrom2PointsAndHeight/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFromCurveAndHeight.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFromCurveAndHeight/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFromCurveAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFromSurface.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFromSurface/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFromSurface.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFrom2PointsAndHeight.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFrom2PointsAndHeight/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromCurveAndHeight.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFromCurveAndHeight/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromCurveAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromSurface.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFromSurface/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromSurface.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFrom2PointsAndHeight.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFrom2PointsAndHeight/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromCurveAndHeight.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFromCurveAndHeight/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromCurveAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromSurface.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFromSurface/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromSurface.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructOneWayReinforcedConcreteSlab.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️interactions/🎬️constructOneWayReinforcedConcreteSlab/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🔀️transformations/🔀️from_aec.building.structure/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteColumn.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️interactions/🎬️constructReinforcedConcreteColumn/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🔣️modelDefinition.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteExternalWall.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️interactions/🎬️constructReinforcedConcreteExternalWall/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🔣️constructOneWayReinforcedConcreteSlab.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🕹️interactions/🕹️constructOneWayReinforcedConcreteSlab/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteInternalWall.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🎬️interactions/🎬️constructReinforcedConcreteInternalWall/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🔣️constructReinforcedConcreteColumn.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🕹️interactions/🕹️constructReinforcedConcreteColumn/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🔀️transformations/🔀️from_aec.building.structure/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🔣️constructReinforcedConcreteExternalWall.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🕹️interactions/🕹️constructReinforcedConcreteExternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🔣️modelDefinition.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🔣️constructReinforcedConcreteInternalWall.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🕹️interactions/🕹️constructReinforcedConcreteInternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🗂️typologies/🧱️ReinforcedConcreteExternalWall/🔣️typology.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🗂️typologies/🧱️ReinforcedConcreteExternalWall/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🗂️typologies/🧱️ReinforcedConcreteInternalWall/🔣️typology.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure.classic/🗂️typologies/🧱️ReinforcedConcreteInternalWall/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🔣️bondable.json",
@@ -317,6 +279,42 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏛️aec.building.structure/🔣️.json"
         },
         {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🎬️actions/🔣️placeCeilingFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🎬️actions/🎬️placeCeilingFrom2PointsAndHeight/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🎬️actions/🔣️placeColumnFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🎬️actions/🎬️placeColumnFrom2PointsAndHeight/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🎬️actions/🔣️placeDoorFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🎬️actions/🎬️placeDoorFrom2PointsAndHeight/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🎬️actions/🔣️placeFoundationFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🎬️actions/🎬️placeFoundationFrom2PointsAndHeight/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🎬️actions/🔣️placeRoofFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🎬️actions/🎬️placeRoofFrom2PointsAndHeight/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🎬️actions/🔣️placeSlabFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🎬️actions/🎬️placeSlabFrom2PointsAndHeight/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🎬️actions/🔣️placeStairFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🎬️actions/🎬️placeStairFrom2PointsAndHeight/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🎬️actions/🔣️placeWallFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🎬️actions/🎬️placeWallFrom2PointsAndHeight/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🎬️actions/🔣️placeWindowFrom2PointsAndHeight.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🎬️actions/🎬️placeWindowFrom2PointsAndHeight/🔣️.json"
+        },
+        {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🏷️attributeDefinitions/🔣️material.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🏷️attributeDefinitions/🏷️material/🔣️.json"
         },
@@ -327,6 +325,50 @@
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🔣️modelDefinition.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🔣️placeBeam.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🕹️interactions/🕹️placeBeam/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🔣️placeCeiling.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🕹️interactions/🕹️placeCeiling/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🔣️placeColumn.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🕹️interactions/🕹️placeColumn/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🔣️placeDoor.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🕹️interactions/🕹️placeDoor/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🔣️placeFoundation.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🕹️interactions/🕹️placeFoundation/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🔣️placeRailing.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🕹️interactions/🕹️placeRailing/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🔣️placeRoof.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🕹️interactions/🕹️placeRoof/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🔣️placeSlab.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🕹️interactions/🕹️placeSlab/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🔣️placeStair.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🕹️interactions/🕹️placeStair/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🔣️placeWall.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🕹️interactions/🕹️placeWall/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🔣️placeWindow.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🕹️interactions/🕹️placeWindow/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/⬆️Ceiling/🔣️typology.json",
@@ -349,12 +391,12 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🗂️typologies/🚪️Door/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🧱️Slab/🔣️typology.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🗂️typologies/🧱️Slab/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🛡️Wall/🔣️typology.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🗂️typologies/🛡️Wall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🧱️Wall/🔣️typology.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🗂️typologies/🧱️Wall/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🧱️Slab/🔣️typology.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🗂️typologies/🧱️Slab/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🪜️Stair/🔣️typology.json",
@@ -385,16 +427,16 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🎬️actions/🎬️constructLineElementFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️interactions/🔣️constructLineElement.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🎬️interactions/🎬️constructLineElement/🔣️.json"
-        },
-        {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🔀️transformations/🔀️from_aec.building.structure/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🔣️modelDefinition.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🕹️interactions/🔣️constructLineElement.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🕹️interactions/🕹️constructLineElement/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🗂️typologies/📏️LineElement/🔣️typology.json",
@@ -585,154 +627,6 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️actions/🎬️verticalRubberCorner/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️arc.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️arc/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️area.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️area/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️booleanDifference.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️booleanDifference/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️booleanIntersection.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️booleanIntersection/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️booleanUnion.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️booleanUnion/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️box.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️box/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️chamfer.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️chamfer/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️circle.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️circle/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️constructCurve.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️constructCurve/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️constructSurface.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️constructSurface/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️controlPointCurve.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️controlPointCurve/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️copy.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️copy/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️createAnchor.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️createAnchor/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️cylinder.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️cylinder/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️explode.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️explode/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️extrudeCrv.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️extrudeCrv/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️extrudeWire.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️extrudeWire/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️fillet.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️fillet/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️interpolateCurve.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️interpolateCurve/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️join.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️join/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️length.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️length/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️line.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️line/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️loft.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️loft/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️mirror.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️mirror/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️move.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️move/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️networkSrf.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️networkSrf/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️offsetSurface.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️offsetSurface/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️plane.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️plane/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️polyline.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️polyline/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️rotate.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️rotate/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️scale1d.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️scale1d/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️scale3d.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️scale3d/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sphere.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️sphere/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️split.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️split/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sweep1.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️sweep1/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sweep2.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️sweep2/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️trim.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🎬️interactions/🎬️trim/🔣️.json"
-        },
-        {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🏷️propertyKinds/🔣️volume.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🏷️propertyKinds/🏷️volume/🔣️.json"
         },
@@ -743,6 +637,154 @@
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🔣️modelDefinition.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️arc.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️arc/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️area.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️area/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️booleanDifference.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️booleanDifference/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️booleanIntersection.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️booleanIntersection/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️booleanUnion.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️booleanUnion/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️box.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️box/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️chamfer.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️chamfer/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️circle.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️circle/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️constructCurve.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️constructCurve/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️constructSurface.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️constructSurface/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️controlPointCurve.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️controlPointCurve/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️copy.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️copy/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️createAnchor.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️createAnchor/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️cylinder.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️cylinder/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️explode.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️explode/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️extrudeCrv.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️extrudeCrv/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️extrudeWire.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️extrudeWire/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️fillet.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️fillet/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️interpolateCurve.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️interpolateCurve/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️join.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️join/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️length.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️length/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️line.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️line/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️loft.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️loft/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️mirror.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️mirror/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️move.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️move/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️networkSrf.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️networkSrf/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️offsetSurface.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️offsetSurface/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️plane.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️plane/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️polyline.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️polyline/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️rotate.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️rotate/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️scale1d.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️scale1d/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️scale3d.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️scale3d/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️sphere.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️sphere/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️split.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️split/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️sweep1.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️sweep1/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️sweep2.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️sweep2/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔣️trim.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🕹️interactions/🕹️trim/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/➡️ExtrudeCurve/🔣️typology.json",
@@ -761,10 +803,6 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🗂️typologies/🌀️Sweep1/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🌀️Sweep2/🔣️typology.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🗂️typologies/🌀️Sweep2/🔣️.json"
-        },
-        {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🌊️InterpolateCurve/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🗂️typologies/🌊️InterpolateCurve/🔣️.json"
         },
@@ -775,6 +813,10 @@
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🌙️Arc/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🗂️typologies/🌙️Arc/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🌪️Sweep2/🔣️typology.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📐️spatial.shape/🗂️typologies/🌪️Sweep2/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🎢️Loft/🔣️typology.json",
@@ -857,26 +899,6 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️actions/🎬️constructWindowsFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructBasePlate.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️interactions/🎬️constructBasePlate/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️interactions/🎬️constructExternalWall/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructHull.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️interactions/🎬️constructHull/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructRoof.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️interactions/🎬️constructRoof/🔣️.json"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructWindows.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🎬️interactions/🎬️constructWindows/🔣️.json"
-        },
-        {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🏷️attributeDefinitions/🔣️gvalue.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🏷️attributeDefinitions/🏷️gvalue/🔣️.json"
         },
@@ -901,6 +923,26 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🔧️propertyDefinitions/🔧️heatedvolume/🔣️.json"
         },
         {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🔣️constructBasePlate.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🕹️interactions/🕹️constructBasePlate/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🔣️constructExternalWall.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🕹️interactions/🕹️constructExternalWall/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🔣️constructHull.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🕹️interactions/🕹️constructHull/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🔣️constructRoof.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🕹️interactions/🕹️constructRoof/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🔣️constructWindows.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🕹️interactions/🕹️constructWindows/🔣️.json"
+        },
+        {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🏠️Roof/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🗂️typologies/🏠️Roof/🔣️.json"
         },
@@ -909,16 +951,16 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🗂️typologies/🐚️Hull/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🟫️BasePlate/🔣️typology.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🗂️typologies/🟫️BasePlate/🔣️.json"
-        },
-        {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🧱️ExternalWall/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🗂️typologies/🧱️ExternalWall/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🪟️Windows/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🗂️typologies/🪟️Windows/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🪨️BasePlate/🔣️typology.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🗂️typologies/🪨️BasePlate/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️actions/🔣️constructSurfaceElementFrom2PointsAndHeight.json",
@@ -933,16 +975,16 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🎬️actions/🎬️constructSurfaceElementFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️interactions/🔣️constructSurfaceElement.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🎬️interactions/🎬️constructSurfaceElement/🔣️.json"
-        },
-        {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🔀️transformations/🔀️from_aec.building.structure/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🔣️modelDefinition.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🕹️interactions/🔣️constructSurfaceElement.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🕹️interactions/🕹️constructSurfaceElement/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🗂️typologies/🗺️SurfaceElement/🔣️typology.json",
@@ -961,16 +1003,16 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🎬️actions/🎬️constructSolidElementFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️interactions/🔣️constructSolidElement.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🎬️interactions/🎬️constructSolidElement/🔣️.json"
-        },
-        {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🔀️transformations/🔀️from_aec.building.structure/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🔣️modelDefinition.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🔣️.json"
+        },
+        {
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🕹️interactions/🔣️constructSolidElement.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🕹️interactions/🕹️constructSolidElement/🔣️.json"
         },
         {
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🗂️typologies/🧊️SolidElement/🔣️typology.json",
@@ -1012,22 +1054,940 @@
           "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🔣️modelDefinition.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧱️aec.building.concrete/🔣️.json"
         }
+      ],
+      "liveBindings": [
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/a04.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromCurveAndHeight.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/a01.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromSurface.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/🗺️constructOneWayRe-8a1d88.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFrom2PointsAndHeight.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/a03.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFromCurveAndHeight.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/🌀️constructReinforc-01c6d3.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFromSurface.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/🗼️constructReinforc-6c77d0.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFrom2PointsAndHeight.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/a06.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromCurveAndHeight.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/a02.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromSurface.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/🌐️constructReinforc-81fc2c.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFrom2PointsAndHeight.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/a05.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromCurveAndHeight.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/a07.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromSurface.json",
+          "live": "🌉️aec.building.structure.classic/🎬️actions/🏠️constructReinforc-ea0620.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
+          "live": "🌉️aec.building.structure.classic/🔀️transformations/🔀️from_aec.building.structure/t-cc7756-ffc804.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🔣️modelDefinition.json",
+          "live": "🌉️aec.building.structure.classic/🔣️modelDefinition.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🕹️interactions/🔣️constructOneWayReinforcedConcreteSlab.json",
+          "live": "🌉️aec.building.structure.classic/🕹️interactions/🧱️constructOneWayRe-72a083.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🕹️interactions/🔣️constructReinforcedConcreteColumn.json",
+          "live": "🌉️aec.building.structure.classic/🕹️interactions/🏛️constructReinforc-411bd6.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🕹️interactions/🔣️constructReinforcedConcreteExternalWall.json",
+          "live": "🌉️aec.building.structure.classic/🕹️interactions/🛡️constructReinforc-c38891.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🕹️interactions/🔣️constructReinforcedConcreteInternalWall.json",
+          "live": "🌉️aec.building.structure.classic/🕹️interactions/🚧️constructReinforc-e8fc67.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json",
+          "live": "🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology-20ac89.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology.json",
+          "live": "🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology-87a300.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology.json",
+          "live": "🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology-9f56a1.json"
+        },
+        {
+          "source": "🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json",
+          "live": "🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology-6a95a6.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🏷️attributeDefinitions/🔣️bondable.json",
+          "live": "🏛️aec.building.structure/🏷️attributeDefinitions/🔗️bondable.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🏷️attributeDefinitions/🔣️exposure.json",
+          "live": "🏛️aec.building.structure/🏷️attributeDefinitions/🌦️exposure.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🏷️attributeDefinitions/🔣️gvalue.json",
+          "live": "🏛️aec.building.structure/🏷️attributeDefinitions/🔆️gvalue.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🏷️attributeDefinitions/🔣️material.json",
+          "live": "🏛️aec.building.structure/🏷️attributeDefinitions/🪨️material.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🏷️attributeDefinitions/🔣️opening.json",
+          "live": "🏛️aec.building.structure/🏷️attributeDefinitions/🚪️opening.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🏷️attributeDefinitions/🔣️uvalue.json",
+          "live": "🏛️aec.building.structure/🏷️attributeDefinitions/🌡️uvalue.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/📊️statDefinitions/🔣️stability.json",
+          "live": "🏛️aec.building.structure/📊️statDefinitions/🔣️stability.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🔀️transformations/🏛️classic/🔣️transformation.json",
+          "live": "🏛️aec.building.structure/🔀️transformations/🏛️classic/🔣️transformation-167065.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🔀️transformations/📏️linefem/🔣️transformation.json",
+          "live": "🏛️aec.building.structure/🔀️transformations/📏️linefem/🔣️transformation-1616a8.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🔀️transformations/🔀️from_building/🔣️transformation.json",
+          "live": "🏛️aec.building.structure/🔀️transformations/🔀️from_building/🔣️transformation-f76f5e.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🔀️transformations/🗺️surfacefem/🔣️transformation.json",
+          "live": "🏛️aec.building.structure/🔀️transformations/🗺️surfacefem/🔣️transformation-ad551f.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🔀️transformations/🧊️solidfem/🔣️transformation.json",
+          "live": "🏛️aec.building.structure/🔀️transformations/🧊️solidfem/🔣️transformation-aabf62.json"
+        },
+        {
+          "source": "🏛️aec.building.structure/🔣️modelDefinition.json",
+          "live": "🏛️aec.building.structure/🔣️modelDefinition.json"
+        },
+        {
+          "source": "🏢️aec.building/🎬️actions/🔣️placeCeilingFrom2PointsAndHeight.json",
+          "live": "🏢️aec.building/🎬️actions/⬆️placeCeilingFrom2PointsAndHeight.json"
+        },
+        {
+          "source": "🏢️aec.building/🎬️actions/🔣️placeColumnFrom2PointsAndHeight.json",
+          "live": "🏢️aec.building/🎬️actions/🏛️placeColumnFrom2PointsAndHeight.json"
+        },
+        {
+          "source": "🏢️aec.building/🎬️actions/🔣️placeDoorFrom2PointsAndHeight.json",
+          "live": "🏢️aec.building/🎬️actions/🚪️placeDoorFrom2PointsAndHeight.json"
+        },
+        {
+          "source": "🏢️aec.building/🎬️actions/🔣️placeFoundationFrom2PointsAndHeight.json",
+          "live": "🏢️aec.building/🎬️actions/🪨️placeFoundationFrom2PointsAndHeight.json"
+        },
+        {
+          "source": "🏢️aec.building/🎬️actions/🔣️placeRoofFrom2PointsAndHeight.json",
+          "live": "🏢️aec.building/🎬️actions/🏠️placeRoofFrom2PointsAndHeight.json"
+        },
+        {
+          "source": "🏢️aec.building/🎬️actions/🔣️placeSlabFrom2PointsAndHeight.json",
+          "live": "🏢️aec.building/🎬️actions/🧱️placeSlabFrom2PointsAndHeight.json"
+        },
+        {
+          "source": "🏢️aec.building/🎬️actions/🔣️placeStairFrom2PointsAndHeight.json",
+          "live": "🏢️aec.building/🎬️actions/🪜️placeStairFrom2PointsAndHeight.json"
+        },
+        {
+          "source": "🏢️aec.building/🎬️actions/🔣️placeWallFrom2PointsAndHeight.json",
+          "live": "🏢️aec.building/🎬️actions/🚧️placeWallFrom2PointsAndHeight.json"
+        },
+        {
+          "source": "🏢️aec.building/🎬️actions/🔣️placeWindowFrom2PointsAndHeight.json",
+          "live": "🏢️aec.building/🎬️actions/🪟️placeWindowFrom2PointsAndHeight.json"
+        },
+        {
+          "source": "🏢️aec.building/🏷️attributeDefinitions/🔣️material.json",
+          "live": "🏢️aec.building/🏷️attributeDefinitions/🪨️material.json"
+        },
+        {
+          "source": "🏢️aec.building/🏷️attributeDefinitions/🔣️opening.json",
+          "live": "🏢️aec.building/🏷️attributeDefinitions/🚪️opening.json"
+        },
+        {
+          "source": "🏢️aec.building/🔣️modelDefinition.json",
+          "live": "🏢️aec.building/🔣️modelDefinition.json"
+        },
+        {
+          "source": "🏢️aec.building/🕹️interactions/🔣️placeBeam.json",
+          "live": "🏢️aec.building/🕹️interactions/🪵️placeBeam.json"
+        },
+        {
+          "source": "🏢️aec.building/🕹️interactions/🔣️placeCeiling.json",
+          "live": "🏢️aec.building/🕹️interactions/⬆️placeCeiling.json"
+        },
+        {
+          "source": "🏢️aec.building/🕹️interactions/🔣️placeColumn.json",
+          "live": "🏢️aec.building/🕹️interactions/🏛️placeColumn.json"
+        },
+        {
+          "source": "🏢️aec.building/🕹️interactions/🔣️placeDoor.json",
+          "live": "🏢️aec.building/🕹️interactions/🚪️placeDoor.json"
+        },
+        {
+          "source": "🏢️aec.building/🕹️interactions/🔣️placeFoundation.json",
+          "live": "🏢️aec.building/🕹️interactions/🪨️placeFoundation.json"
+        },
+        {
+          "source": "🏢️aec.building/🕹️interactions/🔣️placeRailing.json",
+          "live": "🏢️aec.building/🕹️interactions/🚧️placeRailing.json"
+        },
+        {
+          "source": "🏢️aec.building/🕹️interactions/🔣️placeRoof.json",
+          "live": "🏢️aec.building/🕹️interactions/🏠️placeRoof.json"
+        },
+        {
+          "source": "🏢️aec.building/🕹️interactions/🔣️placeSlab.json",
+          "live": "🏢️aec.building/🕹️interactions/🧱️placeSlab.json"
+        },
+        {
+          "source": "🏢️aec.building/🕹️interactions/🔣️placeStair.json",
+          "live": "🏢️aec.building/🕹️interactions/🪜️placeStair.json"
+        },
+        {
+          "source": "🏢️aec.building/🕹️interactions/🔣️placeWall.json",
+          "live": "🏢️aec.building/🕹️interactions/🛡️placeWall.json"
+        },
+        {
+          "source": "🏢️aec.building/🕹️interactions/🔣️placeWindow.json",
+          "live": "🏢️aec.building/🕹️interactions/🪟️placeWindow.json"
+        },
+        {
+          "source": "🏢️aec.building/🗂️typologies/⬆️Ceiling/🔣️typology.json",
+          "live": "🏢️aec.building/🗂️typologies/⬆️Ceiling/🔣️typology.json"
+        },
+        {
+          "source": "🏢️aec.building/🗂️typologies/🏛️Column/🔣️typology.json",
+          "live": "🏢️aec.building/🗂️typologies/🏛️Column/🔣️typology.json"
+        },
+        {
+          "source": "🏢️aec.building/🗂️typologies/🏠️Roof/🔣️typology.json",
+          "live": "🏢️aec.building/🗂️typologies/🏠️Roof/🔣️typology.json"
+        },
+        {
+          "source": "🏢️aec.building/🗂️typologies/🚧️Railing/🔣️typology.json",
+          "live": "🏢️aec.building/🗂️typologies/🚧️Railing/🔣️typology.json"
+        },
+        {
+          "source": "🏢️aec.building/🗂️typologies/🚪️Door/🔣️typology.json",
+          "live": "🏢️aec.building/🗂️typologies/🚪️Door/🔣️typology.json"
+        },
+        {
+          "source": "🏢️aec.building/🗂️typologies/🛡️Wall/🔣️typology.json",
+          "live": "🏢️aec.building/🗂️typologies/🛡️Wall/🔣️typology.json"
+        },
+        {
+          "source": "🏢️aec.building/🗂️typologies/🧱️Slab/🔣️typology.json",
+          "live": "🏢️aec.building/🗂️typologies/🧱️Slab/🔣️typology.json"
+        },
+        {
+          "source": "🏢️aec.building/🗂️typologies/🪜️Stair/🔣️typology.json",
+          "live": "🏢️aec.building/🗂️typologies/🪜️Stair/🔣️typology.json"
+        },
+        {
+          "source": "🏢️aec.building/🗂️typologies/🪟️Window/🔣️typology.json",
+          "live": "🏢️aec.building/🗂️typologies/🪟️Window/🔣️typology.json"
+        },
+        {
+          "source": "🏢️aec.building/🗂️typologies/🪨️Foundation/🔣️typology.json",
+          "live": "🏢️aec.building/🗂️typologies/🪨️Foundation/🔣️typology.json"
+        },
+        {
+          "source": "🏢️aec.building/🗂️typologies/🪵️Beam/🔣️typology.json",
+          "live": "🏢️aec.building/🗂️typologies/🪵️Beam/🔣️typology.json"
+        },
+        {
+          "source": "📏️aec.building.structure.fem.line/🎬️actions/🔣️constructLineElementFrom2PointsAndHeight.json",
+          "live": "📏️aec.building.structure.fem.line/🎬️actions/📍️constructLineElem-f22c36.json"
+        },
+        {
+          "source": "📏️aec.building.structure.fem.line/🎬️actions/🔣️constructLineElementFromCurveAndHeight.json",
+          "live": "📏️aec.building.structure.fem.line/🎬️actions/〰️constructLineEleme-258bd7.json"
+        },
+        {
+          "source": "📏️aec.building.structure.fem.line/🎬️actions/🔣️constructLineElementFromSurface.json",
+          "live": "📏️aec.building.structure.fem.line/🎬️actions/🗺️constructLineElem-19904f.json"
+        },
+        {
+          "source": "📏️aec.building.structure.fem.line/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
+          "live": "📏️aec.building.structure.fem.line/🔀️transformations/🔀️from_aec.building.structure/t-5f46d9-35124e.json"
+        },
+        {
+          "source": "📏️aec.building.structure.fem.line/🔣️modelDefinition.json",
+          "live": "📏️aec.building.structure.fem.line/🔣️modelDefinition.json"
+        },
+        {
+          "source": "📏️aec.building.structure.fem.line/🕹️interactions/🔣️constructLineElement.json",
+          "live": "📏️aec.building.structure.fem.line/🕹️interactions/🔣️constructLineElem-0d404b.json"
+        },
+        {
+          "source": "📏️aec.building.structure.fem.line/🗂️typologies/📏️LineElement/🔣️typology.json",
+          "live": "📏️aec.building.structure.fem.line/🗂️typologies/📏️LineElement/🔣️typology-3ad563.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️aabbFromDiagonalCorners.json",
+          "live": "📐️spatial.shape/🎬️actions/🧊️aabbFromDiagonalCorners.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️addPoint.json",
+          "live": "📐️spatial.shape/🎬️actions/📍️addPoint.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️addSelection.json",
+          "live": "📐️spatial.shape/🎬️actions/➕️addSelection.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️apply.json",
+          "live": "📐️spatial.shape/🎬️actions/✅️apply.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️constrainMoveCursor.json",
+          "live": "📐️spatial.shape/🎬️actions/🧲️constrainMoveCursor.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️copy.json",
+          "live": "📐️spatial.shape/🎬️actions/📋️copy.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️cornerFromLengthWidth.json",
+          "live": "📐️spatial.shape/🎬️actions/📐️cornerFromLengthWidth.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️createAnchor.json",
+          "live": "📐️spatial.shape/🎬️actions/⚓️createAnchor.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️createBoxFrom3Points.json",
+          "live": "📐️spatial.shape/🎬️actions/🎲️createBoxFrom3Points.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️createBoxFromCorners.json",
+          "live": "📐️spatial.shape/🎬️actions/📦️createBoxFromCorners.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️deselectAll.json",
+          "live": "📐️spatial.shape/🎬️actions/🚫️deselectAll.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️extrudeWireToSolid.json",
+          "live": "📐️spatial.shape/🎬️actions/🧱️extrudeWireToSolid.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️faceArea.json",
+          "live": "📐️spatial.shape/🎬️actions/🟨️faceArea.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️finish.json",
+          "live": "📐️spatial.shape/🎬️actions/🏁️finish.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️initPeakAboveOrigin.json",
+          "live": "📐️spatial.shape/🎬️actions/⛰️initPeakAboveOrigin.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️invert.json",
+          "live": "📐️spatial.shape/🎬️actions/🔄️invert.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️line.json",
+          "live": "📐️spatial.shape/🎬️actions/📏️line.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️mirror.json",
+          "live": "📐️spatial.shape/🎬️actions/🪞️mirror.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️move.json",
+          "live": "📐️spatial.shape/🎬️actions/🚚️move.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️offsetFaces.json",
+          "live": "📐️spatial.shape/🎬️actions/↔️offsetFaces.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️peakFromOriginZ.json",
+          "live": "📐️spatial.shape/🎬️actions/🗻️peakFromOriginZ.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️polyline.json",
+          "live": "📐️spatial.shape/🎬️actions/📈️polyline.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️rotate.json",
+          "live": "📐️spatial.shape/🎬️actions/🔃️rotate.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️rubberCornerFromCenter.json",
+          "live": "📐️spatial.shape/🎬️actions/🟣️rubberCornerFromCenter.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️rubberSquareFromCenter.json",
+          "live": "📐️spatial.shape/🎬️actions/🟥️rubberSquareFromCenter.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️scale1d.json",
+          "live": "📐️spatial.shape/🎬️actions/↕️scale1d.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️scale3d.json",
+          "live": "📐️spatial.shape/🎬️actions/🪗️scale3d.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️selectAll.json",
+          "live": "📐️spatial.shape/🎬️actions/☑️selectAll.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️selectAnchors.json",
+          "live": "📐️spatial.shape/🎬️actions/🧷️selectAnchors.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️selectEdges.json",
+          "live": "📐️spatial.shape/🎬️actions/📎️selectEdges.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️selectFaces.json",
+          "live": "📐️spatial.shape/🎬️actions/🔲️selectFaces.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️selectGeometries.json",
+          "live": "📐️spatial.shape/🎬️actions/🧮️selectGeometries.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️selectObjects.json",
+          "live": "📐️spatial.shape/🎬️actions/🎯️selectObjects.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️selectShells.json",
+          "live": "📐️spatial.shape/🎬️actions/🐚️selectShells.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️selectSolids.json",
+          "live": "📐️spatial.shape/🎬️actions/🪨️selectSolids.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️selectVertices.json",
+          "live": "📐️spatial.shape/🎬️actions/🔺️selectVertices.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️selectWires.json",
+          "live": "📐️spatial.shape/🎬️actions/🪢️selectWires.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️selectionBboxCenter.json",
+          "live": "📐️spatial.shape/🎬️actions/⏺️selectionBboxCenter.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️setCubeHeightFromFootprint.json",
+          "live": "📐️spatial.shape/🎬️actions/🏢️setCubeHeightFromFootprint.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️snapSquareFootprint.json",
+          "live": "📐️spatial.shape/🎬️actions/⬜️snapSquareFootprint.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️solidVolume.json",
+          "live": "📐️spatial.shape/🎬️actions/🧴️solidVolume.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️tripletCommit.json",
+          "live": "📐️spatial.shape/🎬️actions/🔱️tripletCommit.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️tripletRubber.json",
+          "live": "📐️spatial.shape/🎬️actions/🎛️tripletRubber.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️undoPick.json",
+          "live": "📐️spatial.shape/🎬️actions/↩️undoPick.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️verticalFinalizeFootprint.json",
+          "live": "📐️spatial.shape/🎬️actions/🏗️verticalFinalizeFootprint.json"
+        },
+        {
+          "source": "📐️spatial.shape/🎬️actions/🔣️verticalRubberCorner.json",
+          "live": "📐️spatial.shape/🎬️actions/🏔️verticalRubberCorner.json"
+        },
+        {
+          "source": "📐️spatial.shape/🏷️propertyKinds/🔣️volume.json",
+          "live": "📐️spatial.shape/🏷️propertyKinds/🔣️volume.json"
+        },
+        {
+          "source": "📐️spatial.shape/📊️statDefinitions/🔣️geometry.json",
+          "live": "📐️spatial.shape/📊️statDefinitions/🔣️geometry.json"
+        },
+        {
+          "source": "📐️spatial.shape/🔣️modelDefinition.json",
+          "live": "📐️spatial.shape/🔣️modelDefinition.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️arc.json",
+          "live": "📐️spatial.shape/🕹️interactions/🌙️arc.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️area.json",
+          "live": "📐️spatial.shape/🕹️interactions/🟨️area.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️booleanDifference.json",
+          "live": "📐️spatial.shape/🕹️interactions/➖️booleanDifference.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️booleanIntersection.json",
+          "live": "📐️spatial.shape/🕹️interactions/✖️booleanIntersection.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️booleanUnion.json",
+          "live": "📐️spatial.shape/🕹️interactions/➕️booleanUnion.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️box.json",
+          "live": "📐️spatial.shape/🕹️interactions/📦️box.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️chamfer.json",
+          "live": "📐️spatial.shape/🕹️interactions/🪓️chamfer.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️circle.json",
+          "live": "📐️spatial.shape/🕹️interactions/⭕️circle.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️constructCurve.json",
+          "live": "📐️spatial.shape/🕹️interactions/〰️constructCurve.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️constructSurface.json",
+          "live": "📐️spatial.shape/🕹️interactions/🗺️constructSurface.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️controlPointCurve.json",
+          "live": "📐️spatial.shape/🕹️interactions/🎛️controlPointCurve.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️copy.json",
+          "live": "📐️spatial.shape/🕹️interactions/📋️copy.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️createAnchor.json",
+          "live": "📐️spatial.shape/🕹️interactions/⚓️createAnchor.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️cylinder.json",
+          "live": "📐️spatial.shape/🕹️interactions/🥫️cylinder.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️explode.json",
+          "live": "📐️spatial.shape/🕹️interactions/💥️explode.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️extrudeCrv.json",
+          "live": "📐️spatial.shape/🕹️interactions/🚀️extrudeCrv.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️extrudeWire.json",
+          "live": "📐️spatial.shape/🕹️interactions/🧱️extrudeWire.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️fillet.json",
+          "live": "📐️spatial.shape/🕹️interactions/🍥️fillet.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️interpolateCurve.json",
+          "live": "📐️spatial.shape/🕹️interactions/🌊️interpolateCurve.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️join.json",
+          "live": "📐️spatial.shape/🕹️interactions/🔗️join.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️length.json",
+          "live": "📐️spatial.shape/🕹️interactions/📏️length.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️line.json",
+          "live": "📐️spatial.shape/🕹️interactions/🖊️line.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️loft.json",
+          "live": "📐️spatial.shape/🕹️interactions/🎢️loft.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️mirror.json",
+          "live": "📐️spatial.shape/🕹️interactions/🪞️mirror.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️move.json",
+          "live": "📐️spatial.shape/🕹️interactions/🚚️move.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️networkSrf.json",
+          "live": "📐️spatial.shape/🕹️interactions/🕸️networkSrf.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️offsetSurface.json",
+          "live": "📐️spatial.shape/🕹️interactions/🧭️offsetSurface.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️plane.json",
+          "live": "📐️spatial.shape/🕹️interactions/✈️plane.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️polyline.json",
+          "live": "📐️spatial.shape/🕹️interactions/📈️polyline.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️rotate.json",
+          "live": "📐️spatial.shape/🕹️interactions/🔃️rotate.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️scale1d.json",
+          "live": "📐️spatial.shape/🕹️interactions/↕️scale1d.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️scale3d.json",
+          "live": "📐️spatial.shape/🕹️interactions/🪗️scale3d.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️sphere.json",
+          "live": "📐️spatial.shape/🕹️interactions/🌐️sphere.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️split.json",
+          "live": "📐️spatial.shape/🕹️interactions/✂️split.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️sweep1.json",
+          "live": "📐️spatial.shape/🕹️interactions/🌀️sweep1.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️sweep2.json",
+          "live": "📐️spatial.shape/🕹️interactions/🌪️sweep2.json"
+        },
+        {
+          "source": "📐️spatial.shape/🕹️interactions/🔣️trim.json",
+          "live": "📐️spatial.shape/🕹️interactions/✏️trim.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/➡️ExtrudeCurve/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/➡️ExtrudeCurve/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/⭕️Circle/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/⭕️Circle/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/〰️ControlPointCurve/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/〰️ControlPointCurve/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/🌀️Sweep1/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/🌀️Sweep1/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/🌊️InterpolateCurve/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/🌊️InterpolateCurve/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/🌐️Sphere/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/🌐️Sphere/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/🌙️Arc/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/🌙️Arc/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/🌪️Sweep2/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/🌪️Sweep2/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/🎢️Loft/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/🎢️Loft/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/📏️Line/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/📏️Line/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/📐️Polyline/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/📐️Polyline/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/📦️Box/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/📦️Box/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/🕸️NetworkSurface/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/🕸️NetworkSurface/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/🗺️Plane/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/🗺️Plane/🔣️typology.json"
+        },
+        {
+          "source": "📐️spatial.shape/🗂️typologies/🥫️Cylinder/🔣️typology.json",
+          "live": "📐️spatial.shape/🗂️typologies/🥫️Cylinder/🔣️typology.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructBasePlateFromSurface.json",
+          "live": "🔥️aec.building.energy/🎬️actions/🧱️constructBasePlateFromSurface.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructExternalWallFrom2PointsAndHeight.json",
+          "live": "🔥️aec.building.energy/🎬️actions/📍️constructExternalWallF-ce900c.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructExternalWallFromCurveAndHeight.json",
+          "live": "🔥️aec.building.energy/🎬️actions/〰️constructExternalWallFr-558fdb.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructExternalWallFromSurface.json",
+          "live": "🔥️aec.building.energy/🎬️actions/🗺️constructExternalWallF-6ac9ec.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructHullFrom2PointsAndHeight.json",
+          "live": "🔥️aec.building.energy/🎬️actions/⚓️constructHullFrom2Point-6d0ad1.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructHullFromCurveAndHeight.json",
+          "live": "🔥️aec.building.energy/🎬️actions/⛵️constructHullFromCurveA-709790.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructHullFromSurface.json",
+          "live": "🔥️aec.building.energy/🎬️actions/🚢️constructHullFromSurface.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructRoofFrom2PointsAndHeight.json",
+          "live": "🔥️aec.building.energy/🎬️actions/🏠️constructRoofFrom2Poin-63a199.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructRoofFromCurveAndHeight.json",
+          "live": "🔥️aec.building.energy/🎬️actions/☂️constructRoofFromCurveA-0994fb.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructRoofFromSurface.json",
+          "live": "🔥️aec.building.energy/🎬️actions/🛖️constructRoofFromSurface.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructWindowsFrom2PointsAndHeight.json",
+          "live": "🔥️aec.building.energy/🎬️actions/🪟️constructWindowsFrom2P-86ab8b.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructWindowsFromCurveAndHeight.json",
+          "live": "🔥️aec.building.energy/🎬️actions/🌈️constructWindowsFromCu-af63cd.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🎬️actions/🔣️constructWindowsFromSurface.json",
+          "live": "🔥️aec.building.energy/🎬️actions/🖼️constructWindowsFromSurface.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🏷️attributeDefinitions/🔣️gvalue.json",
+          "live": "🔥️aec.building.energy/🏷️attributeDefinitions/🔆️gvalue.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🏷️attributeDefinitions/🔣️uvalue.json",
+          "live": "🔥️aec.building.energy/🏷️attributeDefinitions/🌡️uvalue.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/📊️statDefinitions/🔣️energydemand.json",
+          "live": "🔥️aec.building.energy/📊️statDefinitions/🔣️energydemand.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🔀️transformations/🔀️from_geometry/🔣️transformation.json",
+          "live": "🔥️aec.building.energy/🔀️transformations/🔀️from_geometry/🔣️transformation-c2f9ef.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🔣️modelDefinition.json",
+          "live": "🔥️aec.building.energy/🔣️modelDefinition.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🔧️propertyDefinitions/🔣️heatedvolume.json",
+          "live": "🔥️aec.building.energy/🔧️propertyDefinitions/🔣️heatedvolume.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🕹️interactions/🔣️constructBasePlate.json",
+          "live": "🔥️aec.building.energy/🕹️interactions/🧱️constructBasePlate.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🕹️interactions/🔣️constructExternalWall.json",
+          "live": "🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🕹️interactions/🔣️constructHull.json",
+          "live": "🔥️aec.building.energy/🕹️interactions/🚢️constructHull.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🕹️interactions/🔣️constructRoof.json",
+          "live": "🔥️aec.building.energy/🕹️interactions/🏠️constructRoof.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🕹️interactions/🔣️constructWindows.json",
+          "live": "🔥️aec.building.energy/🕹️interactions/🪟️constructWindows.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🗂️typologies/🏠️Roof/🔣️typology.json",
+          "live": "🔥️aec.building.energy/🗂️typologies/🏠️Roof/🔣️typology.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🗂️typologies/🐚️Hull/🔣️typology.json",
+          "live": "🔥️aec.building.energy/🗂️typologies/🐚️Hull/🔣️typology.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🗂️typologies/🧱️ExternalWall/🔣️typology.json",
+          "live": "🔥️aec.building.energy/🗂️typologies/🧱️ExternalWall/🔣️typology.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🗂️typologies/🪟️Windows/🔣️typology.json",
+          "live": "🔥️aec.building.energy/🗂️typologies/🪟️Windows/🔣️typology.json"
+        },
+        {
+          "source": "🔥️aec.building.energy/🗂️typologies/🪨️BasePlate/🔣️typology.json",
+          "live": "🔥️aec.building.energy/🗂️typologies/🪨️BasePlate/🔣️typology.json"
+        },
+        {
+          "source": "🗺️aec.building.structure.fem.surface/🎬️actions/🔣️constructSurfaceElementFrom2PointsAndHeight.json",
+          "live": "🗺️aec.building.structure.fem.surface/🎬️actions/📍️constructSurfaceE-bf2587.json"
+        },
+        {
+          "source": "🗺️aec.building.structure.fem.surface/🎬️actions/🔣️constructSurfaceElementFromCurveAndHeight.json",
+          "live": "🗺️aec.building.structure.fem.surface/🎬️actions/〰️constructSurfaceEl-559d68.json"
+        },
+        {
+          "source": "🗺️aec.building.structure.fem.surface/🎬️actions/🔣️constructSurfaceElementFromSurface.json",
+          "live": "🗺️aec.building.structure.fem.surface/🎬️actions/🗺️constructSurfaceE-303889.json"
+        },
+        {
+          "source": "🗺️aec.building.structure.fem.surface/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
+          "live": "🗺️aec.building.structure.fem.surface/🔀️transformations/🔀️from_aec.building.structure/t-852f51-5fc2b7.json"
+        },
+        {
+          "source": "🗺️aec.building.structure.fem.surface/🔣️modelDefinition.json",
+          "live": "🗺️aec.building.structure.fem.surface/🔣️modelDefinition.json"
+        },
+        {
+          "source": "🗺️aec.building.structure.fem.surface/🕹️interactions/🔣️constructSurfaceElement.json",
+          "live": "🗺️aec.building.structure.fem.surface/🕹️interactions/🔣️constructSurfaceE-7da86f.json"
+        },
+        {
+          "source": "🗺️aec.building.structure.fem.surface/🗂️typologies/🗺️SurfaceElement/🔣️typology.json",
+          "live": "🗺️aec.building.structure.fem.surface/🗂️typologies/🗺️SurfaceElement/🔣️typology-b35a36.json"
+        },
+        {
+          "source": "🧊️aec.building.structure.fem.solid/🎬️actions/🔣️constructSolidElementFrom2PointsAndHeight.json",
+          "live": "🧊️aec.building.structure.fem.solid/🎬️actions/📍️constructSolidEle-04ef9c.json"
+        },
+        {
+          "source": "🧊️aec.building.structure.fem.solid/🎬️actions/🔣️constructSolidElementFromCurveAndHeight.json",
+          "live": "🧊️aec.building.structure.fem.solid/🎬️actions/〰️constructSolidElem-3d50e0.json"
+        },
+        {
+          "source": "🧊️aec.building.structure.fem.solid/🎬️actions/🔣️constructSolidElementFromSurface.json",
+          "live": "🧊️aec.building.structure.fem.solid/🎬️actions/🗺️constructSolidEle-51493b.json"
+        },
+        {
+          "source": "🧊️aec.building.structure.fem.solid/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
+          "live": "🧊️aec.building.structure.fem.solid/🔀️transformations/🔀️from_aec.building.structure/t-d2bc6c-e80f4a.json"
+        },
+        {
+          "source": "🧊️aec.building.structure.fem.solid/🔣️modelDefinition.json",
+          "live": "🧊️aec.building.structure.fem.solid/🔣️modelDefinition.json"
+        },
+        {
+          "source": "🧊️aec.building.structure.fem.solid/🕹️interactions/🔣️constructSolidElement.json",
+          "live": "🧊️aec.building.structure.fem.solid/🕹️interactions/🔣️constructSolidEle-105046.json"
+        },
+        {
+          "source": "🧊️aec.building.structure.fem.solid/🗂️typologies/🧊️SolidElement/🔣️typology.json",
+          "live": "🧊️aec.building.structure.fem.solid/🗂️typologies/🧊️SolidElement/🔣️typology-4e128f.json"
+        },
+        {
+          "source": "🧱️aec.building.concrete/🎬️actions/🔣️constructConcreteWallFromBottomAndTop.json",
+          "live": "🧱️aec.building.concrete/🎬️actions/↕️constructConcreteWall-129083.json"
+        },
+        {
+          "source": "🧱️aec.building.concrete/🎬️actions/🔣️constructExtrudedMushroomColumn.json",
+          "live": "🧱️aec.building.concrete/🎬️actions/🍄️constructExtrudedMus-9ba634.json"
+        },
+        {
+          "source": "🧱️aec.building.concrete/🎬️actions/🔣️constructFullyQuadraticMushroomColumn.json",
+          "live": "🧱️aec.building.concrete/🎬️actions/🟪️constructFullyQuadra-df28f9.json"
+        },
+        {
+          "source": "🧱️aec.building.concrete/🎬️actions/🔣️constructMushroomColumn.json",
+          "live": "🧱️aec.building.concrete/🎬️actions/🏛️constructMushroomColumn.json"
+        },
+        {
+          "source": "🧱️aec.building.concrete/🎬️actions/🔣️constructRectangularMushroomColumnWithQuadraticSlab.json",
+          "live": "🧱️aec.building.concrete/🎬️actions/🟫️constructRectangular-d8de49.json"
+        },
+        {
+          "source": "🧱️aec.building.concrete/🎬️actions/🔣️constructVerticalConcreteWall.json",
+          "live": "🧱️aec.building.concrete/🎬️actions/⬆️constructVerticalConc-f665b2.json"
+        },
+        {
+          "source": "🧱️aec.building.concrete/🎬️actions/🔣️constructWallFromHorizontalPathAndProfile.json",
+          "live": "🧱️aec.building.concrete/🎬️actions/📏️constructWallFromHor-22dcd1.json"
+        },
+        {
+          "source": "🧱️aec.building.concrete/🎬️actions/🔣️constructWallFromHorizontalPathAndProfiles.json",
+          "live": "🧱️aec.building.concrete/🎬️actions/🪗️constructWallFromHor-be52c0.json"
+        },
+        {
+          "source": "🧱️aec.building.concrete/🔣️modelDefinition.json",
+          "live": "🧱️aec.building.concrete/🔣️modelDefinition.json"
+        }
       ]
     },
     {
       "contractId": "artifact-editor-command-bundle-v1",
       "rationaleRule": "artifact-editor-command-projection-v1",
-      "artifactId": "🖍️draw",
+      "artifactId": "🖍️drawing",
       "standardVersion": "1",
       "subsetId": "any",
       "profileDirectoryName": "🪆️1-any",
-      "sourceRoot": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down",
-      "destinationRoot": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down",
-      "sourceFileCount": 11,
-      "destinationDirectoryCount": 9,
-      "destinationNodeCount": 20,
-      "maxPathBytes": 210,
-      "mappingDigest": "1f28fcc6e28e54001a9df6ce98b1c30b565cd42b824ed2491bb9b5e407b7436b",
+      "sourceRoot": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down",
+      "destinationRoot": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down",
+      "sourceFileCount": 9,
+      "destinationDirectoryCount": 7,
+      "destinationNodeCount": 16,
+      "maxPathBytes": 207,
+      "mappingDigest": "2b288fe8537a02cc37b28fc1a8bad5f297db043a8371db0a94b36308de0ed34f",
       "ownerVectors": [
         {
           "artifactId": "🖍️draw",
@@ -1037,99 +1997,43 @@
         }
       ],
       "descendantContractId": "draw-editor-command-bundle-v1",
-      "fileContracts": [
-        {
-          "sourceBasename": "🦀️component.rs",
-          "destinationBasename": "🦀️.rs",
-          "kindId": "rust-source"
-        },
-        {
-          "sourceBasename": "Cargo.toml",
-          "destinationBasename": "Cargo.toml",
-          "fixedFilenameContractId": "cargo-manifest"
-        },
-        {
-          "sourceBasename": "📋️project.json",
-          "destinationBasename": "📋️project.json",
-          "fixedFilenameContractId": "nx-project-manifest"
-        },
-        {
-          "sourceBasename": "📜️script.ts",
-          "destinationBasename": "📜️script.ts",
-          "fixedFilenameContractId": "root-script"
-        },
-        {
-          "sourceBasename": "📦️glue.rs",
-          "destinationPath": "📚️library/🦀️.rs",
-          "configurableEntry": {
-            "contractId": "rust-library-entry",
-            "ecosystemId": "🦀️rust",
-            "configurationSource": "Cargo.toml:lib.path"
-          }
-        }
-      ],
-      "referenceEdits": [
-        {
-          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
-          "adapter": "toml",
-          "structuredLocation": "lib.path",
-          "oldValue": "📦️glue.rs",
-          "newValue": "📚️library/🦀️.rs",
-          "preimageHash": "47213c84c9999d121abd74998de513b6d45c5838bcdcaf27e1dcf673acc01024"
-        },
-        {
-          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
-          "adapter": "toml",
-          "structuredLocation": "lib.path",
-          "oldValue": "📦️glue.rs",
-          "newValue": "📚️library/🦀️.rs",
-          "preimageHash": "35f3abecfcdfac2a01a433fdb61718ddc1802e5a5dcc05a413467d7afb18eaac"
-        }
-      ],
+      "fileContracts": 4,
       "mappings": [
         {
-          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
-          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml"
+          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json",
-          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json"
+          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json",
+          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts",
-          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts"
+          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts",
+          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/📦️glue.rs",
-"destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/📚️library/🦀️.rs"
+          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/🦀️.rs",
+          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/🦀️.rs"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/🦀️component.rs",
-          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/🦀️.rs"
+          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
+          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
-          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml"
+          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/📋️project.json",
+          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/📋️project.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/📋️project.json",
-          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/📋️project.json"
+          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/📜️script.ts",
+          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/📜️script.ts"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/📜️script.ts",
-          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/📜️script.ts"
+          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/🦀️.rs",
+          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/🦀️.rs"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/📦️glue.rs",
-          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/📚️library/🦀️.rs"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/🦀️component.rs",
-          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/🦀️.rs"
-        },
-        {
-          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs",
-          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs"
+          "sourcePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️.rs",
+          "destinationPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs"
         }
       ]
     }

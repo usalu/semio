@@ -38,6 +38,20 @@ const windowIds = (page) => page.evaluate(() => [...document.querySelectorAll("[
 
 /** 🧯️ Every transient notice the shell raises, recorded as it appears — it auto-dismisses after
  * 4 000 ms, so polling for it loses the very refusal this slice made visible. */
+/** 🗄️ The device's persisted plugin module store: its record keys (`record/<generation>/<bundle>`), blob count, and whether
+ * the store's service worker controls the page. */
+const storeState = (page) =>
+  page.evaluate(async () => {
+    const cache = await caches.open("semio-plugin-module-store-v1");
+    const keys = (await cache.keys()).map((request) => decodeURIComponent(new URL(request.url).pathname));
+    return {
+      controlled: navigator.serviceWorker?.controller !== null && navigator.serviceWorker?.controller !== undefined,
+      persisted: await navigator.storage?.persisted?.().catch(() => null),
+      records: keys.filter((key) => key.includes("/record/")).map((key) => key.split("/record/")[1].split("/").map((part) => part.slice(0, 12)).join("/")),
+      blobs: keys.filter((key) => key.includes("/blob/")).length,
+    };
+  }).catch((error) => ({ error: String(error).slice(0, 120) }));
+
 const installNoticeRecorder = (page) =>
   page.addInitScript(() => {
     const seen = [];
@@ -110,7 +124,8 @@ async function signIn(page) {
   if ((await form.count()) === 0) return "hub workspace never opened";
   await form.locator('input[type="email"]').fill(EMAIL);
   await form.locator('input[type="password"]').fill(PASSWORD);
-  await form.locator('button[type="submit"][aria-label="Sign in"]').click({ force: true }).catch(() => undefined);
+  const inForm = form.locator('form:has(input[type="password"]) button[type="submit"]').first();
+  await ((await inForm.count()) > 0 ? inForm : form.locator('button[type="submit"]').first()).click({ force: true }).catch(() => undefined);
   await page.waitForFunction(() => !document.querySelector('[data-semio-hub-sign-in=""]'), undefined, { timeout: 120_000 }).catch(() => undefined);
   await page.waitForTimeout(6_000);
   return null;
@@ -208,8 +223,8 @@ const persistent = process.env.S15_PROFILE_DIR;
 const launchArgs = ["--use-angle=metal", ...(process.env.S15_NETLOG ? [`--log-net-log=${process.env.S15_NETLOG}`, "--net-log-capture-mode=Default"] : [])];
 const browser = persistent ? null : await chromium.launch({ headless: process.env.S12_HEADED !== "1", args: launchArgs });
 const context = persistent
-  ? await chromium.launchPersistentContext(persistent, { headless: process.env.S12_HEADED !== "1", args: launchArgs, viewport: { width: 1600, height: 1000 } })
-  : await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+  ? await chromium.launchPersistentContext(persistent, { headless: process.env.S12_HEADED !== "1", args: launchArgs, viewport: { width: 1600, height: 1000 }, locale: process.env.S15_LOCALE ?? "en-US" })
+  : await browser.newContext({ viewport: { width: 1600, height: 1000 }, locale: process.env.S15_LOCALE ?? "en-US" });
 const page = context.pages()[0] ?? (await context.newPage());
 await installNoticeRecorder(page);
 /** 🚫️ `S15_BLOCK_PLUGIN=<dir>` answers 404 for every locally staged module of that plugin — the served lane then holds
@@ -245,11 +260,17 @@ page.on("response", (response) => {
   if (/\/_semio\/hub\/|plugin-modules/u.test(url)) hubRequests.push(`${response.status()} ${response.request().method()} ${url.replace(/^https?:\/\/[^/]+/u, "")} ${response.headers()["content-length"] ?? "?"}`.slice(0, 220));
 });
 page.on("pageerror", (error) => faults.push(`pageerror: ${String(error)}`.slice(0, 240)));
+/** 👷️ Worker consoles (the store worker owns the browser actor's action lane): every line naming an actor, action or patch. */
+const workerLines = [];
+page.on("worker", (worker) => worker.on("console", (message) => {
+  const text = message.text();
+  if (/actor|action|patch|owner|refus|reject|deadline|\[DEBUG\]/iu.test(text) && workerLines.length < 200) workerLines.push(`${message.type()} ${text}`.slice(0, 400));
+}));
 const consoleAll = [];
 page.on("console", (message) => {
   const text = message.text();
   if (process.env.S15_CONSOLE_ALL === "1" && !/\[vite\]|transform freshness/u.test(text)) consoleAll.push(`${message.type()} ${text}`.slice(0, 500));
-  if (/refused:|dropped|rejected|\[os-shell\]|program load failed|program module unavailable|plugin install|no surface registered|descriptor/iu.test(text)) shellLines.push(`${message.type()} ${text}`.slice(0, 400));
+  if (/refused:|dropped|rejected|\[os-shell\]|\[DEBUG\]|program load failed|program module unavailable|plugin install|no surface registered|descriptor/iu.test(text)) shellLines.push(`${message.type()} ${text}`.slice(0, 400));
 });
 
 const result = { baseUrl, tag, kindFilter, verb, beacon: null, signIn: null, spaces: [], openedSpace: null, uriAfterOpen: null, indexWindows: [], indexSurfaces: [], rowsBefore: [], railRowIds: [], stagedControls: [], kindOptions: [], filledName: null, filledKind: null, submitted: null, createOutcome: null, rowsAfter: [], opened: null, openedWindows: [], documentVerb: null, edits: [], ledgerTail: [], notices: [], shellLines: [], faults: [] };
@@ -263,6 +284,27 @@ try {
   result.signIn = await signIn(page);
   log(`sign-in ${result.signIn ?? "ok"}`);
 
+  /** 🧹️ `S15_EVICT=<pluginId>`: the browser evicted part of this device's store — one stored file of that plugin's bundle
+   * (its largest, the core) is deleted before the document opens, so the next install must notice and reinstall it. */
+  if (process.env.S15_EVICT) {
+    result.evicted = await page.evaluate(async (pluginId) => {
+      const cache = await caches.open("semio-plugin-module-store-v1");
+      const keys = (await cache.keys()).map((request) => request.url);
+      const recordKey = keys.find((url) => url.includes("/record/"));
+      for (const key of keys.filter((url) => url.includes("/record/"))) {
+        const record = await (await cache.match(key)).json();
+        if (record.entry.pluginId !== pluginId) continue;
+        const manifestKey = keys.find((url) => url.endsWith(`/manifest/${record.entry.bundleSha256}`));
+        const manifest = await (await cache.match(manifestKey)).json();
+        const largest = [...manifest.files].sort((left, right) => right.byteLength - left.byteLength)[0];
+        const blobKey = keys.find((url) => url.endsWith(`/blob/${largest.sha256}`));
+        await cache.delete(blobKey);
+        return { path: largest.path, byteLength: largest.byteLength };
+      }
+      return { none: recordKey ?? null };
+    }, process.env.S15_EVICT).catch((error) => ({ error: String(error).slice(0, 160) }));
+    log(`evicted ${JSON.stringify(result.evicted)}`);
+  }
   result.spaces = await ensureSpace(page);
   log(`spaces (${result.spaces.length}) ${JSON.stringify(result.spaces.slice(0, 4))}`);
   await page.screenshot({ path: `${generated}s15-hub-document-${tag}-spaces.png` }).catch(() => undefined);
@@ -315,20 +357,36 @@ try {
     result.stagedControls = await page.evaluate(() => [...document.querySelectorAll('[data-slot="window-action-pane"] [id*=".arg."]')].map((element) => `${element.id}|${element.tagName.toLowerCase()}|${element.getAttribute("role") ?? ""}`));
     const name = page.locator('[data-slot="window-action-pane"] [id$=".arg.name"]:is(input,textarea), [data-slot="window-action-pane"] [id$=".arg.name"] :is(input,textarea)').first();
     result.filledName = (await name.count()) > 0 ? await name.fill(`S12 Hub Document ${Date.now() % 100000}`).then(() => "ok").catch((error) => String(error).split("\n")[0].slice(0, 60)) : "absent";
-    const kind = page.locator('[data-slot="window-action-pane"] [role="combobox"][id$=".arg.kindChoice"], [data-slot="window-action-pane"] select[id$=".arg.kindChoice"], [data-slot="window-action-pane"] [id$=".arg.kindChoice"] :is([role="combobox"],select,button)').first();
+    // 🎛️ The kind picker is a select trigger (`button#kindChoice`, role combobox) inside the staged tree row; a forced
+    // click lands on the row and never opens it. Keyboard first (focus + Enter / ArrowDown), then a real pointer press.
+    const kind = page.locator('[data-slot="window-action-pane"] [id$=".arg.kindChoice"] [role="combobox"], [data-slot="window-action-pane"] button#kindChoice, [data-slot="window-action-pane"] select[id$=".arg.kindChoice"]').first();
     if ((await kind.count()) > 0) {
-      await kind.click({ force: true }).catch(() => undefined);
-      await page.waitForTimeout(1_500);
+      const optionsOpen = async () => (await page.locator('[role="option"]').count()) > 0;
+      await kind.scrollIntoViewIfNeeded().catch(() => undefined);
+      result.kindOpenedBy = "none";
+      for (const [how, open] of [
+        ["enter", async () => { await kind.focus(); await page.keyboard.press("Enter"); }],
+        ["arrow-down", async () => { await kind.focus(); await page.keyboard.press("ArrowDown"); }],
+        ["pointer", async () => { const box = await kind.boundingBox(); if (box) { await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await page.mouse.down(); await page.mouse.up(); } }],
+      ]) {
+        await open().catch(() => undefined);
+        await page.waitForTimeout(800);
+        if (await optionsOpen()) { result.kindOpenedBy = how; break; }
+      }
       result.kindOptions = await page.evaluate(() => [...document.querySelectorAll('[role="option"]')].map((element) => (element.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 60)));
-      if (process.env.S15_DUMP_STAGED === "1") result.kindPopup = await page.evaluate(() => [...document.querySelectorAll('[role="listbox"], [role="option"], [role="menu"], [role="menuitem"], [role="dialog"], [data-radix-popper-content-wrapper], [cmdk-item], [data-slot*="select"], [data-slot*="combobox"]')].map((element) => `${element.tagName.toLowerCase()}|role=${element.getAttribute("role") ?? ""}|slot=${element.getAttribute("data-slot") ?? ""}|vis=${element.getClientRects().length > 0}|${(element.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 50)}`).slice(0, 40));
-      // 🏷️ The hub labels every creation kind "Editor" (it sends the app ROLE label, not the kind's
-      // own — measured 2026-09-22 on 7651: two kinds, two identical labels), so a label filter cannot
-      // pick one. The catalog's own ORDER is a contract (`parseSpaceArtifactCreationCatalogV1` rejects
-      // a non-ascending `kindId` list), so the index is the addressable thing.
+      result.kindValues = await page.evaluate(() => [...document.querySelectorAll('select option')].map((element) => element.value).filter((value) => value.startsWith("{")).map((value) => { try { return JSON.parse(value).kindId; } catch { return value.slice(0, 40); } }));
+      if (process.env.S15_DUMP_STAGED === "1") result.kindPopup = await page.evaluate(() => [...document.querySelectorAll('[role="listbox"], [role="option"], [data-slot*="select"]')].map((element) => `${element.tagName.toLowerCase()}|role=${element.getAttribute("role") ?? ""}|slot=${element.getAttribute("data-slot") ?? ""}|vis=${element.getClientRects().length > 0}|${(element.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 50)}`).slice(0, 40));
+      // 🏷️ The hub labels every creation kind with its app ROLE ("Editor"), so a label cannot pick one; the catalog's
+      // order is a contract (ascending kindId) and the hidden native select carries each option's encoded choice, so
+      // `S12_KIND_ID` picks by kind id (e.g. `2d.drawing`, `text.document`), `S12_KIND_INDEX` by position.
       const optionCount = await page.locator('[role="option"]').count();
-      const wantedIndex = process.env.S12_KIND_INDEX === undefined ? optionCount - 1 : Number(process.env.S12_KIND_INDEX);
+      const byId = process.env.S12_KIND_ID === undefined ? -1 : result.kindValues.indexOf(process.env.S12_KIND_ID);
+      const wantedIndex = byId >= 0 ? byId : process.env.S12_KIND_INDEX === undefined ? optionCount - 1 : Number(process.env.S12_KIND_INDEX);
+      result.kindIndex = wantedIndex;
       const option = page.locator('[role="option"]').nth(Math.max(0, Math.min(optionCount - 1, wantedIndex)));
-      result.filledKind = (await option.count()) > 0 ? await option.click({ force: true }).then(() => "ok").catch((error) => String(error).split("\n")[0].slice(0, 60)) : "no-option";
+      result.filledKind = optionCount > 0 ? await option.click().then(() => "ok").catch((error) => String(error).split("\n")[0].slice(0, 60)) : "no-option";
+      await page.waitForTimeout(500);
+      result.kindShown = await kind.textContent().catch(() => null);
     } else result.filledKind = "absent";
     result.stagedState = await page.evaluate(() => [...document.querySelectorAll('[data-slot="window-action-pane"] [id*="createArtifact"]')].map((element) => `${element.id}|${element.tagName.toLowerCase()}|disabled=${element.hasAttribute("disabled") || element.getAttribute("aria-disabled") === "true"}|${(element.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 40)}`));
     result.submitted = "absent";
@@ -336,7 +394,7 @@ try {
       const outcome = await click(page, selector);
       if (outcome !== "absent") { result.submitted = outcome; break; }
     }
-    log(`name=${result.filledName} kind=${result.filledKind} options=${JSON.stringify(result.kindOptions)} submit=${result.submitted}`);
+    log(`name=${result.filledName} kind=${result.filledKind} (opened by ${result.kindOpenedBy}, index ${result.kindIndex}, shown ${JSON.stringify(result.kindShown)}) kinds=${JSON.stringify(result.kindValues)} submit=${result.submitted}`);
     await page.waitForTimeout(3_000);
     // 🗨️ The guest answers an empty name or kind with `Effect::OpenDialog` rather than a refusal
     // (`🌱create-artifact/🦀️.rs:24`), so a dialog on screen IS the diagnosis that the staged payload
@@ -359,6 +417,16 @@ try {
       }
       result.dialogSubmitted = await click(page, '[role="dialog"] button[type="submit"], [role="dialog"] [id$="submit"], [role="dialog"] [id$="Submit"]');
       log(`dialog submit ${result.dialogSubmitted} options ${JSON.stringify(result.dialogOptions)}`);
+    }
+    /** 🛑️ `S15_CANCEL_INSTALL=1`: cancel the hub program install from its band once bytes are flowing; nothing may be committed. */
+    if (process.env.S15_CANCEL_INSTALL === "1") {
+      const band = page.locator("[data-semio-plugin-install]").first();
+      await page.waitForFunction(() => Number(document.querySelector("[data-semio-plugin-install] [data-semio-plugin-install-progress]")?.getAttribute("value") ?? "0") > 0, undefined, { timeout: 180_000 }).catch(() => undefined);
+      result.cancelAtBytes = await page.evaluate(() => document.querySelector("[data-semio-plugin-install] [data-semio-plugin-install-progress]")?.getAttribute("value") ?? null);
+      result.cancelInstallClicked = await band.locator("button").first().click({ timeout: 10_000 }).then(() => "ok").catch((error) => String(error).split("\n")[0].slice(0, 80));
+      await page.waitForTimeout(8_000);
+      result.afterCancelInstall = { windows: await windowIds(page), store: await storeState(page), band: await page.locator("[data-semio-plugin-install]").count() };
+      log(`install cancelled at ${result.cancelAtBytes} bytes: ${result.cancelInstallClicked}; after ${JSON.stringify(result.afterCancelInstall)}`);
     }
     if (process.env.S15_CANCEL_OPEN === "1") {
       const cancel = page.locator("[data-semio-execution-target-cancel]").first();
@@ -443,11 +511,13 @@ try {
     log(`verb ${verb} → ${result.documentVerb} edits ${JSON.stringify(result.edits)}`);
   }
   await page.screenshot({ path: `${generated}s15-hub-document-${tag}-mutated.png` }).catch(() => undefined);
+  result.store = await storeState(page);
+  log(`store ${JSON.stringify(result.store)}`);
   /** ♻️ `S15_REOPEN=1`: reload and open the same document again — the module now comes from this device (the
    * recorded verified bundle and the immutable content-addressed responses), not a second download. */
   if (process.env.S15_REOPEN === "1" && result.openedWindows.length > 0) {
     moduleTraffic.phase = "reopen";
-    result.installedRecord = await page.evaluate(() => Object.keys(localStorage).filter((key) => key.includes("semio.hub-plugin-modules.v1")).map((key) => (localStorage.getItem(key) ?? "").slice(0, 400)));
+    result.storeBeforeReopen = await storeState(page);
     await page.reload({ waitUntil: "commit" });
     result.reopenBeacon = await awaitBeacon(page, Date.now() + 300_000);
     await page.waitForTimeout(6_000);
@@ -475,9 +545,12 @@ try {
 result.notices = await notices(page).catch(() => []);
 result.creationProgress = await page.evaluate(() => [...document.querySelectorAll("[data-semio-artifact-creation-catalog], [data-semio-artifact-creation]")].map((element) => `${element.getAttribute("data-semio-artifact-creation-catalog") ?? element.getAttribute("data-semio-artifact-creation")}|${(element.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 120)}`)).catch(() => []);
 result.shellLines = shellLines.slice(0, 40);
-result.hubRequests = hubRequests.filter((line) => /\/_semio\/hub\/.*(execution-target|open-plan|artifact-creations|socket-grants|plugin-modules)/u.test(line)).slice(0, 120);
+result.workerLines = workerLines.slice(0, 80);
+result.hubRequests = hubRequests.filter((line) => /\/_semio\/hub\/.*(execution-target|open-plan|artifact-creations|socket-grants|plugin-modules|event-page)/u.test(line) && !/artifact-creations\/[0-9a-f]{32}/u.test(line)).slice(0, 120);
 result.faults = faults.slice(0, 8);
 result.moduleTraffic = moduleTraffic;
+result.hubModuleDownloads = hubRequests.filter((line) => /\/_semio\/hub\/trusted-catalog\/plugin-modules\/[0-9a-f]{64}\//u.test(line)).length;
+result.storeServed = hubRequests.filter((line) => line.includes("/_semio/plugin-modules/")).length;
 if (process.env.S15_CONSOLE_ALL === "1") result.consoleAll = consoleAll.filter((line) => /note|plugin|program|surface|descriptor|install|error/iu.test(line)).slice(-200);
 writeFileSync(`${generated}s15-hub-document-${tag}.txt`, JSON.stringify(result, null, 2));
 log(`=== ${generated}s15-hub-document-${tag}.txt ===`);

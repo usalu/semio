@@ -4043,7 +4043,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "",
+          "artifactSchema": "animate.presentation",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -4218,8 +4218,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "d6c3b7b96b342872437b829958724bb1a6e8f17a61d767572758aa2233b54ee9",
-    "coreWasmSha256": "0ba2dd2b32af5d98a8628d72de3ad5b3fdb411d50a0ac10cb77ece8e2e2cd844",
-    "descriptorSha256": "4986f8caf8382fd3d1306d221f4ed962030e37d4d5bf36d9c6143e1d9037dd11"
+    "wasmSha256": "4c1b12efbaf9cb1aa719656f21c84ca8fd05ed1932b065d29014eb20a106a6c9",
+    "coreWasmSha256": "222a36ae306a7222703c8b5c4d0cc5fc866e50a7a27e1619d16d5e7e71648e43",
+    "descriptorSha256": "b014ffad44d54f1cdf3419355b1a2a2176399441ee1ce89f7b7ad43b6595162c"
   }
 }

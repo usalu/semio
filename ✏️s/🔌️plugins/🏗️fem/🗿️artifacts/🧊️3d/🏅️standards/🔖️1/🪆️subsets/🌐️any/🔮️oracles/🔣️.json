@@ -3505,8 +3505,8 @@
           "role": "expected-analysis",
           "path": "../../📈️analysis/🧫️fixtures/🧮️solves-fem3d-1-benchmarks/📊️expected.results.json",
           "mediaType": "application/json",
-          "sha256": "sha256:4ae1fc6f9f8f8cdc3947f3b0e9641208c66ba79c37aac5819491d752e06bcc29",
-          "bytes": 491605
+          "sha256": "sha256:a76d055abd1d3a50506de055d9968607d2d44701b6622cbcc57cd9de806a20aa",
+          "bytes": 564662
         }
       ],
       "generator": {
@@ -3514,7 +3514,7 @@
         "packageVersion": "3.0.0",
         "engineFamily": "pynite",
         "engineVersion": "3.0.0",
-        "command": "uv run python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/FEM-PLUGIN-END-TO-END/🔨️run-fem3d-oracle.py",
+        "command": "uv run python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/FEM-3D-INTERACTIVE-FEATURE-COMPLETE/🔨️run-fem3d-oracle.py",
         "platform": "darwin-arm64"
       },
       "provenance": {
@@ -3527,7 +3527,7 @@
       "comparisonProfile": "semantic-fem3d-analysis-v1",
       "reproducible": true,
       "family": "analysis",
-      "notes": "displacements, reactions and bar forces for three real structures, four closed-form cases and one mutate-then-solve pair per non-geometry kind — twenty-nine scenarios, each additionally held to global equilibrium in role."
+      "notes": "displacements, reactions and bar forces for three real structures, four closed-form cases and one mutate-then-solve pair per non-geometry kind — thirty-three scenarios, each additionally held to global equilibrium in role."
     },
     {
       "schema": "semio.repository-test.fixture/v2",

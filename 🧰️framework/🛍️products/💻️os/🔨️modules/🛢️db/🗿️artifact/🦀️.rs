@@ -1522,6 +1522,10 @@ fn retire_artifact_state_owner(owner: ArtifactStateRetirementCursor) -> Result<(
     }
 }
 
+/// @emoji 🧹️ Advances one parked state retirement — a replaced or removed value, or a refused
+/// staging graph. Every state apply drives it until nothing is parked, so a replaced value's pages
+/// and its I/O operation never outlive the write that replaced it; parked owners used to wait for a
+/// maintenance pass nothing ran, until the process ran out of I/O operations and refused every write.
 pub fn artifact_state_retirement_maintenance_step() -> Result<bool, DbError> {
     let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let Some(slot) = retired.iter_mut().find(|slot| slot.is_some()) else {
@@ -1669,6 +1673,7 @@ impl DocumentState {
             touched.record(db_state::TouchedRegion::write(path.clone()));
             self.last_writer = self.last_writer.insert(path.clone(), mutation_id.clone());
         }
+        while artifact_state_retirement_maintenance_step()? {}
         Ok((touched, conflicts))
     }
 }
@@ -1976,6 +1981,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             let mut replay_projected = false;
             let result = async {
                 loop {
+                    records.renew_step()?;
                     let mut transaction = match records.next_transaction_step().await? {
                         db_wal::WalCommittedStep::Transaction(transaction) => transaction,
                         db_wal::WalCommittedStep::Yield => {
@@ -3041,7 +3047,7 @@ pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, 
     if through.head_seq <= after.head_seq || through.commit_seq <= after.commit_seq || through.head_edit_id.is_none() {
         return Err(DbError::InvalidArgument("ledger tail must end at an edited point after its start".to_string()));
     }
-    let control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(300), usize::MAX)?;
+    let control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + db_wal::WAL_REPLAY_STEP_STALL_BOUND, db_wal::WAL_REPLAY_STEP_FUEL)?;
     let mut records = db_wal::replay_committed_document(wal, document, control).await?;
     let result = async {
         let mut point = ArtifactLedgerPoint::genesis();
@@ -3052,6 +3058,7 @@ pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, 
             if cancelled.load(std::sync::atomic::Ordering::Acquire) {
                 return Err(DbError::Unavailable("ledger tail cancelled".to_string()));
             }
+            records.renew_step()?;
             let mut transaction = match records.next_transaction_step().await? {
                 db_wal::WalCommittedStep::Transaction(transaction) => transaction,
                 db_wal::WalCommittedStep::Yield => {
@@ -4728,7 +4735,7 @@ pub struct ArtifactAuthority {
     retirement: Option<ArtifactRunnerRetirementReservation>,
     retirement_close: Option<Arc<dyn Fn() -> bool + Send + Sync>>,
     _pool_use: Arc<semio_framework_async::WorkerPoolUse>,
-    _done: std::sync::Mutex<Option<db_actor::ReplyReceiver<()>>>,
+    done: std::sync::Mutex<Option<db_actor::ReplyReceiver<()>>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -5911,7 +5918,7 @@ impl ArtifactAuthority {
         match ready_rx.await {
             Ok(Ok(())) => {
                 ARTIFACT_AUTHORITY_POOL_USES.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-                Ok(ArtifactAuthority { address, cancel, handoff, retirement: Some(retirement), retirement_close: Some(retirement_close), _pool_use: pool_use, _done: std::sync::Mutex::new(Some(done_rx)) })
+                Ok(ArtifactAuthority { address, cancel, handoff, retirement: Some(retirement), retirement_close: Some(retirement_close), _pool_use: pool_use, done: std::sync::Mutex::new(Some(done_rx)) })
             }
             Ok(Err(err)) => Err(err),
             Err(_) => Err(ArtifactEngineOpenRejected::BeforeWal(DbError::Closed)),
@@ -6094,6 +6101,12 @@ impl ArtifactAuthority {
 
     /// 🚪️ Requests closure and advances one finite retained runner turn. The authority remains
     /// caller-owned until the returned terminal acknowledgement is `true`.
+    /// @emoji 🏁️ Takes the one signal that resolves once this authority's runner is terminal — its WAL
+    /// closed and its writer released — so a successor mount of the same document can wait for it.
+    pub fn take_terminal_signal(&self) -> Option<db_actor::ReplyReceiver<()>> {
+        self.done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()
+    }
+
     pub fn shutdown_step(&self) -> bool {
         self.address.close();
         (self.cancel)();

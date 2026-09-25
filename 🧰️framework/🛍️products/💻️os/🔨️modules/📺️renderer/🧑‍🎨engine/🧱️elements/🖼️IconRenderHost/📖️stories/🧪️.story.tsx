@@ -2,7 +2,7 @@
 // 💻️ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/📖️stories/🧪️.story.tsx
 // Specs: Host the framework renderer's `IconRenderHost` with zero WASM engine and zero dev-server asset route —
 // the `framework/hosts` scope registers no static-dir for GLBs (unlike `framework/os`'s `/plugin-modules`), so
-// `assetUrl` is a hand-built `data:model/gltf+json` fixture (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/📖️stories/🧫️fixtures/🧫️placeholder/🟦️.ts`).
+// `assetUrl` is a hand-built `data:model/gltf+json` placeholder asset (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/📖️stories/🧭️coordination/🟦️.ts`).
 // Summary: The default `iconRenderPort` (`framework/ui/js/react/index.tsx`) still does the real three.js offscreen render —
 // GLTFLoader + WebGLRenderer/SVGRenderer — against that fixture, so this exercises the real render pipeline, not
 // a stub. `ToolbarFormat` reads `context.globals.iconRenderer` directly (webgl → `format: "png"`, svg → `format:
@@ -17,7 +17,7 @@ import { useMemo, type ReactElement } from "react";
 import { IconRenderHost } from "@semio-tech/framework-renderer-react";
 import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework";
 import type { IconRenderRequest } from "@semio-tech/ui-react";
-import { iconRenderPlaceholderAssetUrl } from "./🧫️fixtures/🧫️placeholder/🟦️.ts";
+import { iconRenderPlaceholderAssetUrl } from "./🧭️coordination/🟦️.ts";
 
 //#region Fixtures
 function buildStoryIconRenderRequest(format: IconRenderRequest["format"]): IconRenderRequest {

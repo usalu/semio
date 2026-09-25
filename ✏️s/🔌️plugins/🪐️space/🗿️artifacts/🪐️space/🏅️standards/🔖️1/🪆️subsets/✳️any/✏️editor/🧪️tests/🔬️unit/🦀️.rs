@@ -18,9 +18,14 @@ pub(crate) mod context {
     /// `Migrated` tool ids (`AppActionRegistry::validate_tool_job_rows`), and an empty registry
     /// declares none of them — construction panics with `interactive-job.catalog-authority` …
     /// `generated_migrated=false`, `migrated={}`. A registry-less wrapper could not dispatch anything
-    /// anyway (`admit_command_wire_with_proof` refuses every verb with no manifest declaration).
+    /// anyway (`admit_command_wire_with_proof` refuses every verb with no manifest declaration). The app is
+    /// bound to live instance `1`, the instance `artifact_app_laws::meta` stamps on every dispatch — a typed
+    /// command addressed to any other instance is refused as not belonging to the mounted app.
     pub async fn new_app() -> SpaceIndexApp {
-        new_app_with_registry::<EditorApp<SpaceIndexEditor>>(space_index_manifest_for_tests).await
+        use semio_framework_plugin::PluginApp;
+        let mut app = new_app_with_registry::<EditorApp<SpaceIndexEditor>>(space_index_manifest_for_tests).await;
+        app.bind_instance_id(1).await;
+        app
     }
     
     pub async fn new_app_with_artifact() -> (SpaceIndexApp, String) {
