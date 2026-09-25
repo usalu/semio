@@ -1,0 +1,12 @@
+import { readInitialKitFixtureFromPath } from "/home/user/semio/semio/fixtures/script.ts";
+import { Session } from "/home/user/semio/semio/client/lib/js/index.ts";
+const kit = readInitialKitFixtureFromPath("/home/user/semio/semio/fixtures/stores/metabolism/wip/initialKit/kit.semio.json");
+const s = await Session.openInMemory({ timeoutMs: 120000 });
+const store = (await s.stores())[0]!;
+const t0 = Date.now();
+const r = await store.installProjection(JSON.stringify(kit));
+console.log("[DEBUG] install", r, Date.now() - t0, "ms");
+const q = process.argv[2] ? (await Bun.file(process.argv[2]).text()) : "id name hasTypologies { edges { node { id name hasTypes { edges { node { id } } } } } } hasFamilies { edges { node { id name } } }";
+const d = await store.readKitInner(q);
+await Bun.write(process.argv[3] ?? "probe-out.json", JSON.stringify(d)); console.log("[DEBUG] wrote", JSON.stringify(d).length);
+await s.dispose();

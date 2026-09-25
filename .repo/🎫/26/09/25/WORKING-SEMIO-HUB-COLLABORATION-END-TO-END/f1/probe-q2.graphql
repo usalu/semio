@@ -1,0 +1,8 @@
+hasTypes { edges { node { id name unit
+  hasConnectors { edges { node { id name port { id label code copatibleWith { edges { node { id } } } } } } }
+  hasPorts { edges { node { id label code copatibleWith { edges { node { id } } } } } }
+  hasRepresentations { edges { node { id name url tags { edges { node { id name } } } file { id name url } } } }
+} } }
+hasFamilies { edges { node { id name } } }
+hasFiles { edges { node { id name url description folderId } } }
+hasFolders { edges { node { id name path } } }

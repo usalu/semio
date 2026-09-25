@@ -4,15 +4,21 @@
 // #endregion 🧲Header
 
 //#region 🔌Adapters
-import type { Design, Kit, Piece, Session, SetResult, Type } from "@semio/js";
-import { Design as JsDesign, Kit as JsKitEntity, Piece as JsPiece, Session as SemioSession } from "@semio/js";
 import {
-	fetchSemioFileSystemChildren,
+	SemioKitClient,
+	SemioKitSnapshotSource,
+	semioKitToEnvelope,
+	type Design,
+	type Kit,
+	type Piece,
+	type Representation,
 	type SemioFileSystemChildRef,
 	type SemioFileSystemParentRef,
+	type SemioKitCommands,
+	type SemioKitSource,
+	type SetResult,
+	type Type,
 } from "@semio/react";
-import { gunzipSync } from "fflate";
-import type { Store as JsKitStore } from "@semio/js";
 import {
 	CommandBus,
 	Component,
@@ -128,7 +134,7 @@ type SemioSketchpadTranslationTree = {
 	readonly semio: {
 		readonly sketchpad: {
 			readonly toolbar: {
-				readonly parent: SemioSketchpadToolbarParentEntries;
+				parent: SemioSketchpadToolbarParentEntries;
 			};
 		};
 	};
@@ -10260,95 +10266,15 @@ registerSemioSketchpadUiChrome();
 
 
 //#region 🔖KitImport
-type SemioBundleJson = Record<string, unknown>;
-
-/** @emoji 🧾 Recursively flattens `{ items: [...] }` and Relay `edges` for GraphQL install payloads. */
-function semioDenormalizeBundleValue(v: unknown): unknown {
-	if (v == null || typeof v !== "object") return v;
-	if (Array.isArray(v)) return v.map(semioDenormalizeBundleValue);
-	const o = v as SemioBundleJson;
-	if (Array.isArray(o["items"])) return (o["items"] as unknown[]).map(semioDenormalizeBundleValue);
-	if (Array.isArray(o["edges"])) {
-		const out: unknown[] = [];
-		for (const e of o["edges"] as unknown[]) {
-			if (e != null && typeof e === "object" && !Array.isArray(e) && "node" in (e as SemioBundleJson)) {
-				out.push(semioDenormalizeBundleValue((e as SemioBundleJson)["node"]));
-			}
-		}
-		return out;
-	}
-	const flat: SemioBundleJson = {};
-	for (const [k, val] of Object.entries(o)) flat[k] = semioDenormalizeBundleValue(val) as never;
-	return flat;
-}
-
-/** @emoji 🧾 Lifts `*.kit.semio.json` (`initialKit` / `wip.initialKit`) then flattens bundle lists. */
-export function decodeKitSemioEnvelopeToFullFromValue(v: unknown): unknown {
-	let inner: unknown = v;
-	if (inner && typeof inner === "object" && !Array.isArray(inner)) {
-		const top = inner as SemioBundleJson;
-		if (top["initialKit"] != null && typeof top["initialKit"] === "object" && !Array.isArray(top["initialKit"])) {
-			inner = top["initialKit"];
-		} else if (top["wip"] != null && typeof top["wip"] === "object" && !Array.isArray(top["wip"])) {
-			const wr = (top["wip"] as SemioBundleJson)["initialKit"];
-			if (wr != null && typeof wr === "object" && !Array.isArray(wr)) inner = wr;
-		}
-	}
-	return semioDenormalizeBundleValue(inner);
-}
-
-/** @emoji 🧾 Reads a kit DTO root from a decoded semio bundle value. */
-export function sketchpadKitFromDecodedBundle(value: unknown): Kit | null {
-	const denorm = decodeKitSemioEnvelopeToFullFromValue(value);
-	if (denorm == null || typeof denorm !== "object" || Array.isArray(denorm)) return null;
-	if ("id" in denorm) return denorm as Kit;
-	return null;
-}
-
-/** @emoji 📦 Decode gzip-or-JSON kit bytes into a live {@link Kit} via {@link Session.openInMemory}. */
-export async function importKit(
-	data: ArrayBuffer | Uint8Array | Blob | File | string,
-): Promise<{ readonly kit: Kit; readonly session: Session; readonly portCompatSource: Kit }> {
-	let bytes: Uint8Array;
-	if (typeof data === "string") {
-		const res = await fetch(data);
-		bytes = new Uint8Array(await res.arrayBuffer());
-	} else if (data instanceof Uint8Array) {
-		bytes = data;
-	} else if (data instanceof ArrayBuffer) {
-		bytes = new Uint8Array(data);
-	} else {
-		bytes = new Uint8Array(await data.arrayBuffer());
-	}
-	if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
-		bytes = gunzipSync(bytes);
-	}
-	const text = new TextDecoder().decode(bytes);
-	const plainUnknown = decodeKitSemioEnvelopeToFullFromValue(JSON.parse(text));
-	const payload = typeof plainUnknown === "object" && plainUnknown != null ? JSON.stringify(plainUnknown) : String(plainUnknown);
-	const bundleKit = sketchpadKitFromDecodedBundle(plainUnknown);
-	const session = await SemioSession.openInMemory();
-	const stores = await session.stores();
-	if (stores.length === 0) throw new Error("semio/sketchpad: importKit found zero stores after openInMemory");
-	const store = stores[0]!;
-	const installed = await store.installProjection(payload);
-	if (!installed.ok) throw new Error(`semio/sketchpad: importKit installProjection failed: ${installed.error?.message ?? "unknown"}`);
-	const kitDto = await sketchpadKitDtoFromJsStore(store);
-	const portCompatSource = (bundleKit ?? kitDto) as Kit;
-	const compat = sketchpadMergePortCompatMaps(sketchpadExtractPortCompatById(portCompatSource), sketchpadExtractPortCompatById(kitDto));
-	const kit = sketchpadApplyPortCompatById(sketchpadMergeKitDtoFromBundleProjection(kitDto, portCompatSource), compat);
-	return { kit, session, portCompatSource };
-}
-
-/** @emoji 📤 Wraps a kit DTO in the `wip.initialKit` envelope used by {@link importKit}. */
-export function sketchpadKitToSemioEnvelope(kit: Kit): { readonly wip: { readonly initialKit: Kit } } {
-	return { wip: { initialKit: kit } };
+/** @emoji 📦 Opens kit bytes or a kit URL (`.json`, `.zip`, gzip) into a live {@link SemioKitClient}. */
+export async function importKit(data: ArrayBuffer | Uint8Array | Blob | string): Promise<SemioKitClient> {
+	return SemioKitClient.open(typeof data === "string" ? { kind: "url", url: data } : { kind: "bytes", data });
 }
 
 /** @emoji 💾 Triggers a browser download of kit JSON (semio envelope). */
 export function sketchpadDownloadKitJson(kit: Kit, filename?: string): void {
 	if (typeof document === "undefined") return;
-	const json = JSON.stringify(sketchpadKitToSemioEnvelope(kit), null, 2);
+	const json = JSON.stringify(semioKitToEnvelope(kit), null, 2);
 	const blob = new Blob([json], { type: "application/json" });
 	const url = URL.createObjectURL(blob);
 	const anchor = document.createElement("a");
@@ -10362,7 +10288,7 @@ export function sketchpadDownloadKitJson(kit: Kit, filename?: string): void {
 /** @emoji 📋 Copies kit JSON (semio envelope) to the clipboard when available. */
 export async function sketchpadCopyKitJsonToClipboard(kit: Kit): Promise<boolean> {
 	if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) return false;
-	await navigator.clipboard.writeText(JSON.stringify(sketchpadKitToSemioEnvelope(kit), null, 2));
+	await navigator.clipboard.writeText(JSON.stringify(semioKitToEnvelope(kit), null, 2));
 	return true;
 }
 //#endregion 🔖KitImport
@@ -10374,10 +10300,6 @@ export type SketchpadKitPersistenceKind = "temporary" | "file" | "folder" | "rem
 export type SketchpadKitBackendFactory = () => Promise<SemioKitStore>;
 
 let sketchpadKitBackendFactories: Partial<Record<SketchpadKitPersistenceKind, SketchpadKitBackendFactory>> = {};
-
-function sketchpadKitStoreFromFactory(result: SemioKitStore | SemioKitStoreBackend): SemioKitStore {
-	return result instanceof SemioKitStore ? result : new SemioKitStore(result);
-}
 
 function sketchpadPromptServerUrl(preset?: string): string | null {
 	if (typeof window === "undefined" || typeof window.prompt !== "function") return preset ?? null;
@@ -10391,16 +10313,9 @@ export async function sketchpadDefaultRemoteKitFactory(): Promise<SemioKitStore>
 	return sketchpadOpenRemoteKitStore(serverUrl);
 }
 
-/** @emoji 🌐 Opens an HTTP {@link Session} kit and returns a {@link SemioJsKitStore}. */
-export async function sketchpadOpenRemoteKitStore(serverUrl: string): Promise<SemioJsKitStore> {
-	const session = await SemioSession.openHttp(serverUrl);
-	const stores = await session.stores();
-	const jsStore = stores[0];
-	if (!jsStore) {
-		await session.dispose();
-		throw new Error("semio/sketchpad: remote session has no stores");
-	}
-	return createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose() });
+/** @emoji 🌐 Opens a `semio-store` HTTP kit as a {@link SemioKitStore}. */
+export async function sketchpadOpenRemoteKitStore(serverUrl: string): Promise<SemioKitStore> {
+	return new SemioKitStore(await SemioKitClient.open({ kind: "http", serverUrl }));
 }
 
 /** @emoji 🔧 Registers host kit open factories used by {@link SketchpadShellController} `openKit` commands. */
@@ -10442,21 +10357,15 @@ export async function sketchpadPickKitImportFile(): Promise<File | null> {
 	});
 }
 
-/** @emoji 📂 Opens a user-selected kit file via {@link importKit} and returns a {@link SemioJsKitStore}. */
-export async function sketchpadBrowserFileKitFactory(): Promise<SemioJsKitStore> {
+/** @emoji 📂 Opens a user-selected kit file via {@link importKit}. */
+export async function sketchpadBrowserFileKitFactory(): Promise<SemioKitStore> {
 	const file = await sketchpadPickKitImportFile();
 	if (!file) throw new Error("semio/sketchpad: file kit open cancelled");
-	const { session, portCompatSource } = await importKit(file);
-	const jsStore = (await session.stores())[0];
-	if (!jsStore) {
-		await session.dispose();
-		throw new Error("semio/sketchpad: file kit open found no stores");
-	}
-	return createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose(), portCompatSource });
+	return new SemioKitStore(await importKit(file));
 }
 
 /** @emoji 📁 Opens a folder kit when {@link showDirectoryPicker} is available (kit.semio.json at folder root). */
-export async function sketchpadBrowserFolderKitFactory(): Promise<SemioJsKitStore> {
+export async function sketchpadBrowserFolderKitFactory(): Promise<SemioKitStore> {
 	if (typeof window === "undefined" || !("showDirectoryPicker" in window)) {
 		throw new Error("semio/sketchpad: folder kit open requires showDirectoryPicker");
 	}
@@ -10467,13 +10376,7 @@ export async function sketchpadBrowserFolderKitFactory(): Promise<SemioJsKitStor
 		(await dir.getFileHandle("kit.semio.json", { create: false }).then((h) => h.getFile()).catch(() => null)) ??
 		(await dir.getFileHandle("wip/initialKit/kit.semio.json", { create: false }).then((h) => h.getFile()).catch(() => null));
 	if (!kitFile) throw new Error("semio/sketchpad: no kit.semio.json in selected folder");
-	const { session, portCompatSource } = await importKit(kitFile);
-	const jsStore = (await session.stores())[0];
-	if (!jsStore) {
-		await session.dispose();
-		throw new Error("semio/sketchpad: folder kit open found no stores");
-	}
-	return createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose(), portCompatSource });
+	return new SemioKitStore(await importKit(kitFile));
 }
 
 /** @emoji 🌐 Registers browser file/folder/remote kit factories for {@link SketchpadShellController}. */
@@ -10611,13 +10514,13 @@ export function attachSketchpadKitStore(
 	}
 }
 
-/** @emoji 📎 Attaches a kit backend to the shell controller and optionally navigates to it. */
+/** @emoji 📎 Attaches a kit read model to the shell controller and optionally navigates to it. */
 export function attachSketchpadKit(
 	kitId: string,
-	backend: SemioKitStoreBackend,
+	source: SemioKitSource,
 	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean },
 ): void {
-	attachSketchpadKitStore(kitId, new SemioKitStore(backend), options);
+	attachSketchpadKitStore(kitId, new SemioKitStore(source), options);
 }
 
 /** @emoji 🔗 Syncs platform chrome then optional browser history navigation. */
@@ -10638,28 +10541,19 @@ export async function openSketchpadKitFromImport(
 	data: ArrayBuffer | Blob | File | string,
 	options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean },
 ): Promise<string> {
-	const { kit, session, portCompatSource } = await importKit(data);
-	const jsStores = await session.stores();
-	const jsStore = jsStores[0];
-	const store = jsStore
-		? await createSemioKitStoreFromJsStore(jsStore, {
-				onDispose: () => void session.dispose(),
-				portCompatSource,
-			})
-		: new InMemorySemioKitStore(kit);
-	attachSketchpadKitStore(kit.id, store, { kind: options?.kind ?? "fixture", navigate: options?.navigate });
-	return kit.id;
+	const client = await importKit(data);
+	attachSketchpadKitStore(client.kitId, new SemioKitStore(client), { kind: options?.kind ?? "fixture", navigate: options?.navigate });
+	return client.kitId;
 }
 
-/** @emoji 🧪 Full metabolism WIP kit (~19MB, served from `/fixtures/` in sketchpad Vite). */
-const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH = "stores/metabolism/wip/initialKit";
-const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL = `/fixtures/${SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH}/kit.semio.json`;
+/** @emoji 🧪 Metabolism kit archive (kit json + representation files, served from `/fixtures/` by the sketchpad dev server). */
+export const SKETCHPAD_DEV_FIXTURE_METABOLISM_URL = "/fixtures/metabolism.zip";
 
-/** @emoji 🧪 Default dev auto-seed kit (served from `/fixtures/` in sketchpad Vite). */
-const SKETCHPAD_DEV_FIXTURE_KIT_URL = SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL;
+/** @emoji 🧪 Nakagin Capsule Tower filtered kit (embedded representation blobs, served from `/fixtures/`). */
+export const SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL = "/fixtures/nakagin-capsule-tower.filtered.kit.semio.json";
 
-/** @emoji 🧪 Nakagin-filtered kit URL used for dev auto-seed. */
-export const SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL = SKETCHPAD_DEV_FIXTURE_KIT_URL;
+/** @emoji 🧪 Default dev auto-seed kit. */
+const SKETCHPAD_DEV_FIXTURE_KIT_URL = SKETCHPAD_DEV_FIXTURE_METABOLISM_URL;
 
 /** @emoji 🧪 Preloads the dev fixture kit when none are open without leaving home (dev browser only). */
 export async function seedSketchpadDevFixtureKitIfEmpty(): Promise<string | null> {
@@ -10898,300 +10792,63 @@ export function sketchpadBuildDocsRegistry(): readonly SketchpadDocSection[] {
 		.sort((left, right) => left.label.localeCompare(right.label));
 }
 
-/** @emoji 🔌 Backend contract for {@link SemioKitStore} (memory, WASM worker, HTTP, …). */
-export type SemioKitStoreBackend = {
-	getSnapshot(): SketchpadKitSnapshot;
-	subscribe?(listener: () => void): () => void;
-	replace?(next: Kit): void;
-};
+/** @emoji 🗂️ Resolves a kit file id to a fetchable URL of its content. */
+export type SketchpadKitFileResolver = (fileId: string) => string | undefined;
 
-/** @emoji 🗄️ Kit authority store; adapts any {@link SemioKitStoreBackend} to {@link Store}. */
+/** @emoji 🗄️ Framework {@link Store} over a {@link SemioKitSource} read model (no local kit authority). */
 export class SemioKitStore extends Store<SketchpadKitSnapshot> {
-	private detach?: () => void;
+	private readonly detach: () => void;
+	private snapshot: SketchpadKitSnapshot;
 
-	constructor(private readonly backend: SemioKitStoreBackend) {
+	constructor(readonly source: SemioKitSource) {
 		super();
-		if (backend.subscribe) {
-			this.detach = backend.subscribe(() => this.notify());
-		}
+		this.snapshot = { kit: source.getSnapshot() };
+		this.detach = source.subscribe(() => {
+			const kit = source.getSnapshot();
+			if (kit === this.snapshot.kit) return;
+			this.snapshot = { kit };
+			this.notify();
+		});
+	}
+
+	/** @emoji 📌 Store over a fixed read-only kit snapshot (static hosts and tests). */
+	static fromSnapshot(kit: Kit): SemioKitStore {
+		return new SemioKitStore(new SemioKitSnapshotSource(kit));
+	}
+
+	/** @emoji 🧩 Live kit client when the source is backed by rs (commands, VFS, references). */
+	get client(): SemioKitClient | null {
+		return this.source instanceof SemioKitClient ? this.source : null;
 	}
 
 	override getSnapshot(): SketchpadKitSnapshot {
-		return this.backend.getSnapshot();
+		return this.snapshot;
 	}
 
-	replaceKit(next: Kit): void {
-		this.backend.replace?.(next);
-		this.notify();
-	}
+	/** @emoji 🔗 Content URL of a kit file (archive entries, embedded blobs, remote urls). */
+	readonly fileUrl: SketchpadKitFileResolver = (fileId) => {
+		const client = this.client;
+		if (client) return client.fileUrl(fileId);
+		const url = this.snapshot.kit.files?.find((file) => file.id === fileId)?.url;
+		return url && url.length > 0 ? url : undefined;
+	};
 
 	override dispose(): void {
-		this.detach?.();
+		this.detach();
+		void this.client?.dispose();
 		super.dispose();
 	}
 }
 
-/** @emoji 💾 In-memory kit store for hosts without a live {@link @semio/js} session yet. */
-export class InMemorySemioKitStore extends SemioKitStore {
-	constructor(kit: Kit) {
-		let current = kit;
-		super({
-			getSnapshot: () => ({ kit: current }),
-			replace: (next) => {
-				current = next;
-			},
-		});
-	}
-}
-
-/** @emoji 🌐 {@link SemioKitStore} backed by {@link @semio/js} with live kit mutations. */
-export class SemioJsKitStore extends SemioKitStore {
-	constructor(
-		backend: SemioKitStoreBackend,
-		readonly jsStore: JsKitStore,
-		private readonly onSessionDispose: (() => void | Promise<void>) | undefined,
-		private readonly portCompatById: ReadonlyMap<string, readonly { readonly id: string }[]>,
-	) {
-		super(backend);
-	}
-
-	/** @emoji 🏛 WIP {@link JsKitEntity} handle for GraphQL kit commands. */
-	async jsKitEntity(): Promise<JsKitEntity> {
-		return this.jsStore.wip().theKit().kit();
-	}
-
-	/** @emoji 🔄 Re-reads kit DTO from rs and notifies subscribers. */
-	async refreshFromJs(): Promise<void> {
-		const kit = await sketchpadKitDtoFromJsStore(this.jsStore);
-		const fromGraphql = sketchpadExtractPortCompatById(kit);
-		const compat = sketchpadMergePortCompatMaps(this.portCompatById, fromGraphql);
-		this.replaceKit(sketchpadApplyPortCompatById(kit, compat));
-	}
-
-	override dispose(): void {
-		super.dispose();
-		void this.onSessionDispose?.();
-	}
-}
-
-const SKETCHPAD_KIT_READ_INNER = `id name description version createdAt updatedAt
-hasDesigns {
-  edges {
-    node {
-      id name description unit
-      hasPieces {
-        edges {
-          node {
-            id name
-            blueprint { id }
-            position { center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } }
-          }
-        }
-      }
-      hasConnections {
-        edges {
-          node {
-            id
-            parent { referencesPiece { id } referencesConnector { id } }
-            child { referencesPiece { id } referencesConnector { id } }
-          }
-        }
-      }
-    }
-  }
-}
-hasTypes {
-  edges {
-    node {
-      id name description
-      hasConnectors { edges { node { id name port { id label code copatibleWith { edges { node { id } } } } } } }
-      hasPorts { edges { node { id label code copatibleWith { edges { node { id } } } } } }
-      hasRepresentations { edges { node { id name file { id } } } }
-    }
-  }
-}
-qualities { edges { node { id key value } } }
-hasFolders { edges { node { id path description files { edges { node { id name url description folderId } } } } } }
-authors { edges { node { id name } } }
-hasFiles { edges { node { id name url description folderId } } }`;
-
-/** @emoji 📁 Maps GraphQL {@code folderId} onto kit file DTO {@code folder} refs. */
-function sketchpadFileDtoFromGraphqlNode(node: Record<string, unknown>): Record<string, unknown> {
-	const folderRef = node["folder"];
-	if (folderRef != null && typeof folderRef === "object" && "id" in folderRef) return node;
-	const folderId = node["folderId"];
-	if (folderId == null || folderId === "") {
-		const { folderId: _omit, ...rest } = node;
-		return rest;
-	}
-	const { folderId: _omit, ...rest } = node;
-	return { ...rest, folder: { id: String(folderId) } };
-}
-
-function sketchpadFormatKitTimestamp(value: unknown): string {
-	if (value == null || value === "") return "";
-	const date = typeof value === "string" || typeof value === "number" ? new Date(value) : value instanceof Date ? value : null;
-	if (!date || Number.isNaN(date.getTime())) return "";
-	return date.toLocaleString();
-}
-
-function sketchpadKitTimestampIso(value: unknown): string | undefined {
-	if (value == null || value === "") return undefined;
-	const date = typeof value === "string" || typeof value === "number" ? new Date(value) : value instanceof Date ? value : null;
-	if (!date || Number.isNaN(date.getTime())) return undefined;
-	return date.toISOString();
-}
-
-/** @emoji 🔌 Maps GraphQL {@code copatibleWith} relay edges onto {@code compatiblePorts} DTO refs. */
-export function sketchpadPortDtoFromGraphqlNode(node: Record<string, unknown>): Record<string, unknown> {
-	const compatEdges =
-		(node["copatibleWith"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-	const compatiblePorts = compatEdges
-		.map((edge) => edge.node)
-		.filter((port): port is Record<string, unknown> => port != null)
-		.map((port) => ({ id: port["id"] }));
-	if (compatiblePorts.length === 0) return node;
-	return { ...node, compatiblePorts };
-}
-
-/** @emoji 📸 Materializes a kit DTO from rs GraphQL for platform snapshots. */
-export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<Kit> {
-	const data = await jsStore.readKitInner(SKETCHPAD_KIT_READ_INNER);
-	if (!data) return { id: "", name: "" } as Kit;
-	const nodes = (key: string): readonly Record<string, unknown>[] => {
-		const edges = (data[key] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-		return edges.map((edge) => edge.node).filter((node): node is Record<string, unknown> => node != null);
-	};
-	const parseDesigns = (): Design[] => {
-		const edges = (data["hasDesigns"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-		return edges
-			.map((edge) => edge.node)
-			.filter((node): node is Record<string, unknown> => node != null)
-			.map((node) => {
-				const pieceEdges = (node["hasPieces"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-				const pieces = pieceEdges.map((pe) => pe.node).filter((n): n is Record<string, unknown> => n != null) as Design["pieces"];
-				const connectionEdges = (node["hasConnections"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-				const connections = connectionEdges.map((ce) => {
-					const raw = ce.node;
-					if (raw == null || typeof raw !== "object") return raw;
-					const remapSide = (side: unknown): unknown => {
-						if (side == null || typeof side !== "object") return side;
-						const s = side as Record<string, unknown>;
-						const piece = s["referencesPiece"] ?? s["piece"];
-						const connector = s["referencesConnector"] ?? s["connector"];
-						return { ...s, piece, connector };
-					};
-					return { ...raw, parent: remapSide(raw["parent"]), child: remapSide(raw["child"]) };
-				}).filter((n): n is Record<string, unknown> => n != null);
-				return { ...node, pieces, connections } as Design;
-			});
-	};
-	const parseTypes = (): Type[] => {
-		const edges = (data["hasTypes"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-		return edges
-			.map((edge) => edge.node)
-			.filter((node): node is Record<string, unknown> => node != null)
-			.map((node) => {
-				const repEdges = (node["hasRepresentations"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-				const representations = repEdges.map((re) => re.node).filter((n): n is Record<string, unknown> => n != null);
-				const portEdges = (node["hasPorts"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-				const ports = portEdges
-					.map((pe) => pe.node)
-					.filter((n): n is Record<string, unknown> => n != null)
-					.map((port) => sketchpadPortDtoFromGraphqlNode(port));
-				const conEdges = (node["hasConnectors"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-				const connectors = conEdges
-					.map((ce) => ce.node)
-					.filter((n): n is Record<string, unknown> => n != null)
-					.map((connector) => {
-						const port = connector["port"];
-						if (port == null || typeof port !== "object") return connector;
-						return { ...connector, port: sketchpadPortDtoFromGraphqlNode(port as Record<string, unknown>) };
-					});
-				return { ...node, representations, ports, connectors } as Type;
-			});
-	};
-	const filesById = new Map<string, Record<string, unknown>>();
-	for (const file of nodes("hasFiles")) {
-		const normalized = sketchpadFileDtoFromGraphqlNode(file);
-		const id = String(normalized["id"] ?? "");
-		if (id) filesById.set(id, normalized);
-	}
-	for (const folder of nodes("hasFolders")) {
-		const nested = (folder["files"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-		for (const edge of nested) {
-			const file = edge.node;
-			if (!file) continue;
-			const normalized = sketchpadFileDtoFromGraphqlNode(file);
-			const id = String(normalized["id"] ?? "");
-			if (id) filesById.set(id, normalized);
-		}
-	}
-	return {
-		id: String(data["id"] ?? ""),
-		name: String(data["name"] ?? ""),
-		description: data["description"] != null ? String(data["description"]) : undefined,
-		version: data["version"] != null ? String(data["version"]) : undefined,
-		createdAt: data["createdAt"] != null ? String(data["createdAt"]) : undefined,
-		updatedAt: data["updatedAt"] != null ? String(data["updatedAt"]) : undefined,
-		files: [...filesById.values()] as Kit["files"],
-		folders: nodes("hasFolders") as Kit["folders"],
-		authors: nodes("authors") as Kit["authors"],
-		qualities: nodes("qualities") as Kit["qualities"],
-		designs: parseDesigns(),
-		types: parseTypes(),
-	} as Kit;
-}
-
-/** @emoji 🌐 Builds a {@link SemioJsKitStore} from a live {@link @semio/js} store. */
-export async function createSemioKitStoreFromJsStore(
-	jsStore: JsKitStore,
-	options?: { readonly onDispose?: () => void | Promise<void>; readonly portCompatSource?: Kit },
-): Promise<SemioJsKitStore> {
-	const portCompatById = sketchpadExtractPortCompatById(
-		options?.portCompatSource ?? ({ id: "", name: "" } as Kit),
-	);
-	const materializeKit = async (): Promise<Kit> => {
-		const dto = await sketchpadKitDtoFromJsStore(jsStore);
-		const merged = options?.portCompatSource ? sketchpadMergeKitDtoFromBundleProjection(dto, options.portCompatSource) : dto;
-		const compat = sketchpadMergePortCompatMaps(portCompatById, sketchpadExtractPortCompatById(merged));
-		return sketchpadApplyPortCompatById(merged, compat);
-	};
-	let kit = await materializeKit();
-	const refresh = async (): Promise<void> => {
-		kit = await materializeKit();
-	};
-	await refresh();
-	return new SemioJsKitStore(
-		{
-			getSnapshot: () => ({ kit }),
-			replace: (next) => {
-				kit = next;
-			},
-			subscribe: (listener) =>
-				jsStore.session.subscribe(() => {
-					void refresh().then(listener);
-				}),
-		},
-		jsStore,
-		options?.onDispose,
-		portCompatById,
-	);
-}
-
-/** @emoji ⚡ Runs a {@link JsKitEntity} mutation on the active js-backed kit store. */
-export async function executeSketchpadJsKitMutation(
+/** @emoji ⚡ Runs kit commands on a live kit (the sketchpad's single command choke point, see {@link SemioKitClient.execute}). */
+export async function executeSketchpadKitCommand(
 	kitId: string,
-	run: (kit: JsKitEntity) => Promise<SetResult>,
+	run: (kit: SemioKitCommands) => Promise<SetResult>,
 	storeOverride?: SemioKitStore,
 ): Promise<SetResult> {
-	const store = storeOverride ?? getSketchpadShellController()?.getKitStore(kitId);
-	if (!(store instanceof SemioJsKitStore)) {
-		return { ok: false, error: { kind: "NotSupported", message: "semio/sketchpad: kit is not backed by @semio/js" } };
-	}
-	const result = await run(await store.jsKitEntity());
-	await store.refreshFromJs();
-	return result;
+	const client = (storeOverride ?? getSketchpadShellController()?.getKitStore(kitId))?.client;
+	if (!client) return { ok: false, error: { kind: "NotSupported", message: "semio/sketchpad: kit is not backed by a live session" } };
+	return client.execute(run);
 }
 
 function sketchpadActiveKitIdFromPath(path: string): string | null {
@@ -11254,6 +10911,20 @@ export function sketchpadAppIdFromPath(path: string): string {
 //#endregion 🔖SketchpadRouteScope
 
 //#region 🔖KitHelpers
+function sketchpadFormatKitTimestamp(value: unknown): string {
+	if (value == null || value === "") return "";
+	const date = typeof value === "string" || typeof value === "number" ? new Date(value) : value instanceof Date ? value : null;
+	if (!date || Number.isNaN(date.getTime())) return "";
+	return date.toLocaleString();
+}
+
+function sketchpadKitTimestampIso(value: unknown): string | undefined {
+	if (value == null || value === "") return undefined;
+	const date = typeof value === "string" || typeof value === "number" ? new Date(value) : value instanceof Date ? value : null;
+	if (!date || Number.isNaN(date.getTime())) return undefined;
+	return date.toISOString();
+}
+
 /** @emoji 📋 Normalizes list-or-`{ items }` blocks on kit DTO snapshots. */
 function sketchpadKitItemsOf<T>(node: unknown): readonly T[] {
 	if (Array.isArray(node)) return node as readonly T[];
@@ -11397,161 +11068,56 @@ function sketchpadKitFileAtKitRoot(file: Record<string, unknown>): boolean {
 	return sketchpadReadEntityId(file["folder"]) == null;
 }
 
-const SKETCHPAD_METABOLISM_KIT_ASSET_ROOT = `/fixtures/${SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH}`;
-
-/** @emoji 📍 Normalizes a path relative to the metabolism wip kit fixture root (supports `../representations/*.glb`). */
-export function sketchpadFixtureUrlFromKitRelativePath(relativePath: string): string {
-	if (relativePath.startsWith("/")) return relativePath;
-	const segments = SKETCHPAD_METABOLISM_KIT_ASSET_ROOT.split("/").filter(Boolean);
-	for (const part of relativePath.replace(/^\.\//, "").split("/")) {
-		if (part === "..") segments.pop();
-		else if (part !== ".") segments.push(part);
-	}
-	return `/${segments.join("/")}`;
-}
-
-/** @emoji 🧊 Maps metabolism representation GLBs to puzzle 3d `/meshes/*` URLs (see {@link puzzle3dMeshesVitePlugin}). */
-export function sketchpadPuzzle3dMeshUrlForKitFile(row: { readonly name?: string; readonly path?: string }): string | undefined {
-	const path = row.path?.replace(/^\.\//, "") ?? "";
-	if (path.includes("representations/") && path.endsWith(".glb")) {
-		const base = path.split("/").pop();
-		return base ? `/meshes/${base}` : undefined;
-	}
-	const name = row.name?.trim();
-	if (!path && name?.endsWith(".glb")) {
-		return `/meshes/${name}`;
-	}
-	return undefined;
-}
-
-/** @emoji 🗂️ Resolves kit file ids to fetchable mesh URLs (http, absolute, or metabolism assets). */
-export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
-	const map = new Map<string, string>();
-	for (const file of kit.files ?? []) {
-		const row = file as { id: string; url?: string; uri?: string; path?: string; name?: string; blob?: string };
-		const puzzleMesh = sketchpadPuzzle3dMeshUrlForKitFile(row);
-		if (puzzleMesh) {
-			map.set(row.id, puzzleMesh);
-			continue;
-		}
-		if (row.blob && typeof row.blob === "string" && /^(?:blob:|data:|https?:)/i.test(row.blob)) {
-			map.set(row.id, row.blob);
-			continue;
-		}
-		const direct = row.url ?? row.uri;
-		if (direct) {
-			map.set(row.id, direct);
-			continue;
-		}
-		if (row.path) {
-			map.set(row.id, sketchpadFixtureUrlFromKitRelativePath(row.path));
-		}
-	}
-	return map;
-}
-
 const SKETCHPAD_PLACEHOLDER_MESH_URL = "puzzle.3d.placeholder://box";
-
-/** @emoji 🧊 Picks a representation mesh URL for a design piece (placeholder when unresolved). */
-export function sketchpadResolvePieceMeshUrl(
-	piece: { readonly type?: unknown; readonly blueprint?: unknown },
-	kit: Kit,
-	fileUrls: ReadonlyMap<string, string> = sketchpadKitFileUrlById(kit),
-): string {
-	const typeId = sketchpadReadEntityId(piece.type ?? piece.blueprint);
-	if (!typeId) return SKETCHPAD_PLACEHOLDER_MESH_URL;
-	const type = findTypeInKit(kit, typeId);
-	const reps = type ? sketchpadListTypeRepresentations(type) : [];
-	if (reps.length === 0) return SKETCHPAD_PLACEHOLDER_MESH_URL;
-	const untagged =
-		reps.find((rep) => {
-			const tags = rep.tags as { items?: readonly unknown[] } | readonly unknown[] | undefined;
-			if (Array.isArray(tags)) return tags.length === 0;
-			return !tags?.items?.length;
-		}) ?? reps[0];
-	return sketchpadResolveRepresentationMeshUrl(untagged!, kit, fileUrls);
-}
 
 /** @emoji 🏷️ Normalized type representation row for routing and topology. */
 export interface SketchpadTypeRepresentationRef {
 	readonly id: string;
 	readonly name: string;
-	readonly file?: unknown;
-	readonly tags?: unknown;
+	readonly file?: Representation["file"];
+	readonly tags?: Representation["tags"];
 }
 
-function sketchpadMergeKitTypeRepresentations(target: Type, source: Type | undefined): Type {
-	if (!source) return target;
-	const liveReps = sketchpadListTypeRepresentations(target);
-	const bundleReps = sketchpadListTypeRepresentations(source);
-	if (liveReps.length > 0 || bundleReps.length === 0) return target;
-	return { ...target, representations: source.representations } as Type;
-}
-
-/** @emoji 🔀 Overlays bundle projection types/files when GraphQL materialization omits representations. */
-export function sketchpadMergeKitDtoFromBundleProjection(target: Kit, source: Kit): Kit {
-	const sourceFiles = source.files ?? [];
-	const targetFiles = target.files ?? [];
-	const files =
-		sourceFiles.length === 0
-			? targetFiles
-			: [
-					...targetFiles,
-					...sourceFiles.filter((file) => !targetFiles.some((row) => row.id === file.id)),
-				];
-	const sourceTypes = sketchpadKitTypeRows(source);
-	const types = sketchpadKitTypeRows(target).map((type) =>
-		sketchpadMergeKitTypeRepresentations(type, sourceTypes.find((row) => row.id === type.id)),
-	);
-	const targetTypologies = sketchpadKitTypologyRows(target);
-	const sourceTypologies = sketchpadKitTypologyRows(source);
-	const typologies =
-		sourceTypologies.length === 0
-			? (target as { typologies?: unknown }).typologies
-			: targetTypologies.length === 0
-				? (source as { typologies?: unknown }).typologies
-				: (target as { typologies?: unknown }).typologies;
-	return { ...target, files, types, typologies } as Kit;
-}
-
-/** @emoji 📋 Lists representation rows on a kit kind. */
+/** @emoji 📋 Lists representation rows on a kit type. */
 export function sketchpadListTypeRepresentations(type: Type): readonly SketchpadTypeRepresentationRef[] {
-	return sketchpadKitItemsOf<Record<string, unknown>>(type.representations)
-		.filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null && "id" in entry)
-		.map((entry) => ({
-			id: String(entry["id"]),
-			name: typeof entry["name"] === "string" && entry["name"].length > 0 ? entry["name"] : String(entry["id"]),
-			file: entry["file"],
-			tags: entry["tags"],
-		}));
+	return sketchpadKitItemsOf<Representation>(type.representations)
+		.filter((entry) => typeof entry === "object" && entry !== null && "id" in entry)
+		.map((entry) => ({ id: String(entry.id), name: entry.name && entry.name.length > 0 ? entry.name : String(entry.id), file: entry.file, tags: entry.tags }));
 }
 
-/** @emoji 🧊 Resolves the mesh URL for one type representation. */
+/** @emoji 🧊 True when a kit file (by name or content URL) holds glTF geometry the scene can load. */
+function sketchpadIsMeshFile(name: string | undefined, url: string): boolean {
+	return /\.(glb|gltf)$/i.test(name ?? "") || /^data:[^;,]*gltf/i.test(url) || /\.(glb|gltf)(?:[?#]|$)/i.test(url);
+}
+
+/** @emoji 🧊 Mesh URL of one representation ({@code undefined} when its file is no loadable geometry). */
 export function sketchpadResolveRepresentationMeshUrl(
 	representation: Pick<SketchpadTypeRepresentationRef, "file">,
 	kit: Kit,
-	fileUrls: ReadonlyMap<string, string> = sketchpadKitFileUrlById(kit),
-): string {
+	fileUrl: SketchpadKitFileResolver,
+): string | undefined {
 	const fileId = sketchpadReadEntityId(representation.file);
-	if (!fileId) return SKETCHPAD_PLACEHOLDER_MESH_URL;
-	return fileUrls.get(fileId) ?? SKETCHPAD_PLACEHOLDER_MESH_URL;
+	const url = fileId ? fileUrl(fileId) : undefined;
+	if (!fileId || !url) return undefined;
+	return sketchpadIsMeshFile(kit.files?.find((file) => file.id === fileId)?.name, url) ? url : undefined;
 }
 
-/** @emoji 🧊 Picks the primary representation mesh URL for a kit kind. */
-export function sketchpadResolveTypeMeshUrl(
-	type: Type,
-	kit: Kit,
-	fileUrls: ReadonlyMap<string, string> = sketchpadKitFileUrlById(kit),
-): string {
-	const reps = sketchpadListTypeRepresentations(type);
-	if (reps.length === 0) return SKETCHPAD_PLACEHOLDER_MESH_URL;
-	const untagged =
-		reps.find((rep) => {
-			const tags = rep.tags as { items?: readonly unknown[] } | readonly unknown[] | undefined;
-			if (Array.isArray(tags)) return tags.length === 0;
-			return !tags?.items?.length;
-		}) ?? reps[0];
-	return sketchpadResolveRepresentationMeshUrl(untagged!, kit, fileUrls);
+/** @emoji 🧊 Primary mesh URL of a type: first loadable representation, untagged ones first. */
+export function sketchpadResolveTypeMeshUrl(type: Type, kit: Kit, fileUrl: SketchpadKitFileResolver): string | undefined {
+	const representations = sketchpadListTypeRepresentations(type);
+	const tagged = (representation: SketchpadTypeRepresentationRef) => (representation.tags?.length ?? 0) > 0;
+	for (const representation of [...representations.filter((row) => !tagged(row)), ...representations.filter(tagged)]) {
+		const url = sketchpadResolveRepresentationMeshUrl(representation, kit, fileUrl);
+		if (url) return url;
+	}
+	return undefined;
+}
+
+/** @emoji 🧊 Mesh URL of a design piece (placeholder box when its type has no loadable representation). */
+export function sketchpadResolvePieceMeshUrl(piece: Piece, kit: Kit, fileUrl: SketchpadKitFileResolver): string {
+	const typeId = sketchpadReadEntityId(piece.type);
+	const type = typeId ? findTypeInKit(kit, typeId) : undefined;
+	return (type ? sketchpadResolveTypeMeshUrl(type, kit, fileUrl) : undefined) ?? SKETCHPAD_PLACEHOLDER_MESH_URL;
 }
 
 function sketchpadNewKitId(): string {
@@ -11594,8 +11160,8 @@ export const SKETCHPAD_TOPOLOGY_STORE_PREFIX = PLATFORM_TOPOLOGY_STORE_PREFIX;
 type SketchpadPuzzle2dFixtureV1 = {
 	readonly schema: "puzzle.2d.fixture/v1";
 	readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
-	readonly nodes: readonly Record<string, unknown>[];
-	readonly edges: readonly Record<string, unknown>[];
+	readonly nodes: Record<string, unknown>[];
+	readonly edges: Record<string, unknown>[];
 };
 
 type SketchpadVolumeFixtureV1 = {
@@ -11868,7 +11434,7 @@ function sketchpadPieceBlueprintFromDto(piece: Piece, kit: Kit): { readonly kind
 	return null;
 }
 
-/** @emoji 🔗 Loads design transitive refs and piece blueprints from the rust-backed {@link SemioJsKitStore}. */
+/** @emoji 🔗 Loads design transitive refs and piece blueprints (rs computed for live kits, snapshot-derived otherwise). */
 export async function sketchpadFetchKitWiresReferences(
 	store: SemioKitStore,
 	kit: Kit,
@@ -11880,28 +11446,20 @@ export async function sketchpadFetchKitWiresReferences(
 	const designTransitiveTypes = new Map<string, readonly string[]>();
 	const designTransitiveDesigns = new Map<string, readonly string[]>();
 	const pieceBlueprints = new Map<string, { readonly kind: "Type" | "Design"; readonly id: string }>();
+	const client = store.client;
 
-	if (store instanceof SemioJsKitStore) {
-		const jsStore = store.jsStore;
+	if (client) {
 		for (const node of visible) {
 			if (node.fileNodeKindId === "design" && !expandedDesignIds.has(node.id)) {
-				const design = jsStore.design(node.id) as JsDesign;
-				const [types, designs] = await Promise.all([design.referencesTypesTransitive(), design.referencesDesignsTransitive()]);
-				designTransitiveTypes.set(
-					node.id,
-					types.map((t) => t.id).filter((id) => visibleIds.has(id)),
-				);
-				designTransitiveDesigns.set(
-					node.id,
-					designs.map((d) => d.id).filter((id) => visibleIds.has(id) && id !== node.id),
-				);
+				const references = await client.designReferences(node.id);
+				designTransitiveTypes.set(node.id, references.types.filter((id) => visibleIds.has(id)));
+				designTransitiveDesigns.set(node.id, references.designs.filter((id) => visibleIds.has(id) && id !== node.id));
 			}
 			if (node.fileNodeKindId === "piece") {
 				const designId = vfsMeta.get(node.id)?.designId ?? node.parentId ?? "";
 				if (!designId) continue;
-				const piece = jsStore.design(designId).piece(node.id) as JsPiece;
-				const blueprint = await piece.blueprint();
-				if (blueprint) pieceBlueprints.set(node.id, { kind: blueprint.blueprintKind, id: blueprint.id });
+				const blueprint = await client.pieceBlueprint(designId, node.id);
+				if (blueprint) pieceBlueprints.set(node.id, blueprint);
 			}
 		}
 		return { designTransitiveTypes, designTransitiveDesigns, pieceBlueprints };
@@ -11944,8 +11502,7 @@ export function sketchpadKitWiresFixtureFromVisible(
 	const identityByNodeId = new Map<string, number>();
 	const identities: WiresFixtureV1["identities"][number][] = [];
 	const relationships: WiresFixtureV1["relationships"][number][] = [];
-	const boardNodes: { id: string; x: number; y: number; text?: string; iconKind?: string; nodeKind?: string; shape?: "circle" | "rectangle"; width?: number; height?: number; radius?: number }[] =
-		[];
+	const boardNodes: WiresFixtureV1["board"]["nodes"] = [];
 	const boardEdges: { id: string; source: string; target: string }[] = [];
 	const edgeIds = new Set<string>();
 	let relationshipId = 1;
@@ -11983,16 +11540,8 @@ export function sketchpadKitWiresFixtureFromVisible(
 		});
 		const shape = node.fileNodeKindId === "design" ? "circle" : "rectangle";
 		const iconKind = sketchpadKitWiresNodeIconKind(node);
-		boardNodes.push({
-			id: node.id,
-			x: position.x,
-			y: position.y,
-			text: node.name,
-			nodeKind: sketchpadKitWiresIdentityKind(node.fileNodeKindId),
-			shape,
-			...(iconKind ? { iconKind } : {}),
-			...(shape === "circle" ? { radius: 28 } : { width: 120, height: 40 }),
-		});
+		const base = { id: node.id, x: position.x, y: position.y, text: node.name, nodeKind: sketchpadKitWiresIdentityKind(node.fileNodeKindId), handles: [], ...(iconKind ? { iconKind } : {}) };
+		boardNodes.push(shape === "circle" ? { ...base, shape, radius: 28 } : { ...base, shape, width: 120, height: 40 });
 	}
 
 	const kindById = new Map(visible.map((node) => [node.id, node.fileNodeKindId] as const));
@@ -12142,60 +11691,6 @@ function sketchpadCollectKitPortRecords(kit: Kit): readonly Record<string, unkno
 	};
 	sketchpadForEachKitPortRecord(kit, remember);
 	return [...byId.values()];
-}
-
-/** @emoji 🔀 Merges port compat maps; later map entries override earlier ones for the same port id. */
-export function sketchpadMergePortCompatMaps(
-	primary: ReadonlyMap<string, readonly { readonly id: string }[]>,
-	overlay: ReadonlyMap<string, readonly { readonly id: string }[]>,
-): Map<string, readonly { readonly id: string }[]> {
-	const merged = new Map(primary);
-	for (const [portId, refs] of overlay) merged.set(portId, refs);
-	return merged;
-}
-
-/** @emoji 🗺️ Collects port {@code compatiblePorts} refs from a kit snapshot (bundle or DTO). */
-export function sketchpadExtractPortCompatById(kit: Kit): Map<string, readonly { readonly id: string }[]> {
-	const map = new Map<string, readonly { readonly id: string }[]>();
-	for (const port of sketchpadCollectKitPortRecords(kit)) {
-		const id = sketchpadReadEntityId(port);
-		const compatIds = sketchpadReadCompatiblePortIds(port);
-		if (id && compatIds.length > 0) map.set(id, compatIds.map((compatId) => ({ id: compatId })));
-	}
-	return map;
-}
-
-/** @emoji 🔗 Re-applies stored {@code compatiblePorts} onto a GraphQL-shaped kit DTO. */
-export function sketchpadApplyPortCompatById(
-	kit: Kit,
-	compatById: ReadonlyMap<string, readonly { readonly id: string }[]>,
-): Kit {
-	if (compatById.size === 0) return kit;
-	const enrichPort = (port: unknown): unknown => {
-		if (port == null || typeof port !== "object") return port;
-		const row = { ...(port as Record<string, unknown>) };
-		const id = sketchpadReadEntityId(row);
-		const compat = id ? compatById.get(id) : undefined;
-		if (compat?.length) row.compatiblePorts = compat;
-		return row;
-	};
-	const types = (kit.types ?? []).map((type) => ({
-		...type,
-		ports: ((type as { ports?: readonly unknown[] }).ports ?? []).map(enrichPort),
-		connectors: (type.connectors ?? []).map((connector) => ({
-			...connector,
-			port: enrichPort((connector as { port?: unknown }).port),
-		})),
-	}));
-	const familyRows = sketchpadReadKitFamilyRows(kit);
-	const families =
-		familyRows.length === 0
-			? undefined
-			: familyRows.map((family) => ({
-					...family,
-					ports: sketchpadReadFamilyPortRows(family).map(enrichPort),
-				}));
-	return { ...kit, types, ...(families != null ? { families } : {}) } as Kit;
 }
 
 function sketchpadReadCompatiblePortIds(port: Record<string, unknown>): readonly string[] {
@@ -12660,7 +12155,7 @@ export function sketchpadApplyPuzzle2dSelection(
 				pieceIds.push(id);
 			}
 		}
-		ctrl.setRouteSelection({ pieceIds, connectionIds, kitWiresNodeIds: [] });
+		ctrl.setRouteSelection({ pieceIds, connectionIds, kitWiresNodeIds: [], kitWiresHoveredNodeId: null });
 	}
 }
 
@@ -12713,15 +12208,14 @@ export function sketchpadDesignPuzzle2dFixtureFromDesign(design: Design, kit?: K
 	};
 }
 
-/** @emoji 🌐 Builds a 3D design scene volume from design pieces (placeholder meshes until file URLs are wired). */
-export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit): SketchpadVolumeFixtureV1 {
+/** @emoji 🌐 Builds a 3D design scene volume from design pieces (representation meshes, placeholder boxes when a type has none). */
+export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit, fileUrl: SketchpadKitFileResolver = () => undefined): SketchpadVolumeFixtureV1 {
 	const pieces = design.pieces ?? [];
 	const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as readonly SketchpadKitConnection[];
-	const fileUrls = kit ? sketchpadKitFileUrlById(kit) : new Map<string, string>();
 	const objects = pieces.map((piece, index) => ({
 		id: piece.id,
 		objectKind: "semio.design.piece",
-		meshUrl: kit ? sketchpadResolvePieceMeshUrl(piece, kit, fileUrls) : SKETCHPAD_PLACEHOLDER_MESH_URL,
+		meshUrl: kit ? sketchpadResolvePieceMeshUrl(piece, kit, fileUrl) : SKETCHPAD_PLACEHOLDER_MESH_URL,
 		origin: sketchpadPieceSceneOrigin(piece, index),
 		orientation: [0, 0, 0, 1] as [number, number, number, number],
 		scale: [1, 1, 1] as [number, number, number],
@@ -12771,10 +12265,10 @@ function sketchpadSceneCameraFromDesign(design: Design): SketchpadVolumeFixtureV
 }
 
 
-function sketchpadTopologyPayloadForDesignScene(design: Design, kit?: Kit): PlatformTopologyPayload {
+function sketchpadTopologyPayloadForDesignScene(design: Design, kit: Kit, fileUrl: SketchpadKitFileResolver): PlatformTopologyPayload {
 	return sketchpadTopologyPayload(
 		sketchpadDesignPuzzle2dFixtureFromDesign(design, kit),
-		sketchpadDesignVolumeFixtureFromDesign(design, kit),
+		sketchpadDesignVolumeFixtureFromDesign(design, kit, fileUrl),
 	);
 }
 
@@ -12787,8 +12281,8 @@ export function sketchpadTypeVolumeFixtureForRepresentation(
 	type: Type,
 	representation: SketchpadTypeRepresentationRef,
 	kit: Kit,
+	fileUrl: SketchpadKitFileResolver = () => undefined,
 ): SketchpadVolumeFixtureV1 {
-	const fileUrls = sketchpadKitFileUrlById(kit);
 	return {
 		schema: "puzzle.3d.fixture/v1",
 		domain: "architecture",
@@ -12797,10 +12291,10 @@ export function sketchpadTypeVolumeFixtureForRepresentation(
 			{
 				id: representation.id,
 				objectKind: "semio.representation",
-				meshUrl: sketchpadResolveRepresentationMeshUrl(representation, kit, fileUrls),
+				meshUrl: sketchpadResolveRepresentationMeshUrl(representation, kit, fileUrl) ?? SKETCHPAD_PLACEHOLDER_MESH_URL,
 				origin: [0, 0, 0] as [number, number, number],
 				orientation: [0, 0, 0, 1] as [number, number, number, number],
-				scale: [1, 1, 1] as [number, number, number, number],
+				scale: [1, 1, 1] as [number, number, number],
 				label: representation.name,
 				vortices: [],
 			},
@@ -12810,7 +12304,7 @@ export function sketchpadTypeVolumeFixtureForRepresentation(
 }
 
 /** @emoji 🌐 Builds a single-mesh 3D volume for a kit kind (primary representation). */
-export function sketchpadTypeVolumeFixtureFromType(type: Type, kit: Kit): SketchpadVolumeFixtureV1 {
+export function sketchpadTypeVolumeFixtureFromType(type: Type, kit: Kit, fileUrl: SketchpadKitFileResolver = () => undefined): SketchpadVolumeFixtureV1 {
 	const reps = sketchpadListTypeRepresentations(type);
 	if (reps.length === 0) {
 		return {
@@ -12821,19 +12315,20 @@ export function sketchpadTypeVolumeFixtureFromType(type: Type, kit: Kit): Sketch
 			attractions: [],
 		};
 	}
-	return sketchpadTypeVolumeFixtureForRepresentation(type, reps[0]!, kit);
+	return sketchpadTypeVolumeFixtureForRepresentation(type, reps[0]!, kit, fileUrl);
 }
 
-function sketchpadTopologyPayloadForTypeRepresentation(type: Type, representation: SketchpadTypeRepresentationRef, kit: Kit): PlatformTopologyPayload {
-	return sketchpadTopologyPayload(sketchpadEmptyPuzzle2dFixture(), sketchpadTypeVolumeFixtureForRepresentation(type, representation, kit));
+function sketchpadTopologyPayloadForTypeRepresentation(
+	type: Type,
+	representation: SketchpadTypeRepresentationRef,
+	kit: Kit,
+	fileUrl: SketchpadKitFileResolver,
+): PlatformTopologyPayload {
+	return sketchpadTopologyPayload(sketchpadEmptyPuzzle2dFixture(), sketchpadTypeVolumeFixtureForRepresentation(type, representation, kit, fileUrl));
 }
 
-function sketchpadTopologyPayloadForTypeScene(type: Type, kit: Kit): PlatformTopologyPayload {
-	const reps = sketchpadListTypeRepresentations(type);
-	if (reps.length === 0) {
-		return sketchpadTopologyPayload(sketchpadEmptyPuzzle2dFixture(), sketchpadTypeVolumeFixtureFromType(type, kit));
-	}
-	return sketchpadTopologyPayloadForTypeRepresentation(type, reps[0]!, kit);
+function sketchpadTopologyPayloadForTypeScene(type: Type, kit: Kit, fileUrl: SketchpadKitFileResolver): PlatformTopologyPayload {
+	return sketchpadTopologyPayload(sketchpadEmptyPuzzle2dFixture(), sketchpadTypeVolumeFixtureFromType(type, kit, fileUrl));
 }
 
 function sketchpadEmptyPuzzle2dFixture(): SketchpadPuzzle2dFixtureV1 {
@@ -13815,8 +13310,8 @@ export class SketchpadTypeRepresentationScene extends SketchpadRoutedComponent<P
 		if (!type || !representation) {
 			return { presentation: "volume", instanceId, emptyMessage: `Representation ${this.representationId} not found` };
 		}
-		const meshUrl = sketchpadResolveRepresentationMeshUrl(representation, kit!, sketchpadKitFileUrlById(kit!));
-		if (meshUrl === SKETCHPAD_PLACEHOLDER_MESH_URL) {
+		const meshUrl = sketchpadResolveRepresentationMeshUrl(representation, kit!, getSketchpadShellController()?.getKitStore(kitId)?.fileUrl ?? (() => undefined));
+		if (!meshUrl) {
 			return { presentation: "volume", instanceId, emptyMessage: `Mesh unavailable for ${representation.name}` };
 		}
 		return { presentation: "volume", instanceId, emptyMessage: undefined };
@@ -14315,8 +13810,9 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	): void {
 		const { kitId, designId, typeId } = route;
 		if (!kitId) return;
-		const kit = this.getKitStore(kitId)?.getSnapshot().kit;
-		if (!kit) return;
+		const store = this.getKitStore(kitId);
+		const kit = store?.getSnapshot().kit;
+		if (!store || !kit) return;
 		if (surfaceId === SKETCHPAD_SURFACE_KIT_WIRES) {
 			this.syncKitWiresTopology(kitId);
 			return;
@@ -14330,7 +13826,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 			if (type && representation) {
 				this.upsertTopologyStore(
 					sketchpadTypeRepresentationSceneInstanceId(kitId, typeId, representation.id),
-					sketchpadTopologyPayloadForTypeRepresentation(type, representation, kit),
+					sketchpadTopologyPayloadForTypeRepresentation(type, representation, kit, store.fileUrl),
 				);
 			}
 			return;
@@ -14338,7 +13834,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		if (surfaceId === SKETCHPAD_SURFACE_TYPE_SCENE && typeId) {
 			const type = findTypeInKit(kit, typeId);
 			if (type) {
-				this.upsertTopologyStore(sketchpadTypeSceneInstanceId(kitId, typeId), sketchpadTopologyPayloadForTypeScene(type, kit));
+				this.upsertTopologyStore(sketchpadTypeSceneInstanceId(kitId, typeId), sketchpadTopologyPayloadForTypeScene(type, kit, store.fileUrl));
 			}
 			return;
 		}
@@ -14346,7 +13842,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		const design = findDesignInKit(kit, designId);
 		if (!design) return;
 		if (surfaceId === SKETCHPAD_SURFACE_DESIGN_SCENE) {
-			this.upsertTopologyStore(sketchpadDesignSceneInstanceId(kitId, designId), sketchpadTopologyPayloadForDesignScene(design, kit));
+			this.upsertTopologyStore(sketchpadDesignSceneInstanceId(kitId, designId), sketchpadTopologyPayloadForDesignScene(design, kit, store.fileUrl));
 			return;
 		}
 		if (surfaceId === SKETCHPAD_SURFACE_DESIGN_DIAGRAM) {
@@ -14382,27 +13878,16 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		if (!factory) {
 			throw new Error(`semio/sketchpad: no kit factory registered for kind "${kind}"`);
 		}
-		const store = sketchpadKitStoreFromFactory(await factory());
+		const store = await factory();
 		const kitId = store.getSnapshot().kit.id;
 		this.registerKitStore(kitId, store, { kind });
 		this.navigateTo(`/kits/${kitId}`);
 		return kitId;
 	}
 
-	/** @emoji 🆕 Creates an empty in-memory kit backed by {@link @semio/js} and opens it. */
+	/** @emoji 🆕 Creates an empty in-memory kit (live rs session) and opens it. */
 	async createTemporaryKit(name = "Untitled Kit"): Promise<string> {
-		const session = await SemioSession.openInMemory();
-		const jsStore = (await session.stores())[0];
-		if (!jsStore) {
-			await session.dispose();
-			throw new Error("semio/sketchpad: createTemporaryKit found no stores");
-		}
-		const store = await createSemioKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose() });
-		if (name.trim()) {
-			const renamed = await (await store.jsKitEntity()).rename(name.trim());
-			if (!renamed.ok) throw new Error(`semio/sketchpad: rename failed: ${renamed.error?.message ?? "unknown"}`);
-			await store.refreshFromJs();
-		}
+		const store = new SemioKitStore(await SemioKitClient.open({ kind: "empty", name }));
 		const kitId = store.getSnapshot().kit.id;
 		this.registerKitStore(kitId, store, { kind: "temporary" });
 		this.navigateTo(`/kits/${kitId}`);
@@ -14566,14 +14051,15 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		if (!kitId) return Promise.resolve([]);
 		const store = this.getKitStore(kitId);
 		if (!store) return Promise.resolve([]);
-		if (!(store instanceof SemioJsKitStore)) {
+		const client = store.client;
+		if (!client) {
 			const rows = sketchpadKitVfsChildren(store.getSnapshot().kit, parentId);
 			this.rememberVfsNodes(scope, rows, route);
 			return Promise.resolve(rows);
 		}
 		const root = this.getRoot(scope);
 		const parentRef = sketchpadRsVfsParentRef(parentId, root, route, this.vfsMetaForScope(scope));
-		return fetchSemioFileSystemChildren(store.jsStore, parentRef).then((children) => {
+		return client.fileSystemChildren(parentRef).then((children) => {
 			const rows = sketchpadVfsRecordsFromRsChildren(kitId, route, parentId, children);
 			this.rememberVfsNodes(scope, rows, route);
 			return rows;
@@ -14816,16 +14302,10 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				if (!file) break;
 				this.setImportStatus({ phase: "importing", label: file.name });
 				void (async () => {
-					const { kit, session, portCompatSource } = await importKit(file);
-					const jsStore = (await session.stores())[0];
-					if (!jsStore) throw new Error("semio/sketchpad: importKitFromDrop found no stores");
-					const store = await createSemioKitStoreFromJsStore(jsStore, {
-						onDispose: () => void session.dispose(),
-						portCompatSource,
-					});
-					const kitId = kit.id;
-					this.registerKitStore(kitId, store, { kind: "file" });
-					this.setImportStatus({ phase: "success", label: kit.name ?? kitId });
+					const client = await importKit(file);
+					const kitId = client.kitId;
+					this.registerKitStore(kitId, new SemioKitStore(client), { kind: "file" });
+					this.setImportStatus({ phase: "success", label: client.getSnapshot().name ?? kitId });
 					this.navigateTo(`/kits/${kitId}`);
 				})().catch((error) => {
 					const message = error instanceof Error ? error.message : String(error);
@@ -14850,7 +14330,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				break;
 			}
 			case "importFixtureKit": {
-				void openSketchpadKitFromImport(SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL, { kind: "fixture", navigate: true }).catch((error) => {
+				void openSketchpadKitFromImport(SKETCHPAD_DEV_FIXTURE_METABOLISM_URL, { kind: "fixture", navigate: true }).catch((error) => {
 					console.warn("[semio.sketchpad] importFixtureKit failed:", error);
 				});
 				break;
@@ -14916,7 +14396,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				const kitId = sketchpadActiveKitIdFromPath(shell.navigationPath);
 				const name = (args as { name?: string }).name?.trim();
 				if (!kitId || !name) break;
-				void executeSketchpadJsKitMutation(kitId, (kit) => kit.rename(name))
+				void executeSketchpadKitCommand(kitId, (kit) => kit.rename(name))
 					.then((result) => {
 						if (!result.ok) console.error("[semio.sketchpad] renameActiveKit failed:", result.error?.message);
 					})
@@ -14927,7 +14407,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				const kitId = sketchpadActiveKitIdFromPath(shell.navigationPath);
 				const designName = (args as { name?: string }).name?.trim() ?? "New design";
 				if (!kitId) break;
-				void executeSketchpadJsKitMutation(kitId, (kit) => kit.createDesign(designName))
+				void executeSketchpadKitCommand(kitId, (kit) => kit.createDesign(designName))
 					.then((result) => {
 						if (!result.ok) console.error("[semio.sketchpad] createDesignInActiveKit failed:", result.error?.message);
 					})
@@ -15440,9 +14920,17 @@ if (import.meta.vitest) {
 	});
 
 	describe("SemioKitStore", () => {
-		it("InMemorySemioKitStore exposes kit snapshot", () => {
-			const store = new InMemorySemioKitStore({ id: "k1", name: "Demo" } as Kit);
+		it("fromSnapshot exposes a stable kit snapshot without a live client", () => {
+			const store = SemioKitStore.fromSnapshot({ id: "k1", name: "Demo" });
 			expect(store.getSnapshot().kit.name).toBe("Demo");
+			expect(store.getSnapshot()).toBe(store.getSnapshot());
+			expect(store.client).toBeNull();
+		});
+
+		it("resolves file urls from snapshot rows when no live client exists", () => {
+			const store = SemioKitStore.fromSnapshot({ id: "k1", files: [{ id: "f1", name: "a.glb", url: "https://example.com/a.glb" }, { id: "f2", name: "b.glb" }] });
+			expect(store.fileUrl("f1")).toBe("https://example.com/a.glb");
+			expect(store.fileUrl("f2")).toBeUndefined();
 		});
 	});
 
@@ -15453,7 +14941,7 @@ if (import.meta.vitest) {
 				files: [
 					{ id: "f1", name: "Tower.glb" },
 					{ id: "f2", name: "notes.md" },
-					{ id: "f3", path: "assets/plan.pdf" },
+					{ id: "f3", url: "assets/plan.pdf" },
 				],
 			} as Kit;
 			const rows = sketchpadKitVfsChildren(kit, "k1");
@@ -15561,7 +15049,7 @@ if (import.meta.vitest) {
 					},
 				],
 			} as Kit;
-			ctrl.registerKitStore(kitId, new InMemorySemioKitStore(kit));
+			ctrl.registerKitStore(kitId, SemioKitStore.fromSnapshot(kit));
 			const trail = sketchpadNavigation(platform, `/kits/${kitId}/designs/${designId}`);
 			expect(trail.map((level) => level.node.label)).toEqual(["Home", "Kits", "Demo Kit", "Typologies", "Residential", "Designs", "Plan A"]);
 			expect(trail[0]?.alternatives.some((alternative) => alternative.label === "Documentation")).toBe(true);
@@ -15576,7 +15064,7 @@ if (import.meta.vitest) {
 		it("provideStore registers shell and kit stores", () => {
 			const bus = new CommandBus();
 			const ctrl = new SketchpadShellController(bus, () => {});
-			const kitStore = new InMemorySemioKitStore({ id: "k1", name: "A" } as Kit);
+			const kitStore = SemioKitStore.fromSnapshot({ id: "k1", name: "A" } as Kit);
 			ctrl.registerKitStore("k1", kitStore, { kind: "temporary" });
 			expect(ctrl.getStore(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot().openKitIds).toEqual(["k1"]);
 			expect(ctrl.routeSelection.pieceIds).toEqual([]);
@@ -15586,31 +15074,34 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("decodeKitSemioEnvelopeToFullFromValue", () => {
+	describe("decodeSemioKitEnvelope", () => {
 		it("unwraps wip.initialKit envelope", () => {
-			const inner = decodeKitSemioEnvelopeToFullFromValue({ wip: { initialKit: { id: "k", name: "N" } } });
+			const inner = decodeSemioKitEnvelope({ wip: { initialKit: { id: "k", name: "N" } } });
 			expect((inner as { id: string }).id).toBe("k");
+		});
+
+		it("round-trips the export envelope", () => {
+			expect(semioKitRootFromBundle(semioKitToEnvelope({ id: "k", name: "N" }))?.["name"]).toBe("N");
 		});
 	});
 
 	describe("sketchpad dev fixtures", () => {
-		it("auto-seeds from nakagin filtered fixture URL", () => {
-			expect(SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL).toBe("/fixtures/stores/metabolism/wip/initialKit/kit.semio.json");
+		it("serves the metabolism archive and the nakagin filtered kit from /fixtures", () => {
+			expect(SKETCHPAD_DEV_FIXTURE_METABOLISM_URL).toBe("/fixtures/metabolism.zip");
+			expect(SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL).toBe("/fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
 		});
 
 		it("preloads dev fixture on home without navigating to kit app", async () => {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, join } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
-			const { readInitialKitFixtureFromPath } = await import("../../../../fixtures/script.ts");
-			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/stores/metabolism/wip/initialKit/kit.semio.json");
-			const fixtureJson = JSON.stringify(readInitialKitFixtureFromPath(fixturePath));
+			const fixtureBytes = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/metabolism.zip"));
 			const previousFetch = globalThis.fetch;
 			globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
 				const url =
 					typeof input === "string" ? input : input instanceof URL ? input.href : input instanceof Request ? input.url : String(input);
-				if (url.includes("stores/metabolism/wip/initialKit/kit.semio.json")) {
-					return new Response(fixtureJson, { status: 200, headers: { "Content-Type": "application/json" } });
+				if (url.includes(SKETCHPAD_DEV_FIXTURE_METABOLISM_URL)) {
+					return new Response(fixtureBytes, { status: 200, headers: { "Content-Type": "application/zip" } });
 				}
 				return previousFetch(input, init);
 			};
@@ -15627,55 +15118,63 @@ if (import.meta.vitest) {
 				expect(platform.uri.split("?")[0]).toBe("/");
 				expect(platform.activeAppId).toBe(SKETCHPAD_HOME_APP_ID);
 				expect(ctrl.listOpenKitIds()).toContain(kitId);
+				const kit = ctrl.getKitStore(kitId!)!.getSnapshot().kit;
+				const typeWithMesh = kit.types?.find((type) => sketchpadResolveTypeMeshUrl(type, kit, ctrl.getKitStore(kitId!)!.fileUrl));
+				expect(typeWithMesh).toBeDefined();
 			} finally {
 				globalThis.fetch = previousFetch;
 				getSketchpadShellController()?.dispose();
 			}
-		});
+		}, 120_000);
 	});
 
-	describe("sketchpadKitFromDecodedBundle", () => {
+	describe("semioKitRootFromBundle", () => {
 		it("reads metabolism.kit.light.semio.json fixture file", async () => {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, join } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
 			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/metabolism.kit.light.semio.json");
-			const kit = sketchpadKitFromDecodedBundle(JSON.parse(readFileSync(fixturePath, "utf8")));
-			expect(kit?.name).toBe("Metabolism");
-			expect(sketchpadExtractPortCompatById(kit!).size).toBeGreaterThan(0);
-			expect(sketchpadCollectKitPorts(kit!).length).toBeGreaterThan(0);
-			expect(sketchpadReadKitFamilyRows(kit!).some((f) => f["name"] === "Nakagin Capsule Tower")).toBe(true);
+			const root = semioKitRootFromBundle(JSON.parse(readFileSync(fixturePath, "utf8")));
+			expect(root?.["name"]).toBe("Metabolism");
+			expect(sketchpadReadKitFamilyRows(root as Kit).some((f) => f["name"] === "Nakagin Capsule Tower")).toBe(true);
 		});
 
-		it("reads metabolism-shaped wip.initialKit bundle", () => {
-			const raw = {
+		it("flattens metabolism-shaped wip.initialKit item blocks", () => {
+			const root = semioKitRootFromBundle({
 				schema: "test",
-				wip: {
-					initialKit: {
-						id: "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
-						name: "Metabolism",
-						types: { items: [{ id: "t1", name: "Base" }] },
-						designs: { items: [] },
-						families: {
-							items: [
-								{
-									id: "fam-nakagin",
-									name: "Nakagin Capsule Tower",
-									ports: {
-										items: [
-											{ id: "p1", name: "bottom", compatiblePorts: { items: [{ id: "p2" }] } },
-											{ id: "p2", name: "top", compatiblePorts: { items: [{ id: "p1" }] } },
-										],
-									},
-								},
-							],
-						},
-					},
-				},
-			};
-			const kit = sketchpadKitFromDecodedBundle(raw);
-			expect(kit?.name).toBe("Metabolism");
-			expect(sketchpadExtractPortCompatById(kit!).size).toBe(2);
+				wip: { initialKit: { id: "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc", name: "Metabolism", types: { items: [{ id: "t1", name: "Base" }] }, designs: { items: [] } } },
+			});
+			expect(root?.["name"]).toBe("Metabolism");
+			expect(root?.["types"]).toEqual([{ id: "t1", name: "Base" }]);
+		});
+	});
+
+	describe("decodeSemioKitArchive", () => {
+		it("strips embedded blobs from the projection and serves them as file urls", () => {
+			const archive = decodeSemioKitArchive(
+				new TextEncoder().encode(JSON.stringify({ id: "k", name: "K", files: [{ id: "f1", name: "a.glb", blob: "data:model/gltf-binary;base64,AAAA" }] })),
+			);
+			expect(archive.kitId).toBe("k");
+			expect(archive.projection).not.toContain("base64");
+			expect(archive.fileUrls.url("f1")).toBe("data:model/gltf-binary;base64,AAAA");
+		});
+
+		it("resolves folder-relative files against the kit base url", () => {
+			const archive = decodeSemioKitArchive(
+				new TextEncoder().encode(JSON.stringify({ id: "k", folders: [{ id: "d", name: "representations" }], files: [{ id: "f1", name: "a.glb", folder: { id: "d" } }] })),
+				"http://localhost/kits/demo/kit.semio.json",
+			);
+			expect(archive.fileUrls.url("f1")).toBe("http://localhost/kits/demo/representations/a.glb");
+		});
+
+		it("reads kit json and representation entries from a zip archive", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, join } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const archive = decodeSemioKitArchive(new Uint8Array(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/metabolism.zip"))));
+			expect(archive.kitId).toBe("f042c2a4-3ba5-44b0-b22c-0ae8f568aacc");
+			expect(archive.fileUrls.url("457d2061-ac4b-4317-8563-ba41afffd149")).toMatch(/^blob:/);
+			archive.fileUrls.dispose();
 		});
 	});
 
@@ -15710,7 +15209,7 @@ if (import.meta.vitest) {
 		it("closeKit removes store and open id", () => {
 			const bus = new CommandBus();
 			const ctrl = new SketchpadShellController(bus, () => {});
-			ctrl.registerKitStore("k1", new InMemorySemioKitStore({ id: "k1", name: "A" } as Kit));
+			ctrl.registerKitStore("k1", SemioKitStore.fromSnapshot({ id: "k1", name: "A" } as Kit));
 			ctrl.closeKit("k1");
 			expect(ctrl.listOpenKitIds()).toEqual([]);
 			expect(ctrl.getKitStore("k1")).toBeUndefined();
@@ -15724,7 +15223,7 @@ if (import.meta.vitest) {
 			expect(ctrl.listOpenKitIds()).toContain(id);
 			expect(ctrl.getKitStore(id)?.getSnapshot().kit.name).toBe("Test");
 			expect(ctrl.navigationPath).toBe(`/kits/${id}`);
-			expect(ctrl.getKitStore(id)).toBeInstanceOf(SemioJsKitStore);
+			expect(ctrl.getKitStore(id)?.client).toBeInstanceOf(SemioKitClient);
 			ctrl.dispose();
 		});
 
@@ -15750,28 +15249,41 @@ if (import.meta.vitest) {
 	});
 
 	describe("importKit", () => {
-		it("materializes type representations after projection install", async () => {
+		it("materializes typologies, representations and representation meshes from the metabolism archive", async () => {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, join } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
-			const { readInitialKitFixtureFromPath } = await import("../../../../fixtures/script.ts");
-			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/stores/metabolism/wip/initialKit/kit.semio.json");
-			const bundleKit = sketchpadKitFromDecodedBundle(readInitialKitFixtureFromPath(fixturePath));
-			const bundleType = bundleKit?.types?.find((t) => (t.representations?.length ?? 0) > 0);
-			expect(bundleType).toBeDefined();
-			const bundleRepCount = bundleType ? sketchpadListTypeRepresentations(bundleType).length : 0;
-			expect(bundleRepCount).toBeGreaterThan(0);
-			const { kit, session } = await importKit(new TextEncoder().encode(readFileSync(fixturePath, "utf8")));
+			const client = await importKit(new Uint8Array(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/metabolism.zip"))));
 			try {
-				const liveType = kit.types?.find((t) => t.id === bundleType!.id);
-				expect(liveType).toBeDefined();
-				expect(sketchpadListTypeRepresentations(liveType!)).toHaveLength(bundleRepCount);
+				const kit = client.getSnapshot();
+				expect(kit.name).toBe("Metabolism");
+				expect(kit.typologies?.length).toBeGreaterThan(0);
+				expect(kit.designs?.some((design) => design.name === "Nakagin Capsule Tower")).toBe(true);
+				const base = kit.types?.find((type) => type.name === "Base");
+				expect(sketchpadListTypeRepresentations(base!).length).toBeGreaterThan(0);
+				expect(sketchpadResolveTypeMeshUrl(base!, kit, (fileId) => client.fileUrl(fileId))).toMatch(/^blob:/);
 			} finally {
-				await session.dispose();
+				await client.dispose();
 			}
 		}, 120_000);
 
-		it("hydrates family ports into live kit and diagram compat edges", async () => {
+		it("materializes embedded representation blobs of the nakagin filtered kit", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, join } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const client = await importKit(new Uint8Array(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/nakagin-capsule-tower.filtered.kit.semio.json"))));
+			try {
+				const kit = client.getSnapshot();
+				const nakagin = kit.designs?.find((design) => design.name === "Nakagin Capsule Tower");
+				expect(nakagin?.pieces?.length).toBeGreaterThan(0);
+				const volume = sketchpadDesignVolumeFixtureFromDesign(nakagin!, kit, (fileId) => client.fileUrl(fileId));
+				expect(volume.objects.some((object) => object.meshUrl.startsWith("data:"))).toBe(true);
+			} finally {
+				await client.dispose();
+			}
+		}, 120_000);
+
+		it("hydrates family port compatibility through rs connector ports", async () => {
 			const payload = JSON.stringify({
 				id: "kit-import-test",
 				name: "Import Test",
@@ -15791,36 +15303,43 @@ if (import.meta.vitest) {
 				],
 				designs: [],
 			});
-			const { kit, session } = await importKit(new TextEncoder().encode(payload));
+			const client = await importKit(new TextEncoder().encode(payload));
 			try {
+				const kit = client.getSnapshot();
 				expect(kit.name).toBe("Import Test");
-				expect(Array.isArray(kit.types)).toBe(true);
-				expect(sketchpadExtractPortCompatById(kit).size).toBe(2);
+				expect(sketchpadCollectKitPorts(kit).map((port) => port.id).sort()).toEqual(["p1", "p2"]);
 				const fixture = sketchpadKitPuzzle2dFixtureFromKit(kit);
 				expect(fixture.edges.some((edge) => edge.id === "compat-type:t1-type:t2")).toBe(true);
 			} finally {
-				await session.dispose();
+				await client.dispose();
 			}
 		}, 120_000);
 	});
 
-	describe("executeSketchpadJsKitMutation", () => {
-		it("createDesign updates kit snapshot", async () => {
-			const session = await SemioSession.openInMemory({ timeoutMs: 120_000 });
+	describe("executeSketchpadKitCommand", () => {
+		it("createDesign updates kit snapshot through the session operation choke point", async () => {
+			const client = await SemioKitClient.open({ kind: "empty", name: "Commands" });
+			const store = new SemioKitStore(client);
+			const operations: string[] = [];
+			const stopObserving = client.session.onOperation((operation) => operations.push(operation.query));
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
 			try {
-				const jsStore = (await session.stores())[0]!;
-				const store = await createSemioKitStoreFromJsStore(jsStore);
-				const bus = new CommandBus();
-				const ctrl = new SketchpadShellController(bus, () => {});
 				const kitId = store.getSnapshot().kit.id;
 				ctrl.registerKitStore(kitId, store);
-				const created = await executeSketchpadJsKitMutation(kitId, (kit) => kit.createDesign("Layout A"), store);
+				const created = await executeSketchpadKitCommand(kitId, (kit) => kit.createDesign("Layout A"), store);
 				expect(created.ok).toBe(true);
 				expect(store.getSnapshot().kit.designs?.some((d) => d.name === "Layout A")).toBe(true);
-				ctrl.dispose();
+				expect(operations.some((query) => query.includes("createDesign"))).toBe(true);
 			} finally {
-				await session.dispose();
+				stopObserving();
+				ctrl.dispose();
 			}
+		}, 120_000);
+
+		it("reports NotSupported for snapshot-only kits", async () => {
+			const result = await executeSketchpadKitCommand("k1", (kit) => kit.rename("x"), SemioKitStore.fromSnapshot({ id: "k1" }));
+			expect(result.ok).toBe(false);
 		});
 	});
 
@@ -15835,31 +15354,16 @@ if (import.meta.vitest) {
 		it("finds kinds nested under typologies when root types is empty", () => {
 			const bridgeTypeId = "0e240cd2-7f98-42b6-af39-34e7ee4fad35";
 			const bridgeFileId = "60ace9d9-441d-412a-8c91-69e7993fafee";
-			const kit = {
+			const bridge = { id: bridgeTypeId, name: "Bridge", representations: [{ id: "rep-bridge", name: "bridge", file: { id: bridgeFileId } }] };
+			const kit: Kit = {
 				id: "k",
-				typologies: {
-					items: [
-						{
-							id: "topo-bridge",
-							name: "Bridge",
-							types: {
-								items: [
-									{
-										id: bridgeTypeId,
-										name: "Bridge",
-										representations: {
-											items: [{ id: "rep-bridge", name: "bridge", file: { id: bridgeFileId } }],
-										},
-									},
-								],
-							},
-						},
-					],
-				},
+				typologies: [{ id: "topo-bridge", name: "Bridge", types: [bridge], designs: [] }],
 				files: [{ id: bridgeFileId, name: "bridge.glb" }],
-			} as Kit;
+			};
 			expect(findTypeInKit(kit, bridgeTypeId)?.name).toBe("Bridge");
-			expect(sketchpadResolvePieceMeshUrl({ type: { id: bridgeTypeId } }, kit)).toBe("/meshes/bridge.glb");
+			const fileUrl = (fileId: string) => (fileId === bridgeFileId ? "blob:bridge" : undefined);
+			expect(sketchpadResolvePieceMeshUrl({ id: "p", type: { id: bridgeTypeId } }, kit, fileUrl)).toBe("blob:bridge");
+			expect(sketchpadResolvePieceMeshUrl({ id: "p", type: { id: bridgeTypeId } }, kit, () => undefined)).toBe(SKETCHPAD_PLACEHOLDER_MESH_URL);
 		});
 	});
 
@@ -16037,67 +15541,45 @@ if (import.meta.vitest) {
 
 	describe("sketchpadTypeVolumeFixtureFromType", () => {
 		it("places one mesh object at the origin", () => {
-			const kit = {
+			const kit: Kit = {
 				id: "k",
 				types: [{ id: "t1", name: "Chair", representations: [{ id: "r1", name: "chair", file: { id: "f1" } }] }],
-				files: [{ id: "f1", path: "files/chair.glb" }],
-			} as Kit;
-			const volume = sketchpadTypeVolumeFixtureFromType(kit.types![0]!, kit);
+				files: [{ id: "f1", name: "chair.glb" }],
+			};
+			const volume = sketchpadTypeVolumeFixtureFromType(kit.types![0]!, kit, (fileId) => `https://example.com/files/${fileId}/chair.glb`);
 			expect(volume.objects).toHaveLength(1);
 			expect(volume.objects[0]?.id).toBe("r1");
 			expect(volume.objects[0]?.meshUrl).toContain("chair.glb");
 		});
 	});
 
-	describe("sketchpadKitFileUrlById", () => {
-		it("maps embedded file blobs to data URLs when the row is not a metabolism glb name", () => {
-			const kit = {
+	describe("sketchpadResolveTypeMeshUrl", () => {
+		it("skips non-geometry representations and prefers untagged ones", () => {
+			const kit: Kit = {
 				id: "k",
-				files: [{ id: "f1", name: "mesh.bin", blob: "data:application/octet-stream;base64,AAAA" }],
-			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("data:application/octet-stream;base64,AAAA");
+				types: [
+					{
+						id: "t1",
+						representations: [
+							{ id: "r-3dm", file: { id: "f-3dm" } },
+							{ id: "r-lod", file: { id: "f-lod" }, tags: [{ id: "lod" }] },
+							{ id: "r-glb", file: { id: "f-glb" } },
+						],
+					},
+				],
+				files: [
+					{ id: "f-3dm", name: "base_1to200.3dm" },
+					{ id: "f-lod", name: "base_lod.glb" },
+					{ id: "f-glb", name: "base.glb" },
+				],
+			};
+			expect(sketchpadResolveTypeMeshUrl(kit.types![0]!, kit, (fileId) => `blob:${fileId}`)).toBe("blob:f-glb");
 		});
 
-		it("resolves metabolism glbs by file name for puzzle 3d even without url", () => {
-			const kit = {
-				id: "k",
-				files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "bridge.glb" }],
-			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/meshes/bridge.glb");
-		});
-
-		it("prefers fixture /meshes over inline blobs for metabolism glb names", () => {
-			const kit = {
-				id: "k",
-				files: [{ id: "f1", name: "bridge.glb", blob: "data:model/gltf-binary;base64,AAAA" }],
-			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/meshes/bridge.glb");
-		});
-
-		it("resolves metabolism representation glbs for puzzle 3d via /meshes", () => {
-			const kit = {
-				id: "k",
-				files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "bridge.glb" }],
-			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/meshes/bridge.glb");
-		});
-	});
-
-	describe("sketchpadMergeKitDtoFromBundleProjection", () => {
-		it("copies representations and files from bundle when live kit has none", () => {
-			const live = {
-				id: "k",
-				types: [{ id: "t1", name: "A", representations: [] }],
-				files: [],
-			} as Kit;
-			const bundle = {
-				id: "k",
-				types: [{ id: "t1", name: "A", representations: [{ id: "r1", name: "mesh", file: { id: "f1" } }] }],
-				files: [{ id: "f1", blob: "data:model/gltf-binary;base64,AAAA" }],
-			} as Kit;
-			const merged = sketchpadMergeKitDtoFromBundleProjection(live, bundle);
-			expect(sketchpadListTypeRepresentations(merged.types![0]!)).toHaveLength(1);
-			expect(merged.files).toHaveLength(1);
+		it("accepts gltf data urls without file names", () => {
+			const kit: Kit = { id: "k", types: [{ id: "t1", representations: [{ id: "r1", file: { id: "f1" } }] }] };
+			expect(sketchpadResolveTypeMeshUrl(kit.types![0]!, kit, () => "data:representation/gltf-binary;base64,AAAA")).toBe("data:representation/gltf-binary;base64,AAAA");
+			expect(sketchpadResolveTypeMeshUrl(kit.types![0]!, kit, () => undefined)).toBeUndefined();
 		});
 	});
 
@@ -16121,8 +15603,8 @@ if (import.meta.vitest) {
 					},
 				],
 				files: [
-					{ id: "f1", blob: "data:model/gltf-binary;base64,AAAA" },
-					{ id: "f2", blob: "data:model/gltf-binary;base64,BBBB" },
+					{ id: "f1", url: "data:model/gltf-binary;base64,AAAA" },
+					{ id: "f2", url: "data:model/gltf-binary;base64,BBBB" },
 				],
 			} as Kit;
 			platform.addApp(
@@ -16135,7 +15617,7 @@ if (import.meta.vitest) {
 					[new WindowKindRuntime("type-empty", "Type", SKETCHPAD_BODY_TYPE_REP)],
 				),
 			);
-			ctrl.registerKitStore(kitId, new InMemorySemioKitStore(kit));
+			ctrl.registerKitStore(kitId, SemioKitStore.fromSnapshot(kit));
 			platform.uri = `/kits/${kitId}/types/${typeId}`;
 			sketchpadSyncTypeAppChrome(platform);
 			const typeApp = platform.apps.find((app) => app.id === SKETCHPAD_TYPE_APP_ID);
@@ -16145,78 +15627,18 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("sketchpadPortDtoFromGraphqlNode", () => {
-		it("maps copatibleWith edges to compatiblePorts", () => {
-			const port = sketchpadPortDtoFromGraphqlNode({
-				id: "p1",
-				copatibleWith: { edges: [{ node: { id: "p2" } }] },
-			});
-			expect(sketchpadReadCompatiblePortIds(port)).toEqual(["p2"]);
-		});
-	});
-
-	describe("sketchpadMergePortCompatMaps", () => {
-		it("overlays graphql compat onto bundle-derived compat", () => {
-			const base = new Map<string, readonly { readonly id: string }[]>([["p1", [{ id: "p-old" }]]]);
-			const overlay = new Map<string, readonly { readonly id: string }[]>([["p1", [{ id: "p-new" }]]]);
-			const merged = sketchpadMergePortCompatMaps(base, overlay);
-			expect(merged.get("p1")).toEqual([{ id: "p-new" }]);
-		});
-	});
-
-	describe("sketchpadApplyPortCompatById", () => {
-		it("restores compatiblePorts stripped by GraphQL-shaped reads", () => {
-			const bundle = {
+	describe("sketchpadKitPuzzle2dFixtureFromKit port compatibility", () => {
+		it("draws type adjacency for kit family ports referenced by connectors", () => {
+			const kit: Kit = {
 				id: "k",
+				families: [{ id: "fam1", name: "Tower", ports: [{ id: "p1", name: "core bottom", compatiblePorts: [{ id: "p2" }] }, { id: "p2", name: "core top", compatiblePorts: [{ id: "p1" }] }] }],
 				types: [
-					{ id: "t1", connectors: [{ port: { id: "p1", compatiblePorts: [{ id: "p2" }] } }] },
-					{ id: "t2", connectors: [{ port: { id: "p2", compatiblePorts: [{ id: "p1" }] } }] },
+					{ id: "t1", connectors: [{ id: "c1", port: { id: "p1" } }] },
+					{ id: "t2", connectors: [{ id: "c2", port: { id: "p2" } }] },
 				],
-			} as Kit;
-			const graphqlKit = {
-				id: "k",
-				types: [
-					{ id: "t1", connectors: [{ port: { id: "p1", label: "A" } }] },
-					{ id: "t2", connectors: [{ port: { id: "p2", label: "B" } }] },
-				],
-			} as Kit;
-			const compat = sketchpadExtractPortCompatById(bundle);
-			const merged = sketchpadApplyPortCompatById(graphqlKit, compat);
-			const fixture = sketchpadKitPuzzle2dFixtureFromKit(merged);
-			expect(fixture.edges.some((e) => e.id === "compat-type:t1-type:t2")).toBe(true);
-		});
-
-		it("reads port compat from kit families and wires type adjacency via connectors", () => {
-			const bundle = {
-				id: "k",
-				families: [
-					{
-						id: "fam1",
-						name: "Tower",
-						ports: [
-							{ id: "p1", name: "core bottom", compatiblePorts: [{ id: "p2" }] },
-							{ id: "p2", name: "core top", compatiblePorts: [{ id: "p1" }] },
-						],
-					},
-				],
-				types: [
-					{ id: "t1", connectors: [{ port: { id: "p1" } }] },
-					{ id: "t2", connectors: [{ port: { id: "p2" } }] },
-				],
-			} as Kit;
-			const compat = sketchpadExtractPortCompatById(bundle);
-			expect(compat.size).toBe(2);
-			const graphqlKit = {
-				id: "k",
-				types: [
-					{ id: "t1", connectors: [{ port: { id: "p1" } }] },
-					{ id: "t2", connectors: [{ port: { id: "p2" } }] },
-				],
-			} as Kit;
-			const merged = sketchpadApplyPortCompatById(graphqlKit, compat);
-			expect(sketchpadCollectKitPorts(merged).map((p) => p.id).sort()).toEqual(["p1", "p2"]);
-			const fixture = sketchpadKitPuzzle2dFixtureFromKit(merged);
-			expect(fixture.edges.some((e) => e.id === "compat-type:t1-type:t2")).toBe(true);
+			};
+			expect(sketchpadCollectKitPorts(kit).map((p) => p.id).sort()).toEqual(["p1", "p2"]);
+			expect(sketchpadKitPuzzle2dFixtureFromKit(kit).edges.some((e) => e.id === "compat-type:t1-type:t2")).toBe(true);
 		});
 	});
 
@@ -16227,7 +15649,7 @@ if (import.meta.vitest) {
 			const fromBlock = sketchpadReadKitFamilyRows({
 				id: "k",
 				families: { items: [{ id: "f2" }] },
-			} as Kit);
+			} as unknown as Kit);
 			expect(fromBlock[0]?.["id"]).toBe("f2");
 		});
 	});
@@ -16306,7 +15728,7 @@ if (import.meta.vitest) {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			const platform = await buildSketchpadPlatform();
 			const ctrl = getSketchpadShellController()!;
-			ctrl.registerKitStore(kitId, new InMemorySemioKitStore({ id: kitId, name: "Selected Kit" } as Kit), { kind: "fixture" });
+			ctrl.registerKitStore(kitId, SemioKitStore.fromSnapshot({ id: kitId, name: "Selected Kit" } as Kit), { kind: "fixture" });
 			ctrl.navigateTo("/");
 			platform.uri = "/";
 			ctrl.updateHome({ ...sketchpadEmptyHomeUiState(), selectedKitIds: [kitId], expandedRowIds: ["sketchpad-home"] });
@@ -16326,7 +15748,7 @@ if (import.meta.vitest) {
 			const ctrl = getSketchpadShellController()!;
 			ctrl.registerKitStore(
 				kitId,
-				new InMemorySemioKitStore({ id: kitId, name: "Kit", types: [{ id: typeId, name: "Column" }] } as Kit),
+				SemioKitStore.fromSnapshot({ id: kitId, name: "Kit", types: [{ id: typeId, name: "Column" }] } as Kit),
 			);
 			ctrl.navigateTo(`/kits/${kitId}`);
 			platform.uri = `/kits/${kitId}`;
@@ -16362,7 +15784,7 @@ if (import.meta.vitest) {
 			const ctrl = getSketchpadShellController()!;
 			ctrl.registerKitStore(
 				"k-home",
-				new InMemorySemioKitStore({ id: "k-home", name: "Demo Kit", version: "r1", updatedAt: "2025-06-01T12:00:00.000Z" } as Kit),
+				SemioKitStore.fromSnapshot({ id: "k-home", name: "Demo Kit", version: "r1", updatedAt: "2025-06-01T12:00:00.000Z" } as Kit),
 				{ kind: "fixture" },
 			);
 			ctrl.navigateTo("/");
@@ -16386,7 +15808,7 @@ if (import.meta.vitest) {
 			const ctrl = getSketchpadShellController()!;
 			ctrl.registerKitStore(
 				kitId,
-				new InMemorySemioKitStore({
+				SemioKitStore.fromSnapshot({
 					id: kitId,
 					name: "VFS Kit",
 					types: [{ id: typeId, name: "Base" }],
@@ -16413,8 +15835,8 @@ if (import.meta.vitest) {
 			const typeB = "22222222-3333-4444-5555-bbbbbbbbbbbb";
 			const platform = await buildSketchpadPlatform();
 			const ctrl = getSketchpadShellController()!;
-			ctrl.registerKitStore(kitA, new InMemorySemioKitStore({ id: kitA, name: "Kit A", types: [{ id: typeA, name: "Type A" }] } as Kit));
-			ctrl.registerKitStore(kitB, new InMemorySemioKitStore({ id: kitB, name: "Kit B", types: [{ id: typeB, name: "Type B" }] } as Kit));
+			ctrl.registerKitStore(kitA, SemioKitStore.fromSnapshot({ id: kitA, name: "Kit A", types: [{ id: typeA, name: "Type A" }] } as Kit));
+			ctrl.registerKitStore(kitB, SemioKitStore.fromSnapshot({ id: kitB, name: "Kit B", types: [{ id: typeB, name: "Type B" }] } as Kit));
 			ctrl.navigateTo(`/kits/${kitA}`);
 			platform.uri = `/kits/${kitA}`;
 			const vfs = new SketchpadAppVirtualFileSystem(SKETCHPAD_KIT_APP_ID, platform);
@@ -16438,7 +15860,7 @@ if (import.meta.vitest) {
 			const ctrl = new SketchpadShellController(bus, () => {});
 			ctrl.registerKitStore(
 				kitId,
-				new InMemorySemioKitStore({
+				SemioKitStore.fromSnapshot({
 					id: kitId,
 					name: "Expand Kit",
 					folders: [{ id: folderId, path: "/representations" }],
@@ -16542,31 +15964,14 @@ if (import.meta.vitest) {
 
 	describe("sketchpadDesignVolumeFixtureFromDesign", () => {
 		it("creates placeholder mesh objects per piece", () => {
-			const design = {
+			const design: Design = {
 				id: "d",
-				pieces: [{ id: "p1", name: "A", plane: { origin: { x: 1, y: 2, z: 3 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } }],
-			} as Design;
+				pieces: [{ id: "p1", name: "A", position: { plane: { origin: { x: 1, y: 2, z: 3 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } } }],
+			};
 			const volume = sketchpadDesignVolumeFixtureFromDesign(design);
 			expect(volume.objects).toHaveLength(1);
 			expect(volume.objects[0]?.origin).toEqual([1, 2, 3]);
-		});
-	});
-
-	describe("sketchpadKitFileUrlById", () => {
-		it("resolves metabolism-relative file paths", () => {
-			const kit = {
-				id: "k",
-				files: [{ id: "f1", path: "files/mesh.glb" }],
-			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/fixtures/stores/metabolism/wip/initialKit/files/mesh.glb");
-		});
-
-		it("maps parent-relative representation paths to /meshes", () => {
-			const kit = {
-				id: "k",
-				files: [{ id: "f1", path: "../../representations/bridge.glb" }],
-			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/meshes/bridge.glb");
+			expect(volume.objects[0]?.meshUrl).toBe(SKETCHPAD_PLACEHOLDER_MESH_URL);
 		});
 	});
 
@@ -16610,7 +16015,7 @@ if (import.meta.vitest) {
 					},
 				],
 			} as Kit;
-			ctrl.registerKitStore(kitId, new InMemorySemioKitStore(kit));
+			ctrl.registerKitStore(kitId, SemioKitStore.fromSnapshot(kit));
 			ctrl.navigateTo(`/kits/${kitId}/designs/${designId}`);
 			sketchpadApplyPuzzle2dSelection(sketchpadDesignSceneInstanceId(kitId, designId), ["piece-a", "conn-1"], ctrl);
 			expect(ctrl.routeSelection.pieceIds).toEqual(["piece-a"]);
@@ -16623,7 +16028,7 @@ if (import.meta.vitest) {
 			const ctrl = new SketchpadShellController(bus, () => {});
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			const typeId = "11111111-2222-3333-4444-555555555555";
-			ctrl.registerKitStore(kitId, new InMemorySemioKitStore({ id: kitId, name: "K", types: [], designs: [] } as Kit));
+			ctrl.registerKitStore(kitId, SemioKitStore.fromSnapshot({ id: kitId, name: "K", types: [], designs: [] } as Kit));
 			ctrl.navigateTo(`/kits/${kitId}`);
 			sketchpadApplyPuzzle2dSelection(sketchpadKitWiresInstanceId(kitId), [typeId], ctrl);
 			expect(ctrl.routeSelection.kitWiresNodeIds).toEqual([typeId]);
@@ -16667,7 +16072,7 @@ if (import.meta.vitest) {
 			const typeId = "11111111-2222-3333-4444-555555555555";
 			ctrl.registerKitStore(
 				kitId,
-				new InMemorySemioKitStore({
+				SemioKitStore.fromSnapshot({
 					id: kitId,
 					name: "K",
 					types: [{ id: typeId, name: "T" }],
@@ -16693,7 +16098,7 @@ if (import.meta.vitest) {
 			const typeId = "11111111-2222-3333-4444-555555555555";
 			ctrl.registerKitStore(
 				kitId,
-				new InMemorySemioKitStore({
+				SemioKitStore.fromSnapshot({
 					id: kitId,
 					name: "K",
 					types: [{ id: typeId, name: "T" }],

@@ -3859,6 +3859,11 @@ pub mod kit {
                     Arc::new(Self { id, owner_design, position: RwLock::new(Some(pos_node)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
                 }
 
+                /// 🧾 Linked piece (no own placement): its pose follows from its parent connection.
+                pub async fn new_linked_with_external_id(id: Id, owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint) -> Arc<Self> {
+                    Arc::new(Self { id, owner_design, blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Connected)), ..Default::default() })
+                }
+
                 pub async fn set_name(&self, name: Option<String>) {
                     *self.name.write().await = name;
                 }
@@ -4694,7 +4699,7 @@ pub mod kit {
                 piece
             }
 
-            /// @emoji 🗑 Remove a piece from this design's ordered list and external-id index.
+            /// @emoji 🗑 Remove a piece from this design's ordered list and external-id index, together with every connection touching it.
             pub async fn delete_piece_by_external_id(&self, piece_id: &Id) -> Result<(), crate::error::SemioError> {
                 let mut pieces = self.pieces.write().await;
                 let start_len = pieces.len();
@@ -4703,7 +4708,62 @@ pub mod kit {
                     return Err(crate::error::SemioError::not_found("Piece", piece_id.as_str()));
                 }
                 self.piece_weak_by_external_id.write().await.remove(piece_id);
+                let mut kept = Vec::new();
+                for connection in self.connections.read().await.iter() {
+                    let parent = connection.parent.read().await.piece.read().await.id.clone();
+                    let child = connection.child.read().await.piece.read().await.id.clone();
+                    if &parent != piece_id && &child != piece_id {
+                        kept.push(connection.clone());
+                    }
+                }
+                *self.connections.write().await = kept;
                 Ok(())
+            }
+
+            /// @emoji 🔗 Wire a connection between two placed pieces of this design; connectors resolve by id on the pieces' blueprints (unknown ids stay unset).
+            pub async fn insert_connection(self: &Arc<Self>, entity: &crate::operation::ConnectionAdded) -> Result<Arc<connection::Connection>, crate::error::SemioError> {
+                let parent_piece = self.piece_by_external_id(&entity.parent.piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", entity.parent.piece_id.as_str()))?;
+                let child_piece = self.piece_by_external_id(&entity.child.piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", entity.child.piece_id.as_str()))?;
+                async fn connector_of(piece: &Arc<piece::Piece>, connector_id: &Id) -> Option<Arc<super::r#type::Connector>> {
+                    let types = match &*piece.blueprint.read().await {
+                        super::r#type::Blueprint::Type(ty) => vec![ty.clone()],
+                        super::r#type::Blueprint::Design(design) => design.references_types_transitive().await,
+                    };
+                    for ty in types {
+                        if let Some(c) = ty.connectors.read().await.iter().find(|c| &c.id == connector_id) {
+                            return Some(c.clone());
+                        }
+                    }
+                    None
+                }
+                let connection = Arc::new(connection::Connection {
+                    id: entity.id.clone(),
+                    owner_design: Arc::downgrade(self),
+                    description: RwLock::new(entity.description.clone().unwrap_or_default()),
+                    gap: RwLock::new(Some(entity.gap)),
+                    shift: RwLock::new(Some(entity.shift)),
+                    rise: RwLock::new(Some(entity.rise)),
+                    rotation: RwLock::new(Some(entity.rotation)),
+                    turn: RwLock::new(Some(entity.turn)),
+                    tilt: RwLock::new(Some(entity.tilt)),
+                    u: RwLock::new(Some(entity.u)),
+                    v: RwLock::new(Some(entity.v)),
+                    ..Default::default()
+                });
+                let side = |piece: Arc<piece::Piece>, connector: Option<Arc<super::r#type::Connector>>| {
+                    let owner = Arc::downgrade(&connection);
+                    async move { Arc::new(connection::Side { id: Id::new().await, owner_connection: RwLock::new(owner), piece: RwLock::new(piece), connector: RwLock::new(connector), ..Default::default() }) }
+                };
+                let parent_connector = connector_of(&parent_piece, &entity.parent.connector_id).await;
+                let child_connector = connector_of(&child_piece, &entity.child.connector_id).await;
+                *connection.parent.write().await = side(parent_piece.clone(), parent_connector).await;
+                *connection.child.write().await = side(child_piece.clone(), child_connector).await;
+                if child_piece.position.read().await.is_none() {
+                    *child_piece.parent_piece.write().await = Arc::downgrade(&parent_piece);
+                    *child_piece.parent_connection.write().await = Arc::downgrade(&connection);
+                }
+                self.connections.write().await.push(connection.clone());
+                Ok(connection)
             }
 
             /// @emoji 🪢 Command / GraphQL boundary: resolve a piece by external [`Id`] via the write-side weak map.
@@ -5463,7 +5523,6 @@ pub mod kit {
     use crate::external_adapters::async_graphql::Object;
     use crate::external_adapters::async_lock::RwLock;
 
-    use crate::hash::h;
     use crate::id::Id;
     use crate::gql_relay::{Family, Typology};
     use crate::meta::{Attribute, Author, Concept, File, Folder, Prop, Quality, Stat, Tag};
@@ -5828,6 +5887,10 @@ pub mod kit {
                         *design.folder_id.write().await = folder_id.clone();
                     }
                 }
+                if let Some(cc) = &diff.connections {
+                    let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
+                    design.connections.write().await.retain(|c| !cc.removed.iter().any(|r| r.id == c.id));
+                }
                 if let Some(pc) = &diff.pieces {
                     for pr in &pc.removed {
                         let piece_id = pr.id.clone();
@@ -5839,6 +5902,12 @@ pub mod kit {
                     }
                     for modified_piece in &pc.modified {
                         self.apply_design_piece_patch(&design_id, &modified_piece.piece.id, &modified_piece.diff).await?;
+                    }
+                }
+                if let Some(cc) = &diff.connections {
+                    let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
+                    for added in &cc.added {
+                        design.insert_connection(added).await?;
                     }
                 }
             }
@@ -5864,17 +5933,24 @@ pub mod kit {
             let name = entity.name.clone();
             let description = entity.description.clone();
             let (_handle, design) = self.bind_external_design_id(design_id).await;
-            let topo = self.ensure_default_typology().await;
-            let blueprint_type = crate::kit::r#type::Type::new(std::sync::Arc::downgrade(&topo), format!("type-{}", blueprint_id.as_str())).await;
-            topo.types.write().await.push(blueprint_type.clone());
-            self.type_weak_by_id
-                .write()
-                .await
-                .insert(blueprint_type.id.clone(), Arc::downgrade(&blueprint_type));
-            let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
-            let piece = crate::kit::design::piece::Piece::new_fixed_with_external_id(piece_id, Arc::downgrade(&design), blueprint, position).await;
+            let blueprint = if let Some(ty) = self.type_by_external_id(&blueprint_id).await {
+                crate::kit::r#type::Blueprint::Type(ty)
+            } else if let Some(nested) = self.design_by_external_id(&blueprint_id).await {
+                crate::kit::r#type::Blueprint::Design(nested)
+            } else {
+                let topo = self.ensure_default_typology().await;
+                let blueprint_type = crate::kit::r#type::Type::new_with_external_id(std::sync::Arc::downgrade(&topo), blueprint_id.clone(), format!("type-{}", blueprint_id.as_str())).await;
+                topo.types.write().await.push(blueprint_type.clone());
+                self.type_weak_by_id.write().await.insert(blueprint_type.id.clone(), Arc::downgrade(&blueprint_type));
+                crate::kit::r#type::Blueprint::Type(blueprint_type)
+            };
+            let piece = match position {
+                Some(position) => crate::kit::design::piece::Piece::new_fixed_with_external_id(piece_id, Arc::downgrade(&design), blueprint, position).await,
+                None => crate::kit::design::piece::Piece::new_linked_with_external_id(piece_id, Arc::downgrade(&design), blueprint).await,
+            };
             piece.set_name(name).await;
             piece.set_description(description).await;
+            *piece.scale.write().await = Some(entity.scale);
             let _ = design.insert_piece(piece).await;
             Ok(())
         }
@@ -5905,9 +5981,8 @@ pub mod kit {
                 return Ok(());
             }
             if let Some(position) = pdiff.pose {
-                let n = GeomPosition::from_position_input(position);
-                *piece.position.write().await = Some(n);
-                return Ok(());
+                *piece.position.write().await = Some(GeomPosition::from_position_input(position));
+                *piece.connection_kind.write().await = Some(crate::kit::design::piece::PieceConnectionKind::Fixed);
             }
             if let Some(n) = &pdiff.name {
                 piece.set_name(Some(n.clone())).await;
@@ -6127,10 +6202,14 @@ pub mod kit {
             Ok(())
         }
 
+        /// @emoji 🪪 Content hash: blake3 over the key-sorted canonical [`Kit::projection_value`] (hub replication compares it across replicas).
         pub async fn compute_hash(&self) -> String {
-            let name = self.name.read().await;
-            let kid = self.workspace_kit_id().await;
-            h(&[kid.as_str(), name.as_str()])
+            crate::kit_backbone::canonical_json_hash(&self.projection_value().await)
+        }
+
+        /// @emoji 🧾 Canonical kit projection (the `installProjection` wire) of this materialized kit.
+        pub async fn projection_value(&self) -> crate::external_adapters::serde_json::Value {
+            crate::kit_backbone::initial_kit_projection_value(self).await
         }
 
         pub async fn design_by_external_id(&self, id: &Id) -> Option<Arc<design::Design>> {
@@ -6694,6 +6773,10 @@ pub mod kit {
         }
         pub async fn hash(&self) -> String {
             self.compute_hash().await
+        }
+        /// @emoji 🧾 Canonical kit projection JSON (accepted by `installProjection`; hub session snapshot wire).
+        pub async fn projection(&self) -> String {
+            self.projection_value().await.to_string()
         }
         pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
             self.owner_graph.upgrade().map(crate::gql::interfaces::EntityInterface::Graph)
@@ -8849,7 +8932,7 @@ pub mod operation {
         pub name: Option<String>,
         pub description: Option<String>,
         pub scale: f64,
-        pub pose: PositionInput,
+        pub pose: Option<PositionInput>,
     }
 
     #[derive(Clone, Debug, PartialEq)]
@@ -8876,10 +8959,42 @@ pub mod operation {
         pub folder_id: Option<Option<Id>>,
     }
 
+    /// @emoji ⛓️ One connection end: piece id plus connector reference (connector id, name or code until `to_diff` resolves it to the connector id).
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct SideRef {
+        pub piece_id: Id,
+        pub connector_id: Id,
+    }
+
+    /// @emoji 🔗 One `connections.added[]` entity (kit JSON `parent` / `child` wire shape).
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct ConnectionAdded {
+        pub id: Id,
+        pub parent: SideRef,
+        pub child: SideRef,
+        pub gap: f64,
+        pub shift: f64,
+        pub rise: f64,
+        pub rotation: f64,
+        pub turn: f64,
+        pub tilt: f64,
+        pub u: f64,
+        pub v: f64,
+        pub description: Option<String>,
+    }
+
+    /// @emoji 📦 Sparse `connections` pair of one design.
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct ConnectionsCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub added: Vec<ConnectionAdded>,
+    }
+
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct DesignDiff {
         pub scalars: DesignScalarDiff,
         pub pieces: Option<PiecesCollectionDiff>,
+        pub connections: Option<ConnectionsCollectionDiff>,
     }
 
     /// @emoji 📦 Sparse `designs` triple.
@@ -9195,6 +9310,7 @@ pub mod operation {
         CreateFixedPiece { design_id: Id, piece_id: Id, blueprint_id: Id, attribute_ids: Vec<Id> },
         PieceInDesign { design_id: Id, piece_id: Id },
         PiecesInDesign { design_id: Id, piece_ids: Vec<Id> },
+        PiecesAndConnectionsInDesign { design_id: Id, piece_ids: Vec<Id>, connection_ids: Vec<Id> },
     }
 
     /// @emoji 🧭 Shared non-id input payload reused across commands with the same shape.
@@ -9214,6 +9330,8 @@ pub mod operation {
         Offset { offset: OffsetInput },
         CreateFolder { name: String, path: String, description: Option<String>, icon: Option<String>, parent_folder_id: Option<Id> },
         MoveToFolder { folder_id: Option<Id> },
+        DesignItems { pieces: Vec<PieceAdded>, connections: Vec<ConnectionAdded> },
+        PiecePatch { name: Option<String>, description: Option<String>, position: Option<PositionInput> },
     }
 
     /// @emoji 🧩 Normalized  operation surface: every variant is `{ scope: Scope, input: Input }`.
@@ -9241,6 +9359,9 @@ pub mod operation {
         DragPieceInDesign { scope: Scope, input: Input },
         DragPiecesInDesign { scope: Scope, input: Input },
         FixPieceInDesign { scope: Scope, input: Input },
+        AddPiecesAndConnectionsInDesign { scope: Scope, input: Input },
+        DeletePiecesAndConnectionsInDesign { scope: Scope, input: Input },
+        UpdatePieceInDesign { scope: Scope, input: Input },
         CreateFolder { scope: Scope, input: Input },
         DeleteFolder { scope: Scope, input: Input },
         MoveToFolder { scope: Scope, input: Input },
@@ -9271,6 +9392,9 @@ pub mod operation {
                 Operation::DragPieceInDesign { .. } => "dragPieceInDesign",
                 Operation::DragPiecesInDesign { .. } => "dragPiecesInDesign",
                 Operation::FixPieceInDesign { .. } => "fixPieceInDesign",
+                Operation::AddPiecesAndConnectionsInDesign { .. } => "addPiecesAndConnectionsInDesign",
+                Operation::DeletePiecesAndConnectionsInDesign { .. } => "deletePiecesAndConnectionsInDesign",
+                Operation::UpdatePieceInDesign { .. } => "updatePieceInDesign",
                 Operation::CreateFolder { .. } => "createFolder",
                 Operation::DeleteFolder { .. } => "deleteFolder",
                 Operation::MoveToFolder { .. } => "moveToFolder",
@@ -9382,7 +9506,7 @@ pub mod operation {
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModified { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { description: description.clone(), ..Default::default() }, pieces: None } }],
+                                modified: vec![DesignModified { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { description: description.clone(), ..Default::default() }, pieces: None, connections: None } }],
                                 ..Default::default()
                             }),
                             ..Default::default()
@@ -9429,7 +9553,7 @@ pub mod operation {
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModified { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { icon: icon.clone(), ..Default::default() }, pieces: None } }],
+                                modified: vec![DesignModified { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { icon: icon.clone(), ..Default::default() }, pieces: None, connections: None } }],
                                 ..Default::default()
                             }),
                             ..Default::default()
@@ -9458,7 +9582,7 @@ pub mod operation {
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModified { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { image: image.clone(), ..Default::default() }, pieces: None } }],
+                                modified: vec![DesignModified { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { image: image.clone(), ..Default::default() }, pieces: None, connections: None } }],
                                 ..Default::default()
                             }),
                             ..Default::default()
@@ -9683,9 +9807,10 @@ pub mod operation {
                                     scalars: DesignScalarDiff::default(),
                                     pieces: Some(PiecesCollectionDiff {
                                         removed: vec![],
-                                        added: vec![PieceAdded { id: piece_id.clone(), blueprint_id: blueprint_id.clone(), name: name.clone(), description: description.clone(), scale: 1.0, pose: *position }],
+                                        added: vec![PieceAdded { id: piece_id.clone(), blueprint_id: blueprint_id.clone(), name: name.clone(), description: description.clone(), scale: 1.0, pose: Some(*position) }],
                                         modified: vec![],
                                     }),
+                                    connections: None,
                                 },
                             }],
                             ..Default::default()
@@ -9702,7 +9827,7 @@ pub mod operation {
                         designs: Some(DesignsCollectionDiff {
                             modified: vec![DesignModified {
                                 design: IdRef { id: design_id.clone() },
-                                diff: DesignDiff { scalars: DesignScalarDiff::default(), pieces: Some(PiecesCollectionDiff { removed: vec![IdRef { id: piece_id.clone() }], added: vec![], modified: vec![] }) },
+                                diff: DesignDiff { scalars: DesignScalarDiff::default(), pieces: Some(PiecesCollectionDiff { removed: vec![IdRef { id: piece_id.clone() }], added: vec![], modified: vec![] }), connections: None },
                             }],
                             ..Default::default()
                         }),
@@ -9724,6 +9849,7 @@ pub mod operation {
                                 diff: DesignDiff {
                                     scalars: DesignScalarDiff::default(),
                                     pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified: vec![PieceModified { piece: IdRef { id: piece_id.clone() }, diff: PiecePatch { drag: Some(*offset), ..Default::default() } }] }),
+                                    connections: None,
                                 },
                             }],
                             ..Default::default()
@@ -9745,7 +9871,7 @@ pub mod operation {
                     }
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModified { design: IdRef { id: design_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff::default(), pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified }) } }],
+                            modified: vec![DesignModified { design: IdRef { id: design_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff::default(), pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified }), connections: None } }],
                             ..Default::default()
                         }),
                         ..Default::default()
@@ -9763,6 +9889,59 @@ pub mod operation {
                                 diff: DesignDiff {
                                     scalars: DesignScalarDiff::default(),
                                     pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified: vec![PieceModified { piece: IdRef { id: piece_id.clone() }, diff: PiecePatch { fix_piece: true, ..Default::default() } }] }),
+                                    connections: None,
+                                },
+                            }],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
+                }
+                Operation::AddPiecesAndConnectionsInDesign { scope, input } => {
+                    let Scope::PiecesAndConnectionsInDesign { design_id, .. } = scope else {
+                        return Err(SemioError::invalid("addPiecesAndConnectionsInDesign expects Scope::PiecesAndConnectionsInDesign"));
+                    };
+                    let Input::DesignItems { pieces, connections } = input else {
+                        return Err(SemioError::invalid("addPiecesAndConnectionsInDesign expects Input::DesignItems"));
+                    };
+                    add_design_items_diff(kit, design_id, pieces, connections).await
+                }
+                Operation::DeletePiecesAndConnectionsInDesign { scope, .. } => {
+                    let Scope::PiecesAndConnectionsInDesign { design_id, piece_ids, connection_ids } = scope else {
+                        return Err(SemioError::invalid("deletePiecesAndConnectionsInDesign expects Scope::PiecesAndConnectionsInDesign"));
+                    };
+                    let (pieces, connections) = removed_design_items(kit, design_id, piece_ids, connection_ids).await?;
+                    Ok(KitDiff(CanonicalKitDiff {
+                        designs: Some(DesignsCollectionDiff {
+                            modified: vec![DesignModified {
+                                design: IdRef { id: design_id.clone() },
+                                diff: DesignDiff {
+                                    scalars: DesignScalarDiff::default(),
+                                    pieces: if pieces.is_empty() { None } else { Some(PiecesCollectionDiff { removed: pieces.iter().map(|p| IdRef { id: p.id.clone() }).collect(), added: vec![], modified: vec![] }) },
+                                    connections: if connections.is_empty() { None } else { Some(ConnectionsCollectionDiff { removed: connections.iter().map(|c| IdRef { id: c.id.clone() }).collect(), added: vec![] }) },
+                                },
+                            }],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
+                }
+                Operation::UpdatePieceInDesign { scope, input } => {
+                    let Scope::PieceInDesign { design_id, piece_id } = scope else {
+                        return Err(SemioError::invalid("updatePieceInDesign expects Scope::PieceInDesign"));
+                    };
+                    let Input::PiecePatch { name, description, position } = input else {
+                        return Err(SemioError::invalid("updatePieceInDesign expects Input::PiecePatch"));
+                    };
+                    ensure_piece(kit, design_id, piece_id).await?;
+                    Ok(KitDiff(CanonicalKitDiff {
+                        designs: Some(DesignsCollectionDiff {
+                            modified: vec![DesignModified {
+                                design: IdRef { id: design_id.clone() },
+                                diff: DesignDiff {
+                                    scalars: DesignScalarDiff::default(),
+                                    pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified: vec![PieceModified { piece: IdRef { id: piece_id.clone() }, diff: PiecePatch { name: name.clone(), description: description.clone(), pose: *position, ..Default::default() } }] }),
+                                    connections: None,
                                 },
                             }],
                             ..Default::default()
@@ -9838,7 +10017,7 @@ pub mod operation {
                             designs: Some(DesignsCollectionDiff {
                                 modified: vec![DesignModified {
                                     design: IdRef { id: entity_id.clone() },
-                                    diff: DesignDiff { scalars: DesignScalarDiff { folder_id: folder_placement, ..Default::default() }, pieces: None },
+                                    diff: DesignDiff { scalars: DesignScalarDiff { folder_id: folder_placement, ..Default::default() }, pieces: None, connections: None },
                                 }],
                                 ..Default::default()
                             }),
@@ -10059,6 +10238,53 @@ pub mod operation {
                         _ => Err(SemioError::invalid("fixPieceInDesign backwards is unsupported for non-fixed pre-state")),
                     }
                 }
+                Operation::AddPiecesAndConnectionsInDesign { scope, input } => {
+                    let Scope::PiecesAndConnectionsInDesign { design_id, .. } = scope else {
+                        return Err(SemioError::invalid("addPiecesAndConnectionsInDesign expects Scope::PiecesAndConnectionsInDesign"));
+                    };
+                    let Input::DesignItems { pieces, connections } = input else {
+                        return Err(SemioError::invalid("addPiecesAndConnectionsInDesign expects Input::DesignItems"));
+                    };
+                    Ok(vec![Operation::DeletePiecesAndConnectionsInDesign {
+                        scope: Scope::PiecesAndConnectionsInDesign { design_id: design_id.clone(), piece_ids: pieces.iter().map(|p| p.id.clone()).collect(), connection_ids: connections.iter().map(|c| c.id.clone()).collect() },
+                        input: Input::None,
+                    }])
+                }
+                Operation::DeletePiecesAndConnectionsInDesign { scope, .. } => {
+                    let Scope::PiecesAndConnectionsInDesign { design_id, piece_ids, connection_ids } = scope else {
+                        return Err(SemioError::invalid("deletePiecesAndConnectionsInDesign expects Scope::PiecesAndConnectionsInDesign"));
+                    };
+                    let (pieces, connections) = removed_design_items(kit, design_id, piece_ids, connection_ids).await?;
+                    let mut piece_items = Vec::with_capacity(pieces.len());
+                    for piece in &pieces {
+                        piece_items.push(piece_added_from_entity(piece).await);
+                    }
+                    let mut connection_items = Vec::with_capacity(connections.len());
+                    for connection in &connections {
+                        connection_items.push(connection_added_from_entity(connection).await);
+                    }
+                    Ok(vec![Operation::AddPiecesAndConnectionsInDesign {
+                        scope: Scope::PiecesAndConnectionsInDesign { design_id: design_id.clone(), piece_ids: piece_items.iter().map(|p| p.id.clone()).collect(), connection_ids: connection_items.iter().map(|c| c.id.clone()).collect() },
+                        input: Input::DesignItems { pieces: piece_items, connections: connection_items },
+                    }])
+                }
+                Operation::UpdatePieceInDesign { scope, input } => {
+                    let Scope::PieceInDesign { design_id, piece_id } = scope else {
+                        return Err(SemioError::invalid("updatePieceInDesign expects Scope::PieceInDesign"));
+                    };
+                    let Input::PiecePatch { name, description, position } = input else {
+                        return Err(SemioError::invalid("updatePieceInDesign expects Input::PiecePatch"));
+                    };
+                    let before = piece_added_from_entity(ensure_piece(kit, design_id, piece_id).await?.as_ref()).await;
+                    Ok(vec![Operation::UpdatePieceInDesign {
+                        scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() },
+                        input: Input::PiecePatch {
+                            name: name.as_ref().map(|_| before.name.clone().unwrap_or_default()),
+                            description: description.as_ref().map(|_| before.description.clone().unwrap_or_default()),
+                            position: position.and(before.pose),
+                        },
+                    }])
+                }
                 Operation::CreateDesign { scope, .. } => {
                     let Scope::CreateDesign { design_id, .. } = scope else {
                         return Err(SemioError::invalid("createDesign expects Scope::CreateDesign"));
@@ -10194,6 +10420,143 @@ pub mod operation {
         let design = kit.design_by_external_id(design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
         design.piece_by_external_id(piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))
     }
+
+    //#region ⛓️ design items
+    /// @emoji ⚓ Connectors exposed by a blueprint: the type's own connectors, or those of every type nested in a design blueprint.
+    pub(crate) async fn blueprint_connectors(kit: &Arc<crate::kit::Kit>, blueprint_id: &Id) -> Option<Vec<Arc<crate::kit::r#type::Connector>>> {
+        if let Some(ty) = kit.type_by_external_id(blueprint_id).await {
+            return Some(ty.connectors.read().await.clone());
+        }
+        let design = kit.design_by_external_id(blueprint_id).await?;
+        let mut out = Vec::new();
+        for ty in design.references_types_transitive().await {
+            out.extend(ty.connectors.read().await.iter().cloned());
+        }
+        Some(out)
+    }
+
+    /// @emoji 🧷 Blueprint id (type or design) of a placed piece.
+    pub(crate) async fn piece_blueprint_id(piece: &crate::kit::design::piece::Piece) -> Id {
+        match &*piece.blueprint.read().await {
+            crate::kit::r#type::Blueprint::Type(ty) => ty.id.clone(),
+            crate::kit::r#type::Blueprint::Design(design) => design.id.clone(),
+        }
+    }
+
+    /// @emoji 🔎 Resolve a side's connector reference (id, name or code) against the blueprint of its piece (placed or created in the same operation).
+    async fn resolve_side(kit: &Arc<crate::kit::Kit>, design: &Arc<crate::kit::design::Design>, new_pieces: &std::collections::HashMap<Id, Id>, side: &SideRef) -> Result<SideRef, SemioError> {
+        let blueprint_id = match new_pieces.get(&side.piece_id) {
+            Some(blueprint_id) => blueprint_id.clone(),
+            None => piece_blueprint_id(design.piece_by_external_id(&side.piece_id).await.ok_or_else(|| SemioError::not_found("Piece", side.piece_id.as_str()))?.as_ref()).await,
+        };
+        let connectors = blueprint_connectors(kit, &blueprint_id).await.ok_or_else(|| SemioError::not_found("Blueprint", blueprint_id.as_str()))?;
+        let reference = side.connector_id.as_str();
+        for connector in connectors {
+            if connector.id.as_str() == reference || connector.name.read().await.as_str() == reference || connector.code.read().await.as_str() == reference {
+                return Ok(SideRef { piece_id: side.piece_id.clone(), connector_id: connector.id.clone() });
+            }
+        }
+        Err(SemioError::not_found("Connector", reference))
+    }
+
+    async fn side_ref_from_entity(side: &crate::kit::design::connection::Side) -> SideRef {
+        SideRef { piece_id: side.piece.read().await.id.clone(), connector_id: side.connector.read().await.as_ref().map(|c| c.id.clone()).unwrap_or_default() }
+    }
+
+    /// @emoji 🧾 Snapshot one live connection as its `connections.added[]` entity.
+    pub(crate) async fn connection_added_from_entity(c: &crate::kit::design::connection::Connection) -> ConnectionAdded {
+        let description = c.description.read().await.clone();
+        ConnectionAdded {
+            id: c.id.clone(),
+            parent: side_ref_from_entity(&c.parent.read().await.clone()).await,
+            child: side_ref_from_entity(&c.child.read().await.clone()).await,
+            gap: c.gap.read().await.unwrap_or(0.0),
+            shift: c.shift.read().await.unwrap_or(0.0),
+            rise: c.rise.read().await.unwrap_or(0.0),
+            rotation: c.rotation.read().await.unwrap_or(0.0),
+            turn: c.turn.read().await.unwrap_or(0.0),
+            tilt: c.tilt.read().await.unwrap_or(0.0),
+            u: c.u.read().await.unwrap_or(0.0),
+            v: c.v.read().await.unwrap_or(0.0),
+            description: if description.is_empty() { None } else { Some(description) },
+        }
+    }
+
+    /// @emoji 🧾 Snapshot one live piece as its `pieces.added[]` entity (`pose` stays `None` for linked pieces).
+    pub(crate) async fn piece_added_from_entity(p: &crate::kit::design::piece::Piece) -> PieceAdded {
+        let pose = match p.position.read().await.as_ref() {
+            Some(position) => Some(position.snapshot_input().await),
+            None => None,
+        };
+        PieceAdded { id: p.id.clone(), blueprint_id: piece_blueprint_id(p).await, name: p.name.read().await.clone(), description: p.description.read().await.clone(), scale: p.scale.read().await.unwrap_or(1.0), pose }
+    }
+
+    /// @emoji 🔗 Diff for adding pieces and connections to one design; validates blueprints, ids and resolves connector references.
+    async fn add_design_items_diff(kit: &Arc<crate::kit::Kit>, design_id: &Id, pieces: &[PieceAdded], connections: &[ConnectionAdded]) -> Result<KitDiff, SemioError> {
+        let design = ensure_design_entity(kit, design_id).await?;
+        let mut new_pieces = std::collections::HashMap::new();
+        for piece in pieces {
+            if design.piece_by_external_id(&piece.id).await.is_some() || new_pieces.contains_key(&piece.id) {
+                return Err(SemioError::invalid(format!("Piece already exists: {}", piece.id.as_str())));
+            }
+            if kit.type_by_external_id(&piece.blueprint_id).await.is_none() && kit.design_by_external_id(&piece.blueprint_id).await.is_none() {
+                return Err(SemioError::not_found("Blueprint", piece.blueprint_id.as_str()));
+            }
+            new_pieces.insert(piece.id.clone(), piece.blueprint_id.clone());
+        }
+        let existing: std::collections::HashSet<Id> = design.connections.read().await.iter().map(|c| c.id.clone()).collect();
+        let mut added: Vec<ConnectionAdded> = Vec::with_capacity(connections.len());
+        for connection in connections {
+            if existing.contains(&connection.id) || added.iter().any(|a| a.id == connection.id) {
+                return Err(SemioError::invalid(format!("Connection already exists: {}", connection.id.as_str())));
+            }
+            if connection.parent.piece_id == connection.child.piece_id {
+                return Err(SemioError::invalid("a connection must join two different pieces"));
+            }
+            let parent = resolve_side(kit, &design, &new_pieces, &connection.parent).await?;
+            let child = resolve_side(kit, &design, &new_pieces, &connection.child).await?;
+            added.push(ConnectionAdded { parent, child, ..connection.clone() });
+        }
+        Ok(KitDiff(CanonicalKitDiff {
+            designs: Some(DesignsCollectionDiff {
+                modified: vec![DesignModified {
+                    design: IdRef { id: design_id.clone() },
+                    diff: DesignDiff {
+                        scalars: DesignScalarDiff::default(),
+                        pieces: if pieces.is_empty() { None } else { Some(PiecesCollectionDiff { removed: vec![], added: pieces.to_vec(), modified: vec![] }) },
+                        connections: if added.is_empty() { None } else { Some(ConnectionsCollectionDiff { removed: vec![], added }) },
+                    },
+                }],
+                ..Default::default()
+            }),
+            ..Default::default()
+        }))
+    }
+
+    /// @emoji 🗑 Pieces plus connections removed by a delete: the listed connections and every connection touching a listed piece.
+    async fn removed_design_items(kit: &Arc<crate::kit::Kit>, design_id: &Id, piece_ids: &[Id], connection_ids: &[Id]) -> Result<(Vec<Arc<crate::kit::design::piece::Piece>>, Vec<Arc<crate::kit::design::connection::Connection>>), SemioError> {
+        let design = ensure_design_entity(kit, design_id).await?;
+        let mut pieces = Vec::with_capacity(piece_ids.len());
+        for piece_id in piece_ids {
+            pieces.push(design.piece_by_external_id(piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?);
+        }
+        let all = design.connections.read().await.clone();
+        for connection_id in connection_ids {
+            if !all.iter().any(|c| &c.id == connection_id) {
+                return Err(SemioError::not_found("Connection", connection_id.as_str()));
+            }
+        }
+        let mut connections = Vec::new();
+        for c in all {
+            let parent = c.parent.read().await.piece.read().await.id.clone();
+            let child = c.child.read().await.piece.read().await.id.clone();
+            if connection_ids.contains(&c.id) || piece_ids.contains(&parent) || piece_ids.contains(&child) {
+                connections.push(c);
+            }
+        }
+        Ok((pieces, connections))
+    }
+    //#endregion ⛓️ design items
 
     async fn entity_description(kit: &Arc<crate::kit::Kit>, entity_id: &Id) -> Result<Option<String>, SemioError> {
         let kid = kit.workspace_kit_id().await;
@@ -11309,6 +11672,15 @@ pub mod kit_backbone {
         if let Some(p) = &d.pieces {
             o.insert("pieces".to_string(), pieces_collection_diff_wire(p));
         }
+        if let Some(c) = &d.connections {
+            o.insert(
+                "connections".to_string(),
+                crate::external_adapters::serde_json::json!({
+                    "removed": c.removed.iter().map(|r| crate::external_adapters::serde_json::json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
+                    "added": c.added.iter().map(connection_added_json).collect::<Vec<Value>>(),
+                }),
+            );
+        }
         Value::Object(o)
     }
 
@@ -11330,7 +11702,9 @@ pub mod kit_backbone {
         o.insert("id".to_string(), json!(entity.id.as_str()));
         o.insert("blueprint_id".to_string(), json!(entity.blueprint_id.as_str()));
         o.insert("scale".to_string(), json!(entity.scale));
-        o.insert("pose".to_string(), position_input_to_json(&entity.pose));
+        if let Some(pose) = &entity.pose {
+            o.insert("pose".to_string(), position_input_to_json(pose));
+        }
         if let Some(ref n) = entity.name {
             o.insert("name".to_string(), json!(n));
         }
@@ -11552,6 +11926,13 @@ pub mod kit_backbone {
                 "CreateFolder": { "owner_id": owner_id.as_str(), "folder_id": folder_id.as_str() }
             }),
             Scope::Design { design_id } => crate::external_adapters::serde_json::json!({ "Design": { "design_id": design_id.as_str() } }),
+            Scope::PiecesAndConnectionsInDesign { design_id, piece_ids, connection_ids } => crate::external_adapters::serde_json::json!({
+                "PiecesAndConnectionsInDesign": {
+                    "design_id": design_id.as_str(),
+                    "piece_ids": piece_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                    "connection_ids": connection_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                }
+            }),
             Scope::Type { type_id } => crate::external_adapters::serde_json::json!({ "Type": { "type_id": type_id.as_str() } }),
         }
     }
@@ -11563,6 +11944,80 @@ pub mod kit_backbone {
             "definition": a.definition,
         })
     }
+
+    //#region ⛓️ design items json
+    fn piece_added_json(p: &crate::operation::PieceAdded) -> crate::external_adapters::serde_json::Value {
+        crate::external_adapters::serde_json::json!({
+            "id": p.id.as_str(),
+            "blueprint": { "id": p.blueprint_id.as_str() },
+            "name": p.name,
+            "description": p.description,
+            "scale": p.scale,
+            "pose": p.pose.as_ref().map(position_input_to_json),
+        })
+    }
+
+    fn piece_added_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::PieceAdded, SemioError> {
+        Ok(crate::operation::PieceAdded {
+            id: id_from_str(v.get("id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("piece id"))?),
+            blueprint_id: id_from_str(v.get("blueprint").and_then(json_entity_id_ref).ok_or_else(|| SemioError::invalid("piece blueprint"))?),
+            name: v.get("name").and_then(|x| x.as_str()).map(|s| s.to_string()),
+            description: v.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()),
+            scale: v.get("scale").and_then(|x| x.as_f64()).unwrap_or(1.0),
+            pose: match v.get("pose").filter(|x| !x.is_null()) {
+                Some(pose) => Some(position_input_from_json(pose)?),
+                None => None,
+            },
+        })
+    }
+
+    /// @emoji 🔗 Kit JSON wire shape of one connection (`parent` / `child` sides with `piece` and `connector` refs), shared by operations and projections.
+    pub(crate) fn connection_added_json(c: &crate::operation::ConnectionAdded) -> crate::external_adapters::serde_json::Value {
+        let side = |s: &crate::operation::SideRef| crate::external_adapters::serde_json::json!({ "piece": { "id": s.piece_id.as_str() }, "connector": { "id": s.connector_id.as_str() } });
+        let mut o = crate::external_adapters::serde_json::json!({
+            "id": c.id.as_str(),
+            "parent": side(&c.parent),
+            "child": side(&c.child),
+            "gap": c.gap,
+            "shift": c.shift,
+            "rise": c.rise,
+            "rotation": c.rotation,
+            "turn": c.turn,
+            "tilt": c.tilt,
+            "u": c.u,
+            "v": c.v,
+        });
+        if let Some(description) = &c.description {
+            o["description"] = crate::external_adapters::serde_json::Value::String(description.clone());
+        }
+        o
+    }
+
+    pub(crate) fn connection_added_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::ConnectionAdded, SemioError> {
+        let side = |key: &str| -> Result<crate::operation::SideRef, SemioError> {
+            let s = v.get(key).ok_or_else(|| SemioError::invalid(format!("connection {key}")))?;
+            Ok(crate::operation::SideRef {
+                piece_id: id_from_str(s.get("piece").and_then(json_entity_id_ref).ok_or_else(|| SemioError::invalid(format!("connection {key}.piece")))?),
+                connector_id: id_from_str(s.get("connector").and_then(json_entity_id_ref).unwrap_or("")),
+            })
+        };
+        let f = |key: &str| v.get(key).and_then(|x| x.as_f64()).unwrap_or(0.0);
+        Ok(crate::operation::ConnectionAdded {
+            id: id_from_str(v.get("id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("connection id"))?),
+            parent: side("parent")?,
+            child: side("child")?,
+            gap: f("gap"),
+            shift: f("shift"),
+            rise: f("rise"),
+            rotation: f("rotation"),
+            turn: f("turn"),
+            tilt: f("tilt"),
+            u: f("u"),
+            v: f("v"),
+            description: v.get("description").and_then(|x| x.as_str()).filter(|s| !s.is_empty()).map(|s| s.to_string()),
+        })
+    }
+    //#endregion ⛓️ design items json
 
     fn kit_input_json(i: &crate::operation::Input) -> crate::external_adapters::serde_json::Value {
         use crate::operation::Input;
@@ -11635,6 +12090,12 @@ pub mod kit_backbone {
             Input::MoveToFolder { folder_id } => crate::external_adapters::serde_json::json!({
                 "MoveToFolder": { "folder_id": folder_id.as_ref().map(|id| id.as_str()) }
             }),
+            Input::DesignItems { pieces, connections } => crate::external_adapters::serde_json::json!({
+                "DesignItems": { "pieces": pieces.iter().map(piece_added_json).collect::<Vec<_>>(), "connections": connections.iter().map(connection_added_json).collect::<Vec<_>>() }
+            }),
+            Input::PiecePatch { name, description, position } => crate::external_adapters::serde_json::json!({
+                "PiecePatch": { "name": name, "description": description, "position": position.as_ref().map(position_input_to_json) }
+            }),
         }
     }
 
@@ -11667,6 +12128,9 @@ pub mod kit_backbone {
             Operation::CreateFolder { scope, input } => crate::external_adapters::serde_json::json!({ "CreateFolder": pair(scope, input) }),
             Operation::DeleteFolder { scope, input } => crate::external_adapters::serde_json::json!({ "DeleteFolder": pair(scope, input) }),
             Operation::MoveToFolder { scope, input } => crate::external_adapters::serde_json::json!({ "MoveToFolder": pair(scope, input) }),
+            Operation::AddPiecesAndConnectionsInDesign { scope, input } => crate::external_adapters::serde_json::json!({ "AddPiecesAndConnectionsInDesign": pair(scope, input) }),
+            Operation::DeletePiecesAndConnectionsInDesign { scope, input } => crate::external_adapters::serde_json::json!({ "DeletePiecesAndConnectionsInDesign": pair(scope, input) }),
+            Operation::UpdatePieceInDesign { scope, input } => crate::external_adapters::serde_json::json!({ "UpdatePieceInDesign": pair(scope, input) }),
         }
     }
 
@@ -11793,6 +12257,11 @@ pub mod kit_backbone {
                 folder_id: id_from_str(m.get("folder_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("folder_id"))?),
             },
             "Design" => Scope::Design { design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("design_id"))?) },
+            "PiecesAndConnectionsInDesign" => Scope::PiecesAndConnectionsInDesign {
+                design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("design_id"))?),
+                piece_ids: m.get("piece_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
+                connection_ids: m.get("connection_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
+            },
             "Type" => Scope::Type { type_id: id_from_str(m.get("type_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("type_id"))?) },
             other => return Err(SemioError::invalid(format!("unknown scope `{other}`"))),
         })
@@ -11923,6 +12392,24 @@ pub mod kit_backbone {
                 let m = inner.as_object().ok_or_else(|| SemioError::invalid("MoveToFolder"))?;
                 Input::MoveToFolder { folder_id: m.get("folder_id").and_then(|x| x.as_str()).map(id_from_str) }
             }
+            "DesignItems" => {
+                let list = |key: &str| inner.get(key).and_then(|x| x.as_array()).cloned().unwrap_or_default();
+                Input::DesignItems {
+                    pieces: list("pieces").iter().map(piece_added_from_json).collect::<Result<_, _>>()?,
+                    connections: list("connections").iter().map(connection_added_from_json).collect::<Result<_, _>>()?,
+                }
+            }
+            "PiecePatch" => {
+                let m = inner.as_object().ok_or_else(|| SemioError::invalid("PiecePatch"))?;
+                Input::PiecePatch {
+                    name: m.get("name").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                    description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                    position: match m.get("position").filter(|x| !x.is_null()) {
+                        Some(position) => Some(position_input_from_json(position)?),
+                        None => None,
+                    },
+                }
+            }
             other => return Err(SemioError::invalid(format!("unknown input `{other}`"))),
         })
     }
@@ -11960,6 +12447,9 @@ pub mod kit_backbone {
             "CreateFolder" => Operation::CreateFolder { scope, input },
             "DeleteFolder" => Operation::DeleteFolder { scope, input },
             "MoveToFolder" => Operation::MoveToFolder { scope, input },
+            "AddPiecesAndConnectionsInDesign" => Operation::AddPiecesAndConnectionsInDesign { scope, input },
+            "DeletePiecesAndConnectionsInDesign" => Operation::DeletePiecesAndConnectionsInDesign { scope, input },
+            "UpdatePieceInDesign" => Operation::UpdatePieceInDesign { scope, input },
             other => return Err(SemioError::invalid(format!("unknown kit operation `{other}`"))),
         })
     }
@@ -11986,7 +12476,44 @@ pub mod kit_backbone {
     //#endregion 🔖 dev_backbone_kit_operation_json
 
     //#region 🔖 dev_backbone_initial_kit_projection
-    pub(crate) async fn initial_kit_projection_value(kit: &std::sync::Arc<crate::kit::Kit>) -> crate::external_adapters::serde_json::Value {
+    /// @emoji 🪪 Blake3 over key-sorted canonical JSON text, independent of the `serde_json` map ordering feature (native hub and WASM agree).
+    pub fn canonical_json_hash(value: &crate::external_adapters::serde_json::Value) -> String {
+        use crate::external_adapters::serde_json::Value;
+        fn write(v: &Value, out: &mut String) {
+            match v {
+                Value::Object(map) => {
+                    let mut keys: Vec<&String> = map.keys().collect();
+                    keys.sort();
+                    out.push('{');
+                    for (i, k) in keys.iter().enumerate() {
+                        if i > 0 {
+                            out.push(',');
+                        }
+                        out.push_str(&Value::String((*k).clone()).to_string());
+                        out.push(':');
+                        write(&map[k.as_str()], out);
+                    }
+                    out.push('}');
+                }
+                Value::Array(items) => {
+                    out.push('[');
+                    for (i, item) in items.iter().enumerate() {
+                        if i > 0 {
+                            out.push(',');
+                        }
+                        write(item, out);
+                    }
+                    out.push(']');
+                }
+                other => out.push_str(&other.to_string()),
+            }
+        }
+        let mut text = String::new();
+        write(value, &mut text);
+        crate::external_adapters::blake3::hash(text.as_bytes()).to_hex().to_string()
+    }
+
+    pub(crate) async fn initial_kit_projection_value(kit: &crate::kit::Kit) -> crate::external_adapters::serde_json::Value {
         use crate::kit::r#type::Blueprint;
         let kid = kit.workspace_kit_id().await;
         let name = kit.name.read().await.clone();
@@ -12054,7 +12581,11 @@ pub mod kit_backbone {
                     for c in t.connectors.read().await.iter() {
                         let cid = c.id.as_str();
                         let cnm = c.name.read().await.clone();
-                        let port_json = if let Some(port) = c.port.read().await.clone() {
+                        let mut row = crate::external_adapters::serde_json::json!({
+                            "id": cid,
+                            "name": cnm,
+                        });
+                        if let Some(port) = c.port.read().await.clone() {
                             let compat_items: Vec<crate::external_adapters::serde_json::Value> = port
                                 .compatible_with
                                 .read()
@@ -12062,18 +12593,12 @@ pub mod kit_backbone {
                                 .iter()
                                 .map(|p| crate::external_adapters::serde_json::json!({ "id": p.id.as_str() }))
                                 .collect();
-                            crate::external_adapters::serde_json::json!({
+                            row["port"] = crate::external_adapters::serde_json::json!({
                                 "id": port.id.as_str(),
                                 "compatiblePorts": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": compat_items },
-                            })
-                        } else {
-                            continue;
-                        };
-                        cj.push(crate::external_adapters::serde_json::json!({
-                            "id": cid,
-                            "name": cnm,
-                            "port": port_json,
-                        }));
+                            });
+                        }
+                        cj.push(row);
                     }
                     cj
                 };
@@ -12115,34 +12640,41 @@ pub mod kit_backbone {
                     let pcs = d.pieces.read().await;
                     let mut pj = Vec::with_capacity(pcs.len());
                     for p in pcs.iter() {
-                        let ty_id = match &*p.blueprint.read().await {
-                            Blueprint::Type(ty) => ty.id.as_str().to_string(),
-                            _ => String::new(),
-                        };
-                        let pos = p.compute_flat_position().await;
-                        let pv = position_input_to_json(&pos);
-                        let scale = p.scale.read().await.unwrap_or(1.0);
-                        let nm = p.name.read().await.clone().unwrap_or_default();
-                        pj.push(crate::external_adapters::serde_json::json!({
+                        let mut row = crate::external_adapters::serde_json::json!({
                             "id": p.id.as_str(),
-                            "name": nm,
-                            "type": { "id": ty_id },
-                            "plane": pv.get("plane").cloned().unwrap_or_else(|| crate::external_adapters::serde_json::json!({})),
-                            "center": pv.get("center").cloned().unwrap_or_else(|| crate::external_adapters::serde_json::json!({"u":0.0,"v":0.0})),
-                            "scale": scale,
-                            "color": "#000000",
-                            "props": [],
-                            "attributes": [],
-                        }));
+                            "name": p.name.read().await.clone().unwrap_or_default(),
+                            "scale": p.scale.read().await.unwrap_or(1.0),
+                        });
+                        match &*p.blueprint.read().await {
+                            Blueprint::Type(ty) => row["type"] = crate::external_adapters::serde_json::json!({ "id": ty.id.as_str() }),
+                            Blueprint::Design(nested) => row["design"] = crate::external_adapters::serde_json::json!({ "id": nested.id.as_str() }),
+                        }
+                        if let Some(position) = p.position.read().await.as_ref() {
+                            row["pose"] = position_input_to_json(&position.snapshot_input().await);
+                        }
+                        if let Some(description) = p.description.read().await.clone().filter(|s| !s.is_empty()) {
+                            row["description"] = crate::external_adapters::serde_json::Value::String(description);
+                        }
+                        pj.push(row);
                     }
                     pj
                 };
-                out.push(crate::external_adapters::serde_json::json!({
+                let mut connections = Vec::new();
+                for c in d.connections.read().await.iter() {
+                    connections.push(connection_added_json(&crate::operation::connection_added_from_entity(c).await));
+                }
+                let mut row = crate::external_adapters::serde_json::json!({
                     "id": did,
                     "name": dn,
                     "pieces": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": pieces },
-                    "connections": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": [] },
-                }));
+                    "connections": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": connections },
+                });
+                for (key, value) in [("description", d.description.read().await.clone()), ("icon", d.icon.read().await.clone()), ("image", d.image.read().await.clone()), ("unit", d.unit.read().await.clone())] {
+                    if let Some(value) = value.filter(|s| !s.is_empty()) {
+                        row[key] = crate::external_adapters::serde_json::Value::String(value);
+                    }
+                }
+                out.push(row);
             }
             out
         };
@@ -12650,6 +13182,7 @@ pub mod kit_backbone {
             nested_topo: &std::sync::Arc<crate::gql_relay::Typology>,
             kit: &std::sync::Arc<crate::kit::Kit>,
             design_arr: &[crate::external_adapters::serde_json::Value],
+            shells: &mut Vec<(std::sync::Arc<crate::kit::design::Design>, crate::external_adapters::serde_json::Value)>,
         ) -> Result<(), crate::error::SemioError> {
             for d in design_arr {
                 let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
@@ -12657,12 +13190,18 @@ pub mod kit_backbone {
                 let topo_owner = std::sync::Arc::downgrade(&owner_topo);
                 let dn = d.get("name").and_then(|x| x.as_str()).unwrap_or(ds);
                 let des = crate::kit::design::Design::with_id(topo_owner, ds.into(), dn.to_string()).await;
-                hydrate_design_pieces_from_snapshot_value(&des, kit, d).await?;
+                let text = |key: &str| d.get(key).and_then(|x| x.as_str()).map(|s| s.to_string());
+                *des.description.write().await = text("description");
+                *des.icon.write().await = text("icon");
+                *des.image.write().await = text("image");
+                *des.unit.write().await = text("unit");
                 kit.design_weak_by_id.write().await.insert(des.id.clone(), std::sync::Arc::downgrade(&des));
-                owner_topo.designs.write().await.push(des);
+                owner_topo.designs.write().await.push(des.clone());
+                shells.push((des, d.clone()));
             }
             Ok(())
         }
+        let mut design_shells = Vec::new();
 
         let typologies_arr = json.get("typologies").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned();
         if let Some(topos) = typologies_arr {
@@ -12689,57 +13228,64 @@ pub mod kit_backbone {
             }
             for (topo_json, topo) in &topo_entries {
                 let designs_arr = topo_json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
-                hydrate_designs_block(topo, kit, &designs_arr).await?;
+                hydrate_designs_block(topo, kit, &designs_arr, &mut design_shells).await?;
             }
         } else {
             let default_topo = crate::gql_relay::Typology::new(kit_owner.clone(), "Default".to_string()).await;
             let types_arr = json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
             let designs_arr = json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
             hydrate_types_block(&default_topo, kit, &types_arr, &kit_scope_ports).await?;
-            hydrate_designs_block(&default_topo, kit, &designs_arr).await?;
+            hydrate_designs_block(&default_topo, kit, &designs_arr, &mut design_shells).await?;
             kit.typologies.write().await.push(default_topo);
+        }
+        for (des, d_json) in &design_shells {
+            hydrate_design_pieces_from_snapshot_value(des, kit, d_json).await?;
         }
 
         Ok(())
     }
 
-    /// @emoji 🪢 Hydrates [`crate::kit::design::Design`] pieces from one `designs[]` entity (`pieces` block or array).
+    /// @emoji 🪢 Hydrates [`crate::kit::design::Design`] pieces (fixed when a `pose` / `plane` is present, linked otherwise; `type` or nested `design` blueprint) and connections from one `designs[]` entity.
     pub(crate) async fn hydrate_design_pieces_from_snapshot_value(des: &std::sync::Arc<crate::kit::design::Design>, kit: &std::sync::Arc<crate::kit::Kit>, d_json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::SemioError> {
         use std::collections::HashMap;
         {
             let mut pcs = des.pieces.write().await;
             pcs.clear();
         }
+        des.connections.write().await.clear();
         *des.piece_weak_by_external_id.write().await = HashMap::new();
         let plist = d_json.get("pieces").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
         let owner_des = std::sync::Arc::downgrade(des);
         for pj in plist {
             let pid = pj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece missing id"))?;
-            let type_id_raw = match pj.get("type") {
-                Some(crate::external_adapters::serde_json::Value::String(s)) => s.as_str(),
-                Some(crate::external_adapters::serde_json::Value::Object(map)) => map.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece type object missing id"))?,
-                _ => {
-                    return Err(crate::error::SemioError::invalid("design piece missing type (string id or { id })"));
-                }
+            let bp = if let Some(type_id) = pj.get("type").and_then(json_entity_id_ref) {
+                crate::kit::r#type::Blueprint::Type(kit.type_by_external_id(&crate::id::Id::from(type_id)).await.ok_or_else(|| crate::error::SemioError::not_found("Type", type_id))?)
+            } else if let Some(design_id) = pj.get("design").and_then(json_entity_id_ref) {
+                crate::kit::r#type::Blueprint::Design(kit.design_by_external_id(&crate::id::Id::from(design_id)).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id))?)
+            } else {
+                return Err(crate::error::SemioError::invalid("design piece missing blueprint (`type` or `design` as string id or { id })"));
             };
-            let type_id = type_id_raw.into();
-            let ty = kit
-                .type_by_external_id(&type_id)
-                .await
-                .ok_or_else(|| crate::error::SemioError::not_found("Type", type_id.as_str()))?;
-            let pose = pj.get("pose");
-            let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({}));
+            let pose = pj.get("pose").filter(|p| !p.is_null());
+            let plane_val = pj.get("plane").or_else(|| pose.and_then(|p| p.get("plane"))).filter(|p| !p.is_null()).cloned();
             let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| crate::external_adapters::serde_json::json!({"u":0.0,"v":0.0}));
-            let position = position_input_from_json(&crate::external_adapters::serde_json::json!({ "plane": plane_val, "center": center_val }))?;
-            let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
-            let nm_opt = pj.get("name").and_then(|x| x.as_str());
-            let bp = crate::kit::r#type::Blueprint::Type(ty.clone());
-            let piece = crate::kit::design::piece::Piece::new_fixed_with_external_id(pid.into(), owner_des.clone(), bp, position).await;
-            if let Some(nm) = nm_opt {
+            let piece = match plane_val {
+                Some(plane_val) => {
+                    let position = position_input_from_json(&crate::external_adapters::serde_json::json!({ "plane": plane_val, "center": center_val }))?;
+                    crate::kit::design::piece::Piece::new_fixed_with_external_id(pid.into(), owner_des.clone(), bp, position).await
+                }
+                None => crate::kit::design::piece::Piece::new_linked_with_external_id(pid.into(), owner_des.clone(), bp).await,
+            };
+            if let Some(nm) = pj.get("name").and_then(|x| x.as_str()) {
                 piece.set_name(Some(nm.to_string())).await;
             }
-            *piece.scale.write().await = Some(scale);
+            if let Some(description) = pj.get("description").and_then(|x| x.as_str()).filter(|s| !s.is_empty()) {
+                piece.set_description(Some(description.to_string())).await;
+            }
+            *piece.scale.write().await = Some(pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0));
             let _ = des.insert_piece(piece).await;
+        }
+        for cj in d_json.get("connections").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default() {
+            des.insert_connection(&connection_added_from_json(&cj)?).await?;
         }
         Ok(())
     }
@@ -14029,7 +14575,7 @@ pub mod worker {
 
 pub mod gql {
     //! 🌐 Type-safe static GraphQL schema via `Schema::build` (embedded target SDL string for tooling).
-    use crate::external_adapters::async_graphql::{Context, Lookahead, Object, Schema, Subscription};
+    use crate::external_adapters::async_graphql::{Context, InputObject, Lookahead, Object, Schema, Subscription};
     use crate::external_adapters::async_stream::stream;
     use crate::external_adapters::futures_util::Stream;
     use std::pin::Pin;
@@ -17191,7 +17737,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createTag")]
-        async fn create_tag(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_tag(&self, ctx: &Context<'_>, id: Option<Id>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17201,7 +17747,10 @@ pub mod gql {
             }
             let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
             let owner_id = kit.workspace_kit_id().await;
-            let tag_id = Id::new().await;
+            let tag_id = match id {
+                Some(id) => id,
+                None => Id::new().await,
+            };
             let request_id = Id::new().await;
             let tag = crate::meta::TagInput { name, description, icon, order, attributes: None };
             let cmd = Command::ApplyOperation {
@@ -17230,7 +17779,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createConcept")]
-        async fn create_concept(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_concept(&self, ctx: &Context<'_>, id: Option<Id>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17240,7 +17789,10 @@ pub mod gql {
             }
             let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
             let owner_id = kit.workspace_kit_id().await;
-            let concept_id = Id::new().await;
+            let concept_id = match id {
+                Some(id) => id,
+                None => Id::new().await,
+            };
             let request_id = Id::new().await;
             let concept = crate::meta::ConceptInput { name, description, icon, order, attributes: None };
             let cmd = Command::ApplyOperation {
@@ -17276,7 +17828,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createQuality")]
-        async fn create_quality(&self, ctx: &Context<'_>, key: String, value: Option<String>, unit: Option<String>, definition: Option<String>, description: Option<String>, icon: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_quality(&self, ctx: &Context<'_>, id: Option<Id>, key: String, value: Option<String>, unit: Option<String>, definition: Option<String>, description: Option<String>, icon: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17286,7 +17838,10 @@ pub mod gql {
             }
             let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
             let owner_id = kit.workspace_kit_id().await;
-            let quality_id = Id::new().await;
+            let quality_id = match id {
+                Some(id) => id,
+                None => Id::new().await,
+            };
             let request_id = Id::new().await;
             let quality = crate::meta::QualityInput { key, value, unit, definition, description, icon, attributes: None };
             let cmd = Command::ApplyOperation {
@@ -17322,7 +17877,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createType")]
-        async fn create_type(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_type(&self, ctx: &Context<'_>, id: Option<Id>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17332,7 +17887,10 @@ pub mod gql {
             }
             let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
             let owner_id = kit.workspace_kit_id().await;
-            let type_id = Id::new().await;
+            let type_id = match id {
+                Some(id) => id,
+                None => Id::new().await,
+            };
             let request_id = Id::new().await;
             let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
@@ -17370,7 +17928,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createDesign")]
-        async fn create_design(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_design(&self, ctx: &Context<'_>, id: Option<Id>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17380,7 +17938,10 @@ pub mod gql {
             }
             let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
             let owner_id = kit.workspace_kit_id().await;
-            let design_id = Id::new().await;
+            let design_id = match id {
+                Some(id) => id,
+                None => Id::new().await,
+            };
             let request_id = Id::new().await;
             let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
@@ -17398,6 +17959,7 @@ pub mod gql {
         async fn create_folder(
             &self,
             ctx: &Context<'_>,
+            id: Option<Id>,
             name: String,
             path: String,
             description: Option<String>,
@@ -17413,7 +17975,10 @@ pub mod gql {
             }
             let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
             let owner_id = kit.workspace_kit_id().await;
-            let folder_id = Id::new().await;
+            let folder_id = match id {
+                Some(id) => id,
+                None => Id::new().await,
+            };
             let request_id = Id::new().await;
             let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
@@ -17791,7 +18356,7 @@ pub mod gql {
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addFixedPiece")]
-        async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: PositionInput, name: Option<String>, description: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_fixed_piece(&self, ctx: &Context<'_>, id: Option<Id>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: PositionInput, name: Option<String>, description: Option<String>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17800,7 +18365,10 @@ pub mod gql {
                 return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch").await.into());
             }
             let request_id = Id::new().await;
-            let piece_id = Id::new().await;
+            let piece_id = match id {
+                Some(id) => id,
+                None => Id::new().await,
+            };
             let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
                 workspace_id,
@@ -17812,10 +18380,13 @@ pub mod gql {
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
+        /// @emoji 🧩 Add a piece linked to `parentPieceId` through a new connection (`parentConnector` / `childConnector` accept a connector id or name); the piece has no own pose unless `position` is given.
         #[graphql(name = "addChildPieceWithParentConnection")]
         async fn add_child_piece_with_parent_connection(
             &self,
             ctx: &Context<'_>,
+            id: Option<Id>,
+            #[graphql(name = "connectionId")] connection_id: Option<Id>,
             #[graphql(name = "blueprintId")] blueprint_id: Id,
             #[graphql(name = "parentPieceId")] parent_piece_id: Id,
             #[graphql(name = "parentConnector")] parent_connector: String,
@@ -17824,14 +18395,24 @@ pub mod gql {
             description: Option<String>,
             position: Option<PositionInput>,
             scale: Option<f64>,
+            joint: Option<ConnectionJointInput>,
         ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, blueprint_id, parent_piece_id, parent_connector, child_connector, name, description, position, scale);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            let piece_id = match id {
+                Some(id) => id,
+                None => Id::new().await,
+            };
+            let piece = crate::operation::PieceAdded { id: piece_id.clone(), blueprint_id, name, description, scale: scale.unwrap_or(1.0), pose: position };
+            let connection = design_connection_added(connection_id, parent_piece_id, parent_connector, piece_id, child_connector, joint).await;
+            Ok(dispatch_design_items(rt, &self.change_id, &self.design_id, vec![piece], vec![connection]).await.into())
         }
+        /// @emoji 🧩 Add a piece placed at `position` that is also connected to `parentPieceId`.
         #[graphql(name = "addHangingChildPieceWithParentConnection")]
         async fn add_hanging_child_piece_with_parent_connection(
             &self,
             ctx: &Context<'_>,
+            id: Option<Id>,
+            #[graphql(name = "connectionId")] connection_id: Option<Id>,
             #[graphql(name = "blueprintId")] blueprint_id: Id,
             #[graphql(name = "parentPieceId")] parent_piece_id: Id,
             #[graphql(name = "parentConnector")] parent_connector: String,
@@ -17840,9 +18421,32 @@ pub mod gql {
             name: Option<String>,
             description: Option<String>,
             scale: Option<f64>,
+            joint: Option<ConnectionJointInput>,
         ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, blueprint_id, parent_piece_id, parent_connector, child_connector, position, name, description, scale);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            let piece_id = match id {
+                Some(id) => id,
+                None => Id::new().await,
+            };
+            let piece = crate::operation::PieceAdded { id: piece_id.clone(), blueprint_id, name, description, scale: scale.unwrap_or(1.0), pose: Some(position) };
+            let connection = design_connection_added(connection_id, parent_piece_id, parent_connector, piece_id, child_connector, joint).await;
+            Ok(dispatch_design_items(rt, &self.change_id, &self.design_id, vec![piece], vec![connection]).await.into())
+        }
+        /// @emoji 🔗 Connect two placed pieces of this design (`parentConnector` / `childConnector` accept a connector id or name).
+        #[graphql(name = "connectPieces")]
+        async fn connect_pieces(
+            &self,
+            ctx: &Context<'_>,
+            id: Option<Id>,
+            #[graphql(name = "parentPieceId")] parent_piece_id: Id,
+            #[graphql(name = "parentConnector")] parent_connector: String,
+            #[graphql(name = "childPieceId")] child_piece_id: Id,
+            #[graphql(name = "childConnector")] child_connector: String,
+            joint: Option<ConnectionJointInput>,
+        ) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            let connection = design_connection_added(id, parent_piece_id, parent_connector, child_piece_id, child_connector, joint).await;
+            Ok(dispatch_design_items(rt, &self.change_id, &self.design_id, vec![], vec![connection]).await.into())
         }
         async fn piece(&self, #[graphql(name = "id")] id: Id) -> PieceOperationInput {
             PieceOperationInput { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_id: id }
@@ -17850,21 +18454,78 @@ pub mod gql {
         async fn pieces(&self, ids: Vec<Id>) -> PiecesOperationInput {
             PiecesOperationInput { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_ids: ids }
         }
+        /// @emoji 🗑 Delete a piece and every connection touching it.
         #[graphql(name = "deletePiece")]
         async fn delete_piece(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, id);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            Ok(dispatch_design_deletion(rt, &self.change_id, &self.design_id, vec![id], vec![]).await.into())
         }
+        /// @emoji 🗑 Delete pieces and every connection touching them.
         #[graphql(name = "deletePieces")]
         async fn delete_pieces(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, ids);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            Ok(dispatch_design_deletion(rt, &self.change_id, &self.design_id, ids, vec![]).await.into())
         }
+        /// @emoji 🗑 Delete pieces (with their connections) and further connections in one operation.
         #[graphql(name = "deletePiecesAndConnections")]
         async fn delete_pieces_and_connections(&self, ctx: &Context<'_>, #[graphql(name = "pieceIds")] piece_ids: Vec<Id>, #[graphql(name = "connectionIds")] connection_ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, piece_ids, connection_ids);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            Ok(dispatch_design_deletion(rt, &self.change_id, &self.design_id, piece_ids, connection_ids).await.into())
         }
+        /// @emoji ✂️ Delete connections between pieces (the pieces stay).
+        #[graphql(name = "deleteConnections")]
+        async fn delete_connections(&self, ctx: &Context<'_>, ids: Vec<Id>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            Ok(dispatch_design_deletion(rt, &self.change_id, &self.design_id, vec![], ids).await.into())
+        }
+    }
+
+    /// @emoji 📐 Joint parameters of a connection (all default to `0`).
+    #[derive(InputObject, Clone, Copy, Debug, Default)]
+    #[graphql(name = "ConnectionJointInput")]
+    pub struct ConnectionJointInput {
+        pub gap: Option<f64>,
+        pub shift: Option<f64>,
+        pub rise: Option<f64>,
+        pub rotation: Option<f64>,
+        pub turn: Option<f64>,
+        pub tilt: Option<f64>,
+        pub u: Option<f64>,
+        pub v: Option<f64>,
+    }
+
+    async fn design_connection_added(id: Option<Id>, parent_piece_id: Id, parent_connector: String, child_piece_id: Id, child_connector: String, joint: Option<ConnectionJointInput>) -> crate::operation::ConnectionAdded {
+        let j = joint.unwrap_or_default();
+        crate::operation::ConnectionAdded {
+            id: match id {
+                Some(id) => id,
+                None => Id::new().await,
+            },
+            parent: crate::operation::SideRef { piece_id: parent_piece_id, connector_id: parent_connector.into() },
+            child: crate::operation::SideRef { piece_id: child_piece_id, connector_id: child_connector.into() },
+            gap: j.gap.unwrap_or(0.0),
+            shift: j.shift.unwrap_or(0.0),
+            rise: j.rise.unwrap_or(0.0),
+            rotation: j.rotation.unwrap_or(0.0),
+            turn: j.turn.unwrap_or(0.0),
+            tilt: j.tilt.unwrap_or(0.0),
+            u: j.u.unwrap_or(0.0),
+            v: j.v.unwrap_or(0.0),
+            description: None,
+        }
+    }
+
+    async fn dispatch_design_items(rt: &Arc<ParentStore>, change_id: &Id, design_id: &Id, pieces: Vec<crate::operation::PieceAdded>, connections: Vec<crate::operation::ConnectionAdded>) -> crate::operation::CommandResponse {
+        let scope = Scope::PiecesAndConnectionsInDesign { design_id: design_id.clone(), piece_ids: pieces.iter().map(|p| p.id.clone()).collect(), connection_ids: connections.iter().map(|c| c.id.clone()).collect() };
+        dispatch_unsaved_kit_operation(rt, change_id, crate::operation::Operation::AddPiecesAndConnectionsInDesign { scope, input: Input::DesignItems { pieces, connections } }).await
+    }
+
+    async fn dispatch_design_deletion(rt: &Arc<ParentStore>, change_id: &Id, design_id: &Id, piece_ids: Vec<Id>, connection_ids: Vec<Id>) -> crate::operation::CommandResponse {
+        dispatch_unsaved_kit_operation(rt, change_id, crate::operation::Operation::DeletePiecesAndConnectionsInDesign { scope: Scope::PiecesAndConnectionsInDesign { design_id: design_id.clone(), piece_ids, connection_ids }, input: Input::None }).await
+    }
+
+    async fn dispatch_piece_patch(rt: &Arc<ParentStore>, change_id: &Id, design_id: &Id, piece_id: &Id, name: Option<String>, description: Option<String>, position: Option<PositionInput>) -> crate::operation::CommandResponse {
+        dispatch_unsaved_kit_operation(rt, change_id, crate::operation::Operation::UpdatePieceInDesign { scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() }, input: Input::PiecePatch { name, description, position } }).await
     }
 
     pub struct PieceOperationInput {
@@ -17877,13 +18538,13 @@ pub mod gql {
     impl PieceOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, new_name);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            Ok(dispatch_piece_patch(rt, &self.change_id, &self.design_id, &self.piece_id, Some(new_name), None, None).await.into())
         }
         #[graphql(name = "changeDescription")]
         async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, new_description);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            Ok(dispatch_piece_patch(rt, &self.change_id, &self.design_id, &self.piece_id, None, Some(new_description), None).await.into())
         }
         async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
@@ -17902,9 +18563,10 @@ pub mod gql {
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
+        /// @emoji 📍 Place the piece at an absolute `position` (a linked piece becomes fixed).
         async fn r#move(&self, ctx: &Context<'_>, position: PositionInput) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
-            let _ = (ctx, self, position);
-            Ok(crate::operation::CommandResponse::not_implemented().await.into())
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            Ok(dispatch_piece_patch(rt, &self.change_id, &self.design_id, &self.piece_id, None, None, Some(position)).await.into())
         }
         async fn fix(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self);

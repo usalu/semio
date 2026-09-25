@@ -18,22 +18,19 @@ semio = { path = "../../client/lib/rs" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
-uuid = { version = "1.20", features = ["v7", "serde"] }
+uuid = { version = "1.20", features = ["v4", "v7", "serde"] }
 tokio = { version = "1", features = ["full"] }
 axum = { version = "0.8", features = ["ws"] }
-sqlx-core = { version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "migrate", "json", "offline"] }
-sqlx-postgres = { version = "0.8", features = ["uuid", "time", "migrate", "json", "offline"] }
+sqlx-core = { version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"] }
+sqlx-postgres = { version = "0.8", features = ["uuid", "time", "json"] }
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 time = { version = "0.3", features = ["serde", "formatting", "parsing"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 futures = "0.3"
-tokio-stream = "0.1"
 dashmap = "6"
+argon2 = "0.5"
 
 [dev-dependencies]
-tokio = { version = "1", features = ["full", "test-util"] }
-testcontainers = "0.23"
-testcontainers-modules = { version = "0.11", features = ["postgres"] }
 reqwest = { version = "0.12", features = ["json"] }
 tokio-tungstenite = "0.26"

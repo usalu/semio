@@ -9015,7 +9015,7 @@ type DesignOperation {
   removeAttribute(id: ID!): Response!
   removeAttributes(ids: [ID!]!): Response!
   # Pieces
-  addFixedPiece(blueprintId: ID!, position: PositionInput!, name: String, description: String): Response!
+  addFixedPiece(id: ID, blueprintId: ID!, position: PositionInput!, name: String, description: String): Response!
   addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: PositionInput, scale: Float): Response!
   addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: PositionInput!, name: String, description: String, scale: Float): Response!
   piece(id: ID!): PieceOperation!
@@ -9049,7 +9049,7 @@ type Kit implements Artifact & RichStrongEntity & StrongEntity & Entity & Node &
   # Node
   id: ID! # data // uuidv7
   # Entity
-  hash: String! # cached
+  hash: String! # cached // blake3 over the canonical projection
   owner: Entity # reference // Graph | Checkpoint | Alternative
   owns: EntityConnection # reference // Design | Type | File | Folder | Author | Place | Kit | Concept | Tag | Family | Quality | Prop | Stat
   # RichStrongEntity
@@ -9074,6 +9074,7 @@ type Kit implements Artifact & RichStrongEntity & StrongEntity & Entity & Node &
   license: String! # data
   version: String # data
   uri: String! # data
+  projection: String! # computed // canonical kit projection JSON accepted by installProjection
   design(id: ID!): Design # computed
   hasDesigns: DesignConnection! # computed
   type(id: ID!): Type # computed
@@ -9218,37 +9219,37 @@ type KitOperation {
   changeDescription(newDescription: String!): Response!
 
   # Tags
-  createTag(name: String!, description: String, icon: String, order: Int): Response!
+  createTag(id: ID, name: String!, description: String, icon: String, order: Int): Response!
   tag(id: ID!): TagOperation!
   deleteTag(id: ID!): Response!
   deleteTags(ids: [ID!]!): Response!
 
   # Concepts
-  createConcept(name: String!, description: String, icon: String, order: Int): Response!
+  createConcept(id: ID, name: String!, description: String, icon: String, order: Int): Response!
   concept(id: ID!): ConceptOperation!
   deleteConcept(id: ID!): Response!
   deleteConcepts(ids: [ID!]!): Response!
 
   # Qualities
-  createQuality(key: String!, value: String, unit: String, definition: String, description: String, icon: String): Response!
+  createQuality(id: ID, key: String!, value: String, unit: String, definition: String, description: String, icon: String): Response!
   quality(id: ID!): QualityOperation!
   deleteQuality(id: ID!): Response!
   deleteQualities(ids: [ID!]!): Response!
 
   # Types
-  createType(name: String!, description: String, icon: String, image: String, unit: String): Response!
+  createType(id: ID, name: String!, description: String, icon: String, image: String, unit: String): Response!
   type(id: ID!): TypeOperation!
   deleteType(id: ID!): Response!
   deleteTypes(ids: [ID!]!): Response!
 
   # Designs
-  createDesign(name: String!, description: String, icon: String, image: String, unit: String): Response!
+  createDesign(id: ID, name: String!, description: String, icon: String, image: String, unit: String): Response!
   design(id: ID!): DesignOperation!
   deleteDesign(id: ID!): Response!
   deleteDesigns(ids: [ID!]!): Response!
 
   # Folders
-  createFolder(name: String!, path: String!, description: String, icon: String, parentFolderId: ID): Response!
+  createFolder(id: ID, name: String!, path: String!, description: String, icon: String, parentFolderId: ID): Response!
   moveToFolder(nodeId: ID!, folderId: ID): Response!
 }
 

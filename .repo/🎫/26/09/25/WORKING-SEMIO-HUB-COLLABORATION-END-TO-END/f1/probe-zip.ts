@@ -1,0 +1,16 @@
+import { unzipSync, strFromU8 } from "fflate";
+import { Session } from "/home/user/semio/semio/client/lib/js/index.ts";
+const t0 = Date.now();
+const entries = unzipSync(new Uint8Array(await Bun.file("/home/user/semio/semio/fixtures/metabolism.zip").arrayBuffer()), { filter: (f) => f.name === "kit.json" });
+console.log("[DEBUG] unzip", Date.now() - t0, Object.keys(entries));
+const json = strFromU8(entries["kit.json"]!);
+const s = await Session.openInMemory({ timeoutMs: 120000 });
+const store = (await s.stores())[0]!;
+const t1 = Date.now();
+console.log("[DEBUG] install", await store.installProjection(json), Date.now() - t1);
+const d = await store.readKitInner(await Bun.file("probe-q1.graphql").text());
+const x = d as any;
+console.log("[DEBUG] designs", x.hasDesigns.edges.length, "types", x.hasTypes.edges.length, "files", x.hasFiles.edges.length, "folders", JSON.stringify(x.hasFolders).slice(0,300));
+const t = await store.readKitInner("hasTypologies { edges { node { id name } } } hasFamilies { edges { node { id name } } }");
+console.log("[DEBUG]", JSON.stringify(t).slice(0, 500));
+await s.dispose();

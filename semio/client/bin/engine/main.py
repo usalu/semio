@@ -28,7 +28,6 @@ import datetime
 import difflib
 import enum
 import functools
-import importlib.util as _ilu
 import io
 import json
 import logging
@@ -55,7 +54,7 @@ import starlette.middleware.cors
 import uvicorn
 from ariadne import InterfaceType, MutationType, ObjectType, QueryType, ScalarType, load_schema_from_path, make_executable_schema
 from ariadne.asgi import GraphQL
-from mcp.server.fastmcp import Context, FastMCP
+from mcp.server.mcpserver import Context, MCPServer
 from mcp.types import CallToolResult, EmbeddedResource, TextContent, TextResourceContents
 
 try:
@@ -63,11 +62,12 @@ try:
 except Exception:  # pragma: no cover
     openai = None
 
-_semio_core_path = str(pathlib.Path(__file__).parent.parent.parent / "lib" / "py" / "main.py")
-_semio_core_spec = _ilu.spec_from_file_location("semio_core", _semio_core_path)
-_semio_core = _ilu.module_from_spec(_semio_core_spec)
+_monorepo_root = str(pathlib.Path(__file__).resolve().parents[4])
+if _monorepo_root not in sys.path:
+    sys.path.insert(0, _monorepo_root)
+import semio.client.lib.py.main as _semio_core
+
 sys.modules["semio_core"] = _semio_core
-_semio_core_spec.loader.exec_module(_semio_core)
 from semio_core import (
     DEBUG_LOG_FILE,
     ENCODED_NAME_AND_VARIANT_AND_VIEW_PATH,
@@ -1984,7 +1984,7 @@ async def rest_auth_status(serverUrl: str) -> AuthStatusResponse:
 # Mcp MUST expose stateful kit operations via Representation Context Protocol.
 # Call start_working_in_local_kit(path) first; then use start_working_in_design/start_working_in_type to scope further.
 
-mcp = FastMCP("semio", stateless_http=False, json_response=True)
+mcp = MCPServer("semio")
 
 _APP_RESOURCE_URI = "ui://semio/design-viewer"
 _APP_RESOURCE_META = {"ui": {"resourceUri": _APP_RESOURCE_URI}, "ui/resourceUri": _APP_RESOURCE_URI}
@@ -3180,13 +3180,13 @@ def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = 
                 type="resource",
                 resource=TextResourceContents(
                     uri="semio://mcp-app/tool-payload",
-                    mimeType="application/json",
+                    mime_type="application/json",
                     text=text,
                 ),
             ),
         ],
-        structuredContent=payload,
-        isError=is_error,
+        structured_content=payload,
+        is_error=is_error,
     )
 
 
@@ -3806,11 +3806,10 @@ async def engineLifespan(app):
         yield
 
 
-mcp.settings.streamable_http_path = "/"
 engine = starlette.applications.Starlette(lifespan=engineLifespan)
 engine.mount("/api", rest)
 engine.mount("/graphql", graphql_http_app)
-engine.mount("/mcp", mcp.streamable_http_app())
+engine.mount("/mcp", mcp.streamable_http_app(streamable_http_path="/", json_response=True, host=HOST))
 
 
 def start_engine():
@@ -3938,8 +3937,8 @@ sys.modules["engine"] = engine
 def _mcp_app_tool_payload(result: object) -> dict:
     """🔖Unpack kit/design MCP app tool returns (CallToolResult with structuredContent)."""
     assert isinstance(result, CallToolResult), result
-    assert result.structuredContent is not None
-    return result.structuredContent
+    assert result.structured_content is not None
+    return result.structured_content
 
 
 # #region 👓Constants
@@ -4660,7 +4659,7 @@ class TestMcp:
         engine._mcp_session_kits[mock_ctx.session] = kitMetabolismJson
         result = engine.start_working_in_design("nonexistent-id", mock_ctx)
         assert isinstance(result, CallToolResult)
-        assert result.isError is True
+        assert result.is_error is True
         payload = _mcp_app_tool_payload(result)
         assert "error" in payload
 
@@ -5178,7 +5177,7 @@ class TestMcp:
         for tool_fn in (engine.show_design, engine.show_diagram, engine.show_scene, engine.select_pieces, engine.select_connections, engine.select_pieces_and_connections):
             result = tool_fn(mock_ctx)
             assert isinstance(result, CallToolResult), f"{tool_fn.__name__} should return CallToolResult"
-            assert result.isError is True, f"{tool_fn.__name__} should signal error"
+            assert result.is_error is True, f"{tool_fn.__name__} should signal error"
             data = _mcp_app_tool_payload(result)
             assert "error" in data, f"{tool_fn.__name__} should require kit+design"
 
@@ -5842,7 +5841,7 @@ class TestMcpRemoteKit:
             engine._save_auth({})
             result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
             assert isinstance(result, CallToolResult)
-            assert result.isError is True
+            assert result.is_error is True
             assert "error" in _mcp_app_tool_payload(result)
 
     def test_start_working_in_remote_kit_connection_error(self, tmp_path):
@@ -5853,7 +5852,7 @@ class TestMcpRemoteKit:
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
             result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
             assert isinstance(result, CallToolResult)
-            assert result.isError is True
+            assert result.is_error is True
             assert "error" in _mcp_app_tool_payload(result)
 
     def test_start_working_in_remote_kit_clears_previous_state(self, tmp_path):

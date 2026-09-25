@@ -49,24 +49,6 @@
       ],
       "@semio/js/*": [
         "./*"
-      ],
-      "@ui/react": [
-        "../../../ui/react"
-      ],
-      "@ui/react/*": [
-        "../../../ui/react/*"
-      ],
-      "@semio/assets": [
-        "../assets"
-      ],
-      "@semio/assets/*": [
-        "../assets/*"
-      ],
-      "@semio/sketchpad": [
-        "../client/ui/sketchpad"
-      ],
-      "@semio/sketchpad/*": [
-        "../client/ui/sketchpad/*"
       ]
     }
   },

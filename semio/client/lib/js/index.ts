@@ -1387,7 +1387,7 @@ function parseFileSystemNodeRef(node: JsonObject | null | undefined): FileSystem
   return { id, kind: String(node["fileSystemKind"] ?? "") };
 }
 
-function resolveFileSystemNode(session: Session, storeId: string | undefined, ref: FileSystemNodeRef, designId?: string, typeId?: string): Entity {
+function resolveFileSystemNode(session: Session, storeId: string | undefined, ref: FileSystemNodeRef, designId?: string, typeId?: string): Entity | null {
   switch (ref.kind) {
     case "KIT":
       return new Kit(session, ref.id, storeId);
@@ -1401,6 +1401,8 @@ function resolveFileSystemNode(session: Session, storeId: string | undefined, re
       return new Type(session, ref.id, storeId);
     case "FAMILY":
       return new Family(session, ref.id, storeId);
+    case "TYPOLOGY":
+      return new Typology(session, ref.id, storeId);
     case "PIECE":
       return new Piece(session, designId ?? "", ref.id, storeId);
     case "CONNECTION":
@@ -1412,28 +1414,12 @@ function resolveFileSystemNode(session: Session, storeId: string | undefined, re
     case "CONNECTOR":
       return new Connector(session, typeId ?? "", ref.id, storeId);
     default:
-      return new Entity(session, ref.id, storeId);
+      return null;
   }
 }
 
 const VFS_CHILD_NODE_SELECTION =
   "id fileSystemKind fileSystemName fileSystemPath fileSystemHasChildren owner { __typename ... on Type { id } ... on Design { id } }";
-
-function resolveFileSystemNodeFromGraphql(
-  session: Session,
-  storeId: string | undefined,
-  node: JsonObject | null | undefined,
-  designId?: string,
-): Entity {
-  const ref = parseFileSystemNodeRef(node);
-  if (!ref) return new Entity(session, "", storeId);
-  const owner = node?.["owner"] as JsonObject | undefined;
-  const ownerTypename = String(owner?.["__typename"] ?? "");
-  const ownerId = String(owner?.["id"] ?? "");
-  const typeId = ownerTypename === "Type" ? ownerId : undefined;
-  const pieceDesignId = ownerTypename === "Design" ? ownerId : designId;
-  return resolveFileSystemNode(session, storeId, ref, pieceDesignId, typeId);
-}
 
 function parseFileSystemChildrenRefs(frag: JsonObject | null | undefined): readonly SemioFileSystemChildRef[] {
   const edges = (frag?.["fileSystemChildren"] as JsonObject | undefined)?.["edges"];
@@ -1463,94 +1449,57 @@ function kitBranchFrag(frag: JsonObject | null, branch: string | null): JsonObje
   return isJsonObjectNode(b) ? b : null;
 }
 
-function vfsKitFields(branch: string | null, designId?: string) {
-  const b = (frag: JsonObject | null) => kitBranchFrag(frag, branch);
-  const vfs = (frag: JsonObject | null) => String(b(frag as JsonObject | null)?.["fileSystemPath"] ?? "");
-  const vfsChildrenSelection = `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`;
-  return [
-    { method: "fileSystemPath", selection: "... on FileSystemNode { fileSystemPath }", parse: (frag) => vfs(frag), parseEntity: (entity, frag) => vfs(frag) },
-    { method: "fileSystemName", selection: "... on FileSystemNode { fileSystemName }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemName"] ?? "") },
-    { method: "isFileSystemRoot", selection: "... on FileSystemNode { isFileSystemRoot }", parse: (frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]), parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["isFileSystemRoot"]) },
-    { method: "fileSystemKind", selection: "... on FileSystemNode { fileSystemKind }", parse: (frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? ""), parseEntity: (entity, frag) => String(b(frag as JsonObject | null)?.["fileSystemKind"] ?? "") },
-    {
-      method: "fileSystemHasChildren",
-      selection: "... on FileSystemNode { fileSystemHasChildren }",
-      parse: (frag) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
-      parseEntity: (entity, frag) => Boolean(b(frag as JsonObject | null)?.["fileSystemHasChildren"]),
-    },
+/** @emoji 📁 {@code FileSystemNode} read roster for an entity whose node is located in the kit fragment by {@code nodeOf}. */
+function vfsNodeFields(nodeOf: (frag: JsonObject | null) => JsonObject | null | undefined, designId?: string): readonly BoundKitFieldSpec<unknown>[] {
+  const text = (key: string) => (frag: JsonValue) => String(nodeOf(frag as JsonObject | null)?.[key] ?? "");
+  const flag = (key: string) => (frag: JsonValue) => Boolean(nodeOf(frag as JsonObject | null)?.[key]);
+  return defineBoundKitFields([
+    { method: "fileSystemPath", selection: "... on FileSystemNode { fileSystemPath }", parse: text("fileSystemPath") },
+    { method: "fileSystemName", selection: "... on FileSystemNode { fileSystemName }", parse: text("fileSystemName") },
+    { method: "isFileSystemRoot", selection: "... on FileSystemNode { isFileSystemRoot }", parse: flag("isFileSystemRoot") },
+    { method: "fileSystemKind", selection: "... on FileSystemNode { fileSystemKind }", parse: text("fileSystemKind") },
+    { method: "fileSystemHasChildren", selection: "... on FileSystemNode { fileSystemHasChildren }", parse: flag("fileSystemHasChildren") },
     {
       method: "fileSystemParent",
       selection: "... on FileSystemNode { fileSystemParent { id fileSystemKind } }",
       parse: () => null,
       parseEntity: (entity, frag) => {
-        const ref = parseFileSystemNodeRef(b(frag as JsonObject | null)?.["fileSystemParent"] as JsonObject | undefined);
+        const ref = parseFileSystemNodeRef(nodeOf(frag as JsonObject | null)?.["fileSystemParent"] as JsonObject | undefined);
         return ref ? resolveFileSystemNode(entity.session, entity.storeId, ref, designId) : null;
       },
     },
     {
       method: "fileSystemChildren",
-      selection: vfsChildrenSelection,
-      parse: () => [],
-      coarseEvent: true,
-      parseEntity: (entity, frag) => {
-        const nodeFrag = b(frag as JsonObject | null);
-        return Object.freeze(
-          ((nodeFrag?.["fileSystemChildren"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined ?? []).map((e) =>
-            resolveFileSystemNodeFromGraphql(entity.session, entity.storeId, (e as JsonObject)?.["node"] as JsonObject | undefined, designId),
-          ),
-        );
-      },
-    },
-  ] as const;
-}
-
-function vfsEntityPathFields(path: readonly string[], designId?: string) {
-  const nodeAt = (frag: JsonObject | null) => readKitPathNode(frag, path);
-  const vfsChildrenSelection = `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`;
-  return [
-    {
-      method: "fileSystemPath",
-      selection: "... on FileSystemNode { fileSystemPath }",
-      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
-      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemPath"] ?? ""),
-    },
-    {
-      method: "fileSystemName",
-      selection: "... on FileSystemNode { fileSystemName }",
-      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
-      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemName"] ?? ""),
-    },
-    {
-      method: "isFileSystemRoot",
-      selection: "... on FileSystemNode { isFileSystemRoot }",
-      parse: (frag) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
-      parseEntity: (entity, frag) => Boolean(nodeAt(frag as JsonObject | null)?.["isFileSystemRoot"]),
-    },
-    {
-      method: "fileSystemKind",
-      selection: "... on FileSystemNode { fileSystemKind }",
-      parse: (frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
-      parseEntity: (entity, frag) => String(nodeAt(frag as JsonObject | null)?.["fileSystemKind"] ?? ""),
-    },
-    {
-      method: "fileSystemHasChildren",
-      selection: "... on FileSystemNode { fileSystemHasChildren }",
-      parse: (frag) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
-      parseEntity: (entity, frag) => Boolean(nodeAt(frag as JsonObject | null)?.["fileSystemHasChildren"]),
-    },
-    {
-      method: "fileSystemChildren",
-      selection: vfsChildrenSelection,
+      selection: `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`,
       parse: () => [],
       coarseEvent: true,
       parseEntity: (entity, frag) =>
         Object.freeze(
-          (parseFileSystemChildrenRefs(nodeAt(frag as JsonObject | null)) as readonly SemioFileSystemChildRef[]).map((child) =>
-            resolveFileSystemNode(entity.session, entity.storeId, { id: child.id, kind: child.kind }, child.designId, child.typeId),
-          ),
+          parseFileSystemChildrenRefs(nodeOf(frag as JsonObject | null))
+            .map((child) => resolveFileSystemNode(entity.session, entity.storeId, { id: child.id, kind: child.kind }, child.designId ?? designId, child.typeId))
+            .filter((node): node is Entity => node != null),
         ),
     },
-  ] as const;
+  ]);
+}
+
+function vfsKitFields(branch: string | null, designId?: string): readonly BoundKitFieldSpec<unknown>[] {
+  return vfsNodeFields((frag) => kitBranchFrag(frag, branch), designId);
+}
+
+function vfsEntityPathFields(path: readonly string[], designId?: string): readonly BoundKitFieldSpec<unknown>[] {
+  return vfsNodeFields((frag) => readKitPathNode(frag, path), designId);
+}
+
+/** @emoji 📁 {@code FileSystemNode} reads installed by {@link vfsNodeFields} on every kit VFS entity. */
+export interface FileSystemNodeReads {
+  fileSystemParent(): Promise<Entity | null>;
+  fileSystemChildren(): Promise<readonly Entity[]>;
+  fileSystemPath(): Promise<string>;
+  fileSystemName(): Promise<string>;
+  isFileSystemRoot(): Promise<boolean>;
+  fileSystemKind(): Promise<string>;
+  fileSystemHasChildren(): Promise<boolean>;
 }
 
 /** @emoji 📁 One lazy VFS child row from {@link fetchSemioFileSystemChildren}. */
@@ -1874,6 +1823,40 @@ function parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: str
   return out;
 }
 
+//#region 🎛️KitOperationTypes
+/** @emoji 🧮 GraphQL variables bound to a {@link KitOperation} document. */
+export type GraphqlVariables = JsonObject;
+
+/** @emoji 📨 GraphQL response envelope returned by {@link Session.executeOperation}. */
+export type KitOperationEnvelope = GraphqlEnvelope<JsonValue>;
+
+/** @emoji 🧭 Where a {@link KitOperation} originates: this client or a replicated remote participant. */
+export type KitOperationOrigin = "local" | "remote";
+
+/** @emoji 🎛️ One kit-changing GraphQL {@code mutation} document executed on a {@link Session} (the replication unit). */
+export type KitOperation = Readonly<{
+  operationId: string;
+  query: string;
+  variables: GraphqlVariables;
+  origin: KitOperationOrigin;
+}>;
+
+/** @emoji ▶️ Executes a {@link KitOperation}. */
+export type KitOperationExecutor = (operation: KitOperation) => Promise<KitOperationEnvelope>;
+
+/** @emoji 🧅 Wraps kit operation execution (e.g. hub forwarding); call {@code next} to execute locally. */
+export type KitOperationMiddleware = (operation: KitOperation, next: KitOperationExecutor) => Promise<KitOperationEnvelope>;
+
+/** @emoji 👂 Observes executed kit operations. */
+export type KitOperationListener = (operation: KitOperation, envelope: KitOperationEnvelope) => void;
+
+/** @emoji 🆔 Client-generated operation id (uuid). */
+export function newKitOperationId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return `op-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+//#endregion 🎛️KitOperationTypes
+
 /**
  * @emoji 🧭 Target {@code Session}: owns GraphQL transport and only tracks command IDs for {@code Subscription.operation} correlation; {@link EventBus} emits {@code commandSucceeded} only (no duplicate event-kind payloads).
  */
@@ -1934,17 +1917,55 @@ export class Session {
       });
   }
 
-  private async readEnvelope(body: { query: string; variables?: JsonObject; operationName?: string | null }): Promise<GraphqlEnvelope<JsonValue>> {
+  /** @emoji 📖 Executes a read-only {@code query} document against this session's store (never replicated). */
+  async readEnvelope(body: { query: string; variables?: JsonObject; operationName?: string | null }): Promise<GraphqlEnvelope<JsonValue>> {
     this.ensureAlive();
     assertGraphqlWireKind(body.query, "query");
     return executeGraphql(this.handle, body, this.timeoutMs);
   }
 
-  private async mutateEnvelope(body: { query: string; variables?: JsonObject; operationName?: string | null }): Promise<GraphqlEnvelope<JsonValue>> {
-    this.ensureAlive();
-    assertGraphqlWireKind(body.query, "mutation");
-    return executeGraphql(this.handle, body, this.timeoutMs);
+  //#region 🎛️KitOperations
+  private readonly operationMiddlewares: KitOperationMiddleware[] = [];
+  private readonly operationListeners = new Set<KitOperationListener>();
+
+  /** @emoji 🎛️ Wraps {@link executeOperation}; middlewares compose in registration order and call {@code next} to execute locally. */
+  useOperationMiddleware(middleware: KitOperationMiddleware): Unsubscribe {
+    this.operationMiddlewares.push(middleware);
+    return () => {
+      const index = this.operationMiddlewares.indexOf(middleware);
+      if (index >= 0) this.operationMiddlewares.splice(index, 1);
+    };
   }
+
+  /** @emoji 👂 Observes every executed {@link KitOperation} (local and remote) with its GraphQL envelope. */
+  onOperation(listener: KitOperationListener): Unsubscribe {
+    this.operationListeners.add(listener);
+    return () => {
+      this.operationListeners.delete(listener);
+    };
+  }
+
+  /** @emoji 🎛️ Single choke point for every kit-changing {@code mutation} document of this session (see {@link useOperationMiddleware}). */
+  async executeOperation(operation: KitOperation): Promise<KitOperationEnvelope> {
+    this.ensureAlive();
+    assertGraphqlWireKind(operation.query, "mutation");
+    const local: KitOperationExecutor = (op) => executeGraphql(this.handle, { query: op.query, variables: op.variables }, this.timeoutMs);
+    const run = this.operationMiddlewares.reduceRight<KitOperationExecutor>((next, middleware) => (op) => middleware(op, next), local);
+    const envelope = await run(operation);
+    for (const listener of [...this.operationListeners]) {
+      try {
+        listener(operation, envelope);
+      } catch {
+        /* ignore */
+      }
+    }
+    return envelope;
+  }
+
+  private async mutateEnvelope(body: { query: string; variables?: JsonObject }): Promise<GraphqlEnvelope<JsonValue>> {
+    return this.executeOperation({ operationId: newKitOperationId(), query: body.query, variables: body.variables ?? {}, origin: "local" });
+  }
+  //#endregion 🎛️KitOperations
 
   /** @emoji 🧾 Applies a mutation envelope and registers emitted operation ids for {@code Subscription.operation}. */
   mutationReceipt(env: GraphqlEnvelope<JsonValue>): SetResult {
@@ -2261,6 +2282,7 @@ export class Session {
 //#endregion 🏪Store
 
 //#region 📦Kit
+export interface Kit extends FileSystemNodeReads {}
 /** @emoji 📦 Target-schema kit entity beneath {@link Version}; one read + one change event per field, one method per command. */
 export class Kit extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
@@ -2307,19 +2329,19 @@ export class Kit extends Entity {
   declare onConceptsChanged: (cb: (next: readonly Concept[]) => void) => Unsubscribe;
   declare rename: (newName: string) => Promise<SetResult>;
   declare changeDescription: (newDescription: string) => Promise<SetResult>;
-  declare createTag: (name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>;
+  declare createTag: (name: string, description?: string | null, icon?: string | null, order?: number | null, id?: string | null) => Promise<SetResult>;
   declare deleteTag: (id: string) => Promise<SetResult>;
   declare deleteTags: (ids: readonly string[]) => Promise<SetResult>;
-  declare createConcept: (name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>;
+  declare createConcept: (name: string, description?: string | null, icon?: string | null, order?: number | null, id?: string | null) => Promise<SetResult>;
   declare deleteConcept: (id: string) => Promise<SetResult>;
   declare deleteConcepts: (ids: readonly string[]) => Promise<SetResult>;
-  declare createQuality: (key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null) => Promise<SetResult>;
+  declare createQuality: (key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null, id?: string | null) => Promise<SetResult>;
   declare deleteQuality: (id: string) => Promise<SetResult>;
   declare deleteQualities: (ids: readonly string[]) => Promise<SetResult>;
-  declare createType: (name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>;
+  declare createType: (name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null, id?: string | null) => Promise<SetResult>;
   declare deleteType: (id: string) => Promise<SetResult>;
   declare deleteTypes: (ids: readonly string[]) => Promise<SetResult>;
-  declare createDesign: (name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>;
+  declare createDesign: (name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null, id?: string | null) => Promise<SetResult>;
   declare deleteDesign: (id: string) => Promise<SetResult>;
   declare deleteDesigns: (ids: readonly string[]) => Promise<SetResult>;
   declare hasFolders: () => Promise<readonly Folder[]>;
@@ -2327,14 +2349,7 @@ export class Kit extends Entity {
   declare hasFamilies: () => Promise<readonly Family[]>;
   declare hasTypologies: () => Promise<readonly Typology[]>;
   declare typology: (id: string) => Typology;
-  declare fileSystemParent: () => Promise<Entity | null>;
-  declare fileSystemChildren: () => Promise<readonly Entity[]>;
-  declare fileSystemPath: () => Promise<string>;
-  declare fileSystemName: () => Promise<string>;
-  declare isFileSystemRoot: () => Promise<boolean>;
-  declare fileSystemKind: () => Promise<string>;
-  declare fileSystemHasChildren: () => Promise<boolean>;
-  declare createFolder: (name: string, path: string, description?: string | null, icon?: string | null, parentFolderId?: string | null) => Promise<SetResult>;
+  declare createFolder: (name: string, path: string, description?: string | null, icon?: string | null, parentFolderId?: string | null, id?: string | null) => Promise<SetResult>;
   declare moveToFolder: (nodeId: string, folderId?: string | null) => Promise<SetResult>;
 }
 
@@ -2464,43 +2479,43 @@ const KIT_OPERATIONS = defineBoundKitOperations([
   { method: "changeDescription", buildInner: (_e, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
   {
     method: "createTag",
-    buildInner: (_e, name, description, icon, order) =>
-      `ct: createTag(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, order: ${order == null ? "null" : String(order)})`,
+    buildInner: (_e, name, description, icon, order, id) =>
+      `ct: createTag(id: ${gqlString(String(id ?? newUuidV7()))}, name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, order: ${order == null ? "null" : String(order)})`,
   },
   { method: "deleteTag", buildInner: (_e, id) => `dt: deleteTag(id: ${gqlString(String(id ?? ""))})` },
   { method: "deleteTags", buildInner: (_e, ids) => `dts: deleteTags(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
     method: "createConcept",
-    buildInner: (_e, name, description, icon, order) =>
-      `cc: createConcept(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, order: ${order == null ? "null" : String(order)})`,
+    buildInner: (_e, name, description, icon, order, id) =>
+      `cc: createConcept(id: ${gqlString(String(id ?? newUuidV7()))}, name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, order: ${order == null ? "null" : String(order)})`,
   },
   { method: "deleteConcept", buildInner: (_e, id) => `dc: deleteConcept(id: ${gqlString(String(id ?? ""))})` },
   { method: "deleteConcepts", buildInner: (_e, ids) => `dcs: deleteConcepts(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
     method: "createQuality",
-    buildInner: (_e, key, value, unit, definition, description, icon) =>
-      `cq: createQuality(key: ${gqlString(String(key ?? ""))}, value: ${value == null ? "null" : gqlString(String(value))}, unit: ${unit == null ? "null" : gqlString(String(unit))}, definition: ${definition == null ? "null" : gqlString(String(definition))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))})`,
+    buildInner: (_e, key, value, unit, definition, description, icon, id) =>
+      `cq: createQuality(id: ${gqlString(String(id ?? newUuidV7()))}, key: ${gqlString(String(key ?? ""))}, value: ${value == null ? "null" : gqlString(String(value))}, unit: ${unit == null ? "null" : gqlString(String(unit))}, definition: ${definition == null ? "null" : gqlString(String(definition))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))})`,
   },
   { method: "deleteQuality", buildInner: (_e, id) => `dq: deleteQuality(id: ${gqlString(String(id ?? ""))})` },
   { method: "deleteQualities", buildInner: (_e, ids) => `dqs: deleteQualities(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
     method: "createType",
-    buildInner: (_e, name, description, icon, image, unit) =>
-      `cT: createType(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, image: ${image == null ? "null" : gqlString(String(image))}, unit: ${unit == null ? "null" : gqlString(String(unit))})`,
+    buildInner: (_e, name, description, icon, image, unit, id) =>
+      `cT: createType(id: ${gqlString(String(id ?? newUuidV7()))}, name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, image: ${image == null ? "null" : gqlString(String(image))}, unit: ${unit == null ? "null" : gqlString(String(unit))})`,
   },
   { method: "deleteType", buildInner: (_e, id) => `dT: deleteType(id: ${gqlString(String(id ?? ""))})` },
   { method: "deleteTypes", buildInner: (_e, ids) => `dTs: deleteTypes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
     method: "createDesign",
-    buildInner: (_e, name, description, icon, image, unit) =>
-      `cD: createDesign(name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, image: ${image == null ? "null" : gqlString(String(image))}, unit: ${unit == null ? "null" : gqlString(String(unit))})`,
+    buildInner: (_e, name, description, icon, image, unit, id) =>
+      `cD: createDesign(id: ${gqlString(String(id ?? newUuidV7()))}, name: ${gqlString(String(name ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, image: ${image == null ? "null" : gqlString(String(image))}, unit: ${unit == null ? "null" : gqlString(String(unit))})`,
   },
   { method: "deleteDesign", buildInner: (_e, id) => `dD: deleteDesign(id: ${gqlString(String(id ?? ""))})` },
   { method: "deleteDesigns", buildInner: (_e, ids) => `dDs: deleteDesigns(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
     method: "createFolder",
-    buildInner: (_e, name, path, description, icon, parentFolderId) =>
-      `cF: createFolder(name: ${gqlString(String(name ?? ""))}, path: ${gqlString(String(path ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, parentFolderId: ${parentFolderId == null ? "null" : gqlString(String(parentFolderId))})`,
+    buildInner: (_e, name, path, description, icon, parentFolderId, id) =>
+      `cF: createFolder(id: ${gqlString(String(id ?? newUuidV7()))}, name: ${gqlString(String(name ?? ""))}, path: ${gqlString(String(path ?? ""))}, description: ${description == null ? "null" : gqlString(String(description))}, icon: ${icon == null ? "null" : gqlString(String(icon))}, parentFolderId: ${parentFolderId == null ? "null" : gqlString(String(parentFolderId))})`,
   },
   {
     method: "moveToFolder",
@@ -2516,14 +2531,14 @@ function executeSessionReadGraphql(
   session: Session,
   body: Readonly<{ query: string; variables?: JsonObject; operationName?: string | null }>,
 ): Promise<GraphqlEnvelope<JsonValue>> {
-  return (session as unknown as { readEnvelope(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).readEnvelope(body);
+  return session.readEnvelope(body);
 }
 
 function executeSessionWriteGraphql(
   session: Session,
-  body: Readonly<{ query: string; variables?: JsonObject; operationName?: string | null }>,
+  body: Readonly<{ query: string; variables?: JsonObject }>,
 ): Promise<GraphqlEnvelope<JsonValue>> {
-  return (session as unknown as { mutateEnvelope(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).mutateEnvelope(body);
+  return session.executeOperation({ operationId: newKitOperationId(), query: body.query, variables: body.variables ?? {}, origin: "local" });
 }
 
 //#region 🧬VcsEntities
@@ -3113,6 +3128,7 @@ installEntityNodeMethods(
 //#endregion 🧬VcsEntities
 
 //#region 📐Design
+export interface Design extends FileSystemNodeReads {}
 /** @emoji 📐 Design artifact: declarative field reads, commands, and per-field change subscriptions. */
 export class Design extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
@@ -3188,7 +3204,7 @@ export class Design extends Entity {
   declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
   declare removeAttribute: (id: string) => Promise<SetResult>;
   declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
-  declare addFixedPiece: (blueprintId: string, position: PositionInput, name?: string | null, description?: string | null) => Promise<SetResult>;
+  declare addFixedPiece: (blueprintId: string, position: PositionInput, name?: string | null, description?: string | null, id?: string | null) => Promise<SetResult>;
   declare addChildPieceWithParentConnection: (
     blueprintId: string,
     parentPieceId: string,
@@ -3456,8 +3472,8 @@ const DESIGN_OPERATIONS = defineBoundKitOperations([
   { method: "removeAttributes", buildInner: (_e, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   {
     method: "addFixedPiece",
-    buildInner: (_e, blueprintId, position, name, description) =>
-      `afp: addFixedPiece(blueprintId: ${gqlString(String(blueprintId ?? ""))}, position: ${formatPositionInput(position as PositionInput)}, name: ${name == null ? "null" : gqlString(String(name))}, description: ${description == null ? "null" : gqlString(String(description))})`,
+    buildInner: (_e, blueprintId, position, name, description, id) =>
+      `afp: addFixedPiece(id: ${gqlString(String(id ?? newUuidV7()))}, blueprintId: ${gqlString(String(blueprintId ?? ""))}, position: ${formatPositionInput(position as PositionInput)}, name: ${name == null ? "null" : gqlString(String(name))}, description: ${description == null ? "null" : gqlString(String(description))})`,
   },
   {
     method: "addChildPieceWithParentConnection",
@@ -3494,6 +3510,7 @@ installEntityKitMethods(Design, DESIGN_FIELDS as readonly BoundKitFieldSpec<unkn
 //#endregion 📐Design
 
 //#region 🧰Type
+export interface Type extends FileSystemNodeReads {}
 /** @emoji 🧰 Type artifact: declarative field reads, commands, and per-field change subscriptions. */
 export class Type extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
@@ -3664,6 +3681,7 @@ const KIT_PATH_TYPE_CONNECTOR: readonly string[] = ["type", "connector"];
 const KIT_PATH_TYPE_REPRESENTATION: readonly string[] = ["type", "representation"];
 
 //#region 🔘Port
+export interface Port extends FileSystemNodeReads {}
 /** @emoji 🔘 Port under {@link Type}: declarative field reads, commands, and change subscriptions. */
 export class Port extends Entity {
   readonly typeId: string;
@@ -3689,11 +3707,6 @@ export class Port extends Entity {
   declare addAttribute: (key: string, value: string, definition: string) => Promise<SetResult>;
   declare removeAttribute: (id: string) => Promise<SetResult>;
   declare removeAttributes: (ids: readonly string[]) => Promise<SetResult>;
-  declare fileSystemPath: () => Promise<string>;
-  declare fileSystemName: () => Promise<string>;
-  declare fileSystemKind: () => Promise<string>;
-  declare fileSystemHasChildren: () => Promise<boolean>;
-  declare fileSystemChildren: () => Promise<readonly Entity[]>;
 }
 
 installEntityKitMethods(
@@ -3729,6 +3742,7 @@ installEntityKitMethods(
 //#endregion 🔘Port
 
 //#region 🔗Connector
+export interface Connector extends FileSystemNodeReads {}
 /** @emoji 🔗 Connector under {@link Type}: declarative field reads, commands, and change subscriptions. */
 export class Connector extends Entity {
   readonly typeId: string;
@@ -3750,11 +3764,6 @@ export class Connector extends Entity {
   declare rename: (newCode: string) => Promise<SetResult>;
   declare changeDescription: (newDescription: string) => Promise<SetResult>;
   declare changeIcon: (newIcon: string) => Promise<SetResult>;
-  declare fileSystemPath: () => Promise<string>;
-  declare fileSystemName: () => Promise<string>;
-  declare fileSystemKind: () => Promise<string>;
-  declare fileSystemHasChildren: () => Promise<boolean>;
-  declare fileSystemChildren: () => Promise<readonly Entity[]>;
 }
 
 installEntityKitMethods(
@@ -4705,6 +4714,7 @@ installEntityKitMethods(Concept, defineBoundKitFields([
 //#endregion 💡Concept
 
 //#region 🎨Representation
+export interface Representation extends FileSystemNodeReads {}
 /** @emoji 🎨 Representation under {@link Type}: read-only until schema adds {@code RepresentationOperationInput}. */
 export class Representation extends Entity {
   readonly typeId: string;
@@ -4730,11 +4740,6 @@ export class Representation extends Entity {
   declare referencesFiles: () => Promise<readonly File[]>;
   declare referencedByDesigns: () => Promise<readonly Design[]>;
   declare referencedByDesignsTransitive: () => Promise<readonly Design[]>;
-  declare fileSystemPath: () => Promise<string>;
-  declare fileSystemName: () => Promise<string>;
-  declare fileSystemKind: () => Promise<string>;
-  declare fileSystemHasChildren: () => Promise<boolean>;
-  declare fileSystemChildren: () => Promise<readonly Entity[]>;
 }
 
 function parseRepresentationBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
@@ -4835,6 +4840,7 @@ installEntityKitMethods(Representation, defineBoundKitFields([
 //#endregion 🎨Representation
 
 //#region 👨‍👩‍👦Family
+export interface Family extends FileSystemNodeReads {}
 /** @emoji 👨‍👩‍👦 Family artifact: read-only in current kit API. */
 export class Family extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
@@ -4848,13 +4854,6 @@ export class Family extends Entity {
   declare name: () => Promise<string>;
   declare description: () => Promise<string>;
   declare icon: () => Promise<string>;
-  declare fileSystemParent: () => Promise<Entity | null>;
-  declare fileSystemChildren: () => Promise<readonly Entity[]>;
-  declare fileSystemPath: () => Promise<string>;
-  declare fileSystemName: () => Promise<string>;
-  declare isFileSystemRoot: () => Promise<boolean>;
-  declare fileSystemKind: () => Promise<string>;
-  declare fileSystemHasChildren: () => Promise<boolean>;
 }
 
 const FAMILY_FIELDS = defineBoundKitFields([
@@ -4868,6 +4867,7 @@ installEntityKitMethods(Family, FAMILY_FIELDS as readonly BoundKitFieldSpec<unkn
 //#endregion 👨‍👩‍👦Family
 
 //#region 🏛️Typology
+export interface Typology extends FileSystemNodeReads {}
 /** @emoji 🏛️ Typology artifact: owns kit types and designs. */
 export class Typology extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
@@ -4883,13 +4883,6 @@ export class Typology extends Entity {
   declare icon: () => Promise<string>;
   declare hasTypes: () => Promise<readonly Type[]>;
   declare hasDesigns: () => Promise<readonly Design[]>;
-  declare fileSystemParent: () => Promise<Entity | null>;
-  declare fileSystemChildren: () => Promise<readonly Entity[]>;
-  declare fileSystemPath: () => Promise<string>;
-  declare fileSystemName: () => Promise<string>;
-  declare isFileSystemRoot: () => Promise<boolean>;
-  declare fileSystemKind: () => Promise<string>;
-  declare fileSystemHasChildren: () => Promise<boolean>;
 }
 
 function parseTypologyBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
@@ -4920,6 +4913,7 @@ installEntityKitMethods(Typology, TYPOLOGY_FIELDS as readonly BoundKitFieldSpec<
 //#endregion 🏛️Typology
 
 //#region 📄File
+export interface File extends FileSystemNodeReads {}
 /** @emoji 📄 Kit file: inverse derived references via representations and kinds. */
 export class File extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
@@ -5001,6 +4995,7 @@ installEntityKitMethods(File, FILE_FIELDS as readonly BoundKitFieldSpec<unknown,
 //#endregion 📄File
 
 //#region 📁Folder
+export interface Folder extends FileSystemNodeReads {}
 /** @emoji 📁 Folder artifact with constrained virtual file system navigation. */
 export class Folder extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
@@ -5044,13 +5039,6 @@ export class Folder extends Entity {
   declare typologies: () => Promise<readonly Typology[]>;
   declare hasTypes: () => Promise<readonly Type[]>;
   declare hasDesigns: () => Promise<readonly Design[]>;
-  declare fileSystemParent: () => Promise<Entity | null>;
-  declare fileSystemChildren: () => Promise<readonly Entity[]>;
-  declare fileSystemPath: () => Promise<string>;
-  declare fileSystemName: () => Promise<string>;
-  declare isFileSystemRoot: () => Promise<boolean>;
-  declare fileSystemKind: () => Promise<string>;
-  declare fileSystemHasChildren: () => Promise<boolean>;
 }
 
 function parseFolderBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
@@ -5243,6 +5231,901 @@ export async function openSessionHttp(baseUrl: string, opts?: SessionHttpOpenOpt
 }
 
 //#endregion 🚀PublicAPI
+
+//#region 🌐Hub
+//#region 🆔HubIds
+/** @emoji 🆔 RFC 9562 uuid v7 (48-bit unix ms + random) for client-minted entity and operation ids ({@link https://www.rfc-editor.org/rfc/rfc9562#section-5.7}). */
+export function newUuidV7(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  const ms = Date.now();
+  for (let i = 0; i < 6; i++) bytes[i] = Math.floor(ms / 2 ** (8 * (5 - i))) & 0xff;
+  bytes[6] = (bytes[6]! & 0x0f) | 0x70;
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+//#endregion 🆔HubIds
+
+//#region 🧾HubProtocol
+/** @emoji 🧱 JSON value exchanged with the hub (kit projections, GraphQL data, operation variables). */
+export type HubJson = string | number | boolean | null | readonly HubJson[] | HubJsonObject;
+/** @emoji 🧱 JSON object exchanged with the hub. */
+export type HubJsonObject = { readonly [key: string]: HubJson };
+/** @emoji 🎖️ Session role (`owner` > `editor` > `viewer`). */
+export type HubRole = "owner" | "editor" | "viewer";
+/** @emoji 🤖 Participant kind: people in a client or AI agents over MCP. */
+export type HubParticipantKind = "human" | "agent";
+/** @emoji 👤 Hub identity. */
+export type HubPerson = Readonly<{ id: string; name: string; email: string; color: string }>;
+/** @emoji 🔑 Bearer token plus the authenticated person. */
+export type HubAuth = Readonly<{ token: string; person: HubPerson }>;
+/** @emoji 🗝️ Long-lived agent token for MCP clients. */
+export type HubAgentToken = Readonly<{ token: string; label: string; kind: "agent" }>;
+/** @emoji 🗂️ One shared kit on the hub. */
+export type HubSession = Readonly<{
+  id: string;
+  name: string;
+  role: HubRole;
+  owner?: Readonly<{ id: string; name: string }>;
+  version: number;
+  hash: string;
+  updatedAt?: string;
+  participantCount?: number;
+}>;
+/** @emoji 📦 Authoritative kit projection at a version. */
+export type HubKitState = Readonly<{ version: number; hash: string; kit: HubJsonObject }>;
+/** @emoji 📨 Kit operation submitted to the hub. */
+export type HubOperationRequest = Readonly<{ operationId: string; clientId: string; baseVersion: number; query: string; variables?: HubJsonObject }>;
+/** @emoji ✅ Hub receipt of an applied operation. */
+export type HubOperationResult = Readonly<{ version: number; hash: string; data: HubJson }>;
+/** @emoji 📜 Persisted operation log entry. */
+export type HubOperationRecord = Readonly<{
+  version: number;
+  operationId: string;
+  clientId: string;
+  personId: string;
+  participantKind: HubParticipantKind;
+  query: string;
+  variables: HubJsonObject | null;
+  hash: string;
+  createdAt: string;
+}>;
+/** @emoji 👥 Session membership. */
+export type HubMember = Readonly<{ person: HubPerson; role: HubRole }>;
+/** @emoji 🔗 Share link token. */
+export type HubShare = Readonly<{ token: string; role: HubRole; label?: string | null }>;
+/** @emoji 🚪 Result of joining through a share token. */
+export type HubJoinResult = Readonly<{ session: HubSession; role: HubRole }>;
+/** @emoji 🎯 App (and design/type) a participant is looking at. */
+export type HubFocus = Readonly<{ app: string; designId?: string | null; typeId?: string | null }>;
+/** @emoji ✳️ Pieces and connections a participant selected. */
+export type HubSelection = Readonly<{ designId?: string | null; pieceIds: readonly string[]; connectionIds: readonly string[] }>;
+/** @emoji 🖱️ Pointer position in a named coordinate space (e.g. `design:<id>`). */
+export type HubCursor = Readonly<{ x: number; y: number; space: string }>;
+/** @emoji 🧑‍🤝‍🧑 Live presence of one connected client or agent. */
+export type HubParticipant = Readonly<{
+  id: string;
+  personId: string;
+  name: string;
+  color: string;
+  kind: HubParticipantKind;
+  client: string;
+  focus?: HubFocus | null;
+  selection?: HubSelection | null;
+  cursor?: HubCursor | null;
+  joinedAt: string;
+}>;
+/** @emoji 🩹 Partial presence update (merged by the hub). */
+export type HubPresencePatch = Readonly<{ focus?: HubFocus | null; selection?: HubSelection | null; cursor?: HubCursor | null }>;
+/** @emoji 📨 Operation payload submitted over the session websocket. */
+export type HubOperationSubmission = Readonly<{ operationId: string; baseVersion: number; query: string; variables?: HubJsonObject }>;
+/** @emoji 📣 Broadcast of an applied operation (also echoed to its origin). */
+export type HubOperationMessage = Readonly<{
+  type: "operation";
+  version: number;
+  hash: string;
+  operationId: string;
+  clientId: string;
+  participantId?: string | null;
+  personId: string;
+  query: string;
+  variables?: HubJsonObject | null;
+}>;
+/** @emoji 📥 Server → client websocket message. */
+export type HubServerMessage =
+  | Readonly<{ type: "welcome"; self: HubParticipant; participants: readonly HubParticipant[]; version: number; hash: string }>
+  | Readonly<{ type: "presence.joined"; participant: HubParticipant }>
+  | Readonly<{ type: "presence.left"; participantId: string }>
+  | Readonly<{ type: "presence.updated"; participant: HubParticipant }>
+  | HubOperationMessage
+  | Readonly<{ type: "error"; message: string }>
+  | Readonly<{ type: "pong" }>;
+/** @emoji 📤 Client → server websocket message. */
+export type HubClientMessage =
+  | Readonly<{ type: "presence" } & HubPresencePatch>
+  | (Readonly<{ type: "operation" }> & HubOperationSubmission)
+  | Readonly<{ type: "ping" }>;
+
+/** @emoji 🚫 Hub HTTP failure (`status` 0 = unreachable). */
+export class HubError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "HubError";
+  }
+}
+
+/** @emoji 🧩 Kit-scoped operation document root (`session → store → theKit → unsavedChange → kit`), the only replicated mutation shape. */
+export function isHubKitOperationDocument(query: string): boolean {
+  return graphqlWireOperationKind(query) === "mutation" && /unsavedChange\s*\(\s*id\s*:\s*\$changeId\s*\)\s*\{\s*kit\s*\{/.test(query);
+}
+
+const HUB_NAVIGATION_FIELDS = new Set(["session", "store", "theKit", "unsavedChange", "kit", "design", "type", "piece", "pieces", "tag", "concept", "quality", "port", "connector", "connection", "folder", "file"]);
+
+/** @emoji 🏷️ Command leaves of a kit operation document (e.g. {@code ["createDesign"]}, {@code ["drag"]}) for activity feeds. */
+export function hubOperationActions(query: string): readonly string[] {
+  const body = query.replace(/"(?:[^"\\]|\\.)*"/g, '""');
+  const actions: string[] = [];
+  for (const match of body.matchAll(/(?:[_A-Za-z][_0-9A-Za-z]*\s*:\s*)?([_A-Za-z][_0-9A-Za-z]*)\s*\(/g)) {
+    const name = match[1]!;
+    if (!HUB_NAVIGATION_FIELDS.has(name) && !actions.includes(name)) actions.push(name);
+  }
+  return actions;
+}
+
+/** @emoji 🔌 MCP endpoint plus ready-to-copy client configs for an agent token ({@link https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#streamable-http}). */
+export function hubMcpSetup(hubUrl: string, token: string): Readonly<{ endpoint: string; claudeCommand: string; json: string }> {
+  const endpoint = `${hubUrl.replace(/\/+$/, "")}/mcp`;
+  return {
+    endpoint,
+    claudeCommand: `claude mcp add --transport http semio ${endpoint} --header "Authorization: Bearer ${token}"`,
+    json: JSON.stringify({ mcpServers: { semio: { type: "http", url: endpoint, headers: { Authorization: `Bearer ${token}` } } } }, null, 2),
+  };
+}
+//#endregion 🧾HubProtocol
+
+//#region 🔌HubTransport
+/** @emoji 📮 Minimal fetch response surface the hub client needs. */
+export type HubHttpResponse = Readonly<{ ok: boolean; status: number; text(): Promise<string> }>;
+/** @emoji 📮 Injectable fetch (defaults to the global {@link fetch}). */
+export type HubFetch = (
+  url: string,
+  init: Readonly<{ method: string; headers: Readonly<Record<string, string>>; body?: string }>,
+) => Promise<HubHttpResponse>;
+/** @emoji 🧦 Minimal WebSocket surface; the global {@link WebSocket} satisfies it. */
+export interface HubSocket {
+  readonly readyState: number;
+  onopen: ((event: unknown) => void) | null;
+  onmessage: ((event: { readonly data: unknown }) => void) | null;
+  onclose: ((event: unknown) => void) | null;
+  onerror: ((event: unknown) => void) | null;
+  send(data: string): void;
+  close(code?: number, reason?: string): void;
+}
+/** @emoji 🏭 Opens a {@link HubSocket} for a websocket URL. */
+export type HubSocketFactory = (url: string) => HubSocket;
+
+const HUB_SOCKET_OPEN = 1;
+
+function defaultHubFetch(): HubFetch {
+  return (url, init) => fetch(url, init);
+}
+
+function defaultHubSocketFactory(): HubSocketFactory {
+  return (url) => new WebSocket(url) as unknown as HubSocket;
+}
+//#endregion 🔌HubTransport
+
+//#region 🛰️HubClient
+/** @emoji ⚙️ {@link HubClient} construction options. */
+export type HubClientOptions = Readonly<{ url: string; token?: string | null; fetch?: HubFetch; socketFactory?: HubSocketFactory }>;
+
+/** @emoji 🔗 Options for {@link HubClient.connect}. */
+export type HubConnectOptions = Readonly<{ clientId?: string; client?: string; reconnect?: boolean; pingIntervalMs?: number; backoffBaseMs?: number; backoffMaxMs?: number }>;
+
+/** @emoji 🛰️ Typed Hub Protocol v1 client (REST + session websocket); no kit state. */
+export class HubClient {
+  readonly url: string;
+  token: string | null;
+  private readonly fetchFn: HubFetch;
+  private readonly socketFactory: HubSocketFactory;
+
+  constructor(options: HubClientOptions) {
+    this.url = options.url.replace(/\/+$/, "");
+    this.token = options.token ?? null;
+    this.fetchFn = options.fetch ?? defaultHubFetch();
+    this.socketFactory = options.socketFactory ?? defaultHubSocketFactory();
+  }
+
+  private async request<T>(method: string, path: string, body?: object): Promise<T> {
+    const headers: Record<string, string> = { Accept: "application/json" };
+    if (body !== undefined) headers["Content-Type"] = "application/json";
+    if (this.token) headers["Authorization"] = `Bearer ${this.token}`;
+    let response: HubHttpResponse;
+    try {
+      response = await this.fetchFn(`${this.url}${path}`, { method, headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+    } catch (error) {
+      throw new HubError(`hub unreachable: ${error instanceof Error ? error.message : String(error)}`, 0);
+    }
+    const text = await response.text();
+    let parsed: HubJson = null;
+    try {
+      parsed = text === "" ? null : (JSON.parse(text) as HubJson);
+    } catch {
+      parsed = text;
+    }
+    if (!response.ok) {
+      const message = parsed != null && typeof parsed === "object" && !Array.isArray(parsed) && typeof (parsed as HubJsonObject)["error"] === "string" ? String((parsed as HubJsonObject)["error"]) : text;
+      throw new HubError(message || `hub ${method} ${path} failed with ${response.status}`, response.status);
+    }
+    return parsed as T;
+  }
+
+  private sessionPath(sessionId: string, rest = ""): string {
+    return `/sessions/${encodeURIComponent(sessionId)}${rest}`;
+  }
+
+  async register(name: string, email: string, password: string): Promise<HubAuth> {
+    const auth = await this.request<HubAuth>("POST", "/auth/register", { name, email, password });
+    this.token = auth.token;
+    return auth;
+  }
+
+  async login(email: string, password: string): Promise<HubAuth> {
+    const auth = await this.request<HubAuth>("POST", "/auth/login", { email, password });
+    this.token = auth.token;
+    return auth;
+  }
+
+  async me(): Promise<HubPerson> {
+    return (await this.request<{ person: HubPerson }>("GET", "/auth/me")).person;
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await this.request<null>("POST", "/auth/logout", {});
+    } finally {
+      this.token = null;
+    }
+  }
+
+  createAgentToken(label: string): Promise<HubAgentToken> {
+    return this.request<HubAgentToken>("POST", "/auth/tokens", { label });
+  }
+
+  listSessions(): Promise<readonly HubSession[]> {
+    return this.request<readonly HubSession[]>("GET", "/sessions");
+  }
+
+  createSession(name: string, kit?: HubJsonObject): Promise<HubSession> {
+    return this.request<HubSession>("POST", "/sessions", kit === undefined ? { name } : { name, kit });
+  }
+
+  session(sessionId: string): Promise<HubSession> {
+    return this.request<HubSession>("GET", this.sessionPath(sessionId));
+  }
+
+  async deleteSession(sessionId: string): Promise<void> {
+    await this.request<null>("DELETE", this.sessionPath(sessionId));
+  }
+
+  sessionKit(sessionId: string): Promise<HubKitState> {
+    return this.request<HubKitState>("GET", this.sessionPath(sessionId, "/kit"));
+  }
+
+  kitAt(sessionId: string, version: number): Promise<HubKitState> {
+    return this.request<HubKitState>("GET", this.sessionPath(sessionId, `/kit/at/${version}`));
+  }
+
+  postOperation(sessionId: string, operation: HubOperationRequest): Promise<HubOperationResult> {
+    return this.request<HubOperationResult>("POST", this.sessionPath(sessionId, "/operations"), operation);
+  }
+
+  graphql(sessionId: string, query: string, variables?: HubJsonObject): Promise<HubJsonObject> {
+    return this.request<HubJsonObject>("POST", this.sessionPath(sessionId, "/graphql"), variables === undefined ? { query } : { query, variables });
+  }
+
+  operations(sessionId: string, after = 0): Promise<readonly HubOperationRecord[]> {
+    return this.request<readonly HubOperationRecord[]>("GET", this.sessionPath(sessionId, `/operations?after=${after}`));
+  }
+
+  members(sessionId: string): Promise<readonly HubMember[]> {
+    return this.request<readonly HubMember[]>("GET", this.sessionPath(sessionId, "/members"));
+  }
+
+  createShare(sessionId: string, role: Exclude<HubRole, "owner">, label?: string): Promise<HubShare> {
+    return this.request<HubShare>("POST", this.sessionPath(sessionId, "/shares"), label === undefined ? { role } : { role, label });
+  }
+
+  shares(sessionId: string): Promise<readonly HubShare[]> {
+    return this.request<readonly HubShare[]>("GET", this.sessionPath(sessionId, "/shares"));
+  }
+
+  async deleteShare(sessionId: string, token: string): Promise<void> {
+    await this.request<null>("DELETE", this.sessionPath(sessionId, `/shares/${encodeURIComponent(token)}`));
+  }
+
+  joinShare(token: string): Promise<HubJoinResult> {
+    return this.request<HubJoinResult>("POST", `/shares/${encodeURIComponent(token)}/join`, {});
+  }
+
+  presence(sessionId: string): Promise<readonly HubParticipant[]> {
+    return this.request<readonly HubParticipant[]>("GET", this.sessionPath(sessionId, "/presence"));
+  }
+
+  /** @emoji 🤝 MCP endpoint and client configs for an agent token. */
+  mcpSetup(token: string): ReturnType<typeof hubMcpSetup> {
+    return hubMcpSetup(this.url, token);
+  }
+
+  /** @emoji 🧵 Session websocket URL (`?token&clientId&client`). */
+  socketUrl(sessionId: string, clientId: string, client: string): string {
+    const base = this.url.replace(/^http/i, "ws");
+    const params = new URLSearchParams({ token: this.token ?? "", clientId, client });
+    return `${base}${this.sessionPath(sessionId, "/ws")}?${params.toString()}`;
+  }
+
+  /** @emoji 📡 Opens an auto-reconnecting {@link HubSessionConnection}. */
+  connect(sessionId: string, options?: HubConnectOptions): HubSessionConnection {
+    const clientId = options?.clientId ?? newUuidV7();
+    const client = options?.client ?? "sketchpad";
+    return new HubSessionConnection(() => this.socketFactory(this.socketUrl(sessionId, clientId, client)), { ...options, clientId });
+  }
+}
+//#endregion 🛰️HubClient
+
+//#region 📡HubSessionConnection
+/** @emoji 🚦 Websocket lifecycle of a {@link HubSessionConnection}. */
+export type HubConnectionState = "connecting" | "open" | "offline" | "closed";
+
+type HubMessageOf<T extends HubServerMessage["type"]> = Extract<HubServerMessage, { type: T }>;
+
+/** @emoji 📡 Session websocket: typed callbacks, presence roster, keep-alive pings and exponential-backoff reconnects. */
+export class HubSessionConnection {
+  readonly clientId: string;
+  state: HubConnectionState = "connecting";
+  self: HubParticipant | null = null;
+  private socket: HubSocket | null = null;
+  private attempt = 0;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private pingTimer: ReturnType<typeof setInterval> | null = null;
+  private presenceState: HubPresencePatch = {};
+  private readonly live = new Map<string, HubParticipant>();
+  private readonly known = new Map<string, HubParticipant>();
+  private readonly messageListeners = new Set<(message: HubServerMessage) => void>();
+  private readonly stateListeners = new Set<(state: HubConnectionState) => void>();
+  private readonly participantListeners = new Set<(participants: readonly HubParticipant[]) => void>();
+
+  constructor(
+    private readonly openSocket: () => HubSocket,
+    private readonly options: HubConnectOptions & { readonly clientId: string },
+  ) {
+    this.clientId = options.clientId;
+    this.open();
+  }
+
+  /** @emoji 👥 Currently connected participants (including self). */
+  get participants(): readonly HubParticipant[] {
+    return [...this.live.values()];
+  }
+
+  /** @emoji 🔎 Participant by id, including ones that already left. */
+  participant(participantId: string): HubParticipant | undefined {
+    return this.known.get(participantId);
+  }
+
+  /** @emoji 🪪 Most recently seen participant of a person (for log entries without a participant id). */
+  participantOfPerson(personId: string): HubParticipant | undefined {
+    return [...this.known.values()].reverse().find((participant) => participant.personId === personId);
+  }
+
+  on<T extends HubServerMessage["type"]>(type: T, listener: (message: HubMessageOf<T>) => void): Unsubscribe {
+    const wrapped = (message: HubServerMessage): void => {
+      if (message.type === type) listener(message as HubMessageOf<T>);
+    };
+    this.messageListeners.add(wrapped);
+    return () => this.messageListeners.delete(wrapped);
+  }
+
+  onMessage(listener: (message: HubServerMessage) => void): Unsubscribe {
+    this.messageListeners.add(listener);
+    return () => this.messageListeners.delete(listener);
+  }
+
+  onState(listener: (state: HubConnectionState) => void): Unsubscribe {
+    this.stateListeners.add(listener);
+    return () => this.stateListeners.delete(listener);
+  }
+
+  onParticipants(listener: (participants: readonly HubParticipant[]) => void): Unsubscribe {
+    this.participantListeners.add(listener);
+    return () => this.participantListeners.delete(listener);
+  }
+
+  /** @emoji 🩹 Merges and publishes own focus/selection/cursor (re-sent after reconnects). */
+  sendPresence(patch: HubPresencePatch): boolean {
+    this.presenceState = { ...this.presenceState, ...patch };
+    return this.send({ type: "presence", ...patch });
+  }
+
+  sendOperation(operation: HubOperationSubmission): boolean {
+    return this.send({ type: "operation", ...operation });
+  }
+
+  ping(): boolean {
+    return this.send({ type: "ping" });
+  }
+
+  /** @emoji 🔁 Drops the socket and reconnects immediately (e.g. after the browser comes back online). */
+  reconnect(): void {
+    if (this.state === "closed") return;
+    this.attempt = 0;
+    this.socket?.close();
+  }
+
+  close(): void {
+    if (this.state === "closed") return;
+    this.setState("closed");
+    this.clearTimers();
+    const socket = this.socket;
+    this.socket = null;
+    socket?.close(1000, "client closed");
+    this.resetRoster();
+  }
+
+  private send(message: HubClientMessage): boolean {
+    if (this.socket == null || this.socket.readyState !== HUB_SOCKET_OPEN) return false;
+    this.socket.send(JSON.stringify(message));
+    return true;
+  }
+
+  private open(): void {
+    if (this.state === "closed") return;
+    let socket: HubSocket;
+    try {
+      socket = this.openSocket();
+    } catch {
+      this.scheduleReconnect();
+      return;
+    }
+    this.socket = socket;
+    socket.onopen = () => {
+      if (this.socket !== socket) return;
+      this.attempt = 0;
+      this.setState("open");
+      const interval = this.options.pingIntervalMs ?? 25_000;
+      if (interval > 0) this.pingTimer = setInterval(() => this.ping(), interval);
+      if (Object.keys(this.presenceState).length > 0) this.send({ type: "presence", ...this.presenceState });
+    };
+    socket.onmessage = (event) => {
+      if (this.socket !== socket) return;
+      let message: HubServerMessage;
+      try {
+        message = JSON.parse(String(event.data)) as HubServerMessage;
+      } catch {
+        return;
+      }
+      this.receive(message);
+    };
+    socket.onclose = () => {
+      if (this.socket !== socket) return;
+      this.socket = null;
+      this.clearTimers();
+      this.resetRoster();
+      if (this.state === "closed") return;
+      this.setState("offline");
+      this.scheduleReconnect();
+    };
+    socket.onerror = () => undefined;
+  }
+
+  private receive(message: HubServerMessage): void {
+    switch (message.type) {
+      case "welcome":
+        this.self = message.self;
+        this.live.clear();
+        for (const participant of [message.self, ...message.participants]) this.track(participant);
+        this.emitParticipants();
+        break;
+      case "presence.joined":
+      case "presence.updated":
+        this.track(message.participant);
+        this.emitParticipants();
+        break;
+      case "presence.left":
+        this.live.delete(message.participantId);
+        this.emitParticipants();
+        break;
+    }
+    for (const listener of [...this.messageListeners]) {
+      try {
+        listener(message);
+      } catch (error) {
+        console.error("[semio/js] hub listener failed", error);
+      }
+    }
+  }
+
+  private track(participant: HubParticipant): void {
+    this.live.set(participant.id, participant);
+    this.known.set(participant.id, participant);
+    if (this.self?.id === participant.id) this.self = participant;
+  }
+
+  private resetRoster(): void {
+    if (this.live.size === 0) return;
+    this.live.clear();
+    this.emitParticipants();
+  }
+
+  private emitParticipants(): void {
+    const participants = this.participants;
+    for (const listener of [...this.participantListeners]) listener(participants);
+  }
+
+  private setState(state: HubConnectionState): void {
+    if (this.state === state) return;
+    this.state = state;
+    for (const listener of [...this.stateListeners]) listener(state);
+  }
+
+  private scheduleReconnect(): void {
+    if (this.state === "closed" || this.options.reconnect === false) return;
+    const base = this.options.backoffBaseMs ?? 500;
+    const delay = Math.min(this.options.backoffMaxMs ?? 10_000, base * 2 ** this.attempt) * (0.75 + Math.random() * 0.5);
+    this.attempt += 1;
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      if (this.state !== "closed") {
+        this.setState("connecting");
+        this.open();
+      }
+    }, delay);
+  }
+
+  private clearTimers(): void {
+    if (this.pingTimer != null) clearInterval(this.pingTimer);
+    if (this.reconnectTimer != null) clearTimeout(this.reconnectTimer);
+    this.pingTimer = null;
+    this.reconnectTimer = null;
+  }
+}
+//#endregion 📡HubSessionConnection
+
+//#region 🔁HubReplica
+/** @emoji 🚥 Replica sync phase shown by collaboration UIs. */
+export type HubSyncState = "connecting" | "synced" | "syncing" | "offline" | "resyncing" | "closed";
+/** @emoji 📊 Replica sync status snapshot. */
+export type HubSyncStatus = Readonly<{ state: HubSyncState; version: number; hash: string; pending: number; resyncs: number; lastError: string | null }>;
+/** @emoji 📰 Session activity (operations by people or agents, presence changes, resyncs). */
+export type HubActivity =
+  | Readonly<{ kind: "operation"; at: number; version: number; operationId: string; participant: HubParticipant | null; personId: string; own: boolean; actions: readonly string[] }>
+  | Readonly<{ kind: "joined" | "left"; at: number; participant: HubParticipant }>
+  | Readonly<{ kind: "resynced"; at: number; version: number }>;
+/** @emoji ⚙️ {@link HubReplica.open} options: a {@link Store} bound 1:1 to a hub session. */
+export type HubReplicaOptions = Readonly<{ client: HubClient; sessionId: string; store: Store; clientName?: string; clientId?: string; connect?: HubConnectOptions }>;
+
+type HubOwnOperation = { readonly operationId: string; readonly query: string; readonly variables: HubJsonObject; appliedLocally: boolean; echoed: boolean; version: number | null };
+
+/** @emoji ✅ True when a mutation envelope has no GraphQL errors and no {@code ok: false} command response. */
+function hubEnvelopeOk(envelope: GraphqlEnvelope<JsonValue>): boolean {
+  if (Array.isArray(envelope.errors) && envelope.errors.length > 0) return false;
+  let ok = true;
+  const visit = (value: JsonValue | undefined): void => {
+    if (!ok || value == null) return;
+    if (Array.isArray(value)) value.forEach(visit);
+    else if (isJsonObjectNode(value)) {
+      if ("ok" in value && !parseResponsePayload(value).ok) ok = false;
+      else Object.values(value).forEach(visit);
+    }
+  };
+  visit(envelope.data ?? undefined);
+  return ok;
+}
+
+/**
+ * @emoji 🔁 Binds a local rs {@link Store} to a hub session: installs the authoritative kit, forwards every local kit operation
+ * (client-minted ids, {@code baseVersion}), replays remote operations, confirms own echoes, queues while offline and resyncs on hash mismatch.
+ */
+export class HubReplica {
+  readonly client: HubClient;
+  readonly sessionId: string;
+  readonly store: Store;
+  readonly clientId: string;
+  readonly connection: HubSessionConnection;
+  info: HubSession | null = null;
+  private version = 0;
+  private hash = "";
+  private resyncs = 0;
+  private lastError: string | null = null;
+  private resyncing = false;
+  private processing = 0;
+  private flushing: Promise<void> | null = null;
+  private disposed = false;
+  private chain: Promise<void>;
+  private readonly own = new Map<string, HubOwnOperation>();
+  private readonly outbox: string[] = [];
+  private readonly statusListeners = new Set<(status: HubSyncStatus) => void>();
+  private readonly activityListeners = new Set<(activity: HubActivity) => void>();
+  private readonly detachers: Unsubscribe[] = [];
+
+  private constructor(options: HubReplicaOptions) {
+    this.client = options.client;
+    this.sessionId = options.sessionId;
+    this.store = options.store;
+    this.clientId = options.clientId ?? newUuidV7();
+    this.chain = this.bootstrap();
+    this.detachers.push(this.store.session.useOperationMiddleware((operation, next) => this.forward(operation, next)));
+    this.connection = this.client.connect(this.sessionId, { ...options.connect, clientId: this.clientId, client: options.clientName ?? "sketchpad" });
+    this.detachers.push(
+      this.connection.onState(() => this.onConnectionState()),
+      this.connection.on("welcome", (message) => void this.enqueue(() => this.onWelcome(message.version, message.hash))),
+      this.connection.on("operation", (message) => void this.enqueue(() => this.receive(message))),
+      this.connection.on("presence.joined", (message) => this.emitActivity({ kind: "joined", at: Date.now(), participant: message.participant })),
+      this.connection.on("presence.left", (message) => {
+        const participant = this.connection.participant(message.participantId);
+        if (participant) this.emitActivity({ kind: "left", at: Date.now(), participant });
+      }),
+      this.connection.on("error", (message) => {
+        this.lastError = message.message;
+        this.emitStatus();
+      }),
+    );
+  }
+
+  /** @emoji 🚀 Loads the authoritative kit into {@code store} and starts replication. */
+  static async open(options: HubReplicaOptions): Promise<HubReplica> {
+    const replica = new HubReplica(options);
+    try {
+      await replica.chain;
+    } catch (error) {
+      replica.dispose();
+      throw error;
+    }
+    return replica;
+  }
+
+  get status(): HubSyncStatus {
+    const connection = this.connection?.state ?? "connecting";
+    const state: HubSyncState = this.disposed
+      ? "closed"
+      : this.resyncing
+        ? "resyncing"
+        : connection === "offline"
+          ? "offline"
+          : connection !== "open"
+            ? "connecting"
+            : this.outbox.length > 0 || this.processing > 0 || this.flushing != null
+              ? "syncing"
+              : "synced";
+    return { state, version: this.version, hash: this.hash, pending: this.outbox.length, resyncs: this.resyncs, lastError: this.lastError };
+  }
+
+  onStatus(listener: (status: HubSyncStatus) => void): Unsubscribe {
+    this.statusListeners.add(listener);
+    return () => this.statusListeners.delete(listener);
+  }
+
+  onActivity(listener: (activity: HubActivity) => void): Unsubscribe {
+    this.activityListeners.add(listener);
+    return () => this.activityListeners.delete(listener);
+  }
+
+  /** @emoji 🧮 Local rs kit content hash (compare with the hub's broadcast {@code hash}). */
+  async localHash(): Promise<string> {
+    const node = await this.store.readKitInner("hash");
+    return String(node?.["hash"] ?? "");
+  }
+
+  /** @emoji 🔄 Replaces the local kit with the hub's authoritative projection. */
+  resync(): Promise<void> {
+    return this.enqueue(() => this.resyncNow());
+  }
+
+  /** @emoji ⏳ Resolves once queued remote processing and outgoing operations are settled. */
+  async whenIdle(): Promise<void> {
+    for (;;) {
+      const chain = this.chain;
+      await chain;
+      await this.flush();
+      if (chain === this.chain && this.flushing == null) return;
+    }
+  }
+
+  dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    for (const detach of this.detachers.splice(0)) detach();
+    this.connection?.close();
+    this.emitStatus();
+  }
+
+  private enqueue(task: () => Promise<void>): Promise<void> {
+    this.processing += 1;
+    this.emitStatus();
+    this.chain = this.chain
+      .then(() => (this.disposed ? undefined : task()))
+      .catch((error: unknown) => {
+        this.lastError = error instanceof Error ? error.message : String(error);
+        console.error("[semio/js] hub replica", error);
+      })
+      .finally(() => {
+        this.processing -= 1;
+        this.emitStatus();
+      });
+    return this.chain;
+  }
+
+  private async bootstrap(): Promise<void> {
+    try {
+      this.info = await this.client.session(this.sessionId);
+      await this.install(await this.client.sessionKit(this.sessionId));
+    } catch (error) {
+      this.lastError = error instanceof Error ? error.message : String(error);
+      throw error;
+    }
+  }
+
+  private async install(state: HubKitState): Promise<void> {
+    const result = await this.store.installProjection(JSON.stringify(state.kit));
+    if (!result.ok) throw new Error(`installProjection failed: ${result.error.message}`);
+    this.version = state.version;
+    this.hash = state.hash;
+    this.notifyLocalChange();
+  }
+
+  private async forward(operation: KitOperation, next: KitOperationExecutor): Promise<KitOperationEnvelope> {
+    const envelope = await next(operation);
+    if (this.disposed || operation.origin !== "local" || operation.variables["storeId"] !== this.store.id || !isHubKitOperationDocument(operation.query) || !hubEnvelopeOk(envelope)) return envelope;
+    const { storeId: _storeId, changeId: _changeId, ...variables } = operation.variables;
+    const operationId = newUuidV7();
+    this.own.set(operationId, { operationId, query: operation.query, variables: variables as HubJsonObject, appliedLocally: true, echoed: false, version: null });
+    this.outbox.push(operationId);
+    this.emitStatus();
+    void this.flush();
+    return envelope;
+  }
+
+  private flush(): Promise<void> {
+    if (this.flushing != null) return this.flushing;
+    if (this.disposed || this.outbox.length === 0 || this.connection.state !== "open") return Promise.resolve();
+    this.flushing = this.sendOutbox().finally(() => {
+      this.flushing = null;
+      this.emitStatus();
+    });
+    this.emitStatus();
+    return this.flushing;
+  }
+
+  private async sendOutbox(): Promise<void> {
+    while (this.outbox.length > 0 && this.connection.state === "open" && !this.disposed) {
+      const op = this.own.get(this.outbox[0]!)!;
+      try {
+        const result = await this.client.postOperation(this.sessionId, { operationId: op.operationId, clientId: this.clientId, baseVersion: this.version, query: op.query, variables: op.variables });
+        this.outbox.shift();
+        op.version = result.version;
+        if (op.echoed) {
+          this.own.delete(op.operationId);
+          void this.enqueue(() => this.verify(result.version, result.hash));
+        }
+      } catch (error) {
+        if (!(error instanceof HubError) || error.status === 0) return;
+        this.outbox.shift();
+        this.own.delete(op.operationId);
+        this.lastError = `operation rejected (${error.status}): ${error.message}`;
+        void this.enqueue(() => this.resyncNow());
+      }
+    }
+  }
+
+  private async verify(version: number, hash: string): Promise<void> {
+    if (this.version === version && this.own.size === 0 && hash !== "" && hash !== (await this.localHash())) await this.resyncNow();
+  }
+
+  private async onWelcome(version: number, hash: string): Promise<void> {
+    if (version > this.version) await this.catchUp();
+    else if (version < this.version) await this.resyncNow();
+    else await this.verify(version, hash);
+    if (this.version === version) this.hash = hash;
+    void this.flush();
+  }
+
+  private async catchUp(): Promise<void> {
+    const records = await this.client.operations(this.sessionId, this.version);
+    for (const record of [...records].sort((a, b) => a.version - b.version)) {
+      await this.receive({ type: "operation", version: record.version, hash: record.hash, operationId: record.operationId, clientId: record.clientId, personId: record.personId, participantId: null, query: record.query, variables: record.variables });
+    }
+  }
+
+  private async receive(message: HubOperationMessage): Promise<void> {
+    const mine = this.own.get(message.operationId);
+    if (message.version <= this.version) {
+      if (mine) this.settleEcho(mine);
+      return;
+    }
+    if (message.version > this.version + 1) {
+      await this.catchUp();
+      if (message.version > this.version) await this.resyncNow();
+      return;
+    }
+    if (mine == null || !mine.appliedLocally) {
+      try {
+        await this.applyRemote(message);
+      } catch (error) {
+        this.lastError = error instanceof Error ? error.message : String(error);
+        this.version = message.version;
+        if (mine) this.settleEcho(mine);
+        await this.resyncNow();
+        return;
+      }
+    }
+    this.version = message.version;
+    this.hash = message.hash;
+    if (mine) this.settleEcho(mine);
+    const participant = (message.participantId ? this.connection.participant(message.participantId) : undefined) ?? this.connection.participantOfPerson(message.personId) ?? null;
+    this.emitActivity({ kind: "operation", at: Date.now(), version: message.version, operationId: message.operationId, participant, personId: message.personId, own: message.clientId === this.clientId, actions: hubOperationActions(message.query) });
+    await this.verify(message.version, message.hash);
+  }
+
+  private settleEcho(op: HubOwnOperation): void {
+    op.echoed = true;
+    if (!this.outbox.includes(op.operationId)) this.own.delete(op.operationId);
+  }
+
+  private async applyRemote(message: HubOperationMessage): Promise<void> {
+    const changeId = await this.store.ensureChangeId();
+    const envelope = await this.store.session.executeOperation({
+      operationId: message.operationId,
+      query: message.query,
+      variables: { ...(message.variables ?? {}), storeId: this.store.id, changeId } as JsonObject,
+      origin: "remote",
+    });
+    this.store.session.mutationReceipt(envelope);
+    this.notifyLocalChange();
+    if (!hubEnvelopeOk(envelope)) throw new Error(`remote operation ${message.operationId} failed locally`);
+  }
+
+  private async resyncNow(): Promise<void> {
+    this.resyncing = true;
+    this.emitStatus();
+    try {
+      const state = await this.client.sessionKit(this.sessionId);
+      await this.install(state);
+      for (const op of [...this.own.values()]) {
+        if (op.version != null && op.version <= state.version && !this.outbox.includes(op.operationId)) this.own.delete(op.operationId);
+        else op.appliedLocally = false;
+      }
+      this.resyncs += 1;
+      this.emitActivity({ kind: "resynced", at: Date.now(), version: state.version });
+    } finally {
+      this.resyncing = false;
+      this.emitStatus();
+    }
+  }
+
+  private onConnectionState(): void {
+    this.emitStatus();
+  }
+
+  private notifyLocalChange(): void {
+    this.store.session.bus.emit({ kind: "commandSucceeded", payload: null });
+  }
+
+  private emitStatus(): void {
+    if (this.statusListeners.size === 0) return;
+    const status = this.status;
+    for (const listener of [...this.statusListeners]) listener(status);
+  }
+
+  private emitActivity(activity: HubActivity): void {
+    for (const listener of [...this.activityListeners]) listener(activity);
+  }
+}
+//#endregion 🔁HubReplica
+//#endregion 🌐Hub
 
 
 //#region 🧪Tests

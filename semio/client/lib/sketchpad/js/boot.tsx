@@ -147,6 +147,7 @@ function SketchpadFeedbackFormHost({
 			<label className="flex flex-col gap-tiny text-sm">
 				<span>Message</span>
 				<Textarea
+					id="semio.sketchpad.feedback.message"
 					value={draft.message}
 					onChange={(event) => dispatchDraft({ ...draft, message: event.target.value })}
 					placeholder="What should we know?"
@@ -157,6 +158,7 @@ function SketchpadFeedbackFormHost({
 			<label className="flex flex-col gap-tiny text-sm">
 				<span>Contact (optional)</span>
 				<Input
+					id="semio.sketchpad.feedback.contact"
 					value={draft.contact}
 					onChange={(event) => dispatchDraft({ ...draft, contact: event.target.value })}
 					placeholder="email@example.com"

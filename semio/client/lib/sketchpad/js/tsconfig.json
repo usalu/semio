@@ -1,18 +1,17 @@
 {
   "extends": "../../js/tsconfig.json",
   "compilerOptions": {
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
       "@semio/sketchpad": ["."],
       "@semio/sketchpad/*": ["./*"],
       "@semio/js": ["../../js"],
       "@semio/js/*": ["../../js/*"],
-      "@semio/ui": ["../../react/rendering"],
-      "@semio/ui/*": ["../../react/rendering/*"],
+      "@semio/react": ["../../react"],
+      "@semio/react/*": ["../../react/*"],
       "@semio/assets": ["../../../../assets"],
       "@semio/assets/*": ["../../../../assets/*"],
-      "@semio/react": ["../../react/logic"],
-      "@semio/react/*": ["../../react/logic/*"],
       "@semio/rs-wasm": ["../../rs/pkg/semio.d.ts"],
       "@semio/rs-wasm/*": ["../../rs/pkg/*"],
       "@framework/core": ["../../../../../framework/core/index.ts"],
@@ -22,5 +21,6 @@
       "@ui/react/*": ["../../../../../ui/react/*"]
     },
     "types": ["node", "react", "react-dom", "vite/client", "vitest/globals"]
-  }
+  },
+  "include": ["index.ts", "boot.tsx", "global.d.ts", "vite-env.d.ts", "../../react/index.ts"]
 }

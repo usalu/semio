@@ -4,12 +4,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "🧩 Minimal stub so workspace installs resolve; replace with real `@semio/react` bundle when restored.",
+  "description": "🧩 Thin adapter from UI hosts to @semio/js kit sessions (read model, commands, kit archives, React hooks).",
   "exports": {
     ".": "./index.ts"
   },
   "dependencies": {
-    "@semio/js": "workspace:*"
+    "@semio/js": "workspace:*",
+    "fflate": "^0.8.2"
   },
   "peerDependencies": {
     "react": "^19.0.0"

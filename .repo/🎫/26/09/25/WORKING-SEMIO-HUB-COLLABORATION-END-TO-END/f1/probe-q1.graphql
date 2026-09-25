@@ -1,0 +1,14 @@
+id name description version createdAt updatedAt
+hasDesigns { edges { node { id name description unit
+  hasPieces { edges { node { id name blueprint { id __typename } position { center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } } } } }
+  hasConnections { edges { node { id parent { referencesPiece { id } referencesConnector { id } } child { referencesPiece { id } referencesConnector { id } } } } }
+} } }
+hasTypes { edges { node { id name description
+  hasConnectors { edges { node { id name port { id label code copatibleWith { edges { node { id } } } } } } }
+  hasPorts { edges { node { id label code copatibleWith { edges { node { id } } } } } }
+  hasRepresentations { edges { node { id name url file { id name url } } } }
+} } }
+qualities { edges { node { id key value } } }
+hasFolders { edges { node { id path description files { edges { node { id name url description folderId } } } } } }
+authors { edges { node { id name } } }
+hasFiles { edges { node { id name url description folderId } } }
