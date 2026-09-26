@@ -4,7 +4,7 @@ use crate::op::NoteMutation;
 use crate::schema::mutations::{duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation};
 use crate::schema::{clone_block, find_block, offset_block_tree};
 use crate::NoteSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Helpers
@@ -41,5 +41,8 @@ pub struct DuplicateBlock {
 }
 
 pub fn handle(payload: &DuplicateBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+    if find_block(&doc.snapshot.blocks, &payload.block_id).is_none() {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the note has no block {}", payload.block_id)));
+    }
     Ok(duplicate_blocks(doc.snapshot, std::slice::from_ref(&payload.block_id), &mut ctx.id_owner))
 }

@@ -33,5 +33,33 @@
       "delivery": "after-pending",
       "value": 23
     }
+  ],
+  "admissions": [
+    {
+      "id": "one-producer-meets-a-held-lock",
+      "blockedBy": "contended",
+      "producers": 1,
+      "admittedAfterRelease": [
+        1
+      ]
+    },
+    {
+      "id": "one-producer-meets-a-full-lane",
+      "blockedBy": "full",
+      "producers": 1,
+      "admittedAfterRelease": [
+        1
+      ]
+    },
+    {
+      "id": "three-producers-meet-a-full-lane",
+      "blockedBy": "full",
+      "producers": 3,
+      "admittedAfterRelease": [
+        1,
+        2,
+        3
+      ]
+    }
   ]
 }

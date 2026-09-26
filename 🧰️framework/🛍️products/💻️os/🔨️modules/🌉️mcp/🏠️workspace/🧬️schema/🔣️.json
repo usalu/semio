@@ -21,12 +21,28 @@
     "CanonicalCheckpointPartV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["byteLength", "sha256", "base64"],
+      "required": ["byteLength", "sha256"],
       "properties": {
         "byteLength": { "$ref": "#/$defs/Ordinal" },
-        "sha256": { "$ref": "#/$defs/Sha256Hex" },
-        "base64": { "$ref": "#/$defs/Base64" }
+        "sha256": { "$ref": "#/$defs/Sha256Hex" }
       }
+    },
+    "CanonicalCheckpointUntrustedV1": {
+      "allOf": [
+        { "$ref": "https://json.schemas.assets.semio-tech.com/os/mcp/component.json#/$defs/UntrustedContentV1" },
+        {
+          "type": "object",
+          "properties": {
+            "provenance": { "type": "object", "properties": { "source": { "const": "hub-checkpoint" } } },
+            "content": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["packBase64", "sprBase64"],
+              "properties": { "packBase64": { "$ref": "#/$defs/Base64" }, "sprBase64": { "$ref": "#/$defs/Base64" } }
+            }
+          }
+        }
+      ]
     },
     "CanonicalCheckpointFrontierV1": {
       "type": "object",
@@ -43,7 +59,7 @@
     "CanonicalCheckpointResourceValueV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "scope", "descriptorDigestV1", "activeCheckpointId", "etag", "authorityGeneration", "catalogGeneration", "frontier", "pack", "spr"],
+      "required": ["schema", "scope", "descriptorDigestV1", "activeCheckpointId", "etag", "authorityGeneration", "catalogGeneration", "frontier", "pack", "spr", "untrusted"],
       "properties": {
         "schema": { "const": "semio.mcp.canonical-checkpoint-resource/v1" },
         "scope": {
@@ -59,7 +75,8 @@
         "catalogGeneration": { "type": ["integer", "null"], "minimum": 1, "maximum": 9007199254740991 },
         "frontier": { "$ref": "#/$defs/CanonicalCheckpointFrontierV1" },
         "pack": { "$ref": "#/$defs/CanonicalCheckpointPartV1" },
-        "spr": { "$ref": "#/$defs/CanonicalCheckpointPartV1" }
+        "spr": { "$ref": "#/$defs/CanonicalCheckpointPartV1" },
+        "untrusted": { "$ref": "#/$defs/CanonicalCheckpointUntrustedV1" }
       }
     },
     "CanonicalCheckpointResourceContractV1": {

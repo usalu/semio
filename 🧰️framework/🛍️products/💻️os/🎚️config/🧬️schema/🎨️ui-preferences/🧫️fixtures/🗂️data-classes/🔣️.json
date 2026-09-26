@@ -1,0 +1,14 @@
+{
+  "note": "Every UiPreferences mutation, the key it writes and that key's data class. persistedShared rides the hub's per-user preference lane to every device of the signed-in user; persistedLocalOnly never leaves the device. Read by the TypeScript law and the Rust twin law.",
+  "mutations": [
+    { "mutation": { "mutation": "setAppearance", "appearance": "dark" }, "key": "appearance", "dataClass": "persistedShared" },
+    { "mutation": { "mutation": "setLayout", "layout": "tablet" }, "key": "layout", "dataClass": "persistedLocalOnly" },
+    { "mutation": { "mutation": "setDriver", "driverId": "keyboard-first" }, "key": "driverId", "dataClass": "persistedShared" },
+    { "mutation": { "mutation": "setCustomDriver", "driverId": "mine", "driver": { "driverId": "mine", "label": "Mine", "config": {} } }, "key": "customDrivers", "dataClass": "persistedShared" },
+    { "mutation": { "mutation": "setLocale", "locale": "de" }, "key": "locale", "dataClass": "persistedShared" },
+    { "mutation": { "mutation": "setTerminology", "terminology": "beginner" }, "key": "terminology", "dataClass": "persistedShared" },
+    { "mutation": { "mutation": "setTheme", "themeId": "semio" }, "key": "themeId", "dataClass": "persistedShared" },
+    { "mutation": { "mutation": "setCustomTheme", "themeId": "mine", "theme": { "themeId": "mine", "label": "Mine", "config": {} } }, "key": "customThemes", "dataClass": "persistedShared" },
+    { "mutation": { "mutation": "setKeybindingOverride", "controlId": "undo", "keys": "ctrl+alt+k" }, "key": "keybindingOverrides", "dataClass": "persistedShared" }
+  ]
+}

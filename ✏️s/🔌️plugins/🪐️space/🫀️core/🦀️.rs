@@ -20,6 +20,7 @@ type SharedStudioPorts = Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>;
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;
+pub use crate::standards::v1::subsets::any::schema::snapshot::{rfc3339_utc_epoch_ms, utc_minute_text};
 use semio_framework_artifact_space_collection::{artifact_backbone_uri, collection_backbone_uri, ArtifactBody, CollectionEntry, CollectionMutation, CollectionSnapshot, S_COLLECTION_SCHEMA};
 use semio_framework_artifact_space_space::{empty_space_snapshot, space_backbone_uri, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, S_SPACE_SCHEMA};
 use semio_framework_os::{
@@ -480,16 +481,49 @@ app_labels! {
         table_name: native_en "Studios", native_de "Studios", reuse_en "Studios", reuse_de "Studios";
         origin_hub: native_en "hub", native_de "Hub", reuse_en "hub", reuse_de "Hub";
         origin_local: native_en "local", native_de "lokal", reuse_en "local", reuse_de "lokal";
+        kind_atelier: native_en "Atelier", native_de "Atelier", reuse_en "Atelier", reuse_de "Atelier";
+        kind_studio: native_en "Studio", native_de "Studio", reuse_en "Studio", reuse_de "Studio";
+        kind_archive: native_en "Archive", native_de "Archiv", reuse_en "Archive", reuse_de "Archiv";
+        visibility_private: native_en "private", native_de "privat", reuse_en "private", reuse_de "privat";
+        visibility_public: native_en "public", native_de "öffentlich", reuse_en "public", reuse_de "öffentlich";
+        updated_never: native_en "never saved", native_de "nie gespeichert", reuse_en "never saved", reuse_de "nie gespeichert";
     }
 }
+
+impl HomeTableLabels {
+    /// 🏷️ The viewer-language word for a space kind.
+    pub fn kind(&self, kind: SpaceKind) -> &str {
+        match kind {
+            SpaceKind::Atelier => self.kind_atelier.as_str(),
+            SpaceKind::Studio => self.kind_studio.as_str(),
+            SpaceKind::Archive => self.kind_archive.as_str(),
+        }
+    }
+
+    /// 🏷️ The viewer-language word for a space visibility.
+    pub fn visibility(&self, visibility: SpaceVisibility) -> &str {
+        match visibility {
+            SpaceVisibility::Private => self.visibility_private.as_str(),
+            SpaceVisibility::Public => self.visibility_public.as_str(),
+        }
+    }
+
+    /// 🕰️ When a row last changed, in the viewer's language — see [`utc_minute_text`]; `never saved` for a
+    /// local draft that was never saved.
+    pub fn updated(&self, updated_ms: Option<u64>) -> String {
+        updated_ms.map_or_else(|| self.updated_never.as_str().to_owned(), |ms| utc_minute_text(ms, self.locale))
+    }
+}
+
 
 pub struct HomeSpaceRow {
     pub id: String,
     pub name: String,
-    pub kind: String,
-    pub visibility: String,
+    pub kind: SpaceKind,
+    pub visibility: SpaceVisibility,
     pub members: String,
-    pub updated: String,
+    /// 🕰️ When the row last changed (hub-confirmed or last local save); `None` for a never-saved draft.
+    pub updated_ms: Option<u64>,
     pub origin: &'static str,
     /// 📂️ Persistence data class — hub=persistedShared; local catalog=persistedLocalOnly;
     /// ephemeral draft studios (empty backbone_uri)=ephemeralLocalOnly.
@@ -511,33 +545,27 @@ fn caller_role(space: &store::os_directory::DirectorySpace, user_id: &str) -> Op
     space.members.iter().find(|member| member.user_id == user_id).map(|member| member.role)
 }
 
-async fn directory_kind_str(kind: store::os_directory::DirectorySpaceKind) -> &'static str {
+fn directory_kind(kind: store::os_directory::DirectorySpaceKind) -> SpaceKind {
     match kind {
-        store::os_directory::DirectorySpaceKind::Atelier => "atelier",
-        store::os_directory::DirectorySpaceKind::Studio => "studio",
-        store::os_directory::DirectorySpaceKind::Archive => "archive",
+        store::os_directory::DirectorySpaceKind::Atelier => SpaceKind::Atelier,
+        store::os_directory::DirectorySpaceKind::Studio => SpaceKind::Studio,
+        store::os_directory::DirectorySpaceKind::Archive => SpaceKind::Archive,
     }
 }
 
-async fn directory_visibility_str(visibility: store::os_directory::DirectorySpaceVisibility) -> &'static str {
+fn directory_visibility(visibility: store::os_directory::DirectorySpaceVisibility) -> SpaceVisibility {
     match visibility {
-        store::os_directory::DirectorySpaceVisibility::Private => "private",
-        store::os_directory::DirectorySpaceVisibility::Public => "public",
+        store::os_directory::DirectorySpaceVisibility::Private => SpaceVisibility::Private,
+        store::os_directory::DirectorySpaceVisibility::Public => SpaceVisibility::Public,
     }
 }
 
-async fn local_kind_str(kind: &SpaceKind) -> &'static str {
-    match kind {
-        SpaceKind::Atelier => "atelier",
-        SpaceKind::Studio => "studio",
-        SpaceKind::Archive => "archive",
-    }
-}
-
-async fn local_visibility_str(visibility: &SpaceVisibility) -> &'static str {
-    match visibility {
-        SpaceVisibility::Private => "private",
-        SpaceVisibility::Public => "public",
+impl HomeSpaceRow {
+    /// 📊️ The row's six cells in `labels`' language, positional to the Home table's columns — shared by the
+    /// Home editor's and viewer's main windows.
+    pub fn cells(&self, labels: &HomeTableLabels) -> [String; 6] {
+        let origin = if self.origin == "hub" { labels.origin_hub.as_str() } else { labels.origin_local.as_str() };
+        [self.name.clone(), labels.kind(self.kind).to_owned(), labels.visibility(self.visibility).to_owned(), self.members.clone(), labels.updated(self.updated_ms), origin.to_owned()]
     }
 }
 
@@ -553,10 +581,10 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
         rows.push(HomeSpaceRow {
             id: id.clone(),
             name: space.view.name.clone(),
-            kind: directory_kind_str(space.view.kind).await.into(),
-            visibility: directory_visibility_str(space.view.visibility).await.into(),
+            kind: directory_kind(space.view.kind),
+            visibility: directory_visibility(space.view.visibility),
             members: space.view.member_count.to_string(),
-            updated: space.view.updated_at_ms.to_string(),
+            updated_ms: u64::try_from(space.view.updated_at_ms).ok(),
             origin: "hub",
             data_class: "persistedShared",
             role: caller_role(space, user_id),
@@ -569,12 +597,12 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
         rows.push(HomeSpaceRow {
             id: entry.id.clone(),
             name: entry.name.clone(),
-            kind: local_kind_str(&entry.kind).await.into(),
-            visibility: local_visibility_str(&entry.visibility).await.into(),
+            kind: entry.kind,
+            visibility: entry.visibility,
             // 🧑️ The local-only catalog carries no membership roster (single-user by construction);
             // "1" (the implicit owner) is the honest synthesis, not a directory-sourced count.
             members: "1".into(),
-            updated: entry.updated_at.clone(),
+            updated_ms: rfc3339_utc_epoch_ms(&entry.updated_at),
             origin: "local",
             data_class: if entry.backbone_uri.is_empty() { "ephemeralLocalOnly" } else { "persistedLocalOnly" },
             // 🏠️ The local-only catalog is single-user by construction and carries no directory

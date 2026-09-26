@@ -111,6 +111,10 @@ impl ArtifactOwnedToolJobFactory for Gif87aEditorExampleFactory {
 pub struct Gif87aEditor;
 
 impl ArtifactEditor for Gif87aEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = GifSnapshot;
     type Mutation = GifMutation;
     type Config = NoConfig;

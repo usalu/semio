@@ -3,6 +3,7 @@
   "locales": {
     "en": {
       "heading": "Creating artifact",
+      "waiting": "The hub has been working on it for {elapsed}. You can keep waiting or cancel.",
       "cancel": "Cancel creation",
       "cancelling": "Cancellation requested…",
       "opening": {
@@ -26,6 +27,7 @@
     },
     "de": {
       "heading": "Artefakt wird erstellt",
+      "waiting": "Der Hub arbeitet seit {elapsed} daran. Du kannst weiter warten oder abbrechen.",
       "cancel": "Erstellung abbrechen",
       "cancelling": "Abbruch angefordert…",
       "opening": {

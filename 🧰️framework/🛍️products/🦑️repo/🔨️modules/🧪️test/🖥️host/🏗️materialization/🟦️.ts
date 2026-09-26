@@ -194,17 +194,6 @@ export function materializeGoHost(repoRoot: string, discovered: DiscoveredCase, 
   return { command: "go", args: ["run", ".", "--plan", planPath, "--out", outPath], cwd: dir, env: repoToolCacheEnv(repoRoot, { ...process.env, GOWORK: join(dir, "go.work"), GOFLAGS: "" }), hostDir: dir, problems: [] };
 }
 
-/**
- * 🐍️ The cache-local interpreter the Python host runs under, carrying exactly the external
- * distributions the owners declared.
- *
- * A virtual environment, never the system interpreter: a test host may not mutate the machine it
- * runs on. It is created with `--system-site-packages` so a distribution the machine already
- * provides is REUSED rather than downloaded, which is what keeps a zero-touch checkout working
- * offline; anything still missing is installed INTO the environment, where it stays isolated. The
- * environment is keyed by the declared package set, so it is built once and reused by every run and
- * every case that declares the same set, and rebuilt the moment the declaration changes.
- */
 /** 🐍️ The interpreter oracle hosts are provisioned from: `SEMIO_PYTHON`, else the repository's own
  * `.venv` (the only interpreter guaranteed to satisfy `pyproject.toml`'s `requires-python`), else the
  * `python3` on `PATH`. */
@@ -214,6 +203,36 @@ export function oracleHostPython(repoRoot: string): string {
   return existsSync(venv) ? venv : "python3";
 }
 
+/**
+ * 📍️ The site directories an interpreter imports its installed distributions from (`purelib`, then
+ * `platlib` when it differs), as the interpreter itself reports them, or `null` when it cannot say.
+ * @see https://docs.python.org/3/library/sysconfig.html#installation-paths
+ */
+export function pythonSiteDirectories(repoRoot: string, interpreter: string): string[] | null {
+  const probe = runProbe(interpreter, ["-c", "import json, sysconfig; paths = sysconfig.get_paths(); print(json.dumps(list(dict.fromkeys([paths['purelib'], paths['platlib']]))))"], { cwd: repoRoot, budgetMs: testLevelBudgetMs("quick") });
+  if ((probe.status ?? 1) !== 0) return null;
+  const sites = JSON.parse(probe.stdout.trim()) as unknown;
+  return Array.isArray(sites) && sites.length > 0 && sites.every((site) => typeof site === "string") ? (sites as string[]) : null;
+}
+
+/**
+ * 🫙️ The cache-local interpreter the Python host runs under, carrying exactly the external
+ * distributions the owners declared.
+ *
+ * A virtual environment, never the system interpreter: a test host may not mutate the machine it
+ * runs on. Every distribution the base interpreter already provides is REUSED rather than
+ * downloaded, which is what keeps a zero-touch checkout working offline: the environment's own site
+ * directory carries `semio-base-interpreter.pth`, which adds the base interpreter's site directories
+ * (with their own `.pth` files) behind the environment's. `--system-site-packages` cannot do this —
+ * when the base is itself a virtual environment (the repository's `.venv`) it exposes the base's
+ * BASE installation and hides every package of the `.venv`. Anything still missing — or provided by
+ * the base but not importable at the declared version, like a platform-less wheel — is installed INTO
+ * the environment with `--ignore-installed` (so the base's copy cannot satisfy pip's own check),
+ * where it stays isolated and shadows the base. The environment is keyed by the
+ * base and the declared package set, so it is built once and reused by every run and every case that
+ * declares the same set, and rebuilt the moment the declaration changes.
+ * @see https://docs.python.org/3/library/site.html
+ */
 export function provisionPythonInterpreter(repoRoot: string, base: string, declared: readonly OracleHostPackage[]): { interpreter: string; problems: string[] } {
   const external = declared.filter((entry) => entry.path === undefined);
   if (external.length === 0) return { interpreter: base, problems: [] };
@@ -224,18 +243,26 @@ export function provisionPythonInterpreter(repoRoot: string, base: string, decla
   const dir = join(testCacheDir(repoRoot, "hosts"), `python-env-${digest(`${base}\n${signature}`)}`);
   const interpreter = join(dir, process.platform === "win32" ? "Scripts" : "bin", process.platform === "win32" ? "python.exe" : "python3");
   const stampPath = join(dir, "🧾️packages.json");
-  const stamp = existsSync(stampPath) ? (JSON.parse(readFileSync(stampPath, "utf8")) as { signature?: string }) : null;
-  if (stamp?.signature === signature && existsSync(interpreter)) return { interpreter, problems: [] };
+  const stamp = existsSync(stampPath) ? (JSON.parse(readFileSync(stampPath, "utf8")) as { signature?: string; baseSites?: string[] }) : null;
+  if (stamp?.signature === signature && Array.isArray(stamp.baseSites) && existsSync(interpreter)) return { interpreter, problems: [] };
 
   markOutputDir(repoRoot, dir, { testId: "hosts::python-env", cacheKey: `python-env:${signature}` });
   const problems: string[] = [];
+  const shown = relative(repoRoot, dir).split(sep).join("/");
   if (!existsSync(interpreter)) {
-    const created = runProbe(base, ["-m", "venv", "--system-site-packages", dir], { cwd: repoRoot, budgetMs: testLevelBudgetMs("long") });
+    const created = runProbe(base, ["-m", "venv", dir], { cwd: repoRoot, budgetMs: testLevelBudgetMs("long") });
     if ((created.status ?? 1) !== 0 || !existsSync(interpreter)) {
-      problems.push(`python oracle host: cannot create the cache-local environment at ${relative(repoRoot, dir).split(sep).join("/")} with \`${base} -m venv\` — ${created.stderr.trim() || `exit ${created.status}`}`);
+      problems.push(`python oracle host: cannot create the cache-local environment at ${shown} with \`${base} -m venv\` — ${created.stderr.trim() || `exit ${created.status}`}`);
       return { interpreter: base, problems };
     }
   }
+  const baseSites = pythonSiteDirectories(repoRoot, base);
+  const ownSites = pythonSiteDirectories(repoRoot, interpreter);
+  if (baseSites === null || ownSites === null) {
+    problems.push(`python oracle host: cannot read the site directories of ${baseSites === null ? `the base interpreter ${base}` : `the cache-local environment at ${shown}`}`);
+    return { interpreter: base, problems };
+  }
+  writeFileSync(join(ownSites[0]!, "semio-base-interpreter.pth"), baseSites.map((site) => `import site; site.addsitedir(${JSON.stringify(site)})\n`).join(""));
   // 🔎️Importable AND at the declared version. Checking only importability would let a declared pin
   // be silently satisfied by whatever the machine happened to have, which is the same as not
   // declaring one.
@@ -245,15 +272,15 @@ export function provisionPythonInterpreter(repoRoot: string, base: string, decla
   };
   for (const entry of specs) {
     if (present(entry)) continue;
-    const installed = runProbe(interpreter, ["-m", "pip", "install", "--disable-pip-version-check", entry.spec], { cwd: repoRoot, budgetMs: testLevelBudgetMs("exhaustive") });
+    const installed = runProbe(interpreter, ["-m", "pip", "install", "--disable-pip-version-check", "--ignore-installed", entry.spec], { cwd: repoRoot, budgetMs: testLevelBudgetMs("exhaustive") });
     if ((installed.status ?? 1) !== 0) {
-      problems.push(`python oracle host: ${entry.spec} is neither importable nor installable into ${relative(repoRoot, dir).split(sep).join("/")} — ${installed.stderr.trim().split("\n").slice(-3).join(" ") || `pip exited ${installed.status}`}`);
+      problems.push(`python oracle host: ${entry.spec} is neither importable nor installable into ${shown} — ${installed.stderr.trim().split("\n").slice(-3).join(" ") || `pip exited ${installed.status}`}`);
       continue;
     }
     if (!present(entry)) problems.push(`python oracle host: ${entry.spec} installed but \`import ${entry.module}\` at that version still fails — declare the import name with "module" if it differs from the distribution name`);
   }
   if (problems.length === 0) {
-    writeFileSync(stampPath, `${JSON.stringify({ interpreter: base, signature, packages: specs }, null, 2)}\n`);
+    writeFileSync(stampPath, `${JSON.stringify({ interpreter: base, signature, baseSites, packages: specs }, null, 2)}\n`);
     markRunComplete(dir);
   }
   return { interpreter, problems };

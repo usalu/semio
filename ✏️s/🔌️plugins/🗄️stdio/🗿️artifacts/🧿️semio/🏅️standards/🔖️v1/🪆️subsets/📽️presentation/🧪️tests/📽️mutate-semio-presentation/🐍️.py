@@ -894,17 +894,9 @@ def doc_string(ctx: Context) -> str:
     raise AssertionError("%s declares no doc string" % ctx.scenario["id"])
 
 
-def step_uris(ctx: Context, scheme: str) -> list:
-    """🧫️ Every fixture URI of one scheme the scenario's steps name, in step order — including the
-    cells of a step's data table, which is where the specification-vector paths live."""
-    found = []
-    for step in ctx.scenario.get("steps", []):
-        cells = [step["text"]] + [cell for row in step.get("dataTable", []) or [] for cell in row]
-        for cell in cells:
-            for token in cell.split():
-                if token.startswith(scheme):
-                    found.append(token)
-    return found
+def step_uris(ctx: Context, prefix: str) -> list:
+    """🧫️ The fixture URIs under one prefix the scenario's steps name, in step order (the host's one fixture-URI grammar)."""
+    return [uri for uri in ctx.step_fixture_uris() if uri.startswith(prefix)]
 
 
 def fixture_json(ctx: Context, uri: str):

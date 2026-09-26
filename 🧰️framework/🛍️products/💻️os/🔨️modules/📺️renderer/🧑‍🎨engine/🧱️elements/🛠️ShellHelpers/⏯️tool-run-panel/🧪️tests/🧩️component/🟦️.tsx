@@ -8,8 +8,8 @@ import { createElement, Fragment } from "react";
 import { cleanup, render, screen } from "@semio-tech/ui-react/test";
 import panelFixture from "../../../../../../../🔌️plugin/🧫️fixtures/⏯️tool-run/🪧️panel-running.json";
 import "../../../../🐚️Shell/🟦️.tsx";
-import { uiNodeToTreePanelConfig } from "../../../🟦️.tsx";
-import { toolRunPanelReveal } from "../../🟦️.ts";
+import { actionBindingToActionDescriptor, uiNodeToTreePanelConfig } from "../../../🟦️.tsx";
+import { toolRunPanelReveal, toolRunPanelTasksV1 } from "../../🟦️.ts";
 
 const STYLE = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };
 const ACCESSIBILITY = { label: null, description: null, live: "off", shortcut: null, hidden: false };
@@ -50,5 +50,20 @@ describe("⏯️ framework ToolRun panel", () => {
     const again = toolRunPanelReveal(first.runs, body);
     expect(again.added).toEqual([]);
     expect(toolRunPanelReveal(new Set(), undefined).added).toEqual([]);
+  });
+
+  it("lists a live run as a Tasks-window task carrying the run's own Pause, Resume and Abort, and a terminal run as none", () => {
+    const body = hostNode(panelFixture);
+    const [task, ...rest] = toolRunPanelTasksV1(body);
+    expect(rest).toEqual([]);
+    expect({ run: task!.run, label: task!.label, status: task!.status, completed: task!.completed, total: task!.total, valueText: task!.valueText }).toEqual({ run: 1n, label: "Toy fill", status: "Running · Filling (1/1)", completed: 0, total: null, valueText: "Filling (1/1): 0 units" });
+    expect([task!.pause?.binding.action.name, task!.pause?.disabled, task!.resume, task!.abort?.binding.action.name, task!.abort?.disabled]).toEqual(["toolRunPause", false, null, "toolRunAbort", false]);
+    expect(actionBindingToActionDescriptor(task!.pause!.binding)).toEqual({ controllerId: task!.pause!.binding.action.scope, action: "toolRunPause", args: { generation: 0, runId: "1" } });
+    const retarget = (node: any, from: string, to: string): any => ({ ...node, key: node.key.replace(from, to), bindings: node.bindings.map((binding: any) => ({ ...binding, action: { ...binding.action, name: binding.action.name === from ? to : binding.action.name } })), children: node.children.map((child: any) => retarget(child, from, to)) });
+    const [paused] = toolRunPanelTasksV1(retarget(body, "toolRunPause", "toolRunResume"));
+    expect([paused!.pause, paused!.resume?.binding.action.name]).toEqual([null, "toolRunResume"]);
+    const strip = (node: any): any => ({ ...node, children: node.key.endsWith(".actions") ? [] : node.children.map(strip) });
+    expect(toolRunPanelTasksV1(strip(body))).toEqual([]);
+    expect(toolRunPanelTasksV1(undefined)).toEqual([]);
   });
 });

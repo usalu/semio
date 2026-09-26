@@ -27,7 +27,7 @@
 //! `inverse_semio_text_mutation` (`…/🧬️mutations/🦀️.rs`) and the DSL/pack pass-throughs
 //! `parse_semio_text_dsl`/`print_semio_text_dsl`/`encode_semio_text_pack`/`decode_semio_text_pack`.
 //! Every input is read from a fixture the FEATURE declares — the mutation parameters from the
-//! scenario's doc string, the specification vectors from the `asset://` URIs its steps name — so
+//! scenario's doc string, the specification vectors from the fixture URIs its steps name — so
 //! neither adapter holds a transcription that could drift away from what the other one read.
 
 use semio_repo_test_host::Adapter;
@@ -69,24 +69,8 @@ mod subject {
         decode_semio_text_mutation_json(ctx.doc_string()?).map_err(|error| format!("{}: the scenario's mutation payload must decode: {error}", ctx.scenario.id))
     }
 
-    /// 🧫️ Every `asset://` URI the scenario's steps name, in step order. The feature is the single
-    /// place the specification-vector paths are written down; both adapters read them from there.
-    fn step_assets(ctx: &Context) -> Vec<String> {
-        let mut found = Vec::new();
-        for (_, text) in &ctx.scenario.steps {
-            let mut rest = text.as_str();
-            while let Some(at) = rest.find("asset://") {
-                let tail = &rest[at..];
-                let end = tail.find(char::is_whitespace).unwrap_or(tail.len());
-                found.push(tail[..end].to_string());
-                rest = &tail[end..];
-            }
-        }
-        found
-    }
-
     fn vector(ctx: &Context, position: usize, label: &str) -> Result<String, String> {
-        let uri = step_assets(ctx).into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} asset", ctx.scenario.id))?;
+        let uri = ctx.step_fixture_uris().into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} asset", ctx.scenario.id))?;
         String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))
     }
 

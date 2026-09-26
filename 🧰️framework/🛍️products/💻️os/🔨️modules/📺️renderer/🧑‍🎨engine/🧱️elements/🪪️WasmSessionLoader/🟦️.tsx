@@ -7,7 +7,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { scheduleDemandFrame, type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
+import { type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
 import { createContext } from "react";
 // #endregion 🔌️Adapters
 
@@ -41,61 +41,6 @@ async function createSurfaceSession<T>(construct: (module: SurfaceSessionModule)
 }
 //#endregion 🗺️SharedSurfaceSessionLoader
 
-//#region 🔖️DemandFrameScheduler
-/** 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: shared render-on-demand scheduler for wasm engine
- * surfaces that used to run an unconditional `requestAnimationFrame` loop forever (flow node-graph,
- * tiled-map, paint-2d, board-2d) — holding the tab at 60fps even fully idle, which also prevents the
- * browser from throttling/backgrounding it. Mirrors the pattern already used correctly elsewhere in
- * this file: `WasmGraphSurface` renders only from event handlers, and the r3f world uses
- * `frameloop="demand"` + explicit `invalidate()` (`♾️infinite/🌍️world/🎨️r3f/…/🟦️.tsx`).
- * `invalidate()` schedules a render on the next frame, then keeps rendering for `trailingWindowMs`
- * after the LAST invalidate — this absorbs wasm-side eased/animated state (e.g. a spring settling)
- * without needing a per-engine "is something still animating" query. `beginContinuous`/`endContinuous`
- * cover genuinely continuous work (an active pointer gesture, a running compute progress indicator)
- * where invalidate-per-event would be too coarse. */
-export function createDemandFrameScheduler(render: () => void, opts?: { readonly trailingWindowMs?: number }): { invalidate(): void; beginContinuous(reason: string): void; endContinuous(reason: string): void; dispose(): void } {
-  const trailingWindowMs = opts?.trailingWindowMs ?? 250;
-  const continuousReasons = new Set<string>();
-  let handle: { readonly cancel: () => void } | null = null;
-  let trailingUntil = 0;
-  let disposed = false;
-
-  const tick = () => {
-    handle = null;
-    if (disposed) return;
-    render();
-    if (continuousReasons.size > 0 || Date.now() < trailingUntil) schedule();
-  };
-  const schedule = () => {
-    handle = scheduleDemandFrame(tick);
-  };
-  const ensureScheduled = () => {
-    if (disposed || handle !== null) return;
-    schedule();
-  };
-
-  return {
-    invalidate() {
-      trailingUntil = Date.now() + trailingWindowMs;
-      ensureScheduled();
-    },
-    beginContinuous(reason: string) {
-      continuousReasons.add(reason);
-      ensureScheduled();
-    },
-    endContinuous(reason: string) {
-      continuousReasons.delete(reason);
-      if (continuousReasons.size === 0) trailingUntil = Date.now() + trailingWindowMs;
-    },
-    dispose() {
-      disposed = true;
-      continuousReasons.clear();
-      handle?.cancel();
-      handle = null;
-    },
-  };
-}
-//#endregion 🔖️DemandFrameScheduler
 
 //#region GraphSession
 export async function createGraphSession(): Promise<GraphWasmSession> {

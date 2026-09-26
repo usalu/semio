@@ -14,7 +14,9 @@ import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "/Use
 import { createSpaceCommandV1 } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
 import { sealSpaceArtifactCreateV1 } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 
-const [SHELL = "http://127.0.0.1:6530", HUB = "http://127.0.0.1:7800", LOCALE = "en", OUT = "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s11-g10-logs"] = process.argv.slice(2);
+const [SHELL = "http://127.0.0.1:6530", HUB = "http://127.0.0.1:7800", LOCALE = "en", OUT = "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-g10-logs"] = process.argv.slice(2);
+/** 🔢️ `ServerFrame::Commands`'s tag byte (`🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs`, `encode_server_frame`). */
+const SERVER_FRAME_COMMANDS_TAG = 3;
 const AGENT_WORD = LOCALE === "de" ? "KI-Agent" : "AI agent";
 const EMAIL = process.env.G10_HUMAN_EMAIL ?? "user2@semio.dev";
 const PASSWORD = process.env.G10_HUMAN_PASSWORD ?? "gm1-local-dev-pass-2";
@@ -70,6 +72,7 @@ const browser = await chromium.launch({ headless: true, args: ["--use-angle=meta
 const page = await (await browser.newContext({ viewport: { width: 1600, height: 1000 }, locale: LOCALE === "de" ? "de-DE" : "en-US" })).newPage();
 const lines: string[] = [];
 const sockets: { url: string; closed: boolean }[] = [];
+const received = { commands: 0 };
 page.on("console", (message) => lines.push(`${message.type()} ${message.text().slice(0, 400)}`));
 page.on("response", (response) => {
   if (response.status() >= 400) lines.push(`http ${response.status()} ${response.request().method()} ${response.url().slice(0, 240)}`);
@@ -78,7 +81,19 @@ page.on("websocket", (ws) => {
   const entry = { url: ws.url(), closed: false };
   sockets.push(entry);
   ws.on("close", () => (entry.closed = true));
+  if (!entry.url.includes("/document/ws")) return;
+  ws.on("framereceived", (frame) => {
+    if (typeof frame.payload !== "string" && frame.payload.length > 1 && frame.payload[1] === SERVER_FRAME_COMMANDS_TAG) received.commands += 1;
+  });
 });
+/** 🖼️ What the human's note canvas shows: every block the note draws (`data-ink-block-id`), with its box. */
+const canvasView = (page: Page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll("[data-ink-block-id]")].map((el) => {
+      const box = el.getBoundingClientRect();
+      return `${el.getAttribute("data-ink-block-id")}@${Math.round(box.left)},${Math.round(box.top)},${Math.round(box.width)}x${Math.round(box.height)}`;
+    }).sort(),
+  );
 let agent: ReturnType<typeof spawnRawMcp> | undefined;
 let delegationId = "";
 try {
@@ -96,8 +111,13 @@ try {
   if (OPEN === "space") {
     const spaceButton = page.locator(`[data-semio-hub-workspace] li[data-space-id="${spaceId}"] button`).first();
     await spaceButton.waitFor({ state: "attached", timeout: 90_000 });
-    await spaceButton.click({ force: true });
-    await page.waitForFunction((id) => window.location.pathname.includes(`/spaces/${id}`) && [...document.querySelectorAll("[data-window-id]")].some((el) => el.getAttribute("data-window-id") !== "s-home-main"), spaceId, { timeout: 180_000 });
+    const spaceOpen = (budget: number) => page.waitForFunction((id) => window.location.pathname.includes(`/spaces/${id}`) && [...document.querySelectorAll("[data-window-id]")].some((el) => el.getAttribute("data-window-id") !== "s-home-main"), spaceId, { timeout: budget }).then(() => true, () => false);
+    let spaceAttempts = 0;
+    for (let opened = false; !opened && spaceAttempts < 6; spaceAttempts += 1) {
+      await spaceButton.click({ force: true, timeout: 10_000 }).catch(() => undefined);
+      opened = await spaceOpen(30_000);
+    }
+    console.log(`INFO the space opened after ${spaceAttempts} click(s) (a click before the shell's hub identity is ready is refused as opening.identity-required)`);
     const known = new Set(await documentsOf());
     for (let tick = 0; tick < 30 && !(await page.locator('[data-slot="window-action-pane"] [id="action.createArtifact"]').count()); tick += 1) {
       for (const id of await page.evaluate(() => [...document.querySelectorAll('[id$=".engagement.toggle"]')].filter((toggle) => toggle.closest('[data-folded="true"]') !== null).map((toggle) => toggle.id))) await page.locator(`[id="${id}"]`).first().click({ force: true }).catch(() => undefined);
@@ -106,10 +126,14 @@ try {
     await page.locator('[data-slot="window-action-pane"] [id="action.createArtifact"]').first().click({ force: true });
     await page.waitForTimeout(1_500);
     await page.locator('[data-slot="window-action-pane"] [id$=".arg.name"]:is(input,textarea), [data-slot="window-action-pane"] [id$=".arg.name"] :is(input,textarea)').first().fill(`Agent edit ${LOCALE} (shell)`);
-    await page.locator('[data-slot="window-action-pane"] [id$=".arg.kindChoice"]').first().click({ force: true });
-    await page.waitForTimeout(1_000);
     const kindIndex = ((catalog.json?.kinds ?? []) as any[]).findIndex((entry) => entry?.kindId === kind?.kindId);
-    await page.locator('[role="option"]').nth(kindIndex).click({ force: true });
+    for (let attempt = 0; attempt < 4 && (await page.locator('[role="option"]').count()) <= kindIndex; attempt += 1) {
+      await page.keyboard.press("Escape").catch(() => undefined);
+      await page.locator('[data-slot="window-action-pane"] [id$=".arg.kindChoice"]').first().click({ force: true });
+      await page.waitForFunction((index) => document.querySelectorAll('[role="option"]').length > index, kindIndex, { timeout: 20_000 }).catch(() => undefined);
+    }
+    await page.locator('[role="option"]').nth(kindIndex).scrollIntoViewIfNeeded().catch(() => undefined);
+    await page.locator('[role="option"]').nth(kindIndex).click({ force: true, timeout: 15_000 });
     await page.locator('[id$=".action.createArtifact.execute"]').first().click({ force: true });
     for (const deadline = Date.now() + 600_000; !documentId && Date.now() < deadline; ) {
       documentId = (await documentsOf()).find((id) => !known.has(id)) ?? "";
@@ -180,6 +204,10 @@ try {
   }
   row("1 the human signs in through the shell and holds the hub note open live", sockets.some((ws) => ws.url.includes("/document/ws") && !ws.closed), `sync="${live.syncPill}" ledger=${live.ledger.length} peers=${JSON.stringify(live.peers)}`);
   const before = await readShell(page);
+  const canvasBefore = await canvasView(page);
+  const commandsBefore = received.commands;
+  await page.screenshot({ path: join(OUT, `g10-agent-edit-human-sees-${LOCALE}-before.png`) });
+
   const headBefore = await headOf();
 
   const label = `Claude G10 ${LOCALE}`;
@@ -198,7 +226,7 @@ try {
   row("2 the agent is its own delegated principal and opens the same document", opened.isError !== true && String(context.structuredContent?.principal ?? "") === `agent:${delegationId}`, `principal=${context.structuredContent?.principal} writePath=${opened.structuredContent?.sessionDocument?.writePath ?? "?"} ${opened.isError ? JSON.stringify(opened.structuredContent).slice(0, 240) : ""}`);
 
   let roster = await readShell(page);
-  for (let tick = 0; tick < 30 && !roster.peers.some((peer) => peer.kind === "agent"); tick += 1) {
+  for (let tick = 0; tick < 90 && !roster.peers.some((peer) => peer.kind === "agent"); tick += 1) {
     await pause(1_000);
     roster = await readShell(page);
   }
@@ -209,17 +237,24 @@ try {
   const capabilityId = String(((search.structuredContent?.results ?? []) as any[]).map((hit) => String(hit.capabilityId ?? hit.id)).find((id) => id.endsWith(".addBlock")) ?? "");
   const prepared = await call("action_prepare", { capabilityId, input: { kind: "text" } });
   const invoked = await call("action_invoke", { preparedActionHandle: prepared.structuredContent?.preparedHandle });
+  const relayed = await call("artifact_open", { artifactId: documentId });
+  console.log(`INFO the agent's session document after the commit: ${JSON.stringify(relayed.structuredContent?.sessionDocument ?? null)}`);
   row("4 the agent commits an edit through the semio MCP", invoked.structuredContent?.status === "SUCCEEDED", `${capabilityId} status=${invoked.structuredContent?.status ?? JSON.stringify(invoked.structuredContent ?? prepared.structuredContent).slice(0, 240)}`);
 
-  let after = await readShell(page);
   const t0 = Date.now();
-  for (let tick = 0; tick < 60 && after.ledger.length <= before.ledger.length; tick += 1) {
+  let canvasAfter = await canvasView(page);
+  for (let tick = 0; tick < 60 && (received.commands <= commandsBefore || !canvasAfter.some((block) => !canvasBefore.includes(block))); tick += 1) {
     await pause(1_000);
-    after = await readShell(page);
+    canvasAfter = await canvasView(page);
   }
-  row("5 the human sees the agent's edit land live, without a reload", after.ledger.length > before.ledger.length, `ledger ${before.ledger.length}→${after.ledger.length} after ${Date.now() - t0} ms; newest=${JSON.stringify(after.ledger.slice(-2))}`);
+  const after = await readShell(page);
+  row(
+    "5 the human sees the agent's edit land live, without a reload",
+    received.commands > commandsBefore && canvasAfter.some((block) => !canvasBefore.includes(block)),
+    `Commands frames ${commandsBefore}→${received.commands} after ${Date.now() - t0} ms; blocks on the human's canvas ${JSON.stringify(canvasBefore)} → ${JSON.stringify(canvasAfter)}; own history ledger ${before.ledger.length}→${after.ledger.length} (a remote edit is not the human's own undo step)`,
+  );
   let headAfter = await headOf();
-  for (let tick = 0; tick < 30 && headAfter <= headBefore; tick += 1) {
+  for (let tick = 0; tick < 90 && headAfter <= headBefore; tick += 1) {
     await pause(1_000);
     headAfter = await headOf();
   }

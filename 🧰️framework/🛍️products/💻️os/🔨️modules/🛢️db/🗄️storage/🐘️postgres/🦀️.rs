@@ -89,7 +89,7 @@ use crate::db_storage::{
     close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_transfer_list, db_io_write_observed_bytes, register_db_io_backend, register_db_io_backend_prepared_with_use,
     retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult,
     DbIoAsyncDriverRuntime, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities,
-    WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
+    WalSegmentState, WalStorage, DB_IO_LIST_ITEMS, DB_IO_PAGE_BYTES,
 };
 
 macro_rules! with_admitted_artifact {
@@ -205,6 +205,21 @@ fn map_create_error(err: sqlx::Error, what: impl FnOnce() -> String) -> DbError 
 /// `i64::MAX`.
 fn to_i64(value: u64) -> Result<i64, DbError> {
     i64::try_from(value).map_err(|_| DbError::InvalidArgument(format!("value {value} exceeds i64::MAX")))
+}
+
+/// @emoji 📋️ One document's ascending id column in ONE round trip, bounded by the DB I/O list capacity (`sql` binds
+/// the document as `$1` and the row bound as `$2`; a list one row over the capacity is refused exactly as pushing it
+/// would be). A list used to cost one round trip per row (`… > $2 ORDER BY … LIMIT 1` in a loop): the index lists its
+/// runs several times per edit, so every edit on a remote server paid hundreds of round trips and outgrew the hub's
+/// 30 s frame deadline under load (ticket 26/09/23 H9 session 12, two-client e2e `tc19`–`tc22`).
+async fn postgres_ascending_ids(pool: &PgPool, sql: &'static str, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
+    let bound = to_i64(DB_IO_LIST_ITEMS as u64 + 1)?;
+    let rows: Vec<(i64,)> = sqlx::query_as(sql).bind(document.0.as_str()).bind(bound).fetch_all(pool).await.map_err(map_sqlx_error)?;
+    let mut result = DbIoU64List::new();
+    for (id,) in rows {
+        result.push(u64::try_from(id).map_err(|_| DbError::InvalidArgument(format!("stored id {id} is negative")))?)?;
+    }
+    Ok(result)
 }
 
 /// @emoji ✂️ Validates a `WalStorage::read` range against the segment's actual current length
@@ -456,15 +471,7 @@ impl PostgresDbIoExecutor {
     }
 
     async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
-        let mut result = DbIoU64List::new();
-        let mut after = -1i64;
-        while let Some((index,)) =
-            sqlx::query_as("SELECT segment_index FROM db_wal_segment WHERE document_id = $1 AND segment_index > $2 ORDER BY segment_index ASC LIMIT 1").bind(document.0.as_str()).bind(after).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?
-        {
-            result.push(index as u64)?;
-            after = index;
-        }
-        Ok(result)
+        postgres_ascending_ids(&self.pool, "SELECT segment_index FROM db_wal_segment WHERE document_id = $1 ORDER BY segment_index ASC LIMIT $2", document).await
     }
 
     async fn truncate_tail(connection: &mut PgConnection, document: &str, index: u64, new_len: u64) -> Result<(), DbError> {
@@ -558,15 +565,7 @@ impl SnapshotStorage for PostgresDbIoExecutor {
     }
 
     async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
-        let mut result = DbIoU64List::new();
-        let mut after = -1i64;
-        while let Some((generation,)) =
-            sqlx::query_as("SELECT generation FROM db_snapshot_generation WHERE document_id = $1 AND generation > $2 ORDER BY generation ASC LIMIT 1").bind(document.0.as_str()).bind(after).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?
-        {
-            result.push(generation as u64)?;
-            after = generation;
-        }
-        Ok(result)
+        postgres_ascending_ids(&self.pool, "SELECT generation FROM db_snapshot_generation WHERE document_id = $1 ORDER BY generation ASC LIMIT $2", document).await
     }
 
     async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
@@ -685,13 +684,7 @@ impl IndexStorage for PostgresDbIoExecutor {
     }
 
     async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
-        let mut result = DbIoU64List::new();
-        let mut after = -1i64;
-        while let Some((run_id,)) = sqlx::query_as("SELECT run_id FROM db_index_run WHERE document_id = $1 AND run_id > $2 ORDER BY run_id ASC LIMIT 1").bind(document.0.as_str()).bind(after).fetch_optional(&self.pool).await.map_err(map_sqlx_error)? {
-            result.push(run_id as u64)?;
-            after = run_id;
-        }
-        Ok(result)
+        postgres_ascending_ids(&self.pool, "SELECT run_id FROM db_index_run WHERE document_id = $1 ORDER BY run_id ASC LIMIT $2", document).await
     }
 
     async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {

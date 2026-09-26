@@ -1,0 +1,14 @@
+{
+  "handshakeDeadlineMs": 8000,
+  "unansweredAttempts": 3,
+  "shellVersion": 1,
+  "scenarios": [
+    { "name": "a gateway that accepts and never answers is unavailable after three dials", "dials": ["silence", "silence", "silence"], "status": "unavailable", "versionMismatch": null },
+    { "name": "a gateway that refuses every connection is unavailable after three dials", "dials": ["close", "close", "close"], "status": "unavailable", "versionMismatch": null },
+    { "name": "a typed version refusal is incompatible at once and names both versions", "dials": [{ "frame": { "variant": "refused", "reason": "version", "gatewayVersion": 2 } }], "status": "incompatible", "versionMismatch": { "gateway": 2, "shell": 1 } },
+    { "name": "a typed capacity refusal is unavailable at once", "dials": [{ "frame": { "variant": "refused", "reason": "capacity", "gatewayVersion": 1 } }], "status": "unavailable", "versionMismatch": null },
+    { "name": "a welcome from another bridge version is incompatible", "dials": [{ "frame": { "variant": "welcome", "bridgeVersion": 2, "connection": "conn-1", "principal": "agent:test" } }], "status": "incompatible", "versionMismatch": { "gateway": 2, "shell": 1 } },
+    { "name": "a welcomed shell whose gateway then stops answering redials three more times", "dials": [{ "frame": { "variant": "welcome", "bridgeVersion": 1, "connection": "conn-1", "principal": "agent:test" }, "thenClose": true }, "silence", "close", "silence"], "status": "unavailable", "versionMismatch": null },
+    { "name": "a welcome of this version opens the bridge", "dials": [{ "frame": { "variant": "welcome", "bridgeVersion": 1, "connection": "conn-1", "principal": "agent:test" } }], "status": "open", "versionMismatch": null }
+  ]
+}

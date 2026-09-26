@@ -3,7 +3,7 @@ use directory::os_directory::{same_lease_fields_v1, EditedArtifactFrontierV1, Di
 use protocol::{ArtifactId as WireArtifactId, Bootstrap};
 use semio_framework_hash::Sha256;
 use semio_framework_trace::record::{CapturingSink, TraceLevel};
-use semio_hub::artifact_authority::checkpoint_id_encoding_v1;
+use semio_hub::artifact_authority::{checkpoint_id_encoding_v1, AuthorityProgressStage};
 use semio_hub::directory::model::{DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1};
 use semio_hub::directory::replay_directory_command_receipt;
 
@@ -99,6 +99,76 @@ fn readiness_v1_is_redacted_and_never_claims_public_session_issuance() {
     assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), false, false, false, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
     assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, true, false, true, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
     assert_eq!(hub_readiness(HubMode::Development, "network", ready.run_id, true, true, false, true, true, false, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
+}
+
+/// 🧬️ Every readiness body a hub serves — ready, blocked, production on a network bind, and booting
+/// with and without startup progress — is exactly the declared `LocalBootstrapReadinessV1`, and a
+/// ready body can never carry startup progress.
+#[test]
+fn every_served_readiness_body_is_the_declared_readiness_schema() {
+    let mut document: serde_json::Value = serde_json::from_str(include_str!("../../🚀️local-bootstrap/🧬️schema/🔣️.json")).expect("local-bootstrap schema module");
+    document["$ref"] = serde_json::Value::String("#/$defs/LocalBootstrapReadinessV1".into());
+    let schema = semio_framework_schema::OwnedJsonSchemaValidator::compile(&document.to_string()).expect("readiness schema compiles");
+    let run = "00112233445566778899aabbccddeeff".to_string();
+    let reason = "trusted-catalog-never-published-in-this-data-root";
+    let starting = hub_starting_readiness(HubMode::Production, "network", "production".into(), true, true, true);
+    let progressed = HubReadinessV1 { startup: Some(HubStartupProgressV1 { stage: AuthorityProgressStage::GuestCodecExecuting.code(), completed_units: 25_000_000, total_units: 4_000_000_000 }), ..starting.clone() };
+    let bodies = [
+        ("ready", hub_readiness(HubMode::Development, "loopback", run.clone(), true, true, true, true, true, true, false, true, reason)),
+        ("blocked", hub_readiness(HubMode::Development, "loopback", run.clone(), false, false, false, false, false, false, false, false, reason)),
+        ("production", declare_public_session_issuance(hub_readiness(HubMode::Production, "network", "production".into(), true, true, true, true, true, true, true, false, reason), true)),
+        ("starting", starting),
+        ("starting-with-progress", progressed.clone()),
+        ("starting-development", hub_starting_readiness(HubMode::Development, "loopback", run.clone(), false, false, false)),
+    ];
+    for (label, body) in &bodies {
+        let encoded = serde_json::to_string(body).expect("readiness json");
+        assert!(schema.is_valid_json(&encoded), "{label}: {encoded}");
+    }
+    assert_eq!(progressed.status, "not-ready");
+    assert!(progressed.blocked_by.iter().any(|closed| closed.gate == "artifactAuthority" && closed.reason == "trusted-catalog-loading"));
+    let ready_with_startup = HubReadinessV1 { startup: progressed.startup, ..bodies[0].1.clone() };
+    assert!(!schema.is_valid_json(&serde_json::to_string(&ready_with_startup).expect("readiness json")), "a ready hub never reports startup progress");
+}
+
+/// 🌅️ A booting hub answers on its socket before its stores and catalog are up: `/healthz` live,
+/// `/readyz` `503 not-ready` with the catalog load's latest progress, every other route a signed
+/// `503` with `Retry-After`; then it hands the same listener to the full router, which answers on it
+/// without the socket ever being rebound.
+#[test]
+fn a_booting_hub_answers_readiness_with_catalog_progress_then_hands_its_socket_over() {
+    run_socket_test(|| async {
+        let bound = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
+        bound.set_nonblocking(true).expect("non-blocking");
+        let addr = bound.local_addr().expect("address");
+        let progress = StartupProgressCellV1::default();
+        let readiness = hub_starting_readiness(HubMode::Production, "loopback", "production".into(), true, true, false);
+        let boot = BootReadinessServerV1::start(tokio::net::TcpListener::from_std(bound.try_clone().expect("clone")).expect("tokio listener"), readiness, progress.clone(), Tracer::disabled(), CrossOriginPolicyV1::LoopbackDevelopment, ForwardedTlsTrustV1::Untrusted);
+        let first = raw_http_get(addr, "/readyz", &[]).await;
+        assert_eq!(first.status, 503);
+        let body: serde_json::Value = serde_json::from_slice(&first.body).expect("readiness json");
+        assert_eq!(body["status"], "not-ready");
+        assert_eq!(body["artifactAuthority"]["reason"], "trusted-catalog-loading");
+        assert!(body.get("startup").is_none(), "no progress reported yet");
+        progress.observe(AuthorityProgress { stage: AuthorityProgressStage::GuestCodecExecuting, completed_units: 50_000_000, total_units: 4_000_000_000 });
+        let second: serde_json::Value = serde_json::from_slice(&raw_http_get(addr, "/readyz", &[]).await.body).expect("readiness json");
+        assert_eq!(second["startup"], serde_json::json!({ "stage": "guest-codec-executing", "completedUnits": 50_000_000u64, "totalUnits": 4_000_000_000u64 }));
+        let live = raw_http_get(addr, "/healthz", &[]).await;
+        assert_eq!(live.status, 200);
+        assert_eq!(serde_json::from_slice::<serde_json::Value>(&live.body).expect("liveness json")["status"], "live");
+        let refused = raw_http_get(addr, "/directory/spaces", &[]).await;
+        assert_eq!(refused.status, 503);
+        let head = refused.headers.to_ascii_lowercase();
+        assert!(head.contains(&format!("{}: unavailable", semio_hub::refusal::HUB_REFUSAL_HEADER)) && head.contains("retry-after: 5"), "{head}");
+        boot.hand_over().await;
+        let listener = tokio::net::TcpListener::from_std(bound).expect("tokio listener");
+        tokio::spawn(async move {
+            let app = Router::new().route("/readyz", get(|| async { "served by the full router" }));
+            let _ = axum::serve(listener, app).await;
+        });
+        let handed = raw_http_get(addr, "/readyz", &[]).await;
+        assert_eq!((handed.status, handed.body.as_slice()), (200, b"served by the full router".as_slice()), "the full router answers on the very socket the booting hub bound");
+    });
 }
 
 /// 💡️ A hub with a frozen inference binding publishes the service it executes AND the route family
@@ -290,7 +360,7 @@ async fn artifact_creation_recovery_never_closes_a_key_a_live_execution_owns() {
 #[tokio::test]
 async fn trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root() {
     let data_root = std::fs::canonicalize(tempdir("unconfigured-trusted-catalog")).expect("canonical fixture-owned data root");
-    assert!(configured_artifact_authority(&data_root, Some(&NativeCodecProviderSetV1::linked()), &Tracer::disabled(), &StartupCancellationV1::default()).await.expect("unconfigured authority").is_none());
+    assert!(configured_artifact_authority(&data_root, Some(&NativeCodecProviderSetV1::linked()), &Tracer::disabled(), &StartupCancellationV1::default(), &StartupProgressCellV1::default()).await.expect("unconfigured authority").is_none());
     std::fs::remove_dir_all(data_root).expect("remove unconfigured trusted catalog fixture");
 }
 
@@ -305,19 +375,19 @@ async fn launcher_close_cancels_the_startup_catalog_load_instead_of_retrying_it(
     let cancellation = StartupCancellationV1::default();
     cancellation.cancel();
     let started = std::time::Instant::now();
-    assert!(matches!(configured_artifact_authority(&catalog_root, Some(&providers), &Tracer::disabled(), &cancellation).await, Err(AuthorityError::Cancelled)));
+    assert!(matches!(configured_artifact_authority(&catalog_root, Some(&providers), &Tracer::disabled(), &cancellation, &StartupProgressCellV1::default()).await, Err(AuthorityError::Cancelled)));
     assert!(started.elapsed() < std::time::Duration::from_secs(5), "a cancelled load is not retried");
-    assert!(configured_artifact_authority(&catalog_root, Some(&providers), &Tracer::disabled(), &StartupCancellationV1::default()).await.expect("uncancelled load").configured().is_some());
+    assert!(configured_artifact_authority(&catalog_root, Some(&providers), &Tracer::disabled(), &StartupCancellationV1::default(), &StartupProgressCellV1::default()).await.expect("uncancelled load").configured().is_some());
     std::fs::remove_dir_all(catalog_root).expect("remove cancelled-load catalog fixture");
 }
 
 #[tokio::test]
 async fn configured_catalog_without_a_native_provider_fails_closed() {
     let unconfigured = tempdir("unconfigured-headless-catalog");
-    assert!(configured_artifact_authority(&unconfigured, None, &Tracer::disabled(), &StartupCancellationV1::default()).await.expect("unconfigured headless authority").is_none());
+    assert!(configured_artifact_authority(&unconfigured, None, &Tracer::disabled(), &StartupCancellationV1::default(), &StartupProgressCellV1::default()).await.expect("unconfigured headless authority").is_none());
     std::fs::create_dir_all(unconfigured.join("trusted-catalog")).expect("trusted catalog directory");
     std::fs::write(unconfigured.join("trusted-catalog/current.json"), b"{}\n").expect("configured current pointer");
-    let error = match configured_artifact_authority(&unconfigured, None, &Tracer::disabled(), &StartupCancellationV1::default()).await {
+    let error = match configured_artifact_authority(&unconfigured, None, &Tracer::disabled(), &StartupCancellationV1::default(), &StartupProgressCellV1::default()).await {
         Ok(_) => panic!("configured trusted catalog unexpectedly admitted without its native provider"),
         Err(error) => error,
     };
@@ -518,6 +588,46 @@ where
         .expect("socket test");
 }
 
+/// 🏝️ A law that saturates a process-global capacity (the database's DB I/O credit ledger) owns a
+/// whole process: inside a shared test process it re-runs itself as the only law of a child process
+/// and reports that child's verdict, so it never refuses the writes of the laws running beside it; a
+/// runner that already gives every law its own process (nextest) runs it in place. Returns `true`
+/// where the law body must run. The database's own laws use the same protocol
+/// (`db_storage::process_isolated_law`).
+fn process_isolated_law(law: &str) -> bool {
+    const ISOLATED_LAW: &str = "SEMIO_HUB_ISOLATED_LAW";
+    const ISOLATED_LAW_WATCHDOG: std::time::Duration = std::time::Duration::from_secs(600);
+    if std::env::var_os("NEXTEST").is_some() || std::env::var(ISOLATED_LAW).is_ok_and(|isolated| isolated == law) {
+        return true;
+    }
+    let executable = std::env::current_exe().expect("process-isolated law resolves its test executable");
+    let log_path = tempdir("isolated-law").join("child.log");
+    let log = std::fs::File::create(&log_path).expect("process-isolated law creates its child log");
+    let mut child = std::process::Command::new(executable)
+        .args(["--exact", law, "--test-threads=1"])
+        .env(ISOLATED_LAW, law)
+        .stdout(log.try_clone().expect("process-isolated law shares its child log"))
+        .stderr(log)
+        .spawn()
+        .expect("process-isolated law spawns its child process");
+    let deadline = std::time::Instant::now() + ISOLATED_LAW_WATCHDOG;
+    let status = loop {
+        if let Some(status) = child.try_wait().expect("process-isolated law observes its child") {
+            break Some(status);
+        }
+        if std::time::Instant::now() >= deadline {
+            let _ = child.kill();
+            let _ = child.wait();
+            break None;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    };
+    let output = std::fs::read_to_string(&log_path).unwrap_or_default();
+    let _ = std::fs::remove_dir_all(log_path.parent().expect("child log directory"));
+    assert!(status.is_some_and(|status| status.success()) && output.contains("test result: ok. 1 passed"), "process-isolated law {law} did not pass as the only law of its own process ({status:?}):\n{output}");
+    false
+}
+
 async fn test_state() -> HubState {
     test_state_with_capacity(1024, 256).await
 }
@@ -620,6 +730,22 @@ async fn bounded_http_request(addr: SocketAddr, method: &str, path: &str, header
         Ok(response) => response,
         Err(_) => panic!("{method} {path} did not answer within {RAW_HTTP_READ_HANG_GUARD:?}"),
     }
+}
+
+/// 📡️ A catalog load that is still working says so at the level a launcher runs the hub at: an
+/// in-flight unit (a guest codec's fuel progress) is an `info` record, rate-limited per second, and
+/// the terminal unit an `info` `ok`. A launcher's readiness waiter reads exactly this output, so
+/// a load whose progress only reached `debug` looked wedged and was killed while it still worked.
+#[test]
+fn startup_catalog_progress_is_visible_at_the_launcher_level() {
+    let (tracer, sink) = Tracer::capturing(TraceLevel::Info);
+    let control = StartupCatalogControl::new(tracer, StartupCancellationV1::default(), StartupProgressCellV1::default());
+    control.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCodecExecuting, completed_units: 25_000_000, total_units: 4_000_000_000 });
+    control.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCodecExecuting, completed_units: 50_000_000, total_units: 4_000_000_000 });
+    control.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCodecExecuting, completed_units: 4_000_000_000, total_units: 4_000_000_000 });
+    let records = sink.records_for("server.catalog.publication");
+    assert_eq!(records.iter().map(|record| (record.level, record.outcome)).collect::<Vec<_>>(), vec![(TraceLevel::Info, TraceOutcome::Started), (TraceLevel::Info, TraceOutcome::Ok)], "one in-flight record per gap, then the terminal one: {records:?}");
+    assert!(records[0].detail.as_deref().is_some_and(|detail| detail.contains("GuestCodecExecuting 25000000/4000000000")), "{records:?}");
 }
 
 /// 📝️ A hub state whose tracer captures, handed back beside the sink its records land in.
@@ -1444,6 +1570,242 @@ async fn raw_http_get(addr: SocketAddr, path: &str, headers: &[(&str, &str)]) ->
     raw_http_request(addr, "GET", path, headers, &[]).await
 }
 
+/// 🚧️ One hostile request on its own connection. Unlike [`raw_http_request`] it tolerates the hub
+/// closing a request it refused early (an oversized body), and answers `Err` only when the hub never
+/// answered — a dropped connection is a finding, not a transport detail.
+async fn hostile_http_request(addr: SocketAddr, method: &str, path: &str, headers: &[(&str, &str)], body: &[u8]) -> Result<RawHttpResponse, String> {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let mut stream = tokio::net::TcpStream::connect(addr).await.map_err(|error| format!("connect: {error}"))?;
+    let mut request = format!("{method} {path} HTTP/1.1\r\nHost: {addr}\r\nConnection: close\r\nContent-Length: {}\r\n", body.len());
+    for (name, value) in headers {
+        request.push_str(&format!("{name}: {value}\r\n"));
+    }
+    request.push_str("\r\n");
+    let written = async {
+        stream.write_all(request.as_bytes()).await?;
+        stream.write_all(body).await?;
+        stream.flush().await
+    }
+    .await;
+    let mut response = Vec::new();
+    let read = tokio::time::timeout(RAW_HTTP_READ_HANG_GUARD, stream.read_to_end(&mut response)).await.map_err(|_| format!("{method} {path} never answered"))?;
+    if response.is_empty() {
+        return Err(format!("{method} {path} dropped the connection (write {written:?}, read {read:?})"));
+    }
+    let boundary = response.windows(4).position(|bytes| bytes == b"\r\n\r\n").ok_or_else(|| format!("{method} {path} answered no HTTP head"))?;
+    let head = String::from_utf8_lossy(&response[..boundary]).to_string();
+    let status = head.split_whitespace().nth(1).and_then(|status| status.parse().ok()).ok_or_else(|| format!("{method} {path} answered no status"))?;
+    let raw = response[boundary + 4..].to_vec();
+    let body = if head.to_ascii_lowercase().contains("transfer-encoding: chunked") { dechunk_http_body(&raw) } else { raw };
+    Ok(RawHttpResponse { status, headers: head, body })
+}
+
+fn dechunk_http_body(raw: &[u8]) -> Vec<u8> {
+    let mut body = Vec::new();
+    let mut rest = raw;
+    while let Some(line_end) = rest.windows(2).position(|bytes| bytes == b"\r\n") {
+        let size = usize::from_str_radix(std::str::from_utf8(&rest[..line_end]).unwrap_or("0").trim(), 16).unwrap_or(0);
+        if size == 0 || rest.len() < line_end + 2 + size {
+            break;
+        }
+        body.extend_from_slice(&rest[line_end + 2..line_end + 2 + size]);
+        rest = &rest[(line_end + 4 + size).min(rest.len())..];
+    }
+    body
+}
+
+/// 🚧️ The hostile-input fixture names every route the router registers: each `.route(` path of the
+/// bootstrap source is one fixture `route`, so a new route cannot ship without its hostile vectors.
+#[test]
+fn the_hostile_input_fixture_covers_every_registered_route() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚧️hostile-input-v1/🔣️.json")).unwrap();
+    let covered: std::collections::BTreeSet<&str> = fixture["routes"].as_array().unwrap().iter().map(|row| row["route"].as_str().unwrap()).collect();
+    let source = include_str!("../../🏗️bootstrap/🦀️.rs");
+    let registered: std::collections::BTreeSet<String> = source
+        .match_indices(".route(")
+        .filter_map(|(at, _)| {
+            let argument = source[at + ".route(".len()..].split([',', ')']).next()?.trim();
+            Some(argument.trim_matches('"').rsplit("::").next()?.to_string())
+        })
+        .collect();
+    let missing: Vec<&String> = registered.iter().filter(|route| !covered.contains(route.as_str())).collect();
+    assert!(missing.is_empty(), "routes without hostile vectors: {missing:?}");
+    assert!(registered.len() >= 60, "the source scan found the router: {}", registered.len());
+}
+
+/// 🚧️ Every route answers every hostile vector with a typed, signed refusal: a 4xx (or a typed 503
+/// for a subsystem this hub was not configured with) carrying `x-semio-refusal` with the code its
+/// status declares; the body stays the route's own, so a bare refusal discloses nothing. Never a 500,
+/// never a dropped connection. A `credential-ignored` public route may succeed whatever the request
+/// carries; a `credential-optional` one serves a request without a credential and refuses a forged one.
+#[test]
+fn every_route_answers_hostile_input_with_a_typed_signed_refusal() {
+    run_socket_test(|| async {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚧️hostile-input-v1/🔣️.json")).unwrap();
+        let state = test_state().await;
+        let session = issue_test_session(&state, "hostile-input@example.com").await;
+        let addr = spawn_server(state.clone()).await;
+        let bearer = format!("Bearer {}", session.token);
+        let forged = fixture["bodies"]["forgedBearer"].as_str().unwrap();
+        let malformed = fixture["bodies"]["malformedJson"].as_str().unwrap().as_bytes().to_vec();
+        let wrong_schema = serde_json::to_vec(&fixture["bodies"]["wrongSchema"]).unwrap();
+        let oversized = vec![b'x'; fixture["oversizedBytes"].as_u64().unwrap() as usize];
+        let max = fixture["allowedStatuses"]["max"].as_u64().unwrap() as u16;
+        let unavailable = fixture["allowedStatuses"]["typedUnavailable"].as_u64().unwrap() as u16;
+        let mut findings = Vec::new();
+        let mut answered = 0usize;
+        let judge = |findings: &mut Vec<String>, label: String, public: bool, answer: Result<RawHttpResponse, String>| {
+            let response = match answer {
+                Ok(response) => response,
+                Err(error) => return findings.push(format!("{label}: {error}")),
+            };
+            if response.status < 400 {
+                if !public {
+                    findings.push(format!("{label}: a hostile request succeeded with {}", response.status));
+                }
+                return;
+            }
+            if response.status > max && response.status != unavailable {
+                findings.push(format!("{label}: answered {} {}", response.status, String::from_utf8_lossy(&response.body)));
+            }
+            let head = response.headers.to_ascii_lowercase();
+            let Some(code) = head.lines().find_map(|line| line.strip_prefix(&format!("{}: ", semio_hub::refusal::HUB_REFUSAL_HEADER)).map(str::trim).map(str::to_string)) else {
+                return findings.push(format!("{label}: {} without {}", response.status, semio_hub::refusal::HUB_REFUSAL_HEADER));
+            };
+            if semio_hub::refusal::refusal_code(response.status).is_some_and(|declared| declared != code && code != "insecure-transport") && !head.contains("content-type: application/json") {
+                findings.push(format!("{label}: {} carries {code}, not its declared code", response.status));
+            }
+            if head.contains("content-type: application/json") && !response.body.is_empty() && serde_json::from_slice::<serde_json::Value>(&response.body).is_err() {
+                findings.push(format!("{label}: a JSON refusal body that is not JSON"));
+            }
+        };
+        for route in fixture["routes"].as_array().unwrap() {
+            let method = route["method"].as_str().unwrap();
+            let path = route["path"].as_str().unwrap();
+            let public = route["public"].as_str();
+            let body_kind = route["body"]["kind"].as_str();
+            let json = [("content-type", "application/json"), ("origin", "http://127.0.0.1:6066")];
+            let requests: Vec<(&str, Vec<(&str, &str)>, Vec<u8>)> = match body_kind {
+                Some("json") => vec![
+                    ("unauthenticated", json.to_vec(), wrong_schema.clone()),
+                    ("forged-bearer", vec![json[0], json[1], ("authorization", forged)], wrong_schema.clone()),
+                    ("malformed-json", vec![json[0], json[1], ("authorization", bearer.as_str())], malformed.clone()),
+                    ("wrong-schema", vec![json[0], json[1], ("authorization", bearer.as_str())], wrong_schema.clone()),
+                    ("wrong-content-type", vec![("content-type", "text/plain"), json[1], ("authorization", bearer.as_str())], wrong_schema.clone()),
+                    ("oversized", vec![json[0], json[1], ("authorization", bearer.as_str())], oversized.clone()),
+                ],
+                Some("bytes") => vec![
+                    ("unauthenticated", vec![("content-type", "application/octet-stream")], b"hostile".to_vec()),
+                    ("forged-bearer", vec![("content-type", "application/octet-stream"), ("authorization", forged)], b"hostile".to_vec()),
+                    ("oversized", vec![("content-type", "application/octet-stream"), ("authorization", bearer.as_str())], oversized.clone()),
+                ],
+                Some(_) => vec![
+                    ("unauthenticated", vec![], Vec::new()),
+                    ("forged-bearer", vec![("authorization", forged)], Vec::new()),
+                    ("oversized", vec![("content-type", "application/json"), ("authorization", bearer.as_str())], oversized.clone()),
+                ],
+                None => vec![("unauthenticated", vec![], Vec::new()), ("forged-bearer", vec![("authorization", forged)], Vec::new())],
+            };
+            for (vector, headers, body) in &requests {
+                let answer = hostile_http_request(addr, method, path, headers, body).await;
+                answered += 1;
+                judge(&mut findings, format!("{method} {path} [{vector}]"), public == Some("credential-ignored") || (public == Some("credential-optional") && *vector == "unauthenticated"), answer);
+            }
+            if !route["socket"].as_bool().unwrap_or(false) {
+                let wrong_method = if method == "PATCH" { "TRACE" } else { "PATCH" };
+                let answer = hostile_http_request(addr, wrong_method, path, &[("authorization", bearer.as_str())], &[]).await;
+                answered += 1;
+                judge(&mut findings, format!("{wrong_method} {path} [wrong-method]"), false, answer);
+            }
+            if let Some(segment_at) = path.find("space-h").filter(|at| !path[..*at].contains('?')) {
+                for hostile in fixture["hostilePathSegments"].as_array().unwrap() {
+                    let hostile_path = format!("{}{}{}", &path[..segment_at], hostile.as_str().unwrap(), &path[segment_at + "space-h".len()..]);
+                    let answer = hostile_http_request(addr, method, &hostile_path, &[("authorization", bearer.as_str())], &[]).await;
+                    answered += 1;
+                    judge(&mut findings, format!("{method} {hostile_path} [hostile-path]"), public.is_some(), answer);
+                }
+            }
+        }
+        assert!(findings.is_empty(), "{} of {answered} hostile requests were not typed, signed refusals:\n{}", findings.len(), findings.join("\n"));
+        assert!(answered > 400, "every route saw its vectors: {answered}");
+    });
+}
+
+/// 🪪️ A route that also answers anonymously never downgrades a presented credential: without one it
+/// serves the anonymous view, with a live session the caller's view, and with a revoked or forged
+/// session a signed `401` — so a client whose session ended learns it instead of reading as a stranger.
+#[test]
+fn credential_optional_routes_refuse_a_revoked_or_forged_session_instead_of_answering_anonymously() {
+    run_socket_test(|| async {
+        let state = test_state().await;
+        let session = issue_test_session(&state, "optional-caller@example.com").await;
+        let addr = spawn_server(state.clone()).await;
+        let bearer = format!("Bearer {}", session.token);
+        for path in ["/directory/spaces", "/directory/events"] {
+            assert_eq!(raw_http_get(addr, path, &[]).await.status, 200, "{path}: no credential is the anonymous view");
+            assert_eq!(raw_http_get(addr, path, &[("Authorization", bearer.as_str())]).await.status, 200, "{path}: a live session is served");
+            let forged = raw_http_get(addr, path, &[("Authorization", "Bearer not-a-session")]).await;
+            assert_eq!(forged.status, 401, "{path}: a forged bearer is refused");
+            assert!(forged.headers.to_ascii_lowercase().contains(&format!("{}: ", semio_hub::refusal::HUB_REFUSAL_HEADER)), "{path}: the refusal is signed");
+        }
+        let authenticated = state.directory.authenticate_session(&SessionCapability::parse(&session.token).unwrap()).await.unwrap().expect("live session");
+        state.directory.revoke_auth_session(&authenticated.id, "test-revocation", Some(&session.user_id), "optional-caller").await.expect("revoke");
+        for path in ["/directory/spaces", "/directory/events"] {
+            assert_eq!(raw_http_get(addr, path, &[("Authorization", bearer.as_str())]).await.status, 401, "{path}: a revoked session is refused, not served anonymously");
+            assert_eq!(raw_http_get(addr, path, &[]).await.status, 200, "{path}: the anonymous view stays open");
+        }
+    });
+}
+
+/// 🧯️ The refusal layer answers a panicking handler with a typed `500` instead of a dropped
+/// connection, and it never detaches a handler from its request: a client that disconnects drops
+/// the handler it was waiting on, exactly as without the layer.
+#[tokio::test]
+async fn the_refusal_layer_types_a_panic_and_keeps_every_handler_request_owned() {
+    struct DropSignal(Option<tokio::sync::oneshot::Sender<()>>);
+    impl Drop for DropSignal {
+        fn drop(&mut self) {
+            if let Some(signal) = self.0.take() {
+                let _ = signal.send(());
+            }
+        }
+    }
+    async fn panicking() -> StatusCode {
+        std::panic::panic_any("hostile handler")
+    }
+    let (started_tx, started_rx) = tokio::sync::oneshot::channel::<()>();
+    let (dropped_tx, dropped_rx) = tokio::sync::oneshot::channel::<()>();
+    let pending = Arc::new(Mutex::new(Some((started_tx, dropped_tx))));
+    let router = axum::Router::new()
+        .route("/panic", axum::routing::get(panicking))
+        .route(
+            "/pending",
+            axum::routing::get(move || {
+                let signals = pending.lock().unwrap().take();
+                async move {
+                    let Some((started, dropped)) = signals else { return StatusCode::CONFLICT };
+                    let _dropped = DropSignal(Some(dropped));
+                    let _ = started.send(());
+                    std::future::pending::<StatusCode>().await
+                }
+            }),
+        )
+        .layer(axum::middleware::from_fn_with_state(Tracer::disabled(), refusal_middleware));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    let server = tokio::spawn(async move { axum::serve(listener, router).await });
+    let panicked = raw_http_get(addr, "/panic", &[]).await;
+    assert_eq!(panicked.status, 500);
+    assert!(panicked.headers.to_ascii_lowercase().contains(&format!("{}: {}", semio_hub::refusal::HUB_REFUSAL_HEADER, semio_hub::refusal::refusal_code(500).unwrap())), "{}", panicked.headers);
+    let mut client = tokio::net::TcpStream::connect(addr).await.unwrap();
+    tokio::io::AsyncWriteExt::write_all(&mut client, format!("GET /pending HTTP/1.1\r\nHost: {addr}\r\n\r\n").as_bytes()).await.unwrap();
+    tokio::time::timeout(std::time::Duration::from_secs(5), started_rx).await.expect("handler start deadline").expect("handler started");
+    drop(client);
+    tokio::time::timeout(std::time::Duration::from_secs(5), dropped_rx).await.expect("a disconnected request drops its handler").expect("handler dropped");
+    assert_eq!(raw_http_get(addr, "/panic", &[]).await.status, 500, "a panic never takes the server down");
+    server.abort();
+}
+
 /// 🫀️ Liveness and readiness are two different questions, and a hub that has not finished booting
 /// must answer them differently: `/readyz` refuses with `503` while a required subsystem is down,
 /// and `/healthz` still answers `200 live` on the very same process so an orchestrator restarts a
@@ -1491,9 +1853,9 @@ async fn gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_docum
         SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.clone() },
         SocketBindingKeyV1::Membership { user_id: authority.caller.user_id.clone(), space_id: space_id.clone() },
     ] {
-        assert!(state.socket_binding_gates.gate(binding).try_lock_owned().is_err(), "the exact Hub ingress guard remains owned");
+        assert!(state.socket_binding_gates.gate(binding).try_write_owned().is_err(), "the exact Hub ingress guard remains owned");
     }
-    assert!(state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(scope.clone())).try_lock_owned().is_ok(), "Hub ingress must not outer-lock the runtime document writer");
+    assert!(state.socket_binding_gates.document_write(&scope).try_lock_owned().is_ok(), "Hub ingress must not outer-lock the runtime document writer");
     revalidate_gis_map_approval_delivery(&state, &authority).await.expect("fresh delivery under the retained guards");
     drop(authority);
     execute_directory_command_fenced(
@@ -2295,7 +2657,15 @@ async fn next_server_frame_at<S>(ws: &mut S, phase: &str) -> ServerFrame
 where
     S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
 {
-    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
+    next_server_frame_within(ws, phase, std::time::Duration::from_secs(5)).await
+}
+
+/// ⏳️ [`next_server_frame_at`] with the law's own bound, for a frame a loaded host may take longer to answer.
+async fn next_server_frame_within<S>(ws: &mut S, phase: &str, bound: std::time::Duration) -> ServerFrame
+where
+    S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
+{
+    let deadline = tokio::time::Instant::now() + bound;
     loop {
         match tokio::time::timeout_at(deadline, ws.next()).await {
             Ok(Some(Ok(WsMessage::Binary(bytes)))) => return protocol::decode_server_frame(&bytes).await.unwrap_or_else(|error| panic!("server frame at {phase}: {error:?}")).1,
@@ -2303,7 +2673,7 @@ where
             Ok(Some(Ok(_))) => continue,
             Ok(Some(other)) => panic!("expected binary frame at {phase}, got {other:?}"),
             Ok(None) => panic!("stream ended before server frame at {phase}"),
-            Err(_) => panic!("no server frame before 5s deadline at {phase}"),
+            Err(_) => panic!("no server frame within {bound:?} at {phase}"),
         }
     }
 }
@@ -2995,7 +3365,12 @@ async fn execution_target_selection_final_fence_matches_neutral_races() {
         let outcome = match task.await {
             Ok(Ok((fields, assets))) => {
                 assert_eq!(fields.scope, scope);
-                assert_eq!(&*document_execution_target_asset_bytes(&assets.component).await.ok().expect("selected component asset reads"), TEST_EXECUTION_TARGET_COMPONENT_BYTES);
+                let mut stream = assets.component.stream().expect("selected component asset streams");
+                let mut read = Vec::new();
+                while let Some(chunk) = stream.next_chunk().await {
+                    read.extend_from_slice(&chunk.expect("selected component chunk verifies"));
+                }
+                assert_eq!(read.as_slice(), TEST_EXECUTION_TARGET_COMPONENT_BYTES);
                 "selected"
             }
             Ok(Err((_, error))) if error.0.code == DocumentOpenPlanErrorCodeV1::Stale => "stale",
@@ -3674,7 +4049,7 @@ fn socket_grant_directory_route_uses_credential_free_hello_and_revokes_live() {
     run_socket_test(|| async {
         let state = test_state().await;
         let token = seed_author_token(&state).await;
-        let receipt = issue_directory_socket_grant(bearer_headers(&token), State(state.clone())).await.expect("issue directory socket grant").0;
+        let receipt = issue_directory_socket_grant(bearer_headers(&token), State(state.clone()), Bytes::new()).await.expect("issue directory socket grant").0;
         let since = state.directory.head_seq().await.expect("directory head");
         let addr = spawn_server(state.clone()).await;
         let url = format!("ws://{addr}/directory/socket/v1?since={since}");
@@ -3689,6 +4064,62 @@ fn socket_grant_directory_route_uses_credential_free_hello_and_revokes_live() {
         assert!(matches!(next_directory_message(&mut socket).await, DirectoryStreamMessage::Event { event } if event.space_id.as_deref() == Some(STUDIO)));
         assert_eq!(delete_session_me(bearer_headers(&token), State(state)).await, StatusCode::NO_CONTENT);
         assert_eq!(next_close_code(&mut socket, false).await, 4401);
+    });
+}
+
+/// 🚦️ Using an authority never waits on another use of it: while a member's document command is in
+/// flight — holding its principal, membership and space bindings, waiting for the document's writer —
+/// the space owner still adds a newcomer at once and the member's own directory socket still delivers
+/// that event at once. Every use held its bindings exclusively, so one slow write in a space stalled
+/// every directory command and every directory delivery of that space behind it (C10: a member's Home
+/// never listed a space's new documents for 60–120 s).
+#[test]
+fn a_command_in_flight_never_stalls_the_spaces_directory_commands_or_deliveries() {
+    run_socket_test(|| async {
+        let state = test_state().await;
+        let owner = issue_test_session(&state, "fence-owner@example.com").await;
+        let member = issue_test_session(&state, "fence-member@example.com").await;
+        issue_test_session(&state, "fence-newcomer@example.com").await;
+        let space_id = create_space_for_test(&state, &owner.user_id, "Fence space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space_id, "fence-member@example.com", DirectorySpaceRole::Author).await;
+        announce_document_for_test(&state, &space_id, "fence-doc").await;
+        let addr = spawn_server(state.clone()).await;
+        let grant = issue_document_socket_grant_fixture(Path((space_id.clone(), "fence-doc".to_string())), bearer_headers(&member.token), State(state.clone())).await.expect("member document grant").0;
+        let (mut document, _) = connect_async(document_socket_request(&format!("ws://{addr}/scopes/{space_id}%2Ffence-doc/document/ws"), &member.token)).await.expect("member document socket");
+        document.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("document hello");
+        assert!(matches!(next_server_frame(&mut document).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut document).await, ServerFrame::Session { .. }));
+        let directory_grant = issue_directory_socket_grant(bearer_headers(&member.token), State(state.clone()), Bytes::new()).await.expect("member directory grant").0;
+        let since = state.directory.head_seq().await.expect("directory head");
+        let (mut directory, _) = connect_async(socket_request(&format!("ws://{addr}/directory/socket/v1?since={since}"), &directory_grant.grant)).await.expect("member directory socket");
+        directory.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("directory hello");
+
+        let scope = DocumentScope::new(space_id.clone(), "fence-doc");
+        let writer = state.socket_binding_gates.document_write(&scope).lock_owned().await;
+        let mut command = sample_envelope("fence-command", &WireArtifactId("fence-doc".into())).await;
+        command.actor = ActorId(grant.actor_id.clone());
+        document.send(client_binary(&ClientFrame::Commands { batch_id: 31, envelopes: vec![command] }, Lane::Command).await).await.expect("in-flight command");
+        let membership = SocketBindingKeyV1::Membership { user_id: member.user_id.clone(), space_id: space_id.clone() };
+        let admitted = tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            while state.socket_binding_gates.gate(membership.clone()).try_write_owned().is_ok() {
+                tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+            }
+        })
+        .await;
+        assert!(admitted.is_ok(), "the member's command is in flight, holding its membership");
+
+        let upserted_at = std::time::Instant::now();
+        let upsert = DirectoryCommand::UpsertMember { space_id: space_id.clone(), email: "fence-newcomer@example.com".into(), role: DirectorySpaceRole::Spectator };
+        let response = post_directory_command_for_test(addr, &owner.token, "0123456789abcdef0123456789abcdef", upsert).await;
+        assert_eq!(response.status, 202, "the owner's command is not fenced by the member's write: {}", String::from_utf8_lossy(&response.body));
+        assert!(matches!(next_directory_message(&mut directory).await, DirectoryStreamMessage::Event { event } if matches!(&event.body, os_directory::DirectoryEventBody::MemberUpserted { space_id: upserted, .. } if *upserted == space_id)), "the member's directory socket delivers the space's event while its own command is in flight");
+        assert!(upserted_at.elapsed() < std::time::Duration::from_secs(2), "neither waited on the in-flight write: {:?}", upserted_at.elapsed());
+
+        drop(writer);
+        match next_server_frame(&mut document).await {
+            ServerFrame::Ack { batch_id: 31, stages, .. } => assert!(matches!(stages.last(), Some(AckStage::Applied { outcome }) if matches!(outcome.as_ref(), ApplyOutcome::Accepted)), "{stages:?}"),
+            other => panic!("expected the in-flight command's Ack, got {other:?}"),
+        }
     });
 }
 
@@ -4047,7 +4478,6 @@ fn admin_intent_binding_wire_matrix_is_exact_sorted_and_self_deduplicated() {
                     SocketBindingKeyV1::DirectorySpaceAuthority { space_id } => format!("space:{space_id}"),
                     SocketBindingKeyV1::Membership { user_id, space_id } => format!("membership:{user_id}/{space_id}"),
                     SocketBindingKeyV1::Share(id) => format!("share:{id}"),
-                    SocketBindingKeyV1::DocumentWrite(_) => panic!("administrator short authority cannot acquire a document writer"),
                 })
                 .collect::<Vec<_>>()
         });
@@ -4111,7 +4541,7 @@ fn admin_short_effects_retain_principal_until_their_actual_side_effect() {
             if action_first {
                 assert!(tokio::time::timeout(std::time::Duration::from_millis(100), &mut revoke).await.is_err(), "admitted {} must own the principal authority", row["name"]);
                 for binding in bindings {
-                    assert!(state.socket_binding_gates.gate(binding).try_lock_owned().is_err(), "every short effect key stays owned through its physical side effect");
+                    assert!(state.socket_binding_gates.gate(binding).try_write_owned().is_err(), "every short effect key stays owned through its physical side effect");
                 }
             } else {
                 assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), &mut revoke).await.expect("winning short action revoke deadline").expect("winning short action revoke"), StatusCode::NO_CONTENT);
@@ -4194,7 +4624,7 @@ fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() 
                 tokio::time::timeout(std::time::Duration::from_secs(5), gate.socket_session_revoke_attempted.acquire()).await.expect("admin revoke attempt deadline").expect("admin revoke attempt").forget();
                 if command_first {
                     assert!(tokio::time::timeout(std::time::Duration::from_millis(100), &mut revoke).await.is_err(), "admitted admin command retains the exact session");
-                    assert!(state.socket_binding_gates.gate(SocketBindingKeyV1::User(principal.user_id.clone())).try_lock_owned().is_err(), "admitted admin command also retains user-wide revocation authority");
+                    assert!(state.socket_binding_gates.gate(SocketBindingKeyV1::User(principal.user_id.clone())).try_write_owned().is_err(), "admitted admin command also retains user-wide revocation authority");
                     trailing_revoke = Some(revoke);
                 } else {
                     assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), revoke).await.expect("admin revoke deadline").expect("admin revoke"), StatusCode::NO_CONTENT);
@@ -4307,7 +4737,7 @@ fn directory_global_socket_delivery_and_revocation_share_one_transient_authority
             for space in [&space_a, &space_b] {
                 upsert_member_for_test(&state, space, &recipient_email, DirectorySpaceRole::Spectator).await;
             }
-            let receipt = issue_directory_socket_grant(bearer_headers(&recipient.token), State(state.clone())).await.expect("global grant").0;
+            let receipt = issue_directory_socket_grant(bearer_headers(&recipient.token), State(state.clone()), Bytes::new()).await.expect("global grant").0;
             let since = state.directory.head_seq().await.expect("global directory head");
             let url = format!("ws://{addr}/directory/socket/v1?since={since}");
             let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("global directory socket");
@@ -4383,7 +4813,7 @@ fn socket_directory_revoke_after_admission_suppresses_replay_without_deadlock() 
         state.live_gate = Some(gate.clone());
         gate.socket_directory_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
         let token = seed_author_token(&state).await;
-        let receipt = issue_directory_socket_grant(bearer_headers(&token), State(state.clone())).await.expect("issue directory grant").0;
+        let receipt = issue_directory_socket_grant(bearer_headers(&token), State(state.clone()), Bytes::new()).await.expect("issue directory grant").0;
         let addr = spawn_server(state.clone()).await;
         let url = format!("ws://{addr}/directory/socket/v1?since=0");
         let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("directory socket");
@@ -4697,7 +5127,7 @@ fn space_public_boundary_real_socket_denies_public_raw_events_and_member_telemet
             .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#socket-replay-law", owner.user_id) }, DirectoryCommand::RenameSpace { space_id: public_space.clone(), name: "Socket Public Replay".into() })
             .await
             .expect("replayed raw public event");
-        let receipt = issue_directory_socket_grant(bearer_headers(&outsider.token), State(state.clone())).await.expect("outsider directory grant").0;
+        let receipt = issue_directory_socket_grant(bearer_headers(&outsider.token), State(state.clone()), Bytes::new()).await.expect("outsider directory grant").0;
         let addr = spawn_server(state.clone()).await;
         let url = format!("ws://{addr}/directory/socket/v1?since={since}");
         let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("public outsider directory socket");
@@ -5831,7 +6261,7 @@ async fn directory_invite_redemption_admitted_fence_precedes_archive() {
         SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space.clone() },
         SocketBindingKeyV1::Membership { space_id: space.clone(), user_id: caller.user_id.clone() },
     ] {
-        assert!(state.socket_binding_gates.gate(key).try_lock_owned().is_err(), "the admitted redemption must own every exact authority key");
+        assert!(state.socket_binding_gates.gate(key).try_write_owned().is_err(), "the admitted redemption must own every exact authority key");
     }
     gate.directory_command_attempted.acquire().await.unwrap().forget();
     let revoking = {
@@ -6702,6 +7132,61 @@ async fn an_agent_delegation_mints_a_session_that_works_until_it_is_revoked() {
     assert!(audit.iter().any(|fact| fact.event_kind == "agent-session-issued" && fact.peer_class == "agent"), "an agent's session is journalled as an agent's");
 }
 
+/// 🤖️ Revoking a delegation ends the agent at once, never at its session's expiry: the agent's open
+/// document socket closes `4401`, a human on the same document sees the agent's row leave the roster,
+/// and the agent's next request is `401` — the same path a signed-out session takes.
+#[test]
+fn revoking_a_delegation_closes_the_agents_open_document_socket_and_roster_row() {
+    run_socket_test(|| async {
+        let state = test_state().await;
+        let human = issue_test_session(&state, "revoking-human@example.com").await;
+        let space_id = create_space_for_test(&state, &human.user_id, "Revoked agent space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+        announce_document_for_test(&state, &space_id, "agent-doc").await;
+        let addr = spawn_server(state.clone()).await;
+        let bearer = format!("Bearer {}", human.token);
+        let receipt = json_body(&raw_http_request(addr, "POST", "/auth/agent-delegations", &[("content-type", "application/json"), ("authorization", bearer.as_str())], &agent_delegation_body(&space_id, "edit", 3_600)).await);
+        let delegation_id = receipt["delegationId"].as_str().expect("delegation id").to_string();
+        let delegation_bearer = format!("Bearer {}", receipt["token"].as_str().expect("delegation token"));
+        let minted = raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", delegation_bearer.as_str())], &agent_session_body("edit")).await;
+        assert_eq!(minted.status, 200, "{}", String::from_utf8_lossy(&minted.body));
+        let agent_token = json_body(&minted)["token"].as_str().expect("agent session token").to_string();
+        let agent_bearer = format!("Bearer {agent_token}");
+
+        let agent_grant = issue_document_socket_grant_fixture(Path((space_id.clone(), "agent-doc".to_string())), bearer_headers(&agent_token), State(state.clone())).await.expect("agent socket grant").0;
+        issue_document_socket_grant_fixture(Path((space_id.clone(), "agent-doc".to_string())), bearer_headers(&human.token), State(state.clone())).await.expect("human socket grant");
+        let url = format!("ws://{addr}/scopes/{space_id}%2Fagent-doc/document/ws");
+        let (mut agent, _) = connect_async(document_socket_request(&url, &agent_token)).await.expect("agent document socket");
+        let (mut human_socket, _) = connect_async(document_socket_request(&url, &human.token)).await.expect("human document socket");
+        for socket in [&mut agent, &mut human_socket] {
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
+            assert!(matches!(next_server_frame_at(socket, "welcome").await, ServerFrame::Welcome { .. }));
+            assert!(matches!(next_server_frame_at(socket, "session").await, ServerFrame::Session { .. }));
+        }
+        let raw = presence_hex_bytes(presence_normalization_fixture()["vectors"][0]["rawPeerHex"].as_str().unwrap());
+        agent.send(client_binary(&ClientFrame::Presence { peer: raw }, Lane::Preview).await).await.expect("agent presence");
+        let ServerFrame::Presence { peers } = next_server_frame_at(&mut human_socket, "the human sees the agent's presence").await else { panic!("agent presence") };
+        let mut roster = Vec::with_capacity(peers.len());
+        for peer in &peers {
+            roster.push(protocol::decode_presence_peer(peer).await.expect("presence peer").actor);
+        }
+        assert_eq!(roster, vec![agent_grant.actor_id.clone()], "the agent is its own roster row");
+
+        let revoked_at = std::time::Instant::now();
+        let revoked = raw_http_request(addr, "DELETE", &format!("/auth/agent-delegations/{delegation_id}"), &[("authorization", bearer.as_str())], &[]).await;
+        assert_eq!(revoked.status, 204);
+        assert_eq!(next_close_code(&mut agent, false).await, 4401, "the agent's open document socket closes on revocation");
+        let ServerFrame::Presence { peers } = next_server_frame_at(&mut human_socket, "the human sees the agent leave").await else { panic!("agent withdrawal") };
+        let mut roster = Vec::with_capacity(peers.len());
+        for peer in &peers {
+            roster.push(protocol::decode_presence_peer(peer).await.expect("presence peer").actor);
+        }
+        assert!(!roster.contains(&agent_grant.actor_id), "the revoked agent left the roster: {roster:?}");
+        assert!(revoked_at.elapsed() < std::time::Duration::from_secs(5), "revocation reached the socket and the roster promptly: {:?}", revoked_at.elapsed());
+        assert_eq!(raw_http_get(addr, "/auth/sessions/me", &[("authorization", agent_bearer.as_str())]).await.status, 401, "the agent's next request is refused");
+        assert!(connect_async(document_socket_request(&url, &agent_token)).await.is_err(), "the revoked agent cannot open the document again");
+    });
+}
+
 /// 🔬️ The refusals a delegation exchange must be unable to distinguish, and the one it must. A
 /// wrong secret, an unknown selector and an audience WIDER than the one delegated are one
 /// `invalid-delegation`, so a delegation id cannot be probed for existence and an agent cannot
@@ -7295,7 +7780,7 @@ mod quick {
 
         let providers = NativeCodecProviderSetV1::linked();
         let root = native_openable_stdio_bundle();
-        let configured = configured_artifact_authority(&root, Some(&providers), &Tracer::disabled(), &StartupCancellationV1::default()).await.expect("verified stdio authority").configured().expect("configured stdio authority");
+        let configured = configured_artifact_authority(&root, Some(&providers), &Tracer::disabled(), &StartupCancellationV1::default(), &StartupProgressCellV1::default()).await.expect("verified stdio authority").configured().expect("configured stdio authority");
         assert_eq!(configured.catalog.codec_count(), 26);
         assert_eq!(configured.catalog.open_target_count(), 1);
         let mut ready = test_state().await;
@@ -7617,6 +8102,71 @@ mod long {
             }
             let frontier = state.db.document(&db_artifact_id(&DocumentScope::new(STUDIO, "socket-growth"))).await.expect("growth handle").frontier().await.expect("growth frontier");
             assert_eq!(frontier.commit_seq, EDITS as u64);
+        });
+    }
+
+    /// 📨️ Every command a document socket receives is answered — accepted or refused with a reason —
+    /// even when the database refuses writes: twelve sockets on twelve documents write concurrently
+    /// until the process's shared credit refuses some of them, and no socket is ever left without the
+    /// Ack for a batch it sent. A refused write that left its sender waiting forever looked, to a
+    /// client, exactly like a hub that stopped listening.
+    #[test]
+    fn every_command_is_answered_when_the_database_refuses_writes() {
+        if !process_isolated_law("tests::long::every_command_is_answered_when_the_database_refuses_writes") {
+            return;
+        }
+        run_socket_test(|| async {
+            const SOCKETS: usize = 12;
+            const EDITS: usize = 16;
+            let state = test_state().await;
+            let token = seed_author_token(&state).await;
+            let addr = spawn_server(state.clone()).await;
+            let mut sockets = Vec::with_capacity(SOCKETS);
+            for index in 0..SOCKETS {
+                let document = format!("refusal-{index:02}");
+                announce_document_for_test(&state, STUDIO, &document).await;
+                let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), document.clone())), bearer_headers(&token), State(state.clone())).await.expect("refusal socket grant").0;
+                let (mut socket, _) = connect_async(document_socket_request(&format!("ws://{addr}/scopes/{STUDIO}%2F{document}/document/ws"), &token)).await.expect("refusal socket");
+                socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("refusal hello");
+                assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
+                assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { .. }));
+                sockets.push((document, receipt.actor_id, socket));
+            }
+            let outcomes = futures::future::join_all(sockets.into_iter().map(|(document, actor, mut socket)| async move {
+                let mut accepted = 0usize;
+                let mut refused = Vec::new();
+                let mut previous: Option<protocol::MutationId> = None;
+                for edit in 0..EDITS {
+                    let mut envelope = sample_envelope(&format!("{document}-{edit}"), &WireArtifactId(document.clone())).await;
+                    envelope.actor = ActorId(actor.clone());
+                    envelope.diff.payload = db::document::encode_pathmap_json(&serde_json::json!({ format!("path-{edit:02}"): format!("{edit}:{}", "r".repeat(1024)) })).await.unwrap();
+                    envelope.dependencies = previous.iter().cloned().collect();
+                    let batch = 20_000 + edit as u64;
+                    socket.send(client_binary(&ClientFrame::Commands { batch_id: batch, envelopes: vec![envelope.clone()] }, Lane::Command).await).await.expect("refusal command");
+                    let stages = loop {
+                        if let ServerFrame::Ack { batch_id, stages, .. } = next_server_frame_within(&mut socket, &format!("{document} edit {edit} ack"), std::time::Duration::from_secs(40)).await {
+                            if batch_id == batch {
+                                break stages;
+                            }
+                        }
+                    };
+                    match stages.last() {
+                        Some(AckStage::Applied { outcome }) if matches!(outcome.as_ref(), ApplyOutcome::Accepted) => {
+                            accepted += 1;
+                            previous = Some(envelope.mutation_id);
+                        }
+                        Some(AckStage::Applied { outcome }) => match outcome.as_ref() {
+                            ApplyOutcome::Rejected { reason, .. } => refused.push(reason.clone()),
+                            other => panic!("{document} edit {edit}: {other:?}"),
+                        },
+                        other => panic!("{document} edit {edit}: {other:?}"),
+                    }
+                }
+                (document, accepted, refused)
+            }))
+            .await;
+            let answered: usize = outcomes.iter().map(|(_, accepted, refused)| accepted + refused.len()).sum();
+            assert_eq!(answered, SOCKETS * EDITS, "every command was answered: {outcomes:?}");
         });
     }
 

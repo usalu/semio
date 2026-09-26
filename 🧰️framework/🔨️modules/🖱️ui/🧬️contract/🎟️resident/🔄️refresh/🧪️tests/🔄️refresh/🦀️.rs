@@ -229,7 +229,7 @@ fn cold_document_roots_are_priced_from_their_census_and_reach_every_slot() {
 /// 🎟️ A populated 128-node document reserves its complete record and assembly backing, so the byte
 /// ledger reaches its independent ceiling before the sixty-four-position slot ledger.
 #[test]
-fn populated_full_documents_admit_sixty_two_and_refuse_the_sixty_third_on_bytes() {
+fn populated_full_documents_admit_sixty_and_refuse_the_sixty_first_on_bytes() {
     let data = fixture();
     let nodes = data["documentNodes"].as_u64().unwrap() as usize;
     let full = surface_limits(nodes);

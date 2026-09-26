@@ -31,9 +31,11 @@ import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, 
 import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing, type ActorUiPatchReceipt } from "../🚪️lifetime/🩹️patch/🟦️.ts";
 import type { CoalesceKey, Lane } from "../🤖️generated/🎭️actor/🟦️.ts";
 import { OwnedActorTurnOutput, OwnedActorTurnOutputs } from "../🪪️activation/🚪️instance/📥️output/🟦️.ts";
+import type { ShardCodecAnswer, ShardCodecRequest } from "./🧬️component-codec/🟦️.ts";
 import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
 export { ACTOR_RETURN_RESULT_MAXIMUM_BYTES, decodeActorReturnDrive, decodeActorReturnResult, encodeActorReturnDrive, encodeActorReturnResult, type ActorReturnControl, type ActorReturnDrive, type ActorReturnFault, type ActorReturnIdentity, type ActorReturnOrigin, type ActorReturnPageReceipt, type ActorReturnResult } from "../📤️return/🟦️.ts";
 export { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
+export { ACTOR_CODEC_REFUSAL, actorCodecAnswer, type ActorCodecExports, type ShardCodecAnswer, type ShardCodecDocumentPair, type ShardCodecRequest } from "./🧬️component-codec/🟦️.ts";
 /** 🧬️ Brand-check accessor for {@link OwnedResidentLedger}, resolved LAZILY on first use.
  * `OwnedResidentLedger` arrives over an import cycle (`📮️shard-client` → `🎠️kernel/📥️input` →
  * `🖱️ui/…/💾️resident` → back here), and reading `.prototype` at module-evaluation time touches the
@@ -381,6 +383,7 @@ type OutboundMessage =
   | { readonly kind: "takeSegmentedDownloadChunk"; readonly requestId: string; readonly actorId: string; readonly instanceId: number; readonly operationId: bigint }
   | { readonly kind: "checkpoint"; readonly requestId: string; readonly actorId: string }
   | { readonly kind: "restore"; readonly requestId: string; readonly actorId: string; readonly state: Uint8Array }
+  | { readonly kind: "codec"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly request: ShardCodecRequest }
   | { readonly kind: "dispose"; readonly actorId: string; readonly activationGeneration: bigint }
   /** 📨️ terra-web-shardframe: the ONE new wire message every {@link ShardFrame} variant travels over —
    * additive alongside `"activate"`/`"turn"`/etc above, none of which this message kind replaces or
@@ -2235,6 +2238,15 @@ export class ShardClient {
     await this.send<void>(slot, { kind: "restore", requestId, actorId, state }, requestId);
   }
 
+  /** 🧬️ Calls the actor's component `codec` interface once. The caller serializes it with the actor's
+   * turns (the worker refuses a codec call while a turn of the actor is in flight). */
+  async codec(actorId: string, request: ShardCodecRequest): Promise<ShardCodecAnswer> {
+    const slot = this.requireShard(actorId);
+    const activation = this.captureActorActivation(actorId);
+    const requestId = this.nextRequestId();
+    return this.send<ShardCodecAnswer>(slot, { kind: "codec", requestId, actorId, activationGeneration: activation.activationGeneration, request }, requestId);
+  }
+
   /** ⏏️ Frees the worker-side actor entry — does not touch this shard's routing entry so a caller that
    * immediately re-`activate()`s the same `actorId` (hot reload) can still target the same shard;
    * pair with a routing-level `actorShard.delete` only when the actor is gone for good (unusual — most
@@ -2585,5 +2597,7 @@ if (import.meta.vitest) {
   await registerCancelJobReplyTests(import.meta.vitest, shardClientTestDependenciesV1(), testSource);
   const { registerCommandIngressPageTests } = await import("./🧪️tests/📥️command-ingress-pages/🟦️.ts");
   await registerCommandIngressPageTests(import.meta.vitest, shardClientTestDependenciesV1(), testSource);
+  const { registerComponentCodecReplyTests } = await import("./🧪️tests/🧬️component-codec-reply/🟦️.ts");
+  await registerComponentCodecReplyTests(import.meta.vitest, testSource);
 }
 //#endregion 🧪️Tests

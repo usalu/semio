@@ -986,13 +986,19 @@ export function formatBreachReport(breachs: BreachRecord[], cachePath: string): 
   return lines.join("\n");
 }
 
+/** 🚦️ The one blocking rule every contract gate shares: a breach blocks when its priority is `high`; lower
+ * priorities are recorded in the full breach set and never gate. */
+export function isBlockingBreach(breach: Pick<BreachRecord, "priority">): boolean {
+  return breach.priority === "high";
+}
+
 /**
  * 🚪️Runs `policy` on this `script.ts`, reports every high-priority breach, and exits 1 when any exists.
  * The report is mandatory: a gate that exits non-zero without naming what it rejected is unactionable.
  */
 export async function runPolicyExit(scriptPath: string): Promise<void> {
   const { breachs, cachePath } = await runPolicyScript(scriptPath);
-  const high = breachs.filter((b) => b.priority === "high");
+  const high = breachs.filter(isBlockingBreach);
   if (high.length === 0) {
     console.log(`policy: no high-priority breaches (${breachs.length} total recorded at ${cachePath})`);
     return;
@@ -3081,6 +3087,19 @@ export function wasmBuildArguments(profile: string): { pack: string[]; cargo: st
   return { pack: profile === "release" ? ["--release"] : profile === "dev" ? ["--dev"] : ["--profile", profile], cargo: ["--profile", profile] };
 }
 
+/** ⚡️ The label hot path of the browser canvas bundles: usvg text layout (fontdb, ttf-parser face tables, rustybuzz GSUB/GPOS
+ * shaping, tiny-skia-path outlines, roxmltree/svgtypes/simplecss markup) and vello's scene encoding (kurbo, peniko). At
+ * `opt-level = 0` one shaping of a ~100-character line cost ~25 ms in wasm, so every typed character of the trinity query
+ * editor painted in ~85 ms (ticket 26/09/23 F1). Compiled at `opt-level = 3` in the dev profile too — the browser twin of
+ * the root manifest's dev overrides for the wasmtime crates — scoped to the bundles that pass it, so no other build unit
+ * changes. */
+export const BROWSER_CANVAS_HOT_CRATES = ["ttf-parser", "rustybuzz", "usvg", "fontdb", "roxmltree", "svgtypes", "simplecss", "strict-num", "tiny-skia-path", "kurbo", "peniko", "vello_encoding"] as const;
+
+/** ⚙️ The `cargo --config` overrides that optimize `crates` in the dev profile of one build. */
+export function devOptimizedCargoConfigArgs(crates: readonly string[]): string[] {
+  return crates.flatMap((crate) => ["--config", `profile.dev.package.${crate}.opt-level=3`]);
+}
+
 /** 📦️`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
 export function runWasmPackWebBuild(opts: {
   rsDir: string;
@@ -3097,8 +3116,10 @@ export function runWasmPackWebBuild(opts: {
   /** 🔿️ Ship-mode Cargo/wasm-pack profile. `release`/`dev` map to `--release`/`--dev`; any other name
    * (e.g. `wasm-release`) passes `--profile <name>`. Dev mode always uses `--dev` regardless. */
   shipProfile?: string;
+  /** ⚡️ Crates compiled at `opt-level = 3` even in dev mode (e.g. {@link BROWSER_CANVAS_HOT_CRATES}); ship mode ignores it. */
+  devOptimizedCrates?: readonly string[];
 }): void {
-  const { rsDir, logPrefix, pkg, wasmBaseName, outputDirectory = "pkg", threads = false, cargoFeatures = [], noDefaultFeatures = false, shipProfile = "release" } = opts;
+  const { rsDir, logPrefix, pkg, wasmBaseName, outputDirectory = "pkg", threads = false, cargoFeatures = [], noDefaultFeatures = false, shipProfile = "release", devOptimizedCrates = [] } = opts;
   const captureRoot = process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(process.env.SEMIO_TEST_ARTIFACT_DIR) : join(rsDir, "dist");
   mkdirSync(captureRoot, { recursive: true });
   const cargoOutput = mkdtempSync(join(captureRoot, "wasm-cargo-"));
@@ -3114,7 +3135,7 @@ export function runWasmPackWebBuild(opts: {
     const buildLabel = threads ? "cargo build (threaded) + wasm-bindgen" : "wasm-pack build";
     console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${outputDirectory} --out-name ${wasmBaseName} --no-pack`);
     const t0 = Date.now();
-    const featureArgs = [...(noDefaultFeatures ? (["--no-default-features"] as const) : []), ...cargoFeatures.flatMap((feature) => ["--features", feature])];
+    const featureArgs = [...(noDefaultFeatures ? (["--no-default-features"] as const) : []), ...cargoFeatures.flatMap((feature) => ["--features", feature]), ...(profile === "dev" ? devOptimizedCargoConfigArgs(devOptimizedCrates) : [])];
     let status: number;
     if (threads) {
       const repoRoot = getWorkspaceRoot();

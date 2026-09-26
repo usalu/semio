@@ -57,16 +57,8 @@ mod subject {
 
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order. The feature is
     /// the single place those paths are written down; both adapters read them from there.
-    fn step_uris(ctx: &Context, scheme: &str) -> Vec<String> {
-        let mut found = Vec::new();
-        for (_, text) in &ctx.scenario.steps {
-            for token in text.split_whitespace() {
-                if token.starts_with(scheme) {
-                    found.push(token.to_string());
-                }
-            }
-        }
-        found
+    fn step_uris(ctx: &Context, prefix: &str) -> Vec<String> {
+        ctx.step_fixture_uris().into_iter().filter(|uri| uri.starts_with(prefix)).collect()
     }
 
     fn fixture_text(ctx: &Context, uri: &str) -> Result<String, String> {
@@ -85,7 +77,7 @@ mod subject {
     }
 
     fn vector(ctx: &Context, position: usize, label: &str) -> Result<String, String> {
-        let uri = step_uris(ctx, "asset://").into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} asset", ctx.scenario.id))?;
+        let uri = ctx.step_fixture_uris().into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} asset", ctx.scenario.id))?;
         fixture_text(ctx, &uri)
     }
 

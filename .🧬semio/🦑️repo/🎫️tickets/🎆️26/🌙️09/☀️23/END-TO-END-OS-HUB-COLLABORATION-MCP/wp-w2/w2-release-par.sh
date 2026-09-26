@@ -1,12 +1,12 @@
 #!/bin/zsh
 # 🧵️ W2 (coordinator 07:2x): component-release 3 at a time for distinct packages inside ONE wasm hold per batch, then catalog B
 # (stdio,gis,note,animate,block,writer,draw,puzzle,wfc → w2-catalog-b2) on the rebuilt os-hub, then the rest, then the full catalog.
-# Markers and logs live in .🧬semio/🌐hub/w2-logs (outside the ticket `generated` sweep).
+# Markers and logs live in .🧬semio/🌐hub/s12-w2-logs (outside the ticket `generated` sweep).
 # Nx caches every package that succeeded, so a failed batch re-runs only the failed ones.
 # usage: zsh w2-release-par.sh [from-phase: b-warm|b-publish|rest-warm|all-publish]
 set -u
 cd /Users/ueli/Documents/semio || exit 1
-OUT="/Users/ueli/Documents/semio/.🧬semio/🌐hub/w2-logs"
+OUT="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-w2-logs"
 MUTEX=(/Users/ueli/Documents/semio/.tmp-ticket/*fleet-mutex.sh)
 HUB_RUST=(/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust)
 unset CARGO_TARGET_DIR CARGO_BUILD_TARGET_DIR

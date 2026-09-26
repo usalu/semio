@@ -386,6 +386,10 @@ impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for 
 pub struct HomeApp;
 
 impl ArtifactEditor for HomeApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = SHomeSnapshot;
     type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
     type Config = HomeConfig;
@@ -741,6 +745,23 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         ])
         .keybinding("mod+n", "createStudio")
         .keybinding("mod+o", "importSpace")
+        .action_describe("createStudio", LocalizedLabel::native("Creates a new studio with the given name and kind, either a temporary local-only one or one kept in a folder when a folder path is given; sharing stays off until it is promoted.", "Erstellt ein neues Studio mit dem angegebenen Namen und der Art, entweder temporär und nur lokal oder mit Ordnerpfad in einem Ordner gespeichert; Teilen bleibt gesperrt, bis es hochgestuft wird."))
+        .action_describe("bindSpaceFile", LocalizedLabel::native("Binds a studio to a file on disk by path, so the studio's events are persisted to and read from that file.", "Verknüpft ein Studio anhand eines Pfads mit einer Datei auf dem Datenträger, sodass seine Ereignisse in diese Datei geschrieben und daraus gelesen werden."))
+        .action_describe("importSpace", LocalizedLabel::native("Imports a studio from the given .os DSL text, or opens the host's file picker for an .os file when no text is given.", "Importiert ein Studio aus dem angegebenen .os-DSL-Text oder öffnet ohne Text die Dateiauswahl des Hosts für eine .os-Datei."))
+        .action_describe("openSpace", LocalizedLabel::native("Opens the space or studio with the given id, navigating the shell to it.", "Öffnet den Space oder das Studio mit der angegebenen Id und navigiert die Shell dorthin."))
+        .action_describe("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigates the shell to the space behind one node of the Home file tree.", "Navigiert die Shell zum Space hinter einem Knoten des Home-Dateibaums."))
+        .action_describe("deleteVirtualFileSystemNode", LocalizedLabel::native("Deletes the local studio behind one node of the Home file tree, including its draft; its content is gone.", "Löscht das lokale Studio hinter einem Knoten des Home-Dateibaums samt Entwurf; sein Inhalt ist fort."))
+        .action_describe("goHome", LocalizedLabel::native("Navigates the shell back to the Home launcher.", "Navigiert die Shell zurück zum Home-Starter."))
+        .action_describe("createSpace", LocalizedLabel::native("Creates a new shared space on the hub with the given name; without a name it opens the Create Space dialog.", "Erstellt auf dem Hub einen neuen geteilten Space mit dem angegebenen Namen; ohne Namen öffnet es den Dialog Space erstellen."))
+        .action_describe("deleteSpace", LocalizedLabel::native("Deletes one space on the hub for every member; the first call opens a confirmation dialog, and only the confirmed call deletes it.", "Löscht einen Space auf dem Hub für alle Mitglieder; der erste Aufruf öffnet einen Bestätigungsdialog, erst der bestätigte Aufruf löscht."))
+        .action_describe("renameSpace", LocalizedLabel::native("Renames one space on the hub; without a new name it opens the Rename Space dialog seeded with the current name.", "Benennt einen Space auf dem Hub um; ohne neuen Namen öffnet es den Dialog Space umbenennen mit dem aktuellen Namen."))
+        .action_describe("shareSpace", LocalizedLabel::native("Adds or updates a member of one space on the hub by email and role; without an email it opens the Share Space dialog.", "Fügt auf dem Hub einem Space ein Mitglied per E-Mail und Rolle hinzu oder aktualisiert es; ohne E-Mail öffnet es den Dialog Space teilen."))
+        .action_describe("manageSpace", LocalizedLabel::native("Opens the shell's administration pane for one space, where the hub decides what the user may manage.", "Öffnet den Verwaltungsbereich der Shell für einen Space, in dem der Hub entscheidet, was der Nutzer verwalten darf."))
+        .action_describe("copyInviteLink", LocalizedLabel::native("Asks the hub to mint an invite for one space and copies the redeemable link to the clipboard.", "Lässt den Hub eine Einladung für einen Space erzeugen und kopiert den einlösbaren Link in die Zwischenablage."))
+        .action_describe("promoteToHubSpace", LocalizedLabel::native("Promotes a temporary local studio to a shared space on the hub under the given name, so it can be shared and edited together.", "Stuft ein temporäres lokales Studio unter dem angegebenen Namen zu einem geteilten Space auf dem Hub hoch, damit es geteilt und gemeinsam bearbeitet werden kann."))
+        .action_describe("persistLocally", LocalizedLabel::native("Saves a temporary local studio into a folder on this machine so it survives restarts; it stays local-only and unshared.", "Speichert ein temporäres lokales Studio in einen Ordner auf diesem Rechner, damit es Neustarts übersteht; es bleibt lokal und ungeteilt."))
+        .action_audience("applyDirectoryEventPage", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_audience("presenceHeartbeat", semio_framework_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️HomeManifest

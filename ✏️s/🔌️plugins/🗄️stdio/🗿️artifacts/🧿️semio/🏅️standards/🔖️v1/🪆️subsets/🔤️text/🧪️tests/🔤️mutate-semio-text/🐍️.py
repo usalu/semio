@@ -395,22 +395,6 @@ def doc_string(ctx: Context) -> str:
     raise AssertionError("scenario %s carries no doc string" % ctx.scenario["id"])
 
 
-def step_assets(ctx: Context) -> list:
-    """🧫️ Every `asset://` URI the scenario's steps name, in step order. The feature is the single
-    place the specification-vector paths are written down; both adapters read them from here."""
-    found = []
-    for step in ctx.scenario["steps"]:
-        text = step.get("text", "")
-        at = text.find("asset://")
-        while at != -1:
-            end = at
-            while end < len(text) and not text[end].isspace():
-                end += 1
-            found.append(text[at:end])
-            at = text.find("asset://", end)
-    return found
-
-
 def note(ctx: Context) -> dict:
     """📰️ The real article, read through this implementation's own DSL parser."""
     return parse_dsl(ctx.fixture_bytes(ARTICLE_DSL).decode("utf-8"))
@@ -448,7 +432,7 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
     is a THIRD statement of what the verb means, independent of both implementations."""
-    before_uri, mutation_uri, after_uri = step_assets(ctx)[:3]
+    before_uri, mutation_uri, after_uri = ctx.step_fixture_uris()[:3]
     before = fixture_json(ctx, before_uri)
     after = fixture_json(ctx, after_uri)
     applied = apply_mutation(before, fixture_json(ctx, mutation_uri))

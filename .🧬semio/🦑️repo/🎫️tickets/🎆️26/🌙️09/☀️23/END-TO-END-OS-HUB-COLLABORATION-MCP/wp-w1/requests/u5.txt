@@ -46,3 +46,14 @@ Needs: the SPACE guest rebuilt + describe + restage (only space emits tables). N
 `-p semio-framework-ui-contract -p semio-framework-ui-runtime -p semio-framework-ui (wgpu-engine)
 -p semio-framework-plugin -p semio-s-artifact-space-home -p semio-s-artifact-space-space -p semio-s-plugin-space
 -p semio-framework-os-renderer-wgpu`; SDK table laws 5/5, Home window tests 21/21, Space window tests 7/7.
+
+2026-09-25 23:5x (session 12) — SPACE guest rebuild + restage (no describe change needed; descriptors unaffected). Live Home with
+138 hub spaces faulted `s-home-main [reconciler] Credits { nodes: 53, items: 4098 > max_items 4097 }` on the restage4 guest
+(windowed table fixed the 128-NODE fault, 33 spaces were clean; ≥ ~46 Home rows overdraw the surface ITEM budget). Fix:
+`semio-framework-ui-runtime` `surface_subtree_items` (reconciler census + allocation bound, law vs the real reconciler) +
+SDK `semio-framework-plugin` `TreeWindows` item ledger (`TREE_WINDOW_BODY_ITEM_BUDGET`): a window ends early instead of
+faulting. Also Home/Space-index cells localized (kind/visibility words, "Updated" as a UTC minute en/de, space index
+columns/actions/create button en+de). Crates: semio-framework-ui-runtime, semio-framework-plugin (every guest links it — no
+ABI/WIT/codec/pack change, mixed guests fine), semio-s-artifact-space-space, semio-s-artifact-space-home, semio-s-plugin-space.
+Needed now: only the space guest (`semio-s-plugin-space`) rebuilt + restaged for U5's live 138-space proof. Native checks green
+(wp-u5/generated/u5-s12-*.txt).

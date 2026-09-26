@@ -20,6 +20,13 @@ export const INVITE_LINK_FRAGMENT_V1 = "#semio-invite=";
 export function inviteRedeemPathV1(token: string): string {
   return `/directory/invites/${encodeURIComponent(parseInviteTokenV1(token))}/redeem`;
 }
+
+/** 📮️ Whether a `POST /directory/commands` answer carries a receipt: any 2xx, exactly as the Rust directory client
+ * (`📇️directory/🔌️client`) reads it. The hub answers an accepted command `202 Accepted` with its canonical receipt, and
+ * the receipt parser (bound to the sealed request) is what proves the answer; every other status is a refusal. */
+export function directoryCommandAnsweredV1(status: number): boolean {
+  return status >= 200 && status < 300;
+}
 //#endregion 🔖️Routes
 
 //#region 🔖️Rows

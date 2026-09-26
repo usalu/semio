@@ -5443,12 +5443,13 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
     fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
         match self.pool.try_submit(semio_framework_async::Lane::UserVisible, job) {
             Ok(()) => {}
-            Err(error) => match error.kind() {
-                semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < ARTIFACT_RUNNER_RETRY_LIMIT => {
-                    *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
+            Err(error) => match worker_submit_retry_attempt(error.kind(), attempt, ARTIFACT_RUNNER_RETRY_LIMIT) {
+                Some(next) => {
+                    *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), next));
                     self.arm_retry();
                 }
-                kind => {
+                None => {
+                    let kind = error.kind();
                     let job = error.into_job();
                     if let Some(ready) = self.ready.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
                         drop(job);

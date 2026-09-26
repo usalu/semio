@@ -109,6 +109,7 @@ import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSu
 import type { RetainedUiNodeRecord } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
 import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
 import { hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
+import { createCommandStallWatchV1, type CommandStallWatchV1 } from "./⏱️command-stall/🟦️.ts";
 import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
 import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, leftoverShellInvocationFrames as wireLeftoverShellInvocationFrames, shellFrameBytes as wireShellFrameBytes, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_MAGIC, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireDownloadMediaExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { type PluginManifest, type ViewModel } from "../🐚️Shell/🟦️.tsx";
@@ -1329,6 +1330,14 @@ export function serializeCommandIngressForActor<T>(actorId: string, run: () => P
   return serializePerActor(`command-ingress:${actorId}`, run, lane, order);
 }
 
+/** ⏱️ The one stall watch over every program's command lane (`⏱️command-stall`): a command turn that holds its lane past the
+ * contract's bound is reported to the shell, which lets the person cancel it and so release the lane. */
+export const commandStallWatch: CommandStallWatchV1 = createCommandStallWatchV1({
+  now: () => performance.now(),
+  setTimer: (run, delayMs) => setTimeout(run, delayMs),
+  clearTimer: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+});
+
 /** 🎚 Catalog mesh registration is Background so reserved/user verbs stay Interactive and are not starved. */
 export function commandIngressLaneForActionV1(actionId: string): "Interactive" | "Background" {
   return actionId === "registerBrushMesh" ? "Background" : "Interactive";
@@ -2324,12 +2333,16 @@ export function forgetPluginInstanceRetirementV1(pluginId: string, instanceId: n
   retiredPluginInstances.delete(`${pluginId}#${instanceId}`);
 }
 
-/** 🪦️ Whether this failure means "the instance it addressed is retired", covering both throwing gates
- * and the two channel terminals `AppChannelClient` itself raises once its queue is closed. */
+/** 🪦️ Whether this failure means "the instance it addressed is retired", covering both throwing gates, the two
+ * channel terminals `AppChannelClient` itself raises once its queue is closed, and the shard client's
+ * `actor-activation.revoked` — the activation a turn captured was closed under it (a session switch sealing the
+ * instance, a hot swap, a suspend). Such a turn is cancelled WITH its activation: a tree-window refresh that crossed a
+ * `/spaces/<id>` load used to surface as `tree window refresh failed … actor-activation.revoked` (ticket 26/09/23 U5,
+ * C10 relay). */
 export function isPluginInstanceRetiredV1(error: unknown): boolean {
   if (typeof error === "object" && error !== null && (error as Record<string, unknown>)[PLUGIN_INSTANCE_RETIRED] === true) return true;
   const message = error instanceof Error ? error.message : String(error ?? "");
-  return message.includes("app-channel.disposed") || message.includes("app-channel.closed") || message.includes("plugin-handle.closed");
+  return message.includes("app-channel.disposed") || message.includes("app-channel.closed") || message.includes("plugin-handle.closed") || message.includes("actor-activation.revoked");
 }
 //#endregion 🪦️InstanceRetirement
 
@@ -3015,7 +3028,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const activation = shardClient.captureActorActivation(actorId);
       const documentPort = documentBindings.get(instanceId)?.port;
       const inspected = inspectEncodedAppCommand(events);
-      const result = await withTypedOperationCall(actorId, `command#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async (): Promise<WireTurnResult> => {
+      const result = await withTypedOperationCall(actorId, `command#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, () => commandStallWatch.watch({ actorId, programId: pluginId, commandId: inspected.actionId }, async (): Promise<WireTurnResult> => {
         activation.assertActive();
         const results: WireTurnResult[] = [];
         let acknowledgements: readonly ShardEventEnvelope[] = [];
@@ -3077,7 +3090,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         const settled = await settleAcknowledgedPluginTurns(actorId, results, acknowledgements, (turn) => acceptUiPatches(instanceId, turn), activation, call);
         await commitReservedToolSpawnsWhileSerialized(instanceId, actorId, settled.effects);
         return settled;
-      }, inspected.lane, dispatch?.order));
+      }), inspected.lane, dispatch?.order));
       requireActorId(instanceId);
       activation.assertActive();
       const outFrames: Uint8Array[] = [];
@@ -3274,16 +3287,19 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     const activation = shardClient.captureActorActivation(actorId);
     const documentPort = documentBindings.get(instanceId)?.port;
     eventSeq += 1;
-    const surfaces = uiSurfaceByInstance.get(instanceId);
     const requestedSurfaceIds = new Set(events.map((event) => retainedSurfaceId(instanceId, (event.payload as { readonly surface: { readonly surface: string } }).surface.surface)));
-    const missingSurfaceIds = new Set([...requestedSurfaceIds].filter((surfaceId) => {
-      const surface = surfaces?.get(surfaceId);
-      return !surface || surface.view.root === null;
-    }));
-    const closeTurn = hopTrace.open("refresh.turn", { instanceId, events: events.length, requested: requestedSurfaceIds.size, missing: missingSurfaceIds.size });
+    const missingAtSubmission = (): ReadonlySet<string> => {
+      const surfaces = uiSurfaceByInstance.get(instanceId);
+      return new Set([...requestedSurfaceIds].filter((surfaceId) => {
+        const surface = surfaces?.get(surfaceId);
+        return !surface || surface.view.root === null;
+      }));
+    };
+    const closeTurn = hopTrace.open("refresh.turn", { instanceId, events: events.length, requested: requestedSurfaceIds.size });
     const result = await (async () => {
       try {
         return await withTypedOperationCall(actorId, `refresh-ui#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
+          const missingSurfaceIds = missingAtSubmission();
           const settled = await settlePluginTurn(
             actorId,
             await submitTurn(
@@ -3930,14 +3946,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     loadAppDocumentArchive: (instanceId, archive) => requireChannel(instanceId).loadDocumentArchive(archive),
     readWindowConfigPacks: (instanceId) => requireChannel(instanceId).readWindowConfigs(),
     loadWindowConfigPack: (instanceId, entry) => requireChannel(instanceId).loadWindowConfig(entry),
-    // 🚧️ Same channel-v12 retirement as `attachBackbone`/`detachBackbone` above: the old
-    // `AppFrame::Ephemeral` poll was the literal empty-batch drain design-abi.md §4 names as
-    // retired outright — `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s native twin (`ephemeral_snapshot`) stubs the
-    // identical call with an explicit error for the same reason. `Ephemeral` frames still arrive
-    // unsolicited on every real turn outcome (`plugin_exchange` appends one to every batch,
-    // contract-freeze §C7.6) — a future packet that wants an on-demand snapshot here should cache the
-    // most recently observed `Ephemeral` frame per instance rather than resurrecting the retired poll.
-    ephemeralSnapshot: undefined,
+    ephemeralSnapshot: async (instanceId) => requireChannel(instanceId).ephemeral(),
     // 👥️ Contract-freeze §C7.6 — the ONLY plugin ingress for peers. `AppChannelClient.pushPresence`
     // encodes each `ArtifactPresencePeer` and sends the `AppCommand::Presence` frame; a plain `Done`
     // reply, nothing further decoded here.

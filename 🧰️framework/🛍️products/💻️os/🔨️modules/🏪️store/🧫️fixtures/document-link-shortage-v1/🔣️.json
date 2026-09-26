@@ -1,0 +1,513 @@
+{
+  "schema": "semio.store.document-link-shortage/v1",
+  "policy": {
+    "reconnectMinMs": 500,
+    "reconnectMaxMs": 30000,
+    "shortageBoundMs": 60000
+  },
+  "accessRefusedStatuses": [
+    401,
+    403,
+    404,
+    410
+  ],
+  "texts": {
+    "reconnecting": {
+      "en": "Connection lost. Your edits are kept and sent when the hub is reachable again.",
+      "de": "Verbindung unterbrochen. Ihre Änderungen bleiben erhalten und werden gesendet, sobald der Hub wieder erreichbar ist."
+    },
+    "link-expired": {
+      "en": "The connection was lost for too long. Reconnect to keep editing this document.",
+      "de": "Die Verbindung war zu lange unterbrochen. Verbinden Sie sich erneut, um dieses Dokument weiter zu bearbeiten."
+    },
+    "access-revoked": {
+      "en": "Your access to this document was removed.",
+      "de": "Ihr Zugriff auf dieses Dokument wurde entfernt."
+    }
+  },
+  "vectors": [
+    {
+      "id": "a-short-shortage-resumes-in-place",
+      "openedAtMs": 0,
+      "steps": [
+        {
+          "event": {
+            "kind": "restored",
+            "nowMs": 200
+          },
+          "expect": {
+            "state": {
+              "kind": "linked"
+            },
+            "status": "linked",
+            "admitsLocalEdits": true
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 10000
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 500,
+              "retryAtMs": 10500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 70000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 10500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 1000,
+              "retryAtMs": 11500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 70000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 11500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 2000,
+              "retryAtMs": 13500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 70000
+          }
+        },
+        {
+          "event": {
+            "kind": "tick",
+            "nowMs": 20000
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 2000,
+              "retryAtMs": 13500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 70000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 20000
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 4000,
+              "retryAtMs": 24000
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 70000
+          }
+        },
+        {
+          "event": {
+            "kind": "restored",
+            "nowMs": 24100
+          },
+          "expect": {
+            "state": {
+              "kind": "linked"
+            },
+            "status": "linked",
+            "admitsLocalEdits": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-backoff-doubles-to-its-cap-and-an-unlinked-open-expires",
+      "openedAtMs": 0,
+      "steps": [
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 0
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 500,
+              "retryAtMs": 500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 60000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 1000,
+              "retryAtMs": 1500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 60000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 1500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 2000,
+              "retryAtMs": 3500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 60000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 3500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 4000,
+              "retryAtMs": 7500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 60000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 7500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 8000,
+              "retryAtMs": 15500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 60000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 15500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 16000,
+              "retryAtMs": 31500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 60000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 31500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 30000,
+              "retryAtMs": 61500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 60000
+          }
+        },
+        {
+          "event": {
+            "kind": "tick",
+            "nowMs": 59999
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 30000,
+              "retryAtMs": 61500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 60000
+          }
+        },
+        {
+          "event": {
+            "kind": "tick",
+            "nowMs": 60000
+          },
+          "expect": {
+            "state": {
+              "kind": "expired",
+              "sinceMs": 0,
+              "atMs": 60000
+            },
+            "status": "link-expired",
+            "admitsLocalEdits": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-long-offline-expires-and-never-relinks",
+      "openedAtMs": 1000,
+      "steps": [
+        {
+          "event": {
+            "kind": "restored",
+            "nowMs": 1500
+          },
+          "expect": {
+            "state": {
+              "kind": "linked"
+            },
+            "status": "linked",
+            "admitsLocalEdits": true
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 5000
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 5000,
+              "backoffMs": 500,
+              "retryAtMs": 5500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 65000
+          }
+        },
+        {
+          "event": {
+            "kind": "tick",
+            "nowMs": 64999
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 5000,
+              "backoffMs": 500,
+              "retryAtMs": 5500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 65000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 65000
+          },
+          "expect": {
+            "state": {
+              "kind": "expired",
+              "sinceMs": 5000,
+              "atMs": 65000
+            },
+            "status": "link-expired",
+            "admitsLocalEdits": false
+          }
+        },
+        {
+          "event": {
+            "kind": "restored",
+            "nowMs": 66000
+          },
+          "expect": {
+            "state": {
+              "kind": "expired",
+              "sinceMs": 5000,
+              "atMs": 65000
+            },
+            "status": "link-expired",
+            "admitsLocalEdits": false
+          }
+        },
+        {
+          "event": {
+            "kind": "tick",
+            "nowMs": 70000
+          },
+          "expect": {
+            "state": {
+              "kind": "expired",
+              "sinceMs": 5000,
+              "atMs": 65000
+            },
+            "status": "link-expired",
+            "admitsLocalEdits": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-hub-that-withdraws-access-revokes",
+      "openedAtMs": 0,
+      "steps": [
+        {
+          "event": {
+            "kind": "restored",
+            "nowMs": 100
+          },
+          "expect": {
+            "state": {
+              "kind": "linked"
+            },
+            "status": "linked",
+            "admitsLocalEdits": true
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 1000
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 1000,
+              "backoffMs": 500,
+              "retryAtMs": 1500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 61000
+          }
+        },
+        {
+          "event": {
+            "kind": "refused",
+            "nowMs": 1500
+          },
+          "expect": {
+            "state": {
+              "kind": "revoked",
+              "atMs": 1500
+            },
+            "status": "access-revoked",
+            "admitsLocalEdits": false
+          }
+        },
+        {
+          "event": {
+            "kind": "restored",
+            "nowMs": 2000
+          },
+          "expect": {
+            "state": {
+              "kind": "revoked",
+              "atMs": 1500
+            },
+            "status": "access-revoked",
+            "admitsLocalEdits": false
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 2500
+          },
+          "expect": {
+            "state": {
+              "kind": "revoked",
+              "atMs": 1500
+            },
+            "status": "access-revoked",
+            "admitsLocalEdits": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-refusal-while-linked-revokes-at-once",
+      "openedAtMs": 0,
+      "steps": [
+        {
+          "event": {
+            "kind": "restored",
+            "nowMs": 5
+          },
+          "expect": {
+            "state": {
+              "kind": "linked"
+            },
+            "status": "linked",
+            "admitsLocalEdits": true
+          }
+        },
+        {
+          "event": {
+            "kind": "refused",
+            "nowMs": 10
+          },
+          "expect": {
+            "state": {
+              "kind": "revoked",
+              "atMs": 10
+            },
+            "status": "access-revoked",
+            "admitsLocalEdits": false
+          }
+        }
+      ]
+    }
+  ]
+}

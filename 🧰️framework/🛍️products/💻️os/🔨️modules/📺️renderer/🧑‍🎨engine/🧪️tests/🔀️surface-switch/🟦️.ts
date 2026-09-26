@@ -32,6 +32,8 @@ import {
   createSealedInstanceLedgerV1,
   createSessionAppSwitchGateV1,
   createSessionWorkLedgerV1,
+  createShellSessionLaneV1,
+  shellRouteIsOverlayV1,
   quiesceSessionWorkV1,
   resolveBootPrimaryAppV1,
   roleSwitchTargetV1,
@@ -50,6 +52,8 @@ import {
   type SessionWorkKindV1,
 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
 import fixtureJson from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json";
+import sessionLaneFixtureJson from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🧭️session-lane/🔣️.json";
+import pLimit from "p-limit";
 
 type SurfaceSwitchFixture = {
   readonly note: string;
@@ -697,5 +701,94 @@ export async function testSurfaceSwitch(): Promise<void> {
 describe("surface switch", () => {
   it("resolves the boot role, gates the role group, retires the predecessor on every switch, and keeps both axes on the keyboard", async () => {
     await testSurfaceSwitch();
+  });
+});
+
+type SessionLaneStepV1 = { readonly route?: string; readonly job?: string; readonly finish?: string; readonly fail?: string };
+type SessionLaneOutcomeV1 = "resolved" | "rejected";
+type SessionLaneFixtureV1 = {
+  readonly note: string;
+  readonly scenarios: readonly { readonly id: string; readonly steps: readonly SessionLaneStepV1[]; readonly expected: { readonly started: readonly string[]; readonly requests: readonly SessionLaneOutcomeV1[] } }[];
+  readonly routes: readonly { readonly uri: string; readonly overlay: boolean }[];
+};
+type SessionLaneUnderTestV1 = { readonly route: (uri: string) => Promise<void>; readonly run: (job: () => Promise<void>) => Promise<void>; readonly idle: () => boolean };
+
+/** 🧮️ The third-party oracle for {@link createShellSessionLaneV1}: `p-limit` with concurrency 1 is the serial
+ * executor, and only the end-of-lane route absorption is modelled on top of it. */
+function pLimitSessionLaneV1(applyRoute: (uri: string) => Promise<void>): SessionLaneUnderTestV1 {
+  const limit = pLimit(1);
+  const lane: { open: { uri: string; done: Promise<void> } | null } = { open: null };
+  return {
+    route: (uri) => {
+      if (lane.open !== null) {
+        lane.open.uri = uri;
+        return lane.open.done;
+      }
+      const entry = { uri, done: Promise.resolve() };
+      lane.open = entry;
+      entry.done = limit(() => {
+        if (lane.open === entry) lane.open = null;
+        return applyRoute(entry.uri);
+      });
+      return entry.done;
+    },
+    run: (job) => {
+      lane.open = null;
+      return limit(job);
+    },
+    idle: () => limit.activeCount === 0 && limit.pendingCount === 0,
+  };
+}
+
+/** 🎬️ Plays one fixture scenario against a lane: every application blocks until a `finish`/`fail` step settles it. */
+async function driveSessionLaneScenarioV1(make: (applyRoute: (uri: string) => Promise<void>) => SessionLaneUnderTestV1, steps: readonly SessionLaneStepV1[]): Promise<{ readonly started: readonly string[]; readonly requests: readonly SessionLaneOutcomeV1[]; readonly idle: boolean }> {
+  const started: string[] = [];
+  const state: { running: { readonly name: string; readonly resolve: () => void; readonly reject: (error: Error) => void } | null } = { running: null };
+  const application = (name: string): Promise<void> => new Promise<void>((resolve, reject) => {
+    started.push(name);
+    state.running = { name, resolve, reject };
+  });
+  const lane = make(application);
+  const outcomes: Promise<SessionLaneOutcomeV1>[] = [];
+  const outcome = (request: Promise<void>): Promise<SessionLaneOutcomeV1> => request.then(() => "resolved" as const, () => "rejected" as const);
+  for (const step of steps) {
+    if (step.route !== undefined) outcomes.push(outcome(lane.route(step.route)));
+    else if (step.job !== undefined) {
+      const name = step.job;
+      outcomes.push(outcome(lane.run(() => application(name))));
+    } else {
+      const name = step.finish ?? step.fail;
+      const running = state.running;
+      assert(running !== null && running.name === name, `step settles ${name}, but ${running?.name ?? "nothing"} is running`);
+      state.running = null;
+      if (step.finish !== undefined) running.resolve();
+      else running.reject(new Error(`${name} failed`));
+    }
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  return { started, requests: await Promise.all(outcomes), idle: lane.idle() };
+}
+
+describe("shell session lane", () => {
+  it("applies every route in request order, coalesces a waiting burst to the latest, keeps a re-establishment in its place and survives failures — equal to the p-limit oracle", async () => {
+    const fixture = sessionLaneFixtureJson as SessionLaneFixtureV1;
+    assert(fixture.scenarios.length >= 6);
+    for (const scenario of fixture.scenarios) {
+      const shipped = await driveSessionLaneScenarioV1((applyRoute) => createShellSessionLaneV1<string>(applyRoute), scenario.steps);
+      const oracle = await driveSessionLaneScenarioV1(pLimitSessionLaneV1, scenario.steps);
+      assert.deepEqual({ started: shipped.started, requests: shipped.requests }, scenario.expected, `${scenario.id}: shipped lane`);
+      assert.deepEqual({ started: oracle.started, requests: oracle.requests }, scenario.expected, `${scenario.id}: p-limit oracle`);
+      assert.equal(shipped.idle, true, `${scenario.id}: the shipped lane drains`);
+      assert.equal(oracle.idle, true, `${scenario.id}: the oracle drains`);
+    }
+  });
+
+  it("opens the hub overlay on the spot and queues only session routes — equal to a WHATWG URL oracle", () => {
+    const fixture = sessionLaneFixtureJson as SessionLaneFixtureV1;
+    assert(fixture.routes.length >= 9);
+    for (const row of fixture.routes) {
+      assert.equal(shellRouteIsOverlayV1(row.uri), row.overlay, row.uri);
+      assert.equal(new URL(row.uri, "http://127.0.0.1").pathname === "/hub", row.overlay, `${row.uri}: URL oracle`);
+    }
   });
 });

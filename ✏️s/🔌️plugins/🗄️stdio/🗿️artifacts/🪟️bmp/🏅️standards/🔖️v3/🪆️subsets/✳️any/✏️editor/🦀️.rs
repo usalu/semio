@@ -111,6 +111,10 @@ impl ArtifactOwnedToolJobFactory for BmpEditorExampleFactory {
 pub struct BmpEditor;
 
 impl ArtifactEditor for BmpEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = BmpSnapshot;
     type Mutation = BmpMutation;
     type Config = NoConfig;

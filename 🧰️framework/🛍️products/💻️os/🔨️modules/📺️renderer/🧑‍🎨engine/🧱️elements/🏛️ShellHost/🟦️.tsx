@@ -7,7 +7,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🗨️dialog-origin/🟦️.ts";
+import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectOwnerIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🗨️dialog-origin/🟦️.ts";
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { createArtifactCreationCatalogMountV1, runArtifactCreationReadyOpeningV1, type ArtifactCreationCatalogMountV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
@@ -16,6 +16,7 @@ import { directorySessionAuthorityIsCurrentV1, startDirectorySessionRefreshV1, t
 import { directoryAdministrationCommandAllowedV1 } from "../../../../📇️directory/🧬️schema/🟦️.ts";
 import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AgentCredentialInstallUnavailableV1, parseAgentCredentialInstallReceiptV1 } from "../../../../📇️directory/🤖️delegations/🟦️.ts";
 import { HubSessionPortClientV1 } from "../../../../📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts";
+import { LOCAL_HUB_SESSION_ENDPOINT_V1, parseLocalHubSessionAnswerV1 } from "../../../../📇️directory/🎫️local-session/🟦️.ts";
 import { readHubSessionCapabilityV1, writeHubSessionCapabilityV1, type HubConnectionStorageV1, type HubSessionCapabilityV1 } from "../../../../📇️directory/🔐️sign-in/🟦️.ts";
 import { SessionAuthorityNotice } from "../../../../📇️directory/🪪️session-refresh/🪪️notice/🟦️.tsx";
 import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "./🗨️dialog-origin/🎥️tutorial/🟦️.ts";
@@ -34,6 +35,7 @@ import React, {
   useReducer,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import {
   type ActionDescriptor,
@@ -213,9 +215,9 @@ import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type Mu
 import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
 import { SpaceDirectoryHistoryV1 } from "./📇️space-directory/🟦️.ts";
 import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../👕️canvas-presence/🟦️.ts";
-import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, quiesceSessionWorkV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
+import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, createShellSessionLaneV1, quiesceSessionWorkV1, SHELL_HUB_ROUTE, shellRouteIsOverlayV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
-import { focusedProgramKeyV1, focusedProgramV1, programHistoryKeyV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
+import { focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programKeyedEntriesV1, withProgramEntriesV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
 import { causalOrderKeyV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, inputAppliedV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
 
 
@@ -396,7 +398,7 @@ import {
   type WindowTemplateDropPayload,
   writeStoredIntroductionSeen,
 } from "@semio-tech/ui-react";
-import { canonicalUiDriver, canonicalUiTheme, commitUiPreferencesConfigMutation, readUiPreferences, resolveUiPreferences, subscribeUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
+import { canonicalUiDriver, canonicalUiTheme, commitUiPreferenceOnLaneV1, foldUiPreferenceLanePageV1, readUiPreferenceLane, readUiPreferences, resolveUiPreferences, subscribeUiPreferences, UI_PREFERENCES_LANE_SCHEMA_V1, uiPreferenceEnvelopeTextV1, uiPreferenceLaneKeyV1 } from "../../🎚️UiPreferences/🟦️.ts";
 import {
   AppCatalogueContext,
   InterpretedUiNode,
@@ -547,6 +549,7 @@ import {
   type PanelTreeConfigCacheV1,
   applyBrowserActorUiPatchesV1,
   browserActorPanelKeysV1,
+  hubCommandRejectionReasonKeyV1,
   type BrowserActorPanelHostV1,
   type TreeWindowHostV1,
   type TreeWindowSchedulerV1,
@@ -620,6 +623,7 @@ import {
   synthesizeLocalizedLabel,
   toolIdFromPanelTabId,
   uiIntentToActionDescriptor,
+  actionBindingToActionDescriptor,
   type SyncPillState,
   viewerReadOnlyNoticeText,
   useUIHistory,
@@ -641,7 +645,7 @@ import {
   type TutorialUiBridgeContext,
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
-import { toolRunPanelReveal } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
+import { toolRunPanelReveal, toolRunPanelTasksV1, type ToolRunPanelControlV1 } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
 import { createContributionsPublisher, type ContributionsOperatorScope, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -679,13 +683,14 @@ import { publishBrowserActorHostEffectsV1 } from "../../../../🔌️plugin/🌐
 import { InferencePortOpeningMailboxV1 } from "../../../../💡️inference/🚪️opening/🟦️.ts";
 import { isShardLostError } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { hopTrace, type HopTraceDetail } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
-import { type WindowFault, type WindowFaultClass, windowFaultFromError } from "./🩺️fault/🟦️.ts";
+import { liveInstanceWindowFaultV1, type WindowFault, type WindowFaultClass, windowFaultFromError } from "./🩺️fault/🟦️.ts";
+import { createShellRouteLedgerV1 } from "./🧭️route-ledger/🟦️.ts";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT, type HubPluginSourceV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
-import { hubCatalogClosureV1, hubCatalogOwnerOfDialectV1, hubProgramIdV1, parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
-import type { TrustedPluginModuleIndexEntryV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import { hubCatalogClosureV1, hubCatalogOnlyPluginsV1, hubCatalogOwnerOfDialectV1, hubProgramIdV1, parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
+import type { TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
 import pluginModuleStoreWorkerUrl from "../../../../🔌️plugin/📇️registry/🌎️hub-source/👷️service-worker/🟦️.ts?worker&url";
 import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🪪️host-bootstrap/🟦️.tsx";
 import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🌱️artifact-creation/🟦️.tsx";
@@ -707,8 +712,10 @@ import type { BridgeInstanceRef } from "../../../../🌉️mcp/🧵️bridge/�
 import type { ReduceResult, ShellCommand } from "../../../../🖥️shell/🟦️.ts";
 import { AgentChatPanel } from "../💬️AgentChatPanel/🟦️.tsx";
 import { AgentApprovalsNotice, focusAgentApprovalV1 } from "../🤖️AgentApprovals/🟦️.tsx";
-import { TaskManagerWindow, installTasksV1, spawnedJobTasksV1, toolCallTasksV1, type TaskManagerSourcesV1, type TaskManagerTaskV1 } from "../🧵️TaskManager/🟦️.tsx";
-import { cancelSpawnedJobV1, pluginRuntimeActivationRegistryV1, registerProgramExtensionV1, spawnedJobsSnapshotV1, subscribeSpawnedJobsV1, type SpawnedJobRowV1 } from "../🔌️PluginRuntime/🟦️.tsx";
+import { AgentPresence } from "../🚦️AgentPresence/🟦️.tsx";
+import { TaskManagerWindow, installTasksV1, spawnedJobTasksV1, taskManagerToolRunIdV1, toolCallTasksV1, toolRunTasksV1, type TaskManagerSourcesV1, type TaskManagerTaskV1 } from "../🧵️TaskManager/🟦️.tsx";
+import { cancelSpawnedJobV1, commandStallWatch, pluginRuntimeActivationRegistryV1, registerProgramExtensionV1, spawnedJobsSnapshotV1, subscribeSpawnedJobsV1, type SpawnedJobRowV1 } from "../🔌️PluginRuntime/🟦️.tsx";
+import { commandStallBandTextV1, commandStallCancelTextV1, commandStallHeldSecondsV1, type CommandStallV1 } from "../🔌️PluginRuntime/⏱️command-stall/🟦️.ts";
 import { UIFind, UIFindProvider, UISearch, type UISearchItem } from "../🔎️ShellSearch/🟦️.tsx";
 import { UTILITY_CATEGORY_ICON_ID } from "../🎛️UtilityTree/🟦️.tsx";
 import { coerceWireBytes } from "../🔌️PluginRuntime/🟦️.tsx";
@@ -754,14 +761,6 @@ function requiredHostPanelLeafId(app: AppDefinition | undefined): string {
   return panelTabKindId(leaf.kind);
 }
 
-/** 🔗️ The shell's hub connection surface. It is an OVERLAY route: `applyShellUri` opens the workspace
- * over whatever is already open and returns without touching the session, precisely so the app stays
- * usable while no hub is reachable. `parseShellRoute` (owned by `ShellHelpers`) has no `/hub` concept
- * and classifies it `notFound`, so every consumer of that classification must exempt this one path or
- * it undoes the overlay contract — which is what tore the host app's canvas down the moment anyone
- * opened the hub workspace to sign in (ticket 26/09/18, S3: `s-home-main` present signed out, gone
- * after the sign-in, canvas reading `Route not found: /hub`). */
-const SHELL_HUB_ROUTE = "/hub";
 //#endregion 🔖️BuiltNodeReconciler
 
 //#region FrameworkOsShell
@@ -1784,6 +1783,23 @@ function resolveShellScopeStorage(ephemeral: boolean, storageNamespace: string |
  * function, not a second invented bound — see this packet's `📓️terra-web-shellhost-report.md`
  * `## lease-requests` for the ask to export it from `PluginRuntime` instead, at which point this
  * function should be deleted in favor of importing it directly. */
+/** ⏱️ One stall band line: the held program as the person knows it (its spawned window's breadcrumb, else its first app's)
+ * and the held command by its own manifest label, in the person's language, with the seconds it has held its lane. */
+function commandStallLineV1(stall: CommandStallV1, programs: readonly LoadedProgramState[], spawnedApps: readonly SpawnedAppEntry[], terminology: string, locale: string, nowMs: number): string {
+  const instanceId = Number(stall.actorId.slice(stall.actorId.lastIndexOf("#") + 1));
+  const spawned = spawnedApps.find((entry) => entry.pluginId === stall.programId && entry.instanceId === instanceId);
+  const program = programs.find((entry) => entry.handle.pluginId === stall.programId);
+  const app = program?.manifest.apps.find((candidate) => candidate.id === spawned?.appId) ?? program?.manifest.apps[0];
+  const programLabel = spawned ? spawned.breadcrumb.join(" · ") : app ? app.breadcrumb.join(" · ") : stall.programId;
+  const actions = (program?.manifest.apps ?? []).flatMap((candidate) => [...(candidate.actions ?? []), ...candidate.windowKinds.flatMap((kind) => kind.actions ?? [])]);
+  const action = stall.commandId === null ? undefined : actions.find((candidate) => candidate.id === stall.commandId);
+  const commandLabel = stall.commandId === null ? null : action ? resolveManifestLabel(action.label, terminology, locale) : stall.commandId;
+  return commandStallBandTextV1(programLabel, commandLabel, commandStallHeldSecondsV1(stall, nowMs), locale);
+}
+
+/** 🌎️ How often the shell re-reads the serving hub's catalog of plugin modules for its registry's hub half. */
+const HUB_CATALOG_REFRESH_MS = 60_000;
+
 function pluginInstallConcurrency(): number {
   const hardwareConcurrency = typeof navigator !== "undefined" && typeof navigator.hardwareConcurrency === "number" ? navigator.hardwareConcurrency : 5;
   return Math.max(1, Math.min(hardwareConcurrency - 1, 4));
@@ -2040,7 +2056,13 @@ const PENDING_WINDOW_UI_NODE: BuiltNode = pendingWindowUiNode();
  * (`FrameworkOsShellInner`)" warning (`📓️runtime-verification-2026-09-09.md` boot #3). A first load
  * happens inline — a store nobody has subscribed to yet cannot notify anyone — and every later reload
  * is queued for {@link BuiltNodeStoreCacheV1.flushPendingReloads}, which the shell calls from a layout
- * effect (post-commit, pre-paint, so nothing renders stale). */
+ * effect (post-commit, pre-paint, so nothing renders stale).
+ *
+ * 🔢️ Every reload carries the next revision of that store. A built node has no retained revision of its own,
+ * and loading each one at revision 0 left `useUiDocumentRevision` constant for the store's whole life: a
+ * window body that re-rendered in place never re-ran an effect keyed on its revision, so Home's windowed
+ * table measured its 1-row window once after a reload and served "Rows 1–1 of 6" forever (ticket 26/09/23
+ * U5 §12-1). */
 export type BuiltNodeStoreCacheV1 = {
   readonly storeFor: (key: string, node: BuiltNode) => UiDocumentStore;
   readonly flushPendingReloads: () => void;
@@ -2049,7 +2071,7 @@ export type BuiltNodeStoreCacheV1 = {
 };
 
 export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
-  const stores = new Map<string, { node: BuiltNode; readonly store: UiDocumentStore }>();
+  const stores = new Map<string, { node: BuiltNode; revision: number; readonly store: UiDocumentStore }>();
   const pending = new Map<string, BuiltNode>();
   return {
     storeFor: (key, node) => {
@@ -2057,7 +2079,7 @@ export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
       if (!existing) {
         const store = new UiDocumentStore(key);
         store.loadSnapshot(builtNodeToSnapshot(key, node));
-        stores.set(key, { node, store });
+        stores.set(key, { node, revision: 0, store });
         return store;
       }
       if (existing.node === node) pending.delete(key);
@@ -2068,7 +2090,8 @@ export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
       for (const [key, node] of pending) {
         const entry = stores.get(key);
         if (!entry) continue;
-        entry.store.loadSnapshot(builtNodeToSnapshot(key, node));
+        entry.revision += 1;
+        entry.store.loadSnapshot(builtNodeToSnapshot(key, node, entry.revision));
         entry.node = node;
       }
       pending.clear();
@@ -2085,6 +2108,29 @@ export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
 
 /** ⌨️ How many animation frames an opened program's active window has to mount before it is no longer offered focus. */
 const SPAWNED_FOCUS_FRAME_BUDGET = 240;
+
+/** 🪦️ The catch every refresh and effect lane shares: a failure that only says the instance it addressed was retired
+ * under it ({@link isPluginInstanceRetiredV1} — a session switch, a hot swap, a revoked activation) is cancelled with
+ * that instance, and every other failure stays loud. The lanes used to log both, so a load that crossed a session switch
+ * printed `typed-operation progress refresh failed … actor-activation.revoked` (ticket 26/09/23 U5, C10 relay). */
+/** 🌐️ A fresh id for a preference-lane change or its directory command request: 32 lowercase hex characters, the
+ * directory's request-id grammar. */
+function mintPreferenceLaneIdV1(): string {
+  return crypto.randomUUID().replaceAll("-", "");
+}
+
+function logUnlessRetiredV1(what: string): (error: unknown) => void {
+  return (error) => {
+    if (!isPluginInstanceRetiredV1(error)) console.error(what, error);
+  };
+}
+
+/** 🔁️ One spawned program's refresh in flight: at most one pass runs per program, and a refresh asked for while it
+ * runs only records the newest view state and that another pass is owed, which runs the moment this one lands — every
+ * caller awaits the same `done`, and a newer refresh never discards an older one's result. The owed pass is always the
+ * NEWEST `refreshSpawnedUiPass` (read through a ref), so a pass owed across a language switch renders in the new
+ * language instead of the one the first caller's closure held (ticket 26/09/23 U5 §12-2, §12-3). */
+type SpawnedRefreshSlotV1 = { viewState: ViewModel; again: boolean; done: Promise<void> };
 
 function FrameworkOsShellInner({
   pluginFilter,
@@ -2372,7 +2418,7 @@ function FrameworkOsShellInner({
   const replaceBodiesGenerationRef = useRef(0);
   const clipboardFragmentRef = useRef<unknown>(undefined);
   const appRegistrationsJsonRef = useRef<string | null>(null);
-  const spawnedRefreshGenerationRef = useRef(0);
+  const spawnedRefreshSlotsRef = useRef(new Map<string, SpawnedRefreshSlotV1>());
   const contributorInstancesRef = useRef<Map<string, number>>(new Map());
   const layoutSeedKeyRef = useRef<string | null>(null);
   const noExampleResetInstanceIdRef = useRef<number | null>(null);
@@ -2479,6 +2525,16 @@ function FrameworkOsShellInner({
   const spawnedUiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
   const spawnedLayoutSeedRef = useRef<string | null>(null);
   const openSpaceIdRef = useRef<string | null>(null);
+  /** 🪐️ The space the user is in, as state for what renders it (the hub workspace's active space): the ref is what
+   * the async route and session code reads mid-flight, this is what a render reads. The hub pane used to read the ref
+   * during render, so a space re-opened after an identity re-establishment never reached an already-open pane — it kept
+   * saying "Open a space to manage the agents that work in it." while the user was in a space (ticket 26/09/23 U5, G10
+   * S4 relay). Every write goes through {@link rememberOpenSpaceId}. */
+  const [openSpaceId, setOpenSpaceId] = useState<string | null>(null);
+  const rememberOpenSpaceId = useCallback((spaceId: string | null): void => {
+    openSpaceIdRef.current = spaceId;
+    setOpenSpaceId(spaceId);
+  }, []);
   const openInstanceIdRef = useRef<string | null>(null);
   const sessionRef = useRef<ActiveSession | null>(null);
   //#region 🪟️TreeWindows
@@ -2507,7 +2563,7 @@ function FrameworkOsShellInner({
         }
         const windowBody = live.app.windowKinds.some((kind) => kind.bodyKey === bodyKey);
         void refresh(live, windowBody ? { kind: "partial", windowBodies: [bodyKey] } : { kind: "partial", panelBodies: [bodyKey] })
-          .catch((error) => console.error("[os-shell] tree window refresh failed", error))
+          .catch(logUnlessRetiredV1("[os-shell] tree window refresh failed"))
           .finally(() => treeWindowSchedulerRef.current?.settled(bodyKey));
       },
     });
@@ -2543,18 +2599,25 @@ function FrameworkOsShellInner({
     [treeWindowHost],
   );
   //#endregion 🪟️TreeWindows
-  /** 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-A — diagnostic + defensive
-   * reentrancy guard for `applyShellUri`. Observed live (`🧪️5-a-collab-e2e-run1.txt`/`run3.txt`):
-   * `[DEBUG] shell uri apply failed Error: Maximum call stack size exceeded`, immediately followed by a
-   * `plugin instance busy` storm on the SAME session's `attachBackbone`/`refreshUi` — i.e. something
-   * re-enters `applyShellUri` synchronously before an earlier in-flight call returns, deep enough to
-   * overflow the JS stack, leaving the plugin's guest-side `InstanceGuard` stuck (a reentrant exchange
-   * call never completes its `Drop`). Still present after lane 4-I's `spaceIndexAlreadyOpen` idempotency
-   * fix, so this is a DIFFERENT reentrant path than the one that fix closed. Not yet root-caused to a
-   * single call site — the guard below turns the crash into a bounded, logged no-op and captures a full
-   * stack the next time this fires, instead of shipping another blind guess.
-   */
-  const applyShellUriDepthRef = useRef(0);
+  /** 🧭️ The route and every identity re-establishment share ONE serial lane ({@link createShellSessionLaneV1}):
+   * `applyShellUri` never re-enters (lane 5-A's measured `Maximum call stack size exceeded` came from a
+   * reentrant chain, ticket 26/08/17), and — unlike the depth guard that used to stand here — a route asked
+   * for mid-flight is applied after the flight instead of being dropped (ticket 26/09/23 U5). The lane
+   * applies the NEWEST `applyShellUri`, so a queued route sees the session the flight left behind.
+   *
+   * Only routes that REPLACE the session enter it. `/hub` (AU2's hub connection surface: sign in, browse/switch/create
+   * a space, invite, redeem) is an overlay over whatever is open — the route effect opens and closes it on the spot,
+   * so it can never wait behind a session switch (G10 S4: "Open Hub and Spaces" set `/hub` and showed nothing while a
+   * space route was still in flight). A route's document opening is started in lane order but not awaited there: a hub
+   * socket that is slow to attach must not hold every later route. */
+  const applyShellUriRef = useRef<(uri: string, preservedViewState?: ViewModel) => Promise<boolean>>(async () => false);
+  /** 🧭️ The route in effect ({@link createShellRouteLedgerV1}): the route effect never re-applies it; a replaced session
+   * ({@link establishPrimarySession}) or an explicit navigation ({@link navigateShellUri}) invalidates it. */
+  const shellRouteLedgerRef = useRef(createShellRouteLedgerV1());
+  const shellSessionLaneRef = useRef(createShellSessionLaneV1<{ readonly uri: string; readonly preservedViewState?: ViewModel }>(async (request) => {
+    const generation = shellRouteLedgerRef.current.begin();
+    shellRouteLedgerRef.current.settle(generation, request.uri, await applyShellUriRef.current(request.uri, request.preservedViewState));
+  }));
   //#region 🔖️BuiltNodeStores
   /** 🧬️ Per-window/panel `📃️UiDocumentStore`s, keyed the same way `windowUiByWindowId`/`panelUiByKey`/
    * `spawnedWindowUiByWindowId` already are — one stable store instance per key, reloaded via
@@ -2687,11 +2750,11 @@ function FrameworkOsShellInner({
     let cancelled = false;
     void (async () => {
       try {
-        const response = await fetch("/_semio/dev/local-session", { method: "GET", credentials: "same-origin", signal: AbortSignal.timeout(5_000) });
+        const response = await fetch(LOCAL_HUB_SESSION_ENDPOINT_V1, { method: "GET", credentials: "same-origin", signal: AbortSignal.timeout(5_000) });
         if (!response.ok || cancelled) return;
-        const body = (await response.json()) as { readonly token?: string; readonly userId?: string };
-        if (cancelled || typeof body.token !== "string" || typeof body.userId !== "string") return;
-        rememberHubSessionCapability({ token: body.token, userId: body.userId });
+        const session = parseLocalHubSessionAnswerV1(await response.json());
+        if (cancelled || session === null) return;
+        rememberHubSessionCapability(session);
       } catch {
         /* 🔌️ Hub down or local-only serve — stay local-first; identity refresh reconnects later. */
       }
@@ -2713,6 +2776,9 @@ function FrameworkOsShellInner({
   const [directoryBootstrapUi, setDirectoryBootstrapUi] = useState<DirectoryBootstrapUiState>({ kind: "idle" });
   const refreshDirectoryHomeRef = useRef<(session: ActiveSession) => Promise<void>>(async () => {});
   const handleDirectoryEventPageRef = useRef<(message: Extract<BackboneWorkerResponse, { readonly kind: "directory-event-page" }>) => void>(() => {});
+  /** 🌐️ The worker's preference-lane answers (a page, a recorded change, a failure), read through a ref because the worker
+   * handler is built once. */
+  const handlePreferenceLaneMessageRef = useRef<(message: Extract<BackboneWorkerResponse, { readonly kind: "preference-lane-page" | "preference-lane-recorded" | "preference-lane-failed" }>) => void>(() => {});
   const handleDirectoryBootstrapFailureRef = useRef<(message: Extract<BackboneWorkerResponse, { readonly kind: "directory-bootstrap-failed" }>) => void>(() => {});
   const uiLocaleRef = useRef(uiLocale);
   const uiTerminologyRef = useRef(uiTerminology);
@@ -3057,10 +3123,13 @@ function FrameworkOsShellInner({
   }), [captureDialogOrigin]);
   const isCurrentEffectOwner = useCallback((owner: ReturnType<typeof captureEffectOwner>): boolean => {
     const primary = shellStateRef.current.pluginRuntime.session;
-    return isCurrentDialogOrigin(owner.presentation) && owner.plugin !== null
+    return owner.plugin !== null
       && loadedPluginsRef.current.find((entry) => entry.handle.pluginId === owner.session.pluginId)?.handle === owner.plugin
-      && shellEffectSourceIsCurrentV1(owner.source, captureDialogOrigin(owner.session), primary, primary === null ? [] : parsePanelState(primary.viewState)?.spawnedApps ?? []);
-  }, [captureDialogOrigin, isCurrentDialogOrigin]);
+      && shellEffectOwnerIsCurrentV1(owner, { presentation: captureDialogOrigin(primary), mounted: captureDialogOrigin(owner.session), primary, spawned: primary === null ? [] : parsePanelState(primary.viewState)?.spawnedApps ?? [] });
+  }, [captureDialogOrigin]);
+  /** 🎭️ The owner of a pass a PROGRAM runs on its own — its operation progress and completions, its deferred effects:
+   * the primary session presents it, the program is its source ({@link shellEffectOwnerIsCurrentV1}). */
+  const captureProgramEffectOwner = useCallback((program: ActiveSession) => captureEffectOwner(program, captureDialogOrigin(shellStateRef.current.pluginRuntime.session)), [captureDialogOrigin, captureEffectOwner]);
   const closeOwnedDialog = useCallback((openingId: number): boolean => {
     if (liveDialogRef.current?.openingId !== openingId) return false;
     liveDialogRef.current = null;
@@ -3072,7 +3141,7 @@ function FrameworkOsShellInner({
     if (origin === null || !isCurrentDialogOrigin(origin) || !active?.app.dialogs?.some((entry) => entry.id === dialogId)) return null;
     return { openingId: ++dialogOpeningRef.current, dialogId, origin, ...(seedArgs === undefined ? {} : { seedArgs }) };
   }, [isCurrentDialogOrigin]);
-  type RetainedBrowserActorUiV1 = { readonly clientInstanceId: string; readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly scope: DocumentScope; readonly sessionInstanceId: number; readonly windowKindId: string; readonly store: UiDocumentStore; readonly panels: Map<string, UiDocumentStore>; readonly identity: BrowserActorUiMountedV1 | null; readonly actions: BrowserActorActionMailboxV1 };
+  type RetainedBrowserActorUiV1 = { readonly clientInstanceId: string; readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly scope: DocumentScope; readonly sessionInstanceId: number; readonly windows: Map<string, UiDocumentStore>; readonly panels: Map<string, UiDocumentStore>; readonly identity: BrowserActorUiMountedV1 | null; readonly actions: BrowserActorActionMailboxV1 };
   const browserActorUiByRuntimeKeyRef = useRef(new Map<string, RetainedBrowserActorUiV1>());
   const [browserActorUiVersion, setBrowserActorUiVersion] = useState(0);
   const retireBrowserActorUi = useCallback((runtimeKey: string, reason: string) => {
@@ -3128,9 +3197,8 @@ function FrameworkOsShellInner({
    * locale-driven re-open retires the Home instance while its refresh is in flight; measured
    * `wp-g10/generated/boot-probe-de-1.txt`). */
   const reportRefreshFault = useCallback((pluginId: string, error: unknown): void => {
-    if (isPluginInstanceRetiredV1(error)) return;
-    const fault = windowFaultFromError(error, pluginSupervisorByIdRef.current[pluginId]);
-    dispatch({ type: "SET_ERROR", value: fault.message, fault });
+    const fault = liveInstanceWindowFaultV1(error, pluginSupervisorByIdRef.current[pluginId], isPluginInstanceRetiredV1);
+    if (fault !== null) dispatch({ type: "SET_ERROR", value: fault.message, fault });
   }, []);
   /** 🔌️ The exact (possibly cache-busted `?v=`) module URL each currently-loaded plugin was acquired
    * at — `LoadedProgramState`/`PluginWasmHandle` carry no URL of their own. 🧬️ H1-react: its old
@@ -3212,31 +3280,28 @@ function FrameworkOsShellInner({
         // left to answer for.
         if (entry === undefined || entry.clientInstanceId !== message.clientInstanceId) return;
         const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
-        const windowKind = entry.session.app.windowKinds.find((candidate) => (retained === undefined ? message.patches.some((patch) => patch.surface === candidate.id) : candidate.id === retained.windowKindId));
         const refusal =
           entry.scope === undefined || entry.scope.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId
             ? "scope-mismatch"
             : expectedSurfaceId !== message.verifiedSurfaceId
               ? `verified-surface-mismatch: session ${expectedSurfaceId ?? "<none>"} offer ${message.verifiedSurfaceId}`
-              : windowKind === undefined
-                ? `unknown-window-kind: ${message.patches.map((patch) => patch.surface).join(",")}`
-                : message.instanceId !== 0
+              : message.instanceId !== 0
                   ? `instance-mismatch: ${message.instanceId}`
                   : retained !== undefined && (retained.clientInstanceId !== message.clientInstanceId || retained.activationGeneration !== message.activationGeneration || retained.verifiedSurfaceId !== message.verifiedSurfaceId || retained.sessionInstanceId !== entry.session.instanceId)
                     ? "retained-owner-mismatch"
                     : null;
         const answer = (verdicts: readonly { readonly surface: string; readonly outcome: "acknowledged" | "rejected"; readonly revision: number; readonly reason?: string }[]) =>
           worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, verdicts }) });
-        if (refusal !== null || windowKind === undefined) {
-          answer(message.patches.map((patch) => ({ surface: patch.surface, outcome: "rejected" as const, revision: 0, reason: refusal ?? "unknown-window-kind" })));
+        if (refusal !== null) {
+          answer(message.patches.map((patch) => ({ surface: patch.surface, outcome: "rejected" as const, revision: 0, reason: refusal })));
           return;
         }
-        const applied = applyBrowserActorUiPatchesV1(message.patches, windowKind.id, browserActorPanelKeysV1(entry.session.app), retained === undefined ? null : { window: retained.store, panels: retained.panels });
+        const applied = applyBrowserActorUiPatchesV1(message.patches, new Set(entry.session.app.windowKinds.map((kind) => kind.id)), browserActorPanelKeysV1(entry.session.app), retained === undefined ? null : { windows: retained.windows, panels: retained.panels });
         if (applied.stores !== null && retained === undefined) {
           const actions = new BrowserActorActionMailboxV1((request) => worker.postMessage({ wire: encodeBackboneWorkerRequest({ ...request, clientInstanceId: entry.clientInstanceId }) }));
-          browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, scope: { ...message.scope }, sessionInstanceId: entry.session.instanceId, windowKindId: windowKind.id, store: applied.stores.window, panels: applied.stores.panels, identity: null, actions });
+          browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, scope: { ...message.scope }, sessionInstanceId: entry.session.instanceId, windows: applied.stores.windows, panels: applied.stores.panels, identity: null, actions });
         }
-        if (applied.stores !== null && (retained === undefined || applied.panelsAdded)) setBrowserActorUiVersion((current) => current + 1);
+        if (applied.stores !== null && (retained === undefined || applied.surfacesAdded)) setBrowserActorUiVersion((current) => current + 1);
         answer(applied.verdicts);
         return;
       }
@@ -3246,7 +3311,7 @@ function FrameworkOsShellInner({
         const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
         if (entry === undefined || retained === undefined || !browserDocumentMountIsCurrentV1(
           { clientInstanceId: entry.clientInstanceId, scope: entry.scope, instanceId: entry.session.instanceId },
-          { clientInstanceId: retained.clientInstanceId, scope: retained.scope, instanceId: retained.sessionInstanceId, activationGeneration: retained.activationGeneration, verifiedSurfaceId: retained.verifiedSurfaceId, revision: retained.store.getRevisionSnapshot() },
+          { clientInstanceId: retained.clientInstanceId, scope: retained.scope, instanceId: retained.sessionInstanceId, activationGeneration: retained.activationGeneration, verifiedSurfaceId: retained.verifiedSurfaceId, revision: retained.windows.get(message.windowKindId)?.getRevisionSnapshot() ?? 0 },
           { ...message, revision: message.uiRevision },
         )) return;
         if (entry.creationMount !== null && !entry.creationMount.accept(message.catalogGenerationId)) {
@@ -3408,6 +3473,10 @@ function FrameworkOsShellInner({
       // 📇️ §C6 directory lane — the worker's `directory-*` responses never carry a `documentId` this
       // shell already has an `openDocumentSessionsRef` entry for (they're not artifact-sync events at
       // all), so they're routed here, ahead of the artifact-event early return below.
+      if (message.kind === "preference-lane-page" || message.kind === "preference-lane-recorded" || message.kind === "preference-lane-failed") {
+        handlePreferenceLaneMessageRef.current(message);
+        return;
+      }
       if (message.kind === "directory-event-page") {
         handleDirectoryEventPageRef.current(message);
         return;
@@ -3616,9 +3685,13 @@ function FrameworkOsShellInner({
           }
         })();
       } else if (event.kind === "commandOutcome") {
-        // 🌐️ A hub `Ack` that refused or transformed this human's batch: the worker already rolled the local edit back
-        // (or re-applied the transformed envelope), so the only honest thing left is to SAY so — silent loss otherwise.
-        if (event.outcome.kind === "rejected") showTransientNoticeRef.current(`${shellLabel("ui.conflict.hubRejected")}: ${event.outcome.reason}`, "warning", "sync.command.rejected");
+        // 🌐️ A hub `Ack` that refused or transformed this human's batch: the worker already discarded the refused edit
+        // (rollback, or a rebootstrap of the document's actor), so the human is TOLD, in their language, and why.
+        if (event.outcome.kind === "rejected") {
+          const reasonKey = hubCommandRejectionReasonKeyV1(event.outcome.messages);
+          console.warn("[os-shell] hub refused a command batch", message.documentId, event.outcome.reason);
+          showTransientNoticeRef.current(reasonKey === null ? shellLabel("ui.conflict.hubRejected") : `${shellLabel("ui.conflict.hubRejected")}: ${shellLabel(reasonKey)}`, "warning", "sync.command.rejected");
+        }
         else if (event.outcome.kind === "transformed") showTransientNoticeRef.current(shellLabel("ui.conflict.hubTransformed"), "info", "sync.command.transformed");
       } else if (event.kind === "conflict") {
         // ⚖️ Investigated for contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
@@ -3962,6 +4035,23 @@ function FrameworkOsShellInner({
   // sharing the page with others must not fight them over `window.history`.
   const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", hostMode && scope.ownsPage);
   const shellRoute = useMemo(() => parseShellRoute(shellUri.split("?")[0] ?? "/"), [shellUri]);
+  const shellUriRef = useRef(shellUri);
+  shellUriRef.current = shellUri;
+  /** 🧭️ A navigation a human or a guest asks for always takes effect: a session-replacing route is invalidated, a new URI
+   * goes through history (the route effect applies it), and the URI already shown is applied on the spot — back to a
+   * space's index from one of its documents, whose URI is the space's own ({@link createShellRouteLedgerV1}). */
+  const navigateShellUri = useCallback((uri: string) => {
+    const overlay = shellRouteIsOverlayV1(uri);
+    if (!overlay) shellRouteLedgerRef.current.invalidate();
+    if (uri !== shellUriRef.current) {
+      navigateHistory(uri);
+      return;
+    }
+    if (!hostMode || overlay) return;
+    void shellSessionLaneRef.current.route({ uri }).catch((uriError: unknown) => {
+      if (!isPluginInstanceRetiredV1(uriError)) console.warn(`[os-shell] route ${uri} was not applied`, uriError);
+    });
+  }, [hostMode, navigateHistory]);
 
   // 🐚️ `scope.storage` (not a separately-resolved ephemeral/browser port here) — two shells sharing a
   // page must not clobber each other's panel layout/dock state through an unnamespaced localStorage key.
@@ -4046,6 +4136,9 @@ function FrameworkOsShellInner({
         const sApp = hostApps.landing;
         const panelState = buildSpacePanelState([], requiredHostPanelLeafId(hostApps.host));
         const instanceId = await handle.createApp(sApp.id);
+        rememberOpenSpaceId(null);
+        openInstanceIdRef.current = null;
+        shellRouteLedgerRef.current.invalidate();
         const viewState: ViewModel = { activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id, panelJson: panelJsonFromState(panelState) };
         // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
         // boot `setActiveExample` races the session-switch refresh and wipes pane bodies.
@@ -4083,7 +4176,7 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
       dispatch({ type: "SET_ERROR", value: null });
     },
-    [hostConfig, appId, appRole, pluginFilter],
+    [hostConfig, appId, appRole, pluginFilter, rememberOpenSpaceId],
   );
 
   /** 🚑️ ONE watchdog kill must not be a fatal boot. Losing the shard that was running the primary
@@ -4223,6 +4316,17 @@ function FrameworkOsShellInner({
   const cancelPluginInstalls = useCallback(() => {
     for (const abort of pluginInstallAbortsRef.current.values()) abort.abort();
   }, []);
+
+  /** ⏱️ Every command turn holding its program's lane past the stall bound (`⏱️command-stall`), with a once-a-second clock
+   * while any is held so the band's seconds count up; its cancel rejects that turn and releases the lane. */
+  const commandStalls = useSyncExternalStore(commandStallWatch.subscribe, commandStallWatch.stalls);
+  const [commandStallClockMs, setCommandStallClockMs] = useState(() => performance.now());
+  useEffect(() => {
+    if (commandStalls.length === 0) return;
+    setCommandStallClockMs(performance.now());
+    const timer = setInterval(() => setCommandStallClockMs(performance.now()), 1_000);
+    return () => clearInterval(timer);
+  }, [commandStalls.length]);
 
   /** 🌎️ Installs one module of a catalog generation as a hub program (`🌎️hub-source/🔍️resolution`) — from the store, this
    * device's byte-identical staged module, or the hub — with the same install band, byte progress and cancel as every
@@ -4754,6 +4858,9 @@ function FrameworkOsShellInner({
   const boardSessionFactory = useMemo(() => resolveAppSurfaceSessionFactory(surfaceSessionFactories ?? [], focusedProgram), [surfaceSessionFactories, focusedProgram?.pluginId, focusedProgram?.appId, focusedProgram?.instanceId]);
   const focusedApp = hostMode && activeSpawnedApp ? activeSpawnedApp : (session?.app ?? null);
   const focusedSpawnedId = focusedProgram?.spawnedId ?? null;
+  const focusedPanelUiByKey = useMemo(() => programEntriesV1(panelUiByKey, focusedSpawnedId, spawnedIds), [panelUiByKey, focusedSpawnedId, spawnedIds]);
+  const focusedToolMeasuresByToolId = useMemo(() => programEntriesV1(toolMeasuresByToolId, focusedSpawnedId, spawnedIds), [toolMeasuresByToolId, focusedSpawnedId, spawnedIds]);
+  const focusedModeId = focusedSpawnedId !== null && focusedApp !== null ? (spawnedProgramViewStateV1<ViewModel>({}, focusedApp).activeModeId ?? focusedApp.id) : (session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "");
   /** 🧾️ The history the History panel, the undo/redo controls, the uncommitted-edit count and
    * `data-history-json` all read: the FOCUSED program's own, because that is the document the user
    * is editing. While a spawned editor owns the canvas the session's ledger is still kept — it is
@@ -4972,8 +5079,8 @@ function FrameworkOsShellInner({
   }, []);
   /** 🛠️ The tool generation a shell-owned tool control stamps onto its `setActiveTool` press. */
   const toolGeneration = useCallback((): number => toolRegisterRef.current.read().generation, []);
-  const toolMeasuresByToolIdRef = useRef(toolMeasuresByToolId);
-  toolMeasuresByToolIdRef.current = toolMeasuresByToolId;
+  const toolMeasuresByToolIdRef = useRef(focusedToolMeasuresByToolId);
+  toolMeasuresByToolIdRef.current = focusedToolMeasuresByToolId;
   const activeWindowIdRef = useRef(activeWindowId);
   activeWindowIdRef.current = activeWindowId;
   /** 🪟️ The layout the dock is actually rendering — the ONLY honest answer to "which windows does the
@@ -5457,7 +5564,7 @@ function FrameworkOsShellInner({
               return;
             }
             const target = { ...live, pluginId: deferredPluginId, instanceId: deferredInstanceId };
-            const owner = captureEffectOwner(target, captureDialogOrigin(target));
+            const owner = captureProgramEffectOwner(target);
             void applyHostEffects(deferredEffects, target, { kind: "full" }, owner).catch((error) => undefined);
           }),
       });
@@ -5466,7 +5573,7 @@ function FrameworkOsShellInner({
     // 🐢️ `applyHostEffects` is declared later in this component and is referenced in the body only,
     // never in this array — the same temporal-dead-zone avoidance `refreshUi` below documents.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [captureDialogOrigin, captureEffectOwner, hostMode, readDocumentOperatorScope, registry, resolvedTargetViewState],
+    [captureProgramEffectOwner, hostMode, readDocumentOperatorScope, registry, resolvedTargetViewState],
   );
   /** 🔚 A session switch abandons whatever contributions unit is still resolving for the instance
    * that is going away: its closure must never be installed into an instance nobody is looking at,
@@ -5686,7 +5793,7 @@ function FrameworkOsShellInner({
       const dynamicToolMeasures = (cache.get("tools")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
       dispatch({
         type: "SET_TOOL_MEASURES_BY_TOOL_ID",
-        value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicToolMeasures)),
+        value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, null, spawnedIdsRef.current, Object.entries(dynamicToolMeasures))),
       });
       const freshAppLabelsOverlay = normalizeAppLabelsOverlay(cache.get("labels")?.value as Partial<PluginAppLabelsOverlay> | undefined);
       dispatch({ type: "SET_APP_LABELS_OVERLAY", value: (current) => preserveJsonIdentity(current, freshAppLabelsOverlay) });
@@ -5700,7 +5807,7 @@ function FrameworkOsShellInner({
           const entries = panelTabLeaves
             .filter((tab) => tab.bodyKey)
             .map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as BuiltNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? pendingPanelUiNode()] as const);
-          if (!replaceBodies) return mergeRecordPreservingIdentity(current, entries);
+          if (!replaceBodies) return mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, null, spawnedIdsRef.current, entries));
           const next: Record<string, BuiltNode> = { ...current };
           for (const [id, node] of entries) next[id] = node;
           return next;
@@ -5797,7 +5904,7 @@ function FrameworkOsShellInner({
         }
         const owedEffects = owedPassEffectsRef.current;
         owedPassEffectsRef.current = null;
-        if (owedEffects) void applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, owedEffects.scope, owedEffects.owner).catch((error) => console.error("refresh-owed host effects failed", error));
+        if (owedEffects) void applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, owedEffects.scope, owedEffects.owner).catch(logUnlessRetiredV1("refresh-owed host effects failed"));
       },
       (owed, next) => ({ session: next.session, scope: mergeUiDirtyScopeV1(owed.scope, next.scope), extraInstances: next.extraInstances ?? owed.extraInstances, replaceBodies: owed.replaceBodies || next.replaceBodies, hostInputs: owed.hostInputs || next.hostInputs }),
       () => {},
@@ -5850,13 +5957,11 @@ function FrameworkOsShellInner({
       },
     });
     const live = sessionRef.current;
-    if (live) void refreshUi(live, { kind: "full" }, undefined, true).catch((error) => console.error("[os-shell] locale refresh failed", error));
+    if (live) void refreshUi(live, { kind: "full" }, undefined, true).catch(logUnlessRetiredV1("[os-shell] locale refresh failed"));
   }, [uiTerminology, uiLocale, refreshUi]);
 
-  const refreshSpawnedUi = useCallback(
-    async (spawned: SpawnedAppEntry, viewState: ViewModel, scopeArg: UiDirtyScope = { kind: "full" }) => {
-      if (scopeArg.kind === "none") return;
-      const generation = ++spawnedRefreshGenerationRef.current;
+  const refreshSpawnedUiPass = useCallback(
+    async (spawned: SpawnedAppEntry, viewState: ViewModel) => {
       // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — same fix as `refreshUi`
       // above: reads `loadedPluginsRef.current` instead of closing over `loadedPlugins`, so this
       // callback's identity (and every effect that lists it in a deps array) stops churning on every
@@ -5904,13 +6009,11 @@ function FrameworkOsShellInner({
         },
         spawnedWindowInstanceIdV1(spawned.id, guestActiveWindowId),
       );
-      // 🐢️ A spawned instance's view is its bodies + utilities + engagements + measures (no panels, no
-      // labels) — that's already the minimal grouping, so there is no narrower-than-full "partial" scope
-      // worth expressing here; only `none` (handled above) short-circuits the request.
-      const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, [], fullViewState, cache);
+      const panelTabLeaves = flattenPanelTabLeaves(app.panelTabs).filter((tab) => !shellRendersPanelTabItself(panelTabKindId(tab.kind)));
+      const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, fullViewState, cache);
       if (request) {
         const response = await plugin.refreshUi(spawned.instanceId, request);
-        if (generation !== spawnedRefreshGenerationRef.current) return;
+        if (spawnedLayoutSeedRef.current !== spawnedSeed) return;
         applyUiRefreshResponseToCache(cache, response);
       }
       const uiByWindowId = Object.fromEntries(windowKinds.map((kind) => [spawnedWindowInstanceIdV1(spawned.id, kind.id), (cache.get(`window:${kind.id}`)?.value as BuiltNode | undefined) ?? pendingWindowUiNode()] as const));
@@ -5924,8 +6027,43 @@ function FrameworkOsShellInner({
       });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: dynamicEngagements });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: dynamicMeasures });
+      const panelBodies = programKeyedEntriesV1(
+        spawned.id,
+        Object.fromEntries(panelTabLeaves.filter((tab) => tab.bodyKey).map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as BuiltNode | undefined) ?? pendingPanelUiNode()] as const)),
+      );
+      dispatch({ type: "SET_PANEL_UI_BY_KEY", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, spawned.id, spawnedIdsRef.current, Object.entries(panelBodies))) });
+      const toolMeasures = programKeyedEntriesV1(spawned.id, (cache.get("tools")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {});
+      dispatch({ type: "SET_TOOL_MEASURES_BY_TOOL_ID", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, spawned.id, spawnedIdsRef.current, Object.entries(toolMeasures))) });
     },
     [injectActiveUtility, uiLocale, uiTerminology],
+  );
+  const refreshSpawnedUiPassRef = useRef(refreshSpawnedUiPass);
+  refreshSpawnedUiPassRef.current = refreshSpawnedUiPass;
+  const refreshSpawnedUi = useCallback(
+    (spawned: SpawnedAppEntry, viewState: ViewModel, scopeArg: UiDirtyScope = { kind: "full" }): Promise<void> => {
+      if (scopeArg.kind === "none") return Promise.resolve();
+      const slots = spawnedRefreshSlotsRef.current;
+      const running = slots.get(spawned.id);
+      if (running) {
+        running.viewState = viewState;
+        running.again = true;
+        return running.done;
+      }
+      const slot: SpawnedRefreshSlotV1 = { viewState, again: false, done: Promise.resolve() };
+      slot.done = (async () => {
+        try {
+          do {
+            slot.again = false;
+            await refreshSpawnedUiPassRef.current(spawned, slot.viewState);
+          } while (slot.again);
+        } finally {
+          slots.delete(spawned.id);
+        }
+      })();
+      slots.set(spawned.id, slot);
+      return slot.done;
+    },
+    [],
   );
 
   // 🐢️ Keyed on the pluginId/app/instance triple (not `session` object identity) so this only fires on
@@ -5961,11 +6099,8 @@ function FrameworkOsShellInner({
   useEffect(() => {
     const current = sessionRef.current;
     if (!current) return;
-    void refreshUi(current).catch((renderError) => {
-      const fault = windowFaultFromError(renderError, pluginSupervisorByIdRef.current[current.pluginId]);
-      dispatch({ type: "SET_ERROR", value: fault.message, fault });
-    });
-  }, [refreshUi, sessionTripleKey]);
+    void refreshUi(current).catch((renderError) => reportRefreshFault(current.pluginId, renderError));
+  }, [refreshUi, reportRefreshFault, sessionTripleKey]);
 
   useEffect(() => {
     if (!hostMode || !session) {
@@ -5982,14 +6117,14 @@ function FrameworkOsShellInner({
       return;
     }
     void refreshSpawnedUi(activeSpawned, session.viewState).catch((renderError) => {
-      const fault = windowFaultFromError(renderError, pluginSupervisorByIdRef.current[activeSpawned.pluginId]);
-      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: {}, fault });
+      const fault = liveInstanceWindowFaultV1(renderError, pluginSupervisorByIdRef.current[activeSpawned.pluginId], isPluginInstanceRetiredV1);
+      if (fault !== null) dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: {}, fault });
     });
     // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — `loadedPlugins` dropped
     // (same reasoning as the session-refresh effect above): `refreshSpawnedUi` now reads
     // `loadedPluginsRef.current` at call time, and a spawned instance can only exist for an
     // already-loaded plugin, so this never needed to refire on unrelated background catalogue loads.
-  }, [panel, refreshSpawnedUi, session, hostMode]);
+  }, [panel, refreshSpawnedUi, refreshSpawnedUiPass, session, hostMode]);
 
   /** 🪟️ The session layout the shell was showing when a spawned program took the canvas — restored
    * verbatim when focus comes back, so opening a foreign editor and closing it again does not cost
@@ -6009,12 +6144,14 @@ function FrameworkOsShellInner({
    *
    * 🚦️ Keyed on the focused PROGRAM, never on `session` identity: an ordinary refresh must not
    * re-seed, or every action would throw the live arrangement away.
+
    */
   useEffect(() => {
     if (!session) return;
     if (seededFocusedProgramKeyRef.current === focusedProgramKey) return;
     const previous = seededFocusedProgramKeyRef.current;
     seededFocusedProgramKeyRef.current = focusedProgramKey;
+    if (previous !== "" && activeToolIdRef.current) writeToolRegister(null, null);
     if (focusedSpawnedId !== null && focusedApp !== null) {
       // 🪟️ Leaving the session's own canvas — remember it before the spawned seed replaces it.
       if (sessionLayoutBeforeSpawnRef.current === null) sessionLayoutBeforeSpawnRef.current = { layout: shellLayout ?? null, activeWindowId: activeWindowIdRef.current };
@@ -6038,7 +6175,7 @@ function FrameworkOsShellInner({
     // 🐢️ `shellLayout` is read, not depended on: this effect fires on a focused-PROGRAM change only,
     // and listing the live layout would re-enter it on every drag the user makes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusedProgramKey, focusedSpawnedId, focusedApp, session, appLabelsOverlay, uiTerminology, uiLocale]);
+  }, [focusedProgramKey, focusedSpawnedId, focusedApp, session, appLabelsOverlay, uiTerminology, uiLocale, writeToolRegister]);
 
   /** ⌨️ A program the user just opened takes keyboard focus once its active window has mounted — its dock tabpanel,
    * the same stop a pointer click lands on — but only while nothing else holds focus. Opening a program from the
@@ -6102,21 +6239,31 @@ function FrameworkOsShellInner({
    * worker-loss paths already use — with the superseded instance retired once the new one is mounted.
    *
    * The first run only records the key: mounting is not an identity CHANGE, and re-establishing there
-   * would fight the boot that is already establishing the session. */
+   * would fight the boot that is already establishing the session.
+   *
+   * The re-establishment runs on the shell session lane, after whatever route application is in flight, and
+   * the route effect re-applies the route behind it — the new session is the landing app, so a hard load of
+   * `/spaces/<id>` whose hub identity was restored mid-route returns to that space instead of staying on Home
+   * (ticket 26/09/23 U5). */
   const sessionHumanKeyRef = useRef<string | null>(null);
   useEffect(() => {
     const previous = sessionHumanKeyRef.current;
     sessionHumanKeyRef.current = sessionHumanKey;
-    const current = sessionRef.current;
-    if (!current || previous === null || previous === sessionHumanKey) return;
-    const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === current.pluginId)?.handle;
-    if (!handle) return;
-    void establishPrimaryWithShardRetry(handle)
-      .then(() => retireSessionInstance(current).catch(() => undefined))
-      .catch((error: unknown) => {
+    if (!sessionRef.current || previous === null || previous === sessionHumanKey) return;
+    void shellSessionLaneRef.current.run(async () => {
+      const current = sessionRef.current;
+      if (!current) return;
+      const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === current.pluginId)?.handle;
+      if (!handle) return;
+      try {
+        await establishPrimaryWithShardRetry(handle);
+      } catch (error) {
         const fault = windowFaultFromError(error, pluginSupervisorByIdRef.current[current.pluginId]);
         dispatch({ type: "SET_ERROR", value: fault.message, fault });
-      });
+        return;
+      }
+      await retireSessionInstance(current).catch(() => undefined);
+    });
   }, [sessionHumanKey, establishPrimaryWithShardRetry, retireSessionInstance]);
 
   // 🏠️🧳️👁️✏️ Generalised from the host-only `switchToManagedApp`: switches the mounted session to ANY
@@ -6169,7 +6316,7 @@ function FrameworkOsShellInner({
               dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
               dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
               if (hostMode && app.id === landingAppId) {
-                openSpaceIdRef.current = null;
+                rememberOpenSpaceId(null);
                 openInstanceIdRef.current = null;
               }
             },
@@ -6191,7 +6338,7 @@ function FrameworkOsShellInner({
         setSurfaceSwitchBusy(false);
       }
     },
-    [loadedPlugins, refreshUi, retireSessionInstance, session, appLabelsOverlay, hostMode, hostApp, landingAppId, uiTerminology, uiLocale],
+    [loadedPlugins, refreshUi, retireSessionInstance, session, appLabelsOverlay, hostMode, hostApp, landingAppId, uiTerminology, uiLocale, rememberOpenSpaceId],
   );
 
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, artifactJson: string, viewState: ViewModel) => {
@@ -6300,13 +6447,16 @@ function FrameworkOsShellInner({
       return live?.actions === retained.actions && live.identity === identity && openDocumentSessionsRef.current.get(runtimeKey) === entry && shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session);
     };
     if (!current()) throw new Error("browser-actor-action: owner retired");
+    const windowKindId = "windowKindId" in invocation.address ? invocation.address.windowKindId : typeof viewState.activeWindowKindId === "string" ? viewState.activeWindowKindId : identity.windowKindId;
+    const store = retained.windows.get(windowKindId);
+    if (store === undefined) throw new Error("browser-actor-action: window unpainted");
     const result = await retained.actions.dispatchCommand({
       scope: retained.scope,
       verifiedSurfaceId: retained.verifiedSurfaceId,
       activationGeneration: retained.activationGeneration,
       appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION,
       instanceId: identity.instanceId,
-      surfaceRevision: retained.store.getRevisionSnapshot(),
+      surfaceRevision: store.getRevisionSnapshot(),
     }, invocation, viewState);
     for (const patch of result.historyPatches) if (current()) applyHistoryPatch(decodePackWire(Uint8Array.from(patch), "$.historyPatch") as HistoryPatch, false, { pluginId: entry.session.pluginId, instanceId: entry.session.instanceId });
     await publishBrowserActorHostEffectsV1(result.hostEffects, current, async (effect) => {
@@ -6332,6 +6482,7 @@ function FrameworkOsShellInner({
       // 🪦️ An effect pass addressed to an instance a switch has SEALED is stale by construction — the
       // close ladder has already revoked its actor, so running the pass reaches `requireActorId` and
       // surfaces as `no actor for instance N`. One typed drop, no throw, no stack.
+      if (effects.length === 0 && sealedInstancesRef.current.sealed(baseSession.pluginId, baseSession.instanceId)) return;
       if (dropForSealedInstance(baseSession, "host effects", `${effects.length} effect(s)`)) return;
       let nextViewState = baseSession.viewState;
       for (const effect of effects) {
@@ -6386,7 +6537,7 @@ function FrameworkOsShellInner({
           continue;
         }
         if ("navigate" in effect) {
-          navigateHistory(effect.navigate.uri);
+          navigateShellUri(effect.navigate.uri);
           continue;
         }
         if ("loadDocument" in effect) {
@@ -6541,7 +6692,7 @@ function FrameworkOsShellInner({
                   ready: null,
                 };
                 spaceArtifactCreationOwnersRef.current.set(requestId, owner);
-                setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "issued", owner }));
+                setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "issued", owner, atMs: Date.now() }));
                 const worker = ensureBackboneWorker();
                 worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
               }
@@ -6685,7 +6836,7 @@ function FrameworkOsShellInner({
             }
             if (osInstanceId && openSpaceIdRef.current) {
               openInstanceIdRef.current = osInstanceId;
-              navigateHistory(`/spaces/${openSpaceIdRef.current}/instances/${osInstanceId}`);
+              navigateShellUri(`/spaces/${openSpaceIdRef.current}/instances/${osInstanceId}`);
             }
           } else {
             console.warn(
@@ -6738,7 +6889,7 @@ function FrameworkOsShellInner({
         await refreshUi(nextSession, refreshScope, undefined, leftoverReplaceRefreshBodiesV1(), hostEffectsRewriteGuestRenderInputsV1(effects) || nextViewState !== baseSession.viewState);
       }
     },
-    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, requestInferenceProposal, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode],
+    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestInferenceProposal, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode],
   );
   // 🔁️ What the ui-refresh lane applies for a pass that asked for effects of its own, outside that pass.
   applyHostEffectsRef.current = applyHostEffects;
@@ -6767,14 +6918,14 @@ function FrameworkOsShellInner({
         settleOperation(completion.operation);
         applyHistoryPatch(completion.historyPatch, false, { pluginId: target.pluginId, instanceId: target.instanceId });
         const refresh = typedOperationCompletionRefreshV1(completion);
-        const owner = captureEffectOwner(target, captureDialogOrigin(target));
+        const owner = captureProgramEffectOwner(target);
         if (refresh === null) return;
-        void applyHostEffects(completion.requestedEffects, target, refresh, owner).catch((error) => console.error("typed-operation completion effects failed", error));
+        void applyHostEffects(completion.requestedEffects, target, refresh, owner).catch(logUnlessRetiredV1("typed-operation completion effects failed"));
       });
     } catch (error) {
       return;
     }
-  }, [applyHistoryPatch, applyLeftoverInteractionView, applyHostEffects, captureDialogOrigin, captureEffectOwner, dropForRetiredInstance, isCurrentEffectOwner, session, settleOperation]);
+  }, [applyHistoryPatch, applyLeftoverInteractionView, applyHostEffects, captureProgramEffectOwner, dropForRetiredInstance, isCurrentEffectOwner, session, settleOperation]);
 
   /**
    * 🏁️🪟️ The SAME terminal-publication subscription, for every spawned program. The effect above
@@ -6803,7 +6954,7 @@ function FrameworkOsShellInner({
           applyHistoryPatch(completion.historyPatch, false, { pluginId: spawned.pluginId, instanceId: spawned.instanceId });
           const refresh = typedOperationCompletionRefreshV1(completion);
           if (refresh === null) return;
-          void applyHostEffects(completion.requestedEffects, target, refresh, captureEffectOwner(target, captureDialogOrigin(target))).catch((error) => console.error("spawned typed-operation completion effects failed", error));
+          void applyHostEffects(completion.requestedEffects, target, refresh, captureProgramEffectOwner(target)).catch(logUnlessRetiredV1("spawned typed-operation completion effects failed"));
         });
         if (typeof dispose === "function") disposers.push(dispose);
       } catch (error) {
@@ -6815,7 +6966,7 @@ function FrameworkOsShellInner({
     };
     // 🐢️ Keyed on the spawned ROSTER, not on `panel` identity: a panel object churns on every action.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hostMode, session, spawnedRosterKey, applyHistoryPatch, applyHostEffects, captureDialogOrigin, captureEffectOwner, settleOperation]);
+  }, [hostMode, session, spawnedRosterKey, applyHistoryPatch, applyHostEffects, captureProgramEffectOwner, settleOperation]);
 
   /** 🎞️ Renders a running operation's process while it runs: every mid-operation refresh a tool run asks for (its trace,
    * provisional pieces, progress) goes through the ui-refresh lane, whose coalescer merges what arrives while a pass is in
@@ -6829,13 +6980,13 @@ function FrameworkOsShellInner({
       const unsubscribeOperations = plugin.subscribeOperationProgress(target.instanceId, (uiScope) => {
         const scope = resolveUiDirtyScope(uiScope);
         if (scope.kind === "none") return;
-        void applyHostEffects([], target, scope, captureEffectOwner(target, captureDialogOrigin(target))).catch((error) => console.error("typed-operation progress refresh failed", error));
+        void applyHostEffects([], target, scope, captureProgramEffectOwner(target)).catch(logUnlessRetiredV1("typed-operation progress refresh failed"));
       });
       // 💼️ An Isolated spawned job (a mounted analysis, a fill plan) publishes no typed-operation
       // scope; its host driver reports coalesced progress instead, and every window adopting the
       // job's retained output re-renders through the same lane.
       const unsubscribeJobs = plugin.subscribeSpawnedJobProgress?.(target.instanceId, () => {
-        void applyHostEffects([], target, { kind: "full" }, captureEffectOwner(target, captureDialogOrigin(target))).catch((error) => console.error("spawned job progress refresh failed", error));
+        void applyHostEffects([], target, { kind: "full" }, captureProgramEffectOwner(target)).catch(logUnlessRetiredV1("spawned job progress refresh failed"));
       });
       return () => {
         unsubscribeOperations();
@@ -6844,7 +6995,7 @@ function FrameworkOsShellInner({
     } catch (error) {
       return;
     }
-  }, [applyHostEffects, captureDialogOrigin, captureEffectOwner, dropForRetiredInstance, session]);
+  }, [applyHostEffects, captureProgramEffectOwner, dropForRetiredInstance, session]);
 
   /**
    * 🎞️🪟️ The SAME mid-operation progress lane, for every spawned program. The effect above
@@ -6867,10 +7018,10 @@ function FrameworkOsShellInner({
         const unsubscribeOperations = entry.handle.subscribeOperationProgress(spawned.instanceId, (uiScope) => {
           const scope = resolveUiDirtyScope(uiScope);
           if (scope.kind === "none") return;
-          void applyHostEffects([], target, scope, captureEffectOwner(target, captureDialogOrigin(target))).catch((error) => console.error("spawned typed-operation progress refresh failed", error));
+          void applyHostEffects([], target, scope, captureProgramEffectOwner(target)).catch(logUnlessRetiredV1("spawned typed-operation progress refresh failed"));
         });
         const unsubscribeJobs = entry.handle.subscribeSpawnedJobProgress?.(spawned.instanceId, () => {
-          void applyHostEffects([], target, { kind: "full" }, captureEffectOwner(target, captureDialogOrigin(target))).catch((error) => console.error("spawned job progress refresh failed", error));
+          void applyHostEffects([], target, { kind: "full" }, captureProgramEffectOwner(target)).catch(logUnlessRetiredV1("spawned job progress refresh failed"));
         });
         disposers.push(() => {
           unsubscribeOperations();
@@ -6885,117 +7036,104 @@ function FrameworkOsShellInner({
     };
     // 🐢️ Keyed on the spawned ROSTER, not on `panel` identity: a panel object churns on every action.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hostMode, session, spawnedRosterKey, applyHostEffects, captureDialogOrigin, captureEffectOwner]);
+  }, [hostMode, session, spawnedRosterKey, applyHostEffects, captureProgramEffectOwner]);
 
   const applyShellUri = useCallback(
-    async (uri: string, preservedViewState?: ViewModel) => {
-      // 🩹️ See `applyShellUriDepthRef`'s own doc comment: turns an unbounded reentrant call chain into
-      // a bounded, logged no-op instead of a JS stack overflow, and captures a real stack for the next
-      // diagnosis pass.
-      if (applyShellUriDepthRef.current > 0) {
-        return;
+    async (uri: string, preservedViewState?: ViewModel): Promise<boolean> => {
+      const currentSession = sessionRef.current;
+      if (!hostConfig || !currentSession || loadedPlugins.length === 0) return false;
+      const path = uri.split("?")[0] ?? "/";
+      // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §5 — `/spaces/{id}/studio`
+      // (optionally `/instances/{id}`) opens the workflow studio (the canonical resolved host app,
+      // pre-existing behaviour every bare `/spaces/{id}` used to trigger). `parseShellRoute` (owned by
+      // `ShellHelpers/🟦️.tsx`, outside this lane's lease) has no concept of a `/studio`
+      // segment, so it's matched locally here first — `parseShellRoute` itself is never edited, and
+      // its own existing route classification (and tests) stay exactly as they were.
+      const studioMatch = /^\/spaces\/([^/]+)\/studio(?:\/instances\/([^/]+))?$/.exec(path);
+      const route = studioMatch ? ({ kind: "space" as const, spaceId: studioMatch[1]!, instanceId: studioMatch[2] } as const) : parseShellRoute(path);
+      const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
+      if (!sPlugin) return false;
+      if (route.kind === "landing") {
+        rememberOpenSpaceId(null);
+        openInstanceIdRef.current = null;
+        if (!landingAppId) throw new Error("required landing app identity is unavailable");
+        if (currentSession.app.id !== landingAppId) return (await switchToPluginApp(hostConfig.pluginId, landingAppId, preservedViewState)) !== null;
+        return true;
       }
-      applyShellUriDepthRef.current += 1;
-      try {
-        const currentSession = sessionRef.current;
-        if (!hostConfig || !currentSession || loadedPlugins.length === 0) return;
-        const path = uri.split("?")[0] ?? "/";
-        // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §5 — `/spaces/{id}/studio`
-        // (optionally `/instances/{id}`) opens the workflow studio (the canonical resolved host app,
-        // pre-existing behaviour every bare `/spaces/{id}` used to trigger). `parseShellRoute` (owned by
-        // `ShellHelpers/🟦️.tsx`, outside this lane's lease) has no concept of a `/studio`
-        // segment, so it's matched locally here first — `parseShellRoute` itself is never edited, and
-        // its own existing route classification (and tests) stay exactly as they were.
-        // 🔗️ AU2 — `/hub` is the shell's hub connection surface: sign in, browse/switch/create a
-        // space, invite, redeem. It is an overlay over whatever is already open, so it never tears
-        // down the running session and the app stays usable while no hub is reachable.
-        if (path === SHELL_HUB_ROUTE) {
-          setHubWorkspaceOpen(true);
-          return;
-        }
-        setHubWorkspaceOpen(false);
-        const studioMatch = /^\/spaces\/([^/]+)\/studio(?:\/instances\/([^/]+))?$/.exec(path);
-        const route = studioMatch ? ({ kind: "space" as const, spaceId: studioMatch[1]!, instanceId: studioMatch[2] } as const) : parseShellRoute(path);
-        const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
-        if (!sPlugin) return;
-        if (route.kind === "landing") {
-          openSpaceIdRef.current = null;
-          openInstanceIdRef.current = null;
-          if (!landingAppId) throw new Error("required landing app identity is unavailable");
-          if (currentSession.app.id !== landingAppId) await switchToPluginApp(hostConfig.pluginId, landingAppId, preservedViewState);
-          return;
-        }
-        if (route.kind === "notFound") {
-          openSpaceIdRef.current = null;
-          openInstanceIdRef.current = null;
-          return;
-        }
-        const { spaceId, instanceId } = route;
-        // 📇️ §5 — a bare `/spaces/{id}` (no `/studio`, no `/instances/{id}` deep link) now opens the
-        // `s.space` artifact-index app (kind `s.space`, dialect `s.space.space@1/*`, §C4) instead of the
-        // studio, resolved by dialect/surface id off the SAME "s" plugin's own manifest so this activates
-        // the moment lane 2-B registers a real app for that dialect — no further change needed here.
-        if (!studioMatch && !instanceId) {
-          const hostPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
-          const spaceApp = findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "editor") ?? findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "viewer");
-          if (!spaceApp || !hostPlugin) {
-            console.warn("[os-shell] applyShellUri: no app registered for dialect", dialectCoordinate(SPACE_INDEX_DIALECT), "— s.space (lane 2-B) not loaded yet");
-            return;
-          }
-          // 🔁️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-I — idempotency
-          // guard mirroring `studioChanged` below: without it, ANY re-render that mints a new
-          // `applyShellUri` identity (e.g. `switchToPluginApp` depending on `session`, which
-          // `openDocumentRef.current` below itself updates) re-fires this whole branch for the SAME
-          // already-open space, tearing the document's sync session down and reopening it in a tight
-          // loop — observed live as dozens of WS open/close cycles plus a `Maximum call stack size
-          // exceeded` inside the 30s STEP 2 budget (`🧪️4-i-collab-e2e-run3.txt`), never previously
-          // exercised because no earlier lane's fixes let a hard navigation to `/spaces/{id}` reach here.
-          const spaceIndexAlreadyOpen = openSpaceIdRef.current === spaceId && currentSession.app.id === spaceApp.id;
-          openSpaceIdRef.current = spaceId;
-          openInstanceIdRef.current = null;
-          if (spaceIndexAlreadyOpen) return;
-          const spaceSession = currentSession.app.id === spaceApp.id ? currentSession : await switchToPluginApp(hostConfig.pluginId, spaceApp.id, preservedViewState);
-          if (!spaceSession) return;
-          await openDocumentRef.current({ documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA, spaceId }, undefined, { session: spaceSession, plugin: hostPlugin.handle });
-          return;
-        }
-        // 🧭️ Pin the route studio id before the async app switch so the boot example effect cannot
-        // race-navigate to `/spaces/demo` while `switchToPluginApp` is still awaiting.
-        const studioChanged = openSpaceIdRef.current !== spaceId;
-        openSpaceIdRef.current = spaceId;
-        if (!hostAppId) throw new Error("required host app identity is unavailable");
-        const studioSession = currentSession.app.id === hostAppId ? currentSession : await switchToPluginApp(hostConfig.pluginId, hostAppId, preservedViewState);
-        if (!studioSession) return;
-        const studioControllerId = studioSession.app.controllerId;
-        const routeOwner = captureEffectOwner(studioSession, captureDialogOrigin(studioSession));
-        if (studioChanged) {
-          openInstanceIdRef.current = null;
-          const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
-          await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope), routeOwner);
-        }
-        if (openInstanceIdRef.current === (instanceId ?? null)) return;
-        openInstanceIdRef.current = instanceId ?? null;
-        if (instanceId) {
-          const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
-          await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope), routeOwner);
-        } else {
-          const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
-          const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
-          updateSpacePanel(buildSpacePanelState(currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
-          await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope), routeOwner);
-        }
-      } finally {
-        applyShellUriDepthRef.current -= 1;
+      if (route.kind === "notFound") {
+        rememberOpenSpaceId(null);
+        openInstanceIdRef.current = null;
+        return true;
       }
+      const { spaceId, instanceId } = route;
+      // 📇️ §5 — a bare `/spaces/{id}` (no `/studio`, no `/instances/{id}` deep link) now opens the
+      // `s.space` artifact-index app (kind `s.space`, dialect `s.space.space@1/*`, §C4) instead of the
+      // studio, resolved by dialect/surface id off the SAME "s" plugin's own manifest so this activates
+      // the moment lane 2-B registers a real app for that dialect — no further change needed here.
+      if (!studioMatch && !instanceId) {
+        const hostPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
+        const spaceApp = findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "editor") ?? findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "viewer");
+        if (!spaceApp || !hostPlugin) {
+          console.warn("[os-shell] applyShellUri: no app registered for dialect", dialectCoordinate(SPACE_INDEX_DIALECT), "— s.space (lane 2-B) not loaded yet");
+          return false;
+        }
+        // 🔁️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-I — idempotency
+        // guard mirroring `studioChanged` below: without it, ANY re-render that mints a new
+        // `applyShellUri` identity (e.g. `switchToPluginApp` depending on `session`, which
+        // `openDocumentRef.current` below itself updates) re-fires this whole branch for the SAME
+        // already-open space, tearing the document's sync session down and reopening it in a tight
+        // loop — observed live as dozens of WS open/close cycles plus a `Maximum call stack size
+        // exceeded` inside the 30s STEP 2 budget (`🧪️4-i-collab-e2e-run3.txt`), never previously
+        // exercised because no earlier lane's fixes let a hard navigation to `/spaces/{id}` reach here.
+        const spaceIndexAlreadyOpen = openSpaceIdRef.current === spaceId && currentSession.app.id === spaceApp.id;
+        rememberOpenSpaceId(spaceId);
+        openInstanceIdRef.current = null;
+        if (spaceIndexAlreadyOpen) return true;
+        const spaceSession = currentSession.app.id === spaceApp.id ? currentSession : await switchToPluginApp(hostConfig.pluginId, spaceApp.id, preservedViewState);
+        if (!spaceSession) return false;
+        void openDocumentRef.current({ documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA, spaceId }, undefined, { session: spaceSession, plugin: hostPlugin.handle }).catch(logUnlessRetiredV1("[os-shell] space index opening failed"));
+        return true;
+      }
+      // 🧭️ Pin the route studio id before the async app switch so the boot example effect cannot
+      // race-navigate to `/spaces/demo` while `switchToPluginApp` is still awaiting.
+      const studioChanged = openSpaceIdRef.current !== spaceId;
+      rememberOpenSpaceId(spaceId);
+      if (!hostAppId) throw new Error("required host app identity is unavailable");
+      const studioSession = currentSession.app.id === hostAppId ? currentSession : await switchToPluginApp(hostConfig.pluginId, hostAppId, preservedViewState);
+      if (!studioSession) return false;
+      const studioControllerId = studioSession.app.controllerId;
+      const routeOwner = captureEffectOwner(studioSession, captureDialogOrigin(studioSession));
+      if (studioChanged) {
+        openInstanceIdRef.current = null;
+        const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
+        await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope), routeOwner);
+      }
+      if (openInstanceIdRef.current === (instanceId ?? null)) return true;
+      openInstanceIdRef.current = instanceId ?? null;
+      if (instanceId) {
+        const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
+        await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope), routeOwner);
+      } else {
+        const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
+        const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
+        updateSpacePanel(buildSpacePanelState(currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
+        await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope), routeOwner);
+      }
+      return true;
     },
-    [applyHostEffects, loadedPlugins, refreshUi, hostConfig, hostApp, landingAppId, hostAppId, switchToPluginApp, updateSpacePanel],
+    [applyHostEffects, loadedPlugins, refreshUi, hostConfig, hostApp, landingAppId, hostAppId, switchToPluginApp, updateSpacePanel, rememberOpenSpaceId],
   );
+  applyShellUriRef.current = applyShellUri;
 
   useEffect(() => {
     if (!hostMode || loadedPlugins.length === 0) return;
-    void applyShellUri(shellUri).catch((uriError) => {
+    const hubOverlay = shellRouteIsOverlayV1(shellUri);
+    setHubWorkspaceOpen(hubOverlay);
+    if (hubOverlay || !shellRouteLedgerRef.current.shouldApply(shellUri)) return;
+    void shellSessionLaneRef.current.route({ uri: shellUri }).catch((uriError: unknown) => {
+      if (!isPluginInstanceRetiredV1(uriError)) console.warn(`[os-shell] route ${shellUri} was not applied`, uriError);
     });
-  }, [applyShellUri, loadedPlugins.length, shellUri, hostMode]);
+  }, [applyShellUri, loadedPlugins.length, shellUri, hostMode, session?.pluginId, session?.instanceId]);
 
   const resolveSyncTargetSession = useCallback((): ActiveSession | null => {
     if (!session) return null;
@@ -7377,6 +7515,18 @@ function FrameworkOsShellInner({
         }
 
         if (!session) return refuse("no-session");
+        const programOfWindow = (windowId: string): { readonly spawnedId: string | null; readonly session: ActiveSession; readonly extraInstances: readonly { readonly id: string; readonly windowKindId: string }[]; readonly guestWindowId: string } => {
+          const spawnedId = spawnedIdOfWindowInstanceV1(windowId, spawnedIdsRef.current);
+          const spawned = spawnedId === null ? undefined : panel?.spawnedApps.find((candidate) => candidate.id === spawnedId);
+          const app = spawned ? loadedPlugins.find((candidate) => candidate.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId) : undefined;
+          if (!spawned || !app) return { spawnedId: null, session, extraInstances: extraWindowInstancesRef.current, guestWindowId: windowId };
+          return {
+            spawnedId: spawned.id,
+            session: { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) },
+            extraInstances: frameworkLayoutDeclaredInstances(app.defaultLayout, app.windowKinds),
+            guestWindowId: guestWindowIdV1(windowId, spawnedIdsRef.current) ?? windowId,
+          };
+        };
         // 🛑️ A cancel gesture retires the requesting instance's IN-FLIGHT extension work before the
         // gesture itself is forwarded, and never instead of it: the guest still owns its own
         // bookkeeping (its pending table, its progress ledger, its arming latch) and the extension
@@ -7473,12 +7623,7 @@ function FrameworkOsShellInner({
           // 🧰️🪟️ "Active utility is per-window" means per-window of whichever PROGRAM owns that window.
           // A spawned foreign editor's utility bar forwarded to the landing app's instance, so arming a
           // drawing tool inside a spawned `draw` reached `s.space.home` and did nothing.
-          const utilitySpawnedId = spawnedIdOfWindowInstanceV1(windowId, spawnedIdsRef.current);
-          const utilitySpawned = utilitySpawnedId === null ? undefined : panel?.spawnedApps.find((entry) => entry.id === utilitySpawnedId);
-          const utilityApp = utilitySpawned ? loadedPlugins.find((entry) => entry.handle.pluginId === utilitySpawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === utilitySpawned.appId) : undefined;
-          const utilitySession: ActiveSession = utilitySpawned && utilityApp ? { pluginId: utilitySpawned.pluginId, instanceId: utilitySpawned.instanceId, app: utilityApp, viewState: spawnedProgramViewStateV1(session.viewState, utilityApp) } : session;
-          const utilityExtraInstances = utilitySession === session ? extraWindowInstancesRef.current : [];
-          const utilityGuestWindowId = guestWindowIdV1(windowId, spawnedIdsRef.current) ?? windowId;
+          const { spawnedId: utilitySpawnedId, session: utilitySession, extraInstances: utilityExtraInstances, guestWindowId: utilityGuestWindowId } = programOfWindow(windowId);
           const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === utilitySession.pluginId);
           const program = pluginEntry?.handle;
           if (program) {
@@ -7536,29 +7681,29 @@ function FrameworkOsShellInner({
             { kind: "allWindows" },
           );
           if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "tool" && interaction.on.id === next);
-          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
+          const { spawnedId: toolSpawnedId, session: toolSession, extraInstances: toolExtraInstances, guestWindowId: toolGuestWindowId } = programOfWindow(activeWindowIdRef.current ?? "");
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === toolSession.pluginId);
           const program = pluginEntry?.handle;
           if (program) {
-            const toolWindowId = activeWindowIdRef.current ?? undefined;
             const baseToolViewState: ViewModel = {
-              ...session.viewState,
+              ...toolSession.viewState,
               locale: uiLocaleRef.current,
               terminology: uiTerminologyRef.current,
               activeToolId: next ?? undefined,
-              activeUtilityId: next ? undefined : session.viewState.activeUtilityId,
-              windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
-              activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+              activeUtilityId: next ? undefined : toolSession.viewState.activeUtilityId,
+              windowInstances: sessionWindowInstances(toolSession.app, toolExtraInstances).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+              activeUtilityByWindowId: guestActiveUtilityByWindowIdV1(activeUtilityByWindowIdRef.current, toolSpawnedId, spawnedIdsRef.current),
             };
-            const viewState = toolWindowId ? windowViewContext(baseToolViewState, toolWindowId) : panelViewContext(baseToolViewState);
-            if (!viewState) return refuse("view-state-unresolved", `tool window=${toolWindowId ?? ""}`);
-            const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
+            const viewState = toolGuestWindowId ? windowViewContext(baseToolViewState, toolGuestWindowId) : panelViewContext(baseToolViewState);
+            if (!viewState) return refuse("view-state-unresolved", `tool window=${toolGuestWindowId}`);
+            const forwarded: ActionDescriptor = { controllerId: toolSession.app.controllerId, action: action.action, args: { toolId: next } };
             await program
-              .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, toolWindowId), viewState, { order: causalOrderKeyV1(entry.provenance) })
+              .handleAction(toolSession.instanceId, encodeWindowActionInvocation({ ...toolSession, viewState }, forwarded, toolExtraInstances, toolGuestWindowId || undefined), viewState, { order: causalOrderKeyV1(entry.provenance) })
               .then((response) => {
-                applyHistoryPatch(response.historyPatch);
+                applyHistoryPatch(response.historyPatch, false, { pluginId: toolSession.pluginId, instanceId: toolSession.instanceId });
                 applyLeftoverInteractionView(response.output);
                 if (!isCurrentEffectOwner(primaryActionOwner)) return;
-                return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, { kind: "full" }, primaryActionOwner);
+                return applyHostEffects(response.requestedEffects ?? [], { ...toolSession, viewState }, { kind: "full" }, primaryActionOwner);
               })
               .catch((toolError) => undefined);
           }
@@ -7978,7 +8123,7 @@ function FrameworkOsShellInner({
   const onBrowserActorIntent = useCallback((runtimeKey: string, captured: RetainedBrowserActorUiV1, surfaceKey: string, intent: Parameters<typeof uiIntentToActionDescriptor>[0]) => {
     const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
-    const store = surfaceKey === captured.windowKindId ? retained?.store : retained?.panels.get(surfaceKey);
+    const store = retained?.windows.get(surfaceKey) ?? retained?.panels.get(surfaceKey);
     if (store === undefined || retained?.actions !== captured.actions || retained.identity === null || entry?.clientInstanceId !== captured.clientInstanceId || entry.session.instanceId !== captured.sessionInstanceId || !shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session)) return;
     const current = (): boolean => {
       const live = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
@@ -8002,8 +8147,6 @@ function FrameworkOsShellInner({
       showTransientNotice(shellLabel("ui.common.renderError"), "error");
     });
   }, [requestInferenceProposal]);
-  const refuseBrowserActorActionDescriptor = useCallback(() => {
-  }, []);
 
   //#region 🎥️TutorialOrchestration
   /** ⏱️ Real-time throttle for the director's UI/document/event application (~10Hz) — camera stays
@@ -9175,8 +9318,8 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_INSTANCE_FAULT", value: null });
       })
       .catch((commandError) => {
-        const fault = windowFaultFromError(commandError, pluginSupervisorByIdRef.current[session.pluginId]);
-        if (!cancelled) dispatch({ type: "SET_INSTANCE_FAULT", value: fault });
+        const fault = liveInstanceWindowFaultV1(commandError, pluginSupervisorByIdRef.current[session.pluginId], isPluginInstanceRetiredV1);
+        if (!cancelled && fault !== null) dispatch({ type: "SET_INSTANCE_FAULT", value: fault });
       });
     return () => {
       cancelled = true;
@@ -9272,6 +9415,15 @@ function FrameworkOsShellInner({
   const uiDriverList = useMemo((): readonly UiDriver[] => [...builtinUiDrivers(), ...Object.values(uiCustomDrivers)], [uiCustomDrivers]);
   const keysByActionId = useMemo(() => buildKeysByActionId(session?.app.keybindings ?? []), [session?.app.keybindings]);
   const controlKeybindings = useMemo(() => composeControlKeybindings(keysByActionId, uiKeybindingOverrides), [keysByActionId, uiKeybindingOverrides]);
+  /** ⌨️ Settings ▸ Hotkeys names a bound app action or OS command by its own manifest label in the live language; the
+   * rows used to show humanized control ids ("Undo", "Toggle Panel") that stayed English in German (ticket 26/09/23 U5). */
+  const controlKeybindingLabel = useCallback((controlId: string): string | null => {
+    const action = session?.app.actions.find((candidate) => candidate.id === controlId);
+    if (action !== undefined) return resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label as LocalizedLabel | string, uiTerminology, uiLocale));
+    const command = session?.app.commands.find((candidate) => candidate.id === controlId);
+    if (command !== undefined) return resolveManifestLabel(command.label as LocalizedLabel | string, uiTerminology, uiLocale);
+    return null;
+  }, [appLabelsOverlay, session?.app.actions, session?.app.commands, uiLocale, uiTerminology]);
   const osCommands = useMemo(
     () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, uiTerminology, uiLocale, hasOpenArtifactSurfaces),
     [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, hasOpenArtifactSurfaces],
@@ -9324,10 +9476,56 @@ function FrameworkOsShellInner({
         (mutation.mutation === "setTerminology" && locks.terminology) ||
         (mutation.mutation === "setTheme" && locks.themeId)
       ) return;
-      commitUiPreferencesConfigMutation(scope.storage, mutation);
+      const { queued } = commitUiPreferenceOnLaneV1(scope.storage, mutation, preferenceLaneRef.current, mintPreferenceLaneIdV1);
+      if (queued !== null) flushPreferenceLaneRef.current();
     },
     [locks, scope.storage],
   );
+
+  /** 🌐️ The signed-in user's preference lane (ticket 26/09/23 U5): while a verified hub session stands, the worker pages
+   * this user's `user.preference-recorded` events from the lane's frontier and wakes on every directory head past it;
+   * each page folds into this device's log in hub order ({@link foldUiPreferenceLanePageV1}), and every change of a
+   * `persistedShared` preference made here is recorded as a `record-user-preference` command, re-sent under its own
+   * request id until a page acknowledges it — so a change made offline reaches every device once the hub is back. A
+   * `persistedLocalOnly` preference (the chrome layout) never leaves the device. */
+  const preferenceLaneRef = useRef<string | null>(null);
+  const preferenceLaneInFlightRef = useRef(new Set<string>());
+  const flushPreferenceLaneRef = useRef<() => void>(() => undefined);
+  flushPreferenceLaneRef.current = () => {
+    const lane = preferenceLaneRef.current;
+    const worker = backboneWorkerRef.current;
+    if (lane === null || worker === null) return;
+    for (const entry of readUiPreferenceLane(scope.storage, lane).outbox) {
+      if (preferenceLaneInFlightRef.current.has(entry.requestId)) continue;
+      preferenceLaneInFlightRef.current.add(entry.requestId);
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "preference-lane-record", requestId: entry.requestId, schema: UI_PREFERENCES_LANE_SCHEMA_V1, mutation: uiPreferenceEnvelopeTextV1(entry) }) });
+    }
+  };
+  handlePreferenceLaneMessageRef.current = (message) => {
+    const lane = preferenceLaneRef.current;
+    if (message.kind === "preference-lane-page") {
+      if (lane === null || identityRef.current?.userId !== message.userId) return;
+      foldUiPreferenceLanePageV1(scope.storage, lane, message);
+      flushPreferenceLaneRef.current();
+      return;
+    }
+    if (message.requestId !== null) preferenceLaneInFlightRef.current.delete(message.requestId);
+  };
+  const preferenceLaneUserId = verifiedSessionAuthority !== null && identity?.hubBaseUrl ? identity.userId : null;
+  const preferenceLaneHubBaseUrl = verifiedSessionAuthority !== null ? identity?.hubBaseUrl ?? null : null;
+  useEffect(() => {
+    if (preferenceLaneUserId === null || preferenceLaneHubBaseUrl === null) return;
+    const lane = uiPreferenceLaneKeyV1(preferenceLaneHubBaseUrl, preferenceLaneUserId);
+    const worker = ensureBackboneWorker();
+    preferenceLaneRef.current = lane;
+    preferenceLaneInFlightRef.current.clear();
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "preference-lane-open", baseUrl: preferenceLaneHubBaseUrl, userId: preferenceLaneUserId, after: readUiPreferenceLane(scope.storage, lane).afterSeq }) });
+    return () => {
+      if (preferenceLaneRef.current === lane) preferenceLaneRef.current = null;
+      preferenceLaneInFlightRef.current.clear();
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "preference-lane-close" }) });
+    };
+  }, [ensureBackboneWorker, preferenceLaneHubBaseUrl, preferenceLaneUserId, scope.storage]);
 
   const draftThemePatch = useCallback(
     (patch: (next: UiTheme) => void) => {
@@ -9587,6 +9785,7 @@ function FrameworkOsShellInner({
       themeSaveLabel,
       setThemeSaveLabel,
       controlKeybindings,
+      controlKeybindingLabel,
       keybindingCaptureControlId,
       setKeybindingCaptureControlId,
       setKeybindingOverride,
@@ -9609,6 +9808,7 @@ function FrameworkOsShellInner({
       driverSaveLabel,
       setDriverSaveLabel,
       controlKeybindings,
+      controlKeybindingLabel,
       keybindingCaptureControlId,
       setKeybindingOverride,
       resetKeybindingOverride,
@@ -9652,22 +9852,45 @@ function FrameworkOsShellInner({
     [settingsHost, defaultAppsHost, conflictsHost],
   );
 
+  /** 🌎️ The serving hub's current catalog of plugin modules, read when the shell starts and once a minute after (a
+   * catalog generation changes rarely and publishes no stream); `null` without a hub or while it is unreachable. */
+  const [hubCatalog, setHubCatalog] = useState<TrustedPluginModuleIndexV1 | null>(null);
+  useEffect(() => {
+    if (hubPluginSource === null) return;
+    const abort = new AbortController();
+    const read = (): void => {
+      void hubPluginSource.catalog(abort.signal).then((index) => {
+        if (!abort.signal.aborted) setHubCatalog((current) => (current?.generationId === index?.generationId && current !== null ? current : index));
+      }, () => undefined);
+    };
+    read();
+    const timer = setInterval(read, HUB_CATALOG_REFRESH_MS);
+    return () => {
+      abort.abort();
+      clearInterval(timer);
+    };
+  }, [hubPluginSource]);
+  /** 🧩️ The shell's plugin registry is this device's build plus every plugin the serving hub's catalog carries that the build
+   * lacks ({@link hubCatalogOnlyPluginsV1}): a hub-only plugin is listed, installs from the hub (verified, into the store) through
+   * the same `installPlugin`, and then runs like any other device program. */
+  const hubOnlyPlugins = useMemo(() => (hubCatalog === null ? [] : hubCatalogOnlyPluginsV1(hubCatalog, new Set([...registry, ...extensionRegistry].map((entry) => entry.pluginId)))), [hubCatalog, registry, extensionRegistry]);
   const marketplaceHostRef = useRef<MarketplaceHostApi | null>(null);
   const marketplaceHost: MarketplaceHostApi = useMemo(
     () => ({
-      plugins: registry
-        .filter((entry) => !extensionIdSet.has(entry.pluginId))
-        .map((entry): MarketplacePluginEntry => {
-          const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === entry.pluginId);
-          return {
-            pluginId: entry.pluginId,
-            label: loadedEntry?.manifest.label ?? entry.pluginId,
-            version: loadedEntry?.manifest.version,
-            status: pluginStatusById[entry.pluginId] ?? "available",
-            sourceId: pluginSource.id,
-            canUninstall: entry.pluginId !== primaryPluginId && session?.pluginId !== entry.pluginId,
-          };
-        }),
+      plugins: [
+        ...registry.filter((entry) => !extensionIdSet.has(entry.pluginId)).map((entry) => ({ pluginId: entry.pluginId, sourceId: pluginSource.id })),
+        ...hubOnlyPlugins.map((entry) => ({ pluginId: entry.pluginId, sourceId: `hub · ${entry.generationId.slice(0, 12)}` })),
+      ].map(({ pluginId, sourceId }): MarketplacePluginEntry => {
+        const loadedEntry = loadedPlugins.find((candidate) => candidate.handle.pluginId === pluginId);
+        return {
+          pluginId,
+          label: loadedEntry?.manifest.label ?? pluginId,
+          version: loadedEntry?.manifest.version,
+          status: pluginStatusById[pluginId] ?? "available",
+          sourceId,
+          canUninstall: pluginId !== primaryPluginId && session?.pluginId !== pluginId,
+        };
+      }),
       extensions: (() => {
         const byId = new Map<string, MarketplaceExtensionEntry>();
         for (const target of EXTENSION_TARGETS) {
@@ -9706,6 +9929,7 @@ function FrameworkOsShellInner({
     }),
     [
       registry,
+      hubOnlyPlugins,
       extensionIdSet,
       extensionLedger,
       loadedPlugins,
@@ -9725,8 +9949,8 @@ function FrameworkOsShellInner({
   marketplaceHostRef.current = marketplaceHost;
   const frameworkMarketplaceTab = useMemo(() => createFrameworkMarketplacePanelTab(() => marketplaceHostRef.current), [marketplaceHost, uiLocale]);
   const frameworkChatTab = useMemo(
-    () => createFrameworkChatPanelTab(() => <AgentChatPanel status={agentBridge.status} presence={agentBridge.presence} conversation={agentBridge.conversation} onSendMessage={agentBridge.sendAgentMessage} onCancelToolCall={agentBridge.cancelToolCall} onResolveApproval={agentBridge.resolveApproval} />),
-    [agentBridge.presence, agentBridge.status, agentBridge.conversation, agentBridge.sendAgentMessage, agentBridge.cancelToolCall, uiLocale],
+    () => createFrameworkChatPanelTab(() => <AgentChatPanel status={agentBridge.status} presence={agentBridge.presence} versionMismatch={agentBridge.versionMismatch} conversation={agentBridge.conversation} onSendMessage={agentBridge.sendAgentMessage} onCancelToolCall={agentBridge.cancelToolCall} onResolveApproval={agentBridge.resolveApproval} />),
+    [agentBridge.presence, agentBridge.status, agentBridge.versionMismatch, agentBridge.conversation, agentBridge.sendAgentMessage, agentBridge.cancelToolCall, uiLocale],
   );
   /** 🧵️ The `os.task-manager` window — the one central progress + cancel surface: every spawned plugin job
    * (the plugin runtime's own ledger), every plugin installation and every agent tool call still running,
@@ -9736,11 +9960,22 @@ function FrameworkOsShellInner({
   const taskManagerListenersRef = useRef(new Set<() => void>());
   const taskManagerTasksCacheRef = useRef<{ readonly jobs: readonly SpawnedJobRowV1[]; readonly shell: readonly TaskManagerTaskV1[]; readonly tasks: readonly TaskManagerTaskV1[] } | null>(null);
   const installStartedAtRef = useRef(new Map<string, number>());
+  const toolRunStartedAtRef = useRef(new Map<string, number>());
+  const toolRunControlsRef = useRef(new Map<string, { readonly pause: ToolRunPanelControlV1 | null; readonly resume: ToolRunPanelControlV1 | null; readonly abort: ToolRunPanelControlV1 | null }>());
+  const fireToolRunControl = (task: TaskManagerTaskV1, control: "pause" | "resume" | "abort"): void => {
+    const owned = toolRunControlsRef.current.get(task.id)?.[control];
+    if (owned && !owned.disabled) void onActionStable(actionBindingToActionDescriptor(owned.binding));
+  };
   const taskManagerCancelRef = useRef<(task: TaskManagerTaskV1) => void>(() => undefined);
   taskManagerCancelRef.current = (task) => {
     if (task.lane === "job") cancelSpawnedJobV1(task.id.slice("job:".length));
     else if (task.lane === "activation") pluginInstallAbortsRef.current.get(task.id.slice("install:".length))?.abort();
+    else if (task.lane === "toolRun") fireToolRunControl(task, "abort");
     else agentBridge.cancelToolCall(task.id.slice("tool:".length));
+  };
+  const taskManagerSuspendRef = useRef<(task: TaskManagerTaskV1, suspend: boolean) => void>(() => undefined);
+  taskManagerSuspendRef.current = (task, suspend) => {
+    if (task.lane === "toolRun") fireToolRunControl(task, suspend ? "pause" : "resume");
   };
   const taskManagerSources = useMemo((): TaskManagerSourcesV1 => ({
     registry: pluginRuntimeActivationRegistryV1,
@@ -9762,14 +9997,24 @@ function FrameworkOsShellInner({
       };
     },
     cancel: (task) => taskManagerCancelRef.current(task),
+    suspend: (task) => taskManagerSuspendRef.current(task, true),
+    resume: (task) => taskManagerSuspendRef.current(task, false),
   }), []);
   useEffect(() => {
     const startedAt = installStartedAtRef.current;
     for (const pluginId of [...startedAt.keys()]) if (!installingPluginIds.includes(pluginId)) startedAt.delete(pluginId);
     for (const pluginId of installingPluginIds) if (!startedAt.has(pluginId)) startedAt.set(pluginId, Date.now());
-    taskManagerShellTasksRef.current = [...installTasksV1(installingPluginIds, startedAt), ...toolCallTasksV1(agentBridge.conversation)];
+    const runs = toolRunPanelTasksV1(focusedPanelUiByKey[FRAMEWORK_PANEL_TAB_TOOL_RUN_ID]);
+    const program = { pluginId: focusedProgram?.pluginId ?? "", spawnedId: focusedProgram?.spawnedId ?? "" };
+    const runIds = new Set(runs.map((run) => taskManagerToolRunIdV1(program.spawnedId, run.run)));
+    const runStartedAt = toolRunStartedAtRef.current;
+    for (const id of [...runStartedAt.keys()]) if (!runIds.has(id)) runStartedAt.delete(id);
+    for (const id of runIds) if (!runStartedAt.has(id)) runStartedAt.set(id, Date.now());
+    toolRunControlsRef.current = new Map(runs.map((run) => [taskManagerToolRunIdV1(program.spawnedId, run.run), { pause: run.pause, resume: run.resume, abort: run.abort }] as const));
+    const toolRuns = toolRunTasksV1(runs.map((run) => ({ run: run.run, label: run.label, completed: run.completed, total: run.total, valueText: run.valueText, paused: run.pause === null })), program, runStartedAt);
+    taskManagerShellTasksRef.current = [...installTasksV1(installingPluginIds, startedAt), ...toolCallTasksV1(agentBridge.conversation), ...toolRuns];
     for (const listener of [...taskManagerListenersRef.current]) listener();
-  }, [agentBridge.conversation, installingPluginIds]);
+  }, [agentBridge.conversation, installingPluginIds, focusedPanelUiByKey, focusedProgram?.pluginId, focusedProgram?.spawnedId]);
   const frameworkTaskManagerTab = useMemo(() => createFrameworkTaskManagerPanelTab(() => <TaskManagerWindow sources={taskManagerSources} />), [taskManagerSources, uiLocale]);
   /** ⛩️ An approval request has ONE affordance: its row in the agent conversation. Revealing the chat panel
    * is what makes it visible; `focus` additionally moves keyboard focus onto it (the footer notice's
@@ -9942,17 +10187,18 @@ function FrameworkOsShellInner({
     [currentBrowserActorUi, currentDocumentRuntimeKey, onBrowserActorIntent],
   );
   const browserActorPanels = useMemo(
-    (): BrowserActorPanelHostV1 | null => !session || browserActorPanelIntent === null || currentBrowserActorUi?.sessionInstanceId !== session.instanceId ? null : { stores: new Map(currentBrowserActorUi.panels), onIntent: browserActorPanelIntent, onAction: refuseBrowserActorActionDescriptor },
-    [browserActorPanelIntent, browserActorUiVersion, currentBrowserActorUi, refuseBrowserActorActionDescriptor, session],
+    (): BrowserActorPanelHostV1 | null => !session || browserActorPanelIntent === null || currentBrowserActorUi?.sessionInstanceId !== session.instanceId ? null : { stores: new Map(currentBrowserActorUi.panels), onIntent: browserActorPanelIntent, onAction: onActionStable },
+    [browserActorPanelIntent, browserActorUiVersion, currentBrowserActorUi, onActionStable, session],
   );
 
-  const activeRightPanelTab = session?.app.panelTabs.find((tab) => panelAnchorForGroup(tab.group) === "top-right");
-  const activePanelTabId = panel?.activePanelTab ?? (activeRightPanelTab ? panelTabKindId(activeRightPanelTab.kind) : undefined) ?? (session?.app.panelTabs[0] ? panelTabKindId(session.app.panelTabs[0].kind) : undefined);
+  const focusedBrowserActorPanels = focusedSpawnedId === null ? browserActorPanels : null;
+  const activeRightPanelTab = focusedApp?.panelTabs.find((tab) => panelAnchorForGroup(tab.group) === "top-right");
+  const activePanelTabId = panel?.activePanelTab ?? (activeRightPanelTab ? panelTabKindId(activeRightPanelTab.kind) : undefined) ?? (focusedApp?.panelTabs[0] ? panelTabKindId(focusedApp.panelTabs[0].kind) : undefined);
 
   const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
-    if (!session) return [];
-    const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, browserActorPanels));
-    if (hostMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
+    if (!session || !focusedApp) return [];
+    const pluginLeftTabs = focusedApp.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, focusedPanelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels));
+    if (hostMode && focusedApp.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginArtifactTab = flattenPanelTabNodes(pluginLeftTabs).some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
     if (hasPluginArtifactTab) return pluginLeftTabs;
     // 👁️✏️ "Open with…" — contract freeze §5's Document-panel surface: one section per role,
@@ -9999,12 +10245,12 @@ function FrameworkOsShellInner({
       }),
     });
     return [artifactTab, ...pluginLeftTabs];
-  }, [appLabelsOverlay, browserActorPanels, onAction, panel?.spawnedApps.length, panelUiByKey, session, hostMode, uiLocale, uiTerminology, hostAppId, openWithEntries, openWithFocusRole, openArtifactWithAppRef, dispatchSetDefaultApp, dispatchClearDefaultApp, treeWindowHost, treeWindowGeneration]);
+  }, [appLabelsOverlay, focusedBrowserActorPanels, onAction, panel?.spawnedApps.length, focusedPanelUiByKey, session, focusedApp, hostMode, uiLocale, uiTerminology, hostAppId, openWithEntries, openWithFocusRole, openArtifactWithAppRef, dispatchSetDefaultApp, dispatchClearDefaultApp, treeWindowHost, treeWindowGeneration]);
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
-    if (!session) return [];
-    return session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, browserActorPanels));
-  }, [appLabelsOverlay, browserActorPanels, onAction, panelUiByKey, session, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration]);
+    if (!session || !focusedApp) return [];
+    return focusedApp.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, focusedPanelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels));
+  }, [appLabelsOverlay, focusedBrowserActorPanels, onAction, focusedPanelUiByKey, session, focusedApp, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration]);
 
   /**
    * 🧭️ The two bottom anchors' app-declared tabs — `PanelGroup::Display` → `bottom-left`,
@@ -10022,12 +10268,12 @@ function FrameworkOsShellInner({
    */
   const appTabsForBottomAnchor = useCallback(
     (anchor: ReturnType<typeof panelAnchorForGroup>): PanelTabNode[] =>
-      session
-        ? session.app.panelTabs
+      session && focusedApp
+        ? focusedApp.panelTabs
             .filter((tab) => panelAnchorForGroup(tab.group) === anchor && !shellRendersPanelTabItself(panelTabKindId(tab.kind)))
-            .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, browserActorPanels))
+            .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, focusedPanelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels))
         : [],
-    [appLabelsOverlay, browserActorPanels, onAction, panelUiByKey, session, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration],
+    [appLabelsOverlay, focusedBrowserActorPanels, onAction, focusedPanelUiByKey, session, focusedApp, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration],
   );
   const displayBottomLeftTabs = useMemo(() => appTabsForBottomAnchor("bottom-left"), [appTabsForBottomAnchor]);
   const settingsBottomRightTabs = useMemo(() => appTabsForBottomAnchor("bottom-right"), [appTabsForBottomAnchor]);
@@ -10449,32 +10695,33 @@ function FrameworkOsShellInner({
   // the viewer of a dialect offers exactly the same picker its editor does (ticket
   // 26/09/09/PROCEDURAL-3D-END-TO-END). `examplesForApp` is the shared predicate — Rust
   // `manifest::examples_for_app` is its twin, both pinned by `📚️example-picker.json`.
+  const focusedPluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === focusedProgram?.pluginId)?.manifest, [loadedPlugins, focusedProgram?.pluginId]);
   const exampleOptions = useMemo(() => {
-    const app = session?.app;
+    const app = focusedApp;
     if (!app || !appSwitchesExamples(app.id, app.windowKinds, app.actions ?? [])) return [];
-    return examplesForApp(activePluginManifest?.examples ?? [], app).map((example) => ({
+    return examplesForApp(focusedPluginManifest?.examples ?? [], app).map((example) => ({
       id: example.id,
       label: resolveAppLabel(appLabelsOverlay, "example", example.id, resolveManifestLabel(example.label, uiTerminology, uiLocale)),
       // 🩹️ `PluginManifest.examples` entries carry no icon (`{id, label, artifactJson, dialect}` only,
       // same shape kernel's own `PluginManifest` declares) — a generic fallback, not a fabricated field.
       icon: "file" as IconName,
     }));
-  }, [activePluginManifest, session?.app, appLabelsOverlay, uiTerminology, uiLocale]);
+  }, [focusedPluginManifest, focusedApp, appLabelsOverlay, uiTerminology, uiLocale]);
   exampleOptionsRef.current = exampleOptions;
 
   const dispatchActiveExample = useCallback(
     (exampleId: string) => {
-      if (!session) return;
-      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+      if (!session || !focusedApp || !focusedProgram) return;
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === focusedProgram.pluginId)?.handle;
       if (!plugin) return;
-      void onAction(buildActiveExampleAction(session.app.controllerId, exampleId));
+      void onAction(buildActiveExampleAction(focusedApp.controllerId, exampleId));
     },
-    [applyHostEffects, injectActiveUtility, loadedPlugins, onAction, session],
+    [loadedPlugins, onAction, session, focusedApp, focusedProgram],
   );
 
   /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
   const exampleSelectElement = useMemo(() => {
-    if (!session || exampleOptions.length === 0 || locks.exampleId || (hostMode && session.app.id === landingAppId)) return null;
+    if (!session || !focusedApp || exampleOptions.length === 0 || locks.exampleId || (hostMode && focusedApp.id === landingAppId)) return null;
     return (
       <NavbarExampleSelect
         key="fixture"
@@ -10488,7 +10735,7 @@ function FrameworkOsShellInner({
         }}
       />
     );
-  }, [session, exampleOptions, locks.exampleId, hostMode, landingAppId, activeExampleId, dispatchActiveExample]);
+  }, [session, focusedApp, exampleOptions, locks.exampleId, hostMode, landingAppId, activeExampleId, dispatchActiveExample]);
 
   /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`).
    * `aria-keyshortcuts` republishes the two framework mode-cycling chords on the GROUP, which is where
@@ -10751,8 +10998,8 @@ function FrameworkOsShellInner({
   // `resolveModeTools` (an external `framework-os-core` helper this file cannot edit), so every
   // downstream consumer (`buildToolTree`/`buildToolTabs`) keeps reading an already-plain-string `label`.
   const resolvedModeTools = useMemo(
-    () => resolveModeTools(session?.app, activeModeId).map((tool) => ({ ...tool, label: resolveManifestLabel(tool.label as LocalizedLabel | string, uiTerminology, uiLocale) })),
-    [session?.app, activeModeId, uiTerminology, uiLocale],
+    () => resolveModeTools(focusedApp ?? undefined, focusedModeId).map((tool) => ({ ...tool, label: resolveManifestLabel(tool.label as LocalizedLabel | string, uiTerminology, uiLocale) })),
+    [focusedApp, focusedModeId, uiTerminology, uiLocale],
   );
 
   // 🐢️ Only the presence of a session gates the tool tabs, so this memo (and `defaultDock`'s, which
@@ -10995,11 +11242,11 @@ function FrameworkOsShellInner({
    * active so targets such as `puzzle3d-play-distribution` stay mounted for the tour. */
   const introductionToolId = useMemo(() => {
     if (introductionElementIds.length === 0) return null;
-    for (const [toolId, measures] of Object.entries(toolMeasuresByToolId)) {
+    for (const [toolId, measures] of Object.entries(focusedToolMeasuresByToolId)) {
       if (introductionElementIds.some((id) => windowMeasureTreeContainsId(measures, id))) return toolId;
     }
     return null;
-  }, [introductionElementIds, toolMeasuresByToolId]);
+  }, [introductionElementIds, focusedToolMeasuresByToolId]);
 
   const lastIntroductionToolIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -11153,7 +11400,7 @@ function FrameworkOsShellInner({
 
   const toolRunPanelRunsRef = useRef<ReadonlySet<bigint>>(new Set());
   useEffect(() => {
-    const { runs, added } = toolRunPanelReveal(toolRunPanelRunsRef.current, panelUiByKey[FRAMEWORK_PANEL_TAB_TOOL_RUN_ID]);
+    const { runs, added } = toolRunPanelReveal(toolRunPanelRunsRef.current, focusedPanelUiByKey[FRAMEWORK_PANEL_TAB_TOOL_RUN_ID]);
     toolRunPanelRunsRef.current = runs;
     if (added.length === 0) return;
     const located = findPanelTabInDock(dock, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID);
@@ -11161,7 +11408,7 @@ function FrameworkOsShellInner({
     const resolved = findPanelTabPath(dock.anchors[located.anchor], FRAMEWORK_PANEL_TAB_TOOL_RUN_ID);
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: located.anchor, value: resolved });
     dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
-  }, [panelUiByKey, dock]);
+  }, [focusedPanelUiByKey, dock]);
 
   /** 🤖️ Fills {@link applyAgentShellCommandRef}: the MCP gateway's `ui_reveal`/`ui_focus` reach this
    * host as SSOT `ShellCommand`s, and this is where they stop being a mirror update and become the
@@ -11362,6 +11609,7 @@ function FrameworkOsShellInner({
     lastFocusedPanelWindowIdRef.current = activeWindowId;
     const currentSession = sessionRef.current;
     if (!currentSession) return;
+    if (activeWindowId && spawnedIdOfWindowInstanceV1(activeWindowId, spawnedIdsRef.current) !== null) return;
     const panelBodies = flattenPanelTabLeaves(currentSession.app.panelTabs)
       .map((tab) => tab.bodyKey)
       .filter((bodyKey): bodyKey is string => Boolean(bodyKey));
@@ -11463,9 +11711,9 @@ function FrameworkOsShellInner({
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
       // ♻️ Lazy tool/command trees read measures + active tool from refs — revision forces re-resolve.
-      treeContentRevision: toolPanelTreeContentRevision(activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey),
+      treeContentRevision: toolPanelTreeContentRevision(activeToolId, focusedToolMeasuresByToolId, actionPaneStagedArgsByKey),
     };
-  }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, hostMode, treeOpenStates, hostAppId, activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey]);
+  }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, hostMode, treeOpenStates, hostAppId, activeToolId, focusedToolMeasuresByToolId, actionPaneStagedArgsByKey]);
 
   useEffect(() => {
     if (exampleOptions.length === 0) return;
@@ -11560,7 +11808,7 @@ function FrameworkOsShellInner({
         </span>
       </div>
     );
-    const showExampleSelect = exampleOptions.length > 0 && !locks.exampleId && (!hostMode || session.app.id !== landingAppId);
+    const showExampleSelect = exampleOptions.length > 0 && !locks.exampleId && (!hostMode || focusedApp?.id !== landingAppId);
     // 📱️ Mobile has no room for tab bars, example selector, or mode switcher in the navbar — just the
     // logo/title and the single toggle for the merged mobile panel (the two dropped controls resurface as
     // the panel's synthetic "App" tab, see `mobilePanelTabs`).
@@ -11595,7 +11843,7 @@ function FrameworkOsShellInner({
         ),
       },
     ];
-  }, [brand, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, roleSwitcherElement, session, uiLocale, uiTerminology, hostMode, landingAppId]);
+  }, [brand, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, roleSwitcherElement, session, focusedApp?.id, uiLocale, uiTerminology, hostMode, landingAppId]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -11781,8 +12029,9 @@ function FrameworkOsShellInner({
         };
       });
     }
+    const browserActorUi = currentBrowserActorUi?.sessionInstanceId === session.instanceId ? currentBrowserActorUi : undefined;
     const baseWindows = session.app.windowKinds.map((kind) => {
-      const browserActorStore = currentBrowserActorUi?.sessionInstanceId === session.instanceId && currentBrowserActorUi.windowKindId === kind.id ? currentBrowserActorUi.store : undefined;
+      const browserActorStore = browserActorUi === undefined ? undefined : browserActorUi.windows.get(kind.id) ?? builtNodeStoreFor(`browser-actor-pending:${kind.id}`, PENDING_WINDOW_UI_NODE);
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay, uiTerminology, uiLocale, utilityGenerationFor(kind.id));
       const chrome = windowMeasuresChrome(windowMeasuresByWindowId[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id] ?? undefined, kind.id, onActionStable);
       const resolvedEngagement = resolveWindowEngagement(kind, kind.id, windowEngagementsByWindowId);
@@ -11808,7 +12057,7 @@ function FrameworkOsShellInner({
               <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                 {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
                 <TreeWindowContext.Provider value={windowTreeContext(kind.bodyKey)}>
-                <InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? PENDING_WINDOW_UI_NODE)} onAction={browserActorStore === undefined ? onActionStable : refuseBrowserActorActionDescriptor} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => { if (currentDocumentRuntimeKey !== null && currentBrowserActorUi !== undefined) onBrowserActorIntent(currentDocumentRuntimeKey, currentBrowserActorUi, currentBrowserActorUi.windowKindId, intent); }} />
+                <InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => { if (currentDocumentRuntimeKey !== null && browserActorUi !== undefined) onBrowserActorIntent(currentDocumentRuntimeKey, browserActorUi, kind.id, intent); }} />
                 </TreeWindowContext.Provider>
               </ShellFaultBoundary>
             </WindowInstanceIdContext.Provider>
@@ -11875,6 +12124,8 @@ function FrameworkOsShellInner({
     registerRevision,
     utilityGenerationFor,
     appLabelsOverlay,
+    browserActorUiVersion,
+    builtNodeStoreFor,
     currentBrowserActorUi,
     currentDocumentRuntimeKey,
     extraWindowInstances,
@@ -11885,7 +12136,6 @@ function FrameworkOsShellInner({
     onActionStable,
     onBrowserActorIntent,
     onIntentStable,
-    refuseBrowserActorActionDescriptor,
     panel,
     session,
     spawnedWindowEngagements,
@@ -11975,7 +12225,7 @@ function FrameworkOsShellInner({
 
   const canvas = useMemo(() => {
     if (hostMode && shellRoute.kind === "notFound" && shellRoute.path !== SHELL_HUB_ROUTE) {
-      return <ShellRouteNotFoundPage path={shellRoute.path} onHome={() => navigateHistory("/")} />;
+      return <ShellRouteNotFoundPage path={shellRoute.path} onHome={() => navigateShellUri("/")} />;
     }
     const supervisorPluginId = primaryPluginId;
     const supervisorState = supervisorPluginId ? pluginSupervisorById[supervisorPluginId] : undefined;
@@ -12016,7 +12266,7 @@ function FrameworkOsShellInner({
     const focusedSpawned = panel?.activeSpawnedId ? panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId) : undefined;
     const focusedBar = focusedSpawned ? (
       <div className={cn(borderNormalBottomClass, "flex items-center gap-single px-single py-single text-sm text-muted-foreground")}>
-        <button type="button" className="hover:text-foreground" onClick={() => (openSpaceIdRef.current ? navigateHistory(`/spaces/${openSpaceIdRef.current}`) : onAction({ controllerId: session.app.controllerId, action: "closeFocusedInstance" }))}>
+        <button type="button" className="hover:text-foreground" onClick={() => (openSpaceIdRef.current ? navigateShellUri(`/spaces/${openSpaceIdRef.current}`) : onAction({ controllerId: session.app.controllerId, action: "closeFocusedInstance" }))}>
           ← {shellLabel("ui.common.backToWorkflow")}
         </button>
         <span>·</span>
@@ -12161,7 +12411,7 @@ function FrameworkOsShellInner({
         </div>
       </div>
     );
-  }, [activeWindowId, appLabelsOverlay, effectiveModeLayout, error, sessionFault, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, refreshUi, reloadPlugin, session, shellRoute, hostMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
+  }, [activeWindowId, appLabelsOverlay, effectiveModeLayout, error, sessionFault, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateShellUri, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, refreshUi, reloadPlugin, session, shellRoute, hostMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
 
   const footerItems = useMemo((): NavbarItem[] => {
     // 🏛️ Mit Bestand Aggregator partner credits: left "Ein Projekt von LUH und UdK", right "Gefördert durch Zukunft Bau".
@@ -12200,10 +12450,11 @@ function FrameworkOsShellInner({
     // ⛩️ The pointer to waiting agent approvals — it decides nothing, it takes the human to the one
     // affordance in the agent conversation. Present on every device, absent while nothing waits.
     if (agentBridge.pendingApprovals.length > 0) items.push({ key: "agentApprovals", content: <AgentApprovalsNotice approvals={agentBridge.pendingApprovals} onReview={revealAgentApproval} /> });
+    if (agentBridge.status === "unavailable" || agentBridge.status === "incompatible") items.push({ key: "agentBridgeNotice", content: <AgentPresence status={agentBridge.status} presence={agentBridge.presence} versionMismatch={agentBridge.versionMismatch} /> });
     items.push({ key: "hubConnection", content: <HubConnectionIndicator statuses={hubConnectionStatuses} session={hubSessionPresence} link={hubLink} onSignIn={openHubWorkspace} /> });
     if (!mobile) items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" compactLabels={compactFooter} {...buildPanelSelectionProps("bottom-right")} /> });
     return items;
-  }, [agentBridge.pendingApprovals, brand?.id, buildPanelSelectionProps, hubConnectionStatuses, hubLink, hubSessionPresence, mobile, openHubWorkspace, presencePeers, revealAgentApproval, uiDevice, uiLocale]);
+  }, [agentBridge.pendingApprovals, agentBridge.presence, agentBridge.status, agentBridge.versionMismatch, brand?.id, buildPanelSelectionProps, hubConnectionStatuses, hubLink, hubSessionPresence, mobile, openHubWorkspace, presencePeers, revealAgentApproval, uiDevice, uiLocale]);
 
   const buildPanelProps = useCallback(
     (anchor: Anchor) => ({
@@ -12213,9 +12464,9 @@ function FrameworkOsShellInner({
       tabBarHost: (PANEL_TAB_BAR_HOSTS[anchor] ? "chrome" : "panel") as "panel" | "chrome",
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
-      treeContentRevision: toolPanelTreeContentRevision(activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey),
+      treeContentRevision: toolPanelTreeContentRevision(activeToolId, focusedToolMeasuresByToolId, actionPaneStagedArgsByKey),
     }),
-    [actionPaneStagedArgsByKey, activeToolId, buildPanelSelectionProps, panels, toolMeasuresByToolId, treeOpenStates],
+    [actionPaneStagedArgsByKey, activeToolId, buildPanelSelectionProps, panels, focusedToolMeasuresByToolId, treeOpenStates],
   );
 
   // #region 🔖️ReadinessBeacon
@@ -12311,7 +12562,8 @@ function FrameworkOsShellInner({
       if (typeof spaceId !== "string" || typeof documentId !== "string" || spaceId.length === 0 || documentId.length === 0) return null;
       const retained = browserActorUiByRuntimeKeyRef.current.get(documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId, documentId }));
       if (retained?.identity === null || retained?.identity === undefined) return null;
-      return mountedGisMapProbeV1({ ...retained.identity, sessionInstanceId: retained.sessionInstanceId, windowKindId: retained.windowKindId, store: retained.store });
+      const store = retained.windows.get(retained.identity.windowKindId);
+      return store === undefined ? null : mountedGisMapProbeV1({ ...retained.identity, sessionInstanceId: retained.sessionInstanceId, store });
     };
     const host = window as unknown as { __semioMountedGisMapProbe?: typeof read };
     host.__semioMountedGisMapProbe = read;
@@ -12501,9 +12753,9 @@ function FrameworkOsShellInner({
               <HubWorkspace
                 port={hubConnectionPort}
                 locale={uiLocale === "de" ? "de" : "en"}
-                activeSpaceId={openSpaceIdRef.current}
+                activeSpaceId={openSpaceId}
                 onlineUserIds={hubOnlineUserIds}
-                onOpenSpace={(spaceId) => navigateHistory(`/spaces/${spaceId}`)}
+                onOpenSpace={(spaceId) => navigateShellUri(`/spaces/${spaceId}`)}
                 onClose={() => {
                   setHubWorkspaceOpen(false);
                   if (hostMode) navigateHistory(openSpaceIdRef.current === null ? "/" : `/spaces/${openSpaceIdRef.current}`);
@@ -12568,6 +12820,23 @@ function FrameworkOsShellInner({
               <button type="button" className="ml-single underline" data-semio-plugin-install-cancel="" onClick={cancelPluginInstalls}>
                 {pluginInstallCancelTextV1(uiLocale)}
               </button>
+            </div>
+          ) : null}
+          {commandStalls.length > 0 ? (
+            <div
+              role="status"
+              aria-live="polite"
+              data-semio-command-stall=""
+              className={cn("pointer-events-auto absolute top-workbench left-1/2 z-50 mt-double -translate-x-1/2 rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm", installingPluginIds.length > 0 && "translate-y-full")}
+            >
+              {commandStalls.map((stall) => (
+                <div key={stall.id} data-semio-command-stall-id={stall.id} data-command-id={stall.commandId ?? ""}>
+                  {commandStallLineV1(stall, loadedPlugins, panel?.spawnedApps ?? [], uiTerminology, uiLocale, commandStallClockMs)}
+                  <button type="button" className="ml-single underline" data-semio-command-stall-cancel="" onClick={() => commandStallWatch.cancel(stall.id)}>
+                    {commandStallCancelTextV1(uiLocale)}
+                  </button>
+                </div>
+              ))}
             </div>
           ) : null}
           <PanelDockProvider dock={dock} onTabDockDrop={handleTabDockDrop} onTreeUnitDockDrop={handleTreeUnitDockDrop}>

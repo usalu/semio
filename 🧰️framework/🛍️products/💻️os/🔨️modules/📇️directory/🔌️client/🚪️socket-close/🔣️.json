@@ -1,0 +1,11 @@
+{
+  "schema": "semio.os.browser-hub-socket-close/v1",
+  "description": "The close codes the browser sends when IT ends a hub socket (the store worker's document socket, the shell's directory stream). A browser WebSocket.close(code) accepts only 1000 or a code in 3000..4999 (WHATWG WebSockets, close() step 1) and throws InvalidAccessError otherwise, which leaves the socket open; the protocol-level codes of RFC 6455 section 7.4.1 (1002, 1008, ...) are reserved for the endpoints themselves. So every worker-initiated close uses the private-use range 4000..4999, mapping the RFC meaning into it (4000 + the RFC code's last three digits), with a reason of at most 123 UTF-8 bytes.",
+  "admissible": { "normal": 1000, "min": 3000, "max": 4999, "reasonMaxBytes": 123 },
+  "codes": {
+    "protocolMismatch": { "code": 4002, "rfc6455": 1002, "reason": "socket protocol mismatch" },
+    "actorActivationFailed": { "code": 4008, "rfc6455": 1008, "reason": "browser actor activation failed" },
+    "checkpointPairRefused": { "code": 4008, "rfc6455": 1008, "reason": "canonical checkpoint pair refused" },
+    "actorMismatch": { "code": 4008, "rfc6455": 1008, "reason": "socket actor mismatch" }
+  }
+}

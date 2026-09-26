@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🌎️ `os-hub-ts` (nx `os-hub-ts`) router: `bun ./📜️script.ts <test [quick|long|exhaustive] [args…]|two-client-e2e <sqlite|postgres|neo4j>|typecheck>`.
+/** 🌎️ `os-hub-ts` (nx `os-hub-ts`) router: `bun ./📜️script.ts <test [quick|long|exhaustive] [args…]|two-client-e2e <sqlite|postgres|neo4j>|document-growth-e2e <sqlite|postgres|neo4j>|typecheck>`.
  * Bun integration-test harness that boots the REAL `os-hub` binary and drives it with two
  * independent clients to prove the hub's collaboration contract end-to-end (ticket
  * 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS, lane 3-E). Gated behind
@@ -7,7 +7,7 @@
  * reports the whole e2e suite as skipped in well under a second. */
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBunxStatus, runBundleScriptMain, runCargo, runProbe, runVitest } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBunxStatus, runBundleScriptMain, runCargo, runProbe, runVitest, type TestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { freeLoopbackPort, hubDevPostgresBinaryPath } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 
 const HUB_RUST_DIR = "🌎️hub/📦️packages/🦀️rust";
@@ -60,18 +60,21 @@ const TWO_CLIENT_BACKENDS: Readonly<Record<string, TwoClientBackend>> = {
   },
 };
 
-/** 🤝️ Runs the two-client document e2e (`🌎️hub/🧪️tests/🤝️two-client-document`) on one storage
+/** 🗄️ Runs one real-binary hub e2e scenario (`🌎️hub/🧪️tests/<scenario>`) on one storage
  * backend: `sqlite`, or `postgres`/`neo4j` served by that backend's own `🌎️hub/compose.yaml` service
  * in a throwaway compose project (its own volume, a free loopback port), removed afterwards — also when
  * a failing run leaves through `process.exit`, which skips `finally`. The hub
  * is `OS_HUB_BINARY` when set, else the Nx-staged `build-dev-postgres` executable, which links all
  * three drivers. */
-class TwoClientE2eScript extends BundleScript {
+abstract class BackendE2eScript extends BundleScript {
+  protected abstract readonly scenario: string;
+  protected abstract readonly minimumLevel: TestLevel;
+
   async run(segments: string[]): Promise<void> {
     const [name, ...extra] = segments;
-    const { rest } = resolveTestLevel(extra, "long");
+    const { rest } = resolveTestLevel(extra, this.minimumLevel);
     const backend = TWO_CLIENT_BACKENDS[name ?? ""];
-    if (!backend) throw new Error(`two-client-e2e needs one backend: ${Object.keys(TWO_CLIENT_BACKENDS).join(" | ")}`);
+    if (!backend) throw new Error(`${this.scenario} e2e needs one backend: ${Object.keys(TWO_CLIENT_BACKENDS).join(" | ")}`);
     const binary = process.env.OS_HUB_BINARY ?? hubDevPostgresBinaryPath(join(this.repoRoot, HUB_RUST_DIR));
     const compose = ["compose", "--file", join(this.repoRoot, "🌎️hub", "compose.yaml"), "--project-name", `semio-hub-e2e-${name}-${process.pid}`];
     const container = `semio-hub-e2e-${name}-${process.pid}`;
@@ -87,21 +90,33 @@ class TwoClientE2eScript extends BundleScript {
     try {
       if (backend.service) {
         const started = runProbe("docker", [...compose, "--profile", backend.service, "run", "--detach", "--rm", "--name", container, "--publish", `127.0.0.1:${port}:${backend.containerPort}`, backend.service], { cwd: this.repoRoot });
-        if (started.status !== 0) throw new Error(`two-client-e2e could not start the ${backend.service} compose service: ${started.stderr}`);
+        if (started.status !== 0) throw new Error(`${this.scenario} e2e could not start the ${backend.service} compose service: ${started.stderr}`);
         const deadline = Date.now() + 180_000;
         while (runProbe("docker", ["exec", container, ...backend.ready!], { cwd: this.repoRoot }).status !== 0) {
-          if (Date.now() > deadline) throw new Error(`two-client-e2e: ${backend.service} not ready within 180 s`);
+          if (Date.now() > deadline) throw new Error(`${this.scenario} e2e: ${backend.service} not ready within 180 s`);
           await sleep(1000);
         }
       }
       Object.assign(process.env, backend.env(port), { HUB_E2E: "1", OS_HUB_BINARY: binary, HUB_TWO_CLIENT_PORT: process.env.HUB_TWO_CLIENT_PORT ?? String(await freeLoopbackPort()) });
       if (backend.client) process.env.HUB_E2E_WRITER_PROBE = JSON.stringify(["docker", "exec", container, ...backend.client]);
-      console.log(`[os-hub-ts] two-client-e2e backend=${name} binary=${binary} hub-port=${process.env.HUB_TWO_CLIENT_PORT}${backend.service ? ` ${backend.service}=127.0.0.1:${port}` : ""}`);
-      await runVitest(this.root, ["two-client-document", ...rest], "../../🧪️tests/🎚️config/🟦️.ts");
+      console.log(`[os-hub-ts] ${this.scenario} e2e backend=${name} binary=${binary} hub-port=${process.env.HUB_TWO_CLIENT_PORT}${backend.service ? ` ${backend.service}=127.0.0.1:${port}` : ""}`);
+      await runVitest(this.root, [this.scenario, ...rest], "../../🧪️tests/🎚️config/🟦️.ts");
     } finally {
       teardown();
     }
   }
+}
+
+/** 🤝️ The two-client document collaboration e2e (`🌎️hub/🧪️tests/🤝️two-client-document`). */
+class TwoClientE2eScript extends BackendE2eScript {
+  protected readonly scenario = "two-client-document";
+  protected readonly minimumLevel = "long";
+}
+
+/** 📈️ The concurrent document growth e2e (`🌎️hub/🧪️tests/📈️document-growth`). */
+class DocumentGrowthE2eScript extends BackendE2eScript {
+  protected readonly scenario = "document-growth";
+  protected readonly minimumLevel = "exhaustive";
 }
 
 /** 🪁️ Type-checks every `🌎️hub/**` TypeScript source against the hub-scoped `tsconfig.json`. */
@@ -112,6 +127,6 @@ class TypecheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("two-client-e2e", TwoClientE2eScript).register("typecheck", TypecheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("two-client-e2e", TwoClientE2eScript).register("document-growth-e2e", DocumentGrowthE2eScript).register("typecheck", TypecheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

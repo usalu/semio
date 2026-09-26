@@ -56,7 +56,18 @@ impl PreparedOps {
     fn op_counts(&self) -> serde_json::Value {
         serde_json::json!({ "document": self.document.len(), "config": self.config.len(), "draft": self.draft.len() })
     }
+
+    /// 📭️ Whether the preview produced no operation in any lane: nothing to prepare, commit or undo.
+    pub fn is_empty(&self) -> bool {
+        self.document.is_empty() && self.config.is_empty() && self.draft.is_empty()
+    }
 }
+
+/// 📭️ The one warning an invocation whose preview produced no operation answers with. Such a verb
+/// changed nothing (a selection verb with nothing selected, or a verb whose change is a host effect
+/// the two-phase agent lane does not carry), so no transaction is opened, the revision stays where
+/// it was and there is no undo token: never a guest transaction over an empty op list.
+pub const NO_CHANGE_WARNING: &str = "no-change: the action produced no document, config or draft operation, so nothing was committed and there is nothing to undo";
 
 /// ✍️ `MutationOrigin::Agent` — the real channel's `origin` field on `TransactionPrepare`
 /// (`📋️master.md` §3.3: `origin: MutationOrigin::Agent{..}`); this packet's own minimal mirror,
@@ -243,6 +254,13 @@ pub struct ArtifactDocumentBinding {
     pub spr: Vec<u8>,
 }
 
+/// 📮️ Whether a hub document acknowledged the envelopes one commit relayed to it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct HubRelayOutcome {
+    pub acknowledged: bool,
+    pub detail: String,
+}
+
 /// 📥️ Replies — [`AppFrame::Error`] is a COMMAND-level (business) failure (e.g. generation-mismatch,
 /// instance-busy); a hard transport-level failure (no such instance, dead connection) is
 /// `Err(Fault)` at the [`ArtifactChannel::exchange`] boundary instead.
@@ -251,7 +269,9 @@ pub enum AppFrame {
     HistorySnapshot(RevisionStamp),
     Emit { ops: PreparedOps, warnings: Vec<String> },
     TransactionPrepared { txn_id: String },
-    TransactionCommitted { txn_id: String, edit_id: String },
+    /// `relay` is present when the commit relayed envelopes to a hub document: whether the hub
+    /// acknowledged them within [`crate::workspace::HUB_RELAY_ACK_WAIT_MS`].
+    TransactionCommitted { txn_id: String, edit_id: String, relay: Option<HubRelayOutcome> },
     TransactionRolledBack { txn_id: String },
     TransactionUndone { group_id: String },
     TransactionRedone { group_id: String },
@@ -315,11 +335,19 @@ pub trait HistoryUndoPort: Send + Sync {
 /// own `"budget.exceeded"` addition (`GatewayErrorCode::BudgetExceeded`, retryable) and W8's
 /// `"capability.not-found"`/`"plugin.unavailable"` (`🏠️workspace/🦀️.rs`'s `RoutingArtifactChannel`
 /// — a caller-supplied bad capability id vs. a plugin that genuinely cannot be reached right now).
-/// An unrecognised code is `Internal` (never silently swallowed).
+/// Three plugin answers are not gateway defects and say so: a verb whose interactive-job
+/// classification keeps it out of the agent lane (`interactive-job.not-ui-safe`, e.g.
+/// `BatchOnlyPendingRewrite`) is a non-retryable `PLUGIN_UNAVAILABLE`; a preview whose ops exceed the
+/// verb's declared output cap (`interactive-job.preview-output`) is `INPUT_INVALID`; a mutation the
+/// document's own state refuses (`transaction.member-rejected`, e.g. a target that is not there) is
+/// `PRECONDITION_FAILED`. An unrecognised code is `Internal` (never silently swallowed).
 fn map_fault(fault: &Fault) -> GatewayError {
     match fault.code.as_str() {
         "viewer.read-only" | "capability-denied" => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone()),
         "mutation.rejected" => GatewayError::new(GatewayErrorCode::SideEffectRejected, fault.message.clone()),
+        "transaction.member-rejected" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()),
+        "interactive-job.not-ui-safe" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()),
+        "interactive-job.preview-output" => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
         "transaction.generation-mismatch" => GatewayError::new(GatewayErrorCode::RevisionConflict, fault.message.clone()),
         "transaction.instance-busy" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()).retryable(),
         "budget.exceeded" => GatewayError::new(GatewayErrorCode::BudgetExceeded, fault.message.clone()).retryable(),
@@ -377,12 +405,13 @@ struct MockInstanceState {
     force_budget_exceeded: bool,
     force_commit_fault: Option<Fault>,
     force_undo_fails: bool,
+    empty_preview: bool,
 }
 
 #[cfg(test)]
 impl MockInstanceState {
     fn new(instance: u32) -> Self {
-        Self { artifact_id: format!("mock-artifact-{instance}"), generation: 0, head_edit_id: 0, pending: None, prepared: BTreeMap::new(), force_budget_exceeded: false, force_commit_fault: None, force_undo_fails: false }
+        Self { artifact_id: format!("mock-artifact-{instance}"), generation: 0, head_edit_id: 0, pending: None, prepared: BTreeMap::new(), force_budget_exceeded: false, force_commit_fault: None, force_undo_fails: false, empty_preview: false }
     }
 
     fn revision(&self) -> RevisionStamp {
@@ -392,6 +421,7 @@ impl MockInstanceState {
     fn handle(&mut self, command: AppCommand) -> AppFrame {
         match command {
             AppCommand::ReadHistory => AppFrame::HistorySnapshot(self.revision()),
+            AppCommand::PureCommand { .. } if self.empty_preview => AppFrame::Emit { ops: PreparedOps::default(), warnings: Vec::new() },
             AppCommand::PureCommand { capability_id, input } => {
                 let payload = serde_json::to_vec(&serde_json::json!({ "capabilityId": capability_id, "input": input })).unwrap_or_default();
                 AppFrame::Emit { ops: PreparedOps { document: vec![payload], config: Vec::new(), draft: Vec::new() }, warnings: Vec::new() }
@@ -427,7 +457,7 @@ impl MockInstanceState {
                             let edit_id = format!("edit-{}", self.head_edit_id);
                             self.prepared.remove(&txn_id);
                             self.pending = None;
-                            AppFrame::TransactionCommitted { txn_id, edit_id }
+                            AppFrame::TransactionCommitted { txn_id, edit_id, relay: None }
                         }
                     }
                 }
@@ -525,6 +555,11 @@ impl MockArtifactChannel {
 
     pub fn force_undo_fails(&self, instance: u32) {
         self.with_instance(instance, |state| state.force_undo_fails = true);
+    }
+
+    /// 📭️ Every later preview on `instance` produces no operation, as a guest verb that changes nothing does.
+    pub fn force_empty_preview(&self, instance: u32) {
+        self.with_instance(instance, |state| state.empty_preview = true);
     }
 }
 
@@ -1066,11 +1101,41 @@ impl ActionAdapter {
             return Err(error);
         }
 
+        if record.ops.is_empty() {
+            let report = InvocationReport {
+                invocation_id: invocation_id.clone(),
+                capability_id: record.capability_id.clone(),
+                status: InvocationStatus::Succeeded,
+                affected_resources: Vec::new(),
+                revision_before: Some(current.clone()),
+                revision_after: Some(current.clone()),
+                diff_uri: None,
+                warnings: vec![NO_CHANGE_WARNING.to_string()],
+                undo_token: None,
+                postconditions: Vec::new(),
+                replayed: false,
+            };
+            self.record_audit(
+                AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input },
+                AuditDecision::Allowed,
+                Some(current.clone()),
+                Some(current),
+                "no_change",
+                None,
+                None,
+                now_ms,
+            );
+            if let Some(handle) = prep_handle_id {
+                self.handles.revoke(&handle);
+            }
+            return Ok(report);
+        }
+
         let effects_writes: Vec<String> = capability.effects.writes.iter().map(|selector| selector.0.clone()).collect();
         let origin = MutationOrigin::Agent { principal: principal.id.clone(), invocation_id: invocation_id.clone() };
         let commit_result = match self.transaction_prepare_with_retry(record.instance, record.ops.clone(), &format!("agent invoke {}", record.capability_id), origin, now_ms) {
             Ok(txn_id) => match self.exchange_one(record.instance, AppCommand::TransactionCommit { txn_id: txn_id.clone() }) {
-                Ok(AppFrame::TransactionCommitted { edit_id, .. }) => {
+                Ok(AppFrame::TransactionCommitted { edit_id, relay, .. }) => {
                     let after = match self.exchange_one(record.instance, AppCommand::ReadHistory) {
                         Ok(AppFrame::HistorySnapshot(revision)) => revision,
                         _ => current.clone(),
@@ -1085,9 +1150,9 @@ impl ActionAdapter {
                         revision_before: Some(current.clone()),
                         revision_after: Some(after),
                         diff_uri: None,
-                        warnings: Vec::new(),
+                        warnings: relay.iter().filter(|relay| !relay.acknowledged).map(|relay| format!("relay-pending: {}", relay.detail)).collect(),
                         undo_token: Some(undo_token),
-                        postconditions: vec![format!("edit:{edit_id}")],
+                        postconditions: std::iter::once(format!("edit:{edit_id}")).chain(relay.iter().filter(|relay| relay.acknowledged).map(|_| "relay:acknowledged".to_string())).collect(),
                         replayed: false,
                     })
                 }
@@ -1229,6 +1294,9 @@ impl ActionAdapter {
 
         let mut prepared_txn_ids: Vec<(usize, String)> = Vec::new();
         for (index, member) in saga.members.iter().enumerate() {
+            if member.ops.is_empty() {
+                continue;
+            }
             let origin = MutationOrigin::Agent { principal: principal.id.clone(), invocation_id: format!("{saga_handle}-{index}") };
             match self.transaction_prepare_with_retry(member.instance, member.ops.clone(), &format!("saga {saga_handle} member {index}"), origin, now_ms) {
                 Ok(txn_id) => prepared_txn_ids.push((index, txn_id)),

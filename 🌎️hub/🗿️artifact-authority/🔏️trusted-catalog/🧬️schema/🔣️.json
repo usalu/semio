@@ -337,6 +337,31 @@
         "generationId": { "$ref": "#/$defs/digest" },
         "modules": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/TrustedPluginModuleIndexEntryV1" } }
       }
+    },
+
+    "TrustedCatalogGuestResidencyV1": {
+      "description": "How much compiled guest code one hub keeps resident, and how many guests a catalog load verifies at once. Every compiled guest is charged its component's byte length; a guest compiled for a codec call makes room by releasing the least recently used guests no call holds, and nothing is released for having been idle, so a guest documents keep using stays resident however long it waits between calls. A released guest compiles again on its next use.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["residentComponentBytesMaximum", "concurrentVerifications"],
+      "properties": {
+        "residentComponentBytesMaximum": { "const": 268435456, "description": "Most component bytes whose compiled guests stay resident beyond the ones running calls hold (256 MiB)." },
+        "concurrentVerifications": { "const": 4, "description": "Most codec rows a catalog load interprets at once to verify their pack-schema hashes, each on its own instance; rows of one package share that package's one compile, dropped with its last row, and the largest components start first. The hub uses the smaller of this and half its available cores, at least one." }
+      }
+    },
+
+    "GuestCodecVerificationV1": {
+      "description": "One remembered guest codec verification: the pack-schema hash the hub's own interpreter observed for one artifact schema of one component. It is content-addressed — stored under the SHA-256 of its canonical key (component SHA-256, artifact schema, engine) — and read back only when all three match again, so a warm boot skips interpreting a component it already verified while a changed component, schema or engine verifies afresh. Records live under `trusted-catalog/guest-codec-verifications/` and travel with a copied catalog.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "componentSha256", "artifactSchema", "engine", "packSchemaHash"],
+      "properties": {
+        "schema": { "const": "semio.hub.guest-codec-verification/v1" },
+        "componentSha256": { "$ref": "#/$defs/nonzeroDigest" },
+        "artifactSchema": { "$ref": "#/$defs/identity" },
+        "engine": { "type": "string", "minLength": 1, "maxLength": 256, "description": "What verified it: the owned engine's semantic identity (a digest of the interpreter and owned host adapter sources) and the codec fuel ceiling, so any build of the same engine — copied, re-signed or cross-compiled — reuses the record and a changed engine verifies afresh." },
+        "packSchemaHash": { "$ref": "#/$defs/nonzeroDigest" }
+      }
     }
   }
 }

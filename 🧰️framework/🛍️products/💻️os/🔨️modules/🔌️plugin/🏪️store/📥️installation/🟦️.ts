@@ -368,7 +368,11 @@ function readRequestBody(req: { on(event: string, listener: (...args: unknown[])
 }
 
 //#region 🔌️ExtensionStoreVitePlugin
-/** @emoji 🔌 Vite middleware: `POST /🧩️extension-modules/install`, `GET /🧩️extension-modules/watch` SSE (mirrors plugin hot-swap). */
+/** @emoji 🔌 Vite middleware: `POST /🧩️extension-modules/install`, `GET /🧩️extension-modules/watch` SSE (mirrors plugin hot-swap).
+ * `pre`, like the static mount of the same `/🧩️extension-modules` route: the mount answers 404 for every path its install
+ * root lacks, so a store registered after it never saw `watch` — every `s` boot logged a failed
+ * `/🧩️extension-modules/watch` and the shell missed extension installs (ticket 26/09/23 U5). The dev serve lists the store
+ * before its static mounts; law: "extension store route precedence" in `../🧪️tests/🧪️authored-extension-installation-identity`. */
 export function semioExtensionStoreVitePlugin(options: { readonly installRoot: string; readonly repoRoot: string; readonly materializer?: ExtensionMaterializer }) {
   const store = createExtensionStore({
     installRoot: options.installRoot,
@@ -377,6 +381,7 @@ export function semioExtensionStoreVitePlugin(options: { readonly installRoot: s
   });
   return {
     name: "semio-extension-store",
+    enforce: "pre" as const,
     configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void } }) {
       const subscribers = new Set<BackboneServerResponse>();
       mkdirSync(store.installRoot, { recursive: true });
@@ -442,6 +447,6 @@ export function semioExtensionStoreVitePlugin(options: { readonly installRoot: s
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../🧪️tests/🧪️authored-extension-installation-identity/🟦️.ts");
-  await registerTests1(import.meta.vitest, { EXTENSION_COMPONENT_FILE, EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI, EXTENSION_PACKAGE_ENVELOPE_TOKEN, MODULE_EXTENSION_ROUTE, createExtensionStore, decodeOwnedZip, decodePackValue, existsSync, extensionPackageContentHash, installationDirectoryCollision, installationDirectoryEmoji, join, mkdtempSync, packExtensionPackage, readFileSync, rmSync, tmpdir, unpackExtensionPackage, wrapExtensionPackageEnvelope }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { EXTENSION_COMPONENT_FILE, EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI, EXTENSION_PACKAGE_ENVELOPE_TOKEN, EXTENSION_WATCH_PATH, MODULE_EXTENSION_ROUTE, createExtensionStore, semioExtensionStoreVitePlugin, decodeOwnedZip, decodePackValue, existsSync, extensionPackageContentHash, installationDirectoryCollision, installationDirectoryEmoji, join, mkdtempSync, packExtensionPackage, readFileSync, rmSync, tmpdir, unpackExtensionPackage, wrapExtensionPackageEnvelope }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests

@@ -14,7 +14,7 @@ import { join } from "node:path";
 
 const ORIGIN = process.argv[2] ?? "http://127.0.0.1:8030";
 const BINARY = process.argv[3] ?? "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build/semio-os-mcp";
-const OUT = "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s11-g10-logs";
+const OUT = "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-g10-logs";
 const EMAIL = process.env.OS_MCP_HUB_EMAIL ?? "user1@semio.dev";
 const PASSWORD = process.env.OS_MCP_HUB_PASSWORD ?? "gm1-local-dev-pass-1";
 const T0 = Date.now();

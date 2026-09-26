@@ -1015,6 +1015,8 @@ pub fn decode_inference_reply<B: InferenceHubBodyV1>(response: &InferenceHubResp
 #[serde(rename_all = "camelCase")]
 struct HubReadinessInferenceV1 {
     features: HubReadinessInferenceFeaturesV1,
+    #[serde(default)]
+    startup: Option<serde::de::IgnoredAny>,
 }
 
 #[derive(serde::Deserialize)]
@@ -1024,7 +1026,9 @@ struct HubReadinessInferenceFeaturesV1 {
 }
 
 /// 🌎️ `GET /readyz` → `features.inferenceServices`. A body that declares none is an empty roster;
-/// one whose routes are not relative lower-case route families is refused whole.
+/// one whose routes are not relative lower-case route families is refused whole. A hub still booting
+/// (`startup` present) has not loaded the catalog its roster comes from, so it is `Unavailable` — a
+/// retryable answer — never an empty roster the caller would act on.
 pub async fn read_hub_inference_services<T: InferenceHubTransport>(transport: &T, context: &OperationContext, hub_origin: &str) -> Result<Vec<HubInferenceServiceV1>, InferenceRouteErrorV1> {
     let wire = InferenceHubRequestV1 { hub_origin: hub_origin.to_string(), method: InferenceHubMethodV1::Get, path: "/readyz".to_string(), body: Vec::new(), maximum_response_bytes: INFERENCE_RESPONSE_MAX_BYTES };
     let response = transport.request(context, &wire).await?;
@@ -1032,6 +1036,9 @@ pub async fn read_hub_inference_services<T: InferenceHubTransport>(transport: &T
         return Err(InferenceRouteErrorV1::from_status(response.status));
     }
     let readiness: HubReadinessInferenceV1 = serde_json::from_slice(&response.body).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+    if readiness.startup.is_some() {
+        return Err(InferenceRouteErrorV1::Unavailable);
+    }
     let services = readiness.features.inference_services;
     if services.iter().any(|service| !is_service_id(&service.service_id) || !is_hub_inference_route(&service.route)) {
         return Err(InferenceRouteErrorV1::Invalid);
@@ -1781,18 +1788,30 @@ fn commit_instance_slot(_catalog: &Catalog, _capability_id: &str) -> u32 {
 
 /// ✅️ Relays one approval to the hub that executed the job; the hub rebuilds and commits the typed
 /// effect server-side and hands back a durable undo target, retained as this session's undo token.
+/// Every precondition is checked BEFORE the relay; once the hub's receipt exists the edit is a fact,
+/// so a follow-up that cannot complete (undo retention, the events page) is a named `warnings` row
+/// on a successful answer, never an error that would tell the agent to retry an approval that landed.
 fn approve_hub_job(context: &InferenceToolContext<'_>, workspace: &Arc<HeadlessWorkspace>, handle: &str, payload: &InferenceJobHandlePayloadV1, proposal_hash: &str) -> Result<(String, serde_json::Value), GatewayError> {
     let hub = hub_scope_route(payload)?;
     let request = HubInferenceApprovalRequestV1::new(payload.job_id.clone(), proposal_hash.to_string());
     request.validate().map_err(|error| error.to_gateway_error("inference_approve"))?;
-    let receipt = workspace.approve_hub_inference_job(&payload.document_id, &hub.route, &request)?;
     let base = hub.base.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PreconditionFailed, "approved inference job has no retained canonical base binding"))?;
+    let receipt = workspace.approve_hub_inference_job(&payload.document_id, &hub.route, &request)?;
     let scope = DocumentScope::new(hub.space_id.clone(), payload.document_id.clone());
-    let undo_token = context.actions.retain_hub_inference_approval_undo(&context.session, &base.hub_origin, &scope, &hub.route, &receipt.undo, inference_wall_now_ms())?;
-    let page = hub_events_page(&handle_service(payload), &payload.document_id, &workspace.read_hub_inference_job_events(&payload.document_id, &hub.route, &payload.job_id, 0)?);
+    let mut warnings = Vec::new();
+    let undo_token = context
+        .actions
+        .retain_hub_inference_approval_undo(&context.session, &base.hub_origin, &scope, &hub.route, &receipt.undo, inference_wall_now_ms())
+        .map_err(|error| warnings.push(format!("undo-unavailable: {}", error.message)))
+        .ok();
+    let job = workspace
+        .read_hub_inference_job_events(&payload.document_id, &hub.route, &payload.job_id, 0)
+        .map(|events| page_value(&hub_events_page(&handle_service(payload), &payload.document_id, &events)))
+        .map_err(|error| warnings.push(format!("events-unavailable: {}", error.message)))
+        .ok();
     Ok((
         format!("approval of job {} produced mutation {} (applied: {})", receipt.job_id, receipt.mutation_id, receipt.applied),
-        serde_json::json!({ "jobHandle": handle, "job": page_value(&page), "undoToken": undo_token, "commit": serde_json::to_value(&receipt).unwrap_or(serde_json::Value::Null), "baseBinding": hub.base }),
+        serde_json::json!({ "jobHandle": handle, "job": job, "undoToken": undo_token, "commit": serde_json::to_value(&receipt).unwrap_or(serde_json::Value::Null), "baseBinding": hub.base, "warnings": warnings }),
     ))
 }
 

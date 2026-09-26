@@ -306,7 +306,7 @@ fn a_shell_with_no_backbone_reads_remote_detached() {
 fn the_presence_pill_shares_the_elements_own_copy() {
     assert_eq!(ui_wgpu::wgpu::presence_bar_chip_text(&[], None, Locale::En), "No one else is here");
     assert_eq!(ui_wgpu::wgpu::presence_bar_chip_text(&[], None, Locale::De), "Niemand sonst ist hier");
-    let peers: Vec<ui_wgpu::wgpu::PresencePeerRow> = (0..7).map(|index| ui_wgpu::wgpu::PresencePeerRow { actor: format!("a{index}"), user_id: None, label: format!("Peer {index}"), role: None, connected_at_ms: None, color: None }).collect();
+    let peers: Vec<ui_wgpu::wgpu::PresencePeerRow> = (0..7).map(|index| ui_wgpu::wgpu::PresencePeerRow { actor: format!("a{index}"), user_id: None, label: format!("Peer {index}"), role: None, connected_at_ms: None, color: None, is_agent: false }).collect();
     let chip = ui_wgpu::wgpu::presence_bar_chip_text(&peers, None, Locale::En);
     assert!(chip.starts_with("Peer 0 · "), "visible peers keep their order");
     assert!(chip.ends_with("+2 more"), "the same cap and overflow suffix the roster uses");

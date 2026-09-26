@@ -189,7 +189,38 @@ export interface DirectoryEventArtifactRetentionAdvanced {
   retention: ArtifactRetention;
 }
 
+/** 🎚️ One preference change of ONE user (`schema` names the vocabulary, `mutation` is its canonical JSON text — the hub
+ * never reads it). Only that user sees it, and only on the preference lane (`DIRECTORY_PREFERENCE_PAGE_PATH_V1`): the
+ * default page and the Home fold never carry it, so a guest folding directory pages never meets a kind it does not
+ * know (ticket 26/09/23 U5). */
+export interface DirectoryEventUserPreferenceRecorded {
+  kind: "user.preference-recorded";
+  userId: string;
+  schema: string;
+  mutation: string;
+}
+
+/** 🎚️ The preference lane's page route: the principal's own `user.preference-recorded` events on the page machinery of
+ * `/directory/event-page/v1`, nothing else. */
+export const DIRECTORY_PREFERENCE_PAGE_PATH_V1 = "/directory/preference-page/v1";
+export const USER_PREFERENCE_SCHEMA_ID_MAX_BYTES = 128;
+export const USER_PREFERENCE_MUTATION_MAX_BYTES = 4096;
+
+/** 🛡️ A preference vocabulary id (`os.config.ui-preferences.v1`) and one JSON object text within its bound — the Rust
+ * twin's `valid_user_preference_record_v1`. The hub never reads the object; the vocabulary's own clients do. */
+export function validUserPreferenceRecordV1(schema: unknown, mutation: unknown): boolean {
+  if (typeof schema !== "string" || schema.length === 0 || new TextEncoder().encode(schema).length > USER_PREFERENCE_SCHEMA_ID_MAX_BYTES || !/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/u.test(schema)) return false;
+  if (typeof mutation !== "string" || mutation.length < 2 || new TextEncoder().encode(mutation).length > USER_PREFERENCE_MUTATION_MAX_BYTES) return false;
+  try {
+    const value: unknown = JSON.parse(mutation);
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  } catch {
+    return false;
+  }
+}
+
 export type DirectoryEventBody =
+  | DirectoryEventUserPreferenceRecorded
   | DirectoryEventUserCreated
   | DirectoryEventSpaceCreated
   | DirectoryEventSpaceRenamed
@@ -354,6 +385,7 @@ function directoryEventPageEvent(value: unknown): DirectoryEvent {
     "document.indexed": ["kind", "scope", "descriptorDigestV1", "entry"],
     "artifact.checkpoint-published": ["kind", "checkpoint"],
     "artifact.retention-advanced": ["kind", "retention"],
+    "user.preference-recorded": ["kind", "userId", "schema", "mutation"],
   };
   const fields = typeof body.kind === "string" ? bodyFields[body.kind] : undefined;
   if (!fields) throw new Error("directory-event-page.invalid-event-kind");
@@ -368,8 +400,10 @@ function directoryEventPageEvent(value: unknown): DirectoryEvent {
     "member.upserted": ["spaceId", "userId"],
     "member.removed": ["spaceId", "userId"],
     "invite.redeemed": ["spaceId", "userId", "inviteId"],
+    "user.preference-recorded": ["userId", "schema", "mutation"],
   };
   if ((textFields[body.kind as string] ?? []).some((field) => typeof body[field] !== "string")) throw new Error("directory-event-page.invalid-event-text");
+  if (body.kind === "user.preference-recorded" && (!validUserPreferenceRecordV1(body.schema, body.mutation) || event.spaceId !== undefined || event.userId !== body.userId || (body.userId as string).length === 0)) throw new Error("directory-event-page.invalid-user-preference");
   if (
     (body.kind === "space.created" && body.spaceKind !== "atelier" && body.spaceKind !== "studio" && body.spaceKind !== "archive") ||
     ((body.kind === "space.created" || body.kind === "space.visibility-changed") && body.visibility !== "private" && body.visibility !== "public") ||
@@ -430,7 +464,8 @@ export type DirectoryCommand =
   | { kind: "remove-member"; spaceId: string; userId: string }
   | { kind: "create-invite"; spaceId: string; role: DirectorySpaceRole; ttlSecs: number }
   | { kind: "revoke-invite"; spaceId: string; inviteId: string }
-  | { kind: "announce-document"; descriptor: DocumentDescriptor };
+  | { kind: "announce-document"; descriptor: DocumentDescriptor }
+  | { kind: "record-user-preference"; schema: string; mutation: string };
 //#endregion 🔖️Command
 
 
@@ -516,6 +551,7 @@ const DIRECTORY_COMMAND_FIELDS: Record<string, readonly string[]> = {
   "create-invite": ["kind", "spaceId", "role", "ttlSecs"],
   "revoke-invite": ["kind", "spaceId", "inviteId"],
   "announce-document": ["kind", "descriptor"],
+  "record-user-preference": ["kind", "schema", "mutation"],
 };
 
 function directoryCommandRequestId(value: unknown): string {
@@ -559,6 +595,7 @@ export function canonicalDirectoryCommandV1(value: unknown): DirectoryCommand {
     case "remove-member": text("spaceId"); text("userId"); break;
     case "create-invite": text("spaceId"); role(command.role); directoryEventPageInteger(command.ttlSecs, true); break;
     case "revoke-invite": text("spaceId"); text("inviteId"); break;
+    case "record-user-preference": if (!validUserPreferenceRecordV1(command.schema, command.mutation)) throw new Error("directory-command.invalid-user-preference"); break;
     case "announce-document": {
       directoryEventPageNestedShapes({ kind: "document.announced", descriptor: command.descriptor });
       const descriptor = command.descriptor as Record<string, unknown>;
@@ -1622,10 +1659,11 @@ export function sameLeaseFieldsV1(left: DocumentExecutionTargetLeaseFieldsV1, ri
 
 /** 🌐️ Complete localized execution-target status vocabulary. No code carries an origin, URL, path,
  * receipt, grant, digest or user identity; EN and DE are both explicit with no default language. */
-export type DocumentExecutionTargetStatusCodeV1 = "verifying" | "integrity-failed" | "stale" | "cancelled" | "renderer-unavailable" | "link-expired" | "access-revoked";
+export type DocumentExecutionTargetStatusCodeV1 = "verifying" | "retrying" | "integrity-failed" | "stale" | "cancelled" | "renderer-unavailable" | "link-expired" | "access-revoked";
 
 export const DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1: Readonly<Record<DocumentExecutionTargetStatusCodeV1, Readonly<Record<"en" | "de", string>>>> = Object.freeze({
   verifying: Object.freeze({ en: "Verifying document component…", de: "Dokumentkomponente wird überprüft…" }),
+  retrying: Object.freeze({ en: "The hub is busy. Asking again for the document component…", de: "Der Hub ist ausgelastet. Die Dokumentkomponente wird erneut angefragt…" }),
   "integrity-failed": Object.freeze({ en: "The document component could not be verified. Reopen the document.", de: "Die Dokumentkomponente konnte nicht verifiziert werden. Öffnen Sie das Dokument erneut." }),
   stale: Object.freeze({ en: "The document target changed. Reopen the document.", de: "Das Dokumentziel wurde geändert. Öffnen Sie das Dokument erneut." }),
   cancelled: Object.freeze({ en: "Opening the document was cancelled.", de: "Das Öffnen des Dokuments wurde abgebrochen." }),
@@ -1634,10 +1672,10 @@ export const DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1: Readonly<Record<DocumentE
   "access-revoked": Object.freeze({ en: "Your access to this document was removed.", de: "Ihr Zugriff auf dieses Dokument wurde entfernt." }),
 });
 
-/** 🔊️ ARIA live-region politeness for one execution-target status: progress announces, every
- * terminal integrity/stale/renderer outcome asserts. */
+/** 🔊️ ARIA live-region politeness for one execution-target status: progress and a retry of a declared transient answer
+ * announce (the opening still runs and can be cancelled), every terminal integrity/stale/renderer outcome asserts. */
 export function documentExecutionTargetStatusRoleV1(code: DocumentExecutionTargetStatusCodeV1): "status" | "alert" {
-  return code === "verifying" ? "status" : "alert";
+  return code === "verifying" || code === "retrying" ? "status" : "alert";
 }
 
 /** 🪜️ Every stage one execution-target install passes through. The first five are the owner's own

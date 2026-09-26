@@ -56,3 +56,33 @@ fn test_profile_has_tighter_limits_than_prod() {
     assert!(test_config.limits.max_batch_commands < prod_config.limits.max_batch_commands);
 }
 //#endregion 🔖️Config
+
+//#region 🔖️WorkerSubmitRetry
+/// 🔁️ The language-agnostic decision table: a lock race never spends an attempt (so no run of
+/// races, however long, refuses an owner's work), saturation spends exactly one of `limit`, and
+/// shutdown/poisoning are terminal.
+#[test]
+fn worker_submit_retry_follows_the_declared_decision_table() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️worker-submit-retry/🔣️.json")).unwrap();
+    let limit = u8::try_from(fixture["limit"].as_u64().unwrap()).unwrap();
+    let rows = fixture["rows"].as_array().unwrap();
+    for row in rows {
+        let kind = match row["kind"].as_str().unwrap() {
+            "Contended" => semio_framework_async::WorkerSubmitErrorKind::Contended,
+            "Saturated" => semio_framework_async::WorkerSubmitErrorKind::Saturated,
+            "Shutdown" => semio_framework_async::WorkerSubmitErrorKind::Shutdown,
+            "Poisoned" => semio_framework_async::WorkerSubmitErrorKind::Poisoned,
+            other => panic!("undeclared kind {other}"),
+        };
+        let attempt = u8::try_from(row["attempt"].as_u64().unwrap()).unwrap();
+        let next = row["next"].as_u64().map(|next| u8::try_from(next).unwrap());
+        assert_eq!(worker_submit_retry_attempt(kind, attempt, limit), next, "{row}");
+    }
+    assert_eq!(rows.len(), 12);
+    let mut attempt = 0;
+    for _ in 0..10_000 {
+        attempt = worker_submit_retry_attempt(semio_framework_async::WorkerSubmitErrorKind::Contended, attempt, limit).expect("a lock race is never terminal");
+    }
+    assert_eq!(attempt, 0);
+}
+//#endregion 🔖️WorkerSubmitRetry

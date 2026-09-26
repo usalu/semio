@@ -1696,13 +1696,25 @@ export function loadNormalizationTaxonomy(options: Pick<TaxonomyInventoryOptions
   return loadTaxonomy(options);
 }
 
+/** 🧠️ Parsed taxonomies by content digest. Parsing is a pure function of the bytes (the path only names errors and the
+ * loaded copy), so each distinct taxonomy is parsed and validated once per process instead of once per source admission —
+ * measured ~0.9 s per admission under fleet load, paid once per direct-mutation law vector. Bounded to the few most recent
+ * contents, since laws load many synthetic variants. */
+const PARSED_TAXONOMIES = new Map<string, Omit<LoadedTaxonomy, "path" | "input">>();
+const PARSED_TAXONOMY_CAPACITY = 8;
+
 function loadTaxonomy(options: Pick<TaxonomyInventoryOptions, "repoRoot" | "taxonomyPath">): LoadedTaxonomy {
   const path = assertLexicalInputOutsideOpaque(options.repoRoot, options.taxonomyPath ?? TAXONOMY_RELATIVE_PATH, "taxonomyPath", true);
   const input = semanticOwnedInputFileSnapshot(options.repoRoot, relative(resolve(options.repoRoot), path).replaceAll("\\", "/"));
   if (!input) throw new Error("Taxonomy schema is absent: " + path);
+  const cached = PARSED_TAXONOMIES.get(input.contentHash);
+  if (cached) return { ...cached, path, input };
   const bytes = Buffer.from(input.bytes), text = bytes.toString("utf8");
   if (!Buffer.from(text).equals(bytes)) throw new Error("Taxonomy schema has lossy UTF-8: " + path);
-  return { ...parseTaxonomy(JSON.parse(text) as unknown, path), input };
+  const { path: _path, input: _input, ...parsed } = parseTaxonomy(JSON.parse(text) as unknown, path);
+  if (PARSED_TAXONOMIES.size >= PARSED_TAXONOMY_CAPACITY) PARSED_TAXONOMIES.delete(PARSED_TAXONOMIES.keys().next().value!);
+  PARSED_TAXONOMIES.set(input.contentHash, parsed);
+  return { ...parsed, path, input };
 }
 //#endregion 🔣️Schema
 

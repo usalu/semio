@@ -16,6 +16,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { type ArtifactSyncStatus } from "@semio-tech/framework-os";
 import { HubConnectionIndicator, hubConnectionSummaryV1, syncStatusLabelV1, type HubLinkV1, type HubSessionPresenceV1, type SyncStatusTextsV1 } from "../../🟦️.tsx";
 import hubSummary from "../../🧫️fixtures/📶️hub-connection-summary.json";
+import hubProjectionSchema from "../../../../🧬️schema/🔗️hub-projection/🔣️.json";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Fixtures
@@ -64,6 +65,16 @@ describe("syncStatusLabelV1", () => {
 /** 🧪️ Replayed from the language-agnostic fixture `🧫️fixtures/📶️hub-connection-summary.json` (slice U5 added the
  * session link: a verified session that stops answering reads `reconnecting` without a single document). */
 describe("hubConnectionSummaryV1", () => {
+  it("folds every session, link and document mix into exactly the shared hub projection's states", () => {
+    const declared = (hubProjectionSchema as unknown as { readonly definitions: { readonly summary: { readonly properties: { readonly state: { readonly enum: readonly string[] } } } } }).definitions.summary.properties.state.enum;
+    const remotes: readonly (readonly ArtifactSyncStatus["remote"][])[] = [[], [{ kind: "live", peerCount: 2 }], [{ kind: "connecting" }], [{ kind: "backoff", retryInMs: 500 }], [{ kind: "detached" }], [{ kind: "connecting" }, { kind: "backoff", retryInMs: 500 }], [{ kind: "detached" }, { kind: "live", peerCount: 1 }]];
+    const reached = new Set<string>();
+    for (const session of ["none", "signedOut", "signedIn"] as const)
+      for (const link of ["verifying", "reachable", "unreachable"] as const)
+        for (const mix of remotes) reached.add(hubConnectionSummaryV1(mix.map((remote) => status(remote)), session, link).state);
+    expect([...reached].sort()).toEqual([...declared].sort());
+  });
+
   for (const row of hubSummary.cases) {
     it(row.name, () => {
       expect(hubConnectionSummaryV1(row.remotes.map((remote) => status(remote as ArtifactSyncStatus["remote"])), row.session as HubSessionPresenceV1, row.link as HubLinkV1)).toEqual(row.expected);

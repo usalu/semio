@@ -1,0 +1,29 @@
+"""🔋️ D1 codemod: agent-facing en/de descriptions for every energy model editor verb (+ viewer camera chrome)."""
+import sys
+sys.path.insert(0, "/Users/ueli/Documents/semio/.tmp-ticket/wp-d1")
+from d1_apply import describe
+
+M = "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any"
+describe(f"{M}/✏️editor/🦀️.rs", "create_energy_model_editor", [
+    ("assign-surface-construction", "Assigns an existing construction (its layer build-up) to one surface of the energy model by id.", "Weist einer Fläche des Energiemodells anhand ihrer Id eine vorhandene Konstruktion (ihren Schichtaufbau) zu."),
+    ("setActiveExample", "Replaces the whole energy model with a bundled example, the demo or one of the ASHRAE 140 BESTEST cases (600 to 950), by example id.", "Ersetzt das gesamte Energiemodell durch ein mitgeliefertes Beispiel, die Demo oder einen der ASHRAE-140-BESTEST-Fälle (600 bis 950), anhand der Beispiel-Id."),
+    ("set-surface-property", "Sets one property of one surface (such as its name, class or outside boundary, with the interzone partner surface where needed).", "Setzt eine Eigenschaft einer Fläche (etwa Name, Klasse oder äußere Randbedingung, wo nötig mit der Partnerfläche einer anderen Zone)."),
+    ("set-fenestration-property", "Sets one property of one window (fenestration), such as its name, construction or geometry.", "Setzt eine Eigenschaft eines Fensters, etwa Name, Konstruktion oder Geometrie."),
+    ("set-zone-property", "Sets one property of one thermal zone, such as its volume, multiplier or whether it is conditioned.", "Setzt eine Eigenschaft einer thermischen Zone, etwa ihr Volumen, ihren Multiplikator oder ob sie konditioniert ist."),
+    ("set-glazing-material-property", "Sets one optical or thermal property of one glazing material, such as its thickness, transmittance or conductivity.", "Setzt eine optische oder thermische Eigenschaft eines Verglasungsmaterials, etwa Dicke, Transmissionsgrad oder Wärmeleitfähigkeit."),
+    ("set-gas-material-property", "Sets one property of one gas gap between glazing layers, such as its gas type or thickness.", "Setzt eine Eigenschaft eines Gaszwischenraums zwischen Verglasungsschichten, etwa Gasart oder Dicke."),
+    ("set-material-property", "Sets one thermal property of one opaque material, such as its thickness, conductivity, density or specific heat.", "Setzt eine thermische Eigenschaft eines opaken Materials, etwa Dicke, Wärmeleitfähigkeit, Dichte oder spezifische Wärmekapazität."),
+    ("set-thermostat-setpoints", "Sets the heating and cooling setpoint schedules of one thermostat, with optional throttling ranges in kelvin.", "Legt die Heiz- und Kühlsollwert-Zeitpläne eines Thermostats fest, mit optionalen Regelbereichen in Kelvin."),
+    ("set-site", "Sets the building site: latitude, longitude, elevation, time zone and the angle of the building's north axis.", "Legt den Standort des Gebäudes fest: Breite, Länge, Höhe, Zeitzone und den Winkel der Nordachse des Gebäudes."),
+    ("delete-zone", "Deletes one thermal zone by id; refused while any surface, space, gain, HVAC object or airflow node still refers to it.", "Löscht eine thermische Zone anhand ihrer Id; wird abgelehnt, solange noch eine Fläche, ein Raum, eine Last, ein HLK-Objekt oder ein Luftknoten auf sie verweist."),
+    ("delete-surface", "Deletes one surface by id together with every window hosted on it and every adjacency naming it; refused while another surface uses it as its interzone partner.", "Löscht eine Fläche anhand ihrer Id samt aller darin sitzenden Fenster und aller sie nennenden Nachbarschaften; wird abgelehnt, solange eine andere Fläche sie als Partnerfläche nutzt."),
+    ("set-construction-property", "Sets one property of one construction, such as its name or its ordered list of material layers.", "Setzt eine Eigenschaft einer Konstruktion, etwa ihren Namen oder ihre geordnete Liste von Materialschichten."),
+    ("set-simulation-settings", "Sets the simulation's zone and system timesteps in minutes and the number of warm-up days; a running simulation restarts with them.", "Legt die Zonen- und Systemzeitschritte der Simulation in Minuten und die Zahl der Vorlauftage fest; eine laufende Simulation startet damit neu."),
+    ("set-result-field", "Chooses the simulated per-surface result (conduction loss or gain, transmitted or absorbed solar) the 3D model window is coloured by; a running simulation is not restarted.", "Wählt das simulierte Flächenergebnis (Transmissionsverlust oder -gewinn, transmittierte oder absorbierte Solarstrahlung), nach dem das 3D-Modellfenster eingefärbt wird; eine laufende Simulation startet nicht neu."),
+    ("set-run-period", "Sets the simulated calendar period from a start month and day to an end month and day.", "Legt den simulierten Kalenderzeitraum von einem Startmonat und -tag bis zu einem Endmonat und -tag fest."),
+    ("create-surface", "Adds a new surface with the given name and class to an existing zone, built from an existing construction.", "Fügt einer vorhandenen Zone eine neue Fläche mit dem angegebenen Namen und der Klasse hinzu, aufgebaut aus einer vorhandenen Konstruktion."),
+    ("create-zone", "Adds a new thermal zone with the given name, volume in cubic metres, multiplier and conditioning.", "Fügt eine neue thermische Zone mit dem angegebenen Namen, Volumen in Kubikmetern, Multiplikator und Konditionierung hinzu."),
+    ("rename-zone", "Renames one thermal zone; zone names key every simulation report, so a name already in use is refused.", "Benennt eine thermische Zone um; Zonennamen sind der Schlüssel aller Simulationsberichte, ein bereits vergebener Name wird abgelehnt."),
+], [("setCamera", "Chrome")], anchor="builder.build_definition()", statement="builder")
+
+describe(f"{M}/👁️viewer/🦀️.rs", "create_energy_model_viewer", [], [("setCamera", "Chrome")])

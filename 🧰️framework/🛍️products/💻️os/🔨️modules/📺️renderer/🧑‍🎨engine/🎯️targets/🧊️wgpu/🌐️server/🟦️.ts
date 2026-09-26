@@ -5,6 +5,7 @@ import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { playgroundAssetVitePlugins, resolveGisMapTileServeMode, semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin, type PlaygroundAssetSpec } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import type { OwnedBuildConfig, OwnedBuildPlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import { semioAgentBridgeRendezvousVitePlugin } from "../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 
 export type WgpuBrowserConfiguration = {
   readonly workspace: string;
@@ -92,6 +93,7 @@ export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): Owne
     server: { watch: null, fs: { allow: [options.root, ...mounts.map(([, root]) => root)] } },
     plugins: [
       semioEmojiIndexHtmlVitePlugin(options.root),
+      semioAgentBridgeRendezvousVitePlugin({ shellKind: "wgpu-web" }),
       ...mounts.flatMap(([route, root]) => staticDirVitePlugin(options.workspace, { kind: "static-dir", route, root }).filter(plugin => plugin.apply !== "build")),
       ...playgroundAssetVitePlugins(options.workspace, options.assets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
       {

@@ -4,7 +4,7 @@
  * root (`serve/wg7-serve.ts`) mounts the catalog's own bytes, so the shell's execution-target lease check (component
  * SHA-256 equality) admits the hub document.
  *
- * Usage (repo root, inside the wasm mutex): bun .tmp-ticket/wp-wg7/wg7-catalog-module.ts <catalogRoot> <pluginId> <crateName>
+ * Usage (repo root): bun .tmp-ticket/wp-wg7/wg7-catalog-module.ts <catalogRoot> <pluginId> <crateName> [durableName]
  */
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -16,8 +16,8 @@ import { fileDigest } from "/Users/ueli/Documents/semio/🧰️framework/🛍️
 import { MODULE_BRIDGE_FILE, moduleDirectoryName } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { pluginModulesRoot } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 
-const [catalogRoot, pluginId, crateName] = process.argv.slice(2);
-if (!catalogRoot || !pluginId || !crateName) throw new Error("usage: wg7-catalog-module.ts <catalogRoot> <pluginId> <crateName>");
+const [catalogRoot, pluginId, crateName, durableName = "s11-wg7-catalog-modules"] = process.argv.slice(2);
+if (!catalogRoot || !pluginId || !crateName) throw new Error("usage: wg7-catalog-module.ts <catalogRoot> <pluginId> <crateName> [durableName]");
 const repo = "/Users/ueli/Documents/semio";
 const current = JSON.parse(readFileSync(join(catalogRoot, "trusted-catalog", "current.json"), "utf8"));
 const generation = join(catalogRoot, "trusted-catalog", "generations", current.generationId);
@@ -29,7 +29,7 @@ const sha = createHash("sha256").update(readFileSync(component)).digest("hex");
 if (sha !== entry.component.sha256) throw new Error(`catalog component digest mismatch: ${sha} vs ${entry.component.sha256}`);
 
 const shared = pluginModulesRoot("release");
-const durable = join(repo, ".🧬semio", "🌐hub", "s11-wg7-catalog-modules");
+const durable = join(repo, ".🧬semio", "🌐hub", durableName);
 const root = join(durable, "release", "🔌️plugin-modules");
 rmSync(join(durable, "release"), { recursive: true, force: true });
 mkdirSync(root, { recursive: true });

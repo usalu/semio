@@ -1,17 +1,39 @@
-# 🐳️ Build-context exclusions for 🌎️hub/Dockerfile (see its header — the image is UNBUILT).
-# Deliberately conservative: only host-local state and compiler output that the builder stage
-# recreates. Committed `🤖️generated` sources are NOT excluded — several crates and the plugin
-# catalog are generated-then-committed, and dropping them would break the build inside the image.
+# 🐳️ Build-context exclusions for 🌎️hub/Dockerfile (see its header).
+# Only host-local state and compiler output that the builder stage recreates. Committed `🤖️generated`
+# sources are NOT excluded — several crates and the plugin catalog are generated-then-committed, and
+# dropping them would break the build inside the image. `.🧬semio` is the repository's host-local state
+# root: the shared cargo cache (hundreds of GiB), hub data roots and tickets — none of it is a build
+# input, and sending it made the context larger than the disk the build runs on. Patterns without `**/`
+# match at the context root only, so every per-package output directory is excluded at any depth. The `dist`, staging
+# (`📤️distribution`, `🔌️plugin-modules`, `🧩️extension-modules`, `📺️renderer-modules`) and wasm-pack (`pkg`) directories are
+# git-ignored build outputs that no clean checkout has, and `♻️mit-bestand/🔎️recherche` is a research submodule no build
+# reads: together they were ~14 GB of the ~23 GB context the first cold build started to send.
 .git
 .jj
-node_modules
-target
-temp
-test-results
-storybook-static
+.nx
+.venv
+.cursor
+.🧬semio
+.tmp*
+**/node_modules
+**/target
+**/🎯️target
+**/🎯️target-*
+**/📤️dist
+**/temp
+**/test-results
+**/storybook-static
 **/🗑️generated
-**/dist/build
-**/dist/build-dev
-**/dist/build-release
-**/dist/publish
+**/dist
+**/📤️distribution
+**/🔌️plugin-modules
+**/🧩️extension-modules
+**/📺️renderer-modules
+**/pkg
+**/coverage
+**/.vite
+**/.venv
+**/__pycache__
+**/.pytest_cache
+♻️mit-bestand/🔎️recherche
 **/.DS_Store

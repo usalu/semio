@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import * as React from "react";
 import { describe, expect, it } from "vitest";
 import { Window } from "../../🟦️.tsx";
+import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
 import chromeStacking from "../../🧫️fixtures/🪜️chrome-stacking.json";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -24,7 +25,7 @@ describe("Window chrome stacking", () => {
   for (const testCase of fixture.cases) {
     it(`keeps every chrome pane outside the isolated body root: ${testCase.name}`, () => {
       const { container } = render(
-        <Window id="stacking-window" active fill actionPane={<div>Rows</div>} utilityBar={<div>Tools</div>} measures={<div>LOD</div>} search={{ input: { placeholder: "Action" } }}>
+        <Window id="stacking-window" active fill actionPane={<div>Rows</div>} utilityBar={<div>Tools</div>} measures={<div>LOD</div>} search={{ input: { placeholder: uiDataLabel("Action") } }}>
           <div data-testid="body-layer" className={testCase.bodyLayerClass} />
         </Window>,
       );

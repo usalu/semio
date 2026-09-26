@@ -36,7 +36,8 @@ use semio_framework_plugin::{
     ContextMenuRequest, Dialect, DomainTopology, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaError,
     MediaPayload, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
-use serde_json::{json, Value};
+use dsl::os_pack::json;
+use dsl::os_pack::json::Value;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use store::EngineHandles;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{set_snapshot as semio_flow_set_snapshot, SemioFlowMutation};
@@ -318,11 +319,6 @@ impl std::error::Error for SequenceCoreError {
     }
 }
 
-impl From<serde_json::Error> for SequenceCoreError {
-    fn from(error: serde_json::Error) -> Self {
-        Self::Json(error.to_string())
-    }
-}
 //#endregion ⚠️ Errors
 
 //#region 🔖️Host
@@ -1910,7 +1906,10 @@ impl SequenceNodeGraphState {
                 if payload.operations_json.len() > SEQUENCE_RETAINED_RAW_BYTES {
                     return Err(Fault::from("sequence-node-graph-bytes"));
                 }
-                self.operations = serde_json::from_str(&payload.operations_json).map_err(|_| Fault::from("sequence-node-graph-json"))?;
+                let Ok(Value::Array(operations)) = json::parse(&payload.operations_json) else {
+                    return Err(Fault::from("sequence-node-graph-json"));
+                };
+                self.operations = operations;
                 if self.operations.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
                     return Err(Fault::from("sequence-node-graph-items"));
                 }
@@ -3244,10 +3243,10 @@ impl SequenceImportJob {
         let Some(media_json) = self.media_json.as_ref() else {
             return Some(sequence_job_fault(cx, "sequence steps:in importer only accepts a Structured (JSON) payload"));
         };
-        let Ok(value) = serde_json::from_str::<Value>(media_json) else {
+        let Ok(value) = json::parse(media_json) else {
             return Some(sequence_job_fault(cx, "sequence steps:in payload is not valid json"));
         };
-        let params_value = if value.is_object() { value } else { json!({ "value": value }) };
+        let params_value = if value.as_object().is_some() { value } else { json!({ "value": value }) };
         let Ok(params) = dsl::os_pack::from_json_str::<StepParams>(&params_value.to_string()) else {
             return Some(sequence_job_fault(cx, "sequence steps:in payload is not a step parameter record"));
         };
@@ -3687,8 +3686,8 @@ impl ArtifactEditor for SequencePlayApp {
         let MediaPayload::Structured { json, .. } = &media.payload else {
             return Err(MediaError::Payload(port.to_string(), "steps:in importer only accepts a Structured (JSON) payload".into()));
         };
-        let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let params_value = if value.is_object() { value } else { json!({ "value": value }) };
+        let value = json::parse(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let params_value = if value.as_object().is_some() { value } else { json!({ "value": value }) };
         let params: StepParams = dsl::os_pack::from_json_str(&params_value.to_string()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let mut live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children).map_err(|error| MediaError::Payload(port.to_string(), format!("{error:?}")))?;
         let id = format!("step-{}", max_serial_in_snapshot(&live).max(100) + 1);
@@ -3863,7 +3862,7 @@ fn sequence_context_menu_items(registry: &AppActionRegistry, is_de: bool, surfac
                 label: Some(if is_de { "Schritt einklappen".into() } else { "Toggle Collapsed".into() }),
                 icon: Some("chevrons-up-down".into()),
                 action: Some("setStepCollapsed".into()),
-                args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "id": id }))),
+                args: Some(json::to_dsl_value(&json!({ "id": id }))),
                 ..Default::default()
             })
         });
@@ -3995,6 +3994,23 @@ pub fn create_sequence_app() -> AppDefinition {
             // even if it were populated. The subset's own `📚️examples/🎬️demo` facet (mounted at the
             // plugin root as `artifacts::sequence::examples::demo`) is the closest surviving carrier of this
             // content today.
+            .action_describe("reorganize", LocalizedLabel::native("Lays out every step of the sequence automatically along the window's flow direction, overwriting their manual positions.", "Ordnet alle Schritte der Sequenz automatisch entlang der Flussrichtung des Fensters an und überschreibt ihre manuellen Positionen."))
+            .action_describe("setOrientation", LocalizedLabel::native("Sets the flow direction (such as left to right or top to bottom) that Reorganize lays the steps out along; only the window's setting changes.", "Legt die Flussrichtung fest (etwa links nach rechts oder oben nach unten), entlang der Neu anordnen die Schritte auslegt; nur die Einstellung des Fensters ändert sich."))
+            .action_describe("run", LocalizedLabel::native("Runs the sequence's compiled path once from its first step; the document is not changed.", "Führt den kompilierten Pfad der Sequenz einmal ab dem ersten Schritt aus; das Dokument ändert sich nicht."))
+            .action_describe("stop", LocalizedLabel::native("Stops a running sequence; the document is not changed.", "Hält eine laufende Sequenz an; das Dokument ändert sich nicht."))
+            .action_describe("addStep", LocalizedLabel::native("Adds a new step of the given kind to the sequence canvas at x, y.", "Fügt der Sequenzfläche an x, y einen neuen Schritt der angegebenen Art hinzu."))
+            .action_describe("addStepToSlot", LocalizedLabel::native("Adds a new step of the given kind into a named slot of an owner step (such as the body of a loop) at x, y.", "Fügt einen neuen Schritt der angegebenen Art an x, y in einen benannten Slot eines Besitzerschritts ein (etwa den Rumpf einer Schleife)."))
+            .action_describe("removeStep", LocalizedLabel::native("Removes one step by id from the sequence together with the flow edges attached to it.", "Entfernt einen Schritt anhand seiner Id samt der angeschlossenen Flusskanten aus der Sequenz."))
+            .action_describe("deleteSelection", LocalizedLabel::native("Removes every currently selected step from the sequence together with their flow edges.", "Entfernt alle aktuell ausgewählten Schritte samt ihrer Flusskanten aus der Sequenz."))
+            .action_describe("moveStep", LocalizedLabel::native("Moves one step to an absolute position x, y on the sequence canvas.", "Verschiebt einen Schritt an die absolute Position x, y der Sequenzfläche."))
+            .action_describe("connectSteps", LocalizedLabel::native("Adds a flow edge from one step to another, so the second runs after the first.", "Fügt eine Flusskante von einem Schritt zu einem anderen hinzu, sodass der zweite nach dem ersten läuft."))
+            .action_describe("disconnectSteps", LocalizedLabel::native("Removes the flow edge between two steps, so they no longer run in that order.", "Entfernt die Flusskante zwischen zwei Schritten, sodass sie nicht mehr in dieser Reihenfolge laufen."))
+            .action_describe("setStepParams", LocalizedLabel::native("Replaces the parameters of one step with the given name-to-value map.", "Ersetzt die Parameter eines Schritts durch die angegebene Zuordnung von Namen zu Werten."))
+            .action_describe("setStepCollapsed", LocalizedLabel::native("Collapses or expands one step on the canvas, hiding or showing its nested steps.", "Klappt einen Schritt auf der Fläche ein oder aus und verbirgt oder zeigt seine verschachtelten Schritte."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole sequence with the bundled demo sequence; any other example id changes nothing.", "Ersetzt die gesamte Sequenz durch die mitgelieferte Demo-Sequenz; jede andere Beispiel-Id ändert nichts."))
+            .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("setViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_destructive("reorganize")
             .build_definition()
 }
 //#endregion 🔖️Manifest

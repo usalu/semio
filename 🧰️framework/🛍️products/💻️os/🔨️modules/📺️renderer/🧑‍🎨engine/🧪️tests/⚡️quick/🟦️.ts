@@ -122,6 +122,9 @@ describe("renderer quick contracts", () => {
     expect(pluginInstallBandTextV1(["note"], "en", { completedBytes: 12_345_678, totalBytes: 81_200_000 })).toBe("Loading plugin note · 12.3 of 81.2 MB verified");
     expect(pluginInstallBandTextV1(["note"], "de", { completedBytes: 12_345_678, totalBytes: 81_200_000 })).toBe("Plugin wird geladen note · 12,3 von 81,2 MB geprüft");
     expect(pluginInstallBandTextV1(["note"], "de", null)).toBe("Plugin wird geladen note");
+    expect(pluginInstallBandTextV1(["note"], "en", { completedBytes: 12_345_678, totalBytes: 81_200_000, retry: { attempt: 2, of: 4 } })).toBe("Loading plugin note · 12.3 of 81.2 MB verified · the hub did not answer, trying again (2 of 4)");
+    expect(pluginInstallBandTextV1(["note"], "de", { completedBytes: 12_345_678, totalBytes: 81_200_000, retry: { attempt: 2, of: 4 } })).toBe("Plugin wird geladen note · 12,3 von 81,2 MB geprüft · der Hub hat nicht geantwortet, neuer Versuch (2 von 4)");
+    expect(pluginInstallProgressTotalV1({ a: { completedBytes: 1, totalBytes: 2 }, b: { completedBytes: 3, totalBytes: 4, retry: { attempt: 3, of: 4 } } }, ["a", "b"])).toEqual({ completedBytes: 4, totalBytes: 6, retry: { attempt: 3, of: 4 } });
   });
 
   it("upserts a freshly installed program in its plugin's place, so an awaited install routes over it before the next render", () => {

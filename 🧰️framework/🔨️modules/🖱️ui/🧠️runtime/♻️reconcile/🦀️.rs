@@ -579,9 +579,13 @@ pub struct SurfaceReconcileLimits {
     pub max_identifier_bytes: usize,
 }
 
+/// 🚧️ The item ceiling [`SurfaceReconcileLimits::default`] admits for one surface — the bound a producer that
+/// windows its rows (the plugin SDK's `TreeWindows` ledger) stays under by charging [`surface_subtree_items`].
+pub const SURFACE_RECONCILE_MAX_ITEMS: usize = 4_097;
+
 impl Default for SurfaceReconcileLimits {
     fn default() -> Self {
-        Self { max_nodes: SURFACE_RECONCILE_FIXED_NODES, max_items: 4_097, max_bytes: SURFACE_RECONCILE_SURFACE_BYTES, max_identifier_bytes: 256 }
+        Self { max_nodes: SURFACE_RECONCILE_FIXED_NODES, max_items: SURFACE_RECONCILE_MAX_ITEMS, max_bytes: SURFACE_RECONCILE_SURFACE_BYTES, max_identifier_bytes: 256 }
     }
 }
 
@@ -770,23 +774,63 @@ struct SurfaceSemanticCensusCursor {
     string_byte: usize,
     depth: usize,
     value_stack: Box<[Option<SurfaceSemanticValueFrame>]>,
+    oversized_pages: usize,
 }
 
 impl Default for SurfaceSemanticCensusCursor {
     fn default() -> Self {
         let mut value_stack = Vec::with_capacity(SURFACE_RECONCILE_VALUE_DEPTH);
         value_stack.resize_with(SURFACE_RECONCILE_VALUE_DEPTH, || None);
-        Self { field: 0, container: 0, entry: 0, binding: 0, action: 0, data_attribute: 0, string_byte: 0, depth: 0, value_stack: value_stack.into_boxed_slice() }
+        Self { field: 0, container: 0, entry: 0, binding: 0, action: 0, data_attribute: 0, string_byte: 0, depth: 0, value_stack: value_stack.into_boxed_slice(), oversized_pages: 0 }
     }
 }
 
+/// 📏️ Allocation items a fresh reconciliation charges per census item, as `numerator / denominator` — measured
+/// 0.17–0.35 on tree pick rows, bound tree rows, Home-shaped table rows and their containers; priced at 1/2.
+pub const SURFACE_RECONCILE_ALLOCATION_ITEMS_PER_CENSUS_ITEM: (usize, usize) = (1, 2);
+
+/// 📏️ An upper bound of the items `node` and its whole subtree charge a fresh reconciliation against
+/// [`SurfaceReconcileLimits::max_items`]. Per record: the reconciler's own semantic census, plus
+/// [`SURFACE_RECONCILE_ALLOCATION_ITEMS_PER_CENSUS_ITEM`] of it for the allocation items the copy, bindings and
+/// assembly stages charge on top (one per allocated page of what the census priced), plus one per page an
+/// owner spans beyond its first. A producer that stops materialising rows once this would overdraw its item
+/// budget shortens a window instead of having the whole surface refused with `Credits { items }` (ticket
+/// 26/09/23 U5 — 138 Home rows faulted at `items 4098 > 4097`). Pinned against the real reconciler by
+/// `subtree_item_census_bounds_the_items_a_fresh_reconciliation_consumes`.
+pub fn surface_subtree_items(node: &crate::TreeNode) -> Result<usize, SurfaceReconcileFault> {
+    let mut items = 0usize;
+    let mut pending = vec![node];
+    let mut census = SurfaceSemanticCensusCursor::default();
+    while let Some(next) = pending.pop() {
+        census.restart();
+        let mut record = 0usize;
+        loop {
+            match census.step(next) {
+                SurfaceSemanticCensusStep::Progress(delta) => record = record.checked_add(delta.items).ok_or(SurfaceReconcileFault::CounterOverflow)?,
+                SurfaceSemanticCensusStep::Complete => break,
+                SurfaceSemanticCensusStep::Fault(fault) => return Err(fault),
+            }
+        }
+        items = items.checked_add(record.div_ceil(SURFACE_RECONCILE_ALLOCATION_ITEMS_PER_CENSUS_ITEM.1).saturating_mul(SURFACE_RECONCILE_ALLOCATION_ITEMS_PER_CENSUS_ITEM.0)).and_then(|items| items.checked_add(record)).and_then(|items| items.checked_add(census.oversized_pages)).ok_or(SurfaceReconcileFault::CounterOverflow)?;
+        pending.extend(next.children.iter());
+    }
+    Ok(items)
+}
+
 impl SurfaceSemanticCensusCursor {
+    /// 🔁️ Readies a completed census for the next record, keeping its value stack's backing.
+    fn restart(&mut self) {
+        let value_stack = take(&mut self.value_stack);
+        *self = Self { field: 0, container: 0, entry: 0, binding: 0, action: 0, data_attribute: 0, string_byte: 0, depth: 0, value_stack, oversized_pages: 0 };
+    }
+
     /// 📏️ UiText storage is inline in the already-counted enclosing payload; traversal remains work.
     fn inline_text(&self, _value: &ui_contract::UiText) -> SurfaceSemanticUsage {
         SurfaceSemanticUsage { items: 1, bytes: 0 }
     }
 
     fn owner(&mut self, bytes: usize) -> SurfaceSemanticUsage {
+        self.oversized_pages = self.oversized_pages.saturating_add(bytes.div_ceil(SURFACE_RECONCILE_PAGE_BYTES).saturating_sub(1));
         self.string_byte = bytes.saturating_mul(SURFACE_RECONCILE_SEMANTIC_COPIES);
         SurfaceSemanticUsage { items: SURFACE_RECONCILE_SEMANTIC_COPIES, bytes: 0 }
     }

@@ -195,7 +195,7 @@ describe("retained resident refresh budget", () => {
     assert.equal(refusal, "capacity");
   });
 
-  it("admits sixty-two populated full documents and refuses the sixty-third on bytes", () => {
+  it("admits sixty populated full documents and refuses the sixty-first on bytes", () => {
     const ledger = new ResidentLedger(fixture.measured.fixedBackingBytes);
     const full = surfaceLimits(fixture.documentNodes);
     const admitted: number[] = [];

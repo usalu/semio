@@ -1416,6 +1416,26 @@ struct OwnedInvocation {
     fuel_used: u64,
 }
 
+/// 🪪️ The owned engine's semantic identity: a digest of the interpreter's source and of this owned
+/// host adapter's source — every instruction a guest executes and every host import answer it can
+/// observe. A fact one build of the engine derived from a component (a verified pack-schema hash)
+/// holds for every other build of the same engine — a copied, re-signed or cross-compiled binary —
+/// and a changed engine never reuses one.
+pub fn owned_engine_identity() -> &'static str {
+    static IDENTITY: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+    IDENTITY.get_or_init(|| {
+        let interpreter = include_str!("../🧠️interpreter/🦀️.rs").as_bytes();
+        let host = include_str!("🦀️.rs").as_bytes();
+        let mut engine = Vec::with_capacity(64 + interpreter.len() + host.len());
+        engine.extend_from_slice(b"semio.owned-engine/v1\n");
+        engine.extend_from_slice(&(interpreter.len() as u64).to_le_bytes());
+        engine.extend_from_slice(interpreter);
+        engine.extend_from_slice(&(host.len() as u64).to_le_bytes());
+        engine.extend_from_slice(host);
+        format!("owned-engine-v1:{}", hex_encode(semio_framework_hash::hash(&engine).as_bytes()))
+    })
+}
+
 pub struct OwnedRuntime {
     next_instance_id: std::sync::atomic::AtomicU32,
 }
@@ -1534,9 +1554,20 @@ impl OwnedRuntime {
         self.codec_call(compiled, OwnedOperation::PrintMirror, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: &[] }, budget, |_, _| {})
     }
 
+    /// 📥️ `codec.print-mirror` with the same stall-bound fuel observations as [`Self::codec_genesis_observed`]:
+    /// validating a large document's pair interprets for as long as a genesis does.
+    pub async fn codec_print_mirror_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<GuestDocumentMirror, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::PrintMirror, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: &[] }, budget, progress)
+    }
+
     /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for an unlinked package.
     pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget) -> Result<GuestDocumentPair, TurnFault> {
         self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, |_, _| {})
+    }
+
+    /// 🧩️ `codec.apply-ops` with the same stall-bound fuel observations as [`Self::codec_genesis_observed`].
+    pub async fn codec_apply_ops_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<GuestDocumentPair, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, progress)
     }
 
     /// 📜️ `codec.replay-envelopes` — the hub's Check In fold, with the same stall-bound fuel
@@ -1602,7 +1633,13 @@ impl GuestRuntime for OwnedRuntime {
         };
         let guest_checkpoint = if state.pending.is_none() {
             begin_owned_operation(state, OwnedOperation::Checkpoint, None).map_err(turn_fault_host)?;
-            let invocation = resume_owned_operation(state, OwnedOperation::Checkpoint, 100_000_000, 1_000).map_err(turn_fault_host)?;
+            let invocation = match resume_owned_operation(state, OwnedOperation::Checkpoint, 100_000_000, 1_000) {
+                Ok(invocation) => invocation,
+                Err(fault) => {
+                    cancel_owned_operation(state).map_err(turn_fault_host)?;
+                    return Err(turn_fault_host(fault));
+                }
+            };
             Some(decode_owned_result::<Vec<u8>>(&invocation.output).map_err(turn_fault_host)?)
         } else {
             None

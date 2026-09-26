@@ -177,7 +177,7 @@ pub fn decode_app_frame(value: &serde_json::Value) -> Result<AppFrame, String> {
             Ok(AppFrame::Emit { ops: PreparedOps { document: decode_lane(ops.get("document"))?, config: decode_lane(ops.get("config"))?, draft: decode_lane(ops.get("draft"))? }, warnings })
         }
         "transactionPrepared" => Ok(AppFrame::TransactionPrepared { txn_id: field_str(value, "txnId")? }),
-        "transactionCommitted" => Ok(AppFrame::TransactionCommitted { txn_id: field_str(value, "txnId")?, edit_id: field_str(value, "editId")? }),
+        "transactionCommitted" => Ok(AppFrame::TransactionCommitted { txn_id: field_str(value, "txnId")?, edit_id: field_str(value, "editId")?, relay: None }),
         "transactionRolledBack" => Ok(AppFrame::TransactionRolledBack { txn_id: field_str(value, "txnId")? }),
         "transactionUndone" => Ok(AppFrame::TransactionUndone { group_id: field_str(value, "groupId")? }),
         "transactionRedone" => Ok(AppFrame::TransactionRedone { group_id: field_str(value, "groupId")? }),

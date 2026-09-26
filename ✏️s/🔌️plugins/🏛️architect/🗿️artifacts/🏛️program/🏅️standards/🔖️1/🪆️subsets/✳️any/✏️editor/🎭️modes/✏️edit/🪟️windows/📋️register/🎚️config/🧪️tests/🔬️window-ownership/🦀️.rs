@@ -76,44 +76,29 @@ fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
 
 #[test]
 fn architect_window_ownership_interactive_classification_matches_retained_owners() {
-    use crate::editor::architect::{create_architect_app, ArchitectPlayApp, ArchitectWindowCommandJobFactory, ARCHITECT_RETAINED_TOOL_IDS};
+    use crate::editor::architect::{create_architect_app, ArchitectExchangeCommandJobFactory, ArchitectPlayApp, ArchitectWindowCommandJobFactory, ARCHITECT_EXCHANGE_TOOL_IDS, ARCHITECT_RETAINED_TOOL_IDS};
     use semio_framework_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, InteractiveJobClassification};
 
     // 🧵️ Every declared action lives in the APP ROSTER (`definition.actions`); a window kind only
     // carries the rows it explicitly references plus the framework's own synthesized interaction/tool-run
-    // rows (`try_build_definition`). The union is this app's whole declared action surface.
+    // rows (`try_build_definition`). The union is this app's whole declared action surface, and every
+    // one of its verbs runs on one of the two retained factories — no batch-only verb is left.
     let definition = create_architect_app();
     let actions = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).collect::<Vec<_>>();
-    // 🧵️ What is left on the batch path after the nine document verbs were promoted to retained
-    // tools: the four exchange verbs (host effects, no bounded reducer), the three analysis verbs
-    // (they publish three lanes at once) and `search`.
-    let batch_expected = ["exportProgram", "exportRegistersCsv", "importProgram", "importRegistersCsv", "runAnalysis", "runReport", "runValidation", "search"]
-    .into_iter()
-    .collect::<std::collections::BTreeSet<_>>();
-    let retained = ARCHITECT_RETAINED_TOOL_IDS.iter().copied().collect::<std::collections::BTreeSet<_>>();
-    let declared = retained.union(&batch_expected).copied().collect::<std::collections::BTreeSet<_>>();
-    let domain_actions = actions.iter().filter(|action| declared.contains(action.id.as_str())).collect::<Vec<_>>();
-    assert_eq!(domain_actions.iter().map(|action| action.id.as_str()).collect::<std::collections::BTreeSet<_>>(), declared);
-    let migrated = actions
-        .iter()
-        .filter(|action| declared.contains(action.id.as_str()))
-        .filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated)
-        .map(|action| action.id.as_str())
-        .collect::<std::collections::BTreeSet<_>>();
+    let retained = ARCHITECT_RETAINED_TOOL_IDS.iter().chain(ARCHITECT_EXCHANGE_TOOL_IDS.iter()).copied().collect::<std::collections::BTreeSet<_>>();
+    let domain_actions = actions.iter().filter(|action| retained.contains(action.id.as_str())).collect::<Vec<_>>();
+    assert_eq!(domain_actions.iter().map(|action| action.id.as_str()).collect::<std::collections::BTreeSet<_>>(), retained);
+    let migrated = domain_actions.iter().filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated).map(|action| action.id.as_str()).collect::<std::collections::BTreeSet<_>>();
     let proofs = <ArchitectPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().into_iter().map(|proof| proof.tool_id()).collect::<std::collections::BTreeSet<_>>();
-    let publications = <ArchitectWindowCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect::<std::collections::BTreeSet<_>>();
+    let publications = <ArchitectWindowCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
+        .iter()
+        .chain(<ArchitectExchangeCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
+        .map(|contract| contract.tool_id)
+        .collect::<std::collections::BTreeSet<_>>();
     assert_eq!(migrated, retained);
     assert_eq!(proofs, retained);
     assert_eq!(publications, retained);
-    let batch = actions
-        .iter()
-        .filter(|action| declared.contains(action.id.as_str()))
-        .filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .map(|action| action.id.as_str())
-        .collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(batch, batch_expected);
-    assert!(domain_actions.iter().all(|action| action.semantics.execution.interactive_job != InteractiveJobClassification::Unclassified));
-    eprintln!("[DEBUG] Architect interactive catalog has three bounded retained WindowConfig actions and seventeen truthful batch-only pending rewrites");
+    assert!(actions.iter().all(|action| action.semantics.execution.interactive_job != InteractiveJobClassification::BatchOnlyPendingRewrite), "no architect verb is left batch-only");
 }
 
 #[test]

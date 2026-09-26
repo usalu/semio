@@ -102,7 +102,36 @@ mod wasm_program_exchange {
     /// target: Shell{instance}, payload: pack(AppFrame)}` and are already unpacked by
     /// `KernelClient::exchange_commands` — this fn is now a thin awaiting wrapper, not a decoder.
     async fn exchange(client: &KernelClient, instance_id: u32, commands: Vec<AppCommand>) -> Result<crate::kernel_runtime::ExchangeOutcome, String> {
-        client.exchange_commands(instance_id, commands).await
+        let outcome = client.exchange_commands(instance_id, commands).await?;
+        observe_ephemeral(instance_id, &outcome.frames).await;
+        Ok(outcome)
+    }
+
+    /// 👥️ The latest `AppFrame::Ephemeral` every native guest instance published, by instance.
+    fn ephemeral_snapshots() -> &'static std::sync::Mutex<std::collections::BTreeMap<u32, ProgramEphemeralSnapshot>> {
+        static SNAPSHOTS: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeMap<u32, ProgramEphemeralSnapshot>>> = std::sync::OnceLock::new();
+        SNAPSHOTS.get_or_init(Default::default)
+    }
+
+    /// 👥️ Keeps the last `AppFrame::Ephemeral` of one command turn (contract-freeze §C7.6: the guest appends
+    /// one to every command batch it answers), decoded: its interaction and tool run cross the presence wire
+    /// typed, its presence pack verbatim.
+    async fn observe_ephemeral(instance_id: u32, frames: &[AppFrame]) {
+        let Some(AppFrame::Ephemeral { presence, presence_generation, interaction, tool_run, .. }) = frames.iter().rev().find(|frame| matches!(frame, AppFrame::Ephemeral { .. })) else { return };
+        let interaction = if interaction.is_empty() { None } else { protocol::decode_presence_interaction(interaction, &mut 0).await.ok() };
+        let tool_run = if tool_run.is_empty() { None } else { protocol::decode_presence_tool_run(tool_run).ok() };
+        let snapshot = ProgramEphemeralSnapshot { presence: (*presence_generation > 0).then(|| presence.clone()), interaction, tool_run };
+        ephemeral_snapshots().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(instance_id, snapshot);
+    }
+
+    /// 👥️ The last ephemeral state one instance's guest published, if it published any.
+    pub fn ephemeral_snapshot(instance_id: u32) -> Option<ProgramEphemeralSnapshot> {
+        ephemeral_snapshots().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&instance_id).cloned()
+    }
+
+    /// 🪦 Forgets a destroyed instance's ephemeral state.
+    pub fn forget_ephemeral_snapshot(instance_id: u32) {
+        ephemeral_snapshots().lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&instance_id);
     }
 
     fn expect_done(frames: &[AppFrame], seq: u64) -> Result<(), String> {
@@ -440,15 +469,6 @@ mod wasm_program_exchange {
         Ok(outcome.effects)
     }
 
-    /// 🚧️ The old implementation was the literal `exchange(id, [])` drain design-abi.md §4 names as
-    /// retired outright ("The `exchange(id, [])` drain disappears — guests are woken by events/
-    /// timers/`next-wake`"). There is no synchronous poll-for-ephemeral-state left in the ABI;
-    /// presence/ephemeral state will need to arrive as a pushed `Event::Message`/similar the kernel
-    /// thread caches, which is real design work outside this packet's scope. Honest stub.
-    pub fn ephemeral_snapshot(_instance_id: u32) -> Result<(Vec<u8>, u64, u64), String> {
-        Err("ephemeral_snapshot: the empty-command poll it relied on is retired in channel v12 (design-abi.md §4) — guests must push ephemeral state via events now, not implemented in this packet".to_string())
-    }
-
     /// 🖼️ H3-wgpu-native — `design-abi.md` §2: `AppFrame::UiSection` is gone; its replacement is
     /// `ui-patch`, returned in `turn-result.ui-patches` rather than as a frame at all. The kernel
     /// thread reconciles patches into one generation-qualified retained document per
@@ -509,6 +529,16 @@ mod document_backbone_effect_tests;
 struct ProgramPackageIdentityV1 {
     package_id: String,
     component_sha256: String,
+}
+
+/// 👥️ One guest instance's last published ephemeral state (`AppFrame::Ephemeral`), decoded for the presence
+/// wire: the app-owned presence pack (absent while the guest never published one), its declared-broadcast
+/// selection and hover, and its tool run summary.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ProgramEphemeralSnapshot {
+    pub presence: Option<Vec<u8>>,
+    pub interaction: Option<protocol::PresenceInteraction>,
+    pub tool_run: Option<protocol::PresenceToolRun>,
 }
 
 enum ProgramBridgeBackend {
@@ -623,7 +653,6 @@ impl ProgramBridgeEntry {
     /// 🧬️ The document schema `app_id` opens: its own declared schema, or — for a viewer, which declares
     /// none — the schema its package declares for the same dialect, so a spectator's mount makes the
     /// component the kind's codec exactly as an author's does. Empty for an app that opens no document.
-    #[cfg(not(target_arch = "wasm32"))]
     fn app_document_schema(&self, app_id: &str) -> String {
         let Some(app) = self.manifest.apps.iter().find(|app| app.id == app_id) else { return String::new() };
         if !app.io.artifact_schema.is_empty() {
@@ -635,7 +664,14 @@ impl ProgramBridgeEntry {
     pub async fn create_app(&self, app_id: &str) -> Result<u32, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => create_app_js(handle, app_id).await,
+            ProgramBridgeBackend::Js(handle) => {
+                let instance_id = create_app_js(handle, app_id).await?;
+                let schema = self.app_document_schema(app_id);
+                if !schema.is_empty() {
+                    browser_component_codec::register(handle.clone(), schema)?;
+                }
+                Ok(instance_id)
+            }
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, wasm_path } => client.create_app(wasm_path.clone(), self.plugin_id.clone(), app_id.to_string(), self.app_document_schema(app_id)).await,
         }
@@ -644,9 +680,15 @@ impl ProgramBridgeEntry {
     pub fn destroy_app(&self, instance_id: u32) {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => destroy_app_js(handle, instance_id),
+            ProgramBridgeBackend::Js(handle) => {
+                browser_ephemeral::forget(instance_id);
+                destroy_app_js(handle, instance_id);
+            }
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm { client, .. } => client.destroy_app(instance_id),
+            ProgramBridgeBackend::Wasm { client, .. } => {
+                wasm_program_exchange::forget_ephemeral_snapshot(instance_id);
+                client.destroy_app(instance_id);
+            }
         }
     }
 
@@ -657,7 +699,11 @@ impl ProgramBridgeEntry {
         }
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => handle_action_js(handle, instance_id, action_json, view_state).await,
+            ProgramBridgeBackend::Js(handle) => {
+                let result = handle_action_js(handle, instance_id, action_json, view_state).await;
+                browser_ephemeral::observe(handle, instance_id).await;
+                result
+            }
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::handle_action(client, instance_id, action_json, view_state).await,
         }
@@ -680,7 +726,11 @@ impl ProgramBridgeEntry {
     pub async fn handle_command(&self, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => handle_command_js(handle, instance_id, command_json, view_state).await,
+            ProgramBridgeBackend::Js(handle) => {
+                let result = handle_command_js(handle, instance_id, command_json, view_state).await;
+                browser_ephemeral::observe(handle, instance_id).await;
+                result
+            }
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::handle_command(client, instance_id, command_json, view_state).await,
         }
@@ -705,14 +755,7 @@ impl ProgramBridgeEntry {
     pub async fn load_app_document_pack(&self, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => {
-                let load = get_fn(handle.as_ref(), "loadAppArtifactPack")?;
-                let args = Array::new();
-                args.push(&JsValue::from_f64(instance_id as f64));
-                args.push(&js_sys::Uint8Array::from(pack));
-                args.push(&js_sys::Uint8Array::from(spr));
-                load.apply(&JsValue::NULL, &args).map(|_| ()).map_err(|_| "load_app_document_pack failed".into())
-            }
+            ProgramBridgeBackend::Js(handle) => call_js_bytes(handle, "loadAppArtifactPack", instance_id, &[pack, spr]).await,
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::load_app_document_pack(client, instance_id, pack, spr).await,
         }
@@ -827,12 +870,15 @@ impl ProgramBridgeEntry {
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn ephemeral_snapshot(&self, instance_id: u32) -> Result<(Vec<u8>, u64, u64), String> {
+    /// 👥️ The ephemeral state this instance's guest last published on a command turn — what the presence
+    /// heartbeat carries as the peer's app presence pack, interaction and tool run (React's
+    /// `ephemeralSnapshot`). `None` until the guest answered its first command.
+    pub fn ephemeral_snapshot(&self, instance_id: u32) -> Option<ProgramEphemeralSnapshot> {
         match &self.backend {
+            #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { .. } => wasm_program_exchange::ephemeral_snapshot(instance_id),
             #[cfg(target_arch = "wasm32")]
-            _ => Err("ephemeral_snapshot unavailable".into()),
+            ProgramBridgeBackend::Js(_) => browser_ephemeral::snapshot(instance_id),
         }
     }
 
@@ -964,6 +1010,131 @@ async fn receive_document_backbone_js(handle: &Rc<JsValue>, instance_id: u32, ur
     args.push(&JsValue::from_str(uri));
     args.push(&js_sys::Uint8Array::from(payload));
     document_backbone_effects("receiveDocumentBackbone", &call_js(handle, "receiveDocumentBackbone", &args).await?)
+}
+
+/// 👥️ The browser twin of the native `AppFrame::Ephemeral` cache (`wasm_program_exchange::observe_ephemeral`): after
+/// every action and command the JS bridge's `ephemeralSnapshot` — the shared `AppChannelClient.ephemeral()`, the last
+/// `AppFrame::Ephemeral` the guest appended to its answer — is read, its interaction decoded, and kept per instance, so
+/// the browser shell's presence heartbeat carries the guest's presence pack and interaction exactly as the native one.
+#[cfg(target_arch = "wasm32")]
+mod browser_ephemeral {
+    use super::{get_fn, JsCast, JsValue, ProgramEphemeralSnapshot, Rc, Reflect};
+    use std::cell::RefCell;
+    use std::collections::HashMap;
+
+    thread_local! {
+        static SNAPSHOTS: RefCell<HashMap<u32, ProgramEphemeralSnapshot>> = RefCell::new(HashMap::new());
+    }
+
+    fn field_bytes(answer: &JsValue, name: &str) -> Vec<u8> {
+        Reflect::get(answer, &JsValue::from_str(name)).ok().and_then(|value| value.dyn_into::<js_sys::Uint8Array>().ok()).map(|bytes| bytes.to_vec()).unwrap_or_default()
+    }
+
+    /// 📥️ Reads the instance's latest published ephemeral state off the bridge and keeps it decoded.
+    pub(super) async fn observe(handle: &Rc<JsValue>, instance_id: u32) {
+        let Ok(read) = get_fn(handle.as_ref(), "ephemeralSnapshot") else { return };
+        let Ok(answer) = read.call1(&JsValue::NULL, &JsValue::from_f64(f64::from(instance_id))) else { return };
+        if answer.is_null() || answer.is_undefined() {
+            return;
+        }
+        let generation = Reflect::get(&answer, &JsValue::from_str("presenceGeneration")).ok().and_then(|value| value.as_f64()).unwrap_or(0.0);
+        let presence = field_bytes(&answer, "presence");
+        let interaction = field_bytes(&answer, "interaction");
+        let interaction = if interaction.is_empty() { None } else { protocol::decode_presence_interaction(&interaction, &mut 0).await.ok() };
+        let snapshot = ProgramEphemeralSnapshot { presence: (generation > 0.0).then_some(presence), interaction, tool_run: None };
+        SNAPSHOTS.with(|snapshots| snapshots.borrow_mut().insert(instance_id, snapshot));
+    }
+
+    /// 👥️ The last ephemeral state one instance's guest published, if it published any.
+    pub(super) fn snapshot(instance_id: u32) -> Option<ProgramEphemeralSnapshot> {
+        SNAPSHOTS.with(|snapshots| snapshots.borrow().get(&instance_id).cloned())
+    }
+
+    /// 🪦 Forgets a destroyed instance's ephemeral state.
+    pub(super) fn forget(instance_id: u32) {
+        SNAPSHOTS.with(|snapshots| snapshots.borrow_mut().remove(&instance_id));
+    }
+}
+
+/// 🧬️ The browser's [`ComponentDocumentCodec`](semio_framework_os_kernel::os_store::ComponentDocumentCodec):
+/// the mounted program's jco component answering `world actor`'s `codec` interface through the JS
+/// bridge (`codecPackSchemaHash`/`codecGenesis`/`codecPrintMirror`, `🐚️plugin-bridge/🟦️.ts`), on a live
+/// instance's shard actor — the twin of the native `OwnedComponentDocumentCodec` a wgpu shell registers
+/// in `create_app`. With it the mounted component IS the kind identity of a hub document (no
+/// execution-target lease, no component SHA-256 equality with the catalog) and a hub-bound open seeds
+/// the guest from the genesis the component mints (ticket 26/09/23 slices WG8 + WG7).
+#[cfg(target_arch = "wasm32")]
+mod browser_component_codec {
+    use super::{call_js, Array, JsCast, JsValue, Rc, Reflect};
+    use semio_framework_os_kernel::os_store::{self, ArtifactTextFiles, ComponentDocumentCodec, ComponentDocumentCodecFuture, ComponentDocumentGenesis, VcsError};
+    use std::cell::RefCell;
+    use std::collections::HashMap;
+    use std::sync::{Arc, OnceLock};
+
+    thread_local! {
+        static BRIDGES: RefCell<HashMap<String, Rc<JsValue>>> = RefCell::new(HashMap::new());
+    }
+
+    /// 📝️ Makes the program behind `handle` the codec of `schema`: a later mount of the kind's owner
+    /// replaces an earlier one, exactly as [`os_store::register_component_document_codec`] does.
+    pub(super) fn register(handle: Rc<JsValue>, schema: String) -> Result<(), String> {
+        BRIDGES.with(|bridges| bridges.borrow_mut().insert(schema.clone(), handle));
+        os_store::register_component_document_codec(Arc::new(BrowserComponentDocumentCodec { schema, pack_schema_hash: OnceLock::new() })).map_err(|error| error.to_string())
+    }
+
+    /// 🧬️ One kind's codec; the bridge is looked up per call (JS handles live on this isolate only).
+    struct BrowserComponentDocumentCodec {
+        schema: String,
+        pack_schema_hash: OnceLock<[u8; 32]>,
+    }
+
+    impl BrowserComponentDocumentCodec {
+        async fn call(&self, name: &str, args: &Array) -> Result<JsValue, String> {
+            let handle = BRIDGES.with(|bridges| bridges.borrow().get(&self.schema).cloned()).ok_or_else(|| format!("no mounted program owns {:?}", self.schema))?;
+            call_js(&handle, name, args).await
+        }
+    }
+
+    fn bytes(value: &JsValue, what: &str) -> Result<Vec<u8>, String> {
+        value.dyn_ref::<js_sys::Uint8Array>().map(js_sys::Uint8Array::to_vec).ok_or_else(|| format!("{what} is not bytes"))
+    }
+
+    impl ComponentDocumentCodec for BrowserComponentDocumentCodec {
+        fn schema(&self) -> &str {
+            &self.schema
+        }
+
+        fn pack_schema_hash(&self) -> ComponentDocumentCodecFuture<'_, [u8; 32]> {
+            Box::pin(async move {
+                if let Some(hash) = self.pack_schema_hash.get() {
+                    return Ok(*hash);
+                }
+                let fault = |error: String| VcsError::ValidationFailed(format!("component codec.pack-schema-hash({}): {error}", self.schema));
+                let answer = self.call("codecPackSchemaHash", &Array::of1(&JsValue::from_str(&self.schema))).await.map_err(fault)?;
+                let hash: [u8; 32] = bytes(&answer, "pack-schema-hash").map_err(fault)?.try_into().map_err(|raw: Vec<u8>| fault(format!("{} bytes, not 32", raw.len())))?;
+                Ok(*self.pack_schema_hash.get_or_init(|| hash))
+            })
+        }
+
+        fn print_mirror<'a>(&'a self, pack: &'a [u8], spr: &'a [u8]) -> ComponentDocumentCodecFuture<'a, ArtifactTextFiles> {
+            Box::pin(async move {
+                let fault = |error: String| VcsError::Deserialize(format!("component codec.print-mirror({}): {error}", self.schema));
+                let answer = self.call("codecPrintMirror", &Array::of3(&JsValue::from_str(&self.schema), &js_sys::Uint8Array::from(pack), &js_sys::Uint8Array::from(spr))).await.map_err(fault)?;
+                let mirror = answer.dyn_into::<Array>().map_err(|_| fault("mirror is not a tuple".into()))?;
+                let text = |index: u32| mirror.get(index).as_string().ok_or_else(|| fault(format!("mirror half {index} is not text")));
+                Ok(ArtifactTextFiles { dsl: text(0)?, ops: text(1)? })
+            })
+        }
+
+        fn genesis<'a>(&'a self, document_id: &'a str) -> ComponentDocumentCodecFuture<'a, ComponentDocumentGenesis> {
+            Box::pin(async move {
+                let fault = |error: String| VcsError::ValidationFailed(format!("component codec.genesis({}): {error}", self.schema));
+                let answer = self.call("codecGenesis", &Array::of2(&JsValue::from_str(&self.schema), &JsValue::from_str(document_id))).await.map_err(fault)?;
+                let half = |name: &str| Reflect::get(&answer, &JsValue::from_str(name)).map_err(|_| fault(format!("genesis has no {name}"))).and_then(|value| bytes(&value, name).map_err(fault));
+                Ok(ComponentDocumentGenesis { pack: half("pack")?, spr: half("spr")? })
+            })
+        }
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1346,6 +1517,31 @@ pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Pa
         entries.push(ProgramBridgeEntry::from_wasm(module.plugin_id, Some(descriptor.package_id), Some(module.wasm_sha256), modules_root.join(module.wasm_path), descriptor.manifest)?);
     }
     Ok(entries)
+}
+
+/// 🧩️ One program from a hub-resolved execution target: the verified component and descriptor files the
+/// shell's resolution stored (`ExecutionTargetModuleStore`), bound to the lease's component digest. The hub
+/// serves the descriptor as the canonical pack of its `PackageDescriptor`; it is admitted only when it
+/// decodes, re-encodes to exactly its own bytes, is version 1 and names this plugin and exactly that digest
+/// — the same admission the semio MCP remote workspace applies to the same bytes.
+#[cfg(not(target_arch = "wasm32"))]
+pub async fn load_resolved_program(plugin_id: &str, component: &std::path::Path, descriptor: &std::path::Path, component_sha256: &str) -> Result<ProgramBridgeEntry, String> {
+    use crate::native_runtime_modules::NativeJsonPages;
+    use dsl::{FromValue, ToValue};
+    let mut pages = read_native_json_pages(descriptor, semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await?;
+    let mut bytes = Vec::new();
+    let read = std::io::Read::read_to_end(&mut NativeJsonPages::new(pages.iter().flat_map(|page| (0..page.page_count()).filter_map(move |index| page.page(index)))), &mut bytes);
+    close_native_json_pages(&mut pages);
+    read.map_err(|error| format!("hub descriptor {}: {error}", descriptor.display()))?;
+    let value = store::pack_rt::decode_wire_value(&bytes).map_err(|_| "hub execution-target descriptor is not a canonical pack".to_string())?;
+    let package = semio_framework::manifest::PackageDescriptor::from_value(value.clone()).map_err(|_| "hub execution-target descriptor is not a package descriptor".to_string())?;
+    if store::pack_rt::encode_wire_value(&value) != bytes || store::pack_rt::encode_wire_value(&package.to_value()) != bytes {
+        return Err("hub execution-target descriptor is not its exact canonical package projection".into());
+    }
+    if package.descriptor_version != 1 || package.manifest.plugin_id != plugin_id || package.hashes.wasm_sha256 != component_sha256 {
+        return Err(format!("hub execution-target descriptor identity mismatch: {plugin_id}"));
+    }
+    ProgramBridgeEntry::from_wasm(plugin_id.to_string(), Some(package.package_id), Some(component_sha256.to_string()), component.to_path_buf(), package.manifest)
 }
 
 /// 📏️ The native runtime manifest's own bound (`NativeRuntimeManifest::read` refuses more).

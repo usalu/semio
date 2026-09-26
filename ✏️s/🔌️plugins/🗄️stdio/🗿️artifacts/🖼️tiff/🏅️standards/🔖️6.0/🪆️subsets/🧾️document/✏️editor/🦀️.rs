@@ -111,6 +111,10 @@ impl ArtifactOwnedToolJobFactory for TiffAnyEditorExampleFactory {
 pub struct TiffAnyEditor;
 
 impl ArtifactEditor for TiffAnyEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = TiffSnapshot;
     type Mutation = TiffMutation;
     type Config = NoConfig;

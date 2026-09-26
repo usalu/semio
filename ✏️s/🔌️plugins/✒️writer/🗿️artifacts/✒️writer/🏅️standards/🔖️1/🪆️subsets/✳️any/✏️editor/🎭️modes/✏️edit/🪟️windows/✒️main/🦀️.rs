@@ -65,8 +65,6 @@ pub fn render(document: &WriterSnapshot, config: &WriterMainWindowConfig, transi
     let grammar_tokens = tokenize_language(&text, &document.language_id);
     let lsp_tokens = language_tokens_json(document);
     let tokens_json = lsp_tokens.clone().or_else(|| serde_json::to_string(&grammar_tokens).ok());
-    eprintln!("[DEBUG] writer.main tokens path language_id={} lsp_tokens={} grammar_fallback={}", document.language_id, lsp_tokens.is_some(), tokens_json.is_some());
-    eprintln!("[DEBUG] writer.main tokens_json={}", tokens_json.as_deref().unwrap_or("none"));
 
     let diagnostics_json = language_diagnostics_json(document, transient.lint_generation);
 

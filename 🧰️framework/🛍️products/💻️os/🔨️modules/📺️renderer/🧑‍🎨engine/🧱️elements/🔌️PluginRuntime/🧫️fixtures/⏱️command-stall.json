@@ -1,0 +1,147 @@
+{
+  "schema": "semio.os.command-stall.cases/v1",
+  "description": "One actor's command lane under the stall watch. `runs` are offered to the lane in order at time 0; each starts when the lane releases the previous one; `settlesAtMs` counts from that run's own start (null: never settles); `cancelAtMs` is the absolute time its stall is cancelled. `expect` lists, per absolute check time, the commands the watch reports as stalled and the runs that have finished (resolved / cancelled).",
+  "boundMs": 5000,
+  "cases": [
+    {
+      "id": "settles-before-the-bound",
+      "runs": [
+        {
+          "command": "addNode",
+          "settlesAtMs": 1000
+        }
+      ],
+      "expect": [
+        {
+          "atMs": 999,
+          "stalled": [],
+          "resolved": [],
+          "cancelled": []
+        },
+        {
+          "atMs": 6000,
+          "stalled": [],
+          "resolved": [
+            "addNode"
+          ],
+          "cancelled": []
+        }
+      ]
+    },
+    {
+      "id": "slow-but-settles-after-the-bound",
+      "runs": [
+        {
+          "command": "reorganize",
+          "settlesAtMs": 7000
+        }
+      ],
+      "expect": [
+        {
+          "atMs": 4999,
+          "stalled": [],
+          "resolved": [],
+          "cancelled": []
+        },
+        {
+          "atMs": 5000,
+          "stalled": [
+            "reorganize"
+          ],
+          "resolved": [],
+          "cancelled": []
+        },
+        {
+          "atMs": 7000,
+          "stalled": [],
+          "resolved": [
+            "reorganize"
+          ],
+          "cancelled": []
+        }
+      ]
+    },
+    {
+      "id": "never-settles-cancel-releases-the-lane",
+      "runs": [
+        {
+          "command": "clearSelection",
+          "settlesAtMs": null,
+          "cancelAtMs": 6000
+        },
+        {
+          "command": "undo",
+          "settlesAtMs": 100
+        }
+      ],
+      "expect": [
+        {
+          "atMs": 5000,
+          "stalled": [
+            "clearSelection"
+          ],
+          "resolved": [],
+          "cancelled": []
+        },
+        {
+          "atMs": 5999,
+          "stalled": [
+            "clearSelection"
+          ],
+          "resolved": [],
+          "cancelled": []
+        },
+        {
+          "atMs": 6000,
+          "stalled": [],
+          "resolved": [],
+          "cancelled": [
+            "clearSelection"
+          ]
+        },
+        {
+          "atMs": 6100,
+          "stalled": [],
+          "resolved": [
+            "undo"
+          ],
+          "cancelled": [
+            "clearSelection"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a-queued-command-is-not-stalled-while-it-waits",
+      "runs": [
+        {
+          "command": "patchNodes",
+          "settlesAtMs": 4000
+        },
+        {
+          "command": "undo",
+          "settlesAtMs": 4000
+        }
+      ],
+      "expect": [
+        {
+          "atMs": 7999,
+          "stalled": [],
+          "resolved": [
+            "patchNodes"
+          ],
+          "cancelled": []
+        },
+        {
+          "atMs": 8000,
+          "stalled": [],
+          "resolved": [
+            "patchNodes",
+            "undo"
+          ],
+          "cancelled": []
+        }
+      ]
+    }
+  ]
+}

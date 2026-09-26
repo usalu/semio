@@ -18,6 +18,7 @@ import { COMMAND_INGRESS_KINDS } from "../🧵️child/🧬️schema/🟦️.ts"
 import { preparedBinaryen } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
 import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
+import { actorCodecAnswer } from "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts";
 export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
@@ -818,6 +819,17 @@ self.addEventListener("message", async (event) => {
         await actor.api.restore(msg.state);
         reply(requestId, undefined);
         break;
+      case "codec": {
+        if (actor.activationGeneration !== msg.activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
+        if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
+        inFlightTurnActors.add(actorId);
+        try {
+          reply(requestId, await actor.api.codec(msg.request), undefined, beat("turn-step"));
+        } finally {
+          inFlightTurnActors.delete(actorId);
+        }
+        break;
+      }
       case "frame": {
         if (actor.activationGeneration !== msg.activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
         const result = interpretFrame(msg.frame, actorId);
@@ -872,7 +884,9 @@ self.addEventListener("message", async (event) => {
  * @emoji 🌉️ Normalizes ONE actor's jco-transpiled component (`world actor`: exports `reactor`/
  * `jobs`/`checkpoint`/`describe`, imports only `pure` — see `component.wit`) behind the flat
  * `createActorApi()` shape `🟨️shard-worker.js` calls: `poll`/`startJob`/`stepJob`/`cancelJob`/
- * `takeSegmentedDownloadChunk`/`checkpoint`/`restore`.
+ * `takeSegmentedDownloadChunk`/`checkpoint`/`restore`, and `codec` — the component's `codec` interface
+ * answered by `actorCodecAnswer` (`🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts`), the browser's
+ * kind identity and document genesis.
  *
  * DROPS the old `runSerialized` retry/reload loop entirely (design-runtime.md §3: "recovery is the
  * kernel's job now"). Under the old ABI a guest panic (`panic = "abort"`, no unwind) permanently
@@ -912,6 +926,7 @@ const ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES = ${ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BY
 const encodeActorUiPatchReceipt = ${encodeActorUiPatchReceipt.toString()};
 const validateActorUiPatchPairing = ${validateActorUiPatchPairing.toString()};
 const commandIngressKinds = new Map([${COMMAND_INGRESS_KINDS.map((tag, kind) => `[${kind}, "${tag}"]`).join(", ")}]);
+const codecAnswer = ${actorCodecAnswer.toString()};
 
 /** 🎁️ jco lifts \`option<t>\` as a tagged \`{ tag: "none" | "some" }\` variant; every host-side reader
  * below wants the bare value (or nothing), so unwrap exactly that shape and pass anything else through. */
@@ -994,7 +1009,7 @@ export async function createActorApi(actorId, activationGeneration) {
   const hostUrl = new URL("./${PLUGIN_HOST_SHIM_FILE}", import.meta.url);
   hostUrl.search = componentUrl.search;
   const hostShim = await import(hostUrl.href);
-  const { reactor, jobs, checkpoint, describe } = await import(componentUrl.href);
+  const { reactor, jobs, checkpoint, describe, codec } = await import(componentUrl.href);
   return {
     poll: async (events, commandPage, coldPairPage, budget) => {
       if (commandPage) await reactor.stageCommandPage(commandPage.cursor, commandPage.bytes);
@@ -1015,6 +1030,7 @@ export async function createActorApi(actorId, activationGeneration) {
     checkpoint: async () => checkpoint.checkpoint(),
     restore: async (state) => checkpoint.restore(state),
     describe: async () => describe.describe(),
+    codec: (request) => codecAnswer(codec, request),
     resolveEffect: (requestId, value) => hostShim.__resolveEffect(requestId, value),
     rejectEffect: (requestId, message) => hostShim.__rejectEffect(requestId, message),
   };

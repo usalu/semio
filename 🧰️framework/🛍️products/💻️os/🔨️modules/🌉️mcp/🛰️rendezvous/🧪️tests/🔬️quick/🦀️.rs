@@ -72,6 +72,27 @@ fn dropping_a_published_offer_removes_the_file() {
 }
 
 #[test]
+fn publishing_an_offer_sweeps_the_offers_of_gateways_that_are_gone() {
+    let root = TemporaryRoot::new("offer-sweep");
+    let directory = offers_dir_in(root.path());
+    std::fs::create_dir_all(&directory).expect("offers directory");
+    let alive = BridgeOffer { published_at_ms: now_ms(), ..offer_for(std::process::id()) };
+    let dead = BridgeOffer { published_at_ms: now_ms(), ..offer_for(0x7FFF_FFF0) };
+    for offer in [&alive, &dead] {
+        std::fs::write(directory.join(format!("{}.json", offer.pid)), serde_json::to_vec(offer).expect("offer")).expect("write offer");
+    }
+    std::fs::write(directory.join("garbage.json"), b"not an offer").expect("write garbage");
+    let published = publish_offer_in(root.path(), offer_for(4244)).expect("offer publishes");
+    assert!(published.path().exists(), "the publisher's own offer is written after the sweep");
+    assert!(directory.join(format!("{}.json", alive.pid)).exists(), "a live gateway's offer is kept");
+    assert!(!directory.join("garbage.json").exists(), "an unreadable offer is swept");
+    #[cfg(unix)]
+    assert!(!directory.join(format!("{}.json", dead.pid)).exists(), "a gateway that is gone leaves no offer behind for a shell to dial");
+    #[cfg(not(unix))]
+    assert!(directory.join(format!("{}.json", dead.pid)).exists(), "without a process probe a young offer is believed");
+}
+
+#[test]
 fn live_sessions_keep_this_process_and_sweep_a_dead_pid() {
     let root = TemporaryRoot::new("sessions");
     let alive = OsSessionRecord { schema_version: RENDEZVOUS_SCHEMA_VERSION, session_id: "shell-alive".into(), pid: std::process::id(), shell_kind: "react".into(), started_at_ms: 2 };

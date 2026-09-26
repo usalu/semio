@@ -297,12 +297,40 @@ fn live_bridge() -> (Arc<BridgeHandle>, crate::bridge::ShellConnectionId, impl F
     (bridge, connection, move || receiver.try_recv())
 }
 
+/// ⏳️ A shell that attaches while the approval waits out its attach grace is the one asked: the
+/// agent's request is neither refused as "no OS shell attached" nor lost.
+#[test]
+fn a_shell_that_attaches_within_the_grace_is_asked() {
+    let bridge = Arc::new(BridgeHandle::new());
+    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let _ = slot.set(Arc::clone(&bridge));
+    let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_attach_grace_ms(5_000).with_shell_timeout_ms(5_000);
+    let diff = serde_json::json!({});
+    let resolution = std::thread::scope(|scope| {
+        let asked = scope.spawn(|| coordinator.resolve(&approval_request("appr_grace", &diff)));
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        let (connection, mut receiver) = bridge.register();
+        let mut published = false;
+        for _ in 0..200 {
+            if let Some(frame) = receiver.try_recv() {
+                published = matches!(frame, crate::bridge::GatewayToShell::ApprovalRequested { ref approval_id, .. } if approval_id == "appr_grace");
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        assert!(published, "the late shell is shown the approval");
+        bridge.record(connection, crate::bridge::ShellToGateway::Approval { approval_id: "appr_grace".to_string(), decision: crate::bridge::ApprovalDecision::Once, note: None });
+        asked.join().expect("resolve")
+    });
+    assert!(matches!(resolution, ApprovalResolution::Approved { channel: ApprovalChannel::Shell }), "{resolution:?}");
+}
+
 #[test]
 fn a_bridge_with_no_shell_attached_is_unreachable_and_says_so() {
     let bridge = Arc::new(BridgeHandle::new());
     let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
     let _ = slot.set(bridge);
-    let coordinator = ApprovalCoordinator::new(None, Some(slot));
+    let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_attach_grace_ms(0);
     let diff = serde_json::json!({});
     match coordinator.resolve(&approval_request("appr_8", &diff)) {
         ApprovalResolution::Unreachable { details } => assert_eq!(details["channels"]["shell"], "a /bridge is running but no OS shell is attached to it"),

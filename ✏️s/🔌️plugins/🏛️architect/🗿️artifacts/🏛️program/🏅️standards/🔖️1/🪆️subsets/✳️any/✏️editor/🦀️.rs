@@ -1296,7 +1296,168 @@ impl ArtifactOwnedToolJobFactory for ArchitectWindowCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ];
 }
+
+struct ArchitectWindowCommandJobFactoryProofs;
+
+impl ArchitectWindowCommandJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<ArchitectPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.architect.program@1/*#editor",
+        artifact_schema: "architect.program",
+        factory: "ArchitectWindowCommandJobFactory",
+        factory_type: ArchitectWindowCommandJobFactory,
+        contract: ToolExecutionContract::bounded_first_step(4_096, 32, 1, 4_096, 7_500),
+        tools: [
+            "selectRegister",
+            "setAdjacencyFilter",
+            "nodeGraphViewport",
+            "addElement",
+            "removeElement",
+            "addRegisterItem",
+            "removeRegisterItem",
+            "patchRegisterItem",
+            "applyTemplate",
+            "setAdjacencyKind",
+            "setAdjacencyField",
+            "nodeGraphEdit",
+            "setActiveExample"
+        ]
+    }
+}
 //#endregion 🧵️RetainedWindowCommands
+
+//#region 🧵️RetainedExchangeCommands
+/// 🧵️ The analysis and exchange verbs. Imports carry a whole CSV or ProgramSnapshot DSL body and exports,
+/// analyses and reports publish whole records, so they run on their own factory with the public
+/// invocation wire budget instead of the 4 KiB window budget. Every verb here is one bounded step.
+pub(crate) const ARCHITECT_EXCHANGE_TOOL_IDS: &[&str] = &["runValidation", "runAnalysis", "runReport", "search", "exportProgram", "exportRegistersCsv", "importProgramRequest", "importProgram", "importRegistersCsv"];
+const ARCHITECT_EXCHANGE_PAYLOAD_SCHEMA: &str = "architect.program.exchange-command.v1";
+const ARCHITECT_EXCHANGE_RAW_BYTES: usize = semio_framework_plugin::PUBLIC_INVOCATION_BODY_BYTES;
+
+fn architect_exchange_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(ARCHITECT_EXCHANGE_RAW_BYTES, 32, 1, ARCHITECT_EXCHANGE_RAW_BYTES, 7_500)
+}
+
+fn architect_exchange_extent(command: &ArchitectCommand, _snapshot: &ProgramSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    match command {
+        ArchitectCommand::RunValidation(_)
+        | ArchitectCommand::RunAnalysis(_)
+        | ArchitectCommand::RunReport(_)
+        | ArchitectCommand::Search(_)
+        | ArchitectCommand::ExportProgram(_)
+        | ArchitectCommand::ExportRegistersCsv(_)
+        | ArchitectCommand::ImportProgramRequest(_) => Some(1),
+        ArchitectCommand::ImportProgram(payload) if payload.payload.len() <= ARCHITECT_EXCHANGE_RAW_BYTES => Some(1),
+        ArchitectCommand::ImportRegistersCsv(payload) if payload.csv.len() <= ARCHITECT_EXCHANGE_RAW_BYTES => Some(1),
+        _ => None,
+    }
+}
+
+/// 🧵️ One-shot reducer for the exchange verbs — the same dispatch `handle` performs, with the invoking
+/// window handed to `runReport` so it opens the report it authored in that exact window.
+#[expect(clippy::too_many_arguments, reason = "Implements the framework retained command reducer callback signature.")]
+fn architect_exchange_reduce(
+    command: &ArchitectCommand,
+    snapshot: &ProgramSnapshot,
+    config: &ArchitectConfig,
+    history: &HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    context: Option<&ArtifactOwnedToolJobContext<EditorApp<ArchitectPlayApp>>>,
+    operation: &AppOperationContext,
+) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, NoDraftMutation>, Fault> {
+    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    match command {
+        ArchitectCommand::RunReport(payload) => run_report::handle_with_view(payload, &doc, context.and_then(|context| context.view_state.as_ref())),
+        _ => command.dispatch(&doc, &ConfigView { snapshot: config, window: None }),
+    }
+}
+
+pub(crate) struct ArchitectExchangeCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl ArchitectExchangeCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: ARCHITECT_EXCHANGE_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for ArchitectExchangeCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<ArchitectPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<ArchitectPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        ARCHITECT_EXCHANGE_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        architect_exchange_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > ARCHITECT_EXCHANGE_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Architect exchange command rejects oversized wire or a checkpoint"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for ArchitectExchangeCommandJobFactory {
+    type Owner = EditorApp<ArchitectPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = ARCHITECT_EXCHANGE_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
+    /// 📤️ Validation and search publish their result on the Config lane; an analysis stores its record
+    /// in the program and its result in the config; a report stores its record and opens it in the
+    /// invoking report window; the exports, the file request and the imports hand the host a download,
+    /// a file picker or the replacement document.
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "runValidation", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "runAnalysis", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "runReport", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "search", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "exportProgram", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "exportRegistersCsv", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "importProgramRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "importProgram", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "importRegistersCsv", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ];
+}
+
+struct ArchitectExchangeCommandJobFactoryProofs;
+
+impl ArchitectExchangeCommandJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<ArchitectPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.architect.program@1/*#editor",
+        artifact_schema: "architect.program",
+        factory: "ArchitectExchangeCommandJobFactory",
+        factory_type: ArchitectExchangeCommandJobFactory,
+        contract: architect_exchange_contract(),
+        tools: ["runValidation", "runAnalysis", "runReport", "search", "exportProgram", "exportRegistersCsv", "importProgramRequest", "importProgram", "importRegistersCsv"]
+    }
+}
+//#endregion 🧵️RetainedExchangeCommands
 
 //#region 🔖️ArchitectPlayApp
 /// 🧪️ B1: unit struct — every former `RefCell<ArchitectPlayRuntime>` field now lives in
@@ -1305,6 +1466,10 @@ impl ArtifactOwnedToolJobFactory for ArchitectWindowCommandJobFactory {
 pub struct ArchitectPlayApp;
 
 impl ArtifactEditor for ArchitectPlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     /// 🧩️ Composes `s.stdio.semio@v1/table` children, so every bundle of this surface opens them through the same roster.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
     /// 🧬️ The loaded-parent child projection, read straight off the snapshot's own `#[child]` fields.
@@ -1393,29 +1558,12 @@ impl ArtifactEditor for ArchitectPlayApp {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: EditorApp<ArchitectPlayApp>,
-        owner_file: "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.architect.program@1/*#editor",
-        artifact_schema: "architect.program",
-        factory: "ArchitectWindowCommandJobFactory",
-        factory_type: ArchitectWindowCommandJobFactory,
-        contract: ToolExecutionContract::bounded_first_step(4_096, 32, 1, 4_096, 7_500),
-        tools: [
-            "selectRegister",
-            "setAdjacencyFilter",
-            "nodeGraphViewport",
-            "addElement",
-            "removeElement",
-            "addRegisterItem",
-            "removeRegisterItem",
-            "patchRegisterItem",
-            "applyTemplate",
-            "setAdjacencyKind",
-            "setAdjacencyField",
-            "nodeGraphEdit",
-            "setActiveExample"
-        ]
+    /// 🧾️ BOTH factories' proofs, in registration order — `validate_tool_job_rows` matches this
+    /// catalogue against the registered factories exactly.
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        let mut proofs = ArchitectWindowCommandJobFactoryProofs::bounded_first_step_tool_proofs();
+        proofs.extend(ArchitectExchangeCommandJobFactoryProofs::bounded_first_step_tool_proofs());
+        proofs
     }
 
     /// 🗃️ The `Artifact` publication lane every document verb above declares is only SUPPORTED when
@@ -1427,20 +1575,42 @@ impl ArtifactEditor for ArchitectPlayApp {
         Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("architect-artifact-retained", ARCHITECT_ARTIFACT_MUTATION_MAXIMUM_BYTES))
     }
 
+    /// 🎚️ The `Config` lane validation, analysis and search publish their result on — supported only
+    /// when the app owns a one-item config-store preparation factory. The config is one whole record
+    /// carrying the last result text, so its bound is the exchange wire budget.
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("architect-config-retained", ARCHITECT_EXCHANGE_RAW_BYTES))
+    }
+
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
-        registry.register(ArchitectWindowCommandJobFactory::new(registry.controller_id()))
+        let controller = registry.controller_id().to_string();
+        registry.register(ArchitectWindowCommandJobFactory::new(&controller))?;
+        registry.register(ArchitectExchangeCommandJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolOperationSpec>, Fault> {
-        if !ARCHITECT_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        let exchange_verb = ARCHITECT_EXCHANGE_TOOL_IDS.contains(&request.tool_id.as_str());
+        if !ARCHITECT_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) && !exchange_verb {
             return Ok(None);
         }
         let document_verb = ARCHITECT_DOCUMENT_TOOL_IDS.contains(&request.tool_id.as_str());
-        let extent = if document_verb { architect_document_extent } else { architect_window_extent };
+        let extent = if exchange_verb {
+            architect_exchange_extent
+        } else if document_verb {
+            architect_document_extent
+        } else {
+            architect_window_extent
+        };
         if Self::command_id(&request.command) != request.tool_id || extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
             return Err(Fault::from("architect-window-command-mismatch-or-capacity"));
         }
-        let reduce = if document_verb { architect_document_reduce } else { architect_window_reduce };
+        let reduce = if exchange_verb {
+            architect_exchange_reduce
+        } else if document_verb {
+            architect_document_reduce
+        } else {
+            architect_window_reduce
+        };
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(Self::command_id(&request.command), reduce, extent));
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -1462,7 +1632,7 @@ impl ArtifactEditor for ArchitectPlayApp {
                 completion: request.completion,
             },
             Self::command_id,
-            ARCHITECT_WINDOW_RAW_BYTES,
+            if exchange_verb { ARCHITECT_EXCHANGE_RAW_BYTES } else { ARCHITECT_WINDOW_RAW_BYTES },
             1,
             work,
         )?;
@@ -1522,8 +1692,8 @@ impl ArtifactEditor for ArchitectPlayApp {
             "addElement" => Ok(ArchitectCommand::AddElement(add_element::AddElement { name: str_field("name").unwrap_or_else(|| "New Room".into()) })),
             "removeElement" => Ok(ArchitectCommand::RemoveElement(remove_element::RemoveElement { element_id: str_field("elementId").or_else(|| str_field("id")).unwrap_or_default() })),
             "runValidation" => Ok(ArchitectCommand::RunValidation(run_validation::RunValidation {})),
-            "runAnalysis" => Ok(ArchitectCommand::RunAnalysis(run_analysis::RunAnalysis { analysis_kind: str_field("analysisKind").unwrap_or_else(|| "gap".into()) })),
-            "runReport" => Ok(ArchitectCommand::RunReport(run_report::RunReport { report_kind: str_field("reportKind").unwrap_or_else(|| "executiveSummary".into()) })),
+            "runAnalysis" => Ok(ArchitectCommand::RunAnalysis(run_analysis::RunAnalysis { analysis_kind: str_field("analysisKind").unwrap_or_default() })),
+            "runReport" => Ok(ArchitectCommand::RunReport(run_report::RunReport { report_kind: str_field("reportKind").unwrap_or_default() })),
             "exportProgram" => Ok(ArchitectCommand::ExportProgram(export_program::ExportProgram {})),
             "importProgramRequest" => Ok(ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {})),
             "importProgram" => Ok(ArchitectCommand::ImportProgram(import_program::ImportProgram { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
@@ -1635,7 +1805,7 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .action_destructive("removeElement")
             .mutation("setAdjacencyField", LocalizedLabel::native("Set Adjacency Field", "Adjazenzfeld setzen"))
             .view_action("runValidation", LocalizedLabel::native("Run Validation", "Validierung ausführen"))
-            .view_action("runAnalysis", LocalizedLabel::native("Run Analysis", "Analyse ausführen"))
+            .mutation("runAnalysis", LocalizedLabel::native("Run Analysis", "Analyse ausführen"))
             .mutation("runReport", LocalizedLabel::native("Run Report", "Bericht erzeugen"))
             .action_with(ActionDefinition::new("search", LocalizedLabel::native("Search", "Suchen"), ActionKind::View, "search"))
             // 📚️ The playground navbar dispatches `setActiveExample` for its fixture combobox on
@@ -1646,25 +1816,27 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .action_destructive("setActiveExample")
             .action_with(ActionDefinition::new("exportProgram", LocalizedLabel::native("Export ProgramSnapshot", "Programm exportieren"), ActionKind::Shell, "download"))
             .action_with(ActionDefinition::new("exportRegistersCsv", LocalizedLabel::native("Export Registers CSV", "Register CSV exportieren"), ActionKind::Shell, "download"))
+            .action_with(ActionDefinition::new("importProgramRequest", LocalizedLabel::native("Import Program File", "Programmdatei importieren"), ActionKind::Shell, "upload"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setAdjacencyFilter", LocalizedLabel::native("Set Adjacency Filter", "Adjazenzfilter setzen"), ActionKind::View) })
             .action_interactive_job("addElement", InteractiveJobClassification::Migrated)
             .action_interactive_job("addRegisterItem", InteractiveJobClassification::Migrated)
             .action_interactive_job("applyTemplate", InteractiveJobClassification::Migrated)
-            .action_interactive_job("exportProgram", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("exportProgram", InteractiveJobClassification::Migrated)
             .action_destructive("exportProgram")
-            .action_interactive_job("exportRegistersCsv", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("exportRegistersCsv", InteractiveJobClassification::Migrated)
             .action_destructive("exportRegistersCsv")
-            .action_interactive_job("importProgram", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("importRegistersCsv", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("importProgram", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importProgramRequest", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importRegistersCsv", InteractiveJobClassification::Migrated)
             .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
             .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchRegisterItem", InteractiveJobClassification::Migrated)
             .action_interactive_job("removeElement", InteractiveJobClassification::Migrated)
             .action_interactive_job("removeRegisterItem", InteractiveJobClassification::Migrated)
-            .action_interactive_job("runAnalysis", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("runReport", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("runValidation", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("search", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("runAnalysis", InteractiveJobClassification::Migrated)
+            .action_interactive_job("runReport", InteractiveJobClassification::Migrated)
+            .action_interactive_job("runValidation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("search", InteractiveJobClassification::Migrated)
             .action_interactive_job("selectRegister", InteractiveJobClassification::Migrated)
             .action_interactive_job("setAdjacencyField", InteractiveJobClassification::Migrated)
             .action_interactive_job("setAdjacencyFilter", InteractiveJobClassification::Migrated)
@@ -1695,6 +1867,16 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
                 ],
             )
             .action_args("applyTemplate", vec![ActionArgDef::text("templateId", LocalizedLabel::native("Template Id", "Vorlagen-ID"))])
+            .action_args("removeElement", vec![ActionArgDef::text("elementId", LocalizedLabel::native("Element Id", "Element-ID"))])
+            .action_args("addElement", vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name"))])
+            .action_args(
+                "setAdjacencyField",
+                vec![
+                    ActionArgDef::text("entityId", LocalizedLabel::native("Adjacency Id", "Adjazenz-ID")),
+                    ActionArgDef::text("field", LocalizedLabel::native("Field", "Feld")),
+                    ActionArgDef::json_text("value", LocalizedLabel::native("Value JSON", "Wert-JSON")),
+                ],
+            )
             .action_args(
                 "importRegistersCsv",
                 vec![
@@ -1712,7 +1894,11 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             )
             .action_args(
                 "setAdjacencyKind",
-                vec![ActionArgDef::select(
+                vec![
+                    ActionArgDef::text("elementAId", LocalizedLabel::native("First Element Id", "Erste Element-ID")),
+                    ActionArgDef::text("elementBId", LocalizedLabel::native("Second Element Id", "Zweite Element-ID")),
+                    ActionArgDef::toggle("cycle", LocalizedLabel::native("Cycle Kind", "Art weiterschalten")),
+                    ActionArgDef::select(
                     "kind",
                     LocalizedLabel::native("Kind", "Art"),
                     vec![
@@ -1721,10 +1907,11 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
                         ActionArgOption::new("optional", LocalizedLabel::native("Optional", "Optional")),
                         ActionArgOption::new("prohibited", LocalizedLabel::native("Prohibited", "Verboten")),
                     ],
-                )],
+                ),
+                ],
             )
-            .action_args("runAnalysis", vec![ActionArgDef::select("analysisKind", LocalizedLabel::native("Analysis", "Analyse"), analysis_kind_picker_options())])
-            .action_args("runReport", vec![ActionArgDef::select("reportKind", LocalizedLabel::native("Report", "Bericht"), report_kind_picker_options())])
+            .action_args("runAnalysis", vec![ActionArgDef::select("analysisKind", LocalizedLabel::native("Analysis", "Analyse"), analysis_kind_picker_options()).required()])
+            .action_args("runReport", vec![ActionArgDef::select("reportKind", LocalizedLabel::native("Report", "Bericht"), report_kind_picker_options()).required()])
             .action_args("search", vec![ActionArgDef::text("query", LocalizedLabel::native("Query", "Suchanfrage"))])
             .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label())])])
             .action_args("importProgram", vec![ActionArgDef::text("payload", LocalizedLabel::native("ProgramSnapshot DSL", "Programm-DSL"))])
@@ -1751,6 +1938,30 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             // here (not silently: reported in the packet's migration report). The subset's own
             // `📚️examples/🎬️demo`/`📚️examples/🎬️demo-session` facets are the modern, role-agnostic
             // replacement surface for this.
+            .action_describe("setAdjacencyKind", LocalizedLabel::native("Sets how two program elements must relate (required, preferred, optional or prohibited); without a kind it cycles to the next one, and cycling past prohibited removes the adjacency.", "Legt fest, wie zwei Programmelemente zueinander stehen (erforderlich, bevorzugt, optional oder verboten); ohne Art wird zur nächsten gewechselt, nach verboten entfällt die Adjazenz."))
+            .action_describe("addRegisterItem", LocalizedLabel::native("Adds a new row with the given name to one register of the program (such as users, activities or elements), or applies the named template instead.", "Fügt einem Register des Programms (etwa Nutzer, Aktivitäten oder Elemente) eine neue Zeile mit dem angegebenen Namen hinzu oder wendet stattdessen die genannte Vorlage an."))
+            .action_describe("removeRegisterItem", LocalizedLabel::native("Deletes one row by id from a register of the program; its data is gone unless the edit is undone.", "Löscht eine Zeile anhand ihrer Id aus einem Register des Programms; ihre Daten sind fort, sofern die Änderung nicht rückgängig gemacht wird."))
+            .action_describe("patchRegisterItem", LocalizedLabel::native("Merges the fields of a JSON patch into one row of a register, leaving fields the patch does not name unchanged.", "Übernimmt die Felder eines JSON-Patches in eine Registerzeile; nicht genannte Felder bleiben unverändert."))
+            .action_describe("importProgram", LocalizedLabel::native("Replaces the whole architectural program with one parsed from the given ProgramSnapshot DSL text; everything not in the text is discarded.", "Ersetzt das gesamte Raumprogramm durch eines, das aus dem angegebenen ProgramSnapshot-DSL-Text gelesen wird; alles, was nicht im Text steht, wird verworfen."))
+            .action_describe("importRegistersCsv", LocalizedLabel::native("Reads register rows from CSV text into the program by upsert, skipping duplicates, or replacing the existing rows, and reloads the resulting program.", "Liest Registerzeilen aus CSV-Text in das Programm, per Upsert, unter Überspringen von Duplikaten oder unter Ersetzen der vorhandenen Zeilen, und lädt das Ergebnis neu."))
+            .action_describe("applyTemplate", LocalizedLabel::native("Applies one of the program's sector or project templates by id, adding the rows the template defines to the registers.", "Wendet eine Branchen- oder Projektvorlage des Programms anhand ihrer Id an und fügt die von ihr definierten Zeilen den Registern hinzu."))
+            .action_describe("selectRegister", LocalizedLabel::native("Shows the given register (for example stakeholders, users or activities) in the register window; only that window's view changes.", "Zeigt das angegebene Register (etwa Beteiligte, Nutzer oder Aktivitäten) im Registerfenster an; nur die Ansicht dieses Fensters ändert sich."))
+            .action_describe("addElement", LocalizedLabel::native("Adds a new room-like program element with the given name to the program's elements register.", "Fügt dem Elementregister des Programms ein neues raumartiges Programmelement mit dem angegebenen Namen hinzu."))
+            .action_describe("removeElement", LocalizedLabel::native("Deletes one program element by id together with every adjacency that touches it; an unknown id is refused.", "Löscht ein Programmelement anhand seiner Id samt aller Adjazenzen, die es berühren."))
+            .action_describe("setAdjacencyField", LocalizedLabel::native("Sets one named field of one adjacency row to a JSON value, for example its rationale or strength.", "Setzt ein benanntes Feld einer Adjazenzzeile auf einen JSON-Wert, etwa ihre Begründung oder Stärke."))
+            .action_describe("runValidation", LocalizedLabel::native("Checks the whole program against its validation rules and lists the issues in the review view; the program itself is not changed.", "Prüft das gesamte Programm gegen seine Validierungsregeln und listet die Befunde in der Prüfansicht; das Programm selbst ändert sich nicht."))
+            .action_describe("runAnalysis", LocalizedLabel::native("Runs one program analysis (such as gap, conflict, capacity, cost or risk) and stores its result as a new analysis record in the program.", "Führt eine Programmanalyse aus (etwa Lücken, Konflikte, Kapazität, Kosten oder Risiko) und speichert ihr Ergebnis als neuen Analyseeintrag im Programm."))
+            .action_describe("runReport", LocalizedLabel::native("Builds one report (such as executive summary, requirements matrix or adjacency matrix) from the current program, stores it as a report record and opens it in the report window.", "Erstellt einen Bericht (etwa Management-Zusammenfassung, Anforderungsmatrix oder Adjazenzmatrix) aus dem aktuellen Programm, speichert ihn als Berichtseintrag und öffnet ihn im Berichtsfenster."))
+            .action_describe("search", LocalizedLabel::native("Searches every register of the program for a keyword, selects the best matches and remembers the query in the search history.", "Durchsucht alle Register des Programms nach einem Stichwort, wählt die besten Treffer aus und merkt sich die Anfrage im Suchverlauf."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole program with one of the plugin's bundled example programs, by example id.", "Ersetzt das gesamte Programm durch eines der mitgelieferten Beispielprogramme, anhand der Beispiel-Id."))
+            .action_describe("exportProgram", LocalizedLabel::native("Writes the whole program as ProgramSnapshot DSL text to a downloaded .architect.dsl file on the user's machine.", "Schreibt das gesamte Programm als ProgramSnapshot-DSL-Text in eine heruntergeladene .architect.dsl-Datei auf dem Rechner des Nutzers."))
+            .action_describe("importProgramRequest", LocalizedLabel::native("Asks the user to pick a ProgramSnapshot DSL file and then imports it with Import Program, replacing the whole program.", "Lässt den Nutzer eine ProgramSnapshot-DSL-Datei wählen und importiert sie dann mit Programm importieren, wobei das gesamte Programm ersetzt wird."))
+            .action_describe("exportRegistersCsv", LocalizedLabel::native("Writes every register of the program as CSV to a downloaded .registers.csv file on the user's machine.", "Schreibt alle Register des Programms als CSV in eine heruntergeladene .registers.csv-Datei auf dem Rechner des Nutzers."))
+            .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("selectRegister", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_destructive("importProgram")
+            .action_destructive("importRegistersCsv")
             .build_definition()
 }
 //#endregion 🔖️Manifest
@@ -1759,6 +1970,10 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/⚖️declared-verbs/🦀️.rs"]
+mod declared_verb_laws;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts

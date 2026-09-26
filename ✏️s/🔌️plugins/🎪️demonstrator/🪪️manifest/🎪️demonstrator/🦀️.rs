@@ -22,7 +22,9 @@ use sourcing::viewer::sourcing::{create_sourcing_viewer, SourcingViewer};
 
 const PLUGIN_ID: &str = "demonstrator";
 const PLUGIN_LABEL: &str = "Entwerfen mit Bestand";
-const PLUGIN_VERSION: &str = "0.1.0";
+/// 🔢️ The version this bundle and every foreign plugin it composes are built at: all of them are members of one
+/// workspace (`version.workspace = true`), and one tree is one catalog.
+const PLUGIN_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 //#region 🔌️Plugin
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -43,6 +45,12 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     }
 }
 
+/// 📌️ Pins one composed plugin exactly at the version of the tree this bundle is compiled from: a trusted catalog
+/// admits only exact dependency pins inside its own closure (`=x.y.z`, `trustedBootstrapDescriptorClaims`), never a range.
+fn same_tree_pin() -> Result<VersionReq, PluginAssemblyError> {
+    Version::parse(PLUGIN_VERSION).map(VersionReq::Exact).map_err(|error| PluginAssemblyError::new("plugin-assembly.dependency-version", format!("compiled workspace version is not semver: {error}")))
+}
+
 /// 🔌️ Builds the concrete demonstrator bundle: declares its owned playground artifact, registers
 /// its own native editor+viewer surfaces over that artifact, then registers the six foreign plugins'
 /// surfaces in their preserved order (`sourcing`/`process` each contribute an editor+viewer pair).
@@ -51,14 +59,14 @@ pub fn plugin() -> Result<Plugin<DemonstratorApps>, PluginAssemblyError> {
         .label(PLUGIN_LABEL)
         .version(PLUGIN_VERSION)
         .package_id("semio:demonstrator")
-        .depends_on("cad", VersionReq::Any)
-        .depends_on("gis", VersionReq::Any)
-        .depends_on("procedural", VersionReq::Any)
-        .depends_on("process", VersionReq::Any)
-        .depends_on("puzzle", VersionReq::Any)
-        .depends_on("sourcing", VersionReq::Any)
+        .depends_on("cad", same_tree_pin()?)
+        .depends_on("gis", same_tree_pin()?)
+        .depends_on("procedural", same_tree_pin()?)
+        .depends_on("process", same_tree_pin()?)
+        .depends_on("puzzle", same_tree_pin()?)
+        .depends_on("sourcing", same_tree_pin()?)
         .artifact(crate::artifacts::playground::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor_with_examples::<crate::editor::playground::PlaygroundEditor>(crate::editor::playground::create_playground_editor(), vec![crate::artifacts::playground::examples::demo::source()])
+        .editor::<crate::editor::playground::PlaygroundEditor>(crate::editor::playground::create_playground_editor())
         .editor_mutation_roster::<crate::editor::playground::PlaygroundEditor>()
         .viewer::<crate::viewer::playground::PlaygroundViewer>(crate::viewer::playground::create_playground_viewer())
         .viewer_mutation_roster::<crate::viewer::playground::PlaygroundViewer>()

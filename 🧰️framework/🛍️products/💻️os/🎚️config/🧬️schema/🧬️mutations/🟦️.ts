@@ -11,7 +11,8 @@ import type { Identity, SignIn } from "./🪪️sign-in/🟦️.ts";
 import { diff as signInDiff, inverse as signInInverse, signIn } from "./🪪️sign-in/🟦️.ts";
 import type { SignOut } from "./🚪️sign-out/🟦️.ts";
 import { diff as signOutDiff, inverse as signOutInverse, signOut } from "./🚪️sign-out/🟦️.ts";
-import type { UiPreferences } from "../🟦️.ts";
+import { UI_PREFERENCE_DATA_CLASSES, type UiPreferenceDataClass, type UiPreferenceKey, type UiPreferences } from "../🟦️.ts";
+import uiPreferencesMutationSchema from "./🎨️ui-preferences/🧬️schema/🔣️.json" with { type: "json" };
 import type { SetAppearance, SetCustomDriver, SetCustomTheme, SetDriver, SetKeybindingOverride, SetLayout, SetLocale, SetTerminology, SetTheme } from "./🎨️ui-preferences/🟦️.ts";
 import { diff as uiPreferencesDiff, inverse as uiPreferencesInverse, setAppearance, setCustomDriver, setCustomTheme, setDriver, setKeybindingOverride, setLayout, setLocale, setTerminology, setTheme } from "./🎨️ui-preferences/🟦️.ts";
 
@@ -42,6 +43,15 @@ export type UiPreferencesConfigMutation =
   | ({ readonly mutation: "setTheme" } & SetTheme)
   | ({ readonly mutation: "setCustomTheme" } & SetCustomTheme)
   | ({ readonly mutation: "setKeybindingOverride" } & SetKeybindingOverride);
+
+/** 🗂️ The one key each UiPreferences mutation writes, read from the mutation schema (`🎨️ui-preferences/🧬️schema/🔣️.json`
+ * `$defs.PreferenceKeys`). */
+export const UI_PREFERENCE_MUTATION_KEYS: Readonly<Record<UiPreferencesConfigMutation["mutation"], UiPreferenceKey>> = uiPreferencesMutationSchema.$defs.PreferenceKeys.const as Readonly<Record<UiPreferencesConfigMutation["mutation"], UiPreferenceKey>>;
+
+/** 🗂️ Whether a mutation follows the user to every device (`persistedShared`) or stays on this one — its key's data class. */
+export function uiPreferenceMutationDataClassV1(mutation: UiPreferencesConfigMutation): UiPreferenceDataClass {
+  return UI_PREFERENCE_DATA_CLASSES[UI_PREFERENCE_MUTATION_KEYS[mutation.mutation]];
+}
 
 export function applyUiPreferencesConfigMutation(base: UiPreferences, mutation: UiPreferencesConfigMutation): UiPreferences {
   return uiPreferencesDiff(mutation, base);

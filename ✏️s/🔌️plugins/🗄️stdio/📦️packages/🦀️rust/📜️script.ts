@@ -11,6 +11,7 @@ import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, resolveTestLe
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { CATALOG_COMMIT_MARKER_FILENAME, auditPluginCatalogSources, createFreshCatalogBuildVerifier, createFreshCatalogCommitMarker } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { pluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 
 const PACKAGE_NAME = "semio-s-plugin-stdio";
 const PLUGIN_ID = "stdio";
@@ -899,7 +900,7 @@ function requireEmptyFreshRoot(repoRoot: string, value: string): string {
   const exact = realpathSync(root);
   const ambientTarget = cargoTargetDirectory(repoRoot);
   const ambientBuild = cargoBuildDirectory(repoRoot);
-  const developmentCache = resolve(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🧑‍💻dev", "🔌️plugin-modules");
+  const developmentCache = pluginModulesRootIn(repoRoot, "dev");
   if (pathIsWithin(ambientTarget, exact)) throw new Error("catalog-root refuses the ambient shared target");
   if (pathIsWithin(ambientBuild, exact)) throw new Error("catalog-root refuses the ambient shared build directory");
   if (pathIsWithin(developmentCache, exact)) throw new Error("catalog-root refuses the development cache");

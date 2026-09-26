@@ -347,8 +347,10 @@ async fn authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_
     assert_eq!(actual, expected);
     let pack = decode_hex(contract["valid"]["packHex"].as_str().unwrap());
     let spr = decode_hex(contract["valid"]["sprHex"].as_str().unwrap());
-    assert_eq!(actual["pack"]["base64"], super::super::base64_encode_exact(&pack, super::super::checked_base64_length(pack.len()).unwrap()).unwrap());
-    assert_eq!(actual["spr"]["base64"], super::super::base64_encode_exact(&spr, super::super::checked_base64_length(spr.len()).unwrap()).unwrap());
+    assert_eq!(actual["untrusted"]["content"]["packBase64"], super::super::base64_encode_exact(&pack, super::super::checked_base64_length(pack.len()).unwrap()).unwrap());
+    assert_eq!(actual["untrusted"]["content"]["sprBase64"], super::super::base64_encode_exact(&spr, super::super::checked_base64_length(spr.len()).unwrap()).unwrap());
+    assert_eq!(actual["untrusted"]["provenance"]["revision"]["contentSha256"], framework_hash::sha256_hex(&[pack.as_slice(), spr.as_slice()].concat()));
+    assert_eq!(actual["untrusted"]["notice"], crate::schema::UNTRUSTED_CONTENT_NOTICE);
 
     let other_scope = DocumentScope::new(contract["binding"]["sameDocumentOtherSpace"].as_str().unwrap(), scope.document_id.clone());
     let denied_transport = TestTransport::new(Vec::new());

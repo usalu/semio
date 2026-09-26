@@ -22,7 +22,7 @@ const ALL_LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), 
 const MODULE_JSON: &str = include_str!("🔣️.json");
 
 /// 🏷️ `$defs` of `🔣️.json`, in declaration order.
-const EXPORTS: [SchemaExport; 25] = [
+const EXPORTS: [SchemaExport; 27] = [
     SchemaExport { id: "TrustedCatalogRelativePathV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleIdentityV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleCodecV1", leaves: ALL_LEAVES },
@@ -48,6 +48,8 @@ const EXPORTS: [SchemaExport; 25] = [
     SchemaExport { id: "TrustedCatalogPublicationReceiptV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedPluginModuleIndexEntryV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedPluginModuleIndexV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedCatalogGuestResidencyV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "GuestCodecVerificationV1", leaves: ALL_LEAVES },
 ];
 
 /// 📌️ Registers `hub.artifact-authority.trusted-catalog`'s named exports into the process-wide export catalog.
@@ -66,6 +68,32 @@ mod scope_schema_export_law;
 
 /// 🧬️ The draft-07 module every implementation of this contract is projected from.
 pub const TRUSTED_CATALOG_SCHEMA_JSON: &str = include_str!("🔣️.json");
+
+/// 🧊️ `TrustedCatalogGuestResidencyV1`: how many component bytes of compiled guests a hub keeps
+/// resident (least recently used released first, never for idleness) and how many guests a catalog
+/// load compiles and interprets at once.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct TrustedCatalogGuestResidencyV1 {
+    pub resident_component_bytes_maximum: u64,
+    pub concurrent_verifications: usize,
+}
+
+/// 🗃️ `GuestCodecVerificationV1`: one remembered guest codec verification, content-addressed by its key.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GuestCodecVerificationV1 {
+    pub schema: String,
+    pub component_sha256: String,
+    pub artifact_schema: String,
+    pub engine: String,
+    pub pack_schema_hash: String,
+}
+
+/// 🏷️ The `schema` of every [`GuestCodecVerificationV1`].
+pub const GUEST_CODEC_VERIFICATION_SCHEMA: &str = "semio.hub.guest-codec-verification/v1";
+
+/// 🧊️ The one residency every hub applies, the `const` values of `TrustedCatalogGuestResidencyV1`.
+pub const TRUSTED_CATALOG_GUEST_RESIDENCY: TrustedCatalogGuestResidencyV1 = TrustedCatalogGuestResidencyV1 { resident_component_bytes_maximum: 268_435_456, concurrent_verifications: 4 };
 /// 🏷️ Closed publication command schema identity.
 pub const TRUSTED_CATALOG_PUBLICATION_SCHEMA: &str = "semio.hub.trusted-catalog-publication/v1";
 /// 🏷️ Closed publication receipt schema identity.

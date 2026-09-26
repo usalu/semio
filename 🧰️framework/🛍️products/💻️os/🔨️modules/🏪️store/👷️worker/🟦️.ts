@@ -42,20 +42,26 @@ import type {
   DirectoryEventPageAckV1,
   DirectoryStreamMessage,
   DocumentScope,
+  DocumentLink,
+  DocumentLinkStatusCode,
   GisMapApprovalHistoryStatusV1,
   PersistenceBinding,
   RemoteState,
   DocumentSocketGrantReceiptV1,
   SocketGrantReceiptV1,
 } from "../../../🟦️";
-import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
+import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, decodePresenceInteraction, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
 import {
   DirectoryClient,
   DirectoryCommandError,
   DirectoryHttpError,
+  DOCUMENT_LINK_ACCESS_REFUSED_STATUSES,
   HUB_RECONNECT_MAX_MS,
   HUB_RECONNECT_MIN_MS,
   createSocketGrantIssuerV1,
+  documentLinkExpiresAtMs,
+  documentLinkStatus,
+  documentLinkTransition,
   decodeBackboneWorkerRequest,
   decodeBackboneWorkerResponse,
   decodeDocumentArchiveBytes,
@@ -94,7 +100,7 @@ import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, 
 import { encodeActorUiPatchReceipt, type ActorUiPatchReceipt } from "../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM, browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, parseBrowserActorActionRequestV1, parseBrowserActorHistoryPatchBytesV1, parseBrowserActorHostEffectBytesV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
-import { decodeBrowserActorCommandPublicationV1, decodeBrowserActorIntentPublicationV1, decodeBrowserActorUnsolicitedPublicationV1, encodeBrowserActorHostEffectV1, requireBrowserActorCommandBackboneProjectionV1, type BrowserActorCommandBackboneEnvelopeV1, type BrowserActorCommandPublicationV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
+import { decodeBrowserActorCommandPublicationV1, decodeBrowserActorIntentPublicationV1, decodeBrowserActorUnsolicitedPublicationV1, encodeBrowserActorHostEffectV1, requireBrowserActorCommandBackboneProjectionV1, type BrowserActorCommandBackboneEnvelopeV1, type BrowserActorCommandPublicationV1, type BrowserActorEphemeralSnapshotV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
 import { ActorDocumentBindingV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1 } from "../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { parseBrowserActorViewStateRequest } from "../../🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
 import { panelTabKindId, panelViewContext, windowViewContext, type PanelTabKind, type ResolvedPluginViewState } from "../../../../../🔨️modules/🛂️manifest/🟦️.ts";
@@ -182,6 +188,9 @@ import { fetchWithTimeout, latestWins, retryWithJitteredBackoff, type FetchTimeo
 /** 🪪️ Identity config facet (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
  * §C3) — self-contained TS twin (see that module's header doc for why); never redefined here. */
 import type { Identity } from "../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️";
+import { spaceArtifactCreationPollDelayV1, spaceArtifactCreationUnreachableV1 } from "./🌱️creation-polling/🟦️.ts";
+import { executionTargetRetrySleepV1, requestExecutionTargetAssetV1 } from "./🔁️execution-target-retry/🟦️.ts";
+import { closeHubSocketV1 } from "../../📇️directory/🔌️client/🚪️socket-close/🟦️.ts";
 
 export type RustWorkerHost = {
   handleRequestBytes(bytes: Uint8Array): void;
@@ -240,7 +249,7 @@ function ownedDocumentRuntimeKey(documentId: string, spaceId?: string): string |
  * reserves every hub-bound document for the authenticated browser D1 transport. */
 function dispatchBackboneWorkerRequest(request: BackboneWorkerRequest, host: RustWorkerHost | null, typescriptDispatch: (request: BackboneWorkerRequest) => void = handleTsRequest): void {
   const rustDispatch = (value: BackboneWorkerRequest): void => host?.handleRequestBytes(encodeBackboneWorkerRequest(value));
-  if (request.kind === "directory-bootstrap-open" || request.kind === "directory-bootstrap-ack" || request.kind === "directory-bootstrap-reject" || request.kind === "directory-bootstrap-close" || request.kind === "directory-space-open" || request.kind === "directory-space-close") {
+  if (request.kind === "directory-bootstrap-open" || request.kind === "directory-bootstrap-ack" || request.kind === "directory-bootstrap-reject" || request.kind === "directory-bootstrap-close" || request.kind === "directory-space-open" || request.kind === "directory-space-close" || request.kind === "preference-lane-open" || request.kind === "preference-lane-record" || request.kind === "preference-lane-close") {
     typescriptDispatch(request);
     return;
   }
@@ -332,11 +341,13 @@ export type BackboneWorkerTestSeams = {
   spaceArtifactCreationTestFetch: typeof spaceArtifactCreationTestFetch;
   workerPostTestSink: typeof workerPostTestSink;
   readonly browserSessionAuthority: typeof browserSessionAuthority;
+  readonly hubSessionCapabilityHeld: boolean;
   readonly browserSessionOperationFence: typeof browserSessionOperationFence;
   readonly acceptBrowserSessionAuthority: typeof acceptBrowserSessionAuthority;
   readonly captureBrowserSessionOperationFence: typeof captureBrowserSessionOperationFence;
   readonly attachHubSessionPort: typeof attachHubSessionPort;
   readonly detachHubSessionPort: typeof detachHubSessionPort;
+  readonly browserActorAppCommandV1: typeof browserActorAppCommandV1;
 };
 
 /** 🧪️ Exact shape of the dependency bag `🧪️tests/🧪️space-artifact-creation-owner` receives from this module. */
@@ -495,13 +506,6 @@ const EXECUTION_TARGET_DIAGNOSTIC_MAX_BYTES = 1_024;
  * has been genuinely healthy for a modest stretch still gets credit before its next blip. */
 const SUSTAINED_HEALTHY_MS = 15_000;
 
-/** 🔌️ The longest link loss a MOUNTED hub document rides out with its live browser-actor child: within it edits keep
- * applying locally and queue in the outbox, and the next socket re-admits the same hub actor, resumes from the frontier
- * and flushes the queue. Past it the child is retired and the human is told to reconnect — AGENTS.md accepts short
- * connection shortages, never long offline periods. Twice {@link HUB_RECONNECT_MAX_MS}, so at least two reconnect
- * attempts at the capped backoff fall inside it.
- * @see ../../../../../🔨️modules/📡️replication/🧫️fixtures/🔌️link-shortage-v1/🔣️.json */
-const DOCUMENT_LINK_SHORTAGE_BOUND_MS = 2 * HUB_RECONNECT_MAX_MS;
 //#endregion 🔖️Constants
 
 //#region 🔖️Reconnect
@@ -554,7 +558,19 @@ export type ArtifactState = {
   executionTargetOpen: symbol | null;
   executionTargetLease: DocumentExecutionTargetLease | null;
   browserActorReservation: DocumentBrowserActorReservation | null;
-  /** 🔌️ Retires a suspended browser actor once its link stayed down past {@link DOCUMENT_LINK_SHORTAGE_BOUND_MS}. */
+  /** 📥️ Remote backbone messages of an actor-bound document that arrived before its actor child was reserved — the hub's
+   * `Welcome` tail comes before the `Session` that admits the child — handed to the child in arrival order the moment it is
+   * reserved. Bounded like the child's own pre-binding retention. */
+  browserActorBackboneBeforeReservation: Uint8Array[];
+  /** 🔀️ Another human's operations were folded in while this shell's own operations were still unacknowledged. The hub
+   * orders those remote operations BEFORE the pending local ones, but the local fold applied them after, so once the local
+   * ones are accepted the document is rebuilt from the hub's authoritative pair: measured as two humans each showing the
+   * OTHER's value for the same field forever after a short link loss (🎫️ 26/09/23 C10). */
+  remoteFoldedOverLocal: boolean;
+  /** 🔌️ The mounted child's hub link — the kernel's one `DocumentLink` state machine (`documentLinkTransition`,
+   * `🏪️store/🧫️fixtures/document-link-shortage-v1`): a short loss suspends it, past the bound it expires. */
+  link: DocumentLink;
+  /** 🔌️ Fires at the suspended link's expiry ({@link documentLinkExpiresAtMs}) and retires the child once it expired. */
   linkShortageTimer: ReturnType<typeof setTimeout> | null;
   browserActorViewState: ResolvedPluginViewState | null;
   /** 🛟️ Handle for the recursive, jittered sanity-poll reschedule (finding 1) — a plain
@@ -1186,7 +1202,7 @@ class DocumentExecutionTargetLease {
     assertBrowserActorDescribeCapacityV1(this.#descriptor.byteLength);
   }
 
-  async activateBrowserActor(child: DocumentBrowserActorChild, signal: AbortSignal, assertSession: () => void, report: (progress: DocumentExecutionTargetProgressV1) => void): Promise<void> {
+  async activateBrowserActor(child: DocumentBrowserActorChild, signal: AbortSignal, assertSession: () => void, report: (progress: DocumentExecutionTargetProgressV1) => void, retry: (progress: DocumentExecutionTargetProgressV1) => void): Promise<void> {
     const open = this.#browserActorOpen,
       grant = this.#browserActorGrant,
       actor = this.#fields.browserActor;
@@ -1196,12 +1212,21 @@ class DocumentExecutionTargetLease {
       open.assertCurrent();
       if (!this.#live || this.#browserActorOpen !== open || this.#browserActorGrant !== grant) throw new Error("document browser actor: retired authority");
     };
-    const control: ExecutionTargetReadControl = { signal, deadlineAtMs: Math.min(grant.reserveBeforeMs, grant.retireAtMs, Date.now() + SOCKET_GRANT_REQUEST_TIMEOUT_MS), assertCurrent };
+    const readControl = (): ExecutionTargetReadControl => ({ signal, deadlineAtMs: Math.min(grant.reserveBeforeMs, grant.retireAtMs, Date.now() + SOCKET_GRANT_REQUEST_TIMEOUT_MS), assertCurrent });
+    let control = readControl();
     let source: Uint8Array | undefined, result: BrowserActorChildValue | undefined;
     try {
       assertExecutionTargetRead(control);
       this.assertBrowserActorDescribeCapacity();
-      const response = await browserExecutionTargetAssetRequest(open.binding, open.intent.scope.documentId, "browser-actor", open.intent, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal });
+      const response = await requestExecutionTargetAssetV1(() => browserExecutionTargetAssetRequest(open.binding, open.intent.scope.documentId, "browser-actor", open.intent, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal }), {
+        signal,
+        sleep: executionTargetRetrySleepV1,
+        onRetry: (attempt, of) => {
+          assertCurrent();
+          retry({ stage: "browser-actor", completedBytes: attempt, totalBytes: of });
+        },
+      });
+      control = readControl();
       source = await readExecutionTargetBody(response, actor.byteLength, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, "browser-actor", control, report);
       assertExecutionTargetRead(control);
       if ((await executionTargetSha256Hex(source)) !== actor.sha256) throw new Error("document browser actor: body integrity");
@@ -1423,19 +1448,34 @@ async function readExecutionTargetBody(
 /** 🪟️ One body a verified actor child renders, keyed as the shell keys its store and the guest its surface ref. */
 type DocumentRenderSurfaceV1 = Readonly<{ key: string; bodyKey: string }>;
 
-/** 🪟️ The bodies one verified actor child renders: the lease's window and every panel-tab leaf of the verified app,
- * each panel keyed exactly as the shell keys its tab (`panelTabKindId`). The shell's own manifest never selects them. */
-type DocumentRenderSurfacesV1 = Readonly<{ window: DocumentRenderSurfaceV1; panels: readonly DocumentRenderSurfaceV1[] }>;
+/** 🪟️ The bodies one verified actor child renders: every window kind of the verified app (the lease's window among
+ * them, the one its mount identity names) and every panel-tab leaf, each panel keyed exactly as the shell keys its tab
+ * (`panelTabKindId`). A document the shell shows in several windows (note's `note-composite` + `note-navigator`) is one
+ * actor, so every one of its windows renders from — and commands into — that actor; a window left to the shell's local
+ * instance showed a document the hub never sent it and refused every command as `command owner mismatch` (ticket
+ * 26/09/23 C10, S15 finding b). The shell's own manifest never selects them. */
+type DocumentRenderSurfacesV1 = Readonly<{ windows: readonly DocumentRenderSurfaceV1[]; panels: readonly DocumentRenderSurfaceV1[] }>;
 
 function renderSurfaceTextV1(value: PackValue | undefined): value is string {
   return typeof value === "string" && value.length > 0 && new TextEncoder().encode(value).byteLength <= 256 && !/[\u0000-\u001f\u007f]/u.test(value);
 }
 
+/** 🪟️ Every window kind of the verified app, in declaration order. A malformed window, a key that repeats and more
+ * surfaces than one patch offer carries fail the descriptor. */
+function verifiedWindowSurfacesV1(windowKinds: readonly Readonly<Record<string, PackValue>>[]): readonly DocumentRenderSurfaceV1[] {
+  const keys = new Set<string>();
+  return Object.freeze(windowKinds.map((window) => {
+    if (!renderSurfaceTextV1(window.id) || !renderSurfaceTextV1(window.bodyKey) || keys.has(window.id) || keys.size === BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM) throw new Error("document execution target: descriptor mismatch");
+    keys.add(window.id);
+    return Object.freeze({ key: window.id, bodyKey: window.bodyKey });
+  }));
+}
+
 /** 🗂️ Every panel-tab leaf that carries a body, depth-first like the shell's `flattenPanelTabLeaves`. A malformed tab,
- * a key that repeats (or names the window) and more surfaces than one patch offer carries fail the descriptor. */
-function verifiedPanelSurfacesV1(tabs: PackValue | undefined, windowKey: string): readonly DocumentRenderSurfaceV1[] {
+ * a key that repeats (or names a window) and more surfaces than one patch offer carries fail the descriptor. */
+function verifiedPanelSurfacesV1(tabs: PackValue | undefined, windows: readonly DocumentRenderSurfaceV1[]): readonly DocumentRenderSurfaceV1[] {
   const panels: DocumentRenderSurfaceV1[] = [],
-    keys = new Set([windowKey]);
+    keys = new Set(windows.map(({ key }) => key));
   const visit = (value: PackValue | undefined, depth: number): void => {
     if (value === undefined) return;
     if (!Array.isArray(value) || depth > 8) throw new Error("document execution target: descriptor mismatch");
@@ -1500,12 +1540,13 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
     dialect.artifactKind !== fields.parentDialect.artifactKind ||
     dialect.standard !== fields.parentDialect.standard ||
     dialect.subset !== fields.parentDialect.subset ||
-    window === undefined || typeof window.bodyKey !== "string" || window.bodyKey.length === 0 || window.bodyKey.length > 256 ||
+    window === undefined ||
     typeof dialect.artifactKind !== "string" ||
     !surfaceOpensArtifactKindV1(kindPairs(artifactKinds), { artifactKinds: kindPairs(appArtifactKinds), dialectArtifactKind: dialect.artifactKind }, fields.artifact)
   )
     throw new Error("document execution target: descriptor mismatch");
-  return Object.freeze({ window: Object.freeze({ key: fields.surface.windowKindId, bodyKey: window.bodyKey as string }), panels: verifiedPanelSurfacesV1(app.panelTabs, fields.surface.windowKindId) });
+  const windows = verifiedWindowSurfacesV1(windowKinds);
+  return Object.freeze({ windows, panels: verifiedPanelSurfacesV1(app.panelTabs, windows) });
 }
 
 /** 🛡️ Acquires the server-selected verified execution target for one live plan and mints the private
@@ -1517,14 +1558,23 @@ async function installDocumentExecutionTargetLease(state: ArtifactState, binding
   const options = { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal } as const;
   const readControl = (): ExecutionTargetReadControl => ({ signal, deadlineAtMs: Math.min(plan.expiresAtUnixMs, Date.now() + SOCKET_GRANT_REQUEST_TIMEOUT_MS), assertCurrent: assertOwner });
   const report = (progress: DocumentExecutionTargetProgressV1): void => emitExecutionTargetStatus(state, binding, "verifying", progress);
+  const request = (asset: "manifest" | "component" | "descriptor"): Promise<FetchTimeoutResponse> =>
+    requestExecutionTargetAssetV1(() => browserExecutionTargetAssetRequest(binding, state.config.documentId, asset, intent, options), {
+      signal,
+      sleep: executionTargetRetrySleepV1,
+      onRetry: (attempt, of) => {
+        assertOwner();
+        emitExecutionTargetStatus(state, binding, "retrying", { stage: asset, completedBytes: attempt, totalBytes: of });
+      },
+    });
   let component: Uint8Array | null = null;
   let descriptorBytes: Uint8Array | null = null;
   try {
     if (signal.aborted) throw new Error("document execution target: cancelled");
     report({ stage: "manifest", completedBytes: 0, totalBytes: 1 });
+    assertExecutionTargetRead(readControl());
+    const manifestResponse = await request("manifest");
     const manifestControl = readControl();
-    assertExecutionTargetRead(manifestControl);
-    const manifestResponse = await browserExecutionTargetAssetRequest(binding, state.config.documentId, "manifest", intent, options);
     const fields = parseDocumentExecutionTargetLeaseFieldsV1(await readExecutionTargetJson(manifestResponse, EXECUTION_TARGET_MANIFEST_MAX_BYTES, manifestControl));
     if (
       !sameLeaseFieldsV1(
@@ -1536,15 +1586,15 @@ async function installDocumentExecutionTargetLease(state: ArtifactState, binding
     report({ stage: "manifest", completedBytes: 1, totalBytes: 1 });
 
     if (signal.aborted) throw new Error("document execution target: cancelled");
+    assertExecutionTargetRead(readControl());
+    const componentResponse = await request("component");
     const componentControl = readControl();
-    assertExecutionTargetRead(componentControl);
-    const componentResponse = await browserExecutionTargetAssetRequest(binding, state.config.documentId, "component", intent, options);
     component = await readExecutionTargetBody(componentResponse, fields.component.byteLength, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, "component", componentControl, report);
 
     if (signal.aborted) throw new Error("document execution target: cancelled");
+    assertExecutionTargetRead(readControl());
+    const descriptorResponse = await request("descriptor");
     const descriptorControl = readControl();
-    assertExecutionTargetRead(descriptorControl);
-    const descriptorResponse = await browserExecutionTargetAssetRequest(binding, state.config.documentId, "descriptor", intent, options);
     descriptorBytes = await readExecutionTargetBody(descriptorResponse, fields.descriptor.byteLength, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, "descriptor", descriptorControl, report);
 
     if (signal.aborted) throw new Error("document execution target: cancelled");
@@ -1581,6 +1631,7 @@ function dropDocumentExecutionTargetLease(state: ArtifactState): void {
   state.browserActorReservation?.close();
   state.executionTargetLease?.drop();
   state.executionTargetLease = null;
+  state.browserActorBackboneBeforeReservation = [];
 }
 
 export type DocumentBrowserActorChild = Awaited<ReturnType<typeof reserveBrowserActorChild>>;
@@ -1767,7 +1818,10 @@ function browserActorOwnedText(value: PackValue | undefined, expected: string | 
   return value;
 }
 
-function browserActorAppCommandBytes(request: BrowserActorActionRequestV1, fields: DocumentExecutionTargetLeaseFieldsV1): Uint8Array {
+/** 🎛️ Admits one canonical app command against the verified target and names the window it was issued in: any window
+ * kind of the verified app, addressed at its base instance, with a view state bound to that same window. A command
+ * addressed by id (no window in its address) is issued in the view state's active window, or the lease window. */
+function browserActorAppCommandV1(request: BrowserActorActionRequestV1, fields: DocumentExecutionTargetLeaseFieldsV1, windowKeys: ReadonlySet<string>): Readonly<{ bytes: Uint8Array; surfaceKey: string }> {
   if (request.payload.kind !== "app-command") throw new Error("document browser actor: invalid command payload");
   const bytes = Uint8Array.from(request.payload.bytes),
     command = decodeAppCommand(bytes);
@@ -1786,12 +1840,13 @@ function browserActorAppCommandBytes(request: BrowserActorActionRequestV1, field
   if (invocationCanonical.byteLength !== invocationBytes.byteLength || invocationCanonical.some((byte, index) => byte !== invocationBytes[index]) || viewStateCanonical.byteLength !== viewStateBytes.byteLength || viewStateCanonical.some((byte, index) => byte !== viewStateBytes[index])) throw new Error("document browser actor: noncanonical command values");
   const pluginId = fields.package.pluginId,
     appId = fields.surface.appId,
-    windowKindId = fields.surface.windowKindId;
+    activeWindowKindId = viewState.activeWindowKindId;
+  let windowKindId = typeof activeWindowKindId === "string" ? activeWindowKindId : fields.surface.windowKindId;
   if ("pluginId" in address) {
     browserActorOwnedText(address.pluginId, pluginId, "document browser actor: command owner mismatch");
     browserActorOwnedText(address.appId, appId, "document browser actor: command owner mismatch");
     browserActorOwnedText(address.modeId, null, "document browser actor: invalid command mode");
-    browserActorOwnedText(address.windowKindId, windowKindId, "document browser actor: command owner mismatch");
+    windowKindId = browserActorOwnedText(address.windowKindId, null, "document browser actor: command owner mismatch");
     browserActorOwnedText(address.windowInstanceId, windowKindId, "document browser actor: command owner mismatch");
     browserActorOwnedText(address.actionId, null, "document browser actor: invalid command action");
   } else {
@@ -1808,9 +1863,10 @@ function browserActorAppCommandBytes(request: BrowserActorActionRequestV1, field
     if (ownerKind !== "plugin") browserActorOwnedText(ownerFields.appId, appId, "document browser actor: command owner mismatch");
     if (ownerKind === "mode") browserActorOwnedText(ownerFields.modeId, typeof viewState.activeModeId === "string" ? viewState.activeModeId : null, "document browser actor: command owner mismatch");
   }
-  if (viewState.activeWindowKindId !== undefined && viewState.activeWindowKindId !== windowKindId) throw new Error("document browser actor: command view owner mismatch");
+  if (!windowKeys.has(windowKindId)) throw new Error("document browser actor: command owner mismatch");
+  if (activeWindowKindId !== undefined && activeWindowKindId !== windowKindId) throw new Error("document browser actor: command view owner mismatch");
   if (viewState.windowId !== undefined && viewState.windowId !== windowKindId) throw new Error("document browser actor: command view owner mismatch");
-  return bytes;
+  return { bytes, surfaceKey: windowKindId };
 }
 
 function browserActorActionDisposition(request: BrowserActorActionRequestV1, outcome: "guest-applied" | "rejected", mutationCount: number, hostEffects: readonly (readonly number[])[] = [], reason?: string, historyPatches: readonly (readonly number[])[] = []): BrowserActorActionResultV1 {
@@ -1848,6 +1904,8 @@ class DocumentBrowserActorReservation {
   readonly generation: bigint;
   private readonly scope: Readonly<{ spaceId: string; documentId: string }>;
   private readonly windowKindId: string;
+  /** 🪟️ Every window kind of the verified app; an app command is admitted in any of them. */
+  private readonly windowKeys: ReadonlySet<string>;
   /** 🪟️ The window and panel bodies this child renders, by the key the shell's stores and the guest's surface refs share. */
   private readonly surfaceKeys: ReadonlySet<string>;
   private readonly abort = new AbortController();
@@ -1871,6 +1929,7 @@ class DocumentBrowserActorReservation {
   private documentBinding: ActorDocumentBindingV1 | null = null;
   private documentBindingGeneration = 0n;
   private documentBackboneReady = false;
+  private backboneDraining = false;
   private pendingBackboneBeforeBinding: Uint8Array[] = [];
   private pendingBackboneBeforeBindingBytes = 0;
   private pollTail: Promise<void> = Promise.resolve();
@@ -1878,6 +1937,7 @@ class DocumentBrowserActorReservation {
   private localEffectTail: Promise<void> = Promise.resolve();
   private localEffectFailure: Error | null = null;
   private lastActionSequence = 0;
+  private lastEphemeral: BrowserActorEphemeralSnapshotV1 | null = null;
   private retirement: Promise<"retired" | "unconfirmed"> | null = null;
   private closed = false;
 
@@ -1887,6 +1947,12 @@ class DocumentBrowserActorReservation {
 
   get retirementOutcome(): Promise<"retired" | "unconfirmed"> | null {
     return this.retirement;
+  }
+
+  /** 👥️ The guest's last published presence pack and interaction slice — what this human's presence heartbeat carries
+   * for the actor-bound document (the Shell's local instance never sees it). `null` until the guest published one. */
+  get ephemeralSnapshot(): BrowserActorEphemeralSnapshotV1 | null {
+    return this.lastEphemeral;
   }
 
   private invokeWithPages(child: DocumentBrowserActorChild, events: BrowserActorChildValue[], commandPage: ShardCommandIngressPage | null, coldPairPage: BrowserActorChildValue | null, assertCurrent: () => void, allowClosing = false): Promise<BrowserActorChildValue> {
@@ -1985,6 +2051,7 @@ class DocumentBrowserActorReservation {
       activationGeneration: this.generation.toString(),
       instanceId: 0,
       verifiedSurfaceId: identity.surface.surfaceId,
+      windowKindId: identity.surface.windowKindId,
       catalogGenerationId: identity.catalog.generationId,
       componentSha256: identity.package.componentSha256,
       descriptorSha256: identity.package.descriptorByteSha256,
@@ -2085,7 +2152,11 @@ class DocumentBrowserActorReservation {
         if (mode === "control") receipts.push(payload);
         else if (typeof mode !== "string") {
           const publication = mode.kind === "ui-intent" ? decodeBrowserActorIntentPublicationV1(payload) : decodeBrowserActorCommandPublicationV1(payload, mode.sequence);
-          if (publication.kind === "ephemeral" || publication.kind === "merge-report") continue;
+          if (publication.kind === "ephemeral") {
+            this.lastEphemeral = publication.snapshot;
+            continue;
+          }
+          if (publication.kind === "merge-report") continue;
           if (publication.kind === "error") throw new Error(publication.reason);
           if (publication.kind !== "emit" && publication.historyPatch !== null) historyPatches.push(publication.historyPatch);
           if (publication.kind === "operation-completed") continue;
@@ -2097,6 +2168,7 @@ class DocumentBrowserActorReservation {
           publications += 1;
         } else {
           const publication = decodeBrowserActorUnsolicitedPublicationV1(payload);
+          if (publication.kind === "ephemeral") this.lastEphemeral = publication.snapshot;
           if (publication.kind === "completion" || publication.kind === "operation-completed") {
             if (publication.historyPatch !== null) historyPatches.push(publication.historyPatch);
             if (publication.kind === "completion") completions.push(publication);
@@ -2106,7 +2178,7 @@ class DocumentBrowserActorReservation {
       }
       if (mode === "control") throw new Error("actor-document-control.data-before-receipt");
       if (target.tag !== "backbone" || typeof target.val !== "string") throw new Error("document browser actor: unsupported message target");
-      if (!this.documentBackboneReady) throw new Error("actor-document-port.not-live");
+      if (!this.documentBackboneReady && !this.backboneDraining) throw new Error("actor-document-port.not-live");
       const binding = this.documentBinding;
       if (binding === null || target.val !== binding.port.uri) throw new Error("actor-document-port.foreign-uri");
       const kind = documentBackboneEffectV1(payload),
@@ -2214,14 +2286,22 @@ class DocumentBrowserActorReservation {
     }
   }
 
+  /** 📥️ Delivers the backbone retained before the binding (a catch-up tail among it) in arrival order, then opens the
+   * port for live traffic. The guest answers each ingested batch on the bound port (its `remote-ingest-receipt`), so the
+   * bound port accepts the guest's sends while the retained backlog drains. */
   private async flushPendingBackbone(): Promise<void> {
     const binding = this.documentBinding;
     if (binding === null) throw new Error("actor-document-port.unbound");
-    while (this.pendingBackboneBeforeBinding.length > 0) {
-      const queued = this.pendingBackboneBeforeBinding;
-      this.pendingBackboneBeforeBinding = [];
-      this.pendingBackboneBeforeBindingBytes = 0;
-      for (const payload of queued) if (!(await binding.port.receive(this.currentDocumentSource(), payload))) throw new Error("actor-document-port.stale-queued-message");
+    this.backboneDraining = true;
+    try {
+      while (this.pendingBackboneBeforeBinding.length > 0) {
+        const queued = this.pendingBackboneBeforeBinding;
+        this.pendingBackboneBeforeBinding = [];
+        this.pendingBackboneBeforeBindingBytes = 0;
+        for (const payload of queued) if (!(await binding.port.receive(this.currentDocumentSource(), payload))) throw new Error("actor-document-port.stale-queued-message");
+      }
+    } finally {
+      this.backboneDraining = false;
     }
     this.documentBackboneReady = true;
     this.publishMountedIfReady();
@@ -2274,11 +2354,12 @@ class DocumentBrowserActorReservation {
         this.assertDocumentOwnerCurrent();
         // 🪞️ The mailbox sends one action at a time and stamps each at issue, so a queued click carries the revision
         // on screen when it was made, which later acknowledged patches have since passed. Any revision this lifetime
-        // painted on the action's own surface (1 ..= its last acknowledged revision: the window's for an app command,
-        // the intent's window or panel body for a UI intent) is the user's; the guest judges an intent's geometry
+        // painted on the action's own surface (1 ..= its last acknowledged revision: the window an app command was issued
+        // in, the intent's window or panel body for a UI intent) is the user's; the guest judges an intent's geometry
         // staleness itself (`DEFAULT_REVISION_TOLERANCE`).
-        const intent = request.payload.kind === "ui-intent" ? browserActorUiIntentV1(request) : null;
-        const painted = request.surfaceRevision >= 1 && request.surfaceRevision <= (this.renderedSurfaceRevisions.get(intent?.surfaceKey ?? this.windowKindId) ?? 0);
+        const intent = request.payload.kind === "ui-intent" ? browserActorUiIntentV1(request) : null,
+          command = intent === null ? browserActorAppCommandV1(request, fields, this.windowKeys) : null;
+        const painted = request.surfaceRevision >= 1 && request.surfaceRevision <= (this.renderedSurfaceRevisions.get(intent?.surfaceKey ?? command!.surfaceKey) ?? 0);
         if (
           request.scope.spaceId !== fields.scope.spaceId ||
           request.scope.documentId !== fields.scope.documentId ||
@@ -2306,8 +2387,7 @@ class DocumentBrowserActorReservation {
           const result = await this.invokePoll(child, [{ tag: "ui-intent", val: { instance: 0, intent: intent.bytes } }], null, () => this.assertDocumentOwnerCurrent());
           mutationCount = await this.driveTurnResult(result, child, () => this.assertDocumentOwnerCurrent(), publication);
         } else {
-          const command = browserActorAppCommandBytes(request, fields),
-            pages = createShardCommandIngressPages({ owner: 0n, generation: this.generation, commandIndex: 0, commandCount: 1, instance: 0, seq: BigInt(request.actionSequence), command });
+          const pages = createShardCommandIngressPages({ owner: 0n, generation: this.generation, commandIndex: 0, commandCount: 1, instance: 0, seq: BigInt(request.actionSequence), command: command!.bytes });
           let terminal = "idle";
           for (const page of pages) {
             invoked = true;
@@ -2379,7 +2459,8 @@ class DocumentBrowserActorReservation {
     const fields = lease.fields();
     this.scope = Object.freeze({ ...fields.scope });
     this.windowKindId = fields.surface.windowKindId;
-    this.surfaceKeys = new Set([this.windowKindId, ...lease.renderSurfaces().panels.map(({ key }) => key)]);
+    this.windowKeys = new Set(lease.renderSurfaces().windows.map(({ key }) => key));
+    this.surfaceKeys = new Set([...this.windowKeys, ...lease.renderSurfaces().panels.map(({ key }) => key)]);
     this.generation = ++documentBrowserActorGeneration;
     // ⏳️ A LIVE browser actor is bounded by its socket and its lease, never by the calendar the
     // admission plan was minted with. `grant.retireAtMs` is `plan.expiresAtUnixMs`, whose TTL is at
@@ -2432,10 +2513,16 @@ class DocumentBrowserActorReservation {
       const stage = (name: DocumentExecutionTargetProgressV1["stage"], completedBytes = 0): void => {
         if (this.mountedUiRevision === 0) emitExecutionTargetStatus(this.state, binding, "verifying", { stage: name, completedBytes, totalBytes: 1 });
       };
-      await this.lease.activateBrowserActor(child, this.abort.signal, assertCurrent, (progress) => {
-        assertCurrent();
-        emitExecutionTargetStatus(this.state, binding, "verifying", progress);
-      });
+      await this.lease.activateBrowserActor(
+        child,
+        this.abort.signal,
+        assertCurrent,
+        (progress) => {
+          assertCurrent();
+          emitExecutionTargetStatus(this.state, binding, "verifying", progress);
+        },
+        (progress) => emitExecutionTargetStatus(this.state, binding, "retrying", progress),
+      );
       assertCurrent();
       stage("actor-open");
       this.lifetime = await this.openGuest(child, assertCurrent);
@@ -2454,8 +2541,9 @@ class DocumentBrowserActorReservation {
     if (this.closed) throw new Error("document browser actor: closed reservation");
     this.documentBackboneReady = false;
     for (const message of retainedBackbone) this.retainBackboneBeforeBinding(message);
-    if (!this.lifetime || !this.child || !this.socket || !this.activation) return;
+    if (!this.child || !this.socket || !this.activation) return;
     await this.activation;
+    if (!this.lifetime) return;
     await this.viewRefresh;
     const binding = hubBinding(this.state.config),
       socket = this.socket;
@@ -2570,20 +2658,22 @@ class DocumentBrowserActorReservation {
     return this.coldTransfer;
   }
 
-  /** 🖼️ Makes the window and every verified panel body visible to the child (window context for the window, panel
-   * context for the panels, exactly as the local refresh binds them) and reconciles the turn's patches until the
-   * render settles. Rendering the panels here is what keeps an actor-bound document's inspector live (G-P1-4). */
+  /** 🖼️ Makes every verified window (each in its own window context) and every verified panel body (panel context)
+   * visible to the child, exactly as the local refresh binds them, and reconciles the turn's patches until the render
+   * settles. Rendering the panels here is what keeps an actor-bound document's inspector live (G-P1-4); rendering every
+   * window is what lets a second window of the document show and command the live document. */
   private async renderSurface(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> {
     const lifetime = this.lifetime;
     if (lifetime === null) throw new Error("document browser actor: missing render lifetime");
     assertCurrent();
     const hostView = this.state.browserActorViewState;
     if (hostView === null) throw new Error("document browser actor: missing host view context");
-    const windowId = this.lease.fields().surface.windowKindId;
-    const viewState = windowViewContext(hostView, windowId);
-    if (!viewState || viewState.activeWindowKindId !== windowId) throw new Error("document browser actor: unknown host window instance");
     const visible: BrowserActorChildValue[] = [
-      { tag: "surface-visible", val: { surface: { instance: lifetime.instanceId, surface: windowId }, bodyKey: this.lease.renderSurfaces().window.bodyKey, viewState: encodePackValue(viewState) } },
+      ...this.lease.renderSurfaces().windows.map((window): BrowserActorChildValue => {
+        const viewState = windowViewContext(hostView, window.key);
+        if (!viewState || viewState.activeWindowKindId !== window.key) throw new Error("document browser actor: unknown host window instance");
+        return { tag: "surface-visible", val: { surface: { instance: lifetime.instanceId, surface: window.key }, bodyKey: window.bodyKey, viewState: encodePackValue(viewState) } };
+      }),
       ...this.panelVisibleEvents(lifetime, hostView),
     ];
     for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
@@ -2899,6 +2989,23 @@ function documentBrowserActorLease(state: ArtifactState): DocumentExecutionTarge
   return lease;
 }
 
+/** 🎭️ Whether this document's live lease runs it in a verified browser actor — its remote backbone then belongs to that
+ * actor, never to the Shell's local instance, even before the child exists. */
+function documentAwaitsBrowserActor(state: ArtifactState): boolean {
+  const lease = state.executionTargetLease;
+  return lease !== null && lease.live && lease.fields().browserActor.kind === "closed-browser-actor";
+}
+
+/** 📥️ Keeps one remote backbone message for the actor child that is not reserved yet (the `Welcome` tail precedes the
+ * admitting `Session`): before, it went to the Shell's local instance, so a document opened after edits showed only its
+ * checkpoint — every edit since the last check-in was missing on screen although the hub held it (ticket 26/09/23 C10). */
+function retainBackboneBeforeBrowserActor(state: ArtifactState, message: Uint8Array): void {
+  const pending = state.browserActorBackboneBeforeReservation;
+  const bytes = pending.reduce((total, entry) => total + entry.byteLength, 0);
+  if (pending.length >= DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages || message.byteLength > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - bytes) throw new Error("document browser actor: pre-reservation backbone capacity");
+  pending.push(message);
+}
+
 /** 🪪️ Claims a private document slot before reserving worker capacity, with no body fetch or activation. */
 async function reserveDocumentBrowserActorChild(state: ArtifactState): Promise<DocumentBrowserActorReservation | null> {
   const lease = documentBrowserActorLease(state);
@@ -2908,6 +3015,7 @@ async function reserveDocumentBrowserActorChild(state: ArtifactState): Promise<D
   const owner = new DocumentBrowserActorReservation(state, lease, grant);
   state.browserActorReservation = owner;
   try {
+    for (const message of state.browserActorBackboneBeforeReservation.splice(0)) await owner.receiveBackbone(message);
     await owner.reserve();
     return owner;
   } catch (error) {
@@ -2927,6 +3035,7 @@ async function activateDocumentBrowserActorAfterSession(state: ArtifactState, so
   const suspended = suspendedDocumentBrowserActor(state);
   if (suspended !== null && suspended.lease === lease && state.socket === socket && state.hubActorReady && state.actor === lease.browserActorGrant()?.actorId && suspended.reservation.resumeLink(socket)) {
     suspended.pair.resumeLink(socket);
+    state.link = documentLinkTransition(state.link, { kind: "restored", nowMs: Date.now() });
     if (state.linkShortageTimer !== null) clearTimeout(state.linkShortageTimer);
     state.linkShortageTimer = null;
     flushMutationsToHubIfReady(state);
@@ -2946,7 +3055,14 @@ async function activateDocumentBrowserActorAfterSession(state: ArtifactState, so
     // step, not a second pass over a running guest.
     const tailFrontier = state.requiredTailFrontier,
       tailResumeToken = state.pendingResumeToken;
-    if (await seedColdPairFromCanonicalCheckpoint(state, tailResumeToken ?? state.resumeToken ?? "") && tailFrontier !== null) {
+    let seeded = false;
+    try {
+      seeded = await seedColdPairFromCanonicalCheckpoint(state, tailResumeToken ?? state.resumeToken ?? "");
+    } catch (error) {
+      if (!canonicalCheckpointPairRetryable(error)) throw error;
+      void retryCanonicalCheckpointPair(state, lease, socket, tailResumeToken, tailFrontier);
+    }
+    if (seeded && tailFrontier !== null) {
       state.pendingResumeToken = tailResumeToken;
       state.requiredTailFrontier = tailFrontier;
       finishCatchupIfReady(state);
@@ -2959,8 +3075,44 @@ async function activateDocumentBrowserActorAfterSession(state: ArtifactState, so
     if (state.executionTargetLease === lease) state.executionTargetLease = null;
     lease.drop();
     if (current && !state.closed) emitExecutionTargetStatus(state, binding, state.docAbort.signal.aborted ? "cancelled" : "integrity-failed", undefined, diagnostic);
-    socket.close(1008, "browser actor activation failed");
+    closeHubSocketV1(socket, "actorActivationFailed");
   }
+}
+
+/** 🔁️ Repeats a canonical pair request the hub refused transiently (busy, unreachable), with jittered backoff, for as
+ * long as the lease and its socket live; the activated child is then seeded through the ordinary post-activation
+ * install. The document stays at "verifying" meanwhile — never a child without a document. A final refusal ends the
+ * attempt like any integrity failure: the lease drops and the socket closes, so the ordinary reopen runs. */
+async function retryCanonicalCheckpointPair(state: ArtifactState, lease: DocumentExecutionTargetLease, socket: WebSocket, tailResumeToken: string | null, tailFrontier: WireFrontierSummary | null): Promise<void> {
+  const binding = hubBinding(state.config);
+  if (binding === null) return;
+  const current = (): boolean => state.executionTargetLease === lease && lease.live && state.socket === socket && !state.closed;
+  let outcome: Readonly<{ kind: "seeded" | "retired" } | { kind: "refused"; error: unknown }>;
+  try {
+    outcome = await retryWithJitteredBackoff(async () => {
+      if (!current()) return { kind: "retired" } as const;
+      try {
+        return { kind: (await seedColdPairFromCanonicalCheckpoint(state, tailResumeToken ?? state.resumeToken ?? "")) ? "seeded" : "retired" } as const;
+      } catch (error) {
+        if (canonicalCheckpointPairRetryable(error)) throw error;
+        return { kind: "refused", error } as const;
+      }
+    }, { minMs: HUB_RECONNECT_MIN_MS, maxMs: HUB_RECONNECT_MAX_MS, signal: lease.retirement });
+  } catch {
+    return;
+  }
+  if (!current()) return;
+  if (outcome.kind === "seeded" && tailFrontier !== null) {
+    state.pendingResumeToken = tailResumeToken;
+    state.requiredTailFrontier = tailFrontier;
+    finishCatchupIfReady(state);
+  }
+  if (outcome.kind !== "refused") return;
+  state.browserActorReservation?.close();
+  state.executionTargetLease = null;
+  lease.drop();
+  emitExecutionTargetStatus(state, binding, "integrity-failed", undefined, outcome.error instanceof Error ? outcome.error.message : String(outcome.error));
+  closeHubSocketV1(socket, "checkpointPairRefused");
 }
 
 //#endregion 🪪️ExecutionTargetLease
@@ -2999,8 +3151,6 @@ function documentOpenPlanAuthority(
   if (configured && configured.some((byte) => byte !== 0) && (configured.length !== 32 || configured.some((byte, index) => byte !== packSchemaHash[index]))) throw new Error("document open: authority mismatch");
   return { schema: plan.artifact.schema, packSchemaHash, parentDialect: plan.parentDialect, surfaceId: plan.surface.surfaceId };
 }
-/** 🚫️ Open-plan answers that withdraw the human's access (denied, gone, removed): a suspended child retires at once. */
-const DOCUMENT_ACCESS_REFUSED_STATUSES: ReadonlySet<number> = new Set([401, 403, 404, 410]);
 
 type SuspendedDocumentBrowserActorV1 = Readonly<{ reservation: DocumentBrowserActorReservation; lease: DocumentExecutionTargetLease; pair: VerifiedColdDocumentPair }>;
 
@@ -3013,8 +3163,9 @@ function suspendedDocumentBrowserActor(state: ArtifactState): SuspendedDocumentB
 }
 
 /** 🔌️ Suspends a MOUNTED child (and its applied cold pair) when its socket closes, so a short link loss neither refuses
- * the human's next edit nor turns the reconnect into a reopen; arms the {@link DOCUMENT_LINK_SHORTAGE_BOUND_MS} bound.
- * `false` when nothing mounted is resumable — the caller then retires the lease as before. */
+ * the human's next edit nor turns the reconnect into a reopen: the link fails (`documentLinkTransition`) and a timer
+ * ticks it at its expiry ({@link DOCUMENT_LINK_SHORTAGE_POLICY}'s bound). `false` when nothing mounted is resumable —
+ * the caller then retires the lease as before. */
 function suspendDocumentBrowserActorLink(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }>): boolean {
   const reservation = state.browserActorReservation,
     lease = state.executionTargetLease,
@@ -3024,20 +3175,31 @@ function suspendDocumentBrowserActorLink(state: ArtifactState, binding: Extract<
     reservation.close();
     return false;
   }
+  const nowMs = Date.now();
+  state.link = documentLinkTransition(state.link, { kind: "failed", nowMs });
+  const expiresAtMs = documentLinkExpiresAtMs(state.link);
   if (state.linkShortageTimer !== null) clearTimeout(state.linkShortageTimer);
+  state.linkShortageTimer = null;
+  if (expiresAtMs === undefined) {
+    retireSuspendedDocumentBrowserActor(state, binding);
+    return true;
+  }
   state.linkShortageTimer = setTimeout(() => {
     state.linkShortageTimer = null;
-    if (state.browserActorReservation === reservation && reservation.suspended) retireSuspendedDocumentBrowserActor(state, binding, "link-expired");
-  }, DOCUMENT_LINK_SHORTAGE_BOUND_MS);
+    state.link = documentLinkTransition(state.link, { kind: "tick", nowMs: Date.now() });
+    if (state.browserActorReservation === reservation && reservation.suspended && state.link.kind === "expired") retireSuspendedDocumentBrowserActor(state, binding);
+  }, Math.max(0, expiresAtMs - nowMs));
   return true;
 }
 
-/** 🛑️ Retires a suspended child with a localized reason: the link stayed down too long, or the hub withdrew access. */
-function retireSuspendedDocumentBrowserActor(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }>, code: "link-expired" | "access-revoked"): void {
+/** 🛑️ Retires a suspended child with its terminal link's localized reason: the link stayed down too long
+ * (`link-expired`), or the hub withdrew access (`access-revoked`). */
+function retireSuspendedDocumentBrowserActor(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }>): void {
   if (state.linkShortageTimer !== null) clearTimeout(state.linkShortageTimer);
   state.linkShortageTimer = null;
   dropDocumentExecutionTargetLease(state);
-  if (!state.closed) emitExecutionTargetStatus(state, binding, code);
+  const code: DocumentLinkStatusCode = documentLinkStatus(state.link);
+  if (!state.closed && (code === "link-expired" || code === "access-revoked")) emitExecutionTargetStatus(state, binding, code);
 }
 
 /** 🔁️ Re-admits the suspended child's actor on the fresh plan when the plan names the SAME verified target (the lease's
@@ -3152,7 +3314,10 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
     { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: state.docAbort.signal },
   );
   if (!openResponse.ok) {
-    if (suspended !== null && DOCUMENT_ACCESS_REFUSED_STATUSES.has(openResponse.status)) retireSuspendedDocumentBrowserActor(state, binding, "access-revoked");
+    if (suspended !== null && DOCUMENT_LINK_ACCESS_REFUSED_STATUSES.has(openResponse.status)) {
+      state.link = documentLinkTransition(state.link, { kind: "refused", nowMs: Date.now() });
+      retireSuspendedDocumentBrowserActor(state, binding);
+    }
     throw new Error("document open: unavailable");
   }
   let plan: DocumentOpenPlanV1;
@@ -3160,7 +3325,7 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
     plan = parseDocumentOpenPlanV1(await readDocumentOpenJson(openResponse, openControl), Date.now());
   } catch {
     const cancelled = state.docAbort.signal.aborted;
-    clearHubSessionCapability();
+    if (!cancelled) clearHubSessionCapability();
     throw new Error(cancelled ? "document open: cancelled" : "document open: invalid plan");
   }
   assertOwner();
@@ -3179,7 +3344,7 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
       } catch (error) {
         const cancelled = state.docAbort.signal.aborted || String((error as Error).message).includes("cancelled");
         emitExecutionTargetStatus(state, binding, cancelled ? "cancelled" : "integrity-failed");
-        clearHubSessionCapability();
+        if (!cancelled) clearHubSessionCapability();
         throw new Error(cancelled ? "document open: cancelled" : "document open: invalid execution target");
       }
     }
@@ -3479,9 +3644,22 @@ function emitMutationEvent(state: ArtifactState, envelopes: readonly MutationEnv
 /** 🎨️ Stamps `state`'s hub-assigned session color and canonical surface onto an outbound
  * `ArtifactPresencePeer` right before `encodePresencePeer` — the ONE place either field is ever
  * filled; shells never set `peer.color`/`peer.surface` themselves (contract-freeze §C7.4). The TS
- * twin of the Rust actor's `stamp_session`. */
+ * twin of the Rust actor's `stamp_session`. An actor-bound document's presence pack and interaction
+ * slice are its verified actor's own last `Ephemeral` (the native twin keeps the same frame per
+ * program, `ProgramBridge::observe_ephemeral`), never the Shell's local instance's, which never sees
+ * the live document: without this a React human's selections never reached a peer (ticket 26/09/23
+ * C10, WG8 relay). */
 function stampSession(peer: ArtifactPresencePeer, state: ArtifactState): ArtifactPresencePeer {
-  return { ...peer, color: state.sessionColor ?? undefined, surface: hubBinding(state.config)?.installedTarget?.surface.surfaceId };
+  const stamped = { ...peer, color: state.sessionColor ?? undefined, surface: hubBinding(state.config)?.installedTarget?.surface.surfaceId };
+  const reservation = state.browserActorReservation;
+  if (!reservation) return stamped;
+  const ephemeral = reservation.ephemeralSnapshot;
+  const { presencePack: _local, interaction: _localInteraction, ...rest } = stamped;
+  return {
+    ...rest,
+    ...(ephemeral !== null && ephemeral.presence.length > 0 ? { presencePack: ephemeral.presence } : {}),
+    ...(ephemeral !== null && ephemeral.interaction.length > 0 ? { interaction: decodePresenceInteraction(Uint8Array.from(ephemeral.interaction), [0]) } : {}),
+  };
 }
 
 /** ↩️ Synthesizes a local "undo" envelope from a speculative envelope's own precomputed `inverse` —
@@ -3605,7 +3783,7 @@ async function pollFolderOnce(state: ArtifactState, binding: Extract<Persistence
       timeoutMs: FOLDER_FETCH_TIMEOUT_MS,
       signal: state.docAbort.signal,
     })) as BinaryFetchTimeoutResponse;
-    if (response.status === 404) return;
+    if (response.status === 204 || response.status === 404) return;
     if (!response.ok) throw new Error(`folder backbone read failed (${response.status})`);
     const archive = new Uint8Array(await response.arrayBuffer());
     decodeDocumentArchiveBytes(archive);
@@ -3759,7 +3937,7 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
     state.docAbort.signal.addEventListener("abort", onAbort, { once: true });
     socket.onopen = () => {
       if (socket.protocol !== "semio.session.v1") {
-        socket.close(1002, "socket protocol mismatch");
+        closeHubSocketV1(socket, "protocolMismatch");
         return;
       }
       state.reconnectDelayMs = HUB_RECONNECT_MIN_MS;
@@ -4006,8 +4184,10 @@ async function handleAck(state: ArtifactState, batchId: number, stages: readonly
 
     const outcome = stage.Applied.outcome;
     let ackOutcome: CommandAckOutcome;
+    let reorder = false;
     if (outcome === "Accepted") {
       ackOutcome = { kind: "accepted" };
+      reorder = state.remoteFoldedOverLocal && state.pendingMutations.length === 0 && documentAwaitsBrowserActor(state);
     } else if ("Transformed" in outcome) {
       await applyAckCorrection(state, [...sent].reverse().map(rollbackEnvelope), fromWireEnvelope(outcome.Transformed.envelope));
       ackOutcome = { kind: "transformed" };
@@ -4017,6 +4197,7 @@ async function handleAck(state: ArtifactState, batchId: number, stages: readonly
     }
     setStatus(state, { pendingMutations: state.pendingMutations.length });
     emitEvent(state, { kind: "commandOutcome", batchId, outcome: ackOutcome });
+    if (reorder) await requireArtifactRebootstrap(state);
   }
 }
 
@@ -4316,6 +4497,7 @@ function rejectArtifactBootstrap(state: ArtifactState, error: unknown, owner = s
 }
 
 async function requireArtifactRebootstrap(state: ArtifactState): Promise<void> {
+  state.remoteFoldedOverLocal = false;
   const owner = captureArtifactRebootstrapOwner(state);
   requeuePendingBatches(state);
   reissueInferenceApprovalUndoForRebootstrap(state);
@@ -4472,6 +4654,27 @@ async function installArtifactBootstrap(state: ArtifactState, owner: DocumentArt
 
 const CANONICAL_CHECKPOINT_PAIR_REQUEST_TIMEOUT_MS = 30_000;
 
+/** 🧯️ The hub did not hand over the document's canonical checkpoint pair. The pair is the ONLY source of the
+ * document a browser actor renders and authors — for a door-created artifact it is the genesis the owning component
+ * minted for its identity — so an actor never runs without it: before, a missing pair activated a child with no
+ * document, which never rendered and refused every action (`action-owner-mismatch`), with nothing retrying. A
+ * `transient` refusal (the hub is busy or unreachable) is retried while the lease lives; any other refusal is final. */
+class CanonicalCheckpointPairUnavailableV1 extends Error {
+  readonly transient: boolean;
+
+  constructor(readonly status: number, detail = "status") {
+    super(`canonical checkpoint pair: unavailable (${detail} ${status})`);
+    this.transient = detail === "status" && CANONICAL_CHECKPOINT_PAIR_TRANSIENT_STATUSES.has(status);
+  }
+}
+
+const CANONICAL_CHECKPOINT_PAIR_TRANSIENT_STATUSES: ReadonlySet<number> = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+/** 🔁️ Whether a failed canonical pair request may be repeated under the same lease. */
+function canonicalCheckpointPairRetryable(error: unknown): boolean {
+  return (error instanceof CanonicalCheckpointPairUnavailableV1 && error.transient) || (error instanceof Error && error.message === "hub session unreachable");
+}
+
 /** 🪢️ Fetches, verifies and installs the document's canonical checkpoint pair.
  *
  * A hub's document socket NEVER seeds an artifact client: its `Welcome.bootstrap` is computed by the
@@ -4505,14 +4708,8 @@ async function seedColdPairFromCanonicalCheckpoint(state: ArtifactState, resumeT
     { method: "GET", headers: { accept: CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1 } },
     { timeoutMs: CANONICAL_CHECKPOINT_PAIR_REQUEST_TIMEOUT_MS, signal: lease.retirement, admit: () => state.executionTargetLease === lease && lease.live },
   );
-  // 🧯️ A hub that does not HAND OVER a pair is not an integrity violation: it is the state every
-  // client was in before this route existed (no pack, no cold pair, a live socket that can still
-  // carry edits), and a hub whose binary predates the route answers every one of these with a 404.
-  // Throwing here destroyed the lease and closed the socket with 1008, so one missing route made
-  // EVERY cold document unopenable — the freeze outcome 3 forbids. A pair the hub DID hand over and
-  // that does not verify stays fatal below: that one is an integrity violation.
-  if (!response.ok) return false;
-  if (response.headers.get("content-type") !== CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1) return false;
+  if (!response.ok) throw new CanonicalCheckpointPairUnavailableV1(response.status);
+  if (response.headers.get("content-type") !== CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1) throw new CanonicalCheckpointPairUnavailableV1(response.status, "media type");
   const control: ExecutionTargetReadControl = { signal: lease.retirement, deadlineAtMs: Date.now() + CANONICAL_CHECKPOINT_PAIR_REQUEST_TIMEOUT_MS, assertCurrent };
   const body = await readBoundedExecutionTargetBody(response, null, CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES, control, (completedBytes, totalBytes) =>
     emitExecutionTargetStatus(state, binding, "verifying", { stage: "canonical-pair", completedBytes, totalBytes }),
@@ -4688,9 +4885,11 @@ async function handleHubFrame(
       });
       if (fresh.length > 0 && commandBatch === null) throw new Error("document backbone: exact server command batch missing");
       if (fresh.length > 0 && commandBatch !== null) {
+        if (state.pendingMutations.length > 0) state.remoteFoldedOverLocal = true;
         const message = encodeBackboneMessage({ kind: "mutations", envelopes: commandBatch }),
           reservation = state.browserActorReservation;
-        if (reservation === null) emitEvent(state, { kind: "documentBackbone", message });
+        if (reservation === null && documentAwaitsBrowserActor(state)) retainBackboneBeforeBrowserActor(state, message);
+        else if (reservation === null) emitEvent(state, { kind: "documentBackbone", message });
         else {
           try { await reservation.receiveBackbone(message); }
           catch (error) { reservation.close(); throw error; }
@@ -4752,7 +4951,7 @@ async function handleHubFrame(
       const scope = artifactScope(state);
       post({ kind: "socket-actor-failed", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), code: "session-mismatch" });
       dropDocumentExecutionTargetLease(state);
-      state.socket?.close(1008, "socket actor mismatch");
+      if (state.socket) closeHubSocketV1(state.socket, "actorMismatch");
       return;
     }
     state.actor = expectedActor;
@@ -4807,15 +5006,14 @@ const directoryCommandQueue: DirectoryCommandTransportOperationV1[] = [];
 
 const SPACE_ARTIFACT_CREATION_CAPACITY = 8;
 const SPACE_ARTIFACT_CREATION_CATALOG_CAPACITY = 8;
-const SPACE_ARTIFACT_CREATION_POLL_MS = 100;
-const SPACE_ARTIFACT_CREATION_DEADLINE_MS = 120_000;
 const SPACE_ARTIFACT_CREATION_CATALOG_DEADLINE_MS = 10_000;
 
 type SpaceArtifactCreationOperationV1 = {
   readonly request: Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-create" }>;
   readonly abort: AbortController;
   readonly workerEpoch: number;
-  readonly deadlineAtMs: number;
+  lastAnsweredAtMs: number;
+  polls: number;
   cancelRequested: boolean;
   cancelSent: boolean;
   latest: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>;
@@ -4905,7 +5103,7 @@ function spaceArtifactCreationFetch(operation: SpaceArtifactCreationOperationV1,
 }
 
 async function readSpaceArtifactCreationStatus(operation: SpaceArtifactCreationOperationV1, response: FetchTimeoutResponse): Promise<HubSpaceArtifactCreationStatusV1> {
-  const control: ExecutionTargetReadControl = { signal: operation.abort.signal, deadlineAtMs: operation.deadlineAtMs, assertCurrent: () => {
+  const control: ExecutionTargetReadControl = { signal: operation.abort.signal, deadlineAtMs: Date.now() + SOCKET_GRANT_REQUEST_TIMEOUT_MS, assertCurrent: () => {
     if (!spaceArtifactCreationCurrent(operation)) throw new Error("space artifact creation: stale owner");
   } };
   const bytes = await readBoundedExecutionTargetBody(response, null, SPACE_ARTIFACT_CREATION_MAX_BYTES, control, () => {});
@@ -4917,8 +5115,10 @@ async function readSpaceArtifactCreationStatus(operation: SpaceArtifactCreationO
 }
 
 function waitForSpaceArtifactCreationPoll(operation: SpaceArtifactCreationOperationV1): Promise<void> {
+  const delayMs = spaceArtifactCreationPollDelayV1(operation.polls);
+  operation.polls += 1;
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(resolve, SPACE_ARTIFACT_CREATION_POLL_MS);
+    const timer = setTimeout(resolve, delayMs);
     operation.abort.signal.addEventListener("abort", () => {
       clearTimeout(timer);
       reject(new Error("space artifact creation: cancelled"));
@@ -4937,7 +5137,7 @@ async function driveSpaceArtifactCreation(operation: SpaceArtifactCreationOperat
   const requestBody = JSON.stringify(sealSpaceArtifactCreateV1(operation.request));
   let first = true;
   while (spaceArtifactCreationCurrent(operation)) {
-    if (Date.now() >= operation.deadlineAtMs) {
+    if (spaceArtifactCreationUnreachableV1(operation.lastAnsweredAtMs, Date.now())) {
       settleSpaceArtifactCreation(operation, { ...operation.latest, phase: "indeterminate" });
       return;
     }
@@ -4969,6 +5169,7 @@ async function driveSpaceArtifactCreation(operation: SpaceArtifactCreationOperat
       }
       const status = spaceArtifactCreationStatus(operation, await readSpaceArtifactCreationStatus(operation, response));
       if (!spaceArtifactCreationCurrent(operation)) return;
+      operation.lastAnsweredAtMs = Date.now();
       operation.latest = status;
       post(status);
       if (spaceArtifactCreationTerminal(status.phase)) {
@@ -4997,7 +5198,8 @@ function submitSpaceArtifactCreation(request: Extract<BackboneWorkerRequest, { r
     request,
     abort: new AbortController(),
     workerEpoch: directoryWorkerEpoch,
-    deadlineAtMs: Date.now() + SPACE_ARTIFACT_CREATION_DEADLINE_MS,
+    lastAnsweredAtMs: Date.now(),
+    polls: 0,
     cancelRequested: false,
     cancelSent: false,
     latest: { kind: "space-artifact-creation-status", requestId: request.requestId, spaceId: request.spaceId, catalogGenerationId: request.expectedCatalogGenerationId, phase: "accepted" },
@@ -5593,6 +5795,95 @@ async function flushDirectoryQueue(): Promise<void> {
   }
 }
 //#endregion 🔖️Directory
+
+//#region 🌐️PreferenceLane
+/** 🌐️ The signed-in user's preference lane: `user.preference-recorded` pages of the principal from the lane's frontier,
+ * one page in flight, re-fetched whenever the directory head passes that frontier (any live event or heartbeat of its own
+ * socket, which reconnects on its own). The lane never decodes the preference vocabulary — it hands the shell the
+ * events, and the shell folds them (`🎚️UiPreferences` `foldUiPreferenceLanePageV1`). */
+type PreferenceLaneV1 = {
+  readonly userId: string;
+  readonly client: DirectoryClient;
+  readonly abort: AbortController;
+  after: number;
+  fetching: boolean;
+  again: boolean;
+  stream: DirectoryAcknowledgedStream | null;
+};
+
+let preferenceLane: PreferenceLaneV1 | null = null;
+
+function closePreferenceLane(): void {
+  const lane = preferenceLane;
+  preferenceLane = null;
+  if (lane === null) return;
+  lane.abort.abort();
+  lane.stream?.close();
+}
+
+async function fetchPreferenceLanePages(lane: PreferenceLaneV1): Promise<void> {
+  if (lane.fetching) {
+    lane.again = true;
+    return;
+  }
+  lane.fetching = true;
+  try {
+    do {
+      lane.again = false;
+      const page = await lane.client.preferencePage(lane.after, lane.userId, { signal: lane.abort.signal });
+      if (preferenceLane !== lane) return;
+      const authority = browserSessionAuthority;
+      if (authority === null || page.sessionBindingSha256 !== authority.sessionBindingSha256 || page.authorizationGeneration !== authority.authorizationGeneration) {
+        post({ kind: "preference-lane-failed", requestId: null, code: "unauthorized", retryable: false });
+        closePreferenceLane();
+        return;
+      }
+      lane.after = page.throughSeqInclusive;
+      post({ kind: "preference-lane-page", userId: lane.userId, afterSeqExclusive: page.afterSeqExclusive, throughSeqInclusive: page.throughSeqInclusive, hasMore: page.hasMore, events: page.events });
+      if (page.hasMore) lane.again = true;
+    } while (lane.again && preferenceLane === lane);
+  } catch (error) {
+    if (preferenceLane !== lane || lane.abort.signal.aborted) return;
+    const unauthorized = error instanceof DirectoryHttpError && error.status === 401;
+    post({ kind: "preference-lane-failed", requestId: null, code: unauthorized ? "unauthorized" : "transport", retryable: !unauthorized });
+  } finally {
+    lane.fetching = false;
+  }
+}
+
+function openPreferenceLane(baseUrl: string, userId: string, after: number): void {
+  closePreferenceLane();
+  const client = new DirectoryClient(baseUrl, {
+    requestBaseUrl: "",
+    socketGrantIssuer: createSocketGrantIssuerV1({ post: (path, options) => requestSocketGrant(baseUrl, path, options?.signal) }),
+    request: browserDirectoryRequest,
+  });
+  const lane: PreferenceLaneV1 = { userId, client, abort: new AbortController(), after, fetching: false, again: false, stream: null };
+  preferenceLane = lane;
+  void fetchPreferenceLanePages(lane);
+  lane.stream = client.streamAcknowledged(after, (message) => {
+    if (preferenceLane !== lane) return;
+    const head = message.kind === "event" ? message.event.seq : message.kind === "heartbeat" ? message.headSeq : message.kind === "rebootstrap-required" ? Number.MAX_SAFE_INTEGER : 0;
+    if (head > lane.after) void fetchPreferenceLanePages(lane);
+  });
+}
+
+async function recordPreferenceLaneChange(requestId: string, schema: string, mutation: string): Promise<void> {
+  const lane = preferenceLane;
+  if (lane === null) {
+    post({ kind: "preference-lane-failed", requestId, code: "closed", retryable: true });
+    return;
+  }
+  try {
+    const receipt = await lane.client.command(sealDirectoryCommandRequestV1(requestId, { kind: "record-user-preference", schema, mutation }), { signal: lane.abort.signal });
+    post({ kind: "preference-lane-recorded", requestId, outcome: receipt.outcome });
+    void fetchPreferenceLanePages(lane);
+  } catch (error) {
+    const code = directoryCommandErrorCode(error, lane.abort.signal.aborted);
+    post({ kind: "preference-lane-failed", requestId, code, retryable: directoryCommandErrorIsTransient(code) });
+  }
+}
+//#endregion 🌐️PreferenceLane
 
 //#region 🔖️SpaceAdministration
 /** 🏛️ The single shell-owned retained space-administration operation (contract §C6 + the P0
@@ -6802,6 +7093,9 @@ function openArtifact(request: ArtifactActorConfig & { readonly clientInstanceId
     executionTargetOpen: null,
     executionTargetLease: null,
     browserActorReservation: null,
+    browserActorBackboneBeforeReservation: [],
+    remoteFoldedOverLocal: false,
+    link: { kind: "linked" },
     linkShortageTimer: null,
     browserActorViewState: null,
     sanityPollTimer: null,
@@ -7020,6 +7314,15 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
     case "directory-bootstrap-open":
       openDirectoryBootstrap(request.baseUrl, request.after, request.bootstrapEpoch);
       break;
+    case "preference-lane-open":
+      openPreferenceLane(request.baseUrl, request.userId, request.after);
+      break;
+    case "preference-lane-record":
+      void recordPreferenceLaneChange(request.requestId, request.schema, request.mutation);
+      break;
+    case "preference-lane-close":
+      closePreferenceLane();
+      break;
     case "directory-bootstrap-ack":
       acknowledgeDirectoryBootstrap(request);
       break;
@@ -7158,11 +7461,13 @@ if (import.meta.vitest) {
     get hubSessionQueued() { return hubSessionQueued; },
     set hubSessionQueued(value: typeof hubSessionQueued) { hubSessionQueued = value; },
     get browserSessionAuthority() { return browserSessionAuthority; },
+    get hubSessionCapabilityHeld() { return hubSessionCapability !== undefined; },
     get browserSessionOperationFence() { return browserSessionOperationFence; },
     acceptBrowserSessionAuthority,
     captureBrowserSessionOperationFence,
     attachHubSessionPort,
     detachHubSessionPort,
+    browserActorAppCommandV1,
     get socketGrantTestIssue() { return socketGrantTestIssue; },
     set socketGrantTestIssue(value: typeof socketGrantTestIssue) { socketGrantTestIssue = value; },
     get documentSocketGrantTestIssue() { return documentSocketGrantTestIssue; },

@@ -750,6 +750,15 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         // the trait's `io()` override and this manifest declaration.
         .config(PlaybookPlayApp::config_spec())
         .io(playbook_io())
+        .action_describe("addStep", LocalizedLabel::native("Appends a new, empty step to the end of the playbook.", "Hängt dem Playbook am Ende einen neuen, leeren Schritt an."))
+        .action_describe("removeStep", LocalizedLabel::native("Removes one step by id from the playbook together with every block it contains.", "Entfernt einen Schritt anhand seiner Id samt aller enthaltenen Bausteine aus dem Playbook."))
+        .action_describe("moveStep", LocalizedLabel::native("Moves one step to a new position (index) in the playbook.", "Verschiebt einen Schritt an eine neue Position (Index) im Playbook."))
+        .action_describe("addBlock", LocalizedLabel::native("Adds a new block of the given kind (such as a procedural building component) to the named step, or to the default step when none is named.", "Fügt einem Schritt einen neuen Baustein der angegebenen Art (etwa ein prozedurales Bauteil) hinzu, ohne Angabe dem Standardschritt."))
+        .action_describe("removeBlock", LocalizedLabel::native("Removes one block by id from the given step of the playbook.", "Entfernt einen Baustein anhand seiner Id aus dem angegebenen Schritt des Playbooks."))
+        .action_describe("moveBlock", LocalizedLabel::native("Moves one block from its step to a position (index) in another step or the same one.", "Verschiebt einen Baustein aus seinem Schritt an eine Position (Index) in einem anderen oder demselben Schritt."))
+        .action_describe("updatePlaybook", LocalizedLabel::native("Sets the playbook's title; an empty value clears it, and consecutive edits merge into one undo step.", "Legt den Titel des Playbooks fest; ein leerer Wert entfernt ihn, aufeinanderfolgende Änderungen werden zu einem Rückgängig-Schritt zusammengefasst."))
+        .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole playbook with the bundled demo playbook, or with an empty playbook for any other example id.", "Ersetzt das gesamte Playbook durch das mitgelieferte Demo-Playbook, bei jeder anderen Beispiel-Id durch ein leeres Playbook."))
+        .action_destructive("setActiveExample")
         .build_definition()
 }
 //#endregion 🔖️Manifest

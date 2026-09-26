@@ -80,6 +80,19 @@ export function shellEffectSourceIsCurrentV1(
     || spawned.some((entry) => entry.pluginId === source.pluginId && entry.appId === source.appId && entry.instanceId === source.sessionInstanceId);
 }
 
+/** 🎭️ Whether an effect pass may still run: the shell that PRESENTS it is still the primary session's current origin,
+ * and its SOURCE is still the primary app or an exact live spawned app ({@link shellEffectSourceIsCurrentV1}). A program's
+ * own lanes — operation progress, operation completion, deferred effects — are presented by the primary session like
+ * every action is; capturing the PROGRAM as the presentation made every spawned program's pass fail this check, so its
+ * live progress never reached the screen and only an unrelated action's refresh repainted it (a Tasks row stayed
+ * "suspended" after Resume; ticket 26/09/23 U5). */
+export function shellEffectOwnerIsCurrentV1(
+  owner: Readonly<{ presentation: ShellDialogOriginV1 | null; source: ShellDialogOriginV1 | null }>,
+  current: Readonly<{ presentation: ShellDialogOriginV1 | null; mounted: ShellDialogOriginV1 | null; primary: ShellDialogSessionV1 | null; spawned: readonly Readonly<{ pluginId: string; appId: string; instanceId: number }>[] }>,
+): boolean {
+  return shellDialogOriginIsCurrentV1(owner.presentation, current.presentation) && shellEffectSourceIsCurrentV1(owner.source, current.mounted, current.primary, current.spawned);
+}
+
 /** 🚪️ Creation is admitted before its await and before publication; an expired result is retired exactly once. */
 export async function createAdmittedShellInstanceV1<T>(admit: () => boolean, create: () => Promise<T>, retire: (instance: T) => Promise<void>): Promise<T | null> {
   if (!admit()) return null;

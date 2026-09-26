@@ -22,7 +22,9 @@
     { "wire": { "type": "treeItem", "label": "Item" }, "expected": { "type": "treeItem", "label": "Item", "description": null, "icon": null, "defaultOpen": null, "draggable": null, "dragData": null, "dimmed": null, "rowActions": [], "window": null, "granularity": null } },
     { "wire": { "type": "image", "src": "image.png" }, "expected": { "type": "image", "src": "image.png", "alt": null } },
     { "wire": { "type": "surface", "kind": "node-graph", "docSchema": "node-graph@1", "doc": { "bytes": [0, 127, 255] } }, "expected": { "type": "surface", "kind": "node-graph", "docSchema": "node-graph@1", "doc": { "bytes": [0, 127, 255] }, "bindings": [] } },
-    { "wire": { "type": "extension", "extension": "example", "props": { "nested": [null, true, "Ü"] } }, "expected": { "type": "extension", "extension": "example", "props": { "nested": [null, true, "Ü"] } } }
+    { "wire": { "type": "extension", "extension": "example", "props": { "nested": [null, true, "Ü"] } }, "expected": { "type": "extension", "extension": "example", "props": { "nested": [null, true, "Ü"] } } },
+    { "wire": { "type": "table", "label": "Rows", "columns": ["Name", "Size"] }, "expected": { "type": "table", "label": "Rows", "columns": ["Name", "Size"], "actionsLabel": null, "window": null } },
+    { "wire": { "type": "tableRow", "cells": ["a.txt", "3"] }, "expected": { "type": "tableRow", "cells": ["a.txt", "3"], "rowActions": [] } }
   ],
   "defaults": {
     "style": { "variant": "solid", "size": "md", "density": "standard", "tone": "neutral", "emphasis": "regular" },

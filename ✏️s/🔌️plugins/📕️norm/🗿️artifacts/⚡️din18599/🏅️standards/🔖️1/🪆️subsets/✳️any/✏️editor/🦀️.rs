@@ -52,6 +52,10 @@ semio_framework_plugin::app_commands! {
 pub struct Din18599PlayApp;
 
 impl ArtifactEditor for Din18599PlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = Din18599Snapshot;
     type Mutation = Din18599Mutation;
     type Config = NoConfig;
@@ -241,6 +245,10 @@ pub fn create_din18599_app() -> semio_framework_plugin::AppDefinition {
             // gaps" #4), so the old app-level example/workflow registration is dropped here, not
             // silently: the subset's own `📚️examples/🎬️demo-session` facet (real content, moved
             // verbatim below) is the modern role-agnostic replacement surface for this.
+            .action_describe("setSnapshot", LocalizedLabel::native("Replaces the whole DIN V 18599 (energy performance of buildings) compliance document with the supplied document JSON; the previous inputs are discarded.", "Ersetzt das gesamte Nachweisdokument nach DIN V 18599 (energetische Bewertung von Gebäuden) durch das übergebene Dokument-JSON; die bisherigen Eingaben werden verworfen."))
+            .action_describe("evaluate", LocalizedLabel::native("Recomputes every DIN V 18599 (energy performance of buildings) check from the document's inputs and refreshes the results window; the document is not changed.", "Berechnet alle Nachweise nach DIN V 18599 (energetische Bewertung von Gebäuden) aus den Eingaben des Dokuments neu und aktualisiert das Ergebnisfenster; das Dokument ändert sich nicht."))
+            .action_describe("setSelectedCheckIndex", LocalizedLabel::native("Points the inspection panel at one computed check by its index in the results list; only the view changes.", "Richtet das Inspektionspanel anhand seines Index in der Ergebnisliste auf einen berechneten Nachweis aus; nur die Ansicht ändert sich."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Loads one of the bundled DIN V 18599 (energy performance of buildings) examples into the open compliance document, replacing its inputs, by example id.", "Lädt eines der mitgelieferten Beispiele nach DIN V 18599 (energetische Bewertung von Gebäuden) in das offene Nachweisdokument und ersetzt dessen Eingaben, anhand der Beispiel-Id."))
             .build_definition()
 }
 //#endregion ðï¸Manifest

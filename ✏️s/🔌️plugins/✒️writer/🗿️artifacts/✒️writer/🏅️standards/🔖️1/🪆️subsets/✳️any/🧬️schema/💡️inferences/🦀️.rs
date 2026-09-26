@@ -83,7 +83,6 @@ pub fn writer_artifact_inference_descriptor() -> framework_schema::ArtifactInfer
 /// `WriterInference` rather than in `🧬️schema`'s text-only helpers.
 pub fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
     let text = crate::writer_text(document);
-    eprintln!("[DEBUG] writer.schema.inferences language_tokens_json language_id={} text_len={}", document.language_id, text.len());
     if let Some(spec) = dsl::language(&document.language_id) {
         let session = dsl::lsp::LanguageSession::open(spec, text.clone());
         return Some(dsl::os_pack::json::to_json_string(&session.semantic_tokens_lsp()));

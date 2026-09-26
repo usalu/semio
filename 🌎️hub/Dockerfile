@@ -47,6 +47,10 @@ ARG RUNTIME_IMAGE=debian:bookworm-slim
 
 FROM ${RUST_IMAGE} AS builder
 
+# 🧵️ Optional cap on the builder's parallel compiler jobs (`docker build --build-arg CARGO_BUILD_JOBS=2`),
+# for a builder VM that shares its cores or memory with other work. Unset, cargo uses every core.
+ARG CARGO_BUILD_JOBS
+
 # 🧰️ The toolchain is pinned by `rust-toolchain.toml` (a dated nightly, with the wasm targets the
 # plugin crates need); `rustup` in the base image honours it on the first `cargo` invocation.
 ENV DEBIAN_FRONTEND=noninteractive

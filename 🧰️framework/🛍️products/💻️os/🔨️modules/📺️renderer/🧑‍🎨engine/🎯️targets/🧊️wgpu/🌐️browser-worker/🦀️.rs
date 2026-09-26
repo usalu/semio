@@ -23,7 +23,7 @@ const HUB_STATUS_EVENT_CAPACITY: usize = 64;
 /// plus their stateless projection onto `DispatchEvent`, mounted natively so one language-neutral
 /// fixture can be answered by an ordinary `cargo test`. What stays HERE is everything that needs the
 /// Worker: its byte/item credits, its segmented text streams, and the `#[wasm_bindgen]` host.
-use crate::input_wire::{pointer, stateless_dispatch, BrowserBatch, BrowserPointerKind, BrowserWireEvent, TextTarget};
+use crate::input_wire::{accessibility_address_within_credits, pointer, stateless_dispatch, BrowserBatch, BrowserPointerKind, BrowserWireEvent, TextTarget};
 
 struct PendingText {
     stream_id: u64,
@@ -668,16 +668,14 @@ impl BrowserRendererWorker {
                         }
                     }
                 }
-                BrowserWireEvent::AccessibilityFocus { window_id, window_generation, node_id, node_key }
-                | BrowserWireEvent::AccessibilityBlur { window_id, window_generation, node_id, node_key }
-                | BrowserWireEvent::AccessibilityActivate { window_id, window_generation, node_id, node_key } => {
-                    if invalid_accessibility_id(window_id) || invalid_accessibility_id(node_key) || *window_generation == 0 || *node_id == 0 {
+                BrowserWireEvent::AccessibilityFocus { window_id, node_key, .. } | BrowserWireEvent::AccessibilityBlur { window_id, node_key, .. } | BrowserWireEvent::AccessibilityActivate { window_id, node_key, .. } => {
+                    if !accessibility_address_within_credits(window_id, node_key) {
                         return Err(js_error("accessibility-address", "accessibility address is outside fixed identity credits"));
                     }
                     count += 1;
                 }
-                BrowserWireEvent::AccessibilityValue { window_id, window_generation, node_id, node_key, value } => {
-                    if invalid_accessibility_id(window_id) || invalid_accessibility_id(node_key) || *window_generation == 0 || *node_id == 0 || value.encode_utf16().count() > 1024 {
+                BrowserWireEvent::AccessibilityValue { window_id, node_key, value, .. } => {
+                    if !accessibility_address_within_credits(window_id, node_key) || value.encode_utf16().count() > 1024 {
                         return Err(js_error("accessibility-address", "accessibility value or address is outside fixed credits"));
                     }
                     count += 1;
@@ -689,9 +687,6 @@ impl BrowserRendererWorker {
     }
 }
 
-fn invalid_accessibility_id(value: &str) -> bool {
-    value.is_empty() || value.len() > 512 || value.bytes().any(|byte| byte <= 0x1f || byte == 0x7f)
-}
 //#endregion 🧵️Runtime
 
 //#region 🚀️Boot
@@ -809,6 +804,7 @@ impl BrowserRendererBootstrap {
                 text_fault: None,
                 frame_fault: None,
                 text_cancel_pending: false,
+                last_sync_pump_ms: 0.0,
             }),
             checkout: crate::runtime_mailbox_core::InteractionCheckoutLedger::default(),
             draw: DrawList::default(),

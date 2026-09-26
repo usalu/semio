@@ -40,11 +40,19 @@ import {
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { meshCollectionVitePlugin, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirMountVitePlugins, staticDirVitePlugin, tileProxyVitePlugin, type PlaygroundAssetSpec } from "../../🏗️builder/🌐️vite/🟦️.ts";
 import { fontCatalogSources, parseFontCatalog, parseGoogleFontWoff2Map, resolveFontFaceUrl, resolveFontSource } from "../../🔤️fonts/🟦️.ts";
-import type { OwnedBuildMiddleware } from "../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import type { OwnedBuildMiddleware, OwnedBuildServer } from "../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { MESH_DELIVERY_CATALOG, parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
 import { assetPathFromRequest, assetTransportUrl, parseAssetDeliveryAuthority, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../..");
+/** 🧪️ A complete owned dev server whose only live seam is the middleware registration. */
+const ownedServer = (use: (middleware: OwnedBuildMiddleware) => void): OwnedBuildServer => ({
+  middlewares: { use },
+  ws: { send() {} },
+  config: { root: repoRoot, cacheDir: resolve(repoRoot, "node_modules/.vite"), base: "/", server: {} },
+  watcher: { emit: () => false },
+  httpServer: null,
+});
 const uiCss = readFileSync(resolve(import.meta.dir, "../../🖌️ui/🎨️.css"), "utf8");
 const paletteCss = readFileSync(resolve(import.meta.dir, "../../🎨️palette/🎨️.css"), "utf8");
 
@@ -101,7 +109,7 @@ describe("shared asset delivery", () => {
   it("serves encoded handpicked asset routes with exact source bytes and rejects the old route", async () => {
     let handler: OwnedBuildMiddleware | undefined;
     const plugin = semioAssetsVitePlugin(repoRoot)[0]!;
-    plugin.configureServer!({ middlewares: { use(value: OwnedBuildMiddleware) { handler = value; } }, ws: { send() {} }, config: { root: repoRoot, cacheDir: resolve(repoRoot, "node_modules/.vite") } });
+    plugin.configureServer!(ownedServer((value) => { handler = value; }));
     const server = createServer((request, response) => handler!(request, response, () => { response.statusCode = 404; response.end(); }));
     try {
       await new Promise<void>(done => server.listen(0, "127.0.0.1", done));
@@ -134,7 +142,7 @@ describe("favicon delivery", () => {
     const expected = { svg: Buffer.from(semioFaviconSvgMarkup(sources.svg)!), ico: readFileSync(sources.ico) };
     for (const configure of ["configureServer", "configurePreviewServer"] as const) {
       let handler: OwnedBuildMiddleware | undefined;
-      semioFaviconVitePlugin(repoRoot)[0]![configure]!({ middlewares: { use(value: OwnedBuildMiddleware) { handler = value; } }, ws: { send() {} }, config: { root: repoRoot, cacheDir: resolve(repoRoot, "node_modules/.vite") } });
+      semioFaviconVitePlugin(repoRoot)[0]![configure]!(ownedServer((value) => { handler = value; }));
       const server = createServer((request, response) => handler!(request, response, () => { response.statusCode = 404; response.end(); }));
       try {
         await new Promise<void>(done => server.listen(0, "127.0.0.1", done));
@@ -538,7 +546,7 @@ describe("nested mesh source identity", () => {
       });
       const catalog = parseMeshDeliveryCatalog(fixture.catalog, () => { throw new Error("Unexpected source catalog"); });
       let handler: OwnedBuildMiddleware | undefined;
-      plugins[0]!.configureServer!({ middlewares: { use(value) { handler = value; } }, ws: { send() {} }, config: { root: repoRoot, cacheDir: resolve(repoRoot, "node_modules/.vite") } });
+      plugins[0]!.configureServer!(ownedServer((value) => { handler = value; }));
       server = createServer((request, response) => handler!(request, response, () => { response.statusCode = 404; response.end(); }));
       await new Promise<void>(done => server!.listen(0, "127.0.0.1", done));
       const address = server.address();
@@ -574,7 +582,7 @@ describe("puzzle3d mesh-collection asset spec", () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-current-mesh-"));
     const plugins = meshCollectionVitePlugin(repoRoot, puzzle3dMeshSpec);
     let handler: OwnedBuildMiddleware | undefined;
-    plugins[0]!.configureServer!({ middlewares: { use(value) { handler = value; } }, ws: { send() {} }, config: { root: repoRoot, cacheDir: resolve(repoRoot, "node_modules/.vite") } });
+    plugins[0]!.configureServer!(ownedServer((value) => { handler = value; }));
     const server = createServer((request, response) => handler!(request, response, () => { response.statusCode = 404; response.end(); }));
     try {
       await new Promise<void>(done => server.listen(0, "127.0.0.1", done));

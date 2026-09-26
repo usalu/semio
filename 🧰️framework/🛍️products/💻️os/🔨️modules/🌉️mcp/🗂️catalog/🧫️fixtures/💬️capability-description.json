@@ -1,0 +1,341 @@
+[
+  {
+    "name": "a verb that explains what it does, to what, with which consequence passes",
+    "verbs": [
+      {
+        "id": "deleteTile",
+        "title": {
+          "de": "Kachel löschen",
+          "en": "Delete Tile"
+        },
+        "description": {
+          "native": {
+            "de": "Entfernt eine Kachel aus dem Kachelsatz samt aller Nachbarschaftsregeln, die sie nennen; damit angeheftete Zellen werden leer.",
+            "en": "Removes one tile from the tile set and every adjacency rule that names it; pinned cells using it become empty."
+          },
+          "reuse": {
+            "de": "Entfernt eine Kachel aus dem Kachelsatz samt aller Nachbarschaftsregeln, die sie nennen; damit angeheftete Zellen werden leer.",
+            "en": "Removes one tile from the tile set and every adjacency rule that names it; pinned cells using it become empty."
+          }
+        }
+      }
+    ],
+    "problems": []
+  },
+  {
+    "name": "an undeclared description is missing and nothing else is judged",
+    "verbs": [
+      {
+        "id": "solve",
+        "title": {
+          "de": "Lösen",
+          "en": "Solve"
+        },
+        "description": null
+      }
+    ],
+    "problems": [
+      {
+        "verb": "solve",
+        "problem": "missing"
+      }
+    ]
+  },
+  {
+    "name": "an empty German cell breaks the sentence schema",
+    "verbs": [
+      {
+        "id": "addLayer",
+        "title": {
+          "de": "Ebene hinzufügen",
+          "en": "Add Layer"
+        },
+        "description": {
+          "native": {
+            "de": "",
+            "en": "Appends a new layer of the given kind to the top of the drawing."
+          },
+          "reuse": {
+            "de": "",
+            "en": "Appends a new layer of the given kind to the top of the drawing."
+          }
+        }
+      }
+    ],
+    "problems": [
+      {
+        "verb": "addLayer",
+        "problem": "schema"
+      }
+    ]
+  },
+  {
+    "name": "a cell shorter than one object-and-consequence sentence breaks the schema",
+    "verbs": [
+      {
+        "id": "clear",
+        "title": {
+          "de": "Leeren",
+          "en": "Clear"
+        },
+        "description": {
+          "native": {
+            "de": "Leert es.",
+            "en": "Clears it."
+          },
+          "reuse": {
+            "de": "Leert es.",
+            "en": "Clears it."
+          }
+        }
+      }
+    ],
+    "problems": [
+      {
+        "verb": "clear",
+        "problem": "schema"
+      }
+    ]
+  },
+  {
+    "name": "a cell without sentence punctuation breaks the schema",
+    "verbs": [
+      {
+        "id": "moveLayer",
+        "title": {
+          "de": "Ebene verschieben",
+          "en": "Move Layer"
+        },
+        "description": {
+          "native": {
+            "de": "Ordnet eine Ebene im Ebenenbaum der Zeichnung um.",
+            "en": "Reorders one layer within the layer tree of the drawing"
+          },
+          "reuse": {
+            "de": "Ordnet eine Ebene im Ebenenbaum der Zeichnung um.",
+            "en": "Reorders one layer within the layer tree of the drawing"
+          }
+        }
+      }
+    ],
+    "problems": [
+      {
+        "verb": "moveLayer",
+        "problem": "schema"
+      }
+    ]
+  },
+  {
+    "name": "a cell spanning two lines breaks the schema",
+    "verbs": [
+      {
+        "id": "renameNode",
+        "title": {
+          "de": "Knoten umbenennen",
+          "en": "Rename Node"
+        },
+        "description": {
+          "native": {
+            "de": "Benennt einen Knoten des Modellbaums um. Der Knoten behält seine Id.",
+            "en": "Renames one node of the model tree.\nThe node keeps its id."
+          },
+          "reuse": {
+            "de": "Benennt einen Knoten des Modellbaums um. Der Knoten behält seine Id.",
+            "en": "Renames one node of the model tree.\nThe node keeps its id."
+          }
+        }
+      }
+    ],
+    "problems": [
+      {
+        "verb": "renameNode",
+        "problem": "schema"
+      }
+    ]
+  },
+  {
+    "name": "a German cell that is the English cell verbatim is untranslated",
+    "verbs": [
+      {
+        "id": "setSeed",
+        "title": {
+          "de": "Seed ändern",
+          "en": "Change Seed"
+        },
+        "description": {
+          "native": {
+            "de": "Sets the random seed the next solve starts from.",
+            "en": "Sets the random seed the next solve starts from."
+          },
+          "reuse": {
+            "de": "Sets the random seed the next solve starts from.",
+            "en": "Sets the random seed the next solve starts from."
+          }
+        }
+      }
+    ],
+    "problems": [
+      {
+        "verb": "setSeed",
+        "problem": "untranslated"
+      }
+    ]
+  },
+  {
+    "name": "a reuse-terminology row missing its German cell breaks the schema even when the native row is complete",
+    "verbs": [
+      {
+        "id": "addNode",
+        "title": {
+          "de": "Knoten hinzufügen",
+          "en": "Add Node"
+        },
+        "description": {
+          "native": {
+            "de": "Fügt dem Graphen einen neuen, unverbundenen Knoten hinzu.",
+            "en": "Adds a new, unconnected node to the graph."
+          },
+          "reuse": {
+            "en": "Adds a new, unconnected node to the graph."
+          }
+        }
+      }
+    ],
+    "problems": [
+      {
+        "verb": "addNode",
+        "problem": "schema"
+      }
+    ]
+  },
+  {
+    "name": "a description that only repeats the title explains nothing",
+    "verbs": [
+      {
+        "id": "recomputeAnalysis",
+        "title": {
+          "de": "Ergebnisse der Tragwerksanalyse neu berechnen",
+          "en": "Recompute the structural analysis results"
+        },
+        "description": {
+          "native": {
+            "de": "Berechnet die Schnittgrößen aller Stäbe neu und ersetzt die gespeicherten Ergebnisse.",
+            "en": "Recompute the structural analysis results."
+          },
+          "reuse": {
+            "de": "Berechnet die Schnittgrößen aller Stäbe neu und ersetzt die gespeicherten Ergebnisse.",
+            "en": "Recompute the structural analysis results."
+          }
+        }
+      }
+    ],
+    "problems": [
+      {
+        "verb": "recomputeAnalysis",
+        "problem": "repeatsTitle"
+      }
+    ]
+  },
+  {
+    "name": "two verbs of one app sharing an English description are both unspecific",
+    "verbs": [
+      {
+        "id": "pinCell",
+        "title": {
+          "de": "Zelle anheften",
+          "en": "Pin Cell"
+        },
+        "description": {
+          "native": {
+            "de": "Heftet in einer Zelle des Rasters die gewählte Kachel fest, die der nächste Lösungslauf übernimmt.",
+            "en": "Changes one cell of the grid and keeps the change for the next solve."
+          },
+          "reuse": {
+            "de": "Heftet in einer Zelle des Rasters die gewählte Kachel fest, die der nächste Lösungslauf übernimmt.",
+            "en": "Changes one cell of the grid and keeps the change for the next solve."
+          }
+        }
+      },
+      {
+        "id": "maskCell",
+        "title": {
+          "de": "Zelle ausblenden",
+          "en": "Mask Cell"
+        },
+        "description": {
+          "native": {
+            "de": "Nimmt eine Zelle aus dem Raster heraus, sodass der nächste Lösungslauf sie leer lässt.",
+            "en": "Changes one cell of the grid and keeps the change for the next solve."
+          },
+          "reuse": {
+            "de": "Nimmt eine Zelle aus dem Raster heraus, sodass der nächste Lösungslauf sie leer lässt.",
+            "en": "Changes one cell of the grid and keeps the change for the next solve."
+          }
+        }
+      },
+      {
+        "id": "unpinCell",
+        "title": {
+          "de": "Zelle lösen",
+          "en": "Unpin Cell"
+        },
+        "description": {
+          "native": {
+            "de": "Löst die in einer Zelle angeheftete Kachel, sodass der nächste Lösungslauf dort jede Kachel setzen darf.",
+            "en": "Releases the tile pinned in one cell so the next solve may place any tile there."
+          },
+          "reuse": {
+            "de": "Löst die in einer Zelle angeheftete Kachel, sodass der nächste Lösungslauf dort jede Kachel setzen darf.",
+            "en": "Releases the tile pinned in one cell so the next solve may place any tile there."
+          }
+        }
+      }
+    ],
+    "problems": [
+      {
+        "verb": "pinCell",
+        "problem": "sharedWithinApp"
+      },
+      {
+        "verb": "maskCell",
+        "problem": "sharedWithinApp"
+      }
+    ]
+  },
+  {
+    "name": "problems of one verb are reported together in contract order",
+    "verbs": [
+      {
+        "id": "resetGrid",
+        "title": {
+          "de": "Raster zurücksetzen",
+          "en": "Reset grid"
+        },
+        "description": {
+          "native": {
+            "de": "Reset grid.",
+            "en": "Reset grid."
+          },
+          "reuse": {
+            "de": "Reset grid.",
+            "en": "Reset grid."
+          }
+        }
+      }
+    ],
+    "problems": [
+      {
+        "verb": "resetGrid",
+        "problem": "schema"
+      },
+      {
+        "verb": "resetGrid",
+        "problem": "untranslated"
+      },
+      {
+        "verb": "resetGrid",
+        "problem": "repeatsTitle"
+      }
+    ]
+  }
+]

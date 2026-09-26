@@ -15,12 +15,220 @@ Inherits: R1–R7, O1/O1b/O1c, G18 compile health, build-infra audit. Coordinato
 | 1f | renderer-react tests: fundamental / quick | PASS 1 (+4 name-filtered) / 5 of 5 | `renderer-react-test-1.txt`, `renderer-react-test-quick-1.txt` |
 | 1g | renderer-react tests: long (the real corpus) | run 1: 10 fail / 1976 pass, 3 files not loading → run 2 hung (flow pump starved timers under Bun) → run 3: 3 fail (two peer in-flight edits) → **run 4: PASS 2036/2036, 104/104 files, EXIT 0, 231 s** | `renderer-react-test-long-1..4.txt`, `rr-*.txt` |
 | 1h | flow host JS (`🌊️flow/🫀️core` `test-browser`, `test-source`, `test-browser-clock`) | test-browser PASS (incl. new pump law + the pre-existing `pending-close-yields-to-user-events`, red under Bun before), test-source PASS (was red since 09-20), clock PASS. `test-browser-ownership` red until the flow `wasm` step republishes the gitignored bindings copy (request filed `wp-w1/requests/r8.txt`) | `flow-test-*.txt` |
-| 2 | workspace `cargo check --workspace --all-targets --keep-going --message-format=short` | run 1 (01:22, EXIT 101): 3 crates red. Run 2 (02:02, EXIT 101): 5 crates red. **Run 3 (06:45–06:57, EXIT 101): 2 crates red** — `semio-framework-os` lib test (my host-unit edit vs. the peer's `vcs.edits` → `ArtifactHistoryLedger`; fixed right after, `os-host-check-2.txt` EXIT 0) and `semio-framework-repo-cli` bin `repo` (**NEW**, see classification). Every plugin, hub, MCP and renderer crate compiled. **Run 4 (09-25 10:55–11:02): EXIT 0** — `Finished`, 0 `could not compile`, after the repo-cli restoration (round 2 §1) | `generated/ws-check-{1,2,3}-errors.txt`, `ws-check-4.txt` |
+| 2 | workspace `cargo check --workspace --all-targets --keep-going --message-format=short` | run 1 (01:22, EXIT 101): 3 crates red. Run 2 (02:02, EXIT 101): 5 crates red. **Run 3 (06:45–06:57, EXIT 101): 2 crates red** — `semio-framework-os` lib test (my host-unit edit vs. the peer's `vcs.edits` → `ArtifactHistoryLedger`; fixed right after, `os-host-check-2.txt` EXIT 0) and `semio-framework-repo-cli` bin `repo` (**NEW**, see classification). Every plugin, hub, MCP and renderer crate compiled. **Run 4 (09-25 10:55–11:02): EXIT 0** — `Finished`, 0 `could not compile`, after the repo-cli restoration (round 2 §1) . **Session 12 (09-25 23:44): every member by explicit `-p` (264), `--all-targets`, EXIT 0; wasm-gated sets EXIT 0 on wasip2 (41) and unknown-unknown (30)** | `generated/ws-check-{1,2,3}-errors.txt`, `ws-check-4.txt`, `s12-r8-captures/ws-check-1.txt`, `wasm-check-1.txt` |
 | 3 | framework/os crate lib tests (nextest `--profile quick`, private target) | kernel `--features sync,ureq` **1207/1207**; db `--all-features` **770/770** (+2 `#[ignore]` Docker lanes); replication+trace+pack+async+geometry+actor+hash 741/743 → actor fixed → **actor 126/126** (others green in that run); framework+os-run+plugin-host+os host 549/555: the 6 left are all **needs W2 rebuild** (staged guests predate H9's `codec.replay-envelopes` ABI); `semio-framework-os-flow` 37 → **1 red** (§Flow, 260/261 after the 2 held fixes landed 12:00; the 1 needs W2's flow bindings publish) | `kernel-nextest-1.txt`, `db-nextest-1.txt`, `batch1-nextest-1.txt`, `actor-nextest-2.txt`, `batch2-nextest-1.txt`, `batch2b-nextest-1.txt`, `flow-nextest-5.txt` |
 | 3w | renderer-wgpu:test (audit P1-4) | **cargo 1386/1388 (7 skipped), vitest 399/399 (38 files)**. The audit's "~89 failures" is stale (R1: 1372/1372 on 09-24). The 2 reds are Shell source laws that pin `#[cfg(not(wasm32))]`/`#[cfg(wasm32)] … Detached` gating of the browser sync backbone and footer pill — exactly what WG7's browser-actor hub `connect` changes (Shell wgpu target, in flight) → **handed to WG7**: `💓️chrome-maintenance-pressure` `no_chrome_maintenance_lane_arms_itself_without_pressure`, `🌓️appearance-tour-and-footer-pills` `the_footer_pills_are_not_gated_off_the_browser_build` | `wgpu-nextest-1.txt`, `wgpu-vitest-1.txt` |
 | 4 | root `test quick` (`bun nx run workspace:test-quick`, 869 tasks) green + exit code propagates cargo failures | **Round 3 (18:0x): repo-lib `test quick` 612 pass / 85 levelled / 2 fail (JCO staging → W2), typecheck EXIT 0; normalization family at `long` 69/69; repo-lib `test long` 691 pass / 1 levelled exhaustive / 7 fail in 508 s (JCO x2 → W2, discovery x3 + layering x2 → rename slice)** (`s11-r8-captures/repo-lib-test-quick-10.txt`, `repo-lib-typecheck-8.txt`, `norm-long-4.txt`, `repo-lib-test-long-2.txt`). Round 2 (13:16): 611 / 83 / 2 (§repo-lib). Unbailed root census deferred until W2's full publish (869 tasks would starve its builds). **Exit code: PROVEN.** A failing cargo run propagates: `nx run semio-framework-os-flow-core:test-quick` → nextest FAIL → script `process.exit` → nx **EXIT 1** (`flow-nx-test-quick-1.txt`); the root target fails on any failed dependency: `--parallel=1 --nxBail` run stopped on `@semio-tech/repo-lib:test-quick` with **EXIT 130** (bail interrupt) (`root-test-quick-1.txt`). **Green: NOT MET** — first red in fan-out order is `@semio-tech/repo-lib` (~30 red bun laws: repo tooling — JCO/flow compiler boundaries, package handoff, commit/micro-commit, command budgets, Nx transport), repo-tooling owner = **NEW**. A full unbailed census is not run: the fan-out includes `os-hub:test-quick` (hub mutex, H9) and `semio-tech-play:test-quick` (peer), which a single sweep must not run unguarded. Gate gap fixed: the flow crate's 261 laws were in no `test-quick` (project had only `test`) → `test-quick`/`test-long`/`test-exhaustive` added | `generated/root-test-quick-1.txt`, `flow-nx-test-quick-1.txt` |
 | P1-6 | launch-registration resolver probe | **PASS**: launch.json 437 configs, 197 `nx run` pairs, 0 unresolved, 0 duplicates, 3/3 compounds resolve; committed launch.json byte-identical to a fresh render; seed 281 rows + 89 `@generated:` placeholders, 0 unresolved/duplicates | `launch-resolver-3.txt`, probe `wp-r8/r8-launch-resolver.ts` |
 | P2-7 | K2 ownership-gate census (presentation-react, print, actor/cold-pair) | **all three collect and run green**: `@semio-tech/presentation-react` 147/147 (3 files; its default `test` ran at the 15 s fundamental budget and was killed → floored at `quick` like the O1b suites); `@semio-tech/print` `test` EXIT 0 (starts again; the command-boundary law counted Bun built-in `bun:sqlite` as an external package → `bun:` treated like `node:`, fixture updated); `🎭️actor/📥️cold-pair` in `@semio-tech/framework` 188/188 (4 files, suite listed by name) | `presentation-react-test-2.txt`, `print-test-2.txt`, `framework-vitest-1.txt` |
+
+## Session 12
+
+Session 12 (2026-09-25 22:50–). Captures: `.🧬semio/🌐hub/s12-r8-captures/` (durable). Private cargo: `.tmp-ticket/wp-r8/target`.
+
+| # | Item | State | Evidence |
+|---|---|---|---|
+| S12-1 | Every TS project `typecheck` green, measured per project; framework + framework-os under Node strip-only | **DONE — 7/7 nx `typecheck` targets rc=0** (run 3 00:13 + framework-os run 4 00:20); strip-only law 3/3 | `tc/summary-3.txt`, `tc/framework-os-4.txt`, `node-strip-1.txt` |
+| S12-2 | ui-contract retirement reds; root `test quick` unbailed census (count + exit code); root `test long` count | root cause corrected (item-metered backing, not `PagedList` accrual); patch set dry-run clean, measured 197/197 + ui-runtime 125/125 in isolation; lands after `--packages all`; test-only fixture truths landed (174/197 now). Root census: pending (load) | `ui-contract-1.txt`, `wp-r8/ui-retirement-item-metered.py` |
+| S12-3 | repo-lib quick/long reds that needed the s restage (JCO physical matrix) — re-measure on restage4 | JCO fixed at the root (retired staging root); quick-file cost 475 s → 248 s (taxonomy parse memo), 0 fails unbudgeted; gate still load-bound at load 35–43 → re-measure at normal load | `quick-junit-2.xml`, `repo-lib-test-quick-4.txt` |
+| S12-4 | workspace `cargo check` of every member (native) green; wasm32-only crate list checked through the wasm mutex | **DONE** — native EXIT 0 (264/264); 53 wasm-gated crates: wasip2 set (41) EXIT 0, wasm32-unknown-unknown set (30) EXIT 0 | `ws-check-1.txt`, `wasm-gated-crates-1.txt`, `wasm-check-1.txt` |
+| S12-5 | flow bindings request for W2 (`wp-w1/requests/r8.txt`) | **DONE** — still owed after restage4, session-12 entry appended | `r8.txt` |
+| S12-6 | rename-slice plan re-measured against today's tree (not started, by design) | **DONE** — discovery 647 (was 648), layering 254 files / 6 042 excess refs (was 255 / 6 698), 18 stale baseline entries | `discovery-census-1.txt`, `layering-census-1.txt` |
+| S12-7 | Nx `inputs` narrowed to each plugin's real dependency closure; controlled hash experiment; prepared dry-run-clean, lands after `--packages all` | **prepared** — root cause = lone workspace negations (whole-repo filesets); simulated: one-plugin edit invalidates 59 → median 4 others, stdio-crate edit misses exactly its 51 Cargo dependents; patch `wp-r8/nx-narrowed-inputs.py` dry run clean | `nx-simulation-baseline-1.json`, `nx-simulation-narrowed-5.json` |
+
+### Session 12 log
+
+- 22:55 state: 0 R8 processes; W2's release batch b holds the wasm mutex (chain pid 83333); load 13; 161 GiB free. The 48 stray
+  tracked `.js` (session-11 last step) are gone in `13163ff3ae` (19:34 auto-commit); the configurable-descendant node type is gone
+  from discovery (`SemanticDescendantNode` = directory | kind-file | fixed-file) — verified by the typecheck/tests below.
+- 23:00 **typecheck census run 1** (`tc/summary-1.txt`; the 7 nx `typecheck` targets, each target's own command
+  `bun ./📜️script.ts typecheck`): framework rc=2 (17 lines / 12 distinct), framework-os rc=2 (1), os-hub-ts rc=2 (2), ui-react rc=2 (48),
+  plugin-window-kits 0, renderer-react 0, repo-lib rc=2 (6). Fixed at the root:
+  - repo-lib 6: my own session-11 removal of the configurable-descendant machinery dropped `referenceEdits` from
+    `SemanticPathProjectionAuthority`; five laws still asserted it (workspace-contract ×4 incl. the golden type, draw-destination-observation) → removed
+    (the golden fixture never carried the field).
+  - framework: kernel label laws imported `LocalizedLabel` from the kernel, which only imports it → import from its owner (the generated
+    ui-axes module); peer-overlay law cast a `PresenceViewKindInput` union → narrows on `kind`; styling suite built 4 partial
+    `OwnedBuildServer`s → one complete `ownedServer(use)` helper; dock-axis / storybook-dock / Select / Tree / Window component laws
+    (optional fixture fields, widened `rowExtent` literals, a raw string where `UiLabel` is required → `uiDataLabel`).
+  - repo test module imported the Node-native `🕸️dependencies/🟨️.mjs` untyped → declaration `🟨️.d.mts` beside it (precedent
+    `📚️library/🕸️dependencies/🧩️runtime/🟨️.d.mts`).
+  - ui-react (48 → 0 of its own): its program re-checks the ui subtree incl. Bun laws and the tooling they import, but declared only
+    DOM/React types → `types` gains `bun`, `dom-accessibility-api` mapped to its declarations (same as the framework program).
+- 23:13 **run 2** (`tc/summary-2.txt`): **repo-lib 0, plugin-window-kits 0**; framework 1, framework-os 7, os-hub-ts 1, ui-react 1,
+  renderer-react 4 — every remaining line but one is a **peer's in-flight edit** (files modified 23:05–23:13, uncommitted):
+  (a) `BrowserActorUiMountedV1.windowKindId` added in os `🟦️.ts` (23:10) → `🧪️tests/🧪️backbone-envelope-io` L2389 not yet updated
+  (framework, framework-os, os-hub-ts, ui-react); (b) `WgpuPluginHandle.codec` required (`🐚️plugin-bridge` 23:05, codec genesis for
+  wasm32/React — WG8 lineage) → `🧩️package-integration` `fakeHandle` lacks a default `codec`; (c) `🎭️browser-actor-panels` law +
+  fixture mid-rewrite (23:13, per-window stores). Re-measured after the peers settle.
+  The one landed divergence: `🔗️hub-projection` law calls `hubConnectionSummaryV1(statuses, session)` without the `link` axis U5
+  added (09-25 01:32). The React fold now has `local`/`online` and link-driven `reconnecting`/`connecting`; its Rust twin
+  (`🔗️HubConnection/🎯️targets/🧊️wgpu` `hub_connection_summary`, used by the wgpu Shell's `shell_hub_connection_summary_v1`) and the
+  target-neutral `🔗️hub-projection` fixture do not — no link value reproduces the fixture (`empty-is-offline` is `online` when
+  reachable). Schema-first fix = link axis in the fixture + Rust fold + wgpu pill states (en/de) → wgpu Shell owner (WG8), routed.
+- 23:14 repo-lib `test quick` run 1 (`repo-lib-test-quick-1.txt`, load 18–36, W2's 3-parallel release + peers, 19 rustc): budget-killed at
+  300 s, EXIT 1 — 8 of 10 reds are 5 s default timeouts of taxonomy-loading laws (passed at load 15 in session 11) + the 2 JCO laws.
+- 23:20 **JCO physical-matrix root cause** (not "needs a restage"): the taxonomy's 83 `dev-*-interfaces-*` directory contracts, 249
+  companion contracts and 33 interface contracts describe the **retired second staging root** `🧑‍💻dev/🔌️plugin-modules` +
+  `🧑‍💻dev/🧩️extension-modules` (last written 09-15; `🧑‍💻dev/🧫️fixtures/🔌️staging-root.json` lists it under `retiredRoots`) and the
+  pre-codec interface roster. THE staging root is `pluginModulesRoot("dev")` = `🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules`
+  (restage4, 60 components, extensions in the same root). Measured there: 60 component dirs, every one emits the same 28 interfaces
+  (+ `semio-framework-codec` from H9's ABI), `wasi-random-random` in 35, `wasi-filesystem-*` only in layout; `plugin`/`contributor`/
+  `host`/`byte-page` are no longer emitted; 1717 interface files. Fix (one-off `wp-r8/jco-matrix-rebuild.py`, dry run → apply,
+  guarded against concurrent writes): the matrix is rebuilt from the staged tree — 60 directory contracts, 180 companion contracts,
+  31 interface contracts, sets `dev-jco-all-interfaces` 60 / `dev-jco-random-interfaces` 35 / `dev-jco-filesystem-interfaces` 1
+  (ids, reasons, authorities and dispositions kept where the component/interface still exists; +layout, energy, draw); law counts
+  33/83/2027/249 → 31/60/1717/180. **Both JCO laws PASS** (targeted run, 50 pass incl. both; the 4 fails there are the same 5 s
+  load timeouts). Same root cause fixed in every other reader of the retired root: Storybook `staticDirs` (served 09-15 guests) →
+  `pluginModulesRoot("dev")`; the Storybook coordination manifest; the hub script's directory-Home browser attestation + runtime
+  (read the 09-15 space guest) and the stdio catalog-root guard → `pluginModulesRootIn(repoRoot, "dev")`.
+  Residuals: the retired directories still exist on disk (gitignored, nothing reads them now; the os tsconfig still excludes them) —
+  pruning them is left to the user; on a fresh clone the two laws read a staging tree that does not exist yet (they belong behind the
+  staging step — design note for the rename slice).
+- 23:3x S12-5 flow bindings: still stale after restage4 (`🫀️core/🕸️bindings` 09-24 19:45 vs source 09-25 01:53, `cmp` differs at line 30);
+  session-12 entry appended to `wp-w1/requests/r8.txt` (step + evidence + the two reds it clears).
+- 23:44 **S12-4 native workspace check: EXIT 0** — `cargo check --keep-going --all-targets` with an explicit `-p` for each of the
+  **264 members** (`wp-r8/s12-ws-check.sh`, niced, private target), 766 s at load 30–71, `Finished`, **0 `could not compile`**,
+  3574 warning lines (proof of type-check) (`ws-check-1.txt`).
+- 23:46 **wasm-gated crate list** (`wasm-gated-crates-1.txt`, derived from the native check's dep-info — every `.rs` each member
+  actually compiled — grepped for `target_arch="wasm32"` / `target_family="wasm"` / `target_os="wasi"` / `target_env="p2"`):
+  **53 members** carry wasm-target arms the native check cannot see. Split by the real closures (`cargo metadata --filter-platform`,
+  normal+build edges; `wasm-check-sets-1.json`): **41** lie in the wasip2 closure of the 60 staged guest components (214 members),
+  **30** in the wasm32-unknown-unknown closure of the browser renderer (`semio-framework-os-renderer-wgpu`, 85 members), **9** are
+  native-only with wasm exclusions (os-mcp, os-run, plugin-host, plugin-describe, kernel-db, os-services, repo-dashboard, machine,
+  os-scale-fixture). Queued `cargo check --lib --keep-going` for both sets through the wasm mutex
+  (`wp-r8/s12-wasm-check.sh`, mutex pid 18855, FIFO behind WG7 + W2; capture `wasm-check-1.txt`).
+- 23:5x–00:15 **S12-2 ui-contract retirement reds — root cause corrected, fix prepared.** Measured in an isolated copy of the crate
+  closure (scratch cargo workspace of the 8 `🧰️framework/🔨️modules` crates ui-contract/ui-runtime need; own target, no shared
+  build-dir, so W2's in-flight release sees no edit): baseline ui-contract **172/197**, ui-runtime **124/125**
+  (`runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads`).
+  - The session-11 plan (grant accrual inside `PagedList`) was built and measured, and **rejected**: +8 bytes per list moved every
+    exact-size accounting law (6 416 → 6 448 per `UiNodeRecord`, resident permits, refresh sets) and it would recompile every guest
+    from `semio-framework-replication`. The laws themselves decide the rule: typed retirement meters **payload** by bytes and
+    **backing** by items — `UiFixedBytes` frees its emptied buffer as one item with zero bytes, and the typed-component, whole-patch,
+    built-tree and document-alias laws all account logical payload bytes only. `UiFixedList` was the one owner that byte-gated its
+    backing (`release_empty_page(bytes)`) and reported physical page bytes, so a sub-page grant stalled forever, and the document
+    ladder's raise (`maximum_bytes.max(node table bytes)`, puzzle3d B52) then broke `released_bytes <= grant`.
+  - Fix = patch set `wp-r8/ui-retirement-item-metered.py` (+ `-law.rs.txt`), **dry run clean**: the list frees its emptied backing
+    one page per turn as an item (`release_empty_page(usize::MAX)`, zero bytes, documented), the document ladder drops its raise,
+    and the one law that pinned byte-gating (`…obeys_actual_backing_grant`) becomes `…meters_backing_as_items` (a zero grant
+    touches nothing, a one-byte grant finishes the list, items == backings). Measured with the patch: **ui-contract 197/197,
+    ui-runtime 125/125, replication 292/292**. It touches the ui-contract lib every UI guest links → **lands in the window after
+    W2's `--packages all`** (then: `cargo check -p semio-framework-ui-contract --all-targets` + wasm32 check + both nextests, W2
+    restage for the guests).
+  - Landed now (test-only, true on the current tree, no lib/guest compile): Table/TableRow (U5, 09-25) were appended to
+    `Component` but three fixtures/schemas still pinned 19 variants (`🪞️copy`, `⚖️compare`, `⚖️compare/📃️document` → 21) and the
+    typed wire fixture had no vectors for them (+2 sparse→normalized vectors, schema and law 21 → 23; the TS twin
+    `RetainedUiTypedCursor` already decodes both); the resident-capacity law pinned the 09-12 measured static backing (566 352 B)
+    while the 09-17 change `UI_BUILT_CHILDREN_MAX = UI_DOCUMENT_NODES` (a4cda597ea) grew the value arena to 2 077 760 B, so the
+    byte ledger now admits **60** populated full documents and refuses the 61st (was 62/63; measured by the law itself) → fixture,
+    schema consts, Rust law name and TS twin title updated; the capacity drop is that change's consequence (owner of the 09-17
+    change to confirm). Real tree now: **ui-contract 174/197** (`ui-contract-1.txt`); the 23 reds are exactly the retirement-stall
+    family the patch set fixes.
+- 00:13 **typecheck run 3: framework 0, os-hub-ts 0, ui-react 0, plugin-window-kits 0, renderer-react 0, repo-lib 0**; framework-os 2
+  (peer-settled lines): `🧩️package-integration` `fakeHandle` lacked the now-required `WgpuPluginHandle.codec` (WG8's 23:05 change,
+  unowned for an hour) → one line `codec: async () => null` (preamble rule 12); `🔗️hub-projection` — the wgpu Shell owner landed the
+  schema-first twin fix at 00:19 (fixture link axis + Rust fold). **framework-os run 4: rc=0.** → **7/7 targets green.**
+  Node strip-only law (`✂️node-native-typescript`) **3/3** (framework + framework-os entries load under `node --experimental-strip-types`).
+- 00:23–00:57 **S12-3 repo-lib quick.** JCO reds: fixed at the root above (both laws PASS). The gate itself is load-bound: run 2 (load 22–35)
+  budget-killed at 300 s with 2 laws over their 5 s default. Per-law timing (junit, unbudgeted: `wp-r8/quick-law-timings.ts`,
+  `quick-junit-1.xml`): 613 pass / 85 skip / 1 fail, **475 s** summed at load 35–40; the ten slowest were all `direct mutation
+  ownership` (57/45/39/30/27/27/13/13/10 s). Root cause, profiled (`wp-r8/mutation-policy-stage-probe.ts`): every
+  `policyMutationStructuralBreaches` call re-parses and re-validates the 1 MB taxonomy inside source admission (≈0.9 s of a 1.8–3.5 s
+  admission), once per law vector; the rustc oracles cost ~0.1–0.3 s. **Fix (landed):** normalization's `loadTaxonomy` memoizes the
+  parsed schema by content digest (bounded to 8 contents; the path only names errors, so the cached parse is exact) → admission
+  **46–54 ms** after the first call; whole file **614 pass / 85 skip / 0 fail, 248 s** summed at load 25–40 (`quick-junit-2.xml`).
+  The whole-repo `discoverBurndown … markerless manifests` law is levelled `long` (13:2x decision), four CPU-bound fixture laws got
+  explicit 30 s timeouts (measured 5.6–6.6 s at load 35–42). Gate runs 3/4 (`repo-lib-test-quick-3/4.txt`, load 35–43): 610/85/4
+  in 281 s, then 301 s budget-killed — the failing laws differ per run (5 s defaults, one 30 s law at 32.8 s): the machine is at
+  3–4× its cores (W2's 3-parallel release + peers). **Re-measure at normal load**; the structural cost is fixed.
+  repo-lib typecheck: my edits clean; the second program currently fails on a peer's in-flight `DirectoryCommand` edit in
+  `💻️os/🧪️tests/🧪️backbone-envelope-io` (L2374/L2385, 00:4x).
+- 00:58–01:07 **S12-6 rename-slice plan re-measured (not started, by design).** Discovery census (`wp-r8/repo-lib-discovery-census.ts`,
+  `discovery-census-1.txt`, 19 s now vs 883 s in session 11): **647** problems (was 648) — `packaging-violation` 241, `manifest-without-marker`
+  190, `package-implementation` 180 (was 181), `unknown-role` 26, `package-role-unresolved` 9, `target-inside-package-boundary` 1. Layering
+  (`wp-r8/layering-census.ts`, `layering-census-1.txt`): **254 files over baseline, 6 042 excess references** (was 255 / 6 698), 44
+  baseline entries of which **18 are stale** (their file is clean or gone → drop them in the slice); top: `🔣️schema-catalog.json` 3 067,
+  CAD/Draw golden 480, root `Cargo.toml` 293, `🧼️remaining-package-purity-authority` fixture 252, root `📜️script.ts` 279/138, the `🧑‍💻dev`
+  distribution bundle 128, `🔣️taxonomy.json` 118/7 (the JCO matrix now names the live staging root). The plan in "Decision 3" stands.
+- 01:00–01:2x **S12-7 Nx inputs — measurement (design in progress, nothing landed).** Nx's own `HashPlanInspector` resolves every input
+  a task hashes without running it (`wp-r8/nx-hash-plan-probe.ts`; graph 232 s, 60 plugin projects × describe/component-dev/materialize-dev
+  = 180 tasks; `nx-hash-plan-1.json`, summary `nx-hash-plan-1-summary.txt`). Files hashed per task (min/median/max):
+  **component-dev 700 / 8 468 / 10 649, describe 5 632 / 21 006 / 28 040, materialize-dev 73 142 / 73 142 / 73 146**; files of OTHER
+  plugins inside a plugin's plan (median): component-dev 7 275, describe 14 802, materialize-dev 46 406. Example `note`: component-dev
+  hashes 7 275 stdio files (note links 6 stdio codec crates, and each stdio artifact's `default` adds its whole owner tree
+  `…/**/*.{json,semio,wit,…,ts,js}` — fixtures and examples included); materialize-dev hashes 73 146 files incl. 18 613 from
+  `♻️mit-bestand` (png/md/jsonl research data) and `.cursor` plans → effectively the whole repository, so ANY edit anywhere misses every
+  plugin's materialize — this alone explains the audit's 0–3 % hits. The per-crate `nativeSources` are already exact (Rust module graph);
+  the leaks are the owner-tree globs in `default`/`production` (pulled in through `^production`/`^default`) and a still-unattributed
+  whole-repo input in materialize (per-task attribution probe running: `wp-r8/nx-task-plan-probe.ts`).
+- 01:3x Coordinator rule 18 (until lifted, ~B2 publish): every cargo/nx/bun test or build of mine runs under `nice -n 15`
+  (my scripts `s12-wasm-check.sh` — still queued behind W2 on the wasm mutex —, `s12-ws-check.sh`, `s12-typecheck-all.sh` updated; probes
+  launched with `nice -n 15`).
+- 02:14–02:17 **wasm32 check of the wasm-gated sets (through the wasm mutex): `--target wasm32-wasip2` 41 crates EXIT 0 (83 s),
+  `--target wasm32-unknown-unknown` 30 crates EXIT 0 (82 s)**, 0 `could not compile`, warnings present (`wasm-check-1.txt`). S12-4 done.
+- 01:4x **S12-7 root cause found — lone workspace negations.** Attribution by re-planning note's materialize-dev one input at a time
+  (`wp-r8/nx-input-attribution-probe.ts`, `nx-attribution-materialize-1.json`): every `!{workspaceRoot}/…` entry alone plans **~73–93 k
+  files** (the whole repository), `^production` 89 889; the real positives are tiny (`browser-bundle/**/*.ts` 31, `default` 661).
+  Controlled semantics (`wp-r8/nx-fileset-semantics-probe.ts`, `nx-fileset-semantics-1.json`): `[ws positive]` 31, `[ws positive,
+  ws negation]` **24** (subtracts), `[ws negation]` **92 807** (everything else), project-rooted negations are harmless (7 → 6). A
+  named input whose negations reach its positives only through a *reference* (`production = ["default", "!{workspaceRoot}/**/🧫️fixtures/**/*",
+  "!{workspaceRoot}/<owner>/**/🧪️tests/**/*", …]`) therefore hashes the whole repository — in nx.json's global `production` AND in every
+  plugin-generated `production` (`🟨️.mjs` `projectInputs`). Every task that reads `production`/`^production` — all materialize-*, and
+  everything depending on them — misses on any edit anywhere. The per-crate `nativeSources` (exact Rust module graph) are fine; `describe`
+  hashes `default`/`^default` (owner trees incl. fixtures) instead of the native closure.
+  Design (prepared, not landed): (1) `production` inlines `default`'s entries and carries its negations in the same list (nx.json global:
+  the lone `!{workspaceRoot}/**/🧫️fixtures/**/*` is dropped, the project-rooted exclusions stay); (2) the plugin sets `describe` inputs to
+  the component's native closure (`nativeSources`, `^nativeSources`, its command sources) like `component-*`; (3) the cache-input
+  boundary law uses Nx's real `HashPlanInspector` as authority instead of a flat pattern oracle (the flat oracle is why this passed).
+  Proof by planning running (`wp-r8/nx-narrowed-inputs-simulation.ts`: the design applied in memory to the real graph, experiments
+  (a) edit one plugin → other plugins that miss vs. Cargo dependents, (b) edit replication/ui-contract/hash/os-kernel → plugins that miss
+  vs. Cargo dependents).
+- 04:25 typecheck run 6 (load 40–71): framework, os-hub-ts, ui-react, plugin-window-kits, renderer-react, repo-lib **rc=0**;
+  framework-os 1 — a peer added `suspend`/`resume` to `TaskManagerSourcesV1` (00:40) and updated its own component law but not
+  `🧪️tests/🔄️shell-utility-leaves` → the two no-op members added (rule 12, one line); **framework-os run 7 rc=0 → 7/7 green again**.
+- 03:4x–04:2x **S12-7 proof by planning (design applied in memory to the real graph, Nx `HashPlanInspector`, nothing run):**
+  | | baseline (`nx-simulation-baseline-1.json`) | narrowed (`nx-simulation-narrowed-5.json`) |
+  |---|---|---|
+  | files hashed, materialize-dev median | 73 153 | **13 451** |
+  | files hashed, describe median | 21 021 | **8 523** |
+  | files hashed, component-dev median | 8 472 | 8 473 (already exact) |
+  | (a) edit ONE plugin → other plugins that miss (median / max) | **59 / 59** (every plugin, every edit) | **4 / 51** (its Nx/Cargo dependents; 51 = stdio, linked by 51 plugins) |
+  | (b) edit `stdio-dwg` / `stdio-png` → plugins that miss vs Cargo dependents | 60 vs 51 (9 extra) | **51 vs 51, 0 extra, 0 missing** |
+  | (b) edit replication / ui-contract / mesh-engine / geometry | 60 = 60 | 60 = 60 (all plugins link them) |
+  Residual non-dependent invalidations after the change: 5 plugin trees (procedural 14 plugins, flow 4, writer/draw/note 1) — real
+  cross-plugin file reads (`include_str!` of a draw demo DSL in space, a flow editor fixture in sequence, flow-extension manifests in
+  procedural), not globs. Known coarse inputs left as is: root `Cargo.lock`/`Cargo.toml`/`package.json`/`bun.lock` (toolchain contract).
+  **Patch set `wp-r8/nx-narrowed-inputs.py`, dry run clean** (nx.json global `production` inlined without the lone workspace negation;
+  `🟨️.mjs` `production` inlines `default`; component `describe` hashes the native closure; `🕸️graph` generator inputs → `generatorSources`).
+  Lands after `--packages all` on the coordinator's word, then: re-plan without in-memory edits (must equal the simulation), the
+  cache-input laws, and a new structural law (no named input may carry a `!{workspaceRoot}/…` negation whose positives come only
+  through a reference — language-neutral vectors + Nx's planner as oracle).
+- 04:3x–04:5x normalization family at `long` after the taxonomy parse memo (`norm-long-5.txt`, load 64): **68/70**; the two reds pass alone
+  (`norm-prose-1.txt` 1/1 in 25 s, `norm-cad-draw-1.txt` 1/1 in 76 s — the batch failure was a load-starved `bun nx run
+  @semio-tech/plugin-registry:generate` subprocess) → no regression from the memo.
+- 04:5x **Blocked by load, not by code** (rule 18, W2's REST lanes on the critical path, load 40–71): the unbailed root `test quick`
+  census (869 tasks incl. every crate's nextest compile), root `test long` count, and the repo-lib quick gate at normal load. They run
+  when W2's `--packages all` is out and load is back near session-11 levels (≤ 15); nothing else in S12-1…7 is open.
+
+### Session 12 files changed
+
+- Typecheck: `🎠️kernel/🧪️tests/{🏷️history-entry-label,🏷️localized-label-fixture}/🟦️.ts`, `📡️replication/👕️peer-overlay/🧪️tests/🔬️unit/🟦️.ts`,
+  `🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts`, `🖱️ui/🧪️tests/{📐️dock-axis-geometry,📚️storybook-new-stories}/🟦️.ts`, `🖱️ui/🧱️elements/{🌳️Tree/📖️stories/🧪️.story.tsx,
+  🌳️Tree/🧪️tests/🧩️component/🟦️.tsx,🔽️Select/🧪️tests/🧩️component/🟦️.tsx,🪟️Window/🧪️tests/🧩️component/🟦️.tsx}`, new `🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.d.mts`,
+  `🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/tsconfig.json`, `📚️library/🧪️tests/{🔬️workspace-contract,📍️draw-destination-observation}/🟦️.ts`
+  (`referenceEdits`), `📺️renderer/🧑‍🎨engine/🧪️tests/{🧩️package-integration,🔄️shell-utility-leaves}/🟦️.ts(x)` (one-line peer follow-ups).
+- JCO matrix: `📚️library/🔣️taxonomy.json` (dev JCO section rebuilt), `🔬️workspace-contract/🟦️.ts` (counts); retired-root readers `.storybook/main.ts`,
+  `.storybook/📖️stories/🧭️coordination/🟦️.ts`, `🌎️hub/📦️packages/🦀️rust/📜️script.ts`, `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📜️script.ts`.
+- ui-contract fixture truths: `🪞️copy`, `⚖️compare`, `⚖️compare/📃️document` fixtures + schemas (componentCount 21); `🧵️retained/📦️wire/🧫️fixtures/🧾️typed/🔣️.json`
+  + schema (23 vectors); `🧪️tests/🔬️component-unit/🦀️.rs`; `🎟️resident/🔄️refresh/{🧫️fixtures,🧬️schema}/🔣️.json` + law name; renderer
+  `🧪️tests/🎟️resident-refresh-budget/🟦️.ts` (title).
+- repo-lib speed: `📚️library/🧹️normalization/🟦️.ts` (parsed-taxonomy memo); `🔬️workspace-contract/🟦️.ts` (one law → `long`, four explicit timeouts).
+- Prepared, NOT applied: `wp-r8/ui-retirement-item-metered.py` (+ `-law.rs.txt`), `wp-r8/nx-narrowed-inputs.py`.
+- Ticket inputs: `wp-r8/{s12-typecheck-all.sh,s12-ws-check.sh,s12-wasm-check.sh,jco-matrix-rebuild.py,typed-retire-accrual.py (rejected design),
+  quick-law-timings.ts,mutation-policy-cost-probe.ts,mutation-policy-stage-probe.ts,layering-census.ts,nx-hash-plan-probe.ts,nx-named-inputs-probe.ts,
+  nx-task-plan-probe.ts,nx-input-attribution-probe.ts,nx-fileset-semantics-probe.ts,nx-narrowed-inputs-simulation.ts}`.
+- Processes: none running (every detached run of mine exited; the scratch workspace lives in the session scratchpad).
 
 ## Error classification (task 2)
 

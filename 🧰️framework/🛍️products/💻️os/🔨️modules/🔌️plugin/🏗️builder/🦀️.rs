@@ -453,30 +453,16 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
 
     /// ✏️ Declares a typed editor app factory (mutation-capable surface) — the `ArtifactEditor` twin
     /// of `document_app`. `def` is `Editor::builder(E::DIALECT)...build_definition()`. No
-    /// `SemanticMutation` bound — see `viewer` above and `editor_mutation_roster` below. Delegates to
-    /// `editor_app` with an empty example set — see `editor_with_examples` for the variant that
-    /// registers `📚️examples/🎬️<slug>/🦀️.rs` fixtures onto the manifest.
+    /// `SemanticMutation` bound — see `viewer` above and `editor_mutation_roster` below. Examples are
+    /// `E::examples()`, the artefact's own catalogue: each becomes an `ExampleDefinition` stamped
+    /// with this surface's dialect by `register_app_factory`, and every surface of that dialect
+    /// (its viewer included) resolves them through `manifest::examples_for_app`, which feeds the
+    /// navbar dropdown. A plugin does not pass the list.
     pub fn editor<E: crate::app::ArtifactEditor>(self, def: crate::app::AppDefinition) -> Self
     where
         PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>,
     {
-        self.editor_app::<E>(def, Vec::new())
-    }
-
-    /// 📚️ `editor` twin that also declares this subset's `ExampleSource`s on the manifest — each
-    /// becomes an `ExampleDefinition` stamped with `E::DIALECT` by `register_app_factory` at
-    /// `try_build`, the same path `App::example_source` uses. The examples belong to the DIALECT, not
-    /// to this editor: every surface of the same dialect (its viewer included) resolves them through
-    /// `manifest::examples_for_app`, which is what feeds the react shell's example dropdown
-    /// (`activePluginManifest.examples`, `NavbarExampleSelect/🟦️.tsx`) — hidden only while no example
-    /// of the open app's dialect exists. Declared here rather than on a standalone builder step
-    /// because the editor row is the one registration the subset's fixtures travel with
-    /// (`SubsetDeclaration.examples` does the same, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn editor_with_examples<E: crate::app::ArtifactEditor>(self, def: crate::app::AppDefinition, examples: Vec<crate::app::ExampleSource>) -> Self
-    where
-        PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>,
-    {
-        self.editor_app::<E>(def, examples)
+        self.editor_app::<E>(def, E::examples())
     }
 
     fn editor_app<E: crate::app::ArtifactEditor>(mut self, mut def: crate::app::AppDefinition, examples: Vec<crate::app::ExampleSource>) -> Self

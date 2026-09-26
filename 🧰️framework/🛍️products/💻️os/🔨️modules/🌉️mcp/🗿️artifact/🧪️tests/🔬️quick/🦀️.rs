@@ -185,3 +185,82 @@ fn artifact_export_never_fabricates_a_successful_export() {
     let result = registry.call("artifact_export", serde_json::json!({ "artifactId": "doc-4", "format": "pdf" })).unwrap();
     assert!(result.is_error, "no live export command is wired yet — this must never silently succeed");
 }
+
+/// 🧷️ The canary itself plus its base64 spelling for each of its three byte alignments: a document's
+/// bytes reach a result base64-encoded at an unknown offset, and one of these three is then verbatim
+/// in it.
+fn canary_needles(canary: &str) -> Vec<String> {
+    let bytes = canary.as_bytes();
+    let aligned = (0..3).map(|shift| &bytes[shift..]).map(|tail| base64_encode(&tail[..tail.len() / 3 * 3]));
+    std::iter::once(canary.to_string()).chain(aligned).collect()
+}
+
+/// ✂️ `value` with every untrusted envelope cut out, collecting the envelopes it held.
+fn outside_untrusted(value: &serde_json::Value, envelopes: &mut Vec<serde_json::Value>) -> serde_json::Value {
+    match value {
+        serde_json::Value::Object(map) => serde_json::Value::Object(
+            map.iter()
+                .filter_map(|(key, member)| {
+                    if key == "untrusted" && member["schema"] == crate::schema::UNTRUSTED_CONTENT_SCHEMA {
+                        envelopes.push(member.clone());
+                        None
+                    } else {
+                        Some((key.clone(), outside_untrusted(member, envelopes)))
+                    }
+                })
+                .collect(),
+        ),
+        serde_json::Value::Array(items) => serde_json::Value::Array(items.iter().map(|item| outside_untrusted(item, envelopes)).collect()),
+        other => other.clone(),
+    }
+}
+
+fn names_canary(text: &str, needles: &[String]) -> bool {
+    needles.iter().any(|needle| text.contains(needle.as_str()))
+}
+
+fn tool_result_json(result: &CallToolResult) -> serde_json::Value {
+    serde_json::json!({ "content": serde_json::to_value(&result.content).expect("content serializes"), "structuredContent": result.structured_content.clone() })
+}
+
+#[test]
+fn document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧷️untrusted-content-law.json")).expect("law fixture parses");
+    let canary = law["canary"].as_str().expect("canary");
+    let needles = canary_needles(canary);
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens"));
+    semio_framework::io::resolve_ready(workspace.ensure_probe_artifact("doc-canary", serde_json::json!({ "text": canary }))).expect("seed");
+    let mut registry = InMemoryToolRegistry::new();
+    register_artifact_tools(&mut registry, Some(workspace.clone()));
+    let (pack, spr) = workspace.read_artifact_bytes("doc-canary").expect("reads").expect("exists");
+
+    let snapshot = tool_result_json(&registry.call("artifact_snapshot", serde_json::json!({ "artifactId": "doc-canary" })).expect("answers"));
+    let resource: serde_json::Value = serde_json::from_str(workspace.read_resource("semio://artifact/doc-canary").expect("reads")[0].text.as_deref().expect("text")).expect("json body");
+    for carried in [snapshot, resource] {
+        let mut envelopes = Vec::new();
+        let outside = outside_untrusted(&carried, &mut envelopes);
+        assert!(!names_canary(&outside.to_string(), &needles), "the canary leaked outside the envelope: {outside}");
+        assert_eq!(envelopes.len(), 1, "one envelope per carrier: {carried}");
+        let envelope = &envelopes[0];
+        assert!(names_canary(&envelope["content"].to_string(), &needles), "the carrier must really carry the document's canary: {envelope}");
+        assert_eq!(envelope["notice"], crate::schema::UNTRUSTED_CONTENT_NOTICE);
+        assert_eq!(envelope["provenance"]["source"], "artifact-body");
+        assert_eq!(envelope["provenance"]["artifactId"], "doc-canary");
+        assert_eq!(envelope["provenance"]["artifactKind"], crate::workspace::PROBE_SCHEMA);
+        assert_eq!(envelope["provenance"]["authors"], serde_json::json!({ "kind": "local-principal", "principal": "agent:test" }));
+        assert_eq!(envelope["provenance"]["revision"]["contentSha256"], framework_hash::sha256_hex(&[pack.as_slice(), spr.as_slice()].concat()));
+        assert!(!envelope["provenance"]["revision"]["headEditId"].as_str().unwrap_or_default().is_empty(), "a committed probe names its head: {envelope}");
+    }
+
+    for (tool, arguments) in [("artifact_open", serde_json::json!({ "artifactId": "doc-canary" })), ("artifact_validate", serde_json::json!({ "artifactId": "doc-canary" })), ("artifact_export", serde_json::json!({ "artifactId": "doc-canary" }))] {
+        let observed = tool_result_json(&registry.call(tool, arguments).expect("answers"));
+        assert!(!names_canary(&observed.to_string(), &needles), "{tool} forwarded document content outside any envelope: {observed}");
+    }
+    for uri in ["semio://artifact/doc-canary/schema", "semio://artifact/doc-canary/history", "semio://workspace", "semio://workspace/artifacts"] {
+        let observed = workspace.read_resource(uri).map(|contents| contents.into_iter().filter_map(|content| content.text).collect::<Vec<_>>().join("\n")).unwrap_or_else(|error| error.message);
+        assert!(!names_canary(&observed, &needles), "{uri} forwarded document content outside any envelope: {observed}");
+    }
+    let listed = serde_json::to_string(&workspace.list_resources().expect("lists")).expect("serializes");
+    assert!(!names_canary(&listed, &needles), "resources/list forwarded document content: {listed}");
+}

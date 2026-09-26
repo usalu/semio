@@ -200,6 +200,10 @@ impl ArtifactOwnedToolJobFactory for MdRetainedCommandJobFactory {
 pub struct MdEditor;
 
 impl ArtifactEditor for MdEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = MdSnapshot;
     type Mutation = MdMutation;
     type Config = NoConfig;

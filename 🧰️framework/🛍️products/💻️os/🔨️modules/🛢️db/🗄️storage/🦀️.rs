@@ -207,8 +207,6 @@ fn db_io_operation_slot(ledger: &DbIoOperationLedger, operation: u64) -> Option<
     ledger.slots.iter().position(|slot| slot.operation == operation && slot.generation != 0)
 }
 
-static DEBUG_RESERVE_SITES: std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<u64, String>>> = std::sync::LazyLock::new(Default::default);
-
 fn db_io_operation_reserve(initial: DbIoCredit) -> Result<u64, DbError> {
     if !db_io_credit_within_limits(initial, false) {
         return Err(DbError::LimitExceeded("db_io operation aggregate credit"));
@@ -216,17 +214,6 @@ fn db_io_operation_reserve(initial: DbIoCredit) -> Result<u64, DbError> {
     let mut ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let totals = ledger.totals.checked_add(initial).ok_or(DbError::LimitExceeded("db_io process aggregate credit"))?;
     if ledger.free_len == 0 || ledger.next_operation == u64::MAX || ledger.next_generation == u64::MAX || !db_io_credit_within_limits(totals, true) {
-        eprintln!("[DEBUG] reserve refused free_len={} totals={:?} initial={:?} limits pages={} bytes={} items={} controls={}", ledger.free_len, ledger.totals, initial, DB_IO_TOTAL_PAGES, DB_IO_PROCESS_BYTES, DB_IO_PROCESS_ITEM_CREDIT, DB_IO_PROCESS_CONTROL_CREDIT);
-        let sites = DEBUG_RESERVE_SITES.lock().unwrap();
-        let mut shown = std::collections::BTreeSet::new();
-        for slot in ledger.slots.iter().filter(|slot| slot.generation != 0) {
-            eprintln!("[DEBUG]   slot op={} backend={} task={} leases={} live={:?}", slot.operation, slot.backend_owner, slot.task_attached, slot.result_leases, slot.live);
-            if shown.insert((slot.live.pages, slot.backend_owner)) {
-                if let Some(site) = sites.get(&slot.operation) {
-                    eprintln!("[DEBUG]   site for op={}:\n{}", slot.operation, site);
-                }
-            }
-        }
         return Err(DbError::Unavailable("DB I/O process aggregate credit exhausted".to_string()));
     }
     let slot = ledger.free[ledger.free_read];
@@ -234,7 +221,6 @@ fn db_io_operation_reserve(initial: DbIoCredit) -> Result<u64, DbError> {
     ledger.free_len -= 1;
     let operation = ledger.next_operation;
     ledger.next_operation += 1;
-    DEBUG_RESERVE_SITES.lock().unwrap().insert(operation, std::backtrace::Backtrace::force_capture().to_string());
     let generation = ledger.next_generation;
     ledger.next_generation += 1;
     ledger.slots[slot as usize] = DbIoOperationCreditSlot { generation, operation, live: initial, result_leases: 0, task_attached: false, backend_owner: false, #[cfg(test)] owner: DB_IO_LEDGER_OWNER.with(std::cell::Cell::get) };
@@ -1856,7 +1842,9 @@ pub fn db_io_page_maintenance_step() -> Result<Option<usize>, DbError> {
 }
 
 const DB_IO_TEXT_BYTES: usize = 1024;
-const DB_IO_LIST_ITEMS: usize = 4096;
+
+/// @emoji 📋️ The exact capacity of one [`DbIoU64List`]: a backend list longer than this is refused.
+pub const DB_IO_LIST_ITEMS: usize = 4096;
 
 /// @emoji 🔤 Fixed repository-owned path, document, key or fault text.
 #[derive(Clone, PartialEq, Eq)]
@@ -3953,15 +3941,15 @@ fn db_io_submit_job(handle: DbIoTaskHandle, job: Job, attempt: u8) {
     let Some(pool) = pool else { return };
     match pool.try_submit(Lane::Io, job) {
         Ok(()) => {}
-        Err(error) => match error.kind() {
-            kind @ (WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated) if attempt < DB_IO_RETRY_LIMIT => {
+        Err(error) => match worker_submit_retry_attempt(error.kind(), attempt, DB_IO_RETRY_LIMIT) {
+            Some(next) => {
                 drop(error.into_job());
                 let generation = {
                     let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                     if !db_io_slot_matches(&owner, handle) {
                         return;
                     }
-                    owner.retry_attempt = Some(if kind == WorkerSubmitErrorKind::Contended { attempt } else { attempt + 1 });
+                    owner.retry_attempt = Some(next);
                     let Some(generation) = owner.retry_generation.checked_add(1).filter(|generation| *generation != 0) else {
                         owner.retry_attempt = None;
                         owner.phase = DbIoTaskPhase::Faulted;
@@ -3978,7 +3966,8 @@ fn db_io_submit_job(handle: DbIoTaskHandle, job: Job, attempt: u8) {
                 };
                 pool.callback_at(pool.now_ms().saturating_add(DB_IO_RETRY_DELAY_MS), move || db_io_retry(handle, generation));
             }
-            kind => {
+            None => {
+                let kind = error.kind();
                 let job = error.into_job();
                 drop(job);
                 let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);

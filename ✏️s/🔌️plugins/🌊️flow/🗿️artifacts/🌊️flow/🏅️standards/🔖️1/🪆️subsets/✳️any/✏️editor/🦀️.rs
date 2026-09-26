@@ -1091,7 +1091,14 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             }
             let mutations = self.artifact_mutations.take().ok_or_else(|| Fault::from("flow-retained-direct-artifact-owner"))?;
             self.completed = true;
-            return Ok(ArtifactCommandWorkStep::Complete(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) }));
+            if mutations.is_empty() {
+                return Err(match command {
+                    FlowCommand::RemoveWidget(payload) => semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("removeWidget found no widget \"{}\"", payload.widget_id)),
+                    FlowCommand::Disconnect(payload) => semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("disconnect found no synapse \"{}\"", payload.synapse_id)),
+                    _ => Fault::from("flow-retained-direct-route-mismatch"),
+                });
+            }
+            return Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(mutations)));
         }
         if matches!(command, FlowCommand::DeleteSelection(_)) {
             let selected = interaction.selection.get(FLOW_INTERACTION_GRAPH).map_or(&[][..], |selection| selection.ids.as_slice());
@@ -1148,6 +1155,9 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             let mut artifact_mutations = self.edge_mutations.take().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?;
             artifact_mutations.extend(self.node_mutations.take().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?);
             self.completed = true;
+            if artifact_mutations.is_empty() {
+                return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
+            }
             return Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(artifact_mutations)));
         }
         if let FlowCommand::SetPreviewOff(payload) = command {
@@ -1243,7 +1253,10 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             let mutations = self.artifact_mutations.take().ok_or_else(|| Fault::from("flow-retained-patch-widgets-owner"))?;
             self.completed = true;
             let widget_ids_separator = ",";
-            return Ok(ArtifactCommandWorkStep::Complete(if mutations.is_empty() { Emit::default() } else { Emit::amend(mutations, format!("patch-{}-{}", payload.field, payload.widget_ids.join(widget_ids_separator))) }));
+            if mutations.is_empty() {
+                return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.patch-widgets-unchanged"), format!("patchFlowWidgets changed no widget among [{}] with {} = {:?}", payload.widget_ids.join(widget_ids_separator), payload.field, payload.value)));
+            }
+            return Ok(ArtifactCommandWorkStep::Complete(Emit::amend(mutations, format!("patch-{}-{}", payload.field, payload.widget_ids.join(widget_ids_separator)))));
         }
         self.completed = true;
         flow_direct_store_emit(command, &config, view).map(ArtifactCommandWorkStep::Complete)
@@ -1885,12 +1898,19 @@ impl FlowGraphOperationWork {
         let resolved = self.resolved;
         instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
             owner.with_session(|session| match command {
-                FlowCommand::ConnectMediaPorts(payload) if resolved == [true, true] => Ok(Emit::mutations(connect_media_ports::connect_operations(payload, snapshot, config, session))),
-                FlowCommand::ConnectMediaPorts(_) => Ok(Emit::default()),
+                FlowCommand::ConnectMediaPorts(payload) if resolved == [true, true] => {
+                    let operations = connect_media_ports::connect_operations(payload, snapshot, config, session);
+                    if operations.is_empty() {
+                        return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.connect-incompatible"), format!("connectMediaPorts cannot connect {}@{} to {}@{}", payload.source_node_id, payload.source_port_id, payload.target_node_id, payload.target_port_id)));
+                    }
+                    Ok(Emit::mutations(operations))
+                }
+                FlowCommand::ConnectMediaPorts(payload) => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("connectMediaPorts found no widget \"{}\"", if resolved[0] { &payload.target_node_id } else { &payload.source_node_id }))),
                 FlowCommand::Reorganize(_) => Ok(Emit::mutations(reorganize::reorganize_operations(snapshot, config, session))),
-                FlowCommand::RenameFlowWidget(payload) if resolved[0] && !resolved[1] => Ok(Emit::mutations(rename_flow_widget::rename_operations(payload, snapshot))),
-                FlowCommand::RenameFlowWidget(_) => Ok(Emit::default()),
-                FlowCommand::RunExtensionAction(payload) => Ok(run_extension_action::extension_action_result(payload, snapshot, config, session)),
+                FlowCommand::RenameFlowWidget(payload) if resolved[0] && !resolved[1] && !payload.value.trim().is_empty() => Ok(Emit::mutations(rename_flow_widget::rename_operations(payload, snapshot))),
+                FlowCommand::RenameFlowWidget(payload) if !resolved[0] => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("renameFlowWidget found no widget \"{}\"", payload.old_id))),
+                FlowCommand::RenameFlowWidget(payload) => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.widget-id-unavailable"), format!("renameFlowWidget cannot rename \"{}\" to \"{}\": the id is empty or taken", payload.old_id, payload.value.trim()))),
+                FlowCommand::RunExtensionAction(payload) => run_extension_action::extension_action_result(payload, snapshot, config, session),
                 FlowCommand::SetActiveExample(payload) => Ok(Emit::mutations(set_active_example::set_active_example_operations(payload, snapshot)?)),
                 _ => Err(Fault::from("flow-retained-graph-route-mismatch")),
             })?
@@ -2206,6 +2226,10 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for FlowInstanceOper
 pub struct FlowPlayApp;
 
 impl ArtifactEditor for FlowPlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
     /// 🛍️ Publishes the whole registered flow operator catalogue once per app instance on the reserved
@@ -2849,6 +2873,29 @@ pub fn create_flow_app() -> AppDefinition {
             ActionArgOption::new("inputNote", LocalizedLabel::native("Note", "Notiz")),
         ])
         .default_value(&"inputSlider")])
+        .action_args("removeWidget", vec![ActionArgDef::text("widgetId", LocalizedLabel::native("Widget Id", "Widget-ID"))])
+        .action_args("duplicateWidget", vec![ActionArgDef::text("widgetId", LocalizedLabel::native("Widget Id", "Widget-ID"))])
+        .action_args("disconnect", vec![ActionArgDef::text("synapseId", LocalizedLabel::native("Synapse Id", "Synapsen-ID"))])
+        .action_args(
+            "connectMediaPorts",
+            vec![
+                ActionArgDef::text("sourceNodeId", LocalizedLabel::native("Source Widget Id", "Quell-Widget-ID")),
+                ActionArgDef::text("sourcePortId", LocalizedLabel::native("Source Port", "Quellanschluss")),
+                ActionArgDef::text("targetNodeId", LocalizedLabel::native("Target Widget Id", "Ziel-Widget-ID")),
+                ActionArgDef::text("targetPortId", LocalizedLabel::native("Target Port", "Zielanschluss")),
+            ],
+        )
+        .action_args("moveMediaNode", vec![ActionArgDef::text("nodeId", LocalizedLabel::native("Widget Id", "Widget-ID")), ActionArgDef::number("x", LocalizedLabel::native("X", "X")), ActionArgDef::number("y", LocalizedLabel::native("Y", "Y"))])
+        .action_args(
+            "patchFlowWidgets",
+            vec![
+                ActionArgDef::text_list("widgetIds", LocalizedLabel::native("Widget Ids", "Widget-IDs")),
+                ActionArgDef::select("field", LocalizedLabel::native("Field", "Feld"), vec![ActionArgOption::new("value", LocalizedLabel::native("Slider Value", "Reglerwert")), ActionArgOption::new("text", LocalizedLabel::native("Note Text", "Notiztext"))]),
+                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
+            ],
+        )
+        .action_args("renameFlowWidget", vec![ActionArgDef::text("oldId", LocalizedLabel::native("Widget Id", "Widget-ID")), ActionArgDef::text("value", LocalizedLabel::native("New Id", "Neue ID"))])
+        .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::demo::ID, LocalizedLabel::native("Demo", "Demo"))])])
         .action_interactive_job("addWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("removeWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("duplicateWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -2932,6 +2979,27 @@ pub fn create_flow_app() -> AppDefinition {
         // (contract §2.4's `App { definition, examples }` split — `.editor::<E>(def:
         // AppDefinition)` only takes the definition, so `App.examples` has no carrier through this
         // builder). See `📓️w2-p5-flow-notes.md` "SDK gaps" for the framework-level finding.
+        .action_describe("addWidget", LocalizedLabel::native("Adds a new widget of the given kind (an input such as a slider or note, or an operator, optionally a specific neuron kind) to the flow canvas at x, y.", "Fügt der Flow-Fläche an x, y ein neues Widget der angegebenen Art hinzu (eine Eingabe wie Schieberegler oder Notiz oder einen Operator, optional eine bestimmte Neuronart)."))
+        .action_describe("removeWidget", LocalizedLabel::native("Removes one widget by id from the flow graph together with every synapse attached to it.", "Entfernt ein Widget anhand seiner Id samt aller angeschlossenen Synapsen aus dem Flow-Graphen."))
+        .action_describe("duplicateWidget", LocalizedLabel::native("Copies one widget by id into a new widget next to it, connected from the original, as one undoable edit; an unknown id is refused.", "Kopiert ein Widget anhand seiner Id in ein neues, vom Original aus verbundenes Widget daneben, als eine rückgängig machbare Änderung; eine unbekannte Id wird abgelehnt."))
+        .action_describe("deleteSelection", LocalizedLabel::native("Deletes every selected widget and synapse from the flow graph.", "Löscht alle ausgewählten Widgets und Synapsen aus dem Flow-Graphen."))
+        .action_describe("disconnect", LocalizedLabel::native("Removes one synapse (a connection between two ports) by id from the flow graph.", "Entfernt eine Synapse (eine Verbindung zwischen zwei Ports) anhand ihrer Id aus dem Flow-Graphen."))
+        .action_describe("connectMediaPorts", LocalizedLabel::native("Connects an output port of one widget to an input port of another with a new synapse; an unknown widget or an incompatible connection is refused.", "Verbindet einen Ausgangsport eines Widgets mit einem Eingangsport eines anderen durch eine neue Synapse; ein unbekanntes Widget oder eine unverträgliche Verbindung wird abgelehnt."))
+        .action_describe("moveMediaNode", LocalizedLabel::native("Moves one widget to the canvas position x, y; consecutive moves of the same widget merge into one edit.", "Verschiebt ein Widget an die Position x, y der Fläche; aufeinanderfolgende Verschiebungen desselben Widgets werden zu einer Änderung zusammengefasst."))
+        .action_describe("reorganize", LocalizedLabel::native("Lays out every widget of the flow graph automatically from left to right, overwriting their manual positions.", "Ordnet alle Widgets des Flow-Graphen automatisch von links nach rechts an und überschreibt ihre manuellen Positionen."))
+        .action_describe("patchFlowWidgets", LocalizedLabel::native("Sets one field on several widgets at once: a slider's value or a note's text.", "Setzt ein Feld auf mehreren Widgets zugleich: den Wert eines Schiebereglers oder den Text einer Notiz."))
+        .action_describe("renameFlowWidget", LocalizedLabel::native("Renames a widget's id from the old id to a new one and updates every synapse that referenced it; a taken or empty id changes nothing.", "Benennt die Id eines Widgets von der alten in eine neue um und aktualisiert alle Synapsen, die darauf verweisen; eine vergebene oder leere Id ändert nichts."))
+        .action_describe("runExtensionAction", LocalizedLabel::native("Runs one automation of an installed flow extension, such as auto-layout (Reorganize) or auto-evaluate (Evaluate), when that automation is enabled.", "Führt eine Automatisierung einer installierten Flow-Erweiterung aus, etwa automatisches Anordnen (Neu anordnen) oder automatisches Auswerten (Auswerten), sofern sie aktiviert ist."))
+        .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole flow graph with the bundled demo graph, or with an empty graph for an empty id; other ids change nothing.", "Ersetzt den gesamten Flow-Graphen durch den mitgelieferten Demo-Graphen, bei leerer Id durch einen leeren Graphen; andere Ids ändern nichts."))
+        .action_describe("evaluate", LocalizedLabel::native("Evaluates every widget whose result is not computed yet and shows the results on the canvas; the graph itself is not changed.", "Wertet alle Widgets aus, deren Ergebnis noch nicht berechnet ist, und zeigt die Ergebnisse auf der Fläche; der Graph selbst ändert sich nicht."))
+        .action_describe("focusSelection", LocalizedLabel::native("Zooms the main window onto the selected widgets; only the view changes.", "Zoomt das Hauptfenster auf die ausgewählten Widgets; nur die Ansicht ändert sich."))
+        .action_describe("addGeneration", LocalizedLabel::native("Adds a new parameter generation, a named set of input values, to the generate mode's list; generations live in the window, not in the document.", "Fügt der Liste des Generieren-Modus eine neue Parametergeneration hinzu, einen benannten Satz von Eingabewerten; Generationen liegen im Fenster, nicht im Dokument."))
+        .action_describe("removeGeneration", LocalizedLabel::native("Removes one parameter generation by id from the generate mode's list; the flow graph is not changed.", "Entfernt eine Parametergeneration anhand ihrer Id aus der Liste des Generieren-Modus; der Flow-Graph ändert sich nicht."))
+        .action_describe("renameGeneration", LocalizedLabel::native("Renames one parameter generation of the generate mode's list.", "Benennt eine Parametergeneration in der Liste des Generieren-Modus um."))
+        .action_describe("updateGenerationValues", LocalizedLabel::native("Sets the value one input question takes in a parameter generation (the selected one when no id is given) and re-evaluates its preview.", "Setzt den Wert, den eine Eingabefrage in einer Parametergeneration annimmt (ohne Id in der ausgewählten), und wertet ihre Vorschau neu aus."))
+        .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("spotlightCommit", semio_framework_plugin::CapabilityAudience::Input)
+        .action_destructive("reorganize")
         .build_definition()
 }
 //#endregion 🔖️Manifest
@@ -2949,6 +3017,10 @@ pub(crate) mod unit_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️interactive-job/🦀️.rs"]
 mod interactive_job_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/⚖️declared-verbs/🦀️.rs"]
+mod declared_verb_laws;
 //#endregion 🧪️Tests
 
 #[cfg(test)]

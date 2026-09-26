@@ -240,6 +240,60 @@ async fn authenticated_hub_workspace_revocation_and_stream_loss_invalidate_ready
     assert!(binding.ready_snapshot(1_000).unwrap_err().retryable);
 }
 
+/// ⏳️ A directory event invalidates the authority; a hub-bound call issued in that window waits for
+/// the refresh in flight (announced by the binding itself) instead of answering a retryable refusal,
+/// still fails closed once its bounded wait passes, and never waits on a revoked binding.
+#[tokio::test]
+async fn a_call_during_an_authority_refresh_waits_for_it_and_fails_closed_only_after_the_wait() {
+    let contract = fixture();
+    let (client, _) = client_for(&contract["cases"]["memberReady"]);
+    let binding = Arc::new(HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap());
+    let snapshot = binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
+    binding.install_catalog_for_test(Vec::new());
+    assert!(binding.ready_catalog_snapshot(1_000).is_ok());
+
+    binding.invalidate("hub directory event requires an authenticated descriptor refresh");
+    assert!(binding.ready_catalog_snapshot(1_000).unwrap_err().retryable, "the gate itself stays instantaneous and closed");
+    let refresher = {
+        let binding = Arc::clone(&binding);
+        let snapshot = snapshot.as_ref().clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(150));
+            binding.install_snapshot_for_test(snapshot);
+            std::thread::sleep(std::time::Duration::from_millis(150));
+            binding.install_catalog_for_test(Vec::new());
+        })
+    };
+    let started = std::time::Instant::now();
+    binding.await_settled(HUB_AUTHORITY_SETTLE_WAIT_MS);
+    let waited = started.elapsed();
+    refresher.join().unwrap();
+    assert!(binding.ready_catalog_snapshot(1_000).is_ok(), "the call proceeds on the refreshed authority");
+    assert!(waited >= std::time::Duration::from_millis(300), "a bound snapshot without its catalog is still settling: waited {waited:?}");
+    assert!(waited < std::time::Duration::from_millis(HUB_AUTHORITY_SETTLE_WAIT_MS), "woken by the announcement, not by the deadline: waited {waited:?}");
+
+    binding.invalidate("hub directory stream continuity was lost");
+    let started = std::time::Instant::now();
+    binding.await_settled(200);
+    assert!(started.elapsed() >= std::time::Duration::from_millis(200));
+    assert!(binding.ready_snapshot(1_000).unwrap_err().retryable, "a refresh that never lands still fails closed");
+
+    binding.revoke(HubBindingError::MembershipRequired);
+    let started = std::time::Instant::now();
+    binding.await_settled(HUB_AUTHORITY_SETTLE_WAIT_MS);
+    assert!(started.elapsed() < std::time::Duration::from_millis(1_000), "a revoked binding is settled: nothing will refresh it");
+}
+
+/// 🔁️ A failing authority refresh backs off instead of re-asking a busy hub back-to-back: the pause
+/// doubles from the base and saturates at the maximum.
+#[test]
+fn failed_authority_refreshes_back_off_and_saturate() {
+    let pauses: Vec<u64> = (1..=8).map(hub_refresh_retry_ms).collect();
+    assert_eq!(pauses, vec![100, 200, 400, 800, 1_600, 3_200, 5_000, 5_000]);
+    assert_eq!(hub_refresh_retry_ms(u32::MAX), HUB_REFRESH_RETRY_MAX_MS);
+    assert_eq!(hub_refresh_retry_ms(0), HUB_REFRESH_RETRY_BASE_MS);
+}
+
 #[tokio::test]
 async fn native_driver_closes_post_open_cancelled_and_stale_authority_dials_once_without_refresh() {
     let contract = fixture();

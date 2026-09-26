@@ -91,3 +91,60 @@ Upcoming (will be appended here when landed): per-lane `*_report_json` one-line 
    codec or ABI change. native `cargo check -p semio-s-plugin-space --lib` EXIT 0; wasm32-wasip2 check through the fleet
    mutex EXIT 0 (18:0x, s11-t12-captures/space-wasm-1.txt). restage3 built space BEFORE this change → release + restage
    `space` again (its committed hash a75b7a234ecd is stale).
+
+T12 (session 12) — 2026-09-25 23:2x
+17. stdio: open-target declarations (T12). crate semio-s-plugin-stdio (editor code of semio-s-artifact-stdio-{txt,tsv,html},
+   compiled only under stdio's component-app-assembly; no other component links these editors). Edited at 23:18, AFTER
+   stdio's b-warm component-release finished (nx had moved to gis) and before b-publish. The txt, tsv and html editors now
+   declare the kind they edit (`.artifact_kind(crate::artifact_kind())`, the writer/draw pattern), so the hub's one rule
+   (`app_opens_kind`) answers 6 new open targets (stdio.txt / stdio.tsv / stdio.html × editor + viewer). DESCRIPTOR CHANGE
+   (3 apps gain `artifactKinds`) → stdio needs describe + release before `--packages all` (b-publish builds it fresh from
+   the tree anyway). ABI-safe: no WIT, export, pack schema, codec hash, closed-actor format or native-codec change; the
+   26 native-codec kinds and their receipts are untouched. Laws `the_editor_declares_the_artifact_kind_it_edits` ×3 green
+   (editor tests 13/13, 12/12, 11/11); native `cargo check` of the 3 crates with component-app-assembly EXIT 0.
+   stdio's committed `🛂️.descriptor.semio` is stale until that describe (its `descriptor_is_fresh` law is red until then).
+   NOT ABI-safe, prepared as a post-publish patch set (T12 report): csv, json (×2 subsets), xml (×2), md stay unopenable —
+   their kinds are plugin-level native-codec kinds `stdio.<x>` whose dialect is `s.stdio.<x>`; the one rule opens a
+   plugin-level kind only through the dialect that names it, so the fix is the kind id = `s.stdio.<x>` (gltf/vcs precedent),
+   which changes the native-codec receipts.
+17-WITHDRAWN (23:5x): the stdio txt/tsv/html declarations are REVERTED (working tree == HEAD 19:34 for those 6 files), stdio
+   is back to exactly what b-warm built. Reason, measured in the hub source: the `local-stdio-gis-open-v1` fence
+   (`🔏️trusted-catalog/🦀️.rs` ~1580) requires stdio to carry 26 native codecs and ZERO open targets, and every hub gate law
+   in `🌎️hub/📦️packages/🦀️rust/📜️script.ts` publishes `stdio,gis`; a stdio with open targets would also make the bootstrap
+   build a closed browser actor for stdio (release component 39 MB, gis's actor sat 121 KB under the 64 MiB bound). All of
+   stdio (declarations + canonical kind ids + fence + actor) moves to ONE post-publish patch set. Nothing to do for W2 now.
+18. wfc (lane 2, before its build) + demonstrator (rest, not started), 23:4x: the wfc bitmap, grid2d, wfc2d, wfc3d editors and
+   the demonstrator playground editor declare the kind they edit (`.artifact_kind(crate::artifact_kind())`, like wfc grid3d)
+   → +10 open targets (5 kinds × editor + viewer); both packages already open kinds, so no new actor and no profile fence.
+   DESCRIPTOR CHANGE → describe + release wfc and demonstrator before `--packages all`. Laws
+   `the_editor_declares_the_artifact_kind_it_edits` ×5 green; editor tests wfc2d 45/45, wfc3d 56/56, playground 12/12,
+   bitmap 3 solver tests pass alone (red only under parallel load, pre-existing timing) — ABI-safe.
+19. trinity (S15 session-12 FAILs, 00:3x) — crate semio-s-plugin-trinity (semio-s-artifact-trinity-rewriting; writer links
+   semio-s-plugin-trinity, so writer too if its component carries the rewriting editor): `addRuleClause` now refuses by name
+   what it cannot add (a second WHERE clause, an unknown kind, an undecodable rule: `app.command.invalid-args` /
+   `trinity.rewriting.rule-undecodable`) instead of an empty emit, and rewrites ONLY the side it changed (kind=create no
+   longer publishes a re-printed `edit-lhs`). Behaviour change, no descriptor/ABI/codec change. rewriting lib 162/162.
+   Edited 00:2x while writer's lane was compiling stdio crates (before trinity); checked immediately (EXIT 0). → release +
+   restage trinity (and writer) with the next batch. The jack/rewriting "no ↶, undo does nothing" does NOT reproduce
+   natively (4 new round-trip laws green, incl. selectAll→patch→clearSelection→undo→redo on the loaded curated example);
+   root cause still open (T12 report §S12-2).
+20. trinity rewriting (00:5x, after writer's lane finished): the rewriting editor declares the kind it edits
+   (`text.rewriting`, `.artifact_kind(crate::artifact_kind())`) → +2 open targets (editor + viewer). DESCRIPTOR CHANGE →
+   describe + release trinity (and writer if its component carries the rewriting editor) before `--packages all`.
+   `cargo check -p semio-s-artifact-trinity-rewriting --features component-app-assembly --lib` EXIT 0.
+21. sequence (00:3x, REST, not started): production JSON moved off `serde_json` onto first-party `pack` JSON (contract
+   `testing/dependency` ×2); behaviour-preserving, no descriptor/ABI/codec change; lib 210/210; wasm32 check queued
+   through the mutex (pid 57241). Rebuild with the rest batch as usual.
+22. note (G10 relay, 01:3x, after note's lane finished): every note verb that reads arguments now DECLARES them
+   (`.action_args`: patchBlocks blockIds/field/value, moveBlock blockId/targetRowId/dropPosition, deleteBlock and
+   duplicateBlock blockId, setGridSpacing/Subdivisions/Opacity, setSnapGridSpacing, setPencilWidth, setEraserRadius,
+   setCameraZoom value) so agents get a real MCP input schema; patchBlocks/moveBlock/deleteBlock/duplicateBlock refuse by
+   name (`mutation.target-missing`, `app.command.invalid-args`) instead of an empty emit. DESCRIPTOR CHANGE (args) →
+   describe + release note before `--packages all`. Laws: census `every_note_verb_that_reads_arguments_declares_them`
+   (red with 11 offenders before, green after), declared-args decode, refusals; note lib 400/400; check EXIT 0.
+23. DESCRIBE-ALL needed (measured 03:5x, `test quick` of all 60 plugin/extension packages): 28 packages fail ONLY their
+   `descriptor_is_fresh` law — committed `🛂️.descriptor.semio` older than the tree (D1's descriptions, T12's kind/arg
+   declarations, peers): writer, mathematical, wfc, procedural, flow, animate, shooting, demonstrator, sequence, fem,
+   architect, process, lowpoly, reasoning, norm, playbook, playbook-module-procedural, imperative, remodel, energy,
+   trinity, dag, stdio, note, puzzle, block, space, sourcing. 32 packages are fresh and green. After the describe-all,
+   T12 re-runs the 28 (chain `wp-t12/test-quick-all.sh`).

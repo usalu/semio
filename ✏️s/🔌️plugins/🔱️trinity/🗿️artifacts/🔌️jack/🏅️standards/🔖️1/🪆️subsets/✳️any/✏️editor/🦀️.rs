@@ -1178,6 +1178,16 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+alt+s", "commitCheckpoint")
             .io(jack_io())
+            .action_describe("setLodMode", LocalizedLabel::native("Sets the level of detail the graph window draws the component graph with; only that window's view changes.", "Legt die Detailstufe fest, mit der das Graphfenster den Bauteilgraphen zeichnet; nur die Ansicht dieses Fensters ändert sich."))
+            .action_describe("formatDocument", LocalizedLabel::native("Reformats the Jack query in the query editor window; the graph document is not changed, and a query that does not parse is left as it is.", "Formatiert die Jack-Abfrage im Abfrage-Editorfenster neu; das Graphdokument ändert sich nicht, eine nicht lesbare Abfrage bleibt wie sie ist."))
+            .action_describe("deleteSelection", LocalizedLabel::native("Deletes every selected node of the component graph together with every edge attached to them.", "Löscht alle ausgewählten Knoten des Bauteilgraphen samt aller daran angeschlossenen Kanten."))
+            .action_describe("patchNodes", LocalizedLabel::native("Renames the given nodes, or the selected ones when no ids are given; name is the only field a Jack node allows.", "Benennt die angegebenen Knoten um, ohne Ids die ausgewählten; der Name ist das einzige Feld, das ein Jack-Knoten erlaubt."))
+            .action_describe("runQuery", LocalizedLabel::native("Runs a Jack graph query (or the editor's current one) against the component graph and shows the matches in the given results window; CREATE, SET or DELETE clauses change the graph.", "Führt eine Jack-Graphabfrage (oder die aktuelle des Editors) auf dem Bauteilgraphen aus und zeigt die Treffer im angegebenen Ergebnisfenster; CREATE-, SET- oder DELETE-Klauseln ändern den Graphen."))
+            .action_describe("loadExampleQuery", LocalizedLabel::native("Puts one of the bundled example queries into the query editor, runs it and shows its matches in the given results window.", "Setzt eine der mitgelieferten Beispielabfragen in den Abfrage-Editor, führt sie aus und zeigt ihre Treffer im angegebenen Ergebnisfenster."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole component graph with a bundled fixture (the Nakagin capsule tower or the branch chain), by example id.", "Ersetzt den gesamten Bauteilgraphen durch eine mitgelieferte Fixture (den Nakagin Capsule Tower oder die Astkette), anhand der Beispiel-Id."))
+            .action_describe("setFixtureJson", LocalizedLabel::native("Replaces the whole component graph with one parsed from the given fixture JSON; invalid JSON changes nothing.", "Ersetzt den gesamten Bauteilgraphen durch einen, der aus dem angegebenen Fixture-JSON gelesen wird; ungültiges JSON ändert nichts."))
+            .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_destructive("runQuery")
             .build_definition()
 }
 //#endregion 🔖️Manifest

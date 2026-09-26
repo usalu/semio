@@ -115,9 +115,12 @@
     "authentication": { "kind": "local-bootstrap-pipe-v1", "bootstrapReady": true, "publicSessionIssuance": false },
     "directory": { "ready": true },
     "storage": { "ready": true },
+    "artifactCasBarrier": { "ready": true },
+    "artifactPublication": { "ready": true },
+    "artifactCasSweeper": { "ready": true, "execute": false, "defaultMode": "dry-run" },
     "artifactAuthority": { "ready": true },
     "adminAssets": { "ready": true },
-    "features": { "openPlan": false, "rebootstrap": true, "mcpWorkspace": false, "inference": false }
+    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": true, "mcpWorkspace": false, "inferenceServices": [] }
   },
   "bootstrapReadyButArtifactUnavailable": {
     "schema": "semio.hub.readiness/v1",
@@ -128,9 +131,12 @@
     "authentication": { "kind": "local-bootstrap-pipe-v1", "bootstrapReady": true, "publicSessionIssuance": false },
     "directory": { "ready": true },
     "storage": { "ready": true },
+    "artifactCasBarrier": { "ready": true },
+    "artifactPublication": { "ready": true },
+    "artifactCasSweeper": { "ready": true, "execute": false, "defaultMode": "dry-run" },
     "artifactAuthority": { "ready": false, "reason": "trusted-catalog-never-published-in-this-data-root" },
     "adminAssets": { "ready": true },
-    "features": { "openPlan": false, "rebootstrap": true, "mcpWorkspace": false, "inference": false },
+    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": true, "mcpWorkspace": false, "inferenceServices": [] },
     "blockedBy": [{ "gate": "artifactAuthority", "reason": "trusted-catalog-never-published-in-this-data-root" }]
   },
   "notReady": {
@@ -142,14 +148,31 @@
     "authentication": { "kind": "local-bootstrap-pipe-v1", "bootstrapReady": false, "publicSessionIssuance": false },
     "directory": { "ready": false, "reason": "directory-backend-unavailable" },
     "storage": { "ready": false, "reason": "document-storage-backend-unavailable" },
+    "artifactCasBarrier": { "ready": true },
+    "artifactPublication": { "ready": true },
+    "artifactCasSweeper": { "ready": true, "execute": false, "defaultMode": "dry-run" },
     "artifactAuthority": { "ready": false, "reason": "trusted-catalog-never-published-in-this-data-root" },
     "adminAssets": { "ready": false, "reason": "admin-spa-dist-missing-run-os-hub-admin-build" },
-    "features": { "openPlan": false, "rebootstrap": true, "mcpWorkspace": false, "inference": false },
-    "blockedBy": [
-      { "gate": "authentication.bootstrapReady", "reason": "local-bootstrap-pipe-handshake-incomplete" },
-      { "gate": "artifactAuthority", "reason": "trusted-catalog-never-published-in-this-data-root" },
-      { "gate": "adminAssets", "reason": "admin-spa-dist-missing-run-os-hub-admin-build" }
-    ]
+    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": true, "mcpWorkspace": false, "inferenceServices": [] },
+    "blockedBy": [{ "gate": "authentication.bootstrapReady", "reason": "local-bootstrap-pipe-handshake-incomplete" }, { "gate": "artifactAuthority", "reason": "trusted-catalog-never-published-in-this-data-root" }, { "gate": "adminAssets", "reason": "admin-spa-dist-missing-run-os-hub-admin-build" }]
+  },
+  "starting": {
+    "schema": "semio.hub.readiness/v1",
+    "status": "not-ready",
+    "runId": "00112233445566778899aabbccddeeff",
+    "mode": "development",
+    "bindScope": "loopback",
+    "authentication": { "kind": "local-bootstrap-pipe-v1", "bootstrapReady": true, "publicSessionIssuance": false },
+    "directory": { "ready": false, "reason": "hub-starting" },
+    "storage": { "ready": false, "reason": "hub-starting" },
+    "artifactCasBarrier": { "ready": false, "reason": "hub-starting" },
+    "artifactPublication": { "ready": false, "reason": "hub-starting" },
+    "artifactCasSweeper": { "ready": false, "reason": "hub-starting", "execute": false, "defaultMode": "dry-run" },
+    "artifactAuthority": { "ready": false, "reason": "trusted-catalog-loading" },
+    "adminAssets": { "ready": false, "reason": "hub-starting" },
+    "features": { "openPlan": false, "openPlanExchange": false, "rebootstrap": false, "mcpWorkspace": false, "inferenceServices": [] },
+    "blockedBy": [{ "gate": "directory", "reason": "hub-starting" }, { "gate": "storage", "reason": "hub-starting" }, { "gate": "artifactCasBarrier", "reason": "hub-starting" }, { "gate": "artifactAuthority", "reason": "trusted-catalog-loading" }, { "gate": "adminAssets", "reason": "hub-starting" }],
+    "startup": { "stage": "guest-codec-executing", "completedUnits": 25000000, "totalUnits": 4000000000 }
   },
   "hostile": {
     "wrongProof": "f79b613ee78f07614846ab03615dc9df317071949a8de681494eabc96267ac05",

@@ -260,6 +260,10 @@ impl ArtifactOwnedToolJobFactory for XmlAnyRetainedCommandJobFactory {
 pub struct XmlAnyEditor;
 
 impl ArtifactEditor for XmlAnyEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = XmlSnapshot;
     type Mutation = XmlMutation;
     type Config = NoConfig;

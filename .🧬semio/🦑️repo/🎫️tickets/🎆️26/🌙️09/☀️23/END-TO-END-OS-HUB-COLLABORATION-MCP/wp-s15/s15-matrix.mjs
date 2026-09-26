@@ -7,7 +7,8 @@
  *   open · body RENDERED (not the loading skeleton, no window fault, own content beside the chrome) ·
  *   the Actions chip is HIT-TESTABLE by a pointer (the element under its centre is the chip) ·
  *   one real verb from the Actions rail · undo · redo (ledger + `Check in (n)` + structural render digest,
- *   the shared S6 witness) · History rows (read back in the run's locale) · 0 fault lines · closed by its dock tab.
+ *   the shared S6 witness; since session 12 the `Check in (n)` edits must read a clean round trip: the verb adds an edit or coalesces
+ *   into the pending one, undo removes exactly one, redo restores it) · History rows (read back in the run's locale) · 0 fault lines · closed by its dock tab.
  *
  * Viewers are opened, render-checked, chip-checked and closed; a viewer offers no document verb, so the verb columns
  * read `viewer`. The witness helpers are imported from the shared S6 sweep (fresh module instance, so this run's
@@ -43,6 +44,8 @@ const keyOf = (program) => `${baseKeyOf(program)}${subsetOf(program.appId) === "
 
 /** 🗂️ Per-kind verb pins where a kind's document verb differs from its plugin's pin (measured on this serve). */
 const KIND_VERBS = {
+  "space/space": "renameArtifact",
+  "trinity/rewriting": "addRuleClause",
   "block/block2d": "addHandleKind",
   "block/block3d": "addRepresentation",
   "block/block5d": "addGripKind",
@@ -55,16 +58,33 @@ const KIND_VERBS = {
   "stdio/json": "set-node",
   "stdio/xml": "set-node",
 };
-/** ✋️ A rail verb a kind's document verb needs first — puzzle3d's selection verbs act on the live selection. */
-const KIND_PRE = { "puzzle/puzzle3d": "selectAll", "demonstrator/puzzle3d": "selectAll" };
+/** ✋️ A rail verb a kind's document verb needs first — puzzle3d's selection verbs act on the live selection; trinity's
+ * `patchNodes` patches the graph selection when no node ids are given (T12); a fresh stdio table/tree document is empty, so
+ * its kit verb needs the editor's own `Load Example` (default `demo`) before a cell or node exists to edit. A trailing `!`
+ * marks a pre-verb with a staged form: its row is pressed, then its execute control. */
+const KIND_PRE = {
+  "puzzle/puzzle3d": "selectAll",
+  "demonstrator/puzzle3d": "selectAll",
+  "trinity/jack": "selectAll",
+  "space/space": "createArtifact!",
+  "stdio/csv": "setActiveExample!",
+  "stdio/tsv": "setActiveExample!",
+  "stdio/json": "setActiveExample!",
+  "stdio/json/i-json": "setActiveExample!",
+  "stdio/xml": "setActiveExample!",
+  "stdio/xml/valid": "setActiveExample!",
+};
 /** 🧾️ Staged arguments for per-kind pins. */
 const KIND_ARGS = {
   "gis/gisterrain.setExaggeration": { exaggeration: "2.5" },
+  "trinity/rewriting.addRuleClause": { kind: "create" },
   "stdio/txt.replace-text": { text: "S15 text" },
   "stdio/md.replace-text": { text: "# S15" },
   "stdio/html.replace-text": { text: "<p>S15</p>" },
-  "stdio/json.set-node": { nodeId: "@liveId", value: "\"S15\"" },
-  "stdio/xml.set-node": { nodeId: "@liveId", value: "S15" },
+  "stdio/json.set-node": { nodeId: "$\u241fk=name", value: "S15" },
+  "stdio/xml.set-node": { nodeId: "$\u241f2\u241f0", value: "S15" },
+  "stdio/json/i-json.set-node": { nodeId: "$\u241fk=id", value: "S15" },
+  "stdio/xml/valid.set-node": { nodeId: "$\u241f0\u241f0\u241f0", value: "S15" },
 };
 /** 🧭️ Kinds a plugin re-hosts from another plugin (📽️demonstrator composes other plugins' artifacts): their verb
  * pins and staged arguments are the ORIGIN plugin's. */
@@ -88,6 +108,7 @@ for (const program of programs) {
   if (verb) verbs[key] = verb;
   for (const [argKey, value] of Object.entries(defaults.DEFAULT_ARGS)) if (argKey.startsWith(`${origin}.`)) args[`${key}.${argKey.slice(origin.length + 1)}`] = value;
   for (const [argKey, value] of Object.entries(KIND_ARGS)) if (argKey.startsWith(`${base}.`)) args[`${key}.${argKey.slice(base.length + 1)}`] = value;
+  if (key !== base) for (const [argKey, value] of Object.entries(KIND_ARGS)) if (argKey.startsWith(`${key}.`)) args[argKey] = value;
 }
 /** 📕️ Each norm standard's `setSnapshot` stages ITS OWN codec-canonical document: the `➡️after` snapshot of the
  * standard's first committed mutation fixture (it differs from the seeded example by that mutation), folded to one
@@ -371,7 +392,13 @@ async function runRow(program) {
       if (role === "editor") {
         if (KIND_PRE[row.key]) {
           await unfoldActionsRail(page);
-          row.pre = `${KIND_PRE[row.key]}:${await clickUncovered(page, `[data-slot="window-action-pane"] [id="action.${KIND_PRE[row.key]}"]`)}`;
+          const preVerb = KIND_PRE[row.key].replace(/!$/u, "");
+          row.pre = `${preVerb}:${await clickUncovered(page, `[data-slot="window-action-pane"] [id="action.${preVerb}"]`)}`;
+          if (KIND_PRE[row.key].endsWith("!")) {
+            await page.waitForTimeout(800);
+            for (const [argKey, value] of Object.entries(args[`${row.key}.${preVerb}`] ?? {})) row.pre += `:${await sweep.fillStagedArgument(page, argKey, value)}`;
+            row.pre += `:submit=${await sweep.submitStagedVerb(page, preVerb)}`;
+          }
           await page.waitForTimeout(1_500);
         }
         const verb = await mutateUndoRedo(page, refusals, row.key);
@@ -389,8 +416,10 @@ async function runRow(program) {
     row.faultLines = faults.slice(faultCursor).slice(0, 4);
     row.faultCount = faults.length - faultCursor;
     const opens = opened.windowIds.length > 0;
+    const edits = row.edits ?? [];
+    row.cleanRoundTrip = edits.length === 4 && edits[1] >= edits[0] && edits[1] >= 1 && edits[2] === edits[1] - 1 && edits[3] === edits[1];
     row.pass = role === "editor"
-      ? opens && row.bodiesRendered && row.chipsHit && (row.railRows ?? 0) > 0 && row.mutated === true && row.redoDiffersFromUndo === true && row.faultCount === 0
+      ? opens && row.bodiesRendered && row.chipsHit && (row.railRows ?? 0) > 0 && row.mutated === true && row.redoDiffersFromUndo === true && row.cleanRoundTrip && row.faultCount === 0
       : opens && row.bodiesRendered && row.chipsHit && row.faultCount === 0;
     row.totalMs = Date.now() - started;
     return row;

@@ -51,12 +51,11 @@ impl store::ArtifactDsl for SequenceScriptWindowTransient {
     fn envelope_id() -> &'static str { "s.sequence.sequence.scriptwindowtransient" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
-        let json: serde_json::Value = serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))?;
-        dsl::FromValue::from_value(json.into()).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        let json = dsl::os_pack::json::parse(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))?;
+        dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&json)).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
-        let body = serde_json::to_string_pretty(&value).expect("Sequence script transient JSON");
+        let body = dsl::os_pack::json::to_string_pretty(&dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(self)));
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Sequence transient envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -64,16 +63,15 @@ impl store::ArtifactDsl for SequenceScriptWindowTransient {
 
 impl store::ArtifactPack for SequenceScriptWindowTransient {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
-        let body = serde_json::to_vec(&value).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let body = dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(self))).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) { return Err(store::PackError::Schema("Sequence transient pack envelope mismatch".into())); }
-        let json: serde_json::Value = serde_json::from_slice(&body).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        dsl::FromValue::from_value(json.into()).map_err(|error| store::PackError::Schema(error.to_string()))
+        let json = dsl::os_pack::json::parse_bytes(&body).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&json)).map_err(|error| store::PackError::Schema(error.to_string()))
     }
     fn record_spec() -> Option<dsl::RecordSpec> { None }
 }

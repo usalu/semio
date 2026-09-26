@@ -591,6 +591,13 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobF
 //#endregion 🧵️RetainedCommands
 
 impl ArtifactEditor for ShootingPlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![
+        crate::examples::demo::source(),
+        crate::examples::hexagonal_cut_concrete_forest_left::source(),
+    ]
+    }
     type Snapshot = ShootingSnapshot;
     type Mutation = ShootingMutation;
     type Config = ShootingConfig;
@@ -1078,6 +1085,42 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             // `SHOOTING_EXAMPLE_DEFAULT_ID` example registration and the no-op `.workflow("shooting",
             // …)` call are dropped here, not silently: reported in this packet's migration notes. The
             // subset's own `📚️examples/🎬️demo` facet is the modern, role-agnostic replacement surface.
+            .action_describe("importSnapshotJson", LocalizedLabel::native("Replaces the whole shooting document (shots, assets, cameras and scene lighting) with one parsed from the given JSON; invalid JSON changes nothing.", "Ersetzt das gesamte Shooting-Dokument (Aufnahmen, Objekte, Kameras und Szenenlicht) durch eines aus dem angegebenen JSON; ungültiges JSON ändert nichts."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole shooting document with one of the plugin's bundled examples, by example id.", "Ersetzt das gesamte Shooting-Dokument durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))
+            .action_describe("setActiveShot", LocalizedLabel::native("Makes the shot with the given id the active one that shot edits and Export Active Shot apply to.", "Macht die Aufnahme mit der angegebenen Id zur aktiven, auf die Aufnahmeänderungen und Aktive Aufnahme exportieren wirken."))
+            .action_describe("setActiveAsset", LocalizedLabel::native("Makes the asset (3D model) with the given id the active one, or clears the active asset.", "Macht das Objekt (3D-Modell) mit der angegebenen Id zum aktiven oder hebt das aktive Objekt auf."))
+            .action_describe("setShotCamera", LocalizedLabel::native("Replaces the camera pose stored on one shot, which decides how that shot frames the scene when rendered.", "Ersetzt die in einer Aufnahme gespeicherte Kamerapose, die bestimmt, wie diese Aufnahme die Szene beim Rendern zeigt."))
+            .action_describe("saveCamera", LocalizedLabel::native("Saves the current viewport camera into the document's catalogue of saved cameras under the drafted label.", "Speichert die aktuelle Ansichtskamera unter der entworfenen Bezeichnung im Katalog gespeicherter Kameras des Dokuments."))
+            .action_describe("loadSavedCamera", LocalizedLabel::native("Moves the viewport camera to one saved camera by id; only the view changes, not the document.", "Setzt die Ansichtskamera auf eine gespeicherte Kamera anhand ihrer Id; nur die Ansicht ändert sich, nicht das Dokument."))
+            .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the compass direction (azimuth, in degrees) the scene's sun shines from.", "Legt die Himmelsrichtung (Azimut, in Grad) fest, aus der die Sonne der Szene scheint."))
+            .action_describe("setSunElevation", LocalizedLabel::native("Sets how high above the horizon (elevation, in degrees) the scene's sun stands.", "Legt fest, wie hoch über dem Horizont (Höhe, in Grad) die Sonne der Szene steht."))
+            .action_describe("setSunIntensity", LocalizedLabel::native("Sets the brightness of the scene's sun light.", "Legt die Helligkeit des Sonnenlichts der Szene fest."))
+            .action_describe("setAmbientIntensity", LocalizedLabel::native("Sets the brightness of the scene's ambient light.", "Legt die Helligkeit des Umgebungslichts der Szene fest."))
+            .action_describe("setMaterialRoughness", LocalizedLabel::native("Sets the surface roughness applied to the scene's materials, from glossy to matte.", "Legt die auf die Materialien der Szene angewandte Oberflächenrauheit fest, von glänzend bis matt."))
+            .action_describe("setShadowEnabled", LocalizedLabel::native("Turns cast shadows in the scene on or off.", "Schaltet Schlagschatten in der Szene ein oder aus."))
+            .action_describe("toggleSun", LocalizedLabel::native("Switches the scene's sun light on or off.", "Schaltet das Sonnenlicht der Szene ein oder aus."))
+            .action_describe("setActiveShotLabel", LocalizedLabel::native("Renames the active shot to the given label.", "Benennt die aktive Aufnahme in die angegebene Bezeichnung um."))
+            .action_describe("setActiveShotFormat", LocalizedLabel::native("Sets the output format (PNG or SVG) the active shot renders to.", "Legt das Ausgabeformat (PNG oder SVG) fest, in das die aktive Aufnahme gerendert wird."))
+            .action_describe("setActiveShotShape", LocalizedLabel::native("Sets the crop shape of the active shot, rectangle or ellipse, which the rendered icon is cut to.", "Legt die Zuschnittform der aktiven Aufnahme fest, Rechteck oder Ellipse, auf die das gerenderte Icon zugeschnitten wird."))
+            .action_describe("patchShots", LocalizedLabel::native("Sets one named field (such as label, format or shape) on every shot with the given ids.", "Setzt ein benanntes Feld (etwa Bezeichnung, Format oder Form) auf allen Aufnahmen mit den angegebenen Ids."))
+            .action_describe("patchAssets", LocalizedLabel::native("Sets one named field on every asset (3D model) with the given ids.", "Setzt ein benanntes Feld auf allen Objekten (3D-Modellen) mit den angegebenen Ids."))
+            .action_describe("addShot", LocalizedLabel::native("Adds a new shot with the given format and shape, framed by the current viewport camera.", "Fügt eine neue Aufnahme mit dem angegebenen Format und der Form hinzu, gerahmt von der aktuellen Ansichtskamera."))
+            .action_describe("addAsset", LocalizedLabel::native("Adds a new placeholder asset of the given format to the scene.", "Fügt der Szene ein neues Platzhalterobjekt des angegebenen Formats hinzu."))
+            .action_describe("importAsset", LocalizedLabel::native("Imports a GLB model (data-URL payload, optional name) as a new asset in the scene.", "Importiert ein GLB-Modell (Data-URL-Inhalt, optionaler Name) als neues Objekt in die Szene."))
+            .action_describe("resetFixture", LocalizedLabel::native("Resets the whole shooting document to the default scene; every shot, asset and saved camera is discarded.", "Setzt das gesamte Shooting-Dokument auf die Standardszene zurück; alle Aufnahmen, Objekte und gespeicherten Kameras werden verworfen."))
+            .action_describe("translateSelection", LocalizedLabel::native("Moves the given assets by dx, dy and dz; consecutive drags merge into one undo step.", "Verschiebt die angegebenen Objekte um dx, dy und dz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."))
+            .action_describe("rotateSelection", LocalizedLabel::native("Rotates the given assets by an angle around the axis ax, ay, az; consecutive drags merge into one undo step.", "Dreht die angegebenen Objekte um einen Winkel um die Achse ax, ay, az; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."))
+            .action_describe("scaleSelection", LocalizedLabel::native("Scales the given assets by sx, sy and sz; consecutive drags merge into one undo step.", "Skaliert die angegebenen Objekte um sx, sy und sz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."))
+            .action_describe("setShotSelection", LocalizedLabel::native("Selects the given shots in the gallery and document tree; only the editor's view state changes.", "Wählt die angegebenen Aufnahmen in Galerie und Dokumentbaum aus; nur der Ansichtszustand des Editors ändert sich."))
+            .action_describe("setCameraDraftLabel", LocalizedLabel::native("Sets the label the next Save Camera stores the viewport camera under; the document is not changed.", "Legt die Bezeichnung fest, unter der das nächste Kamera speichern die Ansichtskamera ablegt; das Dokument ändert sich nicht."))
+            .action_describe("setCenterModel", LocalizedLabel::native("Sets whether the viewport keeps the model centred; only the view changes.", "Legt fest, ob die Ansicht das Modell zentriert hält; nur die Ansicht ändert sich."))
+            .action_describe("saveDownload", LocalizedLabel::native("Writes the whole shooting document as text to a downloaded shooting.shooting.ops file on the user's machine.", "Schreibt das gesamte Shooting-Dokument als Text in eine heruntergeladene Datei shooting.shooting.ops auf dem Rechner des Nutzers."))
+            .action_describe("loadRequest", LocalizedLabel::native("Opens the host's file picker for a saved shooting document (.ops, .dsl or .spk); the chosen file then replaces the current document.", "Öffnet die Dateiauswahl des Hosts für ein gespeichertes Shooting-Dokument (.ops, .dsl oder .spk); die gewählte Datei ersetzt dann das aktuelle Dokument."))
+            .action_describe("importAssetRequest", LocalizedLabel::native("Opens the host's file picker for a GLB model; the chosen file is then imported as a new asset.", "Öffnet die Dateiauswahl des Hosts für ein GLB-Modell; die gewählte Datei wird dann als neues Objekt importiert."))
+            .action_describe("exportActiveShot", LocalizedLabel::native("Renders the active shot and writes it as a PNG or SVG file named after the shot to the user's machine.", "Rendert die aktive Aufnahme und schreibt sie als PNG- oder SVG-Datei mit dem Namen der Aufnahme auf den Rechner des Nutzers."))
+            .action_describe("exportAllShots", LocalizedLabel::native("Renders every shot and writes each as a PNG or SVG file named after its shot to the user's machine.", "Rendert alle Aufnahmen und schreibt jede als PNG- oder SVG-Datei mit dem Namen ihrer Aufnahme auf den Rechner des Nutzers."))
+            .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_destructive("importSnapshotJson")
             .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -1,0 +1,560 @@
+{
+  "schema": "semio.hub.hostile-input/v1",
+  "description": "Every hub HTTP/WS route, one concrete request each, and the hostile vectors every route is sent. A route answers every vector with a typed, signed refusal (`x-semio-refusal` + `HubRefusalV1` body when it has none of its own) — a 4xx, or a typed 503 for a subsystem this hub was not configured with — never a 500 and never a dropped connection. `public` routes answer without a credential: a `credential-ignored` route (liveness, readiness, static assets) never reads one, so it may succeed whatever the request carries; a `credential-optional` route serves the anonymous view to a request without one and refuses a forged one `401`, never downgrading it to the anonymous view.",
+  "vectors": [
+    {
+      "name": "unauthenticated",
+      "description": "The request with no credential at all."
+    },
+    {
+      "name": "forged-bearer",
+      "description": "A syntactically plausible bearer the hub never issued; refused `401` on every route, public ones included, never downgraded to the anonymous view."
+    },
+    {
+      "name": "malformed-json",
+      "description": "A body that is not JSON, declared as JSON."
+    },
+    {
+      "name": "wrong-schema",
+      "description": "Valid JSON that is not the route's schema."
+    },
+    {
+      "name": "wrong-content-type",
+      "description": "The route's body under a content type it does not accept."
+    },
+    {
+      "name": "oversized",
+      "description": "A body one mebibyte larger than the largest body any hub route admits (axum's 2 MiB default)."
+    },
+    {
+      "name": "hostile-path",
+      "description": "Path segments with traversal, NUL-escape and oversized identifiers."
+    },
+    {
+      "name": "wrong-method",
+      "description": "A method the route does not serve."
+    }
+  ],
+  "bodies": {
+    "malformedJson": "{\"schema\":",
+    "wrongSchema": {
+      "schema": "semio.hostile/v0",
+      "version": -1,
+      "extra": [
+        1,
+        2,
+        3
+      ]
+    },
+    "forgedBearer": "Bearer session.v1.00000000000000000000000000000000.0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "oversizedBytes": 3145728,
+  "hostilePathSegments": [
+    "..",
+    "%2e%2e",
+    "%00",
+    ".%2F..",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "allowedStatuses": {
+    "min": 400,
+    "max": 499,
+    "typedUnavailable": 503
+  },
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/inference/gis-map/jobs",
+      "route": "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
+          "def": "InferenceRequestV1"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/inference/gis-map/jobs/reconcile",
+      "route": "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/reconcile",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
+          "def": "InferenceJobReconcileRequestV1"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/spaces/space-h/documents/doc-h/inference/gis-map/jobs/job-h/events",
+      "route": "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/events"
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/inference/gis-map/jobs/job-h/cancel",
+      "route": "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/cancel",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
+          "def": "InferenceJobReconcileRequestV1"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/inference/gis-map/jobs/job-h/approval",
+      "route": "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/approval",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
+          "def": "InferenceApprovalRequestV1"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/inference/gis-map/approval-undos",
+      "route": "/spaces/{space_id}/documents/{document_id}/inference/gis-map/approval-undos",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
+          "def": "GisMapApprovalUndoRequestV1"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/spaces/space-h/artifact-creations",
+      "route": "/spaces/{space_id}/artifact-creations"
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/artifact-creations",
+      "route": "/spaces/{space_id}/artifact-creations",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json",
+          "def": "SpaceArtifactCreationRequest"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/spaces/space-h/artifact-creations/0123456789abcdef0123456789abcdef",
+      "route": "/spaces/{space_id}/artifact-creations/{request_id}"
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/artifact-creations/0123456789abcdef0123456789abcdef/cancel",
+      "route": "/spaces/{space_id}/artifact-creations/{request_id}/cancel",
+      "body": {
+        "kind": "empty"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/healthz",
+      "route": "/healthz",
+      "public": "credential-ignored"
+    },
+    {
+      "method": "GET",
+      "path": "/readyz",
+      "route": "/readyz",
+      "public": "credential-ignored"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/sessions",
+      "route": "SESSION_MINT_ROUTE",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/🔐️auth/🧬️schema/🔣️.json",
+          "def": "CredentialSignInRequestV1"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/auth/credentials",
+      "route": "CREDENTIAL_ROUTE",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/🔐️auth/🧬️schema/🔣️.json",
+          "def": "CredentialChangeRequestV1"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/auth/sessions/me",
+      "route": "/auth/sessions/me"
+    },
+    {
+      "method": "DELETE",
+      "path": "/auth/sessions/me",
+      "route": "/auth/sessions/me"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/agent-delegations",
+      "route": "AGENT_DELEGATION_ROUTE",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/🔐️auth/🧬️schema/🔣️.json",
+          "def": "CreateAgentDelegationRequestV1"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/auth/agent-delegations?space=space-h",
+      "route": "AGENT_DELEGATION_ROUTE"
+    },
+    {
+      "method": "DELETE",
+      "path": "/auth/agent-delegations/delegation-h",
+      "route": "/auth/agent-delegations/{id}"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/agent-sessions",
+      "route": "AGENT_SESSION_ROUTE",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/🔐️auth/🧬️schema/🔣️.json",
+          "def": "AgentSessionRequestV1"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/directory/commands",
+      "route": "/directory/commands",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json",
+          "def": "DirectoryCommandRequestV1"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/directory/spaces",
+      "route": "/directory/spaces",
+      "public": "credential-optional"
+    },
+    {
+      "method": "GET",
+      "path": "/directory/spaces/space-h",
+      "route": "/directory/spaces/{id}"
+    },
+    {
+      "method": "POST",
+      "path": "/directory/invites/invite-h/redeem",
+      "route": "/directory/invites/{token}/redeem",
+      "body": {
+        "kind": "empty"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/directory/events",
+      "route": "/directory/events",
+      "public": "credential-optional"
+    },
+    {
+      "method": "GET",
+      "path": "/directory/event-page/v1",
+      "route": "/directory/event-page/v1"
+    },
+    {
+      "method": "POST",
+      "path": "/directory/socket-grants",
+      "route": "/directory/socket-grants",
+      "body": {
+        "kind": "empty"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/directory/socket/v1",
+      "route": "/directory/socket/v1",
+      "socket": true
+    },
+    {
+      "method": "POST",
+      "path": "/directory/spaces/space-h/documents/doc-h/socket-grants",
+      "route": "/directory/spaces/{space_id}/documents/{document_id}/socket-grants",
+      "body": {
+        "kind": "empty"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/directory/spaces/space-h/documents/doc-h/socket/v1",
+      "route": "/directory/spaces/{space_id}/documents/{document_id}/socket/v1",
+      "socket": true
+    },
+    {
+      "method": "GET",
+      "path": "/admin/api/overview",
+      "route": "/admin/api/overview"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/api/spaces",
+      "route": "/admin/api/spaces"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/api/spaces/space-h",
+      "route": "/admin/api/spaces/{id}"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/api/users",
+      "route": "/admin/api/users"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/api/connections",
+      "route": "/admin/api/connections"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/api/documents",
+      "route": "/admin/api/documents"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/api/events",
+      "route": "/admin/api/events"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/api/operations/operation-h",
+      "route": "/admin/api/operations/{operation_id}"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/api/operations/operation-h/cancel",
+      "route": "/admin/api/operations/{operation_id}/cancel",
+      "body": {
+        "kind": "empty"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/admin/api/audit",
+      "route": "/admin/api/audit"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/api/observability",
+      "route": "/admin/api/observability"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/api/intents",
+      "route": "/admin/api/intents",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json",
+          "def": "AdminIntentV1"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules",
+      "route": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules",
+      "public": "credential-ignored"
+    },
+    {
+      "method": "GET",
+      "path": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/extension-h/module.mjs",
+      "route": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/{extension_id}/{*rest}",
+      "public": "credential-ignored"
+    },
+    {
+      "method": "GET",
+      "path": "/trusted-catalog/plugin-modules",
+      "route": "/trusted-catalog/plugin-modules",
+      "public": "credential-ignored"
+    },
+    {
+      "method": "GET",
+      "path": "/trusted-catalog/plugin-modules/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "route": "/trusted-catalog/plugin-modules/{bundle_sha256}",
+      "public": "credential-ignored"
+    },
+    {
+      "method": "GET",
+      "path": "/trusted-catalog/plugin-modules/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef/entry.mjs",
+      "route": "/trusted-catalog/plugin-modules/{bundle_sha256}/{*path}",
+      "public": "credential-ignored"
+    },
+    {
+      "method": "GET",
+      "path": "/admin",
+      "route": "/admin",
+      "public": "credential-ignored"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/",
+      "route": "/admin/",
+      "public": "credential-ignored"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/spaces",
+      "route": "/admin/{*path}",
+      "public": "credential-ignored"
+    },
+    {
+      "method": "GET",
+      "path": "/spaces/space-h/blobs/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "route": "/spaces/{space_id}/blobs/{hash}"
+    },
+    {
+      "method": "HEAD",
+      "path": "/spaces/space-h/blobs/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "route": "/spaces/{space_id}/blobs/{hash}"
+    },
+    {
+      "method": "PUT",
+      "path": "/spaces/space-h/blobs/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "route": "/spaces/{space_id}/blobs/{hash}",
+      "body": {
+        "kind": "bytes"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/spaces/space-h/documents/doc-h",
+      "route": "/spaces/{space_id}/documents/{id}"
+    },
+    {
+      "method": "GET",
+      "path": "/spaces/space-h/documents/doc-h/active-checkpoint/pair",
+      "route": "/spaces/{space_id}/documents/{document_id}/active-checkpoint/pair"
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/check-ins",
+      "route": "/spaces/{space_id}/documents/{document_id}/check-ins",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json",
+          "def": "DocumentCheckInV1"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/spaces/space-h/documents/doc-h/check-ins/0123456789abcdef0123456789abcdef",
+      "route": "/spaces/{space_id}/documents/{document_id}/check-ins/{request_id}"
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/check-ins/0123456789abcdef0123456789abcdef/cancel",
+      "route": "/spaces/{space_id}/documents/{document_id}/check-ins/{request_id}/cancel",
+      "body": {
+        "kind": "empty"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/open-plan",
+      "route": "/spaces/{space_id}/documents/{id}/open-plan",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/📇️directory/🧬️schema/🔣️.json",
+          "def": "DocumentOpenIntentV1"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/socket-grants",
+      "route": "/spaces/{space_id}/documents/{id}/socket-grants",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/📇️directory/🧬️schema/🔣️.json",
+          "def": "DocumentOpenIntentV1"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/scopes/space-h%2Fdoc-h/document/ws",
+      "route": "/scopes/{scope}/document/ws",
+      "socket": true
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/execution-target/manifest",
+      "route": "/spaces/{space_id}/documents/{id}/execution-target/manifest",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/📇️directory/🧬️schema/🔣️.json",
+          "def": "DocumentOpenIntentV1"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/execution-target/component",
+      "route": "/spaces/{space_id}/documents/{id}/execution-target/component",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/📇️directory/🧬️schema/🔣️.json",
+          "def": "DocumentOpenIntentV1"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/execution-target/descriptor",
+      "route": "/spaces/{space_id}/documents/{id}/execution-target/descriptor",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/📇️directory/🧬️schema/🔣️.json",
+          "def": "DocumentOpenIntentV1"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/spaces/space-h/documents/doc-h/execution-target/browser-actor",
+      "route": "/spaces/{space_id}/documents/{id}/execution-target/browser-actor",
+      "body": {
+        "kind": "json",
+        "schema": {
+          "module": "🌎️hub/📇️directory/🧬️schema/🔣️.json",
+          "def": "DocumentOpenIntentV1"
+        }
+      }
+    }
+  ]
+}

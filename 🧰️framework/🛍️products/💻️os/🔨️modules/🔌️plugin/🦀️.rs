@@ -5536,6 +5536,14 @@ pub mod app {
                 }
                 validate_arg_defs(&self.id, &format!("action {}", action.id), &action.args);
             }
+            for action in self.actions.iter().chain(self.window_kinds.iter().flat_map(|window| window.actions.iter())) {
+                if let Some(expected) = semio_framework::framework_fixed_audience_violation(action) {
+                    return Err(PluginAssemblyError::new(
+                        "app-definition.invalid",
+                        format!("app {} declares the framework gumball verb {} with audience {:?}; the one rule for every gumball user is {:?}", self.id, action.id, semio_framework::resolve_audience(action), expected),
+                    ));
+                }
+            }
             let mut declared_utility_ids = HashSet::new();
             for utility in &self.utilities {
                 if !(!utility.id.trim().is_empty()) {
@@ -6237,6 +6245,18 @@ pub mod app {
     /// implement; [`TreeWindows`] is this side of it.
     pub use semio_framework_ui_contract::{TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
 
+    /// 🧾️ Items one fixed (unwindowed) record or windowed container record of a body may charge the surface
+    /// reconciliation — the item-side price of [`TREE_WINDOW_FIXED_NODE_HEADROOM`].
+    pub const TREE_WINDOW_FIXED_NODE_ITEMS: usize = 32;
+
+    /// 🧾️ The body-wide ITEM budget windowed rows spend: the surface reconciler's item ceiling
+    /// ([`semio_framework_ui_runtime::SURFACE_RECONCILE_MAX_ITEMS`], less its one root seed) less what the fixed
+    /// records may charge. Rows carrying their own argument maps reach this long before the node budget — 28
+    /// Home rows with five row actions each do — so [`TreeWindows`] prices every materialised row with
+    /// [`semio_framework_ui_runtime::surface_subtree_items`] and ends a window early rather than letting the
+    /// reconciler refuse the whole surface (ticket 26/09/23 U5: 138 Home spaces faulted `items 4098 > 4097`).
+    pub const TREE_WINDOW_BODY_ITEM_BUDGET: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_MAX_ITEMS - 1 - TREE_WINDOW_FIXED_NODE_HEADROOM * TREE_WINDOW_FIXED_NODE_ITEMS;
+
     /// 🪟️ What one container materialises this render: `len` rows starting at `offset` out of `total`.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct TreeSlice {
@@ -6315,6 +6335,7 @@ pub mod app {
         requests: Vec<(&'a TreeWindowRequest, std::cell::Cell<usize>)>,
         budget: std::cell::Cell<u32>,
         nodes: std::cell::Cell<isize>,
+        items: std::cell::Cell<usize>,
         reserved: std::cell::Cell<usize>,
         claimed: std::cell::RefCell<Vec<String>>,
         path: std::cell::RefCell<Vec<String>>,
@@ -6355,6 +6376,7 @@ pub mod app {
                 requests,
                 budget: std::cell::Cell::new(viewport_rows),
                 nodes: std::cell::Cell::new(TREE_WINDOW_BODY_NODE_BUDGET as isize),
+                items: std::cell::Cell::new(TREE_WINDOW_BODY_ITEM_BUDGET),
                 reserved: std::cell::Cell::new(TREE_WINDOW_BODY_NODE_BUDGET - unreserved),
                 claimed: std::cell::RefCell::new(Vec::new()),
                 path: std::cell::RefCell::new(Vec::new()),
@@ -6402,6 +6424,16 @@ pub mod app {
         /// 🥇️ Records still held back for host requests this render has not reached yet.
         pub fn nodes_reserved(&self) -> usize {
             self.reserved.get()
+        }
+
+        /// 🧾️ Reconciliation items windowed rows may still charge — see [`TREE_WINDOW_BODY_ITEM_BUDGET`].
+        pub fn items_remaining(&self) -> usize {
+            self.items.get()
+        }
+
+        /// 🧾️ Gives back the node records of `rows` a window was granted but did not materialise.
+        fn refund(&self, rows: usize) {
+            self.nodes.set(self.nodes.get() + rows as isize);
         }
 
         /// 🔑️ Registers `node_key` as this body's, refusing the second container to claim it — see
@@ -6523,22 +6555,41 @@ pub mod app {
 
     /// 🪟️ Pushes a slice's rows straight into a container builder's children. A row refused with
     /// `ui.fixed-capacity` — the process-global argument arena taken by another panel mid-build, or a
-    /// full `BuiltChildren` — ends the window early with a shorter materialised run; any other error
-    /// propagates. Rows are built with the ledger's `nested` flag raised, so a row that is itself a
-    /// windowed container does not charge its own node twice.
+    /// full `BuiltChildren` — or one whose whole subtree the remaining [`TREE_WINDOW_BODY_ITEM_BUDGET`]
+    /// cannot pay for ends the window early with a shorter materialised run, and gives back the records
+    /// and items it and the unbuilt rest held; any other error propagates. Rows are built with the
+    /// ledger's `nested` flag raised, so a row that is itself a windowed container does not charge its own
+    /// node twice, and its subtree's item price replaces what its nested windows charged.
     fn tree_window_rows<B: HasChildren, T>(mut builder: B, windows: &TreeWindows<'_>, id: &str, entries: &[T], slice: &TreeSlice, mut row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<B> {
-        for entry in &entries[slice.offset..slice.offset + slice.len] {
+        for (built, entry) in entries[slice.offset..slice.offset + slice.len].iter().enumerate() {
+            let (nodes, items) = (windows.nodes.get(), windows.items.get());
+            let unbuilt = || {
+                windows.nodes.set(nodes);
+                windows.items.set(items);
+                windows.refund(slice.len - built);
+            };
             windows.path.borrow_mut().push(id.to_owned());
-            let built = row(entry);
+            let materialised = row(entry);
             windows.path.borrow_mut().pop();
-            let node = match built {
+            let node = match materialised {
                 Ok(node) => node,
-                Err(error) if error.code == "ui.fixed-capacity" => break,
+                Err(error) if error.code == "ui.fixed-capacity" => {
+                    unbuilt();
+                    break;
+                }
                 Err(error) => return Err(error),
             };
+            let Some(cost) = semio_framework_ui_runtime::surface_subtree_items(&node).ok().filter(|cost| *cost <= items) else {
+                unbuilt();
+                break;
+            };
+            windows.items.set(items - cost);
             builder = match builder.try_child(node) {
                 Ok(builder) => builder,
-                Err((builder, _)) => return Ok(builder),
+                Err((builder, _)) => {
+                    unbuilt();
+                    return Ok(builder);
+                }
             };
         }
         Ok(builder)
@@ -7755,6 +7806,546 @@ pub mod app {
                 assert_eq!(A::command_id(&command).await, action.id.as_str(), "command_id mismatch for action {}", action.id);
             }
         }
+
+        //#region 🔖️DeclaredVerbLaws
+        /// 🎯️ What one dispatch of a declared verb did, observed exactly where the shell observes it: the
+        /// host action entry (`PluginApp::handle_action`), the retained publication settle, and the state
+        /// read back afterwards. The declaration (`ActionKind`, audience, `effects.destructive`, args) is
+        /// what users, collaborators and agents rely on; these laws hold the handler to it
+        /// (ticket 26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP, slice P8).
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        pub enum DeclaredVerbOutcome {
+            /// 🚪️ The dispatch infrastructure refused the verb before any handler ran (`interactive-job.*`,
+            /// `app.command.unsupported`) — the declared verb cannot be invoked at all.
+            Unreachable { code: String, detail: String },
+            /// 🛑️ The handler refused this invocation by name.
+            Refused { code: String, detail: String },
+            /// ✅️ The operation settled; see [`DeclaredVerbEffect`].
+            Settled(DeclaredVerbEffect),
+        }
+
+        /// 📤️ The observable effect of one settled dispatch — published lanes, requested host effects and
+        /// the document/config change read back from the stores.
+        #[derive(Clone, Debug, Default, PartialEq, Eq)]
+        pub struct DeclaredVerbEffect {
+            pub lanes: std::collections::BTreeSet<&'static str>,
+            pub document_changed: bool,
+            pub document_replaced: bool,
+            pub config_changed: bool,
+            pub user_path_written: bool,
+            pub host_effects: usize,
+            pub fingerprint: u64,
+        }
+
+        impl DeclaredVerbEffect {
+            /// 🔇️ Nothing observable happened: no store lane beyond the terminal/UI witnesses, no host
+            /// effect or event, no document or config change.
+            pub fn is_silent(&self) -> bool {
+                !self.touches_document() && !self.config_changed && !self.user_path_written && self.host_effects == 0 && self.lanes.iter().all(|lane| matches!(*lane, "terminal" | "ui"))
+            }
+
+            /// 📝️ Wrote the document (its own ops or an owned child's) or asked the host to replace it.
+            pub fn touches_document(&self) -> bool {
+                self.document_changed || self.document_replaced || self.lanes.contains("artifact") || self.lanes.contains("child")
+            }
+        }
+
+        /// 🧪️ One declared verb probed on its app's own boot fixture, from every window kind that presents
+        /// it (a window-claimed verb from its own window, an app-level verb from each window a shell can
+        /// dispatch it from — a window-config verb only acts from its own window).
+        #[derive(Clone, Debug, PartialEq)]
+        pub struct DeclaredVerbProbe {
+            pub verb: String,
+            pub kind: semio_framework::ActionKind,
+            pub audience: semio_framework::CapabilityAudience,
+            pub destructive: bool,
+            pub bridge: Result<(), String>,
+            pub windows: Vec<DeclaredVerbWindowProbe>,
+            /// 🤖️ The same staged invocation through the agent lane (`dispatch_command_frame`, the MCP
+            /// `action_prepare` phase) at the address the capability catalog publishes; `None` for a
+            /// verb agents never see (Input/Chrome audience).
+            pub agent: Option<DeclaredVerbOutcome>,
+        }
+
+        /// 🪟️ The verb dispatched from one window kind: once with the staged declared defaults, then twice
+        /// per perturbable declared argument with two distinct valid values.
+        #[derive(Clone, Debug, PartialEq)]
+        pub struct DeclaredVerbWindowProbe {
+            pub window: String,
+            pub staged: DeclaredVerbOutcome,
+            pub arguments: Vec<DeclaredArgumentProbe>,
+        }
+
+        /// 🔀️ The same verb dispatched with two distinct values of one declared argument. `others_specified`
+        /// says every OTHER declared argument carried a value (a declared default or the surface's example),
+        /// so a refusal cannot be blamed on a missing sibling.
+        #[derive(Clone, Debug, PartialEq)]
+        pub struct DeclaredArgumentProbe {
+            pub argument: String,
+            pub others_specified: bool,
+            pub first: DeclaredVerbOutcome,
+            pub second: DeclaredVerbOutcome,
+        }
+
+        /// ⚖️ One way a handler breaks its verb's declaration.
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        pub enum DeclaredVerbFinding {
+            /// 📝️ A `View`/`🐚️Shell` verb wrote or replaced the document (law a).
+            DocumentWriteFromNonMutation { verb: String, kind: String },
+            /// 🔇️ An agent-facing `Mutation` verb settled without any observable effect for every probe (law b).
+            SilentMutation { verb: String },
+            /// 🔀️ Two distinct values of one declared argument produced the identical outcome (law c).
+            IgnoredArgument { verb: String, argument: String },
+            /// ⚠️ A verb declared destructive settled without writing the document or a user file.
+            DestructiveWithoutDiscard { verb: String },
+            /// 🚪️ The dispatch infrastructure refused the declared verb before its handler ran.
+            Unreachable { verb: String, code: String },
+            /// 🌉️ The declared verb does not bridge to a command with its staged declared defaults.
+            Unbridged { verb: String, detail: String },
+            /// 🤖️ An agent invoking the verb gets a different effect than a human pressing it: refused
+            /// where the shell acts, or writing the document where the shell does not (and vice versa).
+            AgentLaneDiverges { verb: String, shell: String, agent: String },
+        }
+
+        impl std::fmt::Display for DeclaredVerbFinding {
+            fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                match self {
+                    DeclaredVerbFinding::DocumentWriteFromNonMutation { verb, kind } => write!(formatter, "{verb}: declared {kind} but wrote or replaced the document"),
+                    DeclaredVerbFinding::SilentMutation { verb } => write!(formatter, "{verb}: declared Mutation but every probe settled silently — refuse by name or act"),
+                    DeclaredVerbFinding::IgnoredArgument { verb, argument } => write!(formatter, "{verb}: two distinct values of declared argument `{argument}` produced the identical outcome"),
+                    DeclaredVerbFinding::DestructiveWithoutDiscard { verb } => write!(formatter, "{verb}: declared destructive but settled without writing the document or a user file"),
+                    DeclaredVerbFinding::Unreachable { verb, code } => write!(formatter, "{verb}: the dispatch infrastructure refused it before its handler ran ({code})"),
+                    DeclaredVerbFinding::Unbridged { verb, detail } => write!(formatter, "{verb}: does not bridge with its staged declared defaults ({detail})"),
+                    DeclaredVerbFinding::AgentLaneDiverges { verb, shell, agent } => write!(formatter, "{verb}: the agent lane diverges from the shell lane (shell {shell}; agent {agent})"),
+                }
+            }
+        }
+
+        /// ⚖️ The declared-verb verdict — a pure function of one probe, stated once for every plugin and
+        /// held against the language-agnostic fixture `🧫️fixtures/⚖️declared-verb-verdicts.json`.
+        /// (a) no `View`/`🐚️Shell` verb touches the document from any window; (b) an agent-facing
+        /// `Mutation` verb never settles silently on every probe of every window; (c) no agent- or
+        /// chrome-facing verb ignores a declared argument in every window that probed it; a destructive
+        /// verb discards something whenever it settles; every declared agent or chrome verb bridges with
+        /// its staged declared defaults (an Input gesture's payload is the host's) and every declared verb
+        /// is reachable from at least one window.
+        pub fn declared_verb_findings(probe: &DeclaredVerbProbe) -> Vec<DeclaredVerbFinding> {
+            use semio_framework::{ActionKind, CapabilityAudience};
+            let verb = probe.verb.clone();
+            if let Err(detail) = &probe.bridge {
+                return match probe.audience {
+                    CapabilityAudience::Input => Vec::new(),
+                    _ => vec![DeclaredVerbFinding::Unbridged { verb, detail: detail.clone() }],
+                };
+            }
+            if let Some(DeclaredVerbOutcome::Unreachable { code, .. }) = probe.windows.iter().map(|window| &window.staged).find(|staged| matches!(staged, DeclaredVerbOutcome::Unreachable { .. })).filter(|_| probe.windows.iter().all(|window| matches!(window.staged, DeclaredVerbOutcome::Unreachable { .. }))) {
+                return vec![DeclaredVerbFinding::Unreachable { verb, code: code.clone() }];
+            }
+            let outcomes = || probe.windows.iter().flat_map(|window| std::iter::once(&window.staged).chain(window.arguments.iter().flat_map(|argument| [&argument.first, &argument.second])));
+            let settled = || outcomes().filter_map(|outcome| if let DeclaredVerbOutcome::Settled(effect) = outcome { Some(effect) } else { None });
+            let mut findings = Vec::new();
+            if !matches!(probe.kind, ActionKind::Mutation) && settled().any(DeclaredVerbEffect::touches_document) {
+                findings.push(DeclaredVerbFinding::DocumentWriteFromNonMutation { verb: verb.clone(), kind: format!("{:?}", probe.kind) });
+            }
+            if matches!(probe.kind, ActionKind::Mutation) && probe.audience == CapabilityAudience::Agent && outcomes().all(|outcome| matches!(outcome, DeclaredVerbOutcome::Settled(effect) if effect.is_silent())) {
+                findings.push(DeclaredVerbFinding::SilentMutation { verb: verb.clone() });
+            }
+            if probe.destructive && settled().next().is_some() && settled().all(|effect| !effect.touches_document() && !effect.user_path_written) {
+                findings.push(DeclaredVerbFinding::DestructiveWithoutDiscard { verb: verb.clone() });
+            }
+            if let Some(agent) = &probe.agent {
+                let shell_writes = probe.windows.iter().any(|window| declared_verb_wrote_document(&window.staged));
+                let shell_acts = probe.windows.iter().any(|window| matches!(&window.staged, DeclaredVerbOutcome::Settled(effect) if !effect.is_silent()));
+                let agent_writes = declared_verb_wrote_document(agent);
+                let agent_refused = matches!(agent, DeclaredVerbOutcome::Unreachable { .. } | DeclaredVerbOutcome::Refused { .. });
+                if shell_writes != agent_writes || (agent_refused && shell_acts) {
+                    let describe = |outcome: &DeclaredVerbOutcome| match outcome {
+                        DeclaredVerbOutcome::Unreachable { code, .. } => format!("unreachable {code}"),
+                        DeclaredVerbOutcome::Refused { code, .. } => format!("refused {code}"),
+                        DeclaredVerbOutcome::Settled(effect) if effect.touches_document() => "writes the document".to_string(),
+                        DeclaredVerbOutcome::Settled(effect) if effect.is_silent() => "changes nothing".to_string(),
+                        DeclaredVerbOutcome::Settled(_) => "acts without writing the document".to_string(),
+                    };
+                    let shell = probe.windows.iter().map(|window| format!("{}: {}", window.window, describe(&window.staged))).collect::<Vec<_>>().join(", ");
+                    findings.push(DeclaredVerbFinding::AgentLaneDiverges { verb: verb.clone(), shell, agent: describe(agent) });
+                }
+            }
+            if probe.audience != CapabilityAudience::Input {
+                let mut names: Vec<&str> = Vec::new();
+                for argument in probe.windows.iter().flat_map(|window| window.arguments.iter()) {
+                    if !names.contains(&argument.argument.as_str()) {
+                        names.push(argument.argument.as_str());
+                    }
+                }
+                for name in names {
+                    let mut probes = probe.windows.iter().flat_map(|window| window.arguments.iter().map(move |argument| (&window.staged, argument))).filter(|(_, argument)| argument.argument == name).peekable();
+                    if probes.peek().is_some() && probes.all(|(staged, argument)| declared_verb_outcomes_agree(staged, &argument.first, &argument.second, argument.others_specified)) {
+                        findings.push(DeclaredVerbFinding::IgnoredArgument { verb: verb.clone(), argument: name.to_string() });
+                    }
+                }
+            }
+            findings
+        }
+
+        /// 🟰️ Two outcomes an observer cannot tell apart. Two equal settles always agree. Two infrastructure
+        /// refusals prove nothing about the argument. Two equal handler refusals agree only when every
+        /// sibling argument carried a value (otherwise the missing sibling may be what was refused) and the
+        /// staged invocation, which leaves this argument at its default, was refused identically too — a
+        /// body both perturbations fail to parse the same way was still read, since its default did not.
+        fn declared_verb_outcomes_agree(staged: &DeclaredVerbOutcome, first: &DeclaredVerbOutcome, second: &DeclaredVerbOutcome, others_specified: bool) -> bool {
+            match (first, second) {
+                (DeclaredVerbOutcome::Settled(first), DeclaredVerbOutcome::Settled(second)) => first == second,
+                (DeclaredVerbOutcome::Refused { .. }, DeclaredVerbOutcome::Refused { .. }) => others_specified && first == second && staged == first,
+                _ => false,
+            }
+        }
+
+        /// 🔀️ Two distinct valid values for one declared argument, or `None` when its schema admits no
+        /// generic pair (a single-option choice, a record, a host-resolved choice, `Any`).
+        fn declared_argument_alternatives(argument: &semio_framework::ActionArgDef) -> Option<(semio_framework::DslValue, semio_framework::DslValue)> {
+            use semio_framework::{ArgFormat, ArgSchema, DslValue};
+            let text = |value: &str| DslValue::String(value.to_string());
+            match &argument.schema {
+                ArgSchema::String { options, .. } if options.len() >= 2 => Some((text(&options[0].value), text(&options[1].value))),
+                ArgSchema::String { options, .. } if !options.is_empty() => None,
+                ArgSchema::String { format: Some(ArgFormat::ArtifactKind { .. } | ArgFormat::SurfaceApp { .. }), .. } => None,
+                ArgSchema::String { format: Some(ArgFormat::Json), .. } => Some((text("{}"), text("[]"))),
+                ArgSchema::String { .. } => Some((text("p8-alpha"), text("p8-beta"))),
+                ArgSchema::Number { min, max, integer, .. } => {
+                    let (low, high) = match (min, max) {
+                        (Some(low), Some(high)) if high > low => (*low, *high),
+                        (Some(low), _) => (*low, *low + 1.0),
+                        (None, Some(high)) => (*high - 1.0, *high),
+                        (None, None) => (1.0, 2.0),
+                    };
+                    let number = |value: f64| if *integer && value >= 0.0 { DslValue::uint(value as u64) } else if *integer { DslValue::int(value as i64) } else { DslValue::float(value) };
+                    Some((number(low), number(high)))
+                }
+                ArgSchema::Boolean => Some((DslValue::Bool(false), DslValue::Bool(true))),
+                ArgSchema::Vec3 { .. } => Some((DslValue::Array(vec![DslValue::float(1.0), DslValue::float(2.0), DslValue::float(3.0)]), DslValue::Array(vec![DslValue::float(3.0), DslValue::float(2.0), DslValue::float(1.0)]))),
+                ArgSchema::Array { items, .. } => match items.as_ref() {
+                    ArgSchema::String { options, .. } if options.len() >= 2 => Some((DslValue::Array(vec![text(&options[0].value)]), DslValue::Array(vec![text(&options[1].value)]))),
+                    ArgSchema::String { options, .. } if options.is_empty() => Some((DslValue::Array(vec![text("p8-alpha")]), DslValue::Array(vec![text("p8-beta")]))),
+                    ArgSchema::Number { .. } => Some((DslValue::Array(vec![DslValue::uint(1)]), DslValue::Array(vec![DslValue::uint(2)]))),
+                    _ => None,
+                },
+                ArgSchema::String { .. } | ArgSchema::Object { .. } | ArgSchema::Any => None,
+            }
+        }
+
+        /// 🏷️ The stable lower-case name of one published result lane.
+        fn declared_verb_lane_name(lane: TypedOperationResultLane) -> &'static str {
+            match lane {
+                TypedOperationResultLane::Artifact => "artifact",
+                TypedOperationResultLane::Config => "config",
+                TypedOperationResultLane::Draft => "draft",
+                TypedOperationResultLane::Presence => "presence",
+                TypedOperationResultLane::Transient => "transient",
+                TypedOperationResultLane::WindowConfig => "windowConfig",
+                TypedOperationResultLane::WindowTransient => "windowTransient",
+                TypedOperationResultLane::Child => "child",
+                TypedOperationResultLane::Interaction => "interaction",
+                TypedOperationResultLane::Effect => "effect",
+                TypedOperationResultLane::Event => "event",
+                TypedOperationResultLane::Ui => "ui",
+                TypedOperationResultLane::Download => "download",
+                TypedOperationResultLane::Terminal => "terminal",
+                TypedOperationResultLane::Fault => "fault",
+            }
+        }
+
+        /// #️⃣ FNV-1a over every observed part of one settled dispatch.
+        fn declared_verb_fingerprint<'a>(parts: impl IntoIterator<Item = &'a [u8]>) -> u64 {
+            let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+            for part in parts {
+                for byte in part.iter().chain(&[0xff]) {
+                    hash ^= u64::from(*byte);
+                    hash = hash.wrapping_mul(0x0100_0000_01b3);
+                }
+            }
+            hash
+        }
+
+        /// 🚪️ Infrastructure refusals (the verb never reached its handler) versus a handler's own refusal.
+        /// `interactive-job.app-owned-output` is the code a retained job's fault page carries when the
+        /// handler's own `Fault` crossed the publication boundary, so it is the handler's refusal.
+        fn declared_verb_refusal(fault: super::Fault) -> DeclaredVerbOutcome {
+            let code = fault.code.0.clone();
+            if (code.starts_with("interactive-job.") && code != "interactive-job.app-owned-output") || code == "app.command.unsupported" {
+                DeclaredVerbOutcome::Unreachable { code, detail: fault.message }
+            } else {
+                DeclaredVerbOutcome::Refused { code, detail: fault.message }
+            }
+        }
+
+        /// 🎬️ How a fresh probe fixture boots the app's own example: its `setActiveExample` invocation (the
+        /// staged declared defaults overlaid by the surface's example arguments) from the window that
+        /// presents it — replayed on every fixture, so an example that lands as operations, as owned
+        /// children or as a host `LoadDocument` boots the same way the shell boots it.
+        pub struct DeclaredVerbBoot {
+            args: semio_framework::DslValue,
+            view: super::ViewModel,
+        }
+
+        /// 🧫️ The per-probe fixture: the registered app, bound as instance 1, booted with the app's own
+        /// example when it declares one.
+        async fn declared_verb_fixture_app<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>) -> VcsArtifactApp<A, M>
+        where
+            A: ArtifactApp + Default,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
+        {
+            let mut app = VcsArtifactApp::<A, M>::with_registry(A::default(), AppActionRegistry::from_definition(definition)).await;
+            app.bind_instance_id(meta("local").instance_id).await;
+            if let Some(boot) = boot {
+                let action_meta = ActionMeta { view_state: Some(boot.view.clone()), ..meta("local") };
+                let result = app.handle_action("setActiveExample", Some(&boot.args), &action_meta).await.unwrap_or_else(|fault| panic!("the app's own boot example must be admitted: {fault:?}"));
+                let receipt = settle_registered_typed_operation(&mut app, action_meta.instance_id).await.unwrap_or_else(|fault| panic!("the app's own boot example must settle: {fault:?}"));
+                for effect in result.requested_effects.into_iter().chain(receipt.effects) {
+                    if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
+                        app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap_or_else(|fault| panic!("the app's own boot example must load: {fault:?}"));
+                    }
+                }
+            }
+            app
+        }
+
+        /// 📦️ The document (with every owned child's envelope) and config packs the stores hold right now.
+        async fn declared_verb_state<A, M>(app: &mut VcsArtifactApp<A, M>) -> (Vec<u8>, Vec<u8>)
+        where
+            A: ArtifactApp,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
+        {
+            let mut document = app.snapshot().map(|snapshot| store::ArtifactPack::encode_pack(&snapshot)).unwrap_or_default();
+            for child in PluginApp::child_packs(app).await.unwrap_or_default() {
+                document.extend_from_slice(child.slot.as_bytes());
+                document.extend_from_slice(child.child_id.as_bytes());
+                document.extend_from_slice(&child.envelope_pack);
+            }
+            let config = match app.refresh_cache().await {
+                Ok(()) => app.cache.as_ref().map(|(_, _, config, _)| store::ArtifactPack::encode_pack(config.as_ref())).unwrap_or_default(),
+                Err(_) => Vec::new(),
+            };
+            (document, config)
+        }
+
+        /// 🎯️ Dispatches one declared verb exactly as the shell does and reads back what it did.
+        async fn declared_verb_dispatch<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, verb: &str, args: &semio_framework::DslValue, view: &super::ViewModel, body_key: &str) -> DeclaredVerbOutcome
+        where
+            A: ArtifactApp + Default,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
+        {
+            let mut app = declared_verb_fixture_app::<A, M>(definition, boot).await;
+            let (document_before, config_before) = declared_verb_state(&mut app).await;
+            let action_meta = ActionMeta { view_state: Some(view.clone()), ..meta("local") };
+            let receiver = action_meta.instance_id;
+            let outcome = match app.handle_action(verb, Some(args), &action_meta).await {
+                Err(fault) => declared_verb_refusal(fault),
+                Ok(result) => match settle_registered_typed_operation(&mut app, receiver).await {
+                    Err(fault) => declared_verb_refusal(fault),
+                    Ok(receipt) => {
+                        let effects = result.requested_effects.iter().chain(receipt.effects.iter()).map(|effect| format!("{effect:?}")).collect::<Vec<_>>();
+                        let events = result.events.iter().chain(receipt.events.iter()).map(|event| format!("{event:?}")).collect::<Vec<_>>();
+                        let replaced = result.requested_effects.iter().chain(receipt.effects.iter()).any(|effect| matches!(effect, semio_framework::kernel::Effect::LoadDocument { .. }));
+                        let downloaded = result.requested_effects.iter().chain(receipt.effects.iter()).any(|effect| matches!(effect, semio_framework::kernel::Effect::DownloadMediaExport { .. } | semio_framework::kernel::Effect::IconRenderExport { .. }));
+                        let lanes = receipt.lanes.iter().map(|lane| declared_verb_lane_name(*lane)).collect::<std::collections::BTreeSet<_>>();
+                        let (document_after, config_after) = declared_verb_state(&mut app).await;
+                        let rendered = match app.render(body_key, None, view).await {
+                            Ok(tree) => project_and_retire_fixture_tree(tree).unwrap_or_else(|error| format!("projection:{error}")),
+                            Err(fault) => format!("render:{}", fault.code.0),
+                        };
+                        let lane_text = lanes.iter().copied().collect::<Vec<_>>().join(",");
+                        let fingerprint = declared_verb_fingerprint(
+                            [document_after.as_slice(), config_after.as_slice(), lane_text.as_bytes(), rendered.as_bytes()].into_iter().chain(effects.iter().map(|effect| effect.as_bytes())).chain(events.iter().map(|event| event.as_bytes())),
+                        );
+                        DeclaredVerbOutcome::Settled(DeclaredVerbEffect {
+                            user_path_written: downloaded || lanes.contains("download"),
+                            lanes,
+                            document_changed: document_after != document_before,
+                            document_replaced: replaced,
+                            config_changed: config_after != config_before,
+                            host_effects: effects.len() + events.len(),
+                            fingerprint,
+                        })
+                    }
+                },
+            };
+            close_registered_fixture_app(&mut app);
+            outcome
+        }
+
+        /// 🤖️ Dispatches one declared verb exactly as an agent does — the owner-qualified invocation the
+        /// MCP gateway sends as a typed command frame (`dispatch_command_frame`, its `action_prepare`
+        /// phase) — and reads back what that phase reports it would do.
+        async fn declared_verb_agent_dispatch<A, M>(definition: &semio_framework::AppDefinition, boot: Option<&DeclaredVerbBoot>, verb: &str, args: &semio_framework::DslValue, window_kind_id: &str) -> DeclaredVerbOutcome
+        where
+            A: ArtifactApp + Default,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
+        {
+            let mut app = declared_verb_fixture_app::<A, M>(definition, boot).await;
+            let app_id = app.app.instance_id().await.to_string();
+            let arguments = match args {
+                semio_framework::DslValue::Object(entries) => entries.iter().cloned().collect(),
+                _ => std::collections::BTreeMap::new(),
+            };
+            let invocation = super::ManifestActionInvocation {
+                address: semio_framework::manifest::ActionAddress {
+                    plugin_id: String::new(),
+                    app_id,
+                    mode_id: definition.default_mode_id.clone(),
+                    window_kind_id: window_kind_id.to_string(),
+                    window_instance_id: "declared-verb-agent".to_string(),
+                    action_id: verb.to_string(),
+                },
+                arguments,
+            };
+            let outcome = match app.preview_addressed_action(&invocation, &meta("agent")).await {
+                Err(fault) => declared_verb_refusal(fault),
+                Ok(result) => {
+                    let count = |key: &str| result.output.get(key).and_then(|value| value.as_str()).and_then(|value| value.parse::<usize>().ok()).unwrap_or(0);
+                    let (document, config, draft) = (count("documentOps"), count("configOps"), count("draftOps"));
+                    let lanes = [("artifact", document), ("config", config), ("draft", draft)].into_iter().filter(|(_, ops)| *ops != 0).map(|(lane, _)| lane).collect::<std::collections::BTreeSet<_>>();
+                    let host_effects = result.requested_effects.len() + result.events.len();
+                    let fingerprint = declared_verb_fingerprint([format!("{:?}", result.output).as_bytes()]);
+                    DeclaredVerbOutcome::Settled(DeclaredVerbEffect { lanes, document_changed: document != 0, document_replaced: false, config_changed: config != 0, user_path_written: false, host_effects, fingerprint })
+                }
+            };
+            close_registered_fixture_app(&mut app);
+            outcome
+        }
+
+        /// 🧪️ Probes every verb `definition` declares, on the app's own boot example: each window kind's
+        /// resolved actions (framework-reserved, tool-run and host-owned utility/tool verbs excluded) are
+        /// dispatched from an instance of that window kind with the staged declared defaults — overlaid by
+        /// the surface's example arguments, `examples` = `{"verbs": {"<verb>": {"<arg>": <value>}}}`, the
+        /// language-agnostic `🧫️fixtures/⚖️declared-verb-examples.json` of a surface whose verbs need
+        /// document ids to act — then with two distinct values per perturbable declared argument. Every
+        /// probe runs on a fresh registered app.
+        pub async fn probe_declared_verbs<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>) -> Vec<DeclaredVerbProbe>
+        where
+            A: ArtifactApp + Default,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
+        {
+            use semio_framework::{effective_action_args, resolve_audience, window_kind_actions, DslValue};
+            let definition = definition();
+            let instances = definition.window_kinds.iter().enumerate().map(|(index, window)| semio_framework::ViewWindowInstance { id: format!("declared-verb-probe-{index}"), window_kind_id: window.id.clone() }).collect::<Vec<_>>();
+            let view_of = |index: usize| super::ViewModel {
+                active_mode_id: Some(definition.default_mode_id.clone()),
+                active_window_kind_id: Some(definition.window_kinds[index].id.clone()),
+                window_id: Some(instances[index].id.clone()),
+                window_instances: instances.clone(),
+                ..Default::default()
+            };
+            let examples: serde_json::Value = examples.map(|text| serde_json::from_str(text).expect("declared-verb examples are JSON")).unwrap_or(serde_json::Value::Null);
+            let staged_of = |action: &semio_framework::ActionDefinition| {
+                let example = semio_framework::optional_json_to_dsl(examples["verbs"].get(&action.id).cloned()).unwrap_or(DslValue::Object(Vec::new()));
+                effective_action_args(&action.args, &example, None)
+            };
+            let boot = definition
+                .window_kinds
+                .iter()
+                .enumerate()
+                .find_map(|(index, window)| window_kind_actions(&definition, window).into_iter().find(|action| action.id == "setActiveExample").map(|action| DeclaredVerbBoot { args: staged_of(action), view: view_of(index) }));
+            let mut order: Vec<(semio_framework::ActionDefinition, Vec<usize>)> = Vec::new();
+            for (index, window) in definition.window_kinds.iter().enumerate() {
+                for action in window_kind_actions(&definition, window) {
+                    if super::is_framework_reserved_action_id(&action.id) || matches!(action.id.as_str(), super::SET_ACTIVE_TOOL_ACTION_ID | super::SET_ACTIVE_UTILITY_ACTION_ID) {
+                        continue;
+                    }
+                    match order.iter_mut().find(|(known, _)| known.id == action.id) {
+                        Some((_, windows)) => windows.push(index),
+                        None => order.push((action.clone(), vec![index])),
+                    }
+                }
+            }
+            let mut probes = Vec::new();
+            for (action, windows) in &order {
+                let boot = if action.id == "setActiveExample" { None } else { boot.as_ref() };
+                let audience = resolve_audience(action);
+                let staged = staged_of(action);
+                let bridge = A::command_from_action(&action.id, Some(&staged)).await.map(drop).map_err(|fault| format!("{}: {}", fault.code.0, fault.message));
+                let mut window_probes = Vec::new();
+                for index in windows {
+                    let view = view_of(*index);
+                    let window = &definition.window_kinds[*index];
+                    let staged_outcome = declared_verb_dispatch::<A, M>(&definition, boot, &action.id, &staged, &view, &window.body_key).await;
+                    let mut arguments = Vec::new();
+                    if audience != semio_framework::CapabilityAudience::Input && !matches!(staged_outcome, DeclaredVerbOutcome::Unreachable { .. }) {
+                        for argument in &action.args {
+                            let Some((first, second)) = declared_argument_alternatives(argument) else { continue };
+                            let with = |value: DslValue| {
+                                let mut args = staged.clone();
+                                if let DslValue::Object(entries) = &mut args {
+                                    entries.retain(|(key, _)| key != &argument.id);
+                                    entries.push((argument.id.clone(), value));
+                                }
+                                args
+                            };
+                            let others_specified = action.args.iter().filter(|other| other.id != argument.id).all(|other| staged.get(&other.id).is_some_and(|value| !matches!(value, DslValue::Null)));
+                            let first = declared_verb_dispatch::<A, M>(&definition, boot, &action.id, &with(first), &view, &window.body_key).await;
+                            let second = declared_verb_dispatch::<A, M>(&definition, boot, &action.id, &with(second), &view, &window.body_key).await;
+                            arguments.push(DeclaredArgumentProbe { argument: argument.id.clone(), others_specified, first, second });
+                        }
+                    }
+                    window_probes.push(DeclaredVerbWindowProbe { window: window.id.clone(), staged: staged_outcome, arguments });
+                }
+                let agent = match audience {
+                    semio_framework::CapabilityAudience::Agent => {
+                        let claimed = definition.window_kinds.iter().find(|window| window.actions.iter().any(|claimed| claimed.id == action.id)).map_or("*", |window| window.id.as_str());
+                        Some(declared_verb_agent_dispatch::<A, M>(&definition, boot, &action.id, &staged, claimed).await)
+                    }
+                    _ => None,
+                };
+                probes.push(DeclaredVerbProbe { verb: action.id.clone(), kind: action.kind, audience, destructive: action.semantics.effects.destructive, bridge, windows: window_probes, agent });
+            }
+            probes
+        }
+
+        /// ⚖️ Every verb `definition` declares honours its declaration ([`declared_verb_findings`] over
+        /// [`probe_declared_verbs`], with the surface's optional example arguments). Answers the probes, so a
+        /// caller pins their count and the outcome of the verbs its examples make act — a surface that stops
+        /// declaring its verbs or whose examples stop acting cannot turn the law vacuous.
+        pub async fn assert_declared_verbs_honour_their_declarations<A, M>(definition: fn() -> semio_framework::AppDefinition, examples: Option<&str>) -> Vec<DeclaredVerbProbe>
+        where
+            A: ArtifactApp + Default,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
+        {
+            let probes = probe_declared_verbs::<A, M>(definition, examples).await;
+            let findings = probes.iter().flat_map(declared_verb_findings).filter(|finding| !matches!(finding, DeclaredVerbFinding::AgentLaneDiverges { .. })).map(|finding| finding.to_string()).collect::<Vec<_>>();
+            assert!(findings.is_empty(), "{} finding(s) over {} declared verb(s):\n{}", findings.len(), probes.len(), findings.join("\n"));
+            probes
+        }
+
+        /// 🤖️ The verbs whose agent lane diverges from their shell lane, in probe order — a surface pins
+        /// this list so every divergence is named in its own law until the agent lane runs the shell
+        /// lane's code (ticket 26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP, slice P8), and a new one
+        /// turns the law red.
+        pub fn declared_verb_agent_divergences(probes: &[DeclaredVerbProbe]) -> Vec<String> {
+            probes.iter().filter(|probe| declared_verb_findings(probe).iter().any(|finding| matches!(finding, DeclaredVerbFinding::AgentLaneDiverges { .. }))).map(|probe| probe.verb.clone()).collect()
+        }
+
+        /// 🔎️ The probe of one declared verb, for a caller pinning what its examples made that verb do.
+        pub fn declared_verb_probe<'a>(probes: &'a [DeclaredVerbProbe], verb: &str) -> &'a DeclaredVerbProbe {
+            probes.iter().find(|probe| probe.verb == verb).unwrap_or_else(|| panic!("verb {verb} was not probed"))
+        }
+
+        /// 📝️ Whether this outcome settled and wrote or replaced the document.
+        pub fn declared_verb_wrote_document(outcome: &DeclaredVerbOutcome) -> bool {
+            matches!(outcome, DeclaredVerbOutcome::Settled(effect) if effect.touches_document())
+        }
+
+        /// 📝️ Whether the verb's staged invocation wrote or replaced the document from any window.
+        pub fn declared_verb_staged_wrote_document(probe: &DeclaredVerbProbe) -> bool {
+            probe.windows.iter().any(|window| declared_verb_wrote_document(&window.staged))
+        }
+
+        /// 📝️ Whether any invocation of the verb, staged or perturbed, wrote or replaced the document.
+        pub fn declared_verb_ever_wrote_document(probe: &DeclaredVerbProbe) -> bool {
+            probe.windows.iter().any(|window| declared_verb_wrote_document(&window.staged) || window.arguments.iter().any(|argument| declared_verb_wrote_document(&argument.first) || declared_verb_wrote_document(&argument.second)))
+        }
+
+        #[cfg(test)]
+        include!("🧪️tests/⚖️declared-verb-verdicts/🦀️.rs");
+        //#endregion 🔖️DeclaredVerbLaws
 
         /// 🧪️ `command_a`/`command_b` are applied to two `paired_apps` instances; each side then folds the
         /// other's events, one side commits a checkpoint (a structural history event) and the other folds
@@ -32893,7 +33484,12 @@ pub mod app {
                 SurfaceKind::TextEditor,
                 "type",
                 vec![ActionDefinition::bounded_catalog("replace-text", LocalizedLabel::native("Replace Text", "Text ersetzen"), ActionKind::Mutation)
-                    .with_args(vec![ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()])],
+                    .with_args(vec![ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()])
+                    .describe(LocalizedLabel::native(
+                        "Replaces the entire text of the document with the given text; the previous text is gone unless the edit is undone.",
+                        "Ersetzt den gesamten Text des Dokuments durch den angegebenen Text; der bisherige Text ist fort, sofern die Änderung nicht rückgängig gemacht wird.",
+                    ))
+                    .destructive()],
             )
         }
 
@@ -32949,11 +33545,16 @@ pub mod app {
                 "Tabelle",
                 SurfaceKind::Table,
                 "table-2",
-                vec![ActionDefinition::bounded_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation).with_args(vec![
-                    ActionArgDef::number("row", LocalizedLabel::native("Row", "Zeile")).required(),
-                    ActionArgDef::text("column", LocalizedLabel::native("Column", "Spalte")).required(),
-                    ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
-                ])],
+                vec![ActionDefinition::bounded_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation)
+                    .with_args(vec![
+                        ActionArgDef::number("row", LocalizedLabel::native("Row", "Zeile")).required(),
+                        ActionArgDef::text("column", LocalizedLabel::native("Column", "Spalte")).required(),
+                        ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
+                    ])
+                    .describe(LocalizedLabel::native(
+                        "Writes the given value into one table cell, addressed by row index and column, replacing what the cell held before.",
+                        "Schreibt den angegebenen Wert in eine Tabellenzelle, adressiert über Zeilenindex und Spalte, und ersetzt ihren bisherigen Inhalt.",
+                    ))],
             )
         }
 
@@ -33081,10 +33682,15 @@ pub mod app {
                 "Baum",
                 SurfaceKind::BlockList,
                 "list-tree",
-                vec![ActionDefinition::bounded_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation).with_args(vec![
-                    ActionArgDef::text("nodeId", LocalizedLabel::native("Node", "Knoten")).required(),
-                    ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
-                ])],
+                vec![ActionDefinition::bounded_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation)
+                    .with_args(vec![
+                        ActionArgDef::text("nodeId", LocalizedLabel::native("Node", "Knoten")).required(),
+                        ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
+                    ])
+                    .describe(LocalizedLabel::native(
+                        "Writes the given value into one node of the document tree, addressed by node id, replacing the node's previous value.",
+                        "Schreibt den angegebenen Wert in einen Knoten des Dokumentbaums, adressiert über die Knoten-Id, und ersetzt dessen bisherigen Wert.",
+                    ))],
             )
         }
 
@@ -33346,6 +33952,12 @@ pub mod app {
         const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = false;
         /// @emoji 📜️ Stable document schema id — prefer this over `artifact_schema(&self)`.
         const DOCUMENT_SCHEMA: &'static str;
+        /// 📚️ Examples authored for this editor's dialect. `PluginBuilder::editor` stamps this
+        /// catalogue onto the plugin manifest; the navbar dropdown is `examples_for_app` over that
+        /// manifest, so a plugin never passes the list itself.
+        fn examples() -> Vec<ExampleSource> {
+            Vec::new()
+        }
         type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + 'static;
         type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         type Config: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;

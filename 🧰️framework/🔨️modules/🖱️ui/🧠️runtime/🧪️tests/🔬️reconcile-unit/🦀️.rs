@@ -1052,4 +1052,71 @@ fn four_section_full_window_tree_reconciles_under_the_surface_byte_ceiling() {
     );
 }
 
+/// 📊️ One Home-shaped table row: six cells, five row actions and a row activation, each binding carrying its own
+/// one-entry `spaceId` argument map — the heaviest row an app ships today.
+fn census_law_table_row(index: usize) -> crate::TreeNode {
+    census_law_table_row_shaped(index, true)
+}
+
+/// 📊️ A light table row: two cells and one argument-free row action, no row activation.
+fn census_law_light_table_row(index: usize) -> crate::TreeNode {
+    census_law_table_row_shaped(index, false)
+}
+
+fn census_law_table_row_shaped(index: usize, heavy: bool) -> crate::TreeNode {
+    let key = format!("space:{index:04}");
+    let binding = |name: &str| {
+        let mut args = ui_contract::UiMapBuilder::try_new().expect("bounded fixture args");
+        args.push("spaceId".to_string(), ui_contract::UiValue::Text(ui_text(&key))).expect("bounded fixture arg");
+        ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action: ui_contract::ActionId::try_v1("s.space.home", name).expect("bounded fixture action"), args: Some(ui_contract::UiValue::Map(args.finish())), capability: None }
+    };
+    let name = format!("Studio {index}");
+    let all_cells = [name.as_str(), "Atelier", "Private", "1", "2026-09-25 23:05", "Hub"];
+    let mut cells = ui_contract::UiFixedList::default();
+    for cell in if heavy { &all_cells[..] } else { &all_cells[..2] } {
+        cells.try_push(ui_text(cell)).expect("bounded fixture cell");
+    }
+    let all_actions = [("folder-open", "openSpace"), ("pencil", "renameSpace"), ("link", "shareSpace"), ("trash-2", "deleteSpace"), ("users", "manageSpace")];
+    let mut row_actions = ui_contract::UiFixedList::default();
+    for (icon, name) in if heavy { &all_actions[..] } else { &all_actions[..1] } {
+        let action = if heavy { binding(name) } else { ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action: ui_contract::ActionId::try_v1("s.space.home", name).expect("bounded fixture action"), args: None, capability: None } };
+        row_actions.try_push(ui_contract::RowAction { icon: ui_text(icon), label: Some(ui_contract::Label::try_from(*name).expect("bounded fixture label")), action, placement: Default::default() }).expect("bounded fixture row action");
+    }
+    let mut node = crate::TreeNode::try_new(&key, ui_contract::Component::TableRow(ui_contract::TableRowProps { cells, row_actions })).expect("bounded fixture row");
+    if heavy {
+        node.bindings.try_push(binding("openSpace")).expect("bounded fixture activation");
+    }
+    node
+}
+
+fn census_law_table_document(rows: usize, row: fn(usize) -> crate::TreeNode) -> crate::ComponentTree {
+    let mut columns = ui_contract::UiFixedList::default();
+    for column in ["Name", "Kind", "Visibility", "Members", "Updated", "Origin"] {
+        columns.try_push(ui_contract::Label::try_from(column).expect("bounded fixture column")).expect("bounded fixture columns");
+    }
+    let props = ui_contract::TableProps { label: ui_contract::Label::try_from("Studios").expect("bounded fixture label"), columns, actions_label: Some(ui_contract::Label::try_from("Actions").expect("bounded fixture label")), window: Some(ui_contract::TreeWindow { row_extent: Default::default(), total: 500, offset: 0 }) };
+    let table = crate::TreeNode::try_new("framework.window.table", ui_contract::Component::Table(props)).expect("bounded fixture table");
+    tree(table.try_with_children((0..rows).map(row).collect::<Vec<_>>()).unwrap_or_else(|_| panic!("bounded fixture table rows")))
+}
+
+/// 📏️ [`surface_subtree_items`] prices a document at least what its fresh reconciliation consumes (the one extra
+/// item is the reconciler's root seed) and at most twice that, for tree pick rows, tree rows bound with a
+/// four-entry argument map, light table rows and Home-shaped table rows, and their containers alone.
+#[test]
+fn subtree_item_census_bounds_the_items_a_fresh_reconciliation_consumes() {
+    let _guard = crate::surface_reconcile_registry_test_guard();
+    let trees = [0, 1, 8, 16].into_iter().map(|rows| (format!("tree {rows}"), tree_window_law_document(0, rows)));
+    let heavy = [0, 1, 8, 28].into_iter().map(|rows| (format!("heavy table {rows}"), census_law_table_document(rows, census_law_table_row)));
+    let light = [1, 60].into_iter().map(|rows| (format!("light table {rows}"), census_law_table_document(rows, census_law_light_table_row)));
+    for (name, document) in trees.chain(heavy).chain(light) {
+        let priced = surface_subtree_items(&document.root).expect("bounded fixture census");
+        let (reconciled, usage) = tree_window_law_reconcile(&SurfaceReconciler::new("panel:census"), document).expect("bounded fixture reconciles");
+        let consumed = usage.items - 1;
+        assert!(priced >= consumed, "{name}: priced {priced} under the {consumed} items the reconciliation consumed ({usage:?})");
+        assert!(priced <= consumed * 2, "{name}: priced {priced} more than twice the {consumed} items the reconciliation consumed");
+        let mut retired = reconciled;
+        while !retired.retire_one() {}
+    }
+}
+
 //#endregion 🪟️TreeWindowReconcileSizeLaw

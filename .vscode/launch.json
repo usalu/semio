@@ -5500,6 +5500,39 @@
       }
     },
     {
+      "name": "⚖️gate📈️document-growth🪶️sqlite",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:document-growth-e2e -- sqlite",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.19
+      }
+    },
+    {
+      "name": "⚖️gate📈️document-growth🐘️postgres",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:document-growth-e2e -- postgres",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.20
+      }
+    },
+    {
+      "name": "⚖️gate📈️document-growth🕸️neo4j",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:document-growth-e2e -- neo4j",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.21
+      }
+    },
+    {
       "name": "⚖️gate🪆️composed-child-refs",
       "type": "node-terminal",
       "request": "launch",

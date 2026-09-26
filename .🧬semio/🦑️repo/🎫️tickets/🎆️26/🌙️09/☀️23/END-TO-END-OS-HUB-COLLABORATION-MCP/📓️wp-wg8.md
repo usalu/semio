@@ -14,6 +14,232 @@ Captures: `wp-wg8/generated/`. Inheritance: `.tmp-ticket-0918/📓️g7w-…md` 
 | 3 | `hub-live-collaboration-check` steps 1–12 green (runner: **WG8**, per WG7's scope split) | **GREEN (17:0x), all 12 steps, test exits 0 in 209 s** on hub 7800 catalog B (runId `345ceda4…`, generation `e8167ce8…`): `two_live_wgpu_shells_collaborate_on_one_hub_document ... ok` (`.🧬semio/🌐hub/s11-wg8-captures/collab-live-18.raw.txt`). Five native defects fixed on the way, each measured first (§3) |
 | 4 | G-P1-3 — wgpu artifact-creation door (schema-first, progress + cancel, en + de) | **DONE, live-proven (05:42)**: a native wgpu shell created a hub artifact from its own door on hub 7800 — catalog ready (gis, note), `accepted → preparing → ready` in 53.7 s, `artifact-db290b13…`; 4 fixture laws green (§4) |
 
+## Session 12
+
+Ports: hubs 8090–8099, serves 6590–6599; durable data `.🧬semio/🌐hub/s12-wg8-*`. Hub 7800 = W2 (catalog B2 pending).
+
+| # | Item | Status |
+|---|------|--------|
+| S12-1 | Async native open (`os.open-artifact` a retained frame-pumped operation, progress + cancel) | **DONE, laws green**: open law + 4 journey laws 5/5 at load ~40 (`journey-32.raw.txt`, 04:0x): relay ≤ 2.9 ms, opening frames ≤ 0.64 s, post-open render frames ≤ 0.35 s (debug), cancel settles `Cancelled` and mounts nothing. Root fixes on the way: kernel request queue lost wakes; settle-lane refresh reads (bodies + reserved sections) detached; live-only reserved jobs no longer checkpoint at their end + a cut owned checkpoint cancels itself (native undo/redo trap) |
+| S12-2 | Native app presence (cursor/selection both ways, one wire, live with a React peer) + coordinator add-on: full cross-shell journey (native ↔ React `s`, one hub document) | **native half landed, laws green (01:3x)**: schema-first contract `🧬️schema/👕️canvas-presence` + fixture (publish / paint / labels en+de); wgpu twin `🧱️elements/👕️canvas-presence/🎯️targets/🧊️wgpu` (board view = scene camera + world point under the pointer; peer cursors, viewports, marks via replication's `peers_for_window`); the shell's heartbeat now carries `views`, `active_tool`, the guest's `interaction` + presence pack (native `AppFrame::Ephemeral` cache, the retired stub replaced); the chrome paints peer cursor/viewport/name chip + mark chips over every board in the hub colour; hub-admitted self identity from `Session`. Laws: Rust 3/3 + Shell 2/2 (painted board end to end), TS 5/5 (React's `puzzle2dScreenToWorld` / `peersForWindow` / `PEER_OVERLAY_LABELS`, gl-matrix `mat2d` inverse as oracle). Live cross-shell run: waits on 7800 B2. React gaps routed (C10): no `interaction` on React's heartbeat (`ephemeralSnapshot: undefined`), Board2dHost marks domain hardcoded `layer` |
+| S12-3 | B2 `Live` on catalog B2 (guest-owned block via component codec) | **PROVEN live (05:40)**: gate run 24 step 6 Live in 11 s on 7800 B2 with the hub-resolved catalog component aaf7ee82 (component codec from the mounted guest) |
+| S12-4 | `hub-live-collaboration-check` 12/12 on 7800 B2 (+ after `--packages all`); kernel store/sync, renderer, shard suites | **GREEN on 7800 B2 (08:53): 12/12, exit 0** (`s12-wg8-captures/collab-live-25.raw.txt`, generation f485bf7e…): both native shells resolve block by the serving generation, step 6 Live 10.0 s, 7 both online 0.15 s, 8 A authors 7.8 s, 9 B ingests, 10 B authors + A ingests, 11 per-actor undo, 12 offline edit 5.2 s (online 8.5 s), pump 3.0 s, stale → ready, relive 6.7 s, A ingests it. After `--packages all`: pending W2. Suites green 00:4x (kernel 572/572, shard 69/69, renderer 92/92 + kernel_runtime 41/41) |
+| S12-5 | wasm32 checks for every crate touched in s11 + s12 | queued in the wasm mutex (00:4x, `wasm-checks-3.sh`, detached pid 22376; capture `s12-wg8-captures/check-wasm-6.txt`): framework + os-kernel + plugin wasip2, os-kernel `sync` unknown-unknown, renderer unknown-unknown |
+| S12-6 | Genesis-on-open parity with WG7 / C10 (via coordinator) | not started |
+| S12-8 | Coordinator decision: a hub document's component resolves by the SERVING catalog generation (local only on equal content hash), verified, stored content-addressed, progress + cancel | **landed, laws green (04:2x); live on 7800 B2 running**: kernel resolver `📇️directory/🔌️client/🧩️execution-target-module` (`resolve_execution_target_module`: lease → local if equal SHA-256 → verified store entry → hub `execution-target/{component, descriptor}` bytes verified against the lease, stored whole via rename; `ExecutionTargetModuleStore` per-user cache dir; steps + cancel); native shell open gains phase `Resolving` (band `1/3` with the step, en+de, cancel cancels the in-flight request) and mounts the hub-resolved program (`program_bridge::load_resolved_program`, descriptor must name the lease digest). Laws: schema `🧬️schema/🧩️execution-target-module-resolution-v1` + fixture (9 cases over the hub's lease corpus) — Rust 9/9, TS oracle (Ajv + `node:crypto`) 11/11; band law en/de 1/1 |
+| S12-7 | R8 relay: hub-projection twin drift — React's fold carries U5's link axis, the Rust twin did not | **DONE (01:2x), schema-first**: schema `🧬️schema/🔗️hub-projection` gains `session` (`none`/`signedOut`/`signedIn`) + `link` (`verifying`/`reachable`/`unreachable`), states `local`/`online`, `offline` dropped (unreachable with a 3-valued link, also in React's fold); fixture 10 cases; Rust fold `hub_connection_summary(statuses, session, link)` + `HubLink`; the Shell's duplicate `ShellHubConnectionState`/`ShellHubAuthorityV1` deleted (one state enum), badge texts en/de `hub.local`/`hub.online`; laws: Rust `hub_connection:: hub_projection_workspace_tests` 42/42, TS runner (Ajv schema + independent fold + React `hubConnectionSummaryV1` as oracle) 6/6 |
+
+### Log (session 12)
+
+- 23:0x start; read preambles + report. Found session-11 async-open work applied but unreported: `ShellDocumentOpening`
+  (phase `Instantiating → Seeding → Cancelled | Failed`), `ShellDetached` (pool-spawned request, frame pump takes the
+  answer), `render_surfaces_detached` (settle lane renders guest bodies off the shell), open laws in
+  `🔗️hub-projection-workspace` (`settle_document_opening`, `a_native_guest_open_keeps_the_frame_loop_painting_and_is_cancellable`).
+  Journey run 25 (18:01, `s11-wg8-captures/journey-25.raw.txt`): every open stuck `Instantiating` for 180 s; the headless
+  `frame_pump` did not pump renderer I/O then (fixed after run 25; the detached-refresh edit landed 18:13, never run).
+- 23:2x renderer test binary builds; open law alone green (`open-1.raw.txt`): relay 1.5 ms, cancel → `Cancelled`, opening
+  frames ≤ 254 ms; but journey run 26 (`journey-26.raw.txt`, 5/5 pass) showed the settle lane pending for the full 180 s after
+  3 of 5 opens (`rendering: 2.7–4.9 M` frames): a `[DEBUG] wg8` probe (run 27) named the term — `settle_pump.rendering` stayed
+  `Some` (the detached render never answered); a second probe (run 28) caught exactly one
+  `kernel push contended producer=true` right before the hang.
+- **Root cause (kernel request queue, `🧊️renderer/🦀️.rs` `KernelRequestQueue::try_push`):** a push that met the queue's
+  lock held (`try_lock` failed) returned the request with NO wake arranged, so a pool-driven `KernelFuture` (the detached
+  render, the detached `create_app`) was never polled again; `drive`-polled callers (tests, dispatch) hid it by busy-polling.
+  Also a second producer waiting on a full queue overwrote the first one's single `producer_waker`. **Fix:** a contended
+  push asks its producer to retry at once; a full queue keeps every distinct waiting producer's wake (bounded by the queue
+  capacity, `will_wake` dedupe) and wakes them all when a request leaves. Law
+  `kernel_request_admission_never_parks_without_a_wake` over the schema-first fixture `🧫️fixtures/🧵️kernel-pool-future`
+  (`admissions`: held lock, full lane ×1, full lane ×3 producers) with tokio's `sync::Mutex` / bounded `mpsc` as the oracle
+  under the same wake-only executor; queue + future laws 10/10 (`laws-queue-1.txt`).
+- 00:2x journey run 29 (`journey-29.raw.txt`): **5/5**, every open's render phase settles in 17–30 s total (was 180 s ×3);
+  relay ≤ 2.3 ms; opening frames ≤ 0.71 s; post-open render frames ≤ 2.2 s (sections still inline). Latency outliers remain
+  (`selectAll` 39.7 s, one undo 32.9 s — the session-11 "~30 s" watch item). `[DEBUG] wg8` probes reverted (0 lines).
+- 00:4x suites on the current tree (S12-4 row). wasm32 gates queued behind W2/R8 in the mutex.
+- 01:0x–01:2x **S12-7 (R8 relay, hub-projection link axis)**: `🧬️schema/🔗️hub-projection` + fixture (10 cases: busiest live,
+  signed-out masks live, no hub is local, live outranks an unreachable link, unreachable link outranks dialling, verifying is
+  connecting, connecting outranks backoff, backoff outranks detached, reachable+detached / reachable+empty are online);
+  `🔗️HubConnection` fold + `HubLink` (serde camelCase, the schema's spelling) + unit laws (`an_unreachable_link_is_a_shortage…`,
+  `a_reachable_link_with_nothing_live_is_online…`, `a_shell_with_no_hub_at_all_is_local…`; the icon-uniqueness law now asserts
+  distinct spellings — `live`/`online` share React's cloud icon, the text tells them apart); Shell: `hub_projection()` maps
+  `verified_session_authority` → session, `identity_offline`/authority → link (the connection book always holds the local
+  bootstrap hub, so the native shell is never `none`); `ShellHubConnectionState` + `ShellHubAuthorityV1` deleted; the live
+  sign-in law now asserts `online` after sign-in. TS runner `🧪️tests/🔗️hub-projection/🟦️.ts` passes `session`/`link` to React's
+  fold (it failed typecheck before, R8 23:13). Measured: Rust 42/42 (`laws-renderer-8.txt`), TS 6/6 (`ts-hub-projection-1.txt`,
+  run through a one-file vitest config `wp-wg8/vitest-one.config.mts`). Note for C10: React's `offline` state is unreachable in
+  `hubConnectionSummaryV1` (all three link values return earlier) — dead in React's type/icon/label maps.
+- 01:3x **S12-2 native presence (one wire, one encoding)** — what React sends today (measured in source): `views` (Board2dHost
+  camera + world pointer, `space: canvas`, window = the dock window instance), `activeTool`; NOT `interaction`/`presencePack`
+  (`PluginRuntime.ephemeralSnapshot: undefined`, and nobody calls `pushPresence`), and its board overlay paints marks only for the
+  hardcoded domain `layer` (block2d declares `handle`). The native heartbeat sent none of it. Landed:
+  - schema `🧑‍🎨engine/🧬️schema/👕️canvas-presence` + fixture `🧫️fixtures/👕️canvas-presence` (5 publish cases, 1 roster paint case with
+    self / on-window peer with pointer + tool / other-window peer / pointer-less peer, labels en+de);
+  - `🧱️elements/👕️canvas-presence/🎯️targets/🧊️wgpu/🦀️.rs` (mounted `crate::canvas_presence`): `canvas_screen_to_point`,
+    `board_presence_view`, `board_peer_overlays` (replication's `peers_for_window` / `canvas_point_to_screen` /
+    `canvas_peer_viewport_rect` / `peer_overlay_path`), `peer_overlay_label` en+de; the renderer now depends on
+    `semio-framework-replication` directly (Cargo.toml + one Cargo.lock line, swapped atomically, `cargo metadata --locked` = 0);
+  - EngineCanvas `board2d_presence_state(host)` (the board scene's camera + active utility, React's `sceneRef.cameraJson`);
+  - ProgramBridge (native): every command exchange keeps the guest's last `AppFrame::Ephemeral` decoded
+    (`ProgramEphemeralSnapshot { presence, interaction, tool_run }`, forgotten on `destroy_app`) — replaces the retired stub;
+  - Shell: `presence_self` from `ArtifactEvent::Session` (was ignored), `presence_pointer` from every pointer move, heartbeat
+    `views` + `active_tool` + `interaction` + presence pack; overlay phase 8 of `render_overlay_step` paints each peer's viewport
+    frame, cursor dot and name chip and every mark chip, clipped to its board, in `theme.presence_color`.
+  - Laws: `canvas_presence::tests` 3/3; Shell `board_presence_tests` 2/2 — a real painted Board2d surface (camera from its
+    scene) → the heartbeat view, and the roster → overlays, nothing before the hub named the local actor; TS runner
+    `🧪️tests/👕️canvas-presence/🟦️.ts` 5/5. Both Shell painting laws and `engine_surface_retention` now hold the crate's
+    `engine_surface_law_guard` (process-wide engine/retained registries; `engine_surface_retention` failed in parallel with them
+    before). Parallel set `canvas_presence board_presence engine_surface_retention hub_projection hub_connection` 50/50
+    (`laws-board-presence-7.txt`). Pre-existing, not mine: `shell_input_tests` 40/71 red alone and serial ("painted within its
+    opportunity ceiling" — R8's ui-contract retirement-stall family, fix after `--packages all`).
+- 01:4x post-open refresh: `[DEBUG] wg8` timing (reverted) showed the settle lane's refresh still spent ~0.75 s inline on the
+  three reserved-section reads (catalogue 216 ms, engagements 342 ms, measures/tools 187 ms). Fix: the detached settle read now
+  carries them too (`render_refresh_detached` → `ShellRenderedRefresh { surfaces, catalogue, engagements, measures, tools }`;
+  `refresh_ui_rendered` applies whatever was read ahead for the same instance, reads the rest itself; the one-time catalogue
+  claim moves to the step that spawns the read). Journey run 30: post-open render frames ≤ 0.33 s (were ≤ 2.2 s).
+- 01:5x run 30 also surfaced a **native undo/redo trap under load** (4/5; redo `guest trapped: owned turn is mid-flight and
+  cannot admit 1 more event(s)`); `[DEBUG] wg8` dispatch trace (run 31, reverted): the reserved job's terminal step reported
+  `Job`, and the very next turn was `Fault(mid-flight)`. Root cause (plugin host): on `JobStep::Done` the shard checkpointed the
+  guest for the commit candidate; the owned checkpoint ran on a 1 s wall and, cut, returned `Err` **with the checkpoint operation
+  still pending** — the deferred `Event::JobCompleted` then met a mid-flight guest. Fixes: (1) `🧵️shard` — a live-only
+  (`!replayable`, framework reserved) job commits no restore state, so its end takes no checkpoint (`candidate.state` empty);
+  (2) `🖥️host` `OwnedRuntime::checkpoint` cancels its own cut operation before returning the fault (never leaves a guest
+  mid-flight). Law extended: `a_framework_reserved_spawn_starts_live_…` asserts no checkpoint at the end and an empty
+  candidate state; `shard::` 69/69 (`laws-plugin-host-6.txt`).
+- 03:40 resumed after the usage cut. wasm32 gates (`check-wasm-6.txt`, held 02:17): framework+kernel+plugin wasip2 **rc=0**,
+  renderer unknown-unknown **rc=0** (includes kernel `sync`); the standalone kernel `sync` unknown-unknown run failed on a
+  vanished proc-macro dylib in the shared build-dir (`libsemio_framework_value_derive-….dylib` "does not exist" — a concurrent
+  build-dir rewrite, not a code error); re-queued with the shard edits.
+- 04:0x journey run 32 at load ~40: **5/5** (`journey-32.raw.txt`), undo/redo no longer trap.
+- 04:0x **B2 component identity**: catalog B2's block `sourceComponentSha256` aaf7ee82 ≠ every local build (component-release
+  3a5a14fd, component-dev 4146fa0a; the release descriptor still names B's 0d1a9bcd). Coordinator decision (04:1x): resolve by the
+  serving generation, never materialize locally. Why the execution-target routes and not `/trusted-catalog/plugin-modules`: the
+  plugin-module bundle is the BROWSER module (jco core wasm + JS shims) derived from the component; a native shell mounts the
+  component itself, and `POST /spaces/{s}/documents/{d}/execution-target/{manifest,component,descriptor}` serve exactly the lease's
+  component + descriptor for that document (the same chain the semio MCP remote workspace already walks). Both are the serving
+  generation; React (S15) and native now agree on the rule and on the vocabulary (`local` / `store` / `hub`).
+  **For WG7 (wasm32 wgpu):** the resolver's decision + verification (`resolve_execution_target_module`, `verify_execution_target_bytes`)
+  are target-neutral except the on-disk store (`#[cfg(not(target_arch = "wasm32"))]`); a wasm32 shell mounts JS plugin modules, so
+  its twin is S15's plugin-module route with its durable store — not this component store.
+- 04:3x gate run 19 on 7800 B2 launched (detached pid 48965, capture `s12-wg8-captures/collab-live-19.raw.txt`, store
+  `.🧬semio/🌐hub/s12-wg8-execution-targets`).
+- 04:3x gate run 19 (7800 B2): steps 1–3 PASS; 4a: A's door reached `ready` but its open never settled — the law's creation loop
+  only drove `pump_sync_events`, so the resolution's descriptor read (renderer I/O) was never pumped (law fixed: full `frame_pump`
+  + `settle_document_opening`); B's resolution answered `http 503` with no reason (the client dropped refusal bodies). The routes
+  themselves answer (probe `wp-wg8/probe-execution-target.ts`: manifest 200, descriptor 200 106 012 B, component 200 17 678 000 B
+  in 8 ms warm). Fixed on the way: the hub's execution-target **descriptor is the canonical PACK** of `PackageDescriptor`, not
+  JSON — `load_resolved_program` now decodes it with the MCP remote's admission (decode, exact canonical re-encode, version 1,
+  plugin + digest), stored as `descriptors/<sha256>.pack`; the three execution-target fetches keep a bounded refusal body.
+- 04:4x runs 20–21: every native **sign-in answered `Unreachable`** — curl measured the hub's credential mint at 6.8 s and 13.6 s
+  under load ~40 (peer Docker build, playwright, cargo), past the native lane's 5 s directory-command deadline; React's sign-in has
+  no request deadline. Fix: the sign-in turn (mint + `me`) runs under its own finite `HUB_SIGN_IN_DEADLINE_MS` (30 s), still
+  cancellable. Run 22 launched.
+- 05:0x gate run 22 (7800 B2): 1–3, 4a PASS, A Live + authors (8) + undoes (11 own); B's resolution `http 503
+  {"code":"deadline-exceeded"}` (hub's 8 s selection deadline at load ~40); A had NOT resolved — the door's relay names no
+  plugin/app, so it bypassed the resolver and mounted the stale local bytes. Also `Surface unavailable: framework.hub — panel
+  exceeds 128 document nodes` (user1 holds dozens of spaces). Fixes: (1) the lease names the plugin and app
+  (`lease.package.pluginId`, `lease.surface.appId`), so every hub relay resolves (`document_execution_target_lease` first,
+  then `resolve_execution_target_files`); an explicit relay plugin that disagrees with the lease is refused out loud;
+  (2) `asked_through_shortage`: a `503` is asked again, ≤ `EXECUTION_TARGET_UNAVAILABLE_ATTEMPTS` (3), cancellable — fixture
+  +2 cases (Rust 11/11, TS oracle 13/13); (3) the hub workspace tree carries ≤ `HUB_WORKSPACE_VISIBLE_SPACE_ROWS` (8) rows + the
+  open space + a "N more — narrow the search" line (en/de, `data-semio-hub-spaces-hidden`); law
+  `many_spaces_fit_one_panel_document_with_the_open_space_and_a_count_of_the_rest` (64 rows → ≤ 128 nodes). Run 23 launched.
+- 05:2x run 23: every resolution refused `os.directory-client exhausted its network_bytes_per_min budget` — the native directory
+  transport's HTTP pool budget was 10 MB/min, smaller than one 17.7 MB component. Fix: `SHELL_DIRECTORY_NETWORK_BYTES_PER_MINUTE`
+  = 2 × `DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES` (the largest bounded answer the client takes, twice).
+- 05:40 **gate run 24 on 7800 B2: 11/12 PASS** (`collab-live-24.raw.txt`): both native shells resolved block by the serving
+  generation — store now holds `components/aaf7ee82….wasm` + `descriptors/bcaa9827….pack` = the catalog's
+  `sourceComponentSha256`/`sourceDescriptorByteSha256` — step 6 Live 11.0 s, 7 both rosters online, 8 A authors 4.4 s, 9 B ingests,
+  10 B authors + A ingests, 11 per-actor undo. **B2 `Live` (S12-3) proven** with the catalog's own component. Step 12 red only on
+  its freeze bound: B's offline edit 10.3 s vs online 4.3 s (pump 3.0 s, stale → ready, relive 84 ms, A ingests the offline edit);
+  the capture shows the edit's refresh hit `plugin retained document for surface 'block2d-board' exceeded its bounded opportunity
+  budget` — the same retained-surface spin behind the 30–40 s `selectAll` in every native journey. Investigating (run 33).
+- 05:4x retained-surface spin hunt (runs 33–35, `[DEBUG] wg8` probes, reverted): at load ≤ 10 the whole journey is 5/5 with
+  `selectAll` 4.7 s (was 30–40 s under load 40–55), undo/redo 4.0–4.8 s; the one sampled busy owner was a panel surface mid-patch
+  (`framework.panel.artifact patch=true published=false`) — the opportunity budget is spent by load, no defect reproduced at low
+  load. Watch item, not fixed.
+- 05:45 coordinator rule 20: HARD guest freeze (kernel, plugin SDK, guest-linked framework crates, root Cargo files). All my
+  kernel edits (execution-target resolver, refusal bodies, shortage retry, lease split) landed 04:1x–05:2x, before it; the
+  Cargo.lock/renderer `replication` dependency landed 01:0x. Since the freeze: renderer/shell-only edits.
+- 05:23 wasm32 gates (`check-wasm-7.txt`): kernel `sync` unknown-unknown **rc=0**, renderer unknown-unknown **rc=0** (every
+  target-neutral edit up to then: resolver, hub rows, hub link axis, presence).
+- 08:40 resumed after the usage cut; load 7; 7800 ready; React serve 6590 up (pid 79710).
+- 08:53 **gate run 25 on 7800 B2: 12/12, EXIT 0** (load ~7): the step-12 red of run 24 was load (offline 5.2 s vs online 8.5 s now).
+
+### Files (session 12)
+
+Paths relative to `🧰️framework/🛍️products/💻️os/🔨️modules/` unless absolute.
+
+- `📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs` — `KernelRequestQueue::try_push` (contended push wakes, bounded
+  producer-waker list), mounts `canvas_presence`; law `kernel_request_admission_never_parks_without_a_wake` in
+  `📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-kernel-runtime-semantic-document`; fixture/schema `🧵️kernel-pool-future` (`admissions`).
+- `📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` — async open (`ShellDocumentOpening`, phases incl. `Resolving`,
+  `begin_document_resolution`, `continue_resolved_open`, band text en/de), detached settle refresh (`render_refresh_detached`,
+  `ShellRenderedRefresh`), hub projection (`HubLink`/session axes, `shell_hub_connection_text`, `hub.local`/`hub.online`),
+  presence (`presence_self`, `presence_pointer`, heartbeat views/interaction/presence pack, `board_presence_views`,
+  `board_peer_overlays`, overlay phase 8 painting), `HUB_SIGN_IN_DEADLINE_MS`, `SHELL_DIRECTORY_NETWORK_BYTES_PER_MINUTE`.
+- `📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🎯️targets/🧊️wgpu/🦀️.rs` (new) + `🧪️tests/🔬️wgpu-unit`; schema + fixture
+  `📺️renderer/🧑‍🎨engine/{🧬️schema,🧫️fixtures}/👕️canvas-presence`; TS runner `📺️renderer/🧑‍🎨engine/🧪️tests/👕️canvas-presence/🟦️.ts`;
+  Shell law `🐚️Shell/🧪️tests/👕️board-presence`.
+- `📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs` — `board2d_presence_state`.
+- `📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs` — native `AppFrame::Ephemeral` cache
+  (`ProgramEphemeralSnapshot`), `load_resolved_program` (canonical pack descriptor admission).
+- `📺️renderer/🧑‍🎨engine/🧱️elements/🔗️HubConnection/🎯️targets/🧊️wgpu/🦀️.rs` — `HubLink`, `hub_connection_summary(.., link)`,
+  `HUB_WORKSPACE_VISIBLE_SPACE_ROWS`; `🏘️SpaceBrowser` label `MoreRows`; laws in `🔗️HubConnection/🧪️tests/🔬️wgpu-unit`.
+- `📺️renderer/🧑‍🎨engine/{🧬️schema,🧫️fixtures,🧪️tests}/🔗️hub-projection` — session + link axes.
+- `📇️directory/🔌️client/🧩️execution-target-module/🦀️.rs` (new) + mount + refusal bodies in `📇️directory/🔌️client/🦀️.rs`; law in
+  `📇️directory/🔌️client/🧪️tests/🔬️unit`; `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/{🧬️schema/🧩️execution-target-module-resolution-v1,
+  🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json, 🧪️tests/🧩️execution-target-module-resolution/🟦️.ts}`.
+- `🔌️plugin/🖥️host/🧵️shard/🦀️.rs` (live-only jobs end without a checkpoint), `🔌️plugin/🖥️host/🦀️.rs` (cut checkpoint cancels itself);
+  law extended in `🧵️shard/🧪️tests/🔬️unit`.
+- `📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml` + `/Users/ueli/Documents/semio/Cargo.lock` (one line) —
+  direct `semio-framework-replication` dependency.
+- `📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔗️hub-projection-workspace/🦀️.rs` — `frame_pump` pumps renderer I/O + settle,
+  open laws, cross-shell law `a_native_and_a_react_user_collaborate_on_one_hub_document` (+ `CrossShellHandshake`,
+  `paint_session_windows`, `pump_until`), gate law pumps full frames in 4a, band law; `🧲️engine-surface-retention` holds the
+  engine-surface law guard.
+- Ticket-local (`wp-wg8/`): `run-cross-shell.sh`, `cross-shell.mjs`, `serve-react.sh`, `run-collab-live-b2.sh`, `wasm-checks-{3,4}.sh`,
+  `probe-react-boot.mjs`, `probe-execution-target.ts`, `vitest-one.config.mts`, `edit-*.py` (incl. reverted `edit-debug-*`).
+- 09:5x a peer's in-flight test edit (`🐚️Shell/🧪️tests/🔀️wgpu-document-relay/🦀️.rs:240`, 08:53, E0502 borrow of `shell` inside `tabs_mut(..).push(..)`) blocked every renderer test build for an hour; fixed with the one obvious line (the pill text computed first). My builds meanwhile queued ~1 h in `prebuild_lock_exclusive` behind the fleet's wasm/native builds.
+- 09:5x–10:3x **cross-shell runs 1–3** (native wgpu user A = law `a_native_and_a_react_user_collaborate_on_one_hub_document`,
+  React `s` user B = `wp-wg8/cross-shell.mjs` on serve 6590, both on 7800 B2, handshake files). Run 3 measured (`cross-shell-3/`):
+  A signs in, creates a space, seats B, creates a block2d artifact through its door (hub-resolved component), Live 6.2 s;
+  **B opens the native-created artifact from its Space index in React, socket Live 9.6 s, `live · 2 peers`; presence both ways
+  PASS** (A sees B 3.6 s, B sees A at once; one wire: the React roster row is `peer:<hub actor>` = A's `Session` actor); **A's edit
+  reached React** (React's board summary 6 → 7 Handle Kinds) — the driver's ledger witness was wrong (React's History lists
+  only that session's own commands), now the board summary. Harness fixes for run 4: React's edit goes through the window's
+  Actions pane (`#action.addHandleKind`, opened first), undo through `#action.undo`; `--enable-unsafe-webgpu` (the React board
+  painted no canvas headless); the native paint helper reuses the shell input laws' painter (no board registered before);
+  React's reload restores the document in place (no Home), handled; creation waits 300 s (door reached `ready` after 324 s at load).
+- 10:3x **cross-shell run 4** (`cross-shell-4/`): 1 A signs in ✓, 2 A creates + opens (Live 4.5 s) ✓, 3 B opens in React (Live
+  17 s) ✓, 4 presence both ways ✓, **6 A edits → React ingests (6 → 7 Handle Kinds, 4 ms after A's handshake) ✓**, 7 React edits
+  (7 → 8, 20.5 s) and A's ledger later shows it as `apply` (the law read A's count only after the handshake wait had already pumped
+  the ingest — law bug, fixed: ledger count taken before the wait, `pump_until_ledger` re-reads the history), **8 each undoes own:
+  A's undo reached React (8 → 7), React's own undo (7 → 6), A's ledger shows React's edit unapplied (`apply` false) ✓ (law read a
+  stale snapshot — fixed)**. 9 reload: React restored into the Space index (not Home, not the document); the driver now reopens
+  from whichever of the two it lands on. **5 cursors — not exercisable with block2d**: its only window (`block2d-board`, "Node
+  Kind") is by design a summary surface (two text lines, `SurfaceKind::Board2d` but no board canvas), so neither shell has a
+  board to publish a pointer or paint an overlay (native `boards=[]`, React no canvas). The cursor leg needs a canvas kind
+  (puzzle2d board / draw) — the native resolver now mounts any kind the hub leases, so it is a harness follow-up, not a runtime gap.
+- 10:35–10:57 **cross-shell run 5** (`cross-shell-5/`, load ~30): 1 ✓, 2 A creates + opens (Live 11.7 s) ✓, 3 B opens in React
+  (Live 10.9 s) ✓, 4 presence both ways ✓ (A sees B at once, B sees A 4 ms after A's handshake), 5 ✗ (block2d: no board on either
+  shell), **6 A edits (8.4 s) → React 6 → 7 Handle Kinds 5 ms after the handshake ✓, 7 React edits (7 → 8, 20.4 s) → A's ledger
+  `apply` ✓, 8 each undoes own ✓** (A's undo reached React 8 → 7, React's own undo 7 → 6 in 414 ms, A's ledger `("addHandleKind",
+  false), ("apply", false)` after 14.1 s). 9 ✗ in the driver: after `page.reload` React restored into the Space index and the driver
+  waited for a Home row — fixed (`openDocument` races the artifact row against the space row).
+- 10:57–11:15 **cross-shell run 6** (load 52–63 on 10 cores): 1 ✓; 2 ✗ — the door took 300 s to `ready`, the open then sat in
+  `Seeding` (the guest's genesis load in the debug interpreter, on the pool) for the whole 180 s settle budget; React (same load)
+  never listed the space within 180 s. CPU starvation, no defect; run stopped (my pids 79755/79798/79831).
+- 11:0x **cross-shell laws split** (`🐚️Shell/🧪️tests/🔗️hub-projection-workspace`): one shared `CrossShellMeeting::meet(schema)`
+  (steps 1–4: sign-in, space, seat B, door create + hub-resolved open, paint, React opens, presence both ways) + `finish` (done
+  handshake, sign-out, assert); law `a_native_and_a_react_user_collaborate_on_one_hub_document` (block2d: 5 A edits → B ingests,
+  6 B edits → A ingests, 7 each undoes own, 8 reload converges) and new law
+  `a_native_and_a_react_user_see_each_others_cursor_on_one_hub_board` on `CROSS_SHELL_BOARD_SCHEMA = "puzzle.2d.fixture"` (catalog
+  B2's puzzle; its editor window `2d-overview` is `SurfaceKind::Board2d` on both shells, and both shells name the window by the
+  guest's default layout, native `block2d-board` = React's `windowInstanceId`). Driver `CROSS_MODE=edits|cursors`
+  (`cursors`: mounted witness = a painted canvas, then the cursor leg); runner `CROSS_MODE=… run-cross-shell.sh <tag>` picks the law.
+  `cargo check --lib --profile test` rc=0 (warnings = proof; the two in my file fixed).
+- 11:1x wasm32 final gates queued in the mutex (`wasm-checks-5.sh` → `check-wasm-8.txt`: wasip2 framework + kernel + plugin, kernel
+  `sync` unknown-unknown, renderer unknown-unknown).
+
 ## Coordination (read me, WG7 / coordinator)
 
 - **Runner of `hub-live-collaboration-check`: WG8** (WG7's scope split, `📓️wp-wg7.md`).

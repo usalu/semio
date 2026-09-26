@@ -7,7 +7,7 @@
     "schemaVersion": { "const": 1 },
     "cases": {
       "type": "array",
-      "minItems": 5,
+      "minItems": 10,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -79,19 +79,13 @@
     }
   },
   "definitions": {
-    "authority": {
-      "oneOf": [
-        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "noVerifiedSession" } } },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["kind", "authorizationGeneration"],
-          "properties": {
-            "kind": { "const": "verifiedSession" },
-            "authorizationGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
-          }
-        }
-      ]
+    "session": {
+      "description": "Whether this shell holds a hub session: none = no hub configured at all (purely local-first), signedOut = a hub to sign in to and no session, signedIn = a session credential is held.",
+      "enum": ["none", "signedOut", "signedIn"]
+    },
+    "link": {
+      "description": "What the shell's own session revalidation last learned about the hub link, independent of any document: still verifying a held session, reachable, or unreachable (a short shortage ridden out on a bounded backoff).",
+      "enum": ["verifying", "reachable", "unreachable"]
     },
     "remote": {
       "oneOf": [
@@ -123,9 +117,10 @@
     "projection": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["authority", "documents"],
+      "required": ["session", "link", "documents"],
       "properties": {
-        "authority": { "$ref": "#/definitions/authority" },
+        "session": { "$ref": "#/definitions/session" },
+        "link": { "$ref": "#/definitions/link" },
         "documents": { "type": "array", "maxItems": 64, "items": { "$ref": "#/definitions/document" } }
       }
     },
@@ -134,7 +129,7 @@
       "additionalProperties": false,
       "required": ["state", "peerCount", "documentCount"],
       "properties": {
-        "state": { "enum": ["signedOut", "live", "connecting", "reconnecting", "offline"] },
+        "state": { "enum": ["local", "signedOut", "live", "online", "connecting", "reconnecting"] },
         "peerCount": { "type": "integer", "minimum": 0 },
         "documentCount": { "type": "integer", "minimum": 0, "maximum": 64 }
       }

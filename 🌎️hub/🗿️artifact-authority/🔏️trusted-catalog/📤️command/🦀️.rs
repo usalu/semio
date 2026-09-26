@@ -51,7 +51,7 @@ fn read_command(input: impl std::io::Read) -> Result<Vec<u8>, HubError> {
 
 #[cfg(feature = "native-artifact-execution")]
 async fn publish() -> Result<(), HubError> {
-    use super::{AuthorityError, AuthorityLimits, NativeCodecProviderSetV1, OperationContext, StartupCancellationV1, StartupCatalogControl, Tracer, TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS};
+    use super::{AuthorityError, AuthorityLimits, NativeCodecProviderSetV1, OperationContext, StartupCancellationV1, StartupCatalogControl, StartupProgressCellV1, Tracer, TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS};
     use semio_hub::artifact_authority::trusted_catalog::{TrustedCatalogPublicationOutcome, TrustedCatalogPublisher};
     use std::io::Write;
     use std::time::Duration;
@@ -64,7 +64,7 @@ async fn publish() -> Result<(), HubError> {
         .await
         .map_err(|_| HubError::UnsafeAuthConfiguration("publication command input deadline exceeded".into()))?
         .map_err(|_| HubError::UnsafeAuthConfiguration("publication command reader failed".into()))??;
-    let control = StartupCatalogControl::new(Tracer::from_environment(), StartupCancellationV1::default());
+    let control = StartupCatalogControl::new(Tracer::from_environment(), StartupCancellationV1::default(), StartupProgressCellV1::default());
     let context = OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &control)?;
     let providers = NativeCodecProviderSetV1::linked();
     let outcome = TrustedCatalogPublisher::publish_current(&data, &bytes, &providers, &context).await;

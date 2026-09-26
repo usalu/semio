@@ -173,7 +173,7 @@ pub(crate) mod context {
     /// 🪪️ `handle_action` only ADMITS the framework-reserved selection verb on a mounted app — the
     /// selection is not live until its reserved admission has been run to completion.
     pub async fn select_steps(app: &mut SequenceApp, ids: &[&str]) {
-        let target_list: Vec<Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "step", "id": id })).collect();
+        let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "step", "id": id })).collect();
         let targets = serde_json::to_string(&target_list).expect("targets json");
         let admitted = app
             .0

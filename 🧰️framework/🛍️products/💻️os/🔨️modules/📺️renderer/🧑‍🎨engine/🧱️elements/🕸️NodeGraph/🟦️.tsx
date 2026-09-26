@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent, type MouseEvent } from "react";
-import { type GraphWasmSession, GraphWasmCanvas } from "@semio-tech/infinite-canvas-react-renderer";
+import { type GraphWasmSession, EASED_SURFACE_TRAILING_WINDOW_MS, GraphWasmCanvas, createDemandFrameScheduler } from "@semio-tech/infinite-canvas-react-renderer";
 import { STYLING_METRICS, currentStylingAppearanceName, resolveColorHex, serializeCanvasThemeJson, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import {
   borderNormalBottomClass,
@@ -74,7 +74,7 @@ import {
 import { encodePackValue } from "@semio-tech/framework-os";
 import { openSurfaceContextMenu, parseSceneJsonField, useAppCatalogue, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { mapContextMenuSpecs, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
-import { createDemandFrameScheduler, createFlowSession, createGraphSession, isFlowGraphScene, type FlowTask, type FlowWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
+import { createFlowSession, createGraphSession, isFlowGraphScene, type FlowTask, type FlowWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useAppKeybindingsByActionId, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { useUIFindSafe } from "../🔎️ShellSearch/🟦️.tsx";
 import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
@@ -3439,10 +3439,13 @@ export function FlowGraphCanvasHost({
         paintOverlays();
         // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: was an unconditional 60fps `requestAnimationFrame`
         // loop for the surface's entire lifetime — see `createDemandFrameScheduler`'s docstring.
-        const scheduler = createDemandFrameScheduler(() => {
-          renderFlow();
-          paintOverlays();
-        });
+        const scheduler = createDemandFrameScheduler(
+          () => {
+            renderFlow();
+            paintOverlays();
+          },
+          { trailingWindowMs: EASED_SURFACE_TRAILING_WINDOW_MS },
+        );
         schedulerRef.current = scheduler;
         scheduler.invalidate();
         cleanupAttached = () => {

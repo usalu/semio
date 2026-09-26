@@ -51,7 +51,7 @@ import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, typ
 import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { type PluginPanelStatus, type ResolvedShellLocks } from "../🐚️Shell/🟦️.tsx";
 import { ConflictDiffPreview, conflictDiffText } from "../🔺️DiffViewHost/🟦️.tsx";
-import { defaultAppsSettingsTabLabel, defaultAppsSettingsTabText, driverDisplayLabel, noneOptionText, shellLabel, shellLabelLocale, shellTabIcon, shellTerminologyLabel, surfaceRoleChipText } from "../🛠️ShellHelpers/🟦️.tsx";
+import { defaultAppsSettingsTabLabel, defaultAppsSettingsTabText, driverDisplayLabel, noneOptionText, shellLabel, shellLabelIfDefined, shellLabelLocale, shellTabIcon, shellTerminologyLabel, surfaceRoleChipText } from "../🛠️ShellHelpers/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️os-chrome-panels
@@ -332,6 +332,9 @@ export type SettingsHostApi = {
   readonly themeSaveLabel: string;
   readonly setThemeSaveLabel: (value: string) => void;
   readonly controlKeybindings: ReadonlyMap<string, string>;
+  /** ⌨️ The localized name of a bound control the shell's chrome bundles do not name — an app action or an OS command —
+   * in the live language, or `null`. */
+  readonly controlKeybindingLabel: (controlId: string) => string | null;
   readonly keybindingCaptureControlId: string | null;
   readonly setKeybindingCaptureControlId: (id: string | null) => void;
   readonly setKeybindingOverride: (controlId: string, keys: string) => void;
@@ -916,17 +919,26 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
   };
 }
 
-function chordFromKeyboardEvent(event: globalThis.KeyboardEvent): string | null {
-  if (event.key === "Escape") return null;
+/** ⌨️ The keys of one keydown a keybinding capture reads — a DOM `KeyboardEvent` satisfies it. */
+export type KeybindingCaptureKeyV1 = Pick<globalThis.KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey">;
+
+/** ⌨️ What one keydown does to a running keybinding capture: Escape cancels it, a modifier on its own keeps it waiting
+ * for the rest of the chord, anything else completes it as `modifiers+key` in the dispatcher's own spelling.
+ *
+ * A modifier's own keydown used to end the capture — every chord a hand types starts with one — so no chord with a
+ * modifier could ever be recorded: pressing ⌃⌥K on "Undo" left it at ⌘Z (ticket 26/09/23 U5, measured with Playwright's
+ * keyboard). Rows: `🧫️fixtures/⌨️keybinding-capture/🔣️.json`. */
+export function keybindingCaptureStepV1(event: KeybindingCaptureKeyV1): { readonly kind: "cancel" } | { readonly kind: "pending" } | { readonly kind: "chord"; readonly chord: string } {
+  if (event.key === "Escape") return { kind: "cancel" };
+  const key = event.key.toLowerCase();
+  if (key === "control" || key === "meta" || key === "alt" || key === "shift" || key === "os" || key === "altgraph") return { kind: "pending" };
   const parts: string[] = [];
   if (event.ctrlKey) parts.push("ctrl");
   if (event.metaKey) parts.push("meta");
   if (event.altKey) parts.push("alt");
   if (event.shiftKey) parts.push("shift");
-  const key = event.key.length === 1 ? event.key.toLowerCase() : event.key.toLowerCase();
-  if (key === "control" || key === "meta" || key === "alt" || key === "shift") return null;
   parts.push(key === " " ? "space" : key);
-  return parts.join("+");
+  return { kind: "chord", chord: parts.join("+") };
 }
 
 function buildSettingsKeybindingsTree(host: SettingsHostApi): TreePanelConfig {
@@ -946,7 +958,8 @@ function buildSettingsKeybindingsTree(host: SettingsHostApi): TreePanelConfig {
           const chord = parseKeybindingChords(keys)[0];
           const conflict = chord ? chordOwners.get(chord) !== controlId : false;
           const labelId = resolveControlLabelId(controlId);
-          const label = uiDataLabel(humanizeControlId(labelId));
+          const named = host.controlKeybindingLabel(controlId);
+          const label = named !== null ? uiDataLabel(named) : shellLabelIfDefined(labelId) ?? uiDataLabel(humanizeControlId(labelId));
           const capturing = host.keybindingCaptureControlId === controlId;
           return {
             id: `framework.settings.keybindings.${controlId}`,
@@ -964,12 +977,9 @@ function buildSettingsKeybindingsTree(host: SettingsHostApi): TreePanelConfig {
                     if (!capturing) return;
                     event.preventDefault();
                     event.stopPropagation();
-                    const chord = chordFromKeyboardEvent(event.nativeEvent);
-                    if (!chord) {
-                      host.setKeybindingCaptureControlId(null);
-                      return;
-                    }
-                    host.setKeybindingOverride(controlId, chord);
+                    const step = keybindingCaptureStepV1(event.nativeEvent);
+                    if (step.kind === "pending") return;
+                    if (step.kind === "chord") host.setKeybindingOverride(controlId, step.chord);
                     host.setKeybindingCaptureControlId(null);
                   }}
                 />

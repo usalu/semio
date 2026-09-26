@@ -2011,13 +2011,15 @@ export async function loadPluginModuleResilient(pluginId: string, moduleUrl: str
 const PLUGIN_INSTALL_BAND_LABEL: FrozenLabel = { en: "Loading plugin", de: "Plugin wird geladen" };
 const PLUGIN_INSTALL_CANCEL_LABEL: FrozenLabel = { en: "Cancel", de: "Abbrechen" };
 const PLUGIN_INSTALL_PROGRESS_LABEL: FrozenLabel = { en: "{completed} of {total} MB verified", de: "{completed} von {total} MB geprüft" };
+const PLUGIN_INSTALL_RETRY_LABEL: FrozenLabel = { en: "the hub did not answer, trying again ({attempt} of {of})", de: "der Hub hat nicht geantwortet, neuer Versuch ({attempt} von {of})" };
 
 /** 📈️ Every byte the in-flight installs have verified, out of every byte they must verify — `null`
  * while no install is downloading (a locally staged module has nothing to download). */
 export function pluginInstallProgressTotalV1(progressById: Readonly<Record<string, PluginModuleAcquisitionProgress>>, pluginIds: readonly string[]): PluginModuleAcquisitionProgress | null {
   const rows = pluginIds.flatMap((pluginId) => (progressById[pluginId] ? [progressById[pluginId]!] : []));
   if (rows.length === 0) return null;
-  return { completedBytes: rows.reduce((sum, row) => sum + row.completedBytes, 0), totalBytes: rows.reduce((sum, row) => sum + row.totalBytes, 0) };
+  const retry = rows.find((row) => row.retry !== undefined)?.retry;
+  return { completedBytes: rows.reduce((sum, row) => sum + row.completedBytes, 0), totalBytes: rows.reduce((sum, row) => sum + row.totalBytes, 0), ...(retry === undefined ? {} : { retry }) };
 }
 
 /** 🎬️ "Loading plugin cad, beta · 12.3 of 81.2 MB verified" — one band for however many installs are
@@ -2027,7 +2029,9 @@ export function pluginInstallBandTextV1(pluginIds: readonly string[], locale: st
   if (!progress || progress.totalBytes <= 0) return band;
   const megabytes = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const verified = frozenLabelText(PLUGIN_INSTALL_PROGRESS_LABEL, locale).replace("{completed}", megabytes.format(progress.completedBytes / 1_000_000)).replace("{total}", megabytes.format(progress.totalBytes / 1_000_000));
-  return `${band} · ${verified}`;
+  if (progress.retry === undefined) return `${band} · ${verified}`;
+  const retrying = frozenLabelText(PLUGIN_INSTALL_RETRY_LABEL, locale).replace("{attempt}", String(progress.retry.attempt)).replace("{of}", String(progress.retry.of));
+  return `${band} · ${verified} · ${retrying}`;
 }
 
 /** 🔔️ The plugin module store's notices, in the person's language: a stored module that lost files is reinstalled; a full
@@ -2191,45 +2195,62 @@ export type BrowserActorPanelHostV1 = Readonly<{
 
 /** 🗂️ The panel-tab ids whose bodies an actor may render for `app`: its panel-tab leaves with a body, exactly the
  * panels the local refresh asks a guest for (`buildUiRefreshRequest`). */
+/** ⚔️ The localized reason for a hub's refusal of one of this human's command batches, read from the refusal's own
+ * `MutationMessage` codes — the hub's outcome step grades a region another human's concurrent command also touched as
+ * `mutation.clamped` and a structural constraint that command now holds as `mutation.invariant`
+ * (`🛢️db/🗿️artifact` `grade_conflict_record`, frozen code set). `null` for a refusal that names no conflict (admission,
+ * transport): the notice then says only that the hub refused the change. The hub's own `reason` text is English
+ * diagnostics and never reaches the human (ticket 26/09/23 C10, audit G-P2-3).
+ * @see ../../../../../../../../🔨️modules/🛢️db/🗿️artifact/🦀️.rs */
+export function hubCommandRejectionReasonKeyV1(messages: readonly number[]): "ui.conflict.hubConcurrentEdit" | "ui.conflict.hubConcurrentInvariant" | null {
+  if (messages.length === 0) return null;
+  const decoded: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(messages)));
+  if (!Array.isArray(decoded) || decoded.some((message) => message === null || typeof message !== "object" || typeof (message as { code?: unknown }).code !== "string")) throw new Error("hub command rejection: invalid messages");
+  const codes = new Set(decoded.map((message) => (message as { code: string }).code));
+  return codes.has("mutation.invariant") ? "ui.conflict.hubConcurrentInvariant" : codes.has("mutation.clamped") ? "ui.conflict.hubConcurrentEdit" : null;
+}
+
 export function browserActorPanelKeysV1(app: Pick<AppDefinition, "panelTabs">): ReadonlySet<string> {
   return new Set(flattenPanelTabLeaves(app.panelTabs).flatMap((tab) => (tab.bodyKey ? [panelTabKindId(tab.kind)] : [])));
 }
 
-export type BrowserActorUiStoresV1 = Readonly<{ window: UiDocumentStore; panels: Map<string, UiDocumentStore> }>;
+export type BrowserActorUiStoresV1 = Readonly<{ windows: Map<string, UiDocumentStore>; panels: Map<string, UiDocumentStore> }>;
 
 /** 🩹️ Applies one browser-actor patch offer surface by surface and answers one verdict per patch, in offer order
  * — the guest acknowledges and resends per surface (`patch-ack` / `patch-rejected`), so one stale panel never
- * costs the window its frame. A patch for a surface this app does not render is refused `unknown-surface`; a
- * patch that does not apply resets its store to the empty document (see `UiDocumentStore.reset`), which is what
- * the guest's full resend assumes. The FIRST offer of an opening must paint the window, or nothing is retained
- * and every surface is refused `window-surface-unpainted` so the guest resends them all. */
+ * costs a window its frame. Every window kind of the app and every bodied panel is a surface: an actor-bound document
+ * renders all of its windows from its one actor. A patch for a surface this app does not render is refused
+ * `unknown-surface`; a patch that does not apply resets its store to the empty document (see `UiDocumentStore.reset`),
+ * which is what the guest's full resend assumes. The FIRST offer of an opening must paint a window, or nothing is
+ * retained and every surface is refused `window-surface-unpainted` so the guest resends them all. */
 export function applyBrowserActorUiPatchesV1(
   patches: readonly UiPatch[],
-  windowKey: string,
+  windowKeys: ReadonlySet<string>,
   panelKeys: ReadonlySet<string>,
   retained: BrowserActorUiStoresV1 | null,
-): Readonly<{ verdicts: readonly BrowserActorUiPatchVerdictV1[]; stores: BrowserActorUiStoresV1 | null; panelsAdded: boolean }> {
-  const window = retained?.window ?? new UiDocumentStore(windowKey),
+): Readonly<{ verdicts: readonly BrowserActorUiPatchVerdictV1[]; stores: BrowserActorUiStoresV1 | null; surfacesAdded: boolean }> {
+  const windows = retained?.windows ?? new Map<string, UiDocumentStore>(),
     panels = retained?.panels ?? new Map<string, UiDocumentStore>();
-  let panelsAdded = false;
+  let surfacesAdded = false;
   const verdicts = patches.map((patch): BrowserActorUiPatchVerdictV1 => {
-    if (patch.surface !== windowKey && !panelKeys.has(patch.surface)) return { surface: patch.surface, outcome: "rejected", revision: 0, reason: "unknown-surface" };
-    let store = patch.surface === windowKey ? window : panels.get(patch.surface);
+    const owner = windowKeys.has(patch.surface) ? windows : panelKeys.has(patch.surface) ? panels : null;
+    if (owner === null) return { surface: patch.surface, outcome: "rejected", revision: 0, reason: "unknown-surface" };
+    let store = owner.get(patch.surface);
     if (store === undefined) {
       store = new UiDocumentStore(patch.surface);
-      panels.set(patch.surface, store);
-      panelsAdded = true;
+      owner.set(patch.surface, store);
+      surfacesAdded = true;
     }
     const applied = store.applyPatch(patch);
     if (applied.ok) return { surface: patch.surface, outcome: "acknowledged", revision: store.getRevisionSnapshot() };
     store.reset();
     return { surface: patch.surface, outcome: "rejected", revision: 0, reason: applied.rejection.type };
   });
-  if (retained !== null || verdicts.some((verdict) => verdict.surface === windowKey && verdict.outcome === "acknowledged")) return { verdicts, stores: { window, panels }, panelsAdded };
+  if (retained !== null || verdicts.some((verdict) => windowKeys.has(verdict.surface) && verdict.outcome === "acknowledged")) return { verdicts, stores: { windows, panels }, surfacesAdded };
   return {
     verdicts: verdicts.map((verdict): BrowserActorUiPatchVerdictV1 => (verdict.outcome === "acknowledged" ? { surface: verdict.surface, outcome: "rejected", revision: 0, reason: "window-surface-unpainted" } : verdict)),
     stores: null,
-    panelsAdded: false,
+    surfacesAdded: false,
   };
 }
 
@@ -2368,10 +2389,17 @@ function uiIntentPayload(intent: UiIntent): unknown {
 /** @emoji 🌉️ Bridges one semantic UI intent onto the existing plugin action address. Version one is the direct `ActionFactory` mapping; later versions stay explicit in the action name until the host wire owns a version field. */
 export function uiIntentToActionDescriptor(intent: UiIntent): ActionDescriptor {
   const payload = uiIntentPayload(intent);
+  return { ...actionBindingToActionDescriptor({ action: intent.action, args: null }), ...(payload === undefined ? {} : { args: payload }) };
+}
+
+/** @emoji 🌉️ The plugin action address an authored binding fires — the mapping {@link uiIntentToActionDescriptor} applies
+ * to a fired intent, for a host control that re-offers a guest's own binding (the Tasks window pausing a tool run with
+ * the run's own ToolRun-panel Pause). */
+export function actionBindingToActionDescriptor(binding: { readonly action: UiIntent["action"]; readonly args: unknown }): ActionDescriptor {
   return {
-    controllerId: intent.action.scope,
-    action: intent.action.version === 1 ? intent.action.name : `${intent.action.name}@${intent.action.version}`,
-    ...(payload === undefined ? {} : { args: payload }),
+    controllerId: binding.action.scope,
+    action: binding.action.version === 1 ? binding.action.name : `${binding.action.name}@${binding.action.version}`,
+    ...(binding.args === null || binding.args === undefined ? {} : { args: binding.args }),
   };
 }
 
@@ -2701,6 +2729,12 @@ export function shellTabIcon(iconId: IconName | string): React.FC<{ size?: numbe
  * interpolation for keys with `{{placeholders}}`. */
 export function shellLabel(key: UiTranslationKey, options?: Record<string, unknown>): UiLabel {
   return wireLabel(resolveTranslationLabel(uiI18n.t(key, options)) ?? key);
+}
+
+/** @emoji 🌐️ {@link shellLabel} for a key the chrome bundles actually define, or `null` — for a caller holding an open
+ * id space (a control id) that only sometimes names a chrome label. */
+export function shellLabelIfDefined(key: string): UiLabel | null {
+  return uiI18n.exists(key) ? shellLabel(key as UiTranslationKey) : null;
 }
 
 /**

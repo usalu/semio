@@ -1,0 +1,595 @@
+{
+  "schema": "semio.editor.text-input/v1",
+  "provenance": {
+    "what": "The text-input model of the canvas text editor (EditorHost + the TextEditor host): typing inserts at the caret or replaces the exact selection, Backspace/Delete remove one character or the exact selection, arrows move one character (a selection collapses to its edge), Home/End go to the line edges, a paste or an IME composition commits its text like typing it. Semantic tokens never move an edit and no space is ever implied.",
+    "sequences": "Each sequence starts from `text` with the selection `[anchor, caret]` (offsets in Unicode scalar values — every implementation converts to its own units), applies `steps` in order and must end at `expect`. `type` presses one key per character; `key` presses one named key; `select` sets the selection; `paste` and `compose` commit a whole string at once. Every sequence runs under BOTH schedules of the `tokenizer`: `fast` keeps the initial tokens for the whole sequence (the guest's tokens never arrive in between), `slow` re-tokenizes the current text after every step (they always do). The answer must not depend on the schedule.",
+    "tokenizer": "word-runs: every maximal run of ASCII letters, digits and `_` is one semantic token of class `ident`.",
+    "echoes": "The host's optimistic local echo: the host keeps the texts it sent as edits and not yet seen echoed (`local`) and the last text an echo acknowledged. A scene buffer equal to a pending text acknowledges it and every older one — its buffer and selection are applied only when it is the NEWEST pending edit (an older one would revert typing that is still in flight); a buffer equal to the last acknowledged text while edits are still pending is the guest re-publishing a state it already echoed (a job finishing) and is not applied either; any other buffer is an external change (undo, a collaborator, a formatter) and is applied at once, dropping every pending edit. `expect` is the host's text after the event, `pending` the edits still in flight.",
+    "oracles": [
+      "Chromium's native <textarea> editing, driven with real key events by Playwright (the `sequences`, monospace font; `paste`/`compose` via insertText)",
+      "🧰️framework/🔨️modules/✍️editor/🦀️.rs — EditorHost (Rust law, both schedules)",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx — reconcileTextEditorEchoV1 (the `echoes`)"
+    ]
+  },
+  "sequences": [
+    {
+      "id": "a-word-typed-after-a-token-gets-no-implied-space",
+      "text": "RETURN",
+      "selection": [
+        6,
+        6
+      ],
+      "steps": [
+        {
+          "type": " name"
+        }
+      ],
+      "expect": {
+        "text": "RETURN name",
+        "selection": [
+          11,
+          11
+        ]
+      }
+    },
+    {
+      "id": "a-word-typed-into-an-empty-document",
+      "text": "",
+      "selection": [
+        0,
+        0
+      ],
+      "steps": [
+        {
+          "type": "match"
+        }
+      ],
+      "expect": {
+        "text": "match",
+        "selection": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "id": "a-letter-typed-inside-a-token-is-inserted-not-replacing-it",
+      "text": "RETRN",
+      "selection": [
+        3,
+        3
+      ],
+      "steps": [
+        {
+          "type": "U"
+        }
+      ],
+      "expect": {
+        "text": "RETURN",
+        "selection": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "id": "a-letter-typed-at-a-token-start",
+      "text": "(n)",
+      "selection": [
+        1,
+        1
+      ],
+      "steps": [
+        {
+          "type": "m"
+        }
+      ],
+      "expect": {
+        "text": "(mn)",
+        "selection": [
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "id": "punctuation-after-a-keyword-gets-no-implied-space",
+      "text": "MATCH",
+      "selection": [
+        5,
+        5
+      ],
+      "steps": [
+        {
+          "type": "(n)"
+        }
+      ],
+      "expect": {
+        "text": "MATCH(n)",
+        "selection": [
+          8,
+          8
+        ]
+      }
+    },
+    {
+      "id": "backspace-inside-a-token-removes-one-character",
+      "text": "RETURNN",
+      "selection": [
+        7,
+        7
+      ],
+      "steps": [
+        {
+          "key": "Backspace"
+        }
+      ],
+      "expect": {
+        "text": "RETURN",
+        "selection": [
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "id": "delete-inside-a-token-removes-one-character",
+      "text": "RETTURN",
+      "selection": [
+        3,
+        3
+      ],
+      "steps": [
+        {
+          "key": "Delete"
+        }
+      ],
+      "expect": {
+        "text": "RETURN",
+        "selection": [
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "id": "arrows-move-one-character-through-a-token",
+      "text": "MATCH",
+      "selection": [
+        5,
+        5
+      ],
+      "steps": [
+        {
+          "key": "ArrowLeft"
+        },
+        {
+          "key": "ArrowLeft"
+        },
+        {
+          "type": "x"
+        },
+        {
+          "key": "ArrowRight"
+        },
+        {
+          "type": "y"
+        }
+      ],
+      "expect": {
+        "text": "MATxCyH",
+        "selection": [
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "id": "typing-replaces-the-exact-selection",
+      "text": "MATCH (n)",
+      "selection": [
+        0,
+        5
+      ],
+      "steps": [
+        {
+          "type": "W"
+        }
+      ],
+      "expect": {
+        "text": "W (n)",
+        "selection": [
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "a-selection-inside-a-token-is-not-widened",
+      "text": "RETURN",
+      "selection": [
+        2,
+        4
+      ],
+      "steps": [
+        {
+          "type": "x"
+        }
+      ],
+      "expect": {
+        "text": "RExRN",
+        "selection": [
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "id": "backspace-deletes-the-exact-selection",
+      "text": "MATCH (n)",
+      "selection": [
+        5,
+        9
+      ],
+      "steps": [
+        {
+          "key": "Backspace"
+        }
+      ],
+      "expect": {
+        "text": "MATCH",
+        "selection": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "id": "arrow-left-collapses-a-selection-to-its-start",
+      "text": "abcd",
+      "selection": [
+        1,
+        3
+      ],
+      "steps": [
+        {
+          "key": "ArrowLeft"
+        },
+        {
+          "type": "x"
+        }
+      ],
+      "expect": {
+        "text": "axbcd",
+        "selection": [
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "id": "arrow-right-collapses-a-selection-to-its-end",
+      "text": "abcd",
+      "selection": [
+        1,
+        3
+      ],
+      "steps": [
+        {
+          "key": "ArrowRight"
+        },
+        {
+          "type": "x"
+        }
+      ],
+      "expect": {
+        "text": "abcxd",
+        "selection": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "id": "home-and-end-reach-the-line-edges",
+      "text": "MATCH (n)",
+      "selection": [
+        3,
+        3
+      ],
+      "steps": [
+        {
+          "key": "Home"
+        },
+        {
+          "type": "X"
+        },
+        {
+          "key": "End"
+        },
+        {
+          "type": "Y"
+        }
+      ],
+      "expect": {
+        "text": "XMATCH (n)Y",
+        "selection": [
+          11,
+          11
+        ]
+      }
+    },
+    {
+      "id": "a-paste-replaces-the-selection",
+      "text": "a.b",
+      "selection": [
+        2,
+        3
+      ],
+      "steps": [
+        {
+          "paste": "name"
+        }
+      ],
+      "expect": {
+        "text": "a.name",
+        "selection": [
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "id": "a-composition-commits-at-the-caret",
+      "text": "ab",
+      "selection": [
+        1,
+        1
+      ],
+      "steps": [
+        {
+          "compose": "日本"
+        }
+      ],
+      "expect": {
+        "text": "a日本b",
+        "selection": [
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "id": "enter-and-arrow-up-keep-the-column",
+      "text": "abc",
+      "selection": [
+        3,
+        3
+      ],
+      "steps": [
+        {
+          "type": "\nde"
+        },
+        {
+          "key": "ArrowLeft"
+        },
+        {
+          "key": "ArrowUp"
+        },
+        {
+          "type": "X"
+        }
+      ],
+      "expect": {
+        "text": "aXbc\nde",
+        "selection": [
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "id": "a-fast-word-then-corrections",
+      "text": "MATCH (a) RETURN ",
+      "selection": [
+        17,
+        17
+      ],
+      "steps": [
+        {
+          "type": "a.nmae"
+        },
+        {
+          "key": "Backspace"
+        },
+        {
+          "key": "Backspace"
+        },
+        {
+          "key": "Backspace"
+        },
+        {
+          "type": "ame"
+        }
+      ],
+      "expect": {
+        "text": "MATCH (a) RETURN a.name",
+        "selection": [
+          23,
+          23
+        ]
+      }
+    }
+  ],
+  "echoes": [
+    {
+      "id": "stale-echoes-of-in-flight-typing-never-revert-it",
+      "initial": "RETURN",
+      "events": [
+        {
+          "local": "RETURN n",
+          "expect": "RETURN n",
+          "pending": [
+            "RETURN n"
+          ]
+        },
+        {
+          "local": "RETURN na",
+          "expect": "RETURN na",
+          "pending": [
+            "RETURN n",
+            "RETURN na"
+          ]
+        },
+        {
+          "echo": "RETURN n",
+          "expect": "RETURN na",
+          "pending": [
+            "RETURN na"
+          ]
+        },
+        {
+          "local": "RETURN nam",
+          "expect": "RETURN nam",
+          "pending": [
+            "RETURN na",
+            "RETURN nam"
+          ]
+        },
+        {
+          "echo": "RETURN na",
+          "expect": "RETURN nam",
+          "pending": [
+            "RETURN nam"
+          ]
+        },
+        {
+          "echo": "RETURN nam",
+          "expect": "RETURN nam",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "an-external-change-is-applied-and-drops-the-pending-edits",
+      "initial": "MATCH",
+      "events": [
+        {
+          "local": "MATCHx",
+          "expect": "MATCHx",
+          "pending": [
+            "MATCHx"
+          ]
+        },
+        {
+          "echo": "MATCH (n)",
+          "expect": "MATCH (n)",
+          "pending": []
+        },
+        {
+          "echo": "MATCH (n) RETURN n",
+          "expect": "MATCH (n) RETURN n",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "a-repeated-text-is-acknowledged-in-order",
+      "initial": "a",
+      "events": [
+        {
+          "local": "ab",
+          "expect": "ab",
+          "pending": [
+            "ab"
+          ]
+        },
+        {
+          "local": "a",
+          "expect": "a",
+          "pending": [
+            "ab",
+            "a"
+          ]
+        },
+        {
+          "echo": "ab",
+          "expect": "a",
+          "pending": [
+            "a"
+          ]
+        },
+        {
+          "echo": "a",
+          "expect": "a",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "a-selection-only-echo-of-the-newest-edit-is-applied",
+      "initial": "",
+      "events": [
+        {
+          "local": "x",
+          "expect": "x",
+          "pending": [
+            "x"
+          ]
+        },
+        {
+          "echo": "x",
+          "expect": "x",
+          "pending": []
+        },
+        {
+          "echo": "x",
+          "expect": "x",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "a-re-published-acknowledged-text-is-stale-while-typing-is-in-flight",
+      "initial": "a",
+      "events": [
+        {
+          "local": "ab",
+          "expect": "ab",
+          "pending": [
+            "ab"
+          ]
+        },
+        {
+          "echo": "ab",
+          "expect": "ab",
+          "pending": []
+        },
+        {
+          "local": "abc",
+          "expect": "abc",
+          "pending": [
+            "abc"
+          ]
+        },
+        {
+          "echo": "ab",
+          "expect": "abc",
+          "pending": [
+            "abc"
+          ]
+        },
+        {
+          "echo": "abc",
+          "expect": "abc",
+          "pending": []
+        },
+        {
+          "echo": "abc",
+          "expect": "abc",
+          "pending": []
+        }
+      ]
+    }
+  ]
+}

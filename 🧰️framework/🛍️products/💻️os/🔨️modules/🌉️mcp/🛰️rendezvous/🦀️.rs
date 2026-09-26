@@ -146,6 +146,18 @@ fn record_is_live(record: &OsSessionRecord) -> bool {
     now_ms().saturating_sub(record.started_at_ms) <= SESSION_RECORD_MAX_AGE_MS
 }
 
+/// 🫀️ Whether one offer's gateway may still serve it — the session rule, applied to offers.
+#[cfg(unix)]
+fn offer_is_live(offer: &BridgeOffer) -> bool {
+    process_is_alive(offer.pid)
+}
+
+/// 🫀️ See the unix twin — with no process probe, age is the only signal available.
+#[cfg(not(unix))]
+fn offer_is_live(offer: &BridgeOffer) -> bool {
+    now_ms().saturating_sub(offer.published_at_ms) <= SESSION_RECORD_MAX_AGE_MS
+}
+
 fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64
 }
@@ -217,12 +229,30 @@ pub fn publish_offer(offer: BridgeOffer) -> Result<PublishedBridgeOffer, Gateway
 pub fn publish_offer_in(root: &Path, offer: BridgeOffer) -> Result<PublishedBridgeOffer, GatewayError> {
     let directory = offers_dir_in(root);
     std::fs::create_dir_all(&directory).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot create bridge rendezvous directory `{}`: {error}", directory.display())))?;
+    sweep_dead_offers_in(&directory);
     let path = directory.join(format!("{}.json", offer.pid));
     let temporary = directory.join(format!("{}.json.partial", offer.pid));
     let bytes = serde_json::to_vec_pretty(&offer).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
     write_owner_only(&temporary, &bytes)?;
     std::fs::rename(&temporary, &path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot publish bridge offer `{}`: {error}", path.display())))?;
     Ok(PublishedBridgeOffer { path, offer })
+}
+
+/// 🧹️ Removes every offer whose gateway is gone, and every unreadable one. A gateway stopped by a
+/// signal never runs [`PublishedBridgeOffer`]'s `Drop`, so the next gateway to publish sweeps what
+/// it left — the same rule [`live_os_sessions_in`] applies to session records.
+fn sweep_dead_offers_in(directory: &Path) {
+    let Ok(entries) = std::fs::read_dir(directory) else { return };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().and_then(std::ffi::OsStr::to_str) != Some("json") {
+            continue;
+        }
+        let live = std::fs::read(&path).ok().and_then(|bytes| serde_json::from_slice::<BridgeOffer>(&bytes).ok()).is_some_and(|offer| offer_is_live(&offer));
+        if !live {
+            let _ = std::fs::remove_file(&path);
+        }
+    }
 }
 
 #[cfg(unix)]

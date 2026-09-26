@@ -1,0 +1,20 @@
+🌊️ P8 post-publish patch set: flow has ONE scene — the composed content child — and every verb and window uses it.
+
+Measured (clone scratch law, 2026-09-26): after `addWidget` (child lane) the main window did not render the new widget
+(the renderer read the parent's genesis working-scene owner), `removeWidget` of it was refused "found no widget", and any
+parent-lane verb (`removeWidget`, `disconnect`, `deleteSelection`, `patchFlowWidgets`, `connectMediaPorts`, `reorganize`,
+`renameFlowWidget`, `runExtensionAction`, `setActiveExample`) re-pointed the parent's content coordinate at a new
+content-addressed child no store held — dropping every child edit and refusing every later child verb before any capacity
+was measured. Since the parent pack holds only the coordinate, a reload also showed an empty graph.
+
+A `flow_composed_snapshot` (crate root) reads the scene from the content child the parent names; every read entry
+(render + request-context render, interaction topology, pending effects, context menu, host-only evaluation, viewer)
+composes first. Every write publishes ONE snapshot group on that child (`flow_scene_publication`, `flow_content_edit`,
+`host_scene_edit` replace the parent diff `host_operations`), so the nine verbs move to the `Child` publication lane and
+the parent coordinate never moves — the pattern sequence already follows (`sequence_host_snapshot_from_children`,
+`sequence_child_replace_emit`). Unknown targets and no-op edits are refused by name (removeWidget, disconnect,
+deleteSelection, duplicateWidget's missing source, patchFlowWidgets, connectMediaPorts, renameFlowWidget); duplicateWidget
+no longer needs a window transient. Tests read the composed scene and assert the named refusals; the declared-verb law
+pins 28 verbs and the agent-lane divergences (child groups are uncarried until the MCP gateway commits owned children —
+routed to G10), and a new law proves the one-scene property end to end. Clone: flow lib 257 passed / 0 failed (tree:
+252 / 5 failed).

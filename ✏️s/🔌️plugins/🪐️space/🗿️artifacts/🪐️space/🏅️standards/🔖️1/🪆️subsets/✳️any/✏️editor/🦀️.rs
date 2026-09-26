@@ -223,6 +223,10 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceIndexRetainedC
 pub struct SpaceIndexEditor;
 
 impl ArtifactEditor for SpaceIndexEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = SSpaceSnapshot;
     type Mutation = SSpaceMutation;
     type Config = SpaceIndexConfig;
@@ -484,6 +488,20 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
                 ])
                 .submit_label(LocalizedLabel::native("Invite", "Einladen")),
         )
+        .action_describe("createArtifact", LocalizedLabel::native("Creates a new artifact of the chosen kind with the given name in this space; without a name or kind it opens the Create Artifact dialog.", "Erstellt in diesem Space ein neues Artefakt der gewählten Art mit dem angegebenen Namen; ohne Namen oder Art öffnet es den Dialog Artefakt erstellen."))
+        .action_describe("deleteArtifact", LocalizedLabel::native("Removes one artifact by id from this space's index for every member.", "Entfernt ein Artefakt anhand seiner Id für alle Mitglieder aus dem Index dieses Space."))
+        .action_describe("renameArtifact", LocalizedLabel::native("Renames one artifact of this space's index by id.", "Benennt ein Artefakt im Index dieses Space anhand seiner Id um."))
+        .action_describe("touchArtifact", LocalizedLabel::native("Records that an actor opened or edited one artifact at the given time, updating its last-touched entry in the index.", "Hält fest, dass ein Akteur ein Artefakt zum angegebenen Zeitpunkt geöffnet oder bearbeitet hat, und aktualisiert dessen Zuletzt-berührt-Eintrag im Index."))
+        .action_describe("requestDeleteArtifact", LocalizedLabel::native("Opens the confirmation dialog for deleting one artifact; confirming it deletes the artifact for every member.", "Öffnet den Bestätigungsdialog zum Löschen eines Artefakts; die Bestätigung löscht es für alle Mitglieder."))
+        .action_describe("openArtifact", LocalizedLabel::native("Opens one artifact of this space with the user's preferred app for its kind.", "Öffnet ein Artefakt dieses Space mit der bevorzugten App des Nutzers für seine Art."))
+        .action_describe("openArtifactWith", LocalizedLabel::native("Opens one artifact of this space with an explicitly chosen app and role (editor or viewer).", "Öffnet ein Artefakt dieses Space mit einer ausdrücklich gewählten App und Rolle (Editor oder Betrachter)."))
+        .action_describe("inviteMember", LocalizedLabel::native("Invites a person to this space on the hub by email with the given role.", "Lädt eine Person per E-Mail mit der angegebenen Rolle auf dem Hub in diesen Space ein."))
+        .action_describe("requestInviteMember", LocalizedLabel::native("Opens the Invite Member dialog (email and role) for this space.", "Öffnet für diesen Space den Dialog Mitglied einladen (E-Mail und Rolle)."))
+        .action_describe("removeMember", LocalizedLabel::native("Removes one member from this space on the hub; they lose access to its artifacts.", "Entfernt ein Mitglied auf dem Hub aus diesem Space; es verliert den Zugriff auf dessen Artefakte."))
+        .action_describe("setVisibility", LocalizedLabel::native("Sets who can find this space on the hub (such as private or public).", "Legt fest, wer diesen Space auf dem Hub finden kann (etwa privat oder öffentlich)."))
+        .action_describe("copyInviteLink", LocalizedLabel::native("Asks the hub to mint an invite link with the given role for this space and copies it to the clipboard.", "Lässt den Hub einen Einladungslink mit der angegebenen Rolle für diesen Space erzeugen und kopiert ihn in die Zwischenablage."))
+        .action_audience("foldDirectoryEvents", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_audience("presenceHeartbeat", semio_framework_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️Manifest

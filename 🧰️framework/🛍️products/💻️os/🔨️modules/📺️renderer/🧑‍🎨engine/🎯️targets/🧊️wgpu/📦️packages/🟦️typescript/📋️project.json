@@ -46,6 +46,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts",

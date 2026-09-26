@@ -1,0 +1,13 @@
+{
+  "description": "Which failed pass raises a window fault (🎫️ 26/09/23 C10). A pass (session refresh, spawned refresh, conflict read) that fails only because the instance it addressed was retired under it — the Home instance a `/spaces/<id>` load switches away from, a hot swap, a revoked activation — raises NO fault: that window is gone, and a fault raised for it stayed painted over the Space app (`no actor for instance 1`, `actor-activation.revoked`, measured on hubs 7800 and 8021). Every other failure stays a fault of `class`. `failure.kind`: `marked` = an Error carrying the host's retirement mark, `error` = a plain Error, `wire` = a decoded wire fault object.",
+  "rows": [
+    { "name": "gate refusal for a retired instance", "failure": { "kind": "marked", "message": "[DEBUG] program space: no actor for instance 1 (createApp not called, or already destroyed)" }, "fault": null },
+    { "name": "gate refusal for an instance nobody created", "failure": { "kind": "error", "message": "[DEBUG] program space: no actor for instance 99 (createApp not called, or already destroyed)" }, "fault": "unknown" },
+    { "name": "activation revoked under a turn", "failure": { "kind": "error", "message": "plugin-ui.intake-rejected:intake:actor-activation.revoked" }, "fault": null },
+    { "name": "channel disposed with its instance", "failure": { "kind": "error", "message": "app-channel.disposed" }, "fault": null },
+    { "name": "channel closed with its instance", "failure": { "kind": "error", "message": "app-channel.closed" }, "fault": null },
+    { "name": "handle closed by a hot swap", "failure": { "kind": "error", "message": "wgpu-plugin-handle.closed" }, "fault": null },
+    { "name": "guest ABI mismatch", "failure": { "kind": "wire", "origin": "plugin", "code": "plugin.internal.abi-mismatch", "message": "trapped" }, "fault": "abi-mismatch" },
+    { "name": "guest refused to publish its surfaces", "failure": { "kind": "error", "message": "stopped without publishing requested UI surfaces" }, "fault": "unknown" }
+  ]
+}

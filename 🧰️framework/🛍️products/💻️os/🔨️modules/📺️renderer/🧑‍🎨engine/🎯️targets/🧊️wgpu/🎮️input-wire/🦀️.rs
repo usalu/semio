@@ -201,6 +201,18 @@ impl From<BrowserPointerButton> for PointerButton {
     }
 }
 
+/// ♿️ The byte credit of one accessibility address id (`windowId`, `nodeKey`) — the transport's
+/// `FRAME_WORKER_ACCESSIBILITY_ID_BYTES` (`🚚️browser-frame-transport/🟦️.ts`).
+pub(crate) const ACCESSIBILITY_ID_BYTES: usize = 512;
+
+/// ♿️ Whether an accessibility address fits its fixed CREDITS — bounded, non-empty, control-free ids
+/// (`🧫️fixtures/♿️wgpu-accessibility-interaction` `transportCredits`). Liveness is not a credit: a
+/// retired generation or a mismatched key is the renderer's own `Ok(false)`, and node id 0 is the
+/// first id `UiNodeIdAllocator` mints, so neither may fault the Worker.
+pub(crate) fn accessibility_address_within_credits(window_id: &str, node_key: &str) -> bool {
+    [window_id, node_key].into_iter().all(|value| !value.is_empty() && value.len() <= ACCESSIBILITY_ID_BYTES && !value.bytes().any(|byte| byte <= 0x1f || byte == 0x7f))
+}
+
 /// 🎯️ Projects one wire event onto the `DispatchEvent` `Ui::dispatch_event` receives, for every wire
 /// event whose meaning is complete on its own.
 ///

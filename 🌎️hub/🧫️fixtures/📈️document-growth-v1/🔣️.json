@@ -1,0 +1,48 @@
+{
+  "schema": "semio.hub.document-growth-scenario/v1",
+  "version": 1,
+  "author": "author-a",
+  "spaceName": "Document Growth",
+  "documents": [
+    { "kindId": "s.note.note", "count": 11, "editsBeforeRestart": 120 },
+    { "kindId": "s.gis.gismap", "count": 11, "editsBeforeRestart": 120 },
+    { "kindId": "s.note.note", "count": 1, "editsBeforeRestart": 520 },
+    { "kindId": "s.gis.gismap", "count": 1, "editsBeforeRestart": 520 }
+  ],
+  "editsAfterRestart": 3,
+  "command": {
+    "diffSchema": "artifact",
+    "payloadBytes": 2048,
+    "batchIdBase": 1,
+    "mutationIdPrefix": "growth-"
+  },
+  "bounds": {
+    "concurrentDocumentsMin": 20,
+    "concurrentCreations": 4,
+    "longDocumentEditsMin": 500,
+    "ackWithinMs": 60000,
+    "latencyWindowEdits": 40,
+    "latencyGrowthMax": 3,
+    "gracefulExitWithinMs": 15000,
+    "restartWithinMs": 1000,
+    "reopenWithinMs": 30000
+  },
+  "shutdown": {
+    "databaseClosedMarker": "database=closed"
+  },
+  "refusalMarkers": ["DB I/O", "admission exhausted", "credit exhausted", "edit history ledger is saturated", "WAL writer capacity"],
+  "steps": [
+    "start-hub-with-trusted-catalog",
+    "provision-author-and-sign-in",
+    "create-space",
+    "create-every-document-through-the-creation-catalog",
+    "open-plan-socket-grant-and-welcome-per-document",
+    "grow-every-document-concurrently-with-chained-edits",
+    "every-edit-acknowledged-accepted-no-refusal",
+    "ack-latency-of-the-last-window-within-latency-growth-max-of-the-first",
+    "sigterm-exits-zero-and-closes-the-database",
+    "restart-same-data-dir-within-restart-bound",
+    "reopen-every-document-and-its-next-edits-are-accepted",
+    "hub-output-carries-no-refusal-marker"
+  ]
+}

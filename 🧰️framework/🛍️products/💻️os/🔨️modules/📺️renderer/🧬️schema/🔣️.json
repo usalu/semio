@@ -799,7 +799,8 @@
             "additionalProperties": false,
             "required": [
               "id",
-              "requestStages"
+              "requestStages",
+              "sessionKept"
             ],
             "properties": {
               "id": {
@@ -813,6 +814,10 @@
                 "items": {
                   "$ref": "#/$defs/DocumentOpeningRequestStageV1"
                 }
+              },
+              "sessionKept": {
+                "description": "Whether the worker still holds the hub session capability after the refused open: a cancelled or retired open is no evidence against the hub and keeps it; a hostile plan or asset revokes it.",
+                "type": "boolean"
               }
             }
           }

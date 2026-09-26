@@ -330,6 +330,10 @@ pub fn reset_procedure_document_effect(document: &ProcedureSnapshot) -> semio_fr
 }
 
 impl ArtifactEditor for ImperativePlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     /// 🧩️ The roster both composed `s.stdio.semio` children (`flow`, `text`) open through. A
     /// `NoMembers` editor cannot materialise the children `genesis_child_pack` derives, so every
     /// whole-document load fails its archive closure leg before any of them is opened.
@@ -664,6 +668,17 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             // workflow registration this app used to chain here are dropped, not ported. The
             // artifact-level `📚️examples/🎬️demo` facet (`crate::examples::demo`,
             // still mounted in `🦀️.rs`) is the surviving example registration path.
+            .action_describe("addStep", LocalizedLabel::native("Appends a new step of the given kind (for example a control, math, text or effect step) to the end of the procedure.", "Hängt einen neuen Schritt der angegebenen Art (etwa einen Steuerungs-, Mathe-, Text- oder Effektschritt) an das Ende der Prozedur an."))
+            .action_describe("addStepAt", LocalizedLabel::native("Appends a new step of the given kind inside a slot of a control step (such as the then or else branch of an if), or to the procedure's end without owner and slot.", "Hängt einen neuen Schritt der angegebenen Art in einen Slot eines Steuerungsschritts (etwa den Dann- oder Sonst-Zweig eines Wenn) an, ohne Besitzer und Slot an das Ende der Prozedur."))
+            .action_describe("removeStep", LocalizedLabel::native("Removes one step by id from the top level of the procedure, including every step nested inside it.", "Entfernt einen Schritt anhand seiner Id aus der obersten Ebene der Prozedur, samt aller darin verschachtelten Schritte."))
+            .action_describe("removeStepAt", LocalizedLabel::native("Removes one step by id from a control step's slot, or from the top level, including every step nested inside it.", "Entfernt einen Schritt anhand seiner Id aus dem Slot eines Steuerungsschritts oder der obersten Ebene, samt aller darin verschachtelten Schritte."))
+            .action_describe("moveStep", LocalizedLabel::native("Moves one top-level step to a new position (index) in the procedure.", "Verschiebt einen Schritt der obersten Ebene an eine neue Position (Index) in der Prozedur."))
+            .action_describe("moveStepAt", LocalizedLabel::native("Moves one step to a new position (index) within its control step's slot or the top level.", "Verschiebt einen Schritt an eine neue Position (Index) innerhalb des Slots seines Steuerungsschritts oder der obersten Ebene."))
+            .action_describe("setStepParams", LocalizedLabel::native("Replaces the parameters of one top-level step with the given name-to-value map.", "Ersetzt die Parameter eines Schritts der obersten Ebene durch die angegebene Zuordnung von Namen zu Werten."))
+            .action_describe("setStepParamsAt", LocalizedLabel::native("Replaces the parameters of one step inside a control step's slot, or at the top level, with the given name-to-value map.", "Ersetzt die Parameter eines Schritts im Slot eines Steuerungsschritts oder der obersten Ebene durch die angegebene Zuordnung von Namen zu Werten."))
+            .action_describe("run", LocalizedLabel::native("Runs the procedure from its first step and shows the resulting variable scope in the output view; the procedure itself is not changed.", "Führt die Prozedur ab dem ersten Schritt aus und zeigt den entstandenen Variablenbereich in der Ausgabeansicht; die Prozedur selbst ändert sich nicht."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole procedure with the bundled demo program, or with an empty procedure for any other example id.", "Ersetzt die gesamte Prozedur durch das mitgelieferte Demoprogramm, bei jeder anderen Beispiel-Id durch eine leere Prozedur."))
+            .action_destructive("setActiveExample")
             .build_definition()
 }
 //#endregion 🔖️Manifest

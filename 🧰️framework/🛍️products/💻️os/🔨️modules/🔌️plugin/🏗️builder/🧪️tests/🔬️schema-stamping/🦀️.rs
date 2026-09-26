@@ -32,6 +32,10 @@ impl ArtifactEditor for SchemaStampEditorFixture {
         NoConfig::default()
     }
 
+    fn examples() -> Vec<ExampleSource> {
+        vec![ExampleSource::new("stamp-column", LocalizedLabel::native("Stamp Column", "Stempelstütze"), "{\"kind\":\"stamp\"}", "file")]
+    }
+
     fn handle(
         _command: &NoConfigMutation,
         _doc: &ArtifactView<'_, NoConfig>,
@@ -109,6 +113,8 @@ async fn editor_stamps_artifact_schema_from_the_type_when_left_empty() {
     let plugin = Plugin::<SchemaStampApps>::builder("builder-test-schema-stamp-editor").label("Builder Test Schema Stamp Editor").version("0.1.0").package_id("semio:builder-test-schema-stamp-editor").editor::<SchemaStampEditorFixture>(def).try_build().expect("a minimal editor surface must assemble");
     let app = plugin.manifest.apps.iter().find(|app| app.role == AppRole::Editor).expect("the registered editor app definition");
     assert_eq!(app.io.artifact_schema, SchemaStampEditorFixture::DOCUMENT_SCHEMA);
+    let offered = examples_for_app(&plugin.manifest.examples, app);
+    assert_eq!(offered.iter().map(|example| example.id.as_str()).collect::<Vec<_>>(), vec!["stamp-column"]);
 }
 
 #[semio_framework_async_macros::async_test]

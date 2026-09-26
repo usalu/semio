@@ -55,6 +55,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       await expect(promise).rejects.toThrow();
     });
 
+    it("readBackboneEnvelope reads 204 No Content — a document nothing has written yet — as null without retrying", async () => {
+      let calls = 0;
+      globalThis.fetch = vi.fn(async () => {
+        calls += 1;
+        return { ok: true, status: 204, arrayBuffer: async () => new ArrayBuffer(0) } as unknown as Response;
+      }) as unknown as typeof fetch;
+      const result = await readBackboneEnvelope("folder:///doc");
+      expect(result).toBeNull();
+      expect(calls).toBe(1);
+    });
+
     it("readBackboneEnvelope returns null on 404 without retrying", async () => {
       let calls = 0;
       globalThis.fetch = vi.fn(async () => {
@@ -918,6 +929,28 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(() => decodeAppFrame(Uint8Array.from([...encodeAppFrame(rejected), 0]))).toThrow();
     });
 
+    it("keeps each instance's last published Ephemeral frame as its presence snapshot, from any outcome", async () => {
+      const { decodePresenceInteraction, encodePresenceInteraction } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
+      const presence = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/👕️canvas-presence/🔣️.json", source.url), "utf8")) as { readonly paint: readonly { readonly roster: readonly { readonly actor: string; readonly interaction?: Parameters<typeof encodePresenceInteraction>[0] }[] }[] };
+      const selecting = presence.paint[0]!.roster.find((row) => row.actor === "peer-a")!.interaction!;
+      const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+      const handle: AppChannelHandle = { enqueue: () => undefined, outcomes: broadcast.stream };
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 7, "fixture");
+      const flush = async () => { for (let index = 0; index < 12; index += 1) await Promise.resolve(); };
+      expect(client.ephemeral()).toBeNull();
+      broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Ephemeral: { presence: [1], presence_generation: 1, transient_generation: 1, interaction: [], tool_run: [] } })] });
+      await flush();
+      expect(client.ephemeral()).toEqual({ presence: [1], presenceGeneration: 1, transientGeneration: 1, interaction: [] });
+      broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: 0 } }), encodeAppFrame({ Ephemeral: { presence: [2, 3], presence_generation: 2, transient_generation: 5, interaction: encodePresenceInteraction(selecting), tool_run: [] } })] });
+      broadcast.push({ instanceId: 8, frames: [encodeAppFrame({ Ephemeral: { presence: [9], presence_generation: 9, transient_generation: 9, interaction: [], tool_run: [] } })] });
+      await flush();
+      const snapshot = client.ephemeral();
+      expect(snapshot?.presence).toEqual([2, 3]);
+      expect([snapshot?.presenceGeneration, snapshot?.transientGeneration]).toEqual([2, 5]);
+      expect(decodePresenceInteraction(Uint8Array.from(snapshot!.interaction), [0])).toEqual(selecting);
+      client.dispose();
+    });
+
     it("local interaction client fixture lifecycles preserve ACK ownership and ordinary replies", async () => {
       const { readFileSync } = await import("node:fs");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8"));
@@ -1773,6 +1806,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
   type BackboneWorkerRequest = import("../../🟦️.ts").BackboneWorkerRequest;
   type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
   type BrowserActorUiMountedV1 = import("../../🟦️.ts").BrowserActorUiMountedV1;
+  type DirectoryCommand = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DirectoryCommand;
   type DirectoryEvent = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DirectoryEvent;
   type DirectoryStreamMessage = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DirectoryStreamMessage;
   type SocketGrantIssuerV1 = import("../../🟦️.ts").SocketGrantIssuerV1;
@@ -1924,8 +1958,9 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(() => decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: [1], messages: [], mutations: [], inverse_group: [] } }), fixture.commandRequest.actionSequence)).toThrow();
       expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: Array.from(encodePackValue(null)), messages: [], mutations: [], inverse_group: [] } }), fixture.commandRequest.actionSequence).kind).toBe("invocation");
       const ephemeral = encodeAppFrame({ Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [] } });
-      expect(decodeBrowserActorCommandPublicationV1(ephemeral, fixture.commandRequest.actionSequence)).toEqual({ kind: "ephemeral" });
-      expect(decodeBrowserActorIntentPublicationV1(ephemeral)).toEqual({ kind: "ephemeral" });
+      const ephemeralSnapshot = { kind: "ephemeral", snapshot: { presence: [1, 2], presenceGeneration: 3, transientGeneration: 4, interaction: [] } };
+      expect(decodeBrowserActorCommandPublicationV1(ephemeral, fixture.commandRequest.actionSequence)).toEqual(ephemeralSnapshot);
+      expect(decodeBrowserActorIntentPublicationV1(ephemeral)).toEqual(ephemeralSnapshot);
       const progress = encodeAppFrame({ Invocation: { in_reply_to: 0, output: [1, 2], diagnostics: [], ui_scope: [3], history_patch: [], messages: [], mutations: [], inverse_group: [] } });
       expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ OperationCompleted: { operation: 3, revision: 0xfedc_ba98_7654_3210n, ui_scope: [1], history_patch: [] } }), fixture.commandRequest.actionSequence)).toEqual({ kind: "operation-completed", historyPatch: null });
       const historyBytes = Array.from(encodePackValue({ cursor: 1, upserts: [] }));
@@ -2368,6 +2403,22 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(response))).toEqual(response);
     });
 
+    it("carries every directory command across the worker wire back into its declaration order, so the worker can seal it", async () => {
+      const { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } = await import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts");
+      const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🧫️fixtures/📇️directory/🧾️command-receipt-v1.json", source.url), "utf8")) as { readonly requests: readonly { readonly name: string; readonly requestId: string; readonly command: DirectoryCommand; readonly canonical: string }[] };
+      const reordered = corpus.requests.filter((row) => Object.keys(row.command).join(",") !== Object.keys(row.command).sort().join(","));
+      expect(reordered.map((row) => row.command.kind)).toEqual(expect.arrayContaining(["upsert-member", "rename-space", "create-invite"]));
+      for (const row of corpus.requests) {
+        const decoded = decodeBackboneWorkerRequest(encodeBackboneWorkerRequest({ kind: "directory-command", requestId: row.requestId, command: row.command }));
+        expect(decoded, row.name).toEqual({ kind: "directory-command", requestId: row.requestId, command: row.command });
+        if (decoded.kind !== "directory-command") throw new Error(row.name);
+        expect(Object.keys(decoded.command), row.name).toEqual(Object.keys(row.command));
+        expect(directoryCommandRequestJson(sealDirectoryCommandRequestV1(decoded.requestId, decoded.command)), row.name).toBe(row.canonical);
+      }
+      expect(() => decodeBackboneWorkerRequest(encodeBackboneWorkerRequest({ kind: "directory-command", requestId: "0".repeat(32), command: corpus.requests[0]!.command }))).toThrow("invalid directory command request id");
+      expect(() => decodeBackboneWorkerRequest(encodeBackboneWorkerRequest({ kind: "directory-command", requestId: corpus.requests[0]!.requestId, command: { ...corpus.requests[0]!.command, extra: 1 } as unknown as DirectoryCommand }))).toThrow();
+    });
+
     it("document opening attempt stays outer-wire-owned without widening the browser patch contract", async () => {
       const clientInstanceId = "33333333-3333-4333-8333-333333333333";
       const requests: readonly BackboneWorkerRequest[] = [
@@ -2393,6 +2444,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
         activationGeneration: "41",
         instanceId: 0,
         verifiedSurfaceId: "s.gis.gismap@1/viewer",
+        windowKindId: "gis2d-main",
         catalogGenerationId: "1".repeat(64),
         componentSha256: "2".repeat(64),
         descriptorSha256: "3".repeat(64),
@@ -2405,6 +2457,9 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(mounted))).toEqual(mounted);
       const mountedUnknown = encodePackValue({ ...mounted, grant: "forbidden" });
       expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...mountedUnknown]))).toThrow("invalid mounted UI fields");
+      const { windowKindId: _windowKindId, ...mountedWindowless } = mounted;
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...encodePackValue(mountedWindowless)]))).toThrow("invalid mounted UI fields");
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...encodePackValue({ ...mounted, windowKindId: "" })]))).toThrow("invalid mounted UI owner");
       const mountedForeignFrontier = encodePackValue({ ...mounted, frontier: { ...mounted.frontier, documentId: "foreign" } });
       expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...mountedForeignFrontier]))).toThrow("invalid mounted UI identity");
 

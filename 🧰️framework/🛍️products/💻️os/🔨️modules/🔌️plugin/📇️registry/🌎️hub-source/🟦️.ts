@@ -22,6 +22,7 @@ import { PluginModuleUnavailableError, type PluginModuleAcquired, type PluginMod
 import {
   decodeTrustedPluginModuleBundleV1,
   PLUGIN_MODULE_STORE_V1,
+  PLUGIN_MODULE_TRANSFER_RETRY_V1,
   pluginModuleStoreRecordV1,
   TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES,
   TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES,
@@ -143,10 +144,41 @@ async function readBounded(response: Response, maximum: number, onChunk: (bytes:
   return bytes;
 }
 
+/** 🔁️ A transient transfer answer (`PluginModuleTransferRetryV1`): a declared transient status, or the connection failing
+ * before any status. Only this is retried; every other refusal ends the install at once. */
+export class TrustedPluginModuleTransientError extends TrustedPluginModuleRefusalV1 {}
+
 async function fetchBytes(url: string, maximum: number, signal: AbortSignal, onChunk: (bytes: number) => void = () => {}): Promise<Uint8Array> {
-  const response = await fetch(url, { signal });
-  if (!response.ok) throw new TrustedPluginModuleRefusalV1(`trusted plugin module ${url} answered HTTP ${response.status}`);
+  let response: Response;
+  try {
+    response = await fetch(url, { signal });
+  } catch (error) {
+    signal.throwIfAborted();
+    throw new TrustedPluginModuleTransientError(`trusted plugin module ${url} failed before any answer: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  if (!response.ok) {
+    await response.body?.cancel();
+    const message = `trusted plugin module ${url} answered HTTP ${response.status}`;
+    throw PLUGIN_MODULE_TRANSFER_RETRY_V1.transientStatuses.includes(response.status) ? new TrustedPluginModuleTransientError(message) : new TrustedPluginModuleRefusalV1(message);
+  }
   return readBounded(response, maximum, onChunk);
+}
+
+/** ⏳️ Waits one retry backoff, abandoning it the moment the install is cancelled. */
+function transferBackoff(attempt: number, signal: AbortSignal): Promise<void> {
+  const delayMs = Math.min(PLUGIN_MODULE_TRANSFER_RETRY_V1.backoffMaxMs, PLUGIN_MODULE_TRANSFER_RETRY_V1.backoffInitialMs * 2 ** (attempt - 1));
+  return new Promise((resolve, reject) => {
+    signal.throwIfAborted();
+    const timer = setTimeout(() => {
+      signal.removeEventListener("abort", abandon);
+      resolve();
+    }, delayMs);
+    const abandon = (): void => {
+      clearTimeout(timer);
+      reject(signal.reason);
+    };
+    signal.addEventListener("abort", abandon, { once: true });
+  });
 }
 
 /** 🔗️ One hub file of one bundle, its path segments percent-encoded. */
@@ -214,10 +246,24 @@ export function createHubPluginSource(options: HubPluginSourceOptionsV1): HubPlu
     const downloaded: (readonly [TrustedPluginModuleFileV1, Uint8Array])[] = [];
     for (const file of needed) {
       acquisition.signal.throwIfAborted();
-      const bytes = await fetchBytes(hubFileUrl(options.hubMount, entry.bundleSha256, file.path), Math.min(file.byteLength, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES), acquisition.signal, (chunk) => {
-        completedBytes += chunk;
-        acquisition.onProgress?.({ completedBytes, totalBytes });
-      });
+      let bytes: Uint8Array | null = null;
+      let retry: { readonly attempt: number; readonly of: number } | undefined;
+      for (let attempt = 1; bytes === null; attempt += 1) {
+        const startedAt = completedBytes;
+        try {
+          bytes = await fetchBytes(hubFileUrl(options.hubMount, entry.bundleSha256, file.path), Math.min(file.byteLength, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES), acquisition.signal, (chunk) => {
+            completedBytes += chunk;
+            acquisition.onProgress?.({ completedBytes, totalBytes, ...(retry === undefined ? {} : { retry }) });
+          });
+        } catch (error) {
+          if (!(error instanceof TrustedPluginModuleTransientError) || attempt >= PLUGIN_MODULE_TRANSFER_RETRY_V1.maxAttempts) throw error;
+          completedBytes = startedAt;
+          retry = { attempt: attempt + 1, of: PLUGIN_MODULE_TRANSFER_RETRY_V1.maxAttempts };
+          acquisition.onProgress?.({ completedBytes, totalBytes, retry });
+          await transferBackoff(attempt, acquisition.signal);
+        }
+      }
+      if (retry !== undefined) acquisition.onProgress?.({ completedBytes, totalBytes });
       if (!(await verifyTrustedPluginModuleFileV1(file, bytes))) throw new TrustedPluginModuleRefusalV1(`trusted plugin module file ${file.path} differs from its manifest`);
       downloaded.push([file, bytes]);
     }

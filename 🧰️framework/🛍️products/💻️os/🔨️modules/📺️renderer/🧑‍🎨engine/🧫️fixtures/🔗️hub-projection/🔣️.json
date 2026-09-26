@@ -4,7 +4,8 @@
     {
       "id": "verified-live-uses-busiest-document",
       "projection": {
-        "authority": { "kind": "verifiedSession", "authorizationGeneration": 7 },
+        "session": "signedIn",
+        "link": "reachable",
         "documents": [
           { "documentKey": "local:detached", "remote": { "kind": "detached" } },
           { "documentKey": "hub:space-a/connecting", "remote": { "kind": "connecting" } },
@@ -15,9 +16,10 @@
       "expected": { "state": "live", "peerCount": 5, "documentCount": 4 }
     },
     {
-      "id": "unverified-masks-live",
+      "id": "signed-out-masks-live",
       "projection": {
-        "authority": { "kind": "noVerifiedSession" },
+        "session": "signedOut",
+        "link": "verifying",
         "documents": [
           { "documentKey": "hub:space-a/live-2", "remote": { "kind": "live", "peerCount": 2 } },
           { "documentKey": "hub:space-b/live-5", "remote": { "kind": "live", "peerCount": 5 } }
@@ -26,9 +28,46 @@
       "expected": { "state": "signedOut", "peerCount": 0, "documentCount": 2 }
     },
     {
+      "id": "no-hub-is-local-whatever-is-attached",
+      "projection": {
+        "session": "none",
+        "link": "verifying",
+        "documents": [{ "documentKey": "hub:space-a/live-3", "remote": { "kind": "live", "peerCount": 3 } }]
+      },
+      "expected": { "state": "local", "peerCount": 0, "documentCount": 1 }
+    },
+    {
+      "id": "live-outranks-an-unreachable-link",
+      "projection": {
+        "session": "signedIn",
+        "link": "unreachable",
+        "documents": [{ "documentKey": "hub:space-a/live-2", "remote": { "kind": "live", "peerCount": 2 } }]
+      },
+      "expected": { "state": "live", "peerCount": 2, "documentCount": 1 }
+    },
+    {
+      "id": "unreachable-link-outranks-a-dialling-document",
+      "projection": {
+        "session": "signedIn",
+        "link": "unreachable",
+        "documents": [{ "documentKey": "hub:space-a/connecting", "remote": { "kind": "connecting" } }]
+      },
+      "expected": { "state": "reconnecting", "peerCount": 0, "documentCount": 1 }
+    },
+    {
+      "id": "verifying-link-is-connecting",
+      "projection": {
+        "session": "signedIn",
+        "link": "verifying",
+        "documents": [{ "documentKey": "local:detached", "remote": { "kind": "detached" } }]
+      },
+      "expected": { "state": "connecting", "peerCount": 0, "documentCount": 1 }
+    },
+    {
       "id": "connecting-outranks-backoff",
       "projection": {
-        "authority": { "kind": "verifiedSession", "authorizationGeneration": 8 },
+        "session": "signedIn",
+        "link": "reachable",
         "documents": [
           { "documentKey": "hub:space-a/backoff", "remote": { "kind": "backoff", "retryInMs": 1000 } },
           { "documentKey": "hub:space-a/connecting", "remote": { "kind": "connecting" } }
@@ -39,7 +78,8 @@
     {
       "id": "backoff-outranks-detached",
       "projection": {
-        "authority": { "kind": "verifiedSession", "authorizationGeneration": 9 },
+        "session": "signedIn",
+        "link": "reachable",
         "documents": [
           { "documentKey": "local:detached", "remote": { "kind": "detached" } },
           { "documentKey": "hub:space-a/backoff", "remote": { "kind": "backoff", "retryInMs": 2000 } }
@@ -48,9 +88,18 @@
       "expected": { "state": "reconnecting", "peerCount": 0, "documentCount": 2 }
     },
     {
-      "id": "empty-is-offline",
-      "projection": { "authority": { "kind": "verifiedSession", "authorizationGeneration": 10 }, "documents": [] },
-      "expected": { "state": "offline", "peerCount": 0, "documentCount": 0 }
+      "id": "reachable-and-detached-is-online",
+      "projection": {
+        "session": "signedIn",
+        "link": "reachable",
+        "documents": [{ "documentKey": "local:detached", "remote": { "kind": "detached" } }]
+      },
+      "expected": { "state": "online", "peerCount": 0, "documentCount": 1 }
+    },
+    {
+      "id": "reachable-and-empty-is-online",
+      "projection": { "session": "signedIn", "link": "reachable", "documents": [] },
+      "expected": { "state": "online", "peerCount": 0, "documentCount": 0 }
     }
   ],
   "workspace": {

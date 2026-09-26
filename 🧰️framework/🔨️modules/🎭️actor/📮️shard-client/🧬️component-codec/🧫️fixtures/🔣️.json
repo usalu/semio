@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "scope": "actor-component-codec-lane",
+  "refusals": { "unexported": "actor-codec.unexported", "operation": "actor-codec.operation" },
+  "cases": [
+    {
+      "id": "pack-schema-hash-answers-the-fingerprint",
+      "request": { "operation": "pack-schema-hash", "artifactKind": "note.document" },
+      "component": { "bytesHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f" },
+      "expected": { "okHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f" }
+    },
+    {
+      "id": "genesis-answers-the-minted-pair",
+      "request": { "operation": "genesis", "artifactKind": "note.document", "documentId": "artifact-ffe16f4e05776efdde9a094f3796af77" },
+      "component": { "pair": { "packHex": "53504b01", "sprHex": "53505201" } },
+      "expected": { "okPair": { "packHex": "53504b01", "sprHex": "53505201" } }
+    },
+    {
+      "id": "print-mirror-answers-the-text-mirror",
+      "request": { "operation": "print-mirror", "artifactKind": "note.document", "pair": { "packHex": "53504b01", "sprHex": "53505201" } },
+      "component": { "mirror": ["note {}", "[]"] },
+      "expected": { "okMirror": ["note {}", "[]"] }
+    },
+    {
+      "id": "a-guest-plugin-error-answers-its-fault-pack",
+      "request": { "operation": "genesis", "artifactKind": "note.document", "documentId": "local-7" },
+      "component": { "faultHex": "0a0b0c" },
+      "expected": { "faultHex": "0a0b0c" }
+    },
+    {
+      "id": "a-component-without-codec-refuses",
+      "request": { "operation": "pack-schema-hash", "artifactKind": "note.document" },
+      "component": { "exported": false },
+      "expected": { "refusal": "actor-codec.unexported" }
+    },
+    {
+      "id": "an-unknown-operation-refuses",
+      "request": { "operation": "apply-ops", "artifactKind": "note.document" },
+      "component": { "bytesHex": "" },
+      "expected": { "refusal": "actor-codec.operation:apply-ops" }
+    },
+    {
+      "id": "a-host-trap-is-not-a-guest-fault",
+      "request": { "operation": "genesis", "artifactKind": "note.document", "documentId": "artifact-1" },
+      "component": { "throws": "RuntimeError: unreachable" },
+      "expected": { "refusal": "RuntimeError: unreachable" }
+    }
+  ]
+}

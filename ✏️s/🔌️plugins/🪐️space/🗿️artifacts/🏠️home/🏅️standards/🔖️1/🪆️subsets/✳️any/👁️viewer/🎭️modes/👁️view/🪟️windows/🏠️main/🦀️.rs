@@ -43,9 +43,8 @@ fn render_rows(rows: &[crate::HomeSpaceRow], labels: &HomeTableLabels, windows: 
     }
     let columns = [labels.column_name.as_str(), labels.column_kind.as_str(), labels.column_visibility.as_str(), labels.column_members.as_str(), labels.column_updated.as_str(), labels.column_origin.as_str()];
     TableWindowKit::render_rows(windows, labels.table_name.as_str(), &columns, None, rows, |row| {
-        let origin = if row.origin == "hub" { labels.origin_hub.as_str() } else { labels.origin_local.as_str() };
-        let key = format!("space:{}", row.id);
-        table_window_row(&key, &[row.name.as_str(), row.kind.as_str(), row.visibility.as_str(), row.members.as_str(), row.updated.as_str(), origin], std::iter::empty(), None)
+        let cells = row.cells(labels);
+        table_window_row(&format!("space:{}", row.id), &cells.each_ref().map(String::as_str), std::iter::empty(), None)
     })
 }
 

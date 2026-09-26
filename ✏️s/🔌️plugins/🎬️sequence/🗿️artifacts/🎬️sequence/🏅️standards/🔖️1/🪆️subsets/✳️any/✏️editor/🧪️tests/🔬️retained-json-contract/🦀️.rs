@@ -1,4 +1,5 @@
 use super::*;
+use serde_json::Value;
 
 fn assert_measure<T: SequenceRetainedJson + dsl::ToValue>(value: &T) {
     let encoded = dsl::os_pack::to_json_string(value);

@@ -28,7 +28,7 @@ pub mod run_analysis {
     use crate::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::inferences::run_analysis;
     use crate::ProgramSnapshot;
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
     use semio_framework_value_derive::{FromValue, ToValue};
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -39,7 +39,7 @@ pub mod run_analysis {
 
     pub fn handle(payload: &RunAnalysis, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
-        let kind = analysis_kind_from_str(&payload.analysis_kind);
+        let kind = analysis_kind_from_str(&payload.analysis_kind).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("architect.analysis-kind-unknown"), format!("runAnalysis has no analysis kind \"{}\"", payload.analysis_kind)))?;
         let result = run_analysis(program, kind);
         let record = analysis_record_from(program, kind, &result);
         let mut next = cfg.snapshot.clone();
@@ -58,7 +58,7 @@ pub mod run_report {
     use crate::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::inferences::build_report;
     use crate::ProgramSnapshot;
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, ViewModel};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, ViewModel};
     use semio_framework_value_derive::{FromValue, ToValue};
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -78,7 +78,7 @@ pub mod run_report {
         view: Option<&ViewModel>,
     ) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
-        let kind = report_kind_from_str(&payload.report_kind);
+        let kind = report_kind_from_str(&payload.report_kind).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("architect.report-kind-unknown"), format!("runReport has no report kind \"{}\"", payload.report_kind)))?;
         let report = build_report(program, kind);
         let record = report_record_from(program, kind, &report);
         let selected_report_id = record.header.id.clone();

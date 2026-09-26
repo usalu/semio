@@ -389,3 +389,60 @@ async fn reqwest_free_post(addr: SocketAddr, path: &str, bearer: &str, body: &se
     status_line.split_whitespace().nth(1).unwrap_or("0").parse().unwrap_or(0)
 }
 //#endregion 🔖️BridgeOnTheMergedApp
+
+//#region 🔖️BridgeOnlyListenerAnswersEveryConnection
+/// 🚪️ The listener a stdio gateway offers to live shells answers every connection it accepts, in
+/// bounded time, with a typed frame: more shells than it has slots come and go and the next one is
+/// still welcomed (the leak that parked an 8.6 h old gateway with 64 CLOSED sockets); an older and a
+/// newer shell each get `Refused { reason: Version }` and a closed socket, never silence; a shell that
+/// upgrades and never says `Hello` is closed within [`BRIDGE_OPENING_DEADLINE_MS`]; and the run's
+/// completion releases once it is cancelled, which is what withdraws its rendezvous offer.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_bridge_only_listener_answers_every_connection_it_accepts() {
+    use crate::bridge::{BridgeFlags, BridgeRefusal, GatewayToShell, ShellKind, ShellToGateway, BRIDGE_VERSION};
+    use futures::{SinkExt, StreamExt};
+    use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+    use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
+
+    let proof = crate::rendezvous::mint_admission_proof();
+    let mut transport = HttpTransport::new(HttpTransportOptions::with_local_proof(&proof));
+    let run = transport.start_bridge_only().expect("bridge-only listener binds");
+    let addr = run.local_addr();
+    let open = || {
+        let mut request = format!("ws://{addr}/bridge").into_client_request().expect("bridge url");
+        request.headers_mut().insert("sec-websocket-protocol", format!("semio.mcp.bridge.v1, {proof}").parse().expect("protocol header"));
+        tokio_tungstenite::connect_async(request)
+    };
+    let hello = |bridge_version: u16| TungsteniteMessage::Binary(ShellToGateway::Hello { bridge_version, shell_kind: ShellKind::React, shell_session_id: "law".into(), principal_actor: "agent:local".into(), flags: BridgeFlags::NONE }.encode().into());
+    let bounded = std::time::Duration::from_secs(10);
+
+    for round in 0..(HTTP_CONNECTION_CAPACITY + 6) {
+        let (mut socket, _) = tokio::time::timeout(bounded, open()).await.unwrap_or_else(|_| panic!("round {round}: the upgrade was never answered")).expect("upgrade");
+        socket.send(hello(BRIDGE_VERSION)).await.expect("hello");
+        let answer = tokio::time::timeout(bounded, socket.next()).await.unwrap_or_else(|_| panic!("round {round}: Hello was never answered"));
+        let Some(Ok(TungsteniteMessage::Binary(bytes))) = answer else { panic!("round {round}: expected a binary Welcome, got {answer:?}") };
+        assert!(matches!(GatewayToShell::decode(&bytes).expect("decodes"), GatewayToShell::Welcome { bridge_version: BRIDGE_VERSION, .. }), "round {round}");
+        drop(socket);
+    }
+
+    for version in [0, BRIDGE_VERSION + 1] {
+        let (mut socket, _) = tokio::time::timeout(bounded, open()).await.expect("upgrade answered").expect("upgrade");
+        socket.send(hello(version)).await.expect("hello");
+        let answer = tokio::time::timeout(bounded, socket.next()).await.unwrap_or_else(|_| panic!("a v{version} shell got no answer"));
+        let Some(Ok(TungsteniteMessage::Binary(bytes))) = answer else { panic!("a v{version} shell: expected a binary Refused, got {answer:?}") };
+        assert_eq!(GatewayToShell::decode(&bytes).expect("decodes"), GatewayToShell::Refused { reason: BridgeRefusal::Version, gateway_version: BRIDGE_VERSION });
+        let closed = tokio::time::timeout(bounded, socket.next()).await.unwrap_or_else(|_| panic!("a refused v{version} socket stayed open"));
+        assert!(!matches!(closed, Some(Ok(TungsteniteMessage::Binary(_)))), "nothing but the close follows a refusal: {closed:?}");
+    }
+
+    let (mut silent, _) = tokio::time::timeout(bounded, open()).await.expect("upgrade answered").expect("upgrade");
+    let started = std::time::Instant::now();
+    let ended = tokio::time::timeout(std::time::Duration::from_millis(BRIDGE_OPENING_DEADLINE_MS + 10_000), silent.next()).await.expect("a socket that never says Hello is closed by the gateway");
+    assert!(!matches!(ended, Some(Ok(TungsteniteMessage::Binary(_)))), "{ended:?}");
+    assert!(started.elapsed() >= std::time::Duration::from_millis(BRIDGE_OPENING_DEADLINE_MS / 2), "closed by the opening deadline, not at once");
+
+    let completion = run.completion();
+    run.cancel();
+    tokio::task::spawn_blocking(move || completion.wait()).await.expect("the cancelled run completes");
+}
+//#endregion 🔖️BridgeOnlyListenerAnswersEveryConnection

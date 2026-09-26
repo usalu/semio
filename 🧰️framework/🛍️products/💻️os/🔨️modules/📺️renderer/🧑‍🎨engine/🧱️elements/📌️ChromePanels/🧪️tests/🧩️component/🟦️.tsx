@@ -1,10 +1,11 @@
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createFrameworkSettingsPanelTab, themeAlphaInput, themeContrastBadgeText, themeContrastRatioFormatter, themeNumberInputRow, themeTextInputRow, type ConflictsHostApi } from "../../🟦️.tsx";
+import { createFrameworkSettingsPanelTab, keybindingCaptureStepV1, type KeybindingCaptureKeyV1, type SettingsHostApi, themeAlphaInput, themeContrastBadgeText, themeContrastRatioFormatter, themeNumberInputRow, themeTextInputRow, type ConflictsHostApi } from "../../🟦️.tsx";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
+import userEvent from "@testing-library/user-event";
 import type { PanelTabLeaf } from "@semio-tech/ui-react";
 import type { Rgba8 } from "@semio-tech/ui-styling";
 import type { ReactElement } from "react";
@@ -123,5 +124,61 @@ describe("Inline Tree resolution controls", () => {
       expect(resolve).toHaveBeenLastCalledWith(fixture.conflict.id, expected.suffix);
     }
     expect(container.querySelector(".flex.items-center")?.children).toHaveLength(2);
+  });
+});
+
+/** ⌨️ LAW over `🧫️fixtures/⌨️keybinding-capture/🔣️.json`: a capture waits through the modifiers a chord starts with,
+ * records the completed chord in the dispatcher's spelling and ends only on Escape or a chord. Oracle: `user-event`
+ * types the same chords on a real focused button, modifiers first, exactly as a hand does (ticket 26/09/23 U5). */
+describe("keybinding capture", () => {
+  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/⌨️keybinding-capture/🔣️.json"), "utf8")) as {
+    readonly rows: readonly { readonly id: string; readonly keys: readonly Partial<KeybindingCaptureKeyV1>[]; readonly expected: readonly string[] }[];
+  };
+  const outcome = (step: ReturnType<typeof keybindingCaptureStepV1>): string => (step.kind === "chord" ? `chord:${step.chord}` : step.kind);
+
+  it("waits through every modifier and records the chord the fixture names", () => {
+    expect(fixture.rows.length).toBeGreaterThanOrEqual(7);
+    for (const row of fixture.rows) {
+      const steps = row.keys.map((key) => outcome(keybindingCaptureStepV1({ key: "", ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, ...key })));
+      expect(steps, row.id).toEqual(row.expected);
+    }
+  });
+
+  it("records ⌃⌥K typed by user-event on a focused capture button, modifiers first", async () => {
+    const seen: string[] = [];
+    const { getByRole } = render(<button type="button" onKeyDown={(event) => seen.push(outcome(keybindingCaptureStepV1(event.nativeEvent)))}>record</button>);
+    getByRole("button", { name: "record" }).focus();
+    await userEvent.keyboard("{Control>}{Alt>}k{/Alt}{/Control}");
+    expect(seen).toEqual(fixture.rows.find((row) => row.id === "ctrl-alt-k")!.expected);
+    seen.length = 0;
+    await userEvent.keyboard("{Meta>}{Shift>}Z{/Shift}{/Meta}");
+    expect(seen).toEqual(fixture.rows.find((row) => row.id === "meta-shift-z")!.expected);
+  });
+});
+
+/** ⌨️ Settings ▸ Hotkeys names each bound control in the live language: an app action or OS command by the name the host
+ * resolves from its manifest label, a shell control by its chrome bundle entry, and only an id nothing names by its
+ * humanized segment (the rows used to be humanized ids for everything — "Undo" in a German shell; ticket 26/09/23 U5). */
+describe("keybinding row names", () => {
+  it("names app actions through the host, shell controls through the chrome bundles, and humanizes only the rest", () => {
+    const host = {
+      controlKeybindings: new Map([["undo", "mod+z"], ["ui.fullscreen.toggle", "mod+ctrl+f"], ["plugin.frobnicateWidget", "mod+alt+w"]]),
+      controlKeybindingLabel: (controlId: string) => (controlId === "undo" ? "Rückgängig" : null),
+      keybindingCaptureControlId: null,
+      setKeybindingCaptureControlId: vi.fn(),
+      setKeybindingOverride: vi.fn(),
+      resetKeybindingOverride: vi.fn(),
+      locks: {},
+    } as unknown as SettingsHostApi;
+    const panel = createFrameworkSettingsPanelTab(() => host);
+    const leaf = panel.children.find((child): child is PanelTabLeaf => child.kind === "leaf" && child.id === "framework.settings.keybindings")!;
+    const source = leaf.trees[0]!.tree;
+    if (!("resolveTree" in source)) throw new Error("the keybindings tab must carry a lazily resolved tree");
+    const rows = (source.resolveTree() as { sections: { items: { id: string; label: string }[] }[] }).sections[0]!.items;
+    const labels = Object.fromEntries(rows.map((row) => [row.id.slice("framework.settings.keybindings.".length), String(row.label)]));
+    expect(labels.undo).toBe("Rückgängig");
+    expect(labels["ui.fullscreen.toggle"]).not.toBe("Toggle");
+    expect(labels["ui.fullscreen.toggle"]?.length).toBeGreaterThan(0);
+    expect(labels["plugin.frobnicateWidget"]).toBe("Frobnicate Widget");
   });
 });

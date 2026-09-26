@@ -2042,6 +2042,10 @@ impl store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMuta
 pub struct EnergyModelEditor;
 
 impl ArtifactEditor for EnergyModelEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        examples()
+    }
     type Snapshot = EnergyModelSnapshot;
     type Mutation = EnergyModelMutation;
     type Config = EnergyModelConfig;
@@ -2349,11 +2353,8 @@ fn example_rows() -> Vec<(&'static str, &'static str, crate::model::Model)> {
     ]
 }
 
-/// 📚️ The manifest rows the plugin root registers through
-/// `.editor_with_examples::<EnergyModelEditor>(create_energy_model_editor(), examples())`. That
-/// second argument is the ONLY thing that fills `PluginManifest.examples`
-/// (`PluginBuilder::editor` hardcodes an empty set), and the react shell's picker is hidden while
-/// that list is empty.
+/// 📚️ Catalogue `EnergyModelEditor::examples` returns. `.editor` stamps it onto the manifest,
+/// and the navbar dropdown reads that list.
 pub fn examples() -> Vec<ExampleSource> {
     example_rows()
         .into_iter()
@@ -2591,6 +2592,26 @@ pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
     for destructive_id in ENERGY_MODEL_DESTRUCTIVE_ACTION_IDS {
         builder = builder.action_destructive(*destructive_id);
     }
+    builder = builder.action_describe("assign-surface-construction", LocalizedLabel::native("Assigns an existing construction (its layer build-up) to one surface of the energy model by id.", "Weist einer Fläche des Energiemodells anhand ihrer Id eine vorhandene Konstruktion (ihren Schichtaufbau) zu."));
+    builder = builder.action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole energy model with a bundled example, the demo or one of the ASHRAE 140 BESTEST cases (600 to 950), by example id.", "Ersetzt das gesamte Energiemodell durch ein mitgeliefertes Beispiel, die Demo oder einen der ASHRAE-140-BESTEST-Fälle (600 bis 950), anhand der Beispiel-Id."));
+    builder = builder.action_describe("set-surface-property", LocalizedLabel::native("Sets one property of one surface: name, class, construction, outside boundary (outdoor air, ground, other-side temperature, adiabatic, or interzone with its partner surface), sun or wind exposure, or multiplier.", "Setzt eine Eigenschaft einer Fläche: Name, Klasse, Konstruktion, äußere Randbedingung (Außenluft, Erdreich, Temperatur der Gegenseite, adiabat oder zonenübergreifend mit Partnerfläche), Sonnen- oder Windexposition oder Multiplikator."));
+    builder = builder.action_describe("set-fenestration-property", LocalizedLabel::native("Sets one property of one window: name, glazing construction, solar heat gain coefficient, visible transmittance, height, sill height, frame or divider conductance, or overhang and fin dimensions.", "Setzt eine Eigenschaft eines Fensters: Name, Verglasungskonstruktion, Gesamtenergiedurchlassgrad, Lichttransmission, Höhe, Brüstungshöhe, Rahmen- oder Sprossenleitwert oder Maße von Überstand und Seitenblende."));
+    builder = builder.action_describe("set-zone-property", LocalizedLabel::native("Sets one property of one thermal zone: its name, multiplier, whether it is conditioned, or whether it counts towards the total floor area.", "Setzt eine Eigenschaft einer thermischen Zone: Name, Multiplikator, ob sie konditioniert ist oder ob sie zur Gesamtnutzfläche zählt."));
+    builder = builder.action_describe("set-glazing-material-property", LocalizedLabel::native("Sets one property of one glazing material: name, thickness, conductivity, solar or visible transmittance, or front or back infrared emissivity.", "Setzt eine Eigenschaft eines Verglasungsmaterials: Name, Dicke, Wärmeleitfähigkeit, solaren oder sichtbaren Transmissionsgrad oder vorderen oder hinteren Infrarot-Emissionsgrad."));
+    builder = builder.action_describe("set-gas-material-property", LocalizedLabel::native("Sets one property of one gas gap between glazing layers: its name, thickness, or gas (air, argon, krypton or xenon).", "Setzt eine Eigenschaft eines Gaszwischenraums zwischen Verglasungsschichten: Name, Dicke oder Gas (Luft, Argon, Krypton oder Xenon)."));
+    builder = builder.action_describe("set-material-property", LocalizedLabel::native("Sets one property of one opaque material: name, roughness, thickness, conductivity, specific heat, or thermal, solar or visible absorptance.", "Setzt eine Eigenschaft eines opaken Materials: Name, Rauigkeit, Dicke, Wärmeleitfähigkeit, spezifische Wärmekapazität oder thermischen, solaren oder sichtbaren Absorptionsgrad."));
+    builder = builder.action_describe("set-thermostat-setpoints", LocalizedLabel::native("Sets the heating and cooling setpoint schedules of one thermostat, with optional throttling ranges in kelvin.", "Legt die Heiz- und Kühlsollwert-Zeitpläne eines Thermostats fest, mit optionalen Regelbereichen in Kelvin."));
+    builder = builder.action_describe("set-site", LocalizedLabel::native("Sets the building site: latitude, longitude, elevation, time zone and the angle of the building's north axis.", "Legt den Standort des Gebäudes fest: Breite, Länge, Höhe, Zeitzone und den Winkel der Nordachse des Gebäudes."));
+    builder = builder.action_describe("delete-zone", LocalizedLabel::native("Deletes one thermal zone by id; refused while any surface, space, gain, HVAC object or airflow node still refers to it.", "Löscht eine thermische Zone anhand ihrer Id; wird abgelehnt, solange noch eine Fläche, ein Raum, eine Last, ein HLK-Objekt oder ein Luftknoten auf sie verweist."));
+    builder = builder.action_describe("delete-surface", LocalizedLabel::native("Deletes one surface by id together with every window hosted on it and every adjacency naming it; refused while another surface uses it as its interzone partner.", "Löscht eine Fläche anhand ihrer Id samt aller darin sitzenden Fenster und aller sie nennenden Nachbarschaften; wird abgelehnt, solange eine andere Fläche sie als Partnerfläche nutzt."));
+    builder = builder.action_describe("set-construction-property", LocalizedLabel::native("Renames one construction or edits its layer build-up: adds or removes a material layer, or moves a layer up or down.", "Benennt eine Konstruktion um oder bearbeitet ihren Schichtaufbau: fügt eine Materialschicht hinzu, entfernt sie oder verschiebt eine Schicht nach oben oder unten."));
+    builder = builder.action_describe("set-simulation-settings", LocalizedLabel::native("Sets the simulation's zone and system timesteps in minutes and the number of warm-up days; a running simulation restarts with them.", "Legt die Zonen- und Systemzeitschritte der Simulation in Minuten und die Zahl der Vorlauftage fest; eine laufende Simulation startet damit neu."));
+    builder = builder.action_describe("set-result-field", LocalizedLabel::native("Chooses the simulated per-surface result (conduction loss or gain, transmitted or absorbed solar) the 3D model window is coloured by; a running simulation is not restarted.", "Wählt das simulierte Flächenergebnis (Transmissionsverlust oder -gewinn, transmittierte oder absorbierte Solarstrahlung), nach dem das 3D-Modellfenster eingefärbt wird; eine laufende Simulation startet nicht neu."));
+    builder = builder.action_describe("set-run-period", LocalizedLabel::native("Sets the simulated calendar period from a start month and day to an end month and day.", "Legt den simulierten Kalenderzeitraum von einem Startmonat und -tag bis zu einem Endmonat und -tag fest."));
+    builder = builder.action_describe("create-surface", LocalizedLabel::native("Adds a new surface with the given name and class to an existing zone, built from an existing construction.", "Fügt einer vorhandenen Zone eine neue Fläche mit dem angegebenen Namen und der Klasse hinzu, aufgebaut aus einer vorhandenen Konstruktion."));
+    builder = builder.action_describe("create-zone", LocalizedLabel::native("Adds a new thermal zone with the given name, volume in cubic metres, multiplier and conditioning.", "Fügt eine neue thermische Zone mit dem angegebenen Namen, Volumen in Kubikmetern, Multiplikator und Konditionierung hinzu."));
+    builder = builder.action_describe("rename-zone", LocalizedLabel::native("Renames one thermal zone; zone names key every simulation report, so a name already in use is refused.", "Benennt eine thermische Zone um; Zonennamen sind der Schlüssel aller Simulationsberichte, ein bereits vergebener Name wird abgelehnt."));
+    builder = builder.action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome);
     builder.build_definition()
 }
 //#endregion 🔖️Manifest

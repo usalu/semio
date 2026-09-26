@@ -1,7 +1,7 @@
 #!/bin/zsh
 # 🧹 Disk guard: every 5 min; below 100 GiB free prune idle incremental sessions (> 60 min); below 80 GiB also prune superseded semio-* build units (> 12 h, package has a newer unit, crate not compiling now).
 root="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build"
-log="/Users/ueli/Documents/semio/.tmp-ticket/🗑️generated/disk-guard.txt"
+log="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-coord-logs/disk-guard.txt"
 mkdir -p "${log:h}"
 free_gib() { df -g /System/Volumes/Data | awk 'NR==2{print $4}' }
 while true; do

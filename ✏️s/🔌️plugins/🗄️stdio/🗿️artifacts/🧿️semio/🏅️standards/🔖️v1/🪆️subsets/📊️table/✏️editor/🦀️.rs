@@ -200,6 +200,10 @@ impl ArtifactOwnedToolJobFactory for SemioTableEditorExampleFactory {
 pub struct SemioTableEditor;
 
 impl ArtifactEditor for SemioTableEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = SemioTableSnapshot;
     type Mutation = SemioTableMutation;
     type Config = NoConfig;

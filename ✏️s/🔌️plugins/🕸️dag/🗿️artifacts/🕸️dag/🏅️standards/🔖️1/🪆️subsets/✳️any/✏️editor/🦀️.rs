@@ -949,6 +949,18 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("graphPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .config(DagPlayApp::config_spec())
+            .action_describe("addNode", LocalizedLabel::native("Adds a new node of the given kind (such as slider, select, screen, note or preview) to the graph at x, y, or at a default spot.", "Fügt dem Graphen einen neuen Knoten der angegebenen Art (etwa Schieberegler, Auswahl, Bildschirm, Notiz oder Vorschau) an x, y oder an einer Standardstelle hinzu."))
+            .action_describe("removeNode", LocalizedLabel::native("Removes one node by id from the graph together with every edge attached to it.", "Entfernt einen Knoten anhand seiner Id samt aller angeschlossenen Kanten aus dem Graphen."))
+            .action_describe("deleteSelection", LocalizedLabel::native("Removes every currently selected node from the graph together with the edges attached to them.", "Entfernt alle aktuell ausgewählten Knoten samt ihrer angeschlossenen Kanten aus dem Graphen."))
+            .action_describe("connectMediaPorts", LocalizedLabel::native("Connects an output port of one node to an input port of another with a new edge; an incompatible or duplicate connection changes nothing.", "Verbindet einen Ausgangsport eines Knotens mit einem Eingangsport eines anderen durch eine neue Kante; eine unverträgliche oder doppelte Verbindung ändert nichts."))
+            .action_describe("disconnect", LocalizedLabel::native("Removes one edge by id, cutting the connection between its two ports.", "Entfernt eine Kante anhand ihrer Id und trennt damit die Verbindung ihrer beiden Ports."))
+            .action_describe("moveMediaNode", LocalizedLabel::native("Moves one node to the canvas position x, y; consecutive moves of the same node merge into one edit.", "Verschiebt einen Knoten an die Position x, y der Fläche; aufeinanderfolgende Verschiebungen desselben Knotens werden zu einer Änderung zusammengefasst."))
+            .action_describe("renameDagNode", LocalizedLabel::native("Renames a node's id from the old id to a new one and updates every edge that referenced it; a taken or empty id changes nothing.", "Benennt die Id eines Knotens von der alten in eine neue um und aktualisiert alle Kanten, die darauf verweisen; eine vergebene oder leere Id ändert nichts."))
+            .action_describe("patchDagNodes", LocalizedLabel::native("Sets one field (name, or a slider's value, min or max) on every node with the given ids.", "Setzt ein Feld (Name oder Wert, Minimum oder Maximum eines Schiebereglers) auf allen Knoten mit den angegebenen Ids."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole graph with the bundled demo graph, or with an empty graph for any other example id.", "Ersetzt den gesamten Graphen durch den mitgelieferten Demo-Graphen, bei jeder anderen Beispiel-Id durch einen leeren Graphen."))
+            .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_destructive("setActiveExample")
             .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -1,0 +1,17 @@
+p8: lowpoly, fem, puzzle, demonstrator (+ every guest: framework `semio-framework` manifest + `semio-framework-plugin` builder changed)
+  01:4x — gumball verb audience rule (manifest `framework_fixed_audience`, enforced in `try_build_definition`): lowpoly
+  transformBegin/transformEnd → Input (+ corrected delta descriptions), fem3d transformBegin/transformEnd → Input,
+  puzzle3d + puzzle5d setTransformGumballFlag → Chrome. Descriptor-only change (semantics.audience / inPalette); no
+  WIT/codec/pack-schema change. `cargo check` of the 4 artifact crates EXIT 0. More plugins follow in this file.
+p8: reasoning — addRelationship takes sourceId/targetId/kind (declared args; selection fallback; refusals by name),
+  deleteSelection refuses an empty selection, addNode mints a free node id. Descriptor change (args + descriptions).
+  `cargo test -p semio-s-artifact-reasoning-wires --lib` 195/195.
+p8: architect — runAnalysis declared Mutation; runValidation/runAnalysis/runReport/search/exportProgram/exportRegistersCsv/
+  importProgram/importRegistersCsv migrated off BatchOnlyPendingRewrite onto a second retained factory (+ importProgramRequest
+  declared); handlers refuse unknown ids/kinds/unreadable input by name; declared args added (setAdjacencyKind, setAdjacencyField,
+  removeElement, addElement). Descriptor + guest change (new tool factory, no WIT/codec/pack-schema change). Architect law 0/22.
+p8 (landing window, patch set, NOT in the tree yet): flow — `wp-p8/patches/p8-flow.py` (23 files). Flow's scene is the
+  composed content child for every read and write; removeWidget/deleteSelection/disconnect/patchFlowWidgets/
+  connectMediaPorts/reorganize/renameFlowWidget/runExtensionAction/setActiveExample publication lane Artifact → Child
+  (descriptor/publication-contract change; no WIT/codec/pack-schema change). Guest change in semio-s-artifact-flow-flow
+  (+ semio-s-plugin-flow re-export). Clone: flow lib 257/257.

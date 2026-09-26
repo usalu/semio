@@ -111,6 +111,10 @@ impl ArtifactOwnedToolJobFactory for JpgBaselineEditorExampleFactory {
 pub struct JpgBaselineEditor;
 
 impl ArtifactEditor for JpgBaselineEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = JpgSnapshot;
     type Mutation = JpgBaselineMutation;
     type Config = NoConfig;

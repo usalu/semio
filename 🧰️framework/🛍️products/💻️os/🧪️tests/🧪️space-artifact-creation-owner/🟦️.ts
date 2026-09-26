@@ -539,6 +539,56 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(spaceArtifactCreationOperations).toHaveLength(0);
     });
 
+    // 🐢️ ticket 26/09/23 S15: a slow hub is followed, never concluded — 🏪️store/👷️worker/🌱️creation-polling/🔣️.json.
+    it("follows a creation the hub keeps accepted far past the old client deadline, and concludes only when the hub stops answering", async () => {
+      const polling = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🏪️store/👷️worker/🌱️creation-polling/🔣️.json", source.url), "utf8")) as { pollMaxMs: number; unreachableBoundMs: number };
+      vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+      try {
+        let answering = true;
+        let readyAfterMs = 10 * 60_000;
+        const startedAtMs = Date.now();
+        const statuses: Array<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>> = [];
+        let gets = 0;
+        testSeams.spaceArtifactCreationTestFetch = async (path, init) => {
+          if ((init.method ?? "GET") === "GET") gets += 1;
+          if (!answering && (init.method ?? "GET") === "GET") throw new Error("hub unreachable");
+          if (Date.now() - startedAtMs >= readyAfterMs) return response("ready", { artifactId: `artifact-${"2".repeat(32)}`, kindId: "s.gis.gismap", artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" } });
+          return response("accepted");
+        };
+        testSeams.workerPostTestSink = (message) => {
+          if (message.kind === "space-artifact-creation-status") statuses.push(message);
+        };
+        handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", expectedCatalogGenerationId: catalogGenerationId, kindId: "s.gis.gismap", name: "Slow Map" });
+        await vi.advanceTimersByTimeAsync(9 * 60_000);
+        expect(statuses.some((status) => status.phase === "indeterminate"), "a hub that still answers is never concluded").toBe(false);
+        expect(spaceArtifactCreationOperations).toHaveLength(1);
+        expect(gets, "polls back off to the contract's maximum interval").toBeLessThanOrEqual(Math.ceil((9 * 60_000) / polling.pollMaxMs) + 16);
+        await vi.advanceTimersByTimeAsync(2 * 60_000);
+        expect(statuses.at(-1)?.phase).toBe("ready");
+        expect(spaceArtifactCreationOperations).toHaveLength(0);
+
+        statuses.length = 0;
+        readyAfterMs = Number.POSITIVE_INFINITY;
+        const secondRequestId = "5".repeat(32);
+        testSeams.spaceArtifactCreationTestFetch = async (path, init) => {
+          if (!answering && (init.method ?? "GET") === "GET") throw new Error("hub unreachable");
+          const body = JSON.stringify({ schema: "semio.hub.space-artifact-creation-status/v1", requestId: secondRequestId, spaceId: "space-a", catalogGenerationId, phase: "accepted" });
+          return new Response(body, { status: 200, headers: { "content-length": String(new TextEncoder().encode(body).byteLength) } });
+        };
+        handleTsRequest({ kind: "space-artifact-create", requestId: secondRequestId, spaceId: "space-a", expectedCatalogGenerationId: catalogGenerationId, kindId: "s.gis.gismap", name: "Lost Map" });
+        await vi.advanceTimersByTimeAsync(5 * 60_000);
+        expect(statuses.some((status) => status.phase === "indeterminate")).toBe(false);
+        answering = false;
+        await vi.advanceTimersByTimeAsync(polling.unreachableBoundMs - polling.pollMaxMs * 2);
+        expect(statuses.some((status) => status.phase === "indeterminate"), "not before the unreachable bound").toBe(false);
+        await vi.advanceTimersByTimeAsync(polling.pollMaxMs * 4);
+        expect(statuses.at(-1)?.phase, "concluded only once the hub stopped answering for the bound").toBe("indeterminate");
+        expect(spaceArtifactCreationOperations).toHaveLength(0);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it("routes cancellation through the exact retained owner without manufacturing a ready tuple", async () => {
       const calls: Array<readonly [string, string]> = [];
       const statuses: Array<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>> = [];
@@ -850,7 +900,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const exactBatch = extractServerCommandsDocumentBackboneBatchExact(serverFrame);
       if (typeof decoded === "string" || !("Commands" in decoded) || exactBatch === null) throw new Error("expected exact server Commands frame");
       const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
-      const state = { config, actor: "local", openClientInstanceId: "client-1", artifactBootstrap: null, artifactRebootstrapRequired: false, frontier: null, requiredTailFrontier: null, browserActorReservation: null, ingestedMutationIds: new Set<string>() } as unknown as ArtifactState;
+      const state = { config, actor: "local", openClientInstanceId: "client-1", artifactBootstrap: null, artifactRebootstrapRequired: false, frontier: null, requiredTailFrontier: null, executionTargetLease: null, pendingMutations: [], browserActorReservation: null, ingestedMutationIds: new Set<string>() } as unknown as ArtifactState;
       const priorSink = testSeams.workerPostTestSink;
       const posted: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => posted.push(message);
@@ -903,6 +953,22 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const stampedFolder = stampSession(peer, folderState);
       expect(stampedFolder.color).toBeUndefined();
       expect(stampedFolder.surface).toBeUndefined();
+    });
+
+    it("stampSession publishes an actor-bound document's own presence pack and interaction, never the Shell's local instance's", async () => {
+      const { encodePresenceInteraction } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
+      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/👕️canvas-presence/🔣️.json", source.url), "utf8")) as { readonly paint: readonly { readonly roster: readonly ArtifactPresencePeer[] }[] };
+      const selecting = fixture.paint[0]!.roster.find((row) => row.actor === "peer-a")!;
+      const config: ArtifactActorConfig = { documentId: "doc-4", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+      const shellPeer: ArtifactPresencePeer = { actor: "actor-1", connectedAtMs: 1000, views: [], presencePack: [9, 9], interaction: { app_id: "local-instance", domains: [] } };
+      const snapshot = { presence: [1, 2, 3], presenceGeneration: 4, transientGeneration: 5, interaction: encodePresenceInteraction(selecting.interaction!) };
+      const bound = stampSession(shellPeer, { config, sessionColor: 3, browserActorReservation: { ephemeralSnapshot: snapshot } } as unknown as ArtifactState);
+      expect(bound.presencePack).toEqual([1, 2, 3]);
+      expect(bound.interaction).toEqual(selecting.interaction);
+      const unpublished = stampSession(shellPeer, { config, sessionColor: 3, browserActorReservation: { ephemeralSnapshot: null } } as unknown as ArtifactState);
+      expect([unpublished.presencePack, unpublished.interaction]).toEqual([undefined, undefined]);
+      const local = stampSession(shellPeer, { config, sessionColor: 3, browserActorReservation: null } as unknown as ArtifactState);
+      expect([local.presencePack, local.interaction]).toEqual([shellPeer.presencePack, shellPeer.interaction]);
     });
 
     it("handleHubFrame stores the hub-assigned session color on a Session frame", () => {
@@ -4128,6 +4194,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             const deadline = Date.now() + 5_000;
             while (!statuses.some(({ code }) => code === "integrity-failed" || code === "cancelled") && !state?.docAbort.signal.aborted && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 0));
             expect(stages, row.id).toEqual(row.requestStages);
+            expect(testSeams.hubSessionCapabilityHeld, `${row.id}: a cancelled or retired open is no evidence against the hub and keeps the session; a hostile asset revokes it`).toBe(row.sessionKept);
             expect(FakeHubWebSocket.instances, row.id).toHaveLength(0);
             expect(state?.executionTargetLease ?? null, row.id).toBeNull();
             expect(state?.outbox ?? [], row.id).toHaveLength(0);
@@ -4682,7 +4749,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           let bodies = 0,
             loads = 0,
             describes = 0,
-            activated = 0;
+            activated = 0,
+            pairRequests = 0;
           const workers: SessionWorker[] = [],
             records: { fixture: ExecutionTargetLeaseFixture; state: ArtifactState; socket: FakeHubWebSocket; connected: Promise<void> }[] = [];
           const streams: { stream: ReadableStream<Uint8Array>; chunk: Uint8Array; cancelled: number }[] = [];
@@ -4795,6 +4863,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             if (url.endsWith("/execution-target/manifest")) return Response.json(current.manifest);
             if (url.endsWith("/execution-target/component")) return executionTargetBodyResponse(component);
             if (url.endsWith("/execution-target/descriptor")) return executionTargetBodyResponse(descriptor);
+            if (url.endsWith("/active-checkpoint/pair")) {
+              pairRequests++;
+              return new Response("", { status: row.name === "canonical-pair-refused" ? 404 : 503 });
+            }
             if (url.endsWith("/execution-target/browser-actor")) {
               bodies++;
               expect(init?.method).toBe("POST");
@@ -4896,6 +4968,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               expect(streams[0]!.cancelled).toBe(1);
               expect(streams[0]!.stream.locked).toBe(false);
             }
+            if (row.name === "canonical-pair-busy") {
+              await wait(() => pairRequests >= 2);
+              expect(first.state.executionTargetLease).toBe(initialLease);
+              expect(initialLease.live).toBe(true);
+              expect(statuses.some((status) => status.code === "integrity-failed")).toBe(false);
+            }
+            if (row.name === "canonical-pair-refused") {
+              expect(pairRequests).toBe(1);
+              expect(statuses.some((status) => status.code === "integrity-failed" && status.diagnostic === "canonical checkpoint pair: unavailable (status 404)")).toBe(true);
+            }
             expect({ name: row.name, bodies, loads, describes, activated }).toEqual(row);
             if (row.name !== "before-session" && row.activated === 0) expect(first.state.executionTargetLease).toBeNull();
             expect(requests.filter((request) => request.url.endsWith("/browser-actor")).every((request) => !request.body.includes("open.v1.") && !request.body.includes("socket.v1."))).toBe(true);
@@ -4964,13 +5046,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const descriptorApp = guest.manifest.apps.find((app: Record<string, unknown>) => app.id === fixture.manifest.surface.appId);
       if (descriptorApp === undefined) throw new Error("direct browser actor fixture: descriptor app absent");
       descriptorApp.role = "editor";
+      const secondWindow = { key: "gis2d-inset", bodyKey: "gis2d.play.inset" };
+      descriptorApp.windowKinds = [...descriptorApp.windowKinds, { ...descriptorApp.windowKinds[0], id: secondWindow.key, bodyKey: secondWindow.bodyKey }];
       const panelSurfaces = [{ key: "framework.panel.inspection", bodyKey: "gis2d.play.inspection" }, { key: "framework.panel.history", bodyKey: "framework.body.history" }];
       descriptorApp.panelTabs = [
         { kind: { kind: "detailsCategory" }, label: "Details", group: "details", children: [{ kind: { kind: "app", id: panelSurfaces[0]!.key }, label: "Inspection", group: "details", bodyKey: panelSurfaces[0]!.bodyKey, children: [] }] },
         { kind: { kind: "app", id: panelSurfaces[1]!.key }, label: "History", group: "details", bodyKey: panelSurfaces[1]!.bodyKey, children: [] },
       ];
       const panelVisible = (view: ResolvedPluginViewState) => panelSurfaces.map((panel) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: panel.key }, bodyKey: panel.bodyKey, viewState: encodePackValue(panelViewContext(view)) } }));
-      const { panelViewContext } = await import("../../../../🔨️modules/🛂️manifest/🟦️.ts");
+      const { panelViewContext, windowViewContext } = await import("../../../../🔨️modules/🛂️manifest/🟦️.ts");
+      const secondWindowVisible = (view: ResolvedPluginViewState) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: secondWindow.key }, bodyKey: secondWindow.bodyKey, viewState: encodePackValue(windowViewContext(view, secondWindow.key)!) } });
       const descriptor = encodePackValue(guest),
         descriptorByteSha256 = await executionTargetSha256Hex(descriptor);
       const { UiDocumentStore } = await import("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
@@ -4982,7 +5067,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { decodeBrowserActorHostEffectsV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts");
       const windowKindId = fixture.manifest.surface.windowKindId;
       const hostFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🧫️fixtures/🪟️host-opening-context/🔣️.json", source.url), "utf8"));
-      const hostView = { ...hostFixture.valid.viewState, windowId: windowKindId, activeWindowKindId: windowKindId, activeUtilityId: "pan", activeUtilityByWindowId: { [windowKindId]: "pan" }, windowInstances: [{ id: windowKindId, windowKindId }] };
+      const hostView = { ...hostFixture.valid.viewState, windowId: windowKindId, activeWindowKindId: windowKindId, activeUtilityId: "pan", activeUtilityByWindowId: { [windowKindId]: "pan" }, windowInstances: [{ id: windowKindId, windowKindId }, { id: secondWindow.key, windowKindId: secondWindow.key }] };
       const bodyKey = leaseBodyKey(guest);
       function leaseBodyKey(descriptor: Record<string, any>): string {
         return descriptor.manifest.apps.find((app: Record<string, any>) => app.id === fixture.manifest.surface.appId).windowKinds.find((window: Record<string, any>) => window.id === windowKindId).bodyKey;
@@ -5108,7 +5193,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               const visibleView = decodePackValue(visible.viewState) as Record<string, unknown>;
               expect(visibleView).toEqual(state.browserActorViewState);
               visibleViews.push(visibleView);
-              expect(events.slice(1)).toEqual(panelVisible(state.browserActorViewState!));
+              expect(events.slice(1)).toEqual([secondWindowVisible(state.browserActorViewState!), ...panelVisible(state.browserActorViewState!)]);
             }
             if (wake) {
               expect(renderEvents[0]).toBe("surface-visible");
@@ -5705,7 +5790,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             async invoke(path: readonly string[], args: BrowserActorChildValue[]): Promise<BrowserActorChildValue> {
               expect(path).toEqual(["reactor", "poll"]);
               const events = args[0] as Record<string, any>[];
-              expect(events).toEqual(turns === 0 ? [{ tag: "surface-visible", val: { surface: { instance: 0, surface: windowKindId }, bodyKey, viewState: encodePackValue(state.browserActorViewState!) } }, ...panelVisible(state.browserActorViewState!)] : [{ tag: "wake" }]);
+              expect(events).toEqual(turns === 0 ? [{ tag: "surface-visible", val: { surface: { instance: 0, surface: windowKindId }, bodyKey, viewState: encodePackValue(state.browserActorViewState!) } }, secondWindowVisible(state.browserActorViewState!), ...panelVisible(state.browserActorViewState!)] : [{ tag: "wake" }]);
               turns++;
               if (row.name === "stale-after-turn") current = false;
               return {
@@ -5801,6 +5886,44 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         harness.release();
       }
     });
+
+    it("asks the hub again for an execution-target asset it declared temporarily unavailable, announces each retry, and still verifies the lease", async () => {
+      const fixture = await executionTargetLeaseFixture();
+      const policy = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🏪️store/👷️worker/🔁️execution-target-retry/🔣️.json", source.url), "utf8")) as { transientStatuses: number[]; maxAttempts: number };
+      const component = executionTargetBytes(fixture.componentHex);
+      const descriptor = executionTargetBytes(fixture.descriptorHex);
+      for (const [transient, failures, expected] of [[503, 1, "installed"], [502, policy.maxAttempts, "refused"], [404, 1, "refused"]] as const) {
+        const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
+        let componentAnswers = 0;
+        const harness = await executionTargetHarness(fixture, (url) => {
+          if (url.endsWith("/open-plan")) return Response.json(plan);
+          if (url.endsWith("/execution-target/manifest")) return Response.json(fixture.manifest);
+          if (url.endsWith("/execution-target/component")) {
+            componentAnswers += 1;
+            return componentAnswers <= failures ? new Response(`{"schema":"semio.hub.document-open-plan-error/v1","code":"deadline-exceeded"}`, { status: transient }) : executionTargetBodyResponse(component);
+          }
+          if (url.endsWith("/execution-target/descriptor")) return executionTargetBodyResponse(descriptor);
+          return Response.json({ ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 });
+        });
+        try {
+          let reason = "";
+          const outcome = await requestDocumentSocketAuthority(harness.state, harness.binding).then(
+            () => "installed",
+            (error: unknown) => ((reason = String(error)), "refused"),
+          );
+          const retries = harness.statuses.filter((status) => status.code === "retrying").map((status) => status.progress);
+          const declared = policy.transientStatuses.includes(transient);
+          expect(outcome, `${transient} ×${failures}: ${reason} ${JSON.stringify(harness.statuses.map((status) => [status.code, status.progress?.stage, status.diagnostic]))}`).toBe(expected);
+          expect(componentAnswers, `${transient} ×${failures}: component requests`).toBe(declared ? Math.min(failures + 1, policy.maxAttempts) : 1);
+          expect(retries, `${transient} ×${failures}: announced retries`).toEqual(declared ? Array.from({ length: Math.min(failures, policy.maxAttempts - 1) }, (_unused, index) => ({ stage: "component", completedBytes: index + 2, totalBytes: policy.maxAttempts })) : []);
+          expect(documentExecutionTargetStatusRoleV1("retrying")).toBe("status");
+          if (expected === "installed") expect(harness.statuses.at(-1)!.code).toBe(fixture.expected.rendererState);
+          else expect(harness.statuses.at(-1)!.code).not.toBe("retrying");
+        } finally {
+          harness.release();
+        }
+      }
+    }, 60_000);
 
     it("browser document open rejects mismatched and max-plus-one plans and cancels before receipt exchange without leaking authority", async () => {
       const fixture = await browserDocumentOpenFixture();
@@ -6795,6 +6918,123 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(parseColdDocumentPairFrontier(genesis).headEditId).toBe("");
       expect(() => parseColdDocumentPairFrontier({ ...genesis, headEditOrdinal: 9n })).toThrow("cold-pair.frontier");
       expect(parseColdDocumentPairFrontier({ documentId: "artifact-c7", headEditOrdinal: 9n, headEditId: "edit-9", lastCommitSeq: 4n, chainSha256: new Uint8Array(32).fill(6) }).headEditOrdinal).toBe(9n);
+    });
+  });
+
+  describe("browser actor catch-up tail", () => {
+    it("keeps a remote batch that arrives before an actor-bound document's child exists for that child, never the Shell", async () => {
+      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
+      const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
+      const { encodeDocumentBackboneEnvelopeBatchExact: encodeBatch } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
+      const posted: BackboneWorkerResponse[] = [];
+      testSeams.workerPostTestSink = (message) => posted.push(message);
+      try {
+        for (const [documentId, actorBound] of [["tail-before-session", true], ["tail-without-actor-lease", false]] as const) {
+          openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "local-ui" });
+          const state = artifactState(documentId)!;
+          artifacts.delete(state.runtimeKey);
+          const binding = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: "tail-space", requestedSurfaceId: fixture.manifest.surface.surfaceId } as const;
+          state.config = { ...state.config, documentId, bindings: [binding] };
+          state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+          artifacts.set(state.runtimeKey, state);
+          const fields = structuredClone(fixture.manifest);
+          fields.scope = { spaceId: binding.spaceId, documentId };
+          fields.checkpoint = { ...fields.checkpoint, baselineFrontier: { ...fields.checkpoint.baselineFrontier, documentId } };
+          state.executionTargetLease = !actorBound ? null : new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(fields), fixture.hubOrigin, hexBytes(fixture.componentHex), hexBytes(fixture.descriptorHex));
+          state.actor = "hub.v1.self";
+          const envelope = { mutation_id: `${documentId}:m-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], diff: { schema: "gis.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "gis.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n } };
+          const batch = encodeBatch([envelope]);
+          const frontier = { document_id: documentId, head_edit_ordinal: 1, head_edit_id: envelope.mutation_id, last_commit_seq: 1, chain_hash: new Array(32).fill(1) };
+          posted.length = 0;
+          await handleHubFrame(state, { Commands: { envelopes: [{ ...envelope, diff: { schema: envelope.diff.schema, payload: Array.from(envelope.diff.payload) }, inverse: { schema: envelope.inverse.schema, payload: Array.from(envelope.inverse.payload) }, timestamp: { actor: 2, physical_ms: 3, logical: 0 } }], origin: "hub.v1.peer", frontier } } as unknown as Parameters<typeof handleHubFrame>[1], null, null, batch);
+          const shellDeliveries = posted.filter((message) => message.kind === "event" && message.event.kind === "documentBackbone");
+          if (actorBound) {
+            expect(shellDeliveries, documentId).toEqual([]);
+            expect(state.browserActorBackboneBeforeReservation.map((message) => Array.from(message)), documentId).toEqual([Array.from(encodeBackboneMessage({ kind: "mutations", envelopes: batch }))]);
+            dropDocumentExecutionTargetLease(state);
+            expect(state.browserActorBackboneBeforeReservation, documentId).toEqual([]);
+          } else {
+            expect(shellDeliveries, documentId).toHaveLength(1);
+            expect(state.browserActorBackboneBeforeReservation, documentId).toEqual([]);
+          }
+          closeArtifactRuntime(state.runtimeKey);
+        }
+      } finally {
+        testSeams.workerPostTestSink = null;
+      }
+    });
+  });
+
+  describe("remote operations folded over pending local ones", () => {
+    it("rebuilds an actor-bound document from the hub once its own operations are accepted after another human's were folded over them", async () => {
+      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
+      const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
+      const { encodeDocumentBackboneEnvelopeBatchExact: encodeBatch } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
+      const posted: BackboneWorkerResponse[] = [];
+      testSeams.workerPostTestSink = (message) => posted.push(message);
+      try {
+        for (const [documentId, interleaved] of [["fold-remote-over-local", true], ["fold-local-only", false]] as const) {
+          openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "local-ui" });
+          const state = artifactState(documentId)!;
+          artifacts.delete(state.runtimeKey);
+          const binding = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: "fold-space", requestedSurfaceId: fixture.manifest.surface.surfaceId } as const;
+          state.config = { ...state.config, documentId, bindings: [binding] };
+          state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+          artifacts.set(state.runtimeKey, state);
+          const fields = structuredClone(fixture.manifest);
+          fields.scope = { spaceId: binding.spaceId, documentId };
+          fields.checkpoint = { ...fields.checkpoint, baselineFrontier: { ...fields.checkpoint.baselineFrontier, documentId } };
+          state.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(fields), fixture.hubOrigin, hexBytes(fixture.componentHex), hexBytes(fixture.descriptorHex));
+          state.actor = "hub.v1.self";
+          const local = { id: `${documentId}:local-1`, documentId, actor: "hub.v1.self" } as unknown as import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState["pendingMutations"][number];
+          state.pendingMutations = [local];
+          state.pendingBatches.set(7, [local]);
+          const frontier = (ordinal: number, head: string) => ({ document_id: documentId, head_edit_ordinal: ordinal, head_edit_id: head, last_commit_seq: ordinal, chain_hash: new Array(32).fill(ordinal) });
+          if (interleaved) {
+            const remote = { mutation_id: `${documentId}:peer-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], diff: { schema: "gis.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "gis.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n } };
+            await handleHubFrame(state, { Commands: { envelopes: [{ ...remote, diff: { schema: remote.diff.schema, payload: Array.from(remote.diff.payload) }, inverse: { schema: remote.inverse.schema, payload: Array.from(remote.inverse.payload) }, timestamp: { actor: 2, physical_ms: 3, logical: 0 } }], origin: "hub.v1.peer", frontier: frontier(1, remote.mutation_id) } } as unknown as Parameters<typeof handleHubFrame>[1], null, null, encodeBatch([remote]));
+          }
+          expect(state.remoteFoldedOverLocal, documentId).toBe(interleaved);
+          posted.length = 0;
+          await handleHubFrame(state, { Ack: { batch_id: 7, stages: [{ Applied: { outcome: "Accepted" } }], frontier: frontier(interleaved ? 2 : 1, `${documentId}:local-1`) } } as unknown as Parameters<typeof handleHubFrame>[1], null, null, null);
+          expect(state.pendingMutations, documentId).toEqual([]);
+          expect(posted.filter((message) => message.kind === "event" && message.event.kind === "commandOutcome").map((message) => (message as { event: { outcome: unknown } }).event.outcome), documentId).toEqual([{ kind: "accepted" }]);
+          expect(posted.some((message) => message.kind === "artifact-rebootstrap-required"), documentId).toBe(interleaved);
+          expect(state.remoteFoldedOverLocal, documentId).toBe(false);
+          closeArtifactRuntime(state.runtimeKey);
+        }
+      } finally {
+        testSeams.workerPostTestSink = null;
+      }
+    });
+  });
+
+  describe("browser actor command windows", () => {
+    it("admits an app command in every window kind of the verified app and nowhere else", async () => {
+      const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🧫️fixtures/📇️directory/🪟️browser-actor-command-windows-v1.json", source.url), "utf8")) as {
+        readonly pluginId: string;
+        readonly appId: string;
+        readonly leaseWindow: string;
+        readonly windows: readonly string[];
+        readonly cases: readonly Readonly<{ name: string; address: Readonly<{ kind: "window" | "command"; appId?: string; windowKindId?: string; windowInstanceId?: string }>; view: Readonly<Record<string, string>>; admitted?: string; refused?: string }>[];
+      };
+      const { createBrowserActorAppCommandRequestV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🎛️command/🟦️.ts");
+      const { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts");
+      const fields = { package: { pluginId: corpus.pluginId }, surface: { appId: corpus.appId, windowKindId: corpus.leaseWindow } } as unknown as Parameters<typeof testSeams.browserActorAppCommandV1>[1];
+      const windows = new Set(corpus.windows);
+      expect(corpus.cases.filter((row) => row.admitted !== undefined).map((row) => row.admitted)).toEqual(expect.arrayContaining([...windows]));
+      for (const [index, row] of corpus.cases.entries()) {
+        const invocation = row.address.kind === "window"
+          ? { address: { pluginId: corpus.pluginId, appId: row.address.appId ?? corpus.appId, modeId: "edit", windowKindId: row.address.windowKindId!, windowInstanceId: row.address.windowInstanceId!, actionId: "noteShellCommand" }, arguments: { commandId: "shell.windowActivate" } }
+          : { address: { owner: { app: { pluginId: corpus.pluginId, appId: corpus.appId } }, commandId: "noteShellCommand" }, arguments: { commandId: "shell.windowActivate" } };
+        const request = createBrowserActorAppCommandRequestV1(
+          { scope: { spaceId: "space-a", documentId: "artifact-a" }, verifiedSurfaceId: "s.note.note@1/*#editor", appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, activationGeneration: "1", instanceId: 0, surfaceRevision: 1, actionSequence: index + 1 },
+          invocation as Parameters<typeof createBrowserActorAppCommandRequestV1>[1],
+          row.view as Parameters<typeof createBrowserActorAppCommandRequestV1>[2],
+        );
+        if (row.refused !== undefined) expect(() => testSeams.browserActorAppCommandV1(request, fields, windows), row.name).toThrow(row.refused);
+        else expect(testSeams.browserActorAppCommandV1(request, fields, windows).surfaceKey, row.name).toBe(row.admitted);
+      }
     });
   });
 

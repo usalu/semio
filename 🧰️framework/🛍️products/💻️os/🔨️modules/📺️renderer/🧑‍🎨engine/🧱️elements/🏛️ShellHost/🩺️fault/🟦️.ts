@@ -42,3 +42,11 @@ export function windowFaultFromError(error: unknown, supervisor?: string): Windo
   const message = typeof candidate.message === "string" ? candidate.message : typeof fault.message === "string" ? fault.message : String(error);
   return { class: classifyWindowFault(code, supervisor), code, origin, message };
 }
+
+/** 🪦 The window fault a failed pass raises for a LIVE instance, or `null` when `retired` says the failure only means the
+ * instance it addressed was retired under it (a session switch, a hot swap, a revoked activation): that window is already
+ * gone, and a fault raised for it stays on its successor's screen — measured as `no actor for instance 1` /
+ * `actor-activation.revoked` painted over the Space app after a `/spaces/<id>` load (🎫️ 26/09/23 C10). */
+export function liveInstanceWindowFaultV1(error: unknown, supervisor: string | undefined, retired: (error: unknown) => boolean): WindowFault | null {
+  return retired(error) ? null : windowFaultFromError(error, supervisor);
+}

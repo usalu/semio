@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Canvas presence of a board window",
+  "description": "What one board window publishes about its camera and pointer on the presence heartbeat (publish), what it paints for the peers of the verified roster (paint), and the overlay texts in every shell locale (labels). React's Board2dHost + CanvasPresenceOverlayV1 and the wgpu shell's canvas_presence module both pass it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "publish", "paint", "labels"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "publish": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "windowId", "bounds", "camera", "pointer", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "windowId": { "type": "string", "minLength": 1 },
+          "bounds": { "$ref": "#/definitions/rect" },
+          "camera": { "$ref": "#/definitions/camera" },
+          "pointer": { "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/point" }] },
+          "expected": { "$ref": "#/definitions/windowView" }
+        }
+      }
+    },
+    "paint": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "windowId", "bounds", "camera", "myActor", "localColor", "scenePath", "roster", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "windowId": { "type": "string", "minLength": 1 },
+          "bounds": { "$ref": "#/definitions/rect" },
+          "camera": { "$ref": "#/definitions/camera" },
+          "myActor": { "type": "string", "minLength": 1 },
+          "localColor": { "type": "integer", "minimum": 0, "maximum": 255 },
+          "scenePath": { "type": "string", "minLength": 1 },
+          "roster": { "type": "array", "items": { "$ref": "#/definitions/peer" } },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["cursors", "marks"],
+            "properties": {
+              "cursors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["actor", "color", "at", "viewport", "chip", "cursorPath", "viewportPath"],
+                  "properties": {
+                    "actor": { "type": "string", "minLength": 1 },
+                    "color": { "type": "integer", "minimum": 0, "maximum": 255 },
+                    "at": { "$ref": "#/definitions/point" },
+                    "viewport": { "$ref": "#/definitions/rect" },
+                    "chip": { "type": "string", "minLength": 1 },
+                    "cursorPath": { "type": "string", "minLength": 1 },
+                    "viewportPath": { "type": "string", "minLength": 1 }
+                  }
+                }
+              },
+              "marks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["actor", "color", "domain", "id", "mark", "chip", "path"],
+                  "properties": {
+                    "actor": { "type": "string", "minLength": 1 },
+                    "color": { "type": "integer", "minimum": 0, "maximum": 255 },
+                    "domain": { "type": "string", "minLength": 1 },
+                    "id": { "type": "string", "minLength": 1 },
+                    "mark": { "enum": ["selection", "hover"] },
+                    "chip": { "type": "string", "minLength": 1, "maxLength": 2 },
+                    "path": { "type": "string", "minLength": 1 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "labels": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["locale", "name", "tool", "cursor", "viewport", "selection", "hover", "chip"],
+        "properties": {
+          "locale": { "enum": ["en", "de"] },
+          "name": { "type": "string", "minLength": 1 },
+          "tool": { "type": "string", "minLength": 1 },
+          "cursor": { "type": "string", "minLength": 1 },
+          "viewport": { "type": "string", "minLength": 1 },
+          "selection": { "type": "string", "minLength": 1 },
+          "hover": { "type": "string", "minLength": 1 },
+          "chip": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "point": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
+    "rect": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" } },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "zoom": { "type": "number", "exclusiveMinimum": 0 } }
+    },
+    "canvasKind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "x", "y", "zoom"],
+      "properties": { "kind": { "const": "canvas" }, "x": { "type": "number" }, "y": { "type": "number" }, "zoom": { "type": "number" } }
+    },
+    "windowView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["windowId", "space", "kind", "size"],
+      "properties": {
+        "windowId": { "type": "string", "minLength": 1 },
+        "space": { "const": "canvas" },
+        "kind": { "$ref": "#/definitions/canvasKind" },
+        "size": { "$ref": "#/definitions/point" },
+        "pointer": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } }
+      }
+    },
+    "peer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor", "connectedAtMs", "views"],
+      "properties": {
+        "actor": { "type": "string", "minLength": 1 },
+        "connectedAtMs": { "type": "integer", "minimum": 0 },
+        "label": { "type": "string" },
+        "color": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "views": { "type": "array", "items": { "$ref": "#/definitions/windowView" } },
+        "interaction": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["app_id", "domains"],
+          "properties": {
+            "app_id": { "type": "string" },
+            "domains": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["domain", "granularity", "selected", "hovered"],
+                "properties": {
+                  "domain": { "type": "string", "minLength": 1 },
+                  "granularity": { "type": "string" },
+                  "selected": { "type": "array", "items": { "type": "string" } },
+                  "hovered": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "activeTool": { "type": "string" }
+      }
+    }
+  }
+}

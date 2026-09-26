@@ -85,7 +85,7 @@ import {
 import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeDocumentArchiveBytes, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import { decodeCausalEnvelopeBatch } from "@semio-tech/framework-replication";
 import { DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
-import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCodecAnswer, type ShardCodecRequest, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import type { OwnedUiPatchAcknowledgementEntry, ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
@@ -1191,7 +1191,22 @@ export interface WgpuPluginHandle {
   readonly loadAppDocumentArchive: (instanceId: number, archive: Uint8Array) => Promise<void>;
   /** 🗃️ Restores one `(pack, spr)` pair (`AppCommand::LoadDocument`). */
   readonly loadAppDocumentPack: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
+  /** 🧬️ Calls this program's component `codec` interface on a live instance's actor, serialized with
+   * its turns: the browser twin of the native `OwnedComponentDocumentCodec`. A guest fault rejects
+   * with the fault's display message; a program with no live instance refuses. */
+  readonly codec: (request: ShardCodecRequest) => Promise<unknown>;
+  /** 👥️ The last `AppFrame::Ephemeral` this instance's guest appended to an answer (`AppChannelClient.ephemeral`),
+   * or `null` — what the shell's presence heartbeat carries as the peer's app presence pack and interaction. */
+  readonly ephemeralSnapshot: (instanceId: number) => WgpuEphemeralSnapshot | null;
   readonly dispose: () => Promise<void>;
+}
+
+/** 👥️ One instance's published ephemeral state as the JS bridge hands it to Rust: pack bytes, never number arrays. */
+export type WgpuEphemeralSnapshot = { readonly presence: Uint8Array; readonly presenceGeneration: number; readonly interaction: Uint8Array };
+
+/** 👥️ Projects the app channel's last ephemeral frame onto the bridge's byte shape. */
+export function wgpuEphemeralSnapshot(ephemeral: { readonly presence: readonly number[]; readonly presenceGeneration: number; readonly interaction: readonly number[] } | null): WgpuEphemeralSnapshot | null {
+  return ephemeral === null ? null : { presence: Uint8Array.from(ephemeral.presence), presenceGeneration: ephemeral.presenceGeneration, interaction: Uint8Array.from(ephemeral.interaction) };
 }
 
 /** 🐚️ Acquires a real actor through `ActivationRegistry`/`ShardClient` (replacing the deleted
@@ -1234,6 +1249,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     return route;
   };
   const executeFor = (actorId: string): WgpuActorExecutor => <T>(work: () => Promise<T>) => submitActorWork(actorId, work);
+  const codecActorId = (): string => {
+    if (disposing) throw new Error("wgpu-plugin-handle.closed");
+    for (const [instanceId, actorId] of actorIdByInstance) if (channelByInstance.has(instanceId) && !closingInstances.has(instanceId)) return actorId;
+    throw new Error(`wgpu-plugin-codec.no-mounted-instance:${pluginId}`);
+  };
   const releaseInstance = (instanceId: number, actorId: string): void => {
     actorIdByInstance.delete(instanceId);
     channelByInstance.delete(instanceId);
@@ -1848,6 +1868,13 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const failed = frames.find((frame) => "Error" in frame);
       if (failed && "Error" in failed) throw new Error(faultDisplayMessage(failed.Error.fault, decodePackValue));
     },
+    ephemeralSnapshot: (instanceId) => wgpuEphemeralSnapshot(channelByInstance.get(instanceId)?.ephemeral() ?? null),
+    codec: async (request) => {
+      const actorId = codecActorId();
+      const answer: ShardCodecAnswer = await submitActorWork(actorId, () => shardClient.codec(actorId, request));
+      if ("fault" in answer) throw new Error(`actor-codec.${request.operation}(${request.artifactKind}): ${faultDisplayMessage(Array.from(answer.fault), decodePackValue)}`);
+      return answer.ok;
+    },
     dispose: () => {
       if (disposal) return disposal;
       disposing = true;
@@ -1894,6 +1921,14 @@ export interface WgpuJsBridge {
   readonly applyMutations: (instanceId: number, operations: Uint8Array) => Promise<void>;
   readonly loadAppDocumentArchive: (instanceId: number, archive: Uint8Array) => Promise<void>;
   readonly loadAppArtifactPack: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
+  /** 🧬️ `codec.pack-schema-hash(artifactKind)`: the kind's 32-byte structural fingerprint. */
+  readonly codecPackSchemaHash: (artifactKind: string) => Promise<Uint8Array>;
+  /** 🌱️ `codec.genesis(artifactKind, documentId)`: the zero-history `{ pack, spr }` the component mints. */
+  readonly codecGenesis: (artifactKind: string, documentId: string) => Promise<{ readonly pack: Uint8Array; readonly spr: Uint8Array }>;
+  /** 📥️ `codec.print-mirror(artifactKind, pair)`: the pair's `[dsl, ops]` text mirror, its validation fence. */
+  readonly codecPrintMirror: (artifactKind: string, pack: Uint8Array, spr: Uint8Array) => Promise<readonly [string, string]>;
+  /** 👥️ `WgpuPluginHandle.ephemeralSnapshot`, synchronous — read after every action and command. */
+  readonly ephemeralSnapshot: (instanceId: number) => WgpuEphemeralSnapshot | null;
 }
 
 /** 📦️ `handle_action_js`/`handle_command_js` pass the INVOCATION as `pk:`-prefixed pack too, for the
@@ -1951,7 +1986,29 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     applyMutations: (instanceId, operations) => handle.applyMutations(instanceId, operations),
     loadAppDocumentArchive: (instanceId, archive) => handle.loadAppDocumentArchive(instanceId, archive),
     loadAppArtifactPack: (instanceId, pack, spr) => handle.loadAppDocumentPack(instanceId, pack, spr),
+    codecPackSchemaHash: (artifactKind) => handle.codec({ operation: "pack-schema-hash", artifactKind }).then((value) => codecBytes(value, "pack-schema-hash")),
+    codecGenesis: (artifactKind, documentId) => handle.codec({ operation: "genesis", artifactKind, documentId }).then((value) => codecPair(value)),
+    codecPrintMirror: (artifactKind, pack, spr) => handle.codec({ operation: "print-mirror", artifactKind, pair: { pack, spr } }).then((value) => codecMirror(value)),
+    ephemeralSnapshot: (instanceId) => handle.ephemeralSnapshot(instanceId),
   };
+}
+
+/** 🧬️ The byte answer of a `codec` export, refused unless it is exactly bytes. */
+function codecBytes(value: unknown, operation: string): Uint8Array {
+  if (!(value instanceof Uint8Array)) throw new Error(`actor-codec.${operation}.answer-not-bytes`);
+  return value;
+}
+
+/** 🌱️ The `document-pair` answer of `codec.genesis`, refused unless both halves are bytes. */
+function codecPair(value: unknown): { readonly pack: Uint8Array; readonly spr: Uint8Array } {
+  const pair = value !== null && typeof value === "object" ? (value as { readonly pack?: unknown; readonly spr?: unknown }) : {};
+  return { pack: codecBytes(pair.pack, "genesis.pack"), spr: codecBytes(pair.spr, "genesis.spr") };
+}
+
+/** 📥️ The `tuple<string, string>` answer of `codec.print-mirror`. */
+function codecMirror(value: unknown): readonly [string, string] {
+  if (!Array.isArray(value) || value.length !== 2 || typeof value[0] !== "string" || typeof value[1] !== "string") throw new Error("actor-codec.print-mirror.answer-not-a-mirror");
+  return [value[0], value[1]];
 }
 
 /** 📤️ The ONE projection of an `InvocationResponse` onto the JSON string

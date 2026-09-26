@@ -83,7 +83,7 @@ describe("artifact creation Ready opening", () => {
     for (const locale of ["en", "de"] as const) {
       const onCancel = vi.fn();
       const onOpen = vi.fn();
-      const state: ArtifactCreationProgressStateV1 = { ...owner, phase: "ready", cancelRequested: false, openingDisposition: "failed" };
+      const state: ArtifactCreationProgressStateV1 = { ...owner, issuedAtMs: 0, phase: "ready", cancelRequested: false, openingDisposition: "failed" };
       expect(artifactCreationProgressRoleV1(state.phase, state.openingDisposition)).toBe("alert");
       const view = render(createElement(ArtifactCreationProgressNotice, { state, locale, onCancel, onOpen }));
       const retry = ARTIFACT_CREATION_PROGRESS_TEXT_V1[locale].opening.retry;

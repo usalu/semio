@@ -5,7 +5,7 @@
 //! and the wgpu hit-target's `control_id`, plus real row-action buttons dispatching a normal
 //! `ActionDescriptor` through the existing, unmodified `space_index_action` relay.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{space_index_table_row, SSpaceSnapshot, SpaceArtifactRow, SPACE_INDEX_TABLE_COLUMNS};
+use crate::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceArtifactRow, SpaceIndexTableLabels};
 use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
 use semio_framework_plugin::app::{table_row_action, table_window_row, TableWindowKit, TreeWindows, WindowKit};
@@ -40,9 +40,8 @@ pub fn definition() -> WindowKindDefinition {
 /// silently blank a name or dispatch an incomplete open-with call, so both stay UNWIRED here pending a
 /// `requestRenameArtifact` opener + `renameArtifact` dialog / an open-with chooser (mirrors the
 /// `requestDeleteArtifact`/`deleteArtifact` pair already in this app) — see the lane 3-F report's
-/// sharedFileRequest. Labels are `Label::data` (English-only), the SAME documented, deferred limitation
-/// this app's own `📌️panels/👥️members` render already carries (no `locale` field on `SpaceIndexConfig`
-/// yet) — not a new gap.
+/// sharedFileRequest. Every visible string resolves through [`SpaceIndexTableLabels`] in the viewer's
+/// language.
 fn fixed_text(value: &str, code: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiText> {
     semio_framework_plugin::UiText::try_from_str(value).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new(code, "fixed table text admission failed"))
 }
@@ -61,12 +60,10 @@ fn open_artifact_action(row: &SpaceArtifactRow) -> semio_framework_plugin::UiAss
 /// `artifact:<id>` grammar contract §C0 needs. One `TableRow` record per artifact inside the windowed
 /// table kit, so a space of any size stays inside the window's node budget. Split out from `render`
 /// (lane 4-F) so the pure table structure stays unit-testable in isolation.
-fn render_table(config: &SpaceIndexConfig, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    TableWindowKit::render_rows(windows, "Artifacts", &SPACE_INDEX_TABLE_COLUMNS, Some("Actions"), &config.indexed_artifacts, |row| {
-        let cells = space_index_table_row(row, &config.presence_for(&row.id).join(", "));
-        let cells: Vec<&str> = cells.iter().map(String::as_str).collect();
-        let key = format!("artifact:{}", row.id);
-        table_window_row(&key, &cells, [table_row_action(IconName::FolderOpen.as_str(), "Open", open_artifact_action(row)?)?], Some(open_artifact_action(row)?))
+fn render_table(config: &SpaceIndexConfig, labels: &SpaceIndexTableLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    TableWindowKit::render_rows(windows, labels.table_name.as_str(), &labels.columns(), Some(labels.column_actions.as_str()), &config.indexed_artifacts, |row| {
+        let cells = labels.row(row, &config.presence_for(&row.id).join(", "));
+        table_window_row(&format!("artifact:{}", row.id), &cells.each_ref().map(String::as_str), [table_row_action(IconName::FolderOpen.as_str(), labels.action_open.as_str(), open_artifact_action(row)?)?], Some(open_artifact_action(row)?))
     })
 }
 
@@ -87,10 +84,10 @@ fn window_content_dead_line_spacer() -> semio_framework_plugin::BuiltNode {
 /// own handler now mirrors Home's `createSpace` "empty args open the dialog" branch (this lane's own
 /// addition), so no new dispatch machinery is needed here either — only a real DOM element with the
 /// frozen id, reachable directly instead of hunting the command palette.
-fn create_artifact_button() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn create_artifact_button(labels: &SpaceIndexTableLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let icon = fixed_text(IconName::Plus.as_str(), "ui.window.create-icon")?;
     let action = space_index_action("createArtifact", None)?;
-    let builder = semio_framework_ui_contract::button(fixed_label("Create Artifact", "ui.window.create-label")?)
+    let builder = semio_framework_ui_contract::button(fixed_label(labels.create_artifact.as_str(), "ui.window.create-label")?)
         .icon(icon)
         .try_id("s-space-create-artifact")
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create-id", "create button id admission failed"))?;
@@ -103,8 +100,9 @@ fn create_artifact_button() -> semio_framework_plugin::UiAssemblyResult<semio_fr
 }
 
 pub fn render(_document: &SSpaceSnapshot, config: &SpaceIndexConfig, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let labels = semio_framework_plugin::resolve_labels::<SpaceIndexTableLabels>(view_state);
     let mut children = semio_framework_plugin::UiFixedList::<semio_framework_plugin::BuiltNode>::default();
-    for child in [window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_artifact_button()?, render_table(config, &TreeWindows::for_body(view_state, BODY_KEY))?] {
+    for child in [window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_artifact_button(labels)?, render_table(config, labels, &TreeWindows::for_body(view_state, BODY_KEY))?] {
         children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?;
     }
     semio_framework_ui_contract::column()

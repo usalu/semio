@@ -1,0 +1,18 @@
+{
+  "description": "The attempt a refused worker-pool submission retries with (null: terminal). A queue-lock race spends no attempt; a full lane spends one of the owner's limit; shutdown and poisoning never retry.",
+  "limit": 8,
+  "rows": [
+    { "kind": "Contended", "attempt": 0, "next": 0 },
+    { "kind": "Contended", "attempt": 7, "next": 7 },
+    { "kind": "Contended", "attempt": 8, "next": 8 },
+    { "kind": "Contended", "attempt": 255, "next": 255 },
+    { "kind": "Saturated", "attempt": 0, "next": 1 },
+    { "kind": "Saturated", "attempt": 7, "next": 8 },
+    { "kind": "Saturated", "attempt": 8, "next": null },
+    { "kind": "Saturated", "attempt": 255, "next": null },
+    { "kind": "Shutdown", "attempt": 0, "next": null },
+    { "kind": "Shutdown", "attempt": 7, "next": null },
+    { "kind": "Poisoned", "attempt": 0, "next": null },
+    { "kind": "Poisoned", "attempt": 7, "next": null }
+  ]
+}

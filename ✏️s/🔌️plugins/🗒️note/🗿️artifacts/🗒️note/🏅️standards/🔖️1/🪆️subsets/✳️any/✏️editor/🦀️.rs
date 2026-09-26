@@ -770,6 +770,45 @@ pub fn create_note_app() -> AppDefinition {
                 ]).required().default_value(&crate::standards::v1::subsets::any::examples::demo::ID),
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()])
+            .action_args("setGridSpacing", vec![ActionArgDef::number("value", LocalizedLabel::native("Grid spacing", "Rasterabstand")).required()])
+            .action_args("setGridSubdivisions", vec![ActionArgDef::slider("value", LocalizedLabel::native("Subdivisions", "Unterteilungen"), 1.0, 16.0).required()])
+            .action_args("setGridOpacity", vec![ActionArgDef::slider("value", LocalizedLabel::native("Grid opacity", "Rasterdeckkraft"), 0.05, 1.0).required()])
+            .action_args("setSnapGridSpacing", vec![ActionArgDef::number("value", LocalizedLabel::native("Snap spacing", "Einrastabstand")).required()])
+            .action_args("setPencilWidth", vec![ActionArgDef::number("value", LocalizedLabel::native("Pencil width", "Stiftbreite")).required()])
+            .action_args("setEraserRadius", vec![ActionArgDef::number("value", LocalizedLabel::native("Eraser radius", "Radiergummi-Radius")).required()])
+            .action_args("setCameraZoom", vec![ActionArgDef::number("value", LocalizedLabel::native("Zoom", "Zoom")).required()])
+            .action_args("moveBlock", vec![
+                ActionArgDef::text("blockId", LocalizedLabel::native("Block", "Block")).required(),
+                ActionArgDef::text("targetRowId", LocalizedLabel::native("Target row", "Zielzeile")).required(),
+                ActionArgDef::select("dropPosition", LocalizedLabel::native("Position", "Position"), vec![
+                    ActionArgOption::new("before", LocalizedLabel::native("Before", "Davor")),
+                    ActionArgOption::new("inside", LocalizedLabel::native("Inside", "Hinein")),
+                    ActionArgOption::new("after", LocalizedLabel::native("After", "Danach")),
+                ]).default_value(&"inside"),
+            ])
+            .action_args("deleteBlock", vec![ActionArgDef::text("blockId", LocalizedLabel::native("Block", "Block")).required()])
+            .action_args("duplicateBlock", vec![ActionArgDef::text("blockId", LocalizedLabel::native("Block", "Block")).required()])
+            .action_args("patchBlocks", vec![
+                ActionArgDef::text_list("blockIds", LocalizedLabel::native("Blocks", "Blöcke")).required(),
+                ActionArgDef::select("field", LocalizedLabel::native("Field", "Feld"), vec![
+                    ActionArgOption::new("name", LocalizedLabel::native("Name", "Name")),
+                    ActionArgOption::new("visible", LocalizedLabel::native("Visible", "Sichtbar")),
+                    ActionArgOption::new("locked", LocalizedLabel::native("Locked", "Gesperrt")),
+                    ActionArgOption::new("x", LocalizedLabel::native("X", "X")),
+                    ActionArgOption::new("y", LocalizedLabel::native("Y", "Y")),
+                    ActionArgOption::new("width", LocalizedLabel::native("Width", "Breite")),
+                    ActionArgOption::new("height", LocalizedLabel::native("Height", "Höhe")),
+                    ActionArgOption::new("textContent", LocalizedLabel::native("Text", "Text")),
+                    ActionArgOption::new("textSize", LocalizedLabel::native("Text size", "Textgröße")),
+                    ActionArgOption::new("mathTex", LocalizedLabel::native("Math (TeX)", "Mathematik (TeX)")),
+                    ActionArgOption::new("inkWidth", LocalizedLabel::native("Ink width", "Tintenbreite")),
+                    ActionArgOption::new("tableAddRow", LocalizedLabel::native("Add table row", "Tabellenzeile hinzufügen")),
+                    ActionArgOption::new("tableRemoveRow", LocalizedLabel::native("Remove table row", "Tabellenzeile entfernen")),
+                    ActionArgOption::new("tableAddColumn", LocalizedLabel::native("Add table column", "Tabellenspalte hinzufügen")),
+                    ActionArgOption::new("tableRemoveColumn", LocalizedLabel::native("Remove table column", "Tabellenspalte entfernen")),
+                ]).required(),
+                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
+            ])
             // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a): what `capabilities_search`
             // matches on and `capabilities_describe` returns. EN first, DE second, no default language.
             .action_describe("addBlock", LocalizedLabel::native("Adds a new block to the note at the given position — text, image, table, math, ink stroke or group.", "Fügt der Notiz an der angegebenen Position einen neuen Block hinzu — Text, Bild, Tabelle, Mathematik, Tinte oder Gruppe."))

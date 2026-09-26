@@ -59,16 +59,8 @@ mod subject {
 
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order. The feature is
     /// the single place those paths are written down; both adapters read them from there.
-    fn step_uris(ctx: &Context, scheme: &str) -> Vec<String> {
-        let mut found = Vec::new();
-        for (_, text) in &ctx.scenario.steps {
-            for token in text.split_whitespace() {
-                if token.starts_with(scheme) {
-                    found.push(token.to_string());
-                }
-            }
-        }
-        found
+    fn step_uris(ctx: &Context, prefix: &str) -> Vec<String> {
+        ctx.step_fixture_uris().into_iter().filter(|uri| uri.starts_with(prefix)).collect()
     }
 
     fn only_uri(ctx: &Context, scheme: &str, what: &str) -> Result<String, String> {
@@ -287,7 +279,7 @@ mod subject {
     /// no leaf, so its payload comes from the scenario's doc string and its expected answer is the
     /// before-snapshot itself.
     pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
-        let uris = step_uris(ctx, "asset://");
+        let uris = ctx.step_fixture_uris();
         let before = decode_snapshot(&ctx.fixture_json(uris.first().ok_or("the scenario names no before-snapshot")?)?)?;
         let (step, expected) = match uris.len() {
             3 => (decode_mutation(&ctx.fixture_json(&uris[1])?, &before)?, decode_snapshot(&ctx.fixture_json(&uris[2])?)?),
@@ -358,7 +350,7 @@ pub fn adapter() -> Adapter {
         built = built
             .subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate)
             .subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse)
-            .subject("spec-vector", subject::spec_vector);
+            .subject("spec-vector", subject::spec_vector).subject("spec-vector-no-mutation", subject::spec_vector);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

@@ -10,6 +10,7 @@ import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
 import { WGPU_PREFERS_DARK_MEDIA_QUERY, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN, documentBootMetaReader, readWgpuHostStorageSnapshot, resolveWgpuBootDescriptor, resolveWgpuHostAppearance, resolveWgpuHostPlatform, stripBootBrokerProof, wgpuReadinessBeacon, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostPlatform, type WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { DEFAULT_HOST_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { createAccessibilityMirror } from "../♿️accessibility-mirror/🟦️.ts";
+import { watchAgentBridgeOffer } from "../../../🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 import { browserClipboardPasteCandidate, wireBrowserFullscreen, wireBrowserKeyboard } from "../🎮️input-wire/🟦️.ts";
 
 /** 🚏️ Resolves completed renderer artifacts and the generated frame worker through the browser host. */
@@ -377,7 +378,9 @@ async function mount(root: HTMLElement): Promise<void> {
   darkQuery?.addEventListener("change", republishAppearance);
   window.addEventListener("storage", republishAppearance);
   window.addEventListener("storage", republishHostStorage);
+  const stopAgentBridgeOffer = watchAgentBridgeOffer((offer) => transport.setHostAgentBridge(offer));
   window.addEventListener("pagehide", () => {
+    stopAgentBridgeOffer();
     beacon.clear();
     resize.disconnect();
     darkQuery?.removeEventListener("change", republishAppearance);

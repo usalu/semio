@@ -564,20 +564,6 @@ def doc_string(ctx: Context) -> str:
     raise AssertionError("scenario %s carries no doc string" % ctx.scenario["id"])
 
 
-def step_fixture(ctx: Context, scheme: str) -> str:
-    """🧫️ The first `<scheme>://` URI the scenario's steps name. The feature is the single place a
-    fixture path is written down; both adapters read it from there."""
-    for step in ctx.scenario["steps"]:
-        text = step.get("text", "")
-        at = text.find(scheme + "://")
-        if at != -1:
-            end = at
-            while end < len(text) and not text[end].isspace():
-                end += 1
-            return text[at:end]
-    raise AssertionError("scenario %s names no %s:// fixture" % (ctx.scenario["id"], scheme))
-
-
 def tower(ctx: Context) -> dict:
     """🏗️ The real 180-node capsule network, read through this implementation's own DSL parser."""
     return parse_dsl(ctx.fixture_bytes(TOWER_DSL).decode("utf-8"))
@@ -612,7 +598,7 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed `(before, mutation, after)` vector — a THIRD statement of
     what the verb means, independent of both implementations."""
-    vector = json.loads(ctx.fixture_bytes(step_fixture(ctx, "local")).decode("utf-8"))
+    vector = json.loads(ctx.fixture_bytes(ctx.step_fixture_uris()[0]).decode("utf-8"))
     applied = apply_mutation(vector["before"], vector["mutation"])
     if applied != vector["after"]:
         raise AssertionError("%s: the applied flow does not match the vector's after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied), json.dumps(vector["after"])))

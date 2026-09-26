@@ -15,6 +15,7 @@ export type ArtifactCreationProgressOwnerV1 = Readonly<{
 }>;
 
 export type ArtifactCreationProgressStateV1 = ArtifactCreationProgressOwnerV1 & Readonly<{
+  issuedAtMs: number;
   phase: SpaceArtifactCreationPhaseV1;
   cancelRequested: boolean;
   openingDisposition: "idle" | "opening" | "failed";
@@ -23,7 +24,7 @@ export type ArtifactCreationProgressStateV1 = ArtifactCreationProgressOwnerV1 & 
 export type ArtifactCreationProgressUiStateV1 = Readonly<Record<string, ArtifactCreationProgressStateV1>>;
 
 export type ArtifactCreationProgressActionV1 =
-  | { readonly kind: "issued"; readonly owner: ArtifactCreationProgressOwnerV1 }
+  | { readonly kind: "issued"; readonly owner: ArtifactCreationProgressOwnerV1; readonly atMs: number }
   | { readonly kind: "status"; readonly message: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }> }
   | { readonly kind: "cancel-requested"; readonly requestId: string; readonly spaceId: string }
   | { readonly kind: "opening"; readonly requestId: string; readonly spaceId: string }
@@ -41,6 +42,7 @@ export const ARTIFACT_CREATION_PROGRESS_TEXT_V1 = {
       failed: "Artifact creation failed.",
       cancelled: "Artifact creation was cancelled.",
     },
+    waiting: "The hub has been working on it for {elapsed}. You can keep waiting or cancel.",
     cancel: "Cancel creation",
     cancelling: "Cancellation requested…",
     opening: {
@@ -64,6 +66,7 @@ export const ARTIFACT_CREATION_PROGRESS_TEXT_V1 = {
       failed: "Die Artefakterstellung ist fehlgeschlagen.",
       cancelled: "Die Artefakterstellung wurde abgebrochen.",
     },
+    waiting: "Der Hub arbeitet seit {elapsed} daran. Du kannst weiter warten oder abbrechen.",
     cancel: "Erstellung abbrechen",
     cancelling: "Abbruch angefordert…",
     opening: {
@@ -113,7 +116,7 @@ export function reduceArtifactCreationProgressUiV1(
   current: ArtifactCreationProgressUiStateV1,
   action: ArtifactCreationProgressActionV1,
 ): ArtifactCreationProgressUiStateV1 {
-  if (action.kind === "issued") return retainArtifactCreationProgressV1(current, { ...action.owner, phase: "accepted", cancelRequested: false, openingDisposition: "idle" });
+  if (action.kind === "issued") return retainArtifactCreationProgressV1(current, { ...action.owner, issuedAtMs: action.atMs, phase: "accepted", cancelRequested: false, openingDisposition: "idle" });
   const requestId = action.kind === "status" ? action.message.requestId : action.requestId;
   const state = current[requestId];
   if (state === undefined) return current;
@@ -134,8 +137,21 @@ export function reduceArtifactCreationProgressUiV1(
   return { ...current, [state.requestId]: { ...state, phase: action.message.phase, openingDisposition: action.message.phase === "ready" && state.phase === "ready" ? state.openingDisposition : "idle" } };
 }
 
-/** ♿ Exact-locale, phase-only creation status. Server status has no numeric counters, so this
- * component never invents a percentage or renders a misleading progress meter. */
+/** ⏱️ How long a creation must run before its notice says how long the hub has been working on it. */
+export const ARTIFACT_CREATION_WAITING_AFTER_MS = 10_000;
+
+/** ⏱️ The elapsed time of a running creation in the person's language (`2 min 5 s` / `2 Min. 5 s`). */
+export function artifactCreationElapsedTextV1(elapsedMs: number, language: keyof typeof ARTIFACT_CREATION_PROGRESS_TEXT_V1): string {
+  const seconds = Math.max(0, Math.floor(elapsedMs / 1_000));
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  if (minutes === 0) return `${rest} s`;
+  return language === "de" ? `${minutes} Min. ${rest} s` : `${minutes} min ${rest} s`;
+}
+
+/** ♿ Exact-locale creation status: the hub's own phase, and — once a creation runs longer than
+ * {@link ARTIFACT_CREATION_WAITING_AFTER_MS} — how long the hub has been working on it, with the Cancel kept. Server status
+ * has no numeric counters, so this component never invents a percentage or renders a misleading progress meter. */
 export function ArtifactCreationProgressNotice({
   state,
   locale,
@@ -147,6 +163,13 @@ export function ArtifactCreationProgressNotice({
   onCancel(requestId: string, spaceId: string): void;
   onOpen(requestId: string): void;
 }>): React.ReactElement | null {
+  const [nowMs, setNowMs] = React.useState(() => Date.now());
+  const running = !artifactCreationProgressTerminalV1(state.phase);
+  React.useEffect(() => {
+    if (!running) return;
+    const timer = setInterval(() => setNowMs(Date.now()), 1_000);
+    return () => clearInterval(timer);
+  }, [running]);
   const language = artifactCreationProgressLocaleV1(locale);
   if (language === null) return null;
   const copy = ARTIFACT_CREATION_PROGRESS_TEXT_V1[language];
@@ -170,6 +193,7 @@ export function ArtifactCreationProgressNotice({
       <h2>{copy.heading}</h2>
       <p>{state.name}</p>
       <p>{status}</p>
+      {running && nowMs - state.issuedAtMs >= ARTIFACT_CREATION_WAITING_AFTER_MS ? <p data-semio-artifact-creation-elapsed="">{copy.waiting.replace("{elapsed}", artifactCreationElapsedTextV1(nowMs - state.issuedAtMs, language))}</p> : null}
       {state.phase === "ready" && state.openingDisposition === "failed" ? (
         <button aria-label={`${copy.opening.retry}: ${state.name}`} onClick={() => onOpen(state.requestId)} type="button">
           {copy.opening.retry}

@@ -947,7 +947,14 @@ fn attach_stdio_bridge(options: &StdioOptions, principal: &AgentPrincipal, bridg
     match crate::rendezvous::publish_offer(offer) {
         Ok(published) => {
             eprintln!("[semio-os-mcp] bridge listening on ws://{}/bridge — offered to {} live os session(s) via {}", run.local_addr(), sessions.len(), published.path().display());
-            Some(StdioBridgeAttachment { run, _offer: published })
+            let offer = std::sync::Arc::new(std::sync::Mutex::new(Some(published)));
+            let withdrawn = std::sync::Arc::clone(&offer);
+            let completion = run.completion();
+            std::thread::spawn(move || {
+                completion.wait();
+                withdrawn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            });
+            Some(StdioBridgeAttachment { run, offer })
         }
         Err(error) => {
             eprintln!("[semio-os-mcp] the bridge offer could not be published ({}) — cancelling the listener rather than leaving an unreachable socket open", error.message);
@@ -958,14 +965,18 @@ fn attach_stdio_bridge(options: &StdioOptions, principal: &AgentPrincipal, bridg
 }
 
 /// 🧷️ Keeps the bridge-only listener and its published offer alive for exactly as long as stdio
-/// serving runs — dropping it removes the offer file and cancels the listener.
+/// serving runs — dropping it removes the offer file and cancels the listener. The offer is also
+/// withdrawn the moment the listener's run completes on its own (a failed or closed listener), so no
+/// shell is ever pointed at a gateway that can no longer serve it. Dropping it withdraws the offer
+/// on the dropping thread itself: the process may exit before the completion watcher wakes.
 struct StdioBridgeAttachment {
     run: HttpTransportRun,
-    _offer: crate::rendezvous::PublishedBridgeOffer,
+    offer: std::sync::Arc<std::sync::Mutex<Option<crate::rendezvous::PublishedBridgeOffer>>>,
 }
 
 impl Drop for StdioBridgeAttachment {
     fn drop(&mut self) {
+        self.offer.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
         self.run.cancel();
     }
 }

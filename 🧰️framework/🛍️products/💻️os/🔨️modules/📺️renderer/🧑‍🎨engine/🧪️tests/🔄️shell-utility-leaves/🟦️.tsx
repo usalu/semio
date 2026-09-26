@@ -43,7 +43,7 @@ describe("🔄️ target-neutral Shell utility leaves", () => {
 
   test("the React Task Manager oracle distinguishes an unattached runtime", () => {
     const noTasks: readonly TaskManagerTaskV1[] = [];
-    const { container } = render(<TaskManagerWindow sources={{ registry: () => null, tasks: () => noTasks, subscribe: () => () => undefined, cancel: () => undefined }} />);
+    const { container } = render(<TaskManagerWindow sources={{ registry: () => null, tasks: () => noTasks, subscribe: () => () => undefined, cancel: () => undefined, suspend: () => undefined, resume: () => undefined }} />);
     const status = container.querySelector("[data-semio-task-manager-empty]");
     expect(status?.getAttribute("role")).toBe("status");
     expect(status?.getAttribute("data-semio-task-manager-empty")).toBe(fixture.taskManager.state);

@@ -1335,6 +1335,10 @@ fn parse_flow_viewport(args: &dsl::DslValue) -> Result<semio_framework_os_kernel
 }
 
 impl ArtifactEditor for Generation2dPlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     /// 🧩️ The loaded-parent child projection every archive load and maintenance swap asks for before a
     /// decoded document may replace the store. `Generation2dSnapshot` declares no child slot, so the
     /// projection is honestly empty; without it every replacement faulted with `editor did not declare
@@ -2002,6 +2006,23 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         // the no-op `.workflow("generation2d", …)` call are dropped here (not silently — reported in
         // this packet's migration notes). The subset's own `📚️examples` facet is the modern,
         // role-agnostic replacement surface for this.
+        .action_describe("addGeneration", LocalizedLabel::native("Adds a new generation, a named set of input values for the 2D generator, to the generation list and selects it.", "Fügt der Generationsliste eine neue Generation hinzu, einen benannten Satz von Eingabewerten für den 2D-Generator, und wählt sie aus."))
+        .action_describe("selectGeneration", LocalizedLabel::native("Selects the generation with the given id, whose input values the generator then evaluates and shows.", "Wählt die Generation mit der angegebenen Id aus, deren Eingabewerte der Generator dann auswertet und zeigt."))
+        .action_describe("renameGeneration", LocalizedLabel::native("Renames one generation of the generation list.", "Benennt eine Generation der Generationsliste um."))
+        .action_describe("removeGeneration", LocalizedLabel::native("Removes one generation by id from the generation list, with its input values.", "Entfernt eine Generation anhand ihrer Id samt ihrer Eingabewerte aus der Generationsliste."))
+        .action_describe("updateGenerationValues", LocalizedLabel::native("Sets the value one input question takes in a generation (the selected one when no id is given) and re-evaluates the result.", "Setzt den Wert, den eine Eingabefrage in einer Generation annimmt (ohne Id in der ausgewählten), und wertet das Ergebnis neu aus."))
+        .action_describe("addWidget", LocalizedLabel::native("Adds a new widget of the given kind (an input or an operator of the 2D generator graph) to the canvas.", "Fügt der Fläche ein neues Widget der angegebenen Art hinzu (eine Eingabe oder einen Operator des 2D-Generatorgraphen)."))
+        .action_describe("removeWidget", LocalizedLabel::native("Removes one widget by id from the generator graph together with its connections.", "Entfernt ein Widget anhand seiner Id samt seiner Verbindungen aus dem Generatorgraphen."))
+        .action_describe("reorganize", LocalizedLabel::native("Lays out every widget of the generator graph automatically from left to right, overwriting their manual positions.", "Ordnet alle Widgets des Generatorgraphen automatisch von links nach rechts an und überschreibt ihre manuellen Positionen."))
+        .action_describe("setShowMode", LocalizedLabel::native("Sets what the editor shows, such as the generator graph or the generated result; only the view changes.", "Legt fest, was der Editor zeigt, etwa den Generatorgraphen oder das erzeugte Ergebnis; nur die Ansicht ändert sich."))
+        .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole 2D generator with one of the plugin's bundled examples, by example id.", "Ersetzt den gesamten 2D-Generator durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))
+        .action_describe("moveMediaNode", LocalizedLabel::native("Moves one widget to the canvas position x, y.", "Verschiebt ein Widget an die Position x, y der Fläche."))
+        .action_describe("connectMediaPorts", LocalizedLabel::native("Connects an output port of one widget to an input port of another; an incompatible connection changes nothing.", "Verbindet einen Ausgangsport eines Widgets mit einem Eingangsport eines anderen; eine unverträgliche Verbindung ändert nichts."))
+        .action_describe("generate", LocalizedLabel::native("Switches the editor to its generate view, which shows the generation list and the result of the selected generation.", "Schaltet den Editor in seine Generieren-Ansicht, die die Generationsliste und das Ergebnis der ausgewählten Generation zeigt."))
+        .action_describe("setEvalOutputs", LocalizedLabel::native("Hands the editor evaluated generator outputs (JSON) computed elsewhere so it can show them; the document is not changed.", "Übergibt dem Editor anderswo berechnete Generatorausgaben (JSON), damit er sie zeigt; das Dokument ändert sich nicht."))
+        .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_destructive("reorganize")
         .build_definition()
 }
 //#endregion 🔖️Manifest

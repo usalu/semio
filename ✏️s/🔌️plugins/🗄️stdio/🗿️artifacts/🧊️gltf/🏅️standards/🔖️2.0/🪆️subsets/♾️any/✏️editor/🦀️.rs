@@ -200,6 +200,10 @@ impl ArtifactOwnedToolJobFactory for GltfAnyEditorExampleFactory {
 pub struct GltfAnyEditor;
 
 impl ArtifactEditor for GltfAnyEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = GltfSnapshot;
     type Mutation = GltfMutation;
     type Config = NoConfig;

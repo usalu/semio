@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["schema", "presentedChrome", "settingsTabStrip"],
+  "required": ["schema", "presentedChrome", "settingsTabStrip", "transportCredits"],
   "properties": {
     "schema": { "const": "semio.renderer.wgpu.accessibility-interaction.v1" },
     "presentedChrome": {
@@ -35,10 +35,41 @@
         "tailIds": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
       },
       "additionalProperties": false
+    },
+    "transportCredits": {
+      "type": "object",
+      "description": "Addresses the frame transport and the Worker admit or refuse by credits alone; liveness is the renderer's `rejections`.",
+      "required": ["note", "admitted", "refused"],
+      "properties": {
+        "note": { "type": "string", "minLength": 1 },
+        "admitted": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/creditRow" } },
+        "refused": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/creditRow" } }
+      },
+      "additionalProperties": false
     }
   },
   "$defs": {
     "rect": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" } },
+    "creditRow": {
+      "type": "object",
+      "required": ["id", "wire"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "wire": {
+          "type": "object",
+          "required": ["kind", "windowId", "windowGeneration", "nodeId", "nodeKey"],
+          "properties": {
+            "kind": { "enum": ["accessibility-focus", "accessibility-blur", "accessibility-activate"] },
+            "windowId": { "type": "string" },
+            "windowGeneration": { "type": "number" },
+            "nodeId": { "type": "number" },
+            "nodeKey": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "namedId": {
       "type": "object",
       "required": ["id", "label"],

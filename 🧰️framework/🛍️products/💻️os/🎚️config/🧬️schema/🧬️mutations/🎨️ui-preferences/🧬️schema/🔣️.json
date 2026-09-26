@@ -14,6 +14,7 @@
     { "$ref": "#/$defs/SetKeybindingOverride" }
   ],
   "$defs": {
+    "PreferenceKeys": { "$comment": "The one UiPreferences key each mutation writes; its data class is that key's (`../../../🎨️ui-preferences/🔣️.json` DataClasses).", "const": { "setAppearance": "appearance", "setLayout": "layout", "setDriver": "driverId", "setCustomDriver": "customDrivers", "setLocale": "locale", "setTerminology": "terminology", "setTheme": "themeId", "setCustomTheme": "customThemes", "setKeybindingOverride": "keybindingOverrides" } },
     "SetAppearance": { "type": "object", "additionalProperties": false, "required": ["mutation", "appearance"], "properties": { "mutation": { "type": "string", "const": "setAppearance" }, "appearance": { "anyOf": [{ "type": "string", "enum": ["system", "light", "dark"] }, { "type": "null" }] } } },
     "SetLayout": { "type": "object", "additionalProperties": false, "required": ["mutation", "layout"], "properties": { "mutation": { "type": "string", "const": "setLayout" }, "layout": { "anyOf": [{ "type": "string", "enum": ["desktop", "tablet"] }, { "type": "null" }] } } },
     "SetDriver": { "type": "object", "additionalProperties": false, "required": ["mutation", "driverId"], "properties": { "mutation": { "const": "setDriver" }, "driverId": { "anyOf": [{ "type": "string" }, { "type": "null" }] } } },

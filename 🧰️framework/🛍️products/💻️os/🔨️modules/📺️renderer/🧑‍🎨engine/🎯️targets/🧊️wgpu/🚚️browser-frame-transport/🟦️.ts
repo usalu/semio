@@ -271,6 +271,11 @@ export type BrowserFrameHostStorage = { readonly kind: "host-storage"; readonly 
  * one call. */
 export type BrowserFrameHostAppearance = { readonly kind: "host-appearance"; readonly lifecycle: number; readonly appearance: WgpuHostAppearance };
 
+/** @emoji 🛰️ The local supervisor's agent-bridge offer as the page last read it (`🔗️AgentBridge/🛰️offer`), `null` once no
+ * gateway offers one. The Worker owns no page and dials nothing it discovered itself: the page reads the offer, the
+ * Worker hands it to the renderer's `semioWgpuSetAgentBridgeConfig`, and the bridge socket goes through the page door. */
+export type BrowserFrameHostAgentBridge = { readonly kind: "host-agent-bridge"; readonly lifecycle: number; readonly offer: { readonly url: string; readonly admissionProof: string } | null };
+
 export type BrowserFrameWorkerBatch = {
   readonly kind: "batch";
   readonly lifecycle: number;
@@ -310,7 +315,7 @@ export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readon
 
 export type BrowserFrameImageDecodeResult = { readonly kind: "image-decode-result"; readonly lifecycle: number; readonly requestId: number; readonly bitmap: ImageBitmap | null; readonly detail?: string };
 
-export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | { readonly kind: "close"; readonly lifecycle: number };
+export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | { readonly kind: "close"; readonly lifecycle: number };
 
 /** @emoji 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
@@ -544,7 +549,7 @@ export class BrowserFrameTransport {
     }
     if (event.kind === "accessibility-focus" || event.kind === "accessibility-blur" || event.kind === "accessibility-activate" || event.kind === "accessibility-value") {
       const invalidText = (value: string) => value.length === 0 || new TextEncoder().encode(value).byteLength > FRAME_WORKER_ACCESSIBILITY_ID_BYTES || /[\u0000-\u001f\u007f]/u.test(value);
-      if (invalidText(event.windowId) || invalidText(event.nodeKey) || !Number.isSafeInteger(event.windowGeneration) || event.windowGeneration < 1 || !Number.isSafeInteger(event.nodeId) || event.nodeId < 1) {
+      if (invalidText(event.windowId) || invalidText(event.nodeKey) || !Number.isSafeInteger(event.windowGeneration) || event.windowGeneration < 0 || !Number.isSafeInteger(event.nodeId) || event.nodeId < 0) {
         this.fail("lossless-overflow", "accessibility address is outside fixed identity credits");
         return false;
       }
@@ -628,6 +633,18 @@ export class BrowserFrameTransport {
       this.requestFrame();
     } catch {
       /* a Worker that cannot take an appearance change is already failing on its own channel */
+    }
+  }
+
+  /** @emoji 🛰️ Hands the page's latest agent-bridge offer to the Worker. Fire-and-forget like {@link setHostAppearance}:
+   * an offer that cannot cross leaves the bridge `Disabled`, never a faulted surface. */
+  setHostAgentBridge(offer: { readonly url: string; readonly admissionProof: string } | null): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-agent-bridge", lifecycle: this.lifecycle, offer });
+      this.requestFrame();
+    } catch {
+      /* a Worker that cannot take an offer is already failing on its own channel */
     }
   }
 

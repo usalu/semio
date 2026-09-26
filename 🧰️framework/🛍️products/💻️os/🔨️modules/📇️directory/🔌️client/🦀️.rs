@@ -887,6 +887,12 @@ pub struct DirectoryClient<T: DirectoryTransport> {
     credential: Option<Arc<LocalHubCredential>>,
 }
 
+/// 🧾️ The first bytes of an execution-target refusal body — the hub's closed error code, never document
+/// data — so a shell can say why a route refused instead of only its status.
+fn execution_target_refusal(body: &[u8]) -> String {
+    String::from_utf8_lossy(&body[..body.len().min(256)]).into_owned()
+}
+
 impl<T: DirectoryTransport> DirectoryClient<T> {
     pub fn new(transport: T, base_url: impl Into<String>) -> Self {
         Self { transport, base_url: base_url.into(), credential: None }
@@ -1098,7 +1104,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         match response.status {
             401 => return Err(DirectoryClientError::Unauthorized),
             200..=299 => {}
-            status => return Err(DirectoryClientError::Http { status, body: String::new() }),
+            status => return Err(DirectoryClientError::Http { status, body: execution_target_refusal(&response.body) }),
         }
         if response.body.len() > 64 * 1024 {
             return Err(DirectoryClientError::Decode("document execution-target manifest exceeded its fixed byte limit".into()));
@@ -1132,7 +1138,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
             401 => Err(DirectoryClientError::Unauthorized),
             200..=299 if response.body.len() <= DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES as usize => Ok(response.body),
             200..=299 => Err(DirectoryClientError::Decode("document execution-target component exceeded its fixed byte limit".into())),
-            status => Err(DirectoryClientError::Http { status, body: String::new() }),
+            status => Err(DirectoryClientError::Http { status, body: execution_target_refusal(&response.body) }),
         }
     }
 
@@ -1153,7 +1159,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
             401 => Err(DirectoryClientError::Unauthorized),
             200..=299 if response.body.len() <= DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES as usize => Ok(response.body),
             200..=299 => Err(DirectoryClientError::Decode("document execution-target descriptor exceeded its fixed byte limit".into())),
-            status => Err(DirectoryClientError::Http { status, body: String::new() }),
+            status => Err(DirectoryClientError::Http { status, body: execution_target_refusal(&response.body) }),
         }
     }
 
@@ -2209,6 +2215,12 @@ mod space_artifact_creation;
 #[path = "📌️document-check-in/🦀️.rs"]
 mod document_check_in;
 //#endregion 🌱️SpaceArtifactCreation
+
+//#region 🧩️ExecutionTargetModule
+#[path = "🧩️execution-target-module/🦀️.rs"]
+mod execution_target_module;
+pub use execution_target_module::*;
+//#endregion 🧩️ExecutionTargetModule
 
 //#region 🧪️Tests
 #[cfg(test)]

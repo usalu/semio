@@ -274,7 +274,10 @@ async fn spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completi
 /// exact shard-minted `JobTurn`, the seed starts the job without ever checkpointing the guest (a whole
 /// block2d checkpoint outgrew the fixed checkpoint pages and closed the seed, so native undo never
 /// applied — ticket 26/09/23 slice WG8 §1.4), a replay request for it is refused, and the host's steps
-/// with that turn run it to `Done` and deliver `Event::JobCompleted` to the spawning actor.
+/// with that turn run it to `Done` and deliver `Event::JobCompleted` to the spawning actor. Its end takes
+/// no guest checkpoint either: nothing commits a live-only job's state, and a block2d terminal checkpoint
+/// cut at its 1 s deadline left the guest mid-flight, so the deferred `Event::JobCompleted` trapped
+/// (WG8 session 12, native undo/redo under load).
 #[semio_framework_async_macros::async_test]
 async fn a_framework_reserved_spawn_starts_live_hands_its_turn_to_the_host_and_refuses_replay() {
     let _replay_authority = replay_test_authority();
@@ -325,7 +328,9 @@ async fn a_framework_reserved_spawn_starts_live_hands_its_turn_to_the_host_and_r
             _ => None,
         })
         .collect();
-    assert!(matches!(steps.as_slice(), [JobStepOutcome::Yield, JobStepOutcome::Complete { candidate }] if candidate.output == b"undone"), "{steps:?}");
+    assert!(matches!(steps.as_slice(), [JobStepOutcome::Yield, JobStepOutcome::Complete { candidate }] if candidate.output == b"undone" && candidate.state.is_empty()), "{steps:?}");
+    let GuestInstanceState::Mock(state) = &shard.instances.get(&actor.0).expect("registered instance").state else { panic!("mock instance") };
+    assert_eq!(state.checkpoint, None, "a live-only reserved job commits no restore state, so its end never checkpoints the guest either");
     let completed = mock.observed_events(actor).await.into_iter().find(|event| matches!(event, Event::JobCompleted { job, .. } if *job == job_id));
     assert!(matches!(&completed, Some(Event::JobCompleted { result: RequestOutcome::Ok(bytes), .. }) if bytes == b"undone"), "{completed:?}");
 }

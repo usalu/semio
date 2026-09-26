@@ -33,12 +33,13 @@ export function recorder(tag, sessions) {
   return { report, record, save };
 }
 
-/** 🌐️ Two independent browser contexts, one per human, each on its own serve. */
-export async function openSessions(urls) {
+/** 🌐️ Two independent browser contexts, one per human, each on its own serve; `locale` seats the browser language the
+ * shell boots in, `users` overrides the humans (their hub's own credentials). */
+export async function openSessions(urls, { locale = "en-US", users = USERS } = {}) {
   const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--ignore-gpu-blocklist"] });
   const sessions = [];
-  for (const [index, user] of USERS.entries()) {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  for (const [index, user] of users.entries()) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale });
     const page = await context.newPage();
     const lines = [];
     const sockets = [];
@@ -136,8 +137,26 @@ export async function waitNewRow(page, prefix, before, deadlineMs) {
   throw new Error(`no new ${prefix} row within ${deadlineMs} ms`);
 }
 
+/** 🧭️ Waits for one row of a WINDOWED table (only rows inside its scroll window exist in the DOM): checks the rendered rows,
+ * then pages every `table-window-scroll` container top to bottom, as a human scrolls; leaves the table on the row. */
 export async function waitRow(page, prefix, id, deadlineMs) {
-  await page.locator(`[data-ui-node-key="${prefix}:${id}"]`).first().waitFor({ state: "attached", timeout: deadlineMs });
+  const row = page.locator(`[data-ui-node-key="${prefix}:${id}"]`).first();
+  const deadline = Date.now() + deadlineMs;
+  while (Date.now() < deadline) {
+    if ((await row.count()) > 0) return;
+    const scrollers = page.locator('[data-slot="table-window-scroll"]');
+    for (let index = 0, count = await scrollers.count(); index < count && (await row.count()) === 0; index += 1) {
+      for (let top = 0; ; ) {
+        const metrics = await scrollers.nth(index).evaluate((element, y) => { element.scrollTop = y; return { top: element.scrollTop, scrollHeight: element.scrollHeight, clientHeight: element.clientHeight }; }, top).catch(() => null);
+        await page.waitForTimeout(400);
+        if (metrics === null || (await row.count()) > 0 || metrics.top + metrics.clientHeight >= metrics.scrollHeight) break;
+        top = metrics.top + Math.max(1, Math.floor(metrics.clientHeight * 0.8));
+      }
+    }
+    if ((await row.count()) > 0) return;
+    await page.waitForTimeout(500);
+  }
+  throw new Error(`timeout waiting for [data-ui-node-key="${prefix}:${id}"] (${deadlineMs} ms, windowed tables paged)`);
 }
 
 /** 🎛️ The labelled buttons of one table row (row actions render as labelled buttons). */

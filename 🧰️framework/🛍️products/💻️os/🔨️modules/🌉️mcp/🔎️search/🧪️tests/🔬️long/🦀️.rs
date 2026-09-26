@@ -1,12 +1,6 @@
 use super::*;
-use crate::catalog::{audit_source, compile, CapabilityAudience, CapabilityDefinition, CapabilityOwner, Catalog, CatalogAuditFinding, CatalogSource};
+use crate::catalog::{audit_source, compile, description_findings, CapabilityAudience, CapabilityDefinition, CapabilityOwner, Catalog, CatalogAuditFinding, CatalogSource, DescriptionFinding};
 use semio_framework::{Locale, Terminology};
-
-/// 🧾️ The plugins whose every agent-published verb carries a hand-authored en+de description, a
-/// reviewed audience and a destructive mark where it discards or writes outside history
-/// (`📓️m5b-mcp-catalog-descriptions-classification-destructive.md`). `gis` joins once the freeze on
-/// its crate lifts.
-const AUTHORED_PLUGINS: &[&str] = &["draw", "note", "raster", "layout", "forms", "cad"];
 
 /// 📇️ The catalog source an agent actually meets: the repo's generated plugin registry and every
 /// committed `🔣️.json` descriptor, discovered exactly as `semio-os-mcp stdio --folder .` does.
@@ -70,24 +64,27 @@ fn the_installed_catalog_publishes_no_raw_input_event() {
     assert_eq!(undeclared, Vec::new());
 }
 
-/// 💬️ Every verb the authored plugins publish carries a description in English AND German — no
-/// default language, no empty text for an agent to choose between.
+/// 💬️ The description census over every installed plugin and extension: each verb an agent can be
+/// offered — plugin actions and commands, and the framework-injected ones — explains itself in
+/// English AND German under the manifest's `CapabilityDescription` contract. No default language, no
+/// bare title, no two verbs of one app answering a search with the same text.
 #[test]
-fn the_authored_plugins_describe_every_published_verb_in_en_and_de() {
+fn every_installed_agent_verb_explains_itself_in_en_and_de() {
+    let findings = description_findings(&installed_source());
+    assert_eq!(findings, Vec::<DescriptionFinding>::new(), "{}", findings.iter().map(DescriptionFinding::message).collect::<Vec<_>>().join("\n"));
     for locale in [Locale::En, Locale::De] {
-        let catalog = installed_catalog(locale);
-        let blank: Vec<&str> = catalog.entries.iter().filter(|entry| plugin_of(entry).is_some_and(|plugin| AUTHORED_PLUGINS.contains(&plugin)) && entry.description.trim().is_empty()).map(|entry| entry.id.as_str()).collect();
-        assert_eq!(blank, Vec::<&str>::new(), "undescribed in {locale:?}");
+        let blank: Vec<String> = installed_catalog(locale).entries.iter().filter(|entry| plugin_of(entry).is_some() && entry.description.trim().is_empty()).map(|entry| entry.id.to_string()).collect();
+        assert_eq!(blank, Vec::<String>::new(), "undescribed in {locale:?}");
     }
 }
 
-/// ⚠️ The authored plugins mark every delete/clear/reset/replace verb and every export/save to a
+/// ⚠️ Every installed plugin marks every delete/clear/reset/replace verb and every export/save to a
 /// user path destructive, so `ApprovalMode::WhenDestructive` asks a human before an agent commits it;
 /// camera poses and preview-runner steps are chrome and never published.
 #[test]
-fn the_authored_plugins_gate_destructive_and_user_path_verbs_and_keep_chrome_out() {
-    let findings: Vec<CatalogAuditFinding> = audit_source(&installed_source()).into_iter().filter(|finding| AUTHORED_PLUGINS.iter().any(|plugin| finding.capability_id().starts_with(&format!("{plugin}.")))).collect();
-    assert_eq!(findings, Vec::new());
+fn every_installed_plugin_gates_destructive_and_user_path_verbs_and_keeps_chrome_out() {
+    let findings = audit_source(&installed_source());
+    assert_eq!(findings, Vec::<CatalogAuditFinding>::new(), "{}", findings.iter().map(CatalogAuditFinding::message).collect::<Vec<_>>().join("\n"));
     let catalog = installed_catalog(Locale::En);
     for (plugin, verb) in [("layout", "exportPdf"), ("layout", "exportPng"), ("draw", "exportDocument"), ("draw", "commitDocument"), ("draw", "setSnapshot"), ("note", "saveDownload"), ("forms", "exportFixture"), ("cad", "saveCurrent")] {
         let hits = published(&catalog, plugin, verb);

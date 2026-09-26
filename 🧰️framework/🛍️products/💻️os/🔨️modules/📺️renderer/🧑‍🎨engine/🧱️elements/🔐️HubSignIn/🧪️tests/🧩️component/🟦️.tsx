@@ -57,6 +57,9 @@ import {
   type HubSignInResponseV1,
   type HubSignInTransportV1,
 } from "../../../../../../📇️directory/🔐️sign-in/🟦️.ts";
+import localSessionFixture from "../../../../../../📇️directory/🎫️local-session/🔣️.json";
+import localSessionSchema from "../../../../../../📇️directory/🎫️local-session/🧬️.schema.json";
+import { localHubSessionAnswerV1, parseLocalHubSessionAnswerV1, type LocalHubSessionV1 } from "../../../../../../📇️directory/🎫️local-session/🟦️.ts";
 import { HubSignInPane, hubSignInFormOfferedV1, hubSignInSubmittableV1 } from "../../🟦️.tsx";
 import { useHubConnection, type HubConnectionPortV1 } from "../../../🔗️HubConnection/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -661,3 +664,31 @@ describe("useHubConnection sign-in lane", () => {
   });
 });
 //#endregion 🔗️Hook
+
+//#region 🎫️LocalSession
+/** 🎫️ LAW over `📇️directory/🎫️local-session/🔣️.json`: the dev serve's local-session endpoint answers a typed session
+ * or the typed "not offered" (never a 404 — ticket 26/09/23 U5). The encoder yields exactly the fixture's answers, the
+ * shell adopts exactly the fixture's sessions, and both third-party oracles agree — Ajv on which bodies are
+ * well-formed answers, `fast-deep-equal` on every encoded answer. */
+describe("development local-session answers", () => {
+  it("encode and decode every fixture row, and agree with the Ajv and fast-deep-equal oracles", () => {
+    const rows = localSessionFixture as unknown as {
+      readonly encode: readonly { readonly id: string; readonly session: LocalHubSessionV1 | null; readonly answer: unknown }[];
+      readonly decode: readonly { readonly id: string; readonly body: unknown; readonly shape: boolean; readonly expected: LocalHubSessionV1 | null }[];
+    };
+    const validate = new Ajv({ strict: true }).compile(localSessionSchema as object);
+    expect(rows.encode.length).toBeGreaterThanOrEqual(2);
+    for (const row of rows.encode) {
+      expect(equal(localHubSessionAnswerV1(row.session), row.answer), row.id).toBe(true);
+      expect(validate(row.answer), `${row.id}: the encoded answer is a schema answer`).toBe(true);
+      expect(parseLocalHubSessionAnswerV1(row.answer), `${row.id}: round trip`).toEqual(row.session);
+    }
+    expect(rows.decode.length).toBeGreaterThanOrEqual(10);
+    for (const row of rows.decode) {
+      expect(parseLocalHubSessionAnswerV1(row.body), row.id).toEqual(row.expected);
+      expect(validate(row.body), `${row.id}: Ajv shape`).toBe(row.shape);
+      if (row.expected !== null) expect(row.shape, `${row.id}: only a well-formed answer is ever adopted`).toBe(true);
+    }
+  });
+});
+//#endregion 🎫️LocalSession

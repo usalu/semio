@@ -314,6 +314,8 @@ const DATABASE_SYNC_HELLO_TURN_MS: u64 = 8;
 const DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES: usize = 4 * 1024;
 const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS: usize = db_storage::DB_IO_OPERATION_PAGES;
 const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES: usize = DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS * db_storage::DB_IO_PAGE_BYTES;
+const DATABASE_SYNC_HELLO_ADMISSION_WAITERS: usize = 256;
+const DATABASE_SYNC_HELLO_ADMISSION_SATURATED: &str = "database sync hello admission saturated";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
@@ -362,10 +364,16 @@ struct DatabaseSyncHelloAdmissionState {
     items: usize,
     bytes: usize,
     next_generation: u64,
+    waiters: AdmissionWaiters<DATABASE_SYNC_HELLO_ADMISSION_WAITERS>,
 }
 
-static DATABASE_SYNC_HELLO_ADMISSION: std::sync::Mutex<DatabaseSyncHelloAdmissionState> =
-    std::sync::Mutex::new(DatabaseSyncHelloAdmissionState { slots: [EMPTY_DATABASE_SYNC_HELLO_SLOT; DATABASE_SYNC_HELLO_SLOTS], items: 0, bytes: 0, next_generation: 1 });
+static DATABASE_SYNC_HELLO_ADMISSION: std::sync::Mutex<DatabaseSyncHelloAdmissionState> = std::sync::Mutex::new(DatabaseSyncHelloAdmissionState {
+    slots: [EMPTY_DATABASE_SYNC_HELLO_SLOT; DATABASE_SYNC_HELLO_SLOTS],
+    items: 0,
+    bytes: 0,
+    next_generation: 1,
+    waiters: AdmissionWaiters::new(),
+});
 
 struct DatabaseSyncHelloAdmission {
     slot: usize,
@@ -381,7 +389,7 @@ impl DatabaseSyncHelloAdmission {
         }
         let mut state = DATABASE_SYNC_HELLO_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(slot) = state.slots.iter().position(|entry| !entry.occupied) else {
-            return Err(DbError::Unavailable("database sync hello admission saturated".to_string()));
+            return Err(DbError::Unavailable(DATABASE_SYNC_HELLO_ADMISSION_SATURATED.to_string()));
         };
         let items = DATABASE_SYNC_HELLO_MAX_ITEMS;
         let bytes = DATABASE_SYNC_HELLO_MAX_BYTES;
@@ -414,7 +422,68 @@ impl Drop for DatabaseSyncHelloAdmission {
         *entry = EMPTY_DATABASE_SYNC_HELLO_SLOT;
         state.items = state.items.saturating_sub(self.items);
         state.bytes = state.bytes.saturating_sub(self.bytes);
+        let waiters = state.waiters.wakers();
+        drop(state);
+        waiters.into_iter().flatten().for_each(std::task::Waker::wake);
     }
+}
+
+/// @emoji ⏳️ Resolves once a sync-hello admission slot is free (or at `deadline_ms` on the pool's
+/// clock), so a hello beyond the process's `DATABASE_SYNC_HELLO_SLOTS` concurrent hellos waits its
+/// turn instead of being refused: two dozen document sockets reopening together after a hub
+/// restart are all welcomed (ticket 26/09/23 H9 session 12, growth e2e g15). The slot is not
+/// reserved; the caller claims it with its next submission and waits again if another hello took it.
+pub struct DatabaseSyncHelloAdmissionReady {
+    pool: std::sync::Arc<semio_framework_async::WorkerPool>,
+    deadline_ms: u64,
+    waiter: Option<u64>,
+    deadline_armed: bool,
+}
+
+impl DatabaseSyncHelloAdmissionReady {
+    /// @emoji 🎟️ Waits for a free slot until `deadline_ms` on `pool`'s clock.
+    pub fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>, deadline_ms: u64) -> Self {
+        Self { pool, deadline_ms, waiter: None, deadline_armed: false }
+    }
+}
+
+impl std::future::Future for DatabaseSyncHelloAdmissionReady {
+    type Output = Result<(), DbError>;
+
+    fn poll(self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        let this = self.get_mut();
+        let mut state = DATABASE_SYNC_HELLO_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let free = state.slots.iter().any(|entry| !entry.occupied);
+        if free || this.pool.now_ms() >= this.deadline_ms {
+            if let Some(waiter) = this.waiter.take() {
+                state.waiters.remove(waiter);
+            }
+            return std::task::Poll::Ready(if free { Ok(()) } else { Err(DbError::Unavailable(DATABASE_SYNC_HELLO_ADMISSION_SATURATED.to_string())) });
+        }
+        if !state.waiters.register(&mut this.waiter, context.waker()) {
+            return std::task::Poll::Ready(Err(DbError::Unavailable("database sync hello admission waiters saturated".to_string())));
+        }
+        drop(state);
+        if !this.deadline_armed {
+            this.deadline_armed = true;
+            let waker = context.waker().clone();
+            this.pool.callback_at(this.deadline_ms, move || waker.wake());
+        }
+        std::task::Poll::Pending
+    }
+}
+
+impl Drop for DatabaseSyncHelloAdmissionReady {
+    fn drop(&mut self) {
+        if let Some(waiter) = self.waiter.take() {
+            DATABASE_SYNC_HELLO_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).waiters.remove(waiter);
+        }
+    }
+}
+
+/// @emoji 🔢️ How many tasks wait for a sync-hello admission slot right now.
+pub fn database_sync_hello_admission_waiters() -> usize {
+    DATABASE_SYNC_HELLO_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).waiters.len()
 }
 
 #[derive(Default)]
@@ -2540,6 +2609,12 @@ pub struct DatabaseSyncHelloRejected {
 }
 
 impl DatabaseSyncHelloRejected {
+    /// @emoji 🚦️ Whether this hello was refused only because every admission slot was taken, so
+    /// the same hello is admitted once [`DatabaseSyncHelloAdmissionReady`] resolves.
+    pub fn admission_saturated(&self) -> bool {
+        matches!(&self.error, Some(DbError::Unavailable(message)) if message == DATABASE_SYNC_HELLO_ADMISSION_SATURATED)
+    }
+
     fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>, error: DbError, owners: DatabaseSyncHelloOwners) -> Self {
         let deadline_ms = pool.now_ms().saturating_add(DATABASE_SYNC_HELLO_DEADLINE_MS);
         let close = std::sync::Arc::new(DatabaseSyncHelloRejectedClose {

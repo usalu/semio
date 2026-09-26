@@ -666,6 +666,16 @@ pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
             // packet's migration report). The subset's own pre-existing
             // `🗿️artifacts/◻️2d/…/📚️examples/🎬️hexagonal-cut-concrete-forest-{left,right}` facet is
             // the modern, role-agnostic replacement surface for this.
+            .action_describe("patchNodeKind", LocalizedLabel::native("Sets one field of the 2D block's node kind: its name, label, variant, description or icon.", "Setzt ein Feld der Knotenart des 2D-Blocks: Name, Bezeichnung, Variante, Beschreibung oder Symbol."))
+            .action_describe("addHandleKind", LocalizedLabel::native("Adds a new handle kind (a named, coloured connector type with a default wire kind) to the 2D block.", "Fügt dem 2D-Block eine neue Griffart hinzu (einen benannten, farbigen Verbindertyp mit Standard-Leitungsart)."))
+            .action_describe("removeHandleKind", LocalizedLabel::native("Removes one handle kind by id from the 2D block.", "Entfernt eine Griffart anhand ihrer Id aus dem 2D-Block."))
+            .action_describe("addHandle", LocalizedLabel::native("Adds a new handle of the first handle kind to the 2D block at a default angle and radius; without any handle kind nothing happens.", "Fügt dem 2D-Block einen neuen Griff der ersten Griffart mit Standardwinkel und -radius hinzu; ohne Griffart geschieht nichts."))
+            .action_describe("removeHandle", LocalizedLabel::native("Removes one handle by id from the 2D block.", "Entfernt einen Griff anhand seiner Id aus dem 2D-Block."))
+            .action_describe("addCompatibilityRule", LocalizedLabel::native("Adds a two-way compatibility rule saying which handle kinds (source and target) may connect to each other.", "Fügt eine beidseitige Kompatibilitätsregel hinzu, welche Griffarten (Quelle und Ziel) miteinander verbunden werden dürfen."))
+            .action_describe("removeCompatibilityRule", LocalizedLabel::native("Removes one compatibility rule by id, so its two handle kinds may no longer connect.", "Entfernt eine Kompatibilitätsregel anhand ihrer Id, sodass ihre zwei Griffarten nicht mehr verbunden werden dürfen."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Loads one of the plugin's bundled 2D block examples into the document, replacing what differs, by example id.", "Lädt eines der mitgelieferten 2D-Block-Beispiele in das Dokument und ersetzt Abweichendes, anhand der Beispiel-Id."))
+            .action_describe("edit", LocalizedLabel::native("Replaces the whole 2D block document with one parsed from the given JSON text; invalid or identical JSON changes nothing.", "Ersetzt das gesamte 2D-Block-Dokument durch eines aus dem angegebenen JSON-Text; ungültiges oder identisches JSON ändert nichts."))
+            .action_destructive("edit")
             .build_definition()
 }
 //#endregion 🔖️Manifest

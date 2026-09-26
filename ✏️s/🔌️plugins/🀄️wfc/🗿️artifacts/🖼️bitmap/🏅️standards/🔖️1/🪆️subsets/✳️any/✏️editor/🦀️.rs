@@ -980,6 +980,7 @@ impl BitmapEditor {
 pub fn create_bitmap_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(WFC_BITMAP_DIALECT)
         .document(["semio", "wfc", "bitmap"])
+        .artifact_kind(crate::artifact_kind())
         .icon_id("image")
         .mode_def(edit::definition())
         .default_mode_id(edit::WFC_BITMAP_MODE_EDIT)
@@ -1015,6 +1016,24 @@ pub fn create_bitmap_editor() -> semio_framework_plugin::AppDefinition {
             ],
         )
         .action_interactive_job(pin_solution::PIN_SOLUTION_ACTION_ID, InteractiveJobClassification::Migrated)
+        .action_describe("set-input-pixels", LocalizedLabel::native("Overwrites a rectangle of the input sample at x, y with the given palette indices (base64, one byte per pixel, row by row); the solve learns its patterns from this sample.", "Überschreibt ein Rechteck des Eingabemusters an x, y mit den angegebenen Palettenindizes (Base64, ein Byte pro Pixel, zeilenweise); der Löser lernt seine Muster aus diesem Beispiel."))
+        .action_describe("resize-input", LocalizedLabel::native("Resizes the input sample to the given width and height; growing pads the new right and bottom margin with palette colour 0, shrinking drops the pixels outside.", "Ändert die Größe des Eingabemusters; beim Vergrößern wird der neue rechte und untere Rand mit Palettenfarbe 0 gefüllt, beim Verkleinern fallen die Pixel außerhalb weg."))
+        .action_describe("add-palette-color", LocalizedLabel::native("Inserts an RGBA colour into the palette at the given index and renumbers every pixel and pin that used that index or a higher one.", "Fügt der Palette an der angegebenen Position eine RGBA-Farbe hinzu und nummeriert alle Pixel und Anheftungen um, die diesen oder einen höheren Index verwenden."))
+        .action_describe("change-palette-color", LocalizedLabel::native("Recolours one palette entry in place to the given RGBA value; every pixel and pin using that index changes colour with it.", "Färbt einen Paletteneintrag direkt auf den angegebenen RGBA-Wert um; alle Pixel und Anheftungen mit diesem Index ändern ihre Farbe mit."))
+        .action_describe("remove-palette-color", LocalizedLabel::native("Removes one palette colour and renumbers the entries above it; refused while any pixel or pin still uses the colour.", "Entfernt eine Palettenfarbe und nummeriert die darüberliegenden Einträge um; wird abgelehnt, solange noch ein Pixel oder eine Anheftung die Farbe verwendet."))
+        .action_describe("set-active-color", LocalizedLabel::native("Arms the palette colour the input window's brush paints with; only this window's brush state changes, not the document.", "Wählt die Palettenfarbe, mit der der Pinsel des Eingabefensters malt; nur der Pinselzustand dieses Fensters ändert sich, nicht das Dokument."))
+        .action_describe("change-model", LocalizedLabel::native("Sets the overlapping model the solve learns from the sample: pattern size N, how many of the sample's 8 rotations and reflections to use, whether the sample wraps around, and an optional ground colour.", "Legt das überlappende Modell fest, das der Löser aus dem Muster lernt: Mustergröße N, wie viele der 8 Drehungen und Spiegelungen genutzt werden, ob das Muster umläuft, und eine optionale Bodenfarbe."))
+        .action_describe("change-seed", LocalizedLabel::native("Sets the random seed the solve starts from; the same seed and model always produce the same output bitmap.", "Legt den Zufallsstartwert des Lösers fest; derselbe Startwert und dasselbe Modell erzeugen immer dieselbe Ausgabebitmap."))
+        .action_describe("solve", LocalizedLabel::native("Starts the fill tool run that generates the output bitmap from the input sample; the result stays a preview until it is pinned, so the document does not change.", "Startet den Füll-Werkzeuglauf, der aus dem Eingabemuster die Ausgabebitmap erzeugt; das Ergebnis bleibt eine Vorschau, bis es angeheftet wird, das Dokument ändert sich nicht."))
+        .action_describe("commit-fill-solve", LocalizedLabel::native("Hands a finished fill run's pixels and contradiction flag to the output window's preview; the document is not changed, Pin Solution keeps a result.", "Übergibt die Pixel und das Widerspruchskennzeichen eines fertigen Füll-Laufs an die Vorschau des Ausgabefensters; das Dokument ändert sich nicht, Lösung anheften behält ein Ergebnis."))
+        .action_describe("resize-output", LocalizedLabel::native("Sets the width, height and wrap-around of the bitmap the solve generates; pins outside the new size are removed.", "Legt Breite, Höhe und Umlauf der Bitmap fest, die der Löser erzeugt; Anheftungen außerhalb der neuen Größe werden entfernt."))
+        .action_describe("pin-pixel", LocalizedLabel::native("Fixes one output pixel at x, y to a palette colour before solving; the solve must keep it.", "Legt ein Ausgabepixel an x, y vor dem Lösen auf eine Palettenfarbe fest; der Löser muss sie beibehalten."))
+        .action_describe("unpin-pixel", LocalizedLabel::native("Releases the pin on one output pixel at x, y so the solve chooses its colour again; refused when the pixel carries no pin.", "Löst die Anheftung eines Ausgabepixels an x, y, sodass der Löser dessen Farbe wieder selbst wählt; wird abgelehnt, wenn das Pixel nicht angeheftet ist."))
+        .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole document (sample, palette, model, output size, seed and pins) with one of the plugin's bundled bitmap examples, by example id.", "Ersetzt das gesamte Dokument (Muster, Palette, Modell, Ausgabegröße, Startwert und Anheftungen) durch eines der mitgelieferten Bitmap-Beispiele, anhand der Beispiel-Id."))
+        .action_describe("pin-solution", LocalizedLabel::native("Makes a finished solve durable by pinning every output pixel to the colour the solve chose, replacing any pin that disagrees; a contradiction is refused.", "Macht eine fertige Lösung dauerhaft, indem jedes Ausgabepixel auf die vom Löser gewählte Farbe angeheftet wird; abweichende Anheftungen werden ersetzt, ein Widerspruch wird abgelehnt."))
+        .action_audience("stroke-begin", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("stroke-extend", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("stroke-commit", semio_framework_plugin::CapabilityAudience::Input)
         .build_definition()
 }
 //#endregion 🔖️Manifest

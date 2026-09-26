@@ -10,12 +10,14 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, st
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, backboneKindFromUri, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
+import { AGENT_BRIDGE_OFFER_ENDPOINT, agentBridgeOfferAnswerV1 } from "../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { MODULE_BRIDGE_FILE, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, resolveBootSourceContentHashes, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, writeStagedSourceFreshness, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
 import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import { requestLocalBrokerSession } from "../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
-import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV, DEV_LOCAL_HUB_SESSION_PATH } from "../🚀️local-hub/🏃️execution/🟦️.ts";
+import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV } from "../🚀️local-hub/🏃️execution/🟦️.ts";
+import { LOCAL_HUB_SESSION_ENDPOINT_V1, localHubSessionAnswerV1 } from "../../📇️directory/🎫️local-session/🟦️.ts";
 import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, AGENT_CREDENTIAL_INSTALL_SCHEMA_V1, AGENT_CREDENTIAL_SCHEMA_V1, agentCredentialInstallFileNameV1, isAgentDelegationTokenV1 } from "../../📇️directory/🤖️delegations/🟦️.ts";
 /** @emoji 📥️ Filename owned by plugin store installation; inlined so the vite-plugin graph does not pull materialization. */
 const EXTENSION_INSTALL_META = "📥️install.json";
@@ -471,7 +473,8 @@ export function semioProductionTestBoundaryVitePlugin(): { name: string; enforce
 }
 
 /** @emoji 💾️ Vite middleware for browser file/folder backbone IO: `GET|PUT ${BACKBONE_ENDPOINT_PATH}?uri=&documentId=&schema=`
- * for read/write, plus `GET ${BACKBONE_ENDPOINT_PATH}/watch?uri=` (SSE) for external-edit notification —
+ * for read/write — a document nothing has written yet reads as `204 No Content`, the ordinary first-boot answer, never a
+ * `404` in the console of a fresh data root (ticket 26/09/23 U5) — plus `GET ${BACKBONE_ENDPOINT_PATH}/watch?uri=` (SSE) for external-edit notification —
  * `🏪️store/👷️worker/🟦️.ts`'s folder transport degrades to polling if this endpoint isn't reachable. */
 export function semioBackboneVitePlugin() {
   return {
@@ -558,8 +561,9 @@ export function semioBackboneVitePlugin() {
           readBackbonePayload(uri, documentId)
             .then((payload) => {
               if (payload == null) {
-                res.statusCode = 404;
-                res.end("");
+                res.statusCode = 204;
+                res.setHeader("cache-control", "no-store");
+                res.end();
                 return;
               }
               res.statusCode = 200;
@@ -1309,7 +1313,6 @@ export function semioSourceFreshnessVitePlugins(options: { readonly repoRoot: st
 /** @emoji 🛰️ Where a live os session and a `semio-os-mcp` stdio gateway find each other — the exact
  * layout the gateway's own `🌉️mcp/🛰️rendezvous` facet owns (`~/.semio/agent/bridge`). */
 export const AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION = 1;
-export const AGENT_BRIDGE_OFFER_ENDPOINT_PATH = "/__semio/agent-bridge";
 
 /** @emoji 🏷️ The carrier that points this dev session and one `semio-os-mcp` gateway at a rendezvous
  * of their own instead of the per-user default — the exact twin of the gateway's own
@@ -1359,13 +1362,13 @@ type RendezvousServerResponse = { statusCode: number; setHeader: (name: string, 
 
 /** @emoji 🛰️ Publishes THIS dev session as a live os session the stdio MCP gateway can discover, and
  * serves the gateway's own offer back to the browser shell on
- * {@link AGENT_BRIDGE_OFFER_ENDPOINT_PATH}. The admission proof never travels through an environment
+ * {@link AGENT_BRIDGE_OFFER_ENDPOINT} — always `200`, the offer or the typed "not offered". The admission proof never travels through an environment
  * variable or a build-time define: the dev server reads the owner-only offer file and hands it over
  * loopback, on request, exactly like the local supervisor it is.
  *
  * Both halves are removed when the dev server closes, so a gateway that starts later never believes a
  * dead session. */
-export function semioAgentBridgeRendezvousVitePlugin(options: { readonly rendezvousRoot?: string; readonly sessionId?: string } = {}) {
+export function semioAgentBridgeRendezvousVitePlugin(options: { readonly shellKind: "react" | "wgpu-web"; readonly rendezvousRoot?: string; readonly sessionId?: string }) {
   const root = options.rendezvousRoot ?? agentBridgeRendezvousDir();
   const sessionsDir = join(root, "sessions");
   const recordPath = join(sessionsDir, `${process.pid}.json`);
@@ -1383,18 +1386,18 @@ export function semioAgentBridgeRendezvousVitePlugin(options: { readonly rendezv
       mkdirSync(sessionsDir, { recursive: true });
       writeFileSync(
         recordPath,
-        JSON.stringify({ schemaVersion: AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, sessionId: options.sessionId ?? `dev-${process.pid}`, pid: process.pid, shellKind: "react", startedAtMs: Date.now() }, null, 2),
+        JSON.stringify({ schemaVersion: AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, sessionId: options.sessionId ?? `dev-${process.pid}`, pid: process.pid, shellKind: options.shellKind, startedAtMs: Date.now() }, null, 2),
         { mode: 0o600 },
       );
       process.once("exit", removeRecord);
       server.httpServer?.once("close", removeRecord);
       server.middlewares.use((req, res, next) => {
-        if (!req.url?.startsWith(AGENT_BRIDGE_OFFER_ENDPOINT_PATH)) return next();
+        if (!req.url?.startsWith(AGENT_BRIDGE_OFFER_ENDPOINT)) return next();
         const offer = newestLiveAgentBridgeOffer(root);
-        res.statusCode = offer ? 200 : 404;
+        res.statusCode = 200;
         res.setHeader("content-type", "application/json");
         res.setHeader("cache-control", "no-store");
-        res.end(JSON.stringify(offer ?? { error: "no live semio-os-mcp gateway is offering a bridge" }));
+        res.end(JSON.stringify(agentBridgeOfferAnswerV1(offer)));
       });
     },
     closeBundle: removeRecord,
@@ -1507,27 +1510,23 @@ export function semioAgentCredentialInstallVitePlugin(options: { readonly repoRo
 
 /** @emoji 🎫️ Serves the shell a FRESH development session from the local hub owner's broker on every request, for the
  * profile this serve signs in as — so a shell whose 15-minute local session lapsed, or a second user's serve, claims one
- * with no manual sign-in. 404 when the serve joined a hub without a broker (the shell's own sign-in stays available).
+ * with no manual sign-in. Always `200` with a `LocalHubSessionAnswerV1`: the typed "not offered" when the serve joined a
+ * hub without a broker (the shell's own sign-in stays available).
  * @see ../🚀️local-hub/🏃️execution/🟦️.ts */
 export function semioLocalHubSessionVitePlugin() {
   return {
     name: "semio-local-hub-session",
     configureServer(server: { middlewares: { use: (handler: (req: { readonly url?: string; readonly method?: string }, res: { statusCode: number; setHeader: (k: string, v: string) => void; end: (body?: string) => void }, next: () => void) => void) => void } }) {
       server.middlewares.use((req, res, next) => {
-        if (req.method !== "GET" || req.url?.split("?")[0] !== DEV_LOCAL_HUB_SESSION_PATH) return next();
+        if (req.method !== "GET" || req.url?.split("?")[0] !== LOCAL_HUB_SESSION_ENDPOINT_V1) return next();
         const dataDir = process.env[DEV_LOCAL_HUB_DATA_ENV] ?? "";
         const hubUrl = process.env.S_HUB_URL ?? "";
         const profileId = process.env[DEV_LOCAL_HUB_PROFILE_ENV] ?? "";
         void (dataDir && hubUrl && profileId ? requestLocalBrokerSession(dataDir, hubUrl, profileId).catch(() => null) : Promise.resolve(null)).then((session) => {
           res.setHeader("cache-control", "no-store");
-          if (session === null) {
-            res.statusCode = 404;
-            res.end("local-session unavailable");
-            return;
-          }
           res.statusCode = 200;
           res.setHeader("content-type", "application/json");
-          res.end(JSON.stringify({ schema: "semio.os.dev-local-hub-session/v1", token: session.token, userId: session.userId }));
+          res.end(JSON.stringify(localHubSessionAnswerV1(session === null ? null : { token: session.token, userId: session.userId })));
         });
       });
     },

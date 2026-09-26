@@ -26,6 +26,7 @@ import {
   type ContextMenuItem,
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
+import { createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/infinite-canvas-react-renderer";
 import { GestureRecognizer, type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type MergeMode, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type RasterWasmSession, createRasterSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
@@ -731,11 +732,13 @@ function Paint2dCanvasSurface({
 //#endregion Paint2dCanvasSurface
 
 //#region Paint2dWasmCanvas
-/** 🖼️ Minimal canvas-attach wrapper (no pointer forwarding — {@link Paint2dCanvasSurface} owns pointer/wheel routing). */
+/** 🖼️ Minimal canvas-attach wrapper (no pointer forwarding — {@link Paint2dCanvasSurface} owns pointer/wheel routing). Paints on
+ * demand through the one shared scheduler: the owner's handle ({@link frameDemandingSessionV1}) invalidates on every call
+ * and paints at once on `renderFrame`, so an idle raster canvas paints nothing (ticket 26/09/23 F1: it repainted every
+ * animation frame — 60 frames/s and 120 rAF/s for the composite + navigator windows of one idle raster editor). */
 function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessionFactory: () => RasterWasmSession; readonly onSessionReady: (session: RasterWasmSession) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef = useRef<number | null>(null);
   const observerRef = useRef<ResizeObserver | null>(null);
 
   useEffect(() => {
@@ -743,7 +746,8 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
     const container = containerRef.current;
     if (!canvas || !container) return;
     const session = sessionFactory();
-    onSessionReady(session);
+    const scheduler = createDemandFrameScheduler(() => session.renderFrame());
+    onSessionReady(frameDemandingSessionV1(session, scheduler));
     const rect = container.getBoundingClientRect();
     const dpr = globalThis.devicePixelRatio || 1;
     const initW = Math.max(1, Math.round(rect.width));
@@ -768,24 +772,19 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
           canvas.style.width = `${w}px`;
           canvas.style.height = `${h}px`;
           session.setSize(w, h, nextDpr);
-          session.renderFrame();
+          scheduler.paintNow();
         };
         resize();
         const observer = new ResizeObserver(resize);
         observer.observe(container);
         observerRef.current = observer;
-        const tick = () => {
-          session.renderFrame();
-          rafRef.current = requestAnimationFrame(tick);
-        };
-        rafRef.current = requestAnimationFrame(tick);
       })
       .catch(() => {
         /* attach failed — surfaced via session.gpuReady() polling in Paint2dCanvasSurface */
       });
     return () => {
       disposed = true;
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      scheduler.dispose();
       observerRef.current?.disconnect();
       observerRef.current = null;
     };

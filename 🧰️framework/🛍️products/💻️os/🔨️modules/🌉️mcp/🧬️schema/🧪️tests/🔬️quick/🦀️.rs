@@ -192,3 +192,24 @@ fn inline_local_refs(value: &serde_json::Value, document: &serde_json::Value) ->
         other => other.clone(),
     }
 }
+
+/// 🧯️ Every tool output schema admits BOTH its success shape and the typed tool error: the official
+/// MCP SDK validates `structuredContent` against `outputSchema` on error results too, so a success-only
+/// schema turns a typed error into a client exception. The widened schema keeps the `$defs` its
+/// references resolve against at the root, refuses an untyped error, and widening twice changes nothing.
+#[test]
+fn a_tool_output_schema_admits_its_success_shape_and_the_typed_tool_error() {
+    let mut widened = tool_output_schema("InvocationReport");
+    convert_draft07_to_2020_12(&mut widened);
+    admit_tool_errors(&mut widened);
+    let once = widened.clone();
+    admit_tool_errors(&mut widened);
+    assert_eq!(widened, once, "idempotent");
+    assert!(widened.get("$defs").is_some(), "the root keeps the definitions its references resolve against: {widened}");
+    let validator = compile_validator(&widened).expect("the widened schema compiles");
+    validate(&validator, &invocation_report_example()).expect("the success shape still validates");
+    for code in [GatewayErrorCode::ApprovalRequired, GatewayErrorCode::PermissionDenied, GatewayErrorCode::NotFound] {
+        validate(&validator, &GatewayError::new(code, "refused").to_tool_error_payload()).unwrap_or_else(|error| panic!("{code:?} as a tool error: {error}"));
+    }
+    assert!(validate(&validator, &serde_json::json!({ "code": "NOT_A_CODE", "message": "x", "details": null, "retryable": false })).is_err(), "an unknown code is neither shape");
+}

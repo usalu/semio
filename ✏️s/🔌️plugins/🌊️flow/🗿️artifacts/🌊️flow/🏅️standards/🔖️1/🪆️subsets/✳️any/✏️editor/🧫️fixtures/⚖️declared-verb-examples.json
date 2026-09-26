@@ -1,0 +1,13 @@
+{
+  "why": "Example invocations of the flow editor's verbs that act on its demo example (widgets slider, add, preview; synapses s1 slider@number->add@a, s2 add@sum->preview). The declared-verb law (`artifact_app_laws::assert_declared_verbs_honour_their_declarations`) boots every probe with `setActiveExample` below and overlays these arguments on the staged declared defaults, so every declared argument is probed on an invocation that can act.",
+  "verbs": {
+    "setActiveExample": { "exampleId": "demo" },
+    "removeWidget": { "widgetId": "add" },
+    "duplicateWidget": { "widgetId": "slider" },
+    "disconnect": { "synapseId": "s1" },
+    "connectMediaPorts": { "sourceNodeId": "slider", "sourcePortId": "number", "targetNodeId": "add", "targetPortId": "b" },
+    "moveMediaNode": { "nodeId": "add", "x": 10, "y": 20 },
+    "patchFlowWidgets": { "widgetIds": ["slider"], "field": "value", "value": "7" },
+    "renameFlowWidget": { "oldId": "preview", "value": "result" }
+  }
+}

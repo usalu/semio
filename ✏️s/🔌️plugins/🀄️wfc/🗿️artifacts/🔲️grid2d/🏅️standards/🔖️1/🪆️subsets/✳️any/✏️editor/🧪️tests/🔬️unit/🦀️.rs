@@ -296,3 +296,11 @@ fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_ros
     let proofs: std::collections::BTreeSet<&str> = <Grid2dEditor as ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
     assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
 }
+
+/// 🎯️ LAW: the editor declares the artifact kind it edits (the artifact's own `artifact_kind()`), which is
+/// what the hub's one open-target rule (`app_opens_kind`, `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`)
+/// pairs with this editor and the viewer of its dialect — so a WFC 2D grid can be created and opened as a hub document.
+#[test]
+fn the_editor_declares_the_artifact_kind_it_edits() {
+    assert_eq!(create_grid2d_editor().artifact_kinds, vec![crate::artifact_kind()]);
+}

@@ -1,7 +1,7 @@
 use super::*;
 
 fn peer(actor: &str, label: &str, role: Option<PresenceRole>) -> PresencePeerRow {
-    PresencePeerRow { actor: actor.into(), user_id: None, label: label.into(), role, connected_at_ms: None, color: None }
+    PresencePeerRow { actor: actor.into(), user_id: None, label: label.into(), role, connected_at_ms: None, color: None, is_agent: false }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -65,5 +65,19 @@ async fn build_presence_bar_empty_peers_renders_localized_empty_text() {
         assert_eq!(root.children.len(), 1);
         let UiNode::Text(text) = &root.children[0] else { panic!("expected a Text child") };
         assert_eq!(text.value.as_str(), expected);
+    }
+}
+
+/// 🤖️ An agent peer is its own row whose accessible name carries the agent word and whose badge node is
+/// `peer-agent-badge:<actor>` — React's `PresenceBar` (`👥️scoped-presence` law) — in en and de; a person never gets it.
+#[semio_framework_async_macros::async_test]
+async fn an_agent_row_carries_the_agent_badge_in_both_tongues_and_a_person_never_does() {
+    let agent = PresencePeerRow { is_agent: true, ..peer("actor-agent", "Drafting agent", Some(PresenceRole::Author)) };
+    let peers = vec![peer("actor-a", "Ada", Some(PresenceRole::Author)), agent];
+    for (locale, word) in [(Locale::En, "AI agent"), (Locale::De, "KI-Agent")] {
+        let tree = format!("{:?}", build_presence_bar_localized("s-presence-peers", &peers, None, locale));
+        assert!(tree.contains("peer-agent-badge:actor-agent") && tree.contains(word), "{locale:?}: the agent row carries its badge");
+        assert!(!tree.contains("peer-agent-badge:actor-a\""), "a person never gets the badge");
+        assert_eq!(presence_bar_chip_text(&peers, None, locale), format!("Ada · Drafting agent ({word})"));
     }
 }

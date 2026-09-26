@@ -264,6 +264,10 @@ impl ArtifactOwnedToolJobFactory for JsonIJsonRetainedCommandJobFactory {
 pub struct JsonIJsonEditor;
 
 impl ArtifactEditor for JsonIJsonEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::standards::v_rfc8259::subsets::i_json::examples::demo::source()]
+    }
     type Snapshot = JsonSnapshot;
     type Mutation = JsonMutation;
     type Config = NoConfig;

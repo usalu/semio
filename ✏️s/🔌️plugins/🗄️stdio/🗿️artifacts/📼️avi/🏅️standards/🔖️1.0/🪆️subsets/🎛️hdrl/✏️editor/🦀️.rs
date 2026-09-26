@@ -111,6 +111,10 @@ impl ArtifactOwnedToolJobFactory for AviEditorExampleFactory {
 pub struct AviEditor;
 
 impl ArtifactEditor for AviEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = AviSnapshot;
     type Mutation = AviMutation;
     type Config = NoConfig;

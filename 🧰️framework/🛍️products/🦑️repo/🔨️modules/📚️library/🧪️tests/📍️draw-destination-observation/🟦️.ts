@@ -284,7 +284,6 @@ for (const row of vector.cases) test("Draw destination observation: " + row.id, 
       if (authority.problems.length) throw new Error("authority:" + authority.problems.join(";"));
       expect(authority.mappings).toEqual(projection.mappings);
       expect(authority.mappingDigest).toBe(projection.mappingDigest);
-      expect(authority.referenceEdits).toEqual([]);
     } catch (caught) { error = (caught as Error).message.split(":")[0]!; }
     expect(error, row.id).toBe(row.error);
     expect(reads).toHaveLength(row.contentReads);

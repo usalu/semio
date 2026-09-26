@@ -1680,6 +1680,12 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         expect(enqueued).toEqual([instance]);
       });
 
+      it("cancels a turn whose actor activation was revoked under it with that activation — a typed retirement, not a failure", () => {
+        expect(isPluginInstanceRetiredV1(new Error("actor-activation.revoked")), "the shard client's revoked-activation terminal").toBe(true);
+        expect(isPluginInstanceRetiredV1(new Error("[os-shell] refresh-ui#4 settled: actor-activation.revoked")), "however a lane words the rethrow").toBe(true);
+        expect(isPluginInstanceRetiredV1(new Error("actor-activation.budget-exhausted")), "any other activation fault stays loud").toBe(false);
+      });
+
       it("keeps a never-created instance a loud failure rather than a retirement", async () => {
         const lease = {
           handle: {

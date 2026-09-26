@@ -16,12 +16,13 @@
     "incremental": true,
     "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
     "noEmit": true,
-    "types": ["react", "react-dom", "vite/client"],
+    "types": ["bun", "react", "react-dom", "vite/client"],
     "baseUrl": ".",
     "paths": {
       "@semio-tech/ui-react": ["./🟦️.tsx"],
       "@semio-tech/ui-react/runtime": ["./🟦️.tsx"],
-      "@semio-tech/ui-react/test": ["./🟦️.ts"]
+      "@semio-tech/ui-react/test": ["./🟦️.ts"],
+      "dom-accessibility-api": ["../../../../../../../node_modules/dom-accessibility-api/dist/index.d.ts"]
     }
   },
   "include": ["../../**/*.ts", "../../**/*.tsx", "../../../../🧱️elements/**/*.ts", "../../../../🧱️elements/**/*.tsx", "../../../../🔨️modules/**/*.ts", "../../../../🔨️modules/**/*.tsx", "../../../../🧪️tests/**/*.ts", "../../../../🧪️tests/**/*.tsx"],

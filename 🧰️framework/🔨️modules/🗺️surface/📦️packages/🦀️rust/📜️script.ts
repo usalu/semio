@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework-surface-rs` router: `bun ./📜️script.ts <wasm|test>` — one wasm-bindgen crate for the paint/terrain/node-graph/tiled-map surface family (puzzle's `board-2d` surface now lives in the puzzle plugin crate itself). */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runCmd, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BROWSER_CANVAS_HOT_CRATES, BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runCmd, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -11,6 +11,7 @@ class WasmScript extends BundleScript {
       wasmBaseName: "framework_surface",
       outputDirectory: "🕸️bindings",
       shipProfile: "wasm-release",
+      devOptimizedCrates: BROWSER_CANVAS_HOT_CRATES,
       noDefaultFeatures: true,
       cargoFeatures: ["session-bindgen"],
       pkg: {

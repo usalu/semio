@@ -1,0 +1,375 @@
+--- /private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/editor-before.rs	2026-09-26 05:25:39
++++ 🧰️framework/🔨️modules/✍️editor/🦀️.rs	2026-09-26 05:28:43
+@@ -209,8 +209,6 @@
+     start: usize,
+     end: usize,
+     kind: String,
+-    head_end: Option<usize>,
+-    tail_start: Option<usize>,
+ }
+ 
+ #[derive(Clone, Debug, Deserialize, FromValue)]
+@@ -527,14 +525,10 @@
+         self.set_selection_range(anchor, caret);
+     }
+ 
++    /// ⌨️ Places the selection exactly: token and span boundaries never widen a selection the input made.
+     pub fn set_selection_range(&mut self, anchor: usize, caret: usize) {
+-        self.anchor = anchor.min(self.text.len());
+-        self.caret = caret.min(self.text.len());
+-        if self.caret != self.anchor {
+-            let (start, end) = self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor));
+-            self.anchor = start;
+-            self.caret = end;
+-        }
++        self.anchor = char_boundary_at_or_before(&self.text, anchor);
++        self.caret = char_boundary_at_or_before(&self.text, caret);
+         self.finish_caret_update();
+     }
+ 
+@@ -609,9 +603,9 @@
+             self.anchor = span.start;
+             self.caret = span.end;
+         } else {
+-            let snapped = self.snap_offset_for_atomic(offset);
+-            self.anchor = snapped;
+-            self.caret = snapped;
++            let offset = char_boundary_at_or_before(&self.text, offset);
++            self.anchor = offset;
++            self.caret = offset;
+         }
+         self.finish_caret_update();
+     }
+@@ -801,7 +795,7 @@
+     /// must never extend the current selection.
+     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: i32) {
+         let world = editor_screen_to_world(&self.camera, Point::new(sx, sy));
+-        let offset = self.snap_offset_for_atomic(self.hit_test_offset(world));
++        let offset = self.hit_test_offset(world);
+         self.caret = offset;
+         self.anchor = offset;
+         self.set_hover_at_offset(offset);
+@@ -813,7 +807,7 @@
+     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, _buttons: i32) {
+         if self.drag_selecting {
+             let world = editor_screen_to_world(&self.camera, Point::new(sx, sy));
+-            self.caret = self.snap_offset_for_atomic(self.hit_test_offset(world));
++            self.caret = self.hit_test_offset(world);
+             return;
+         }
+         let world = editor_screen_to_world(&self.camera, Point::new(sx, sy));
+@@ -823,11 +817,6 @@
+     pub fn pointer_up_screen(&mut self, _sx: f64, _sy: f64, button: i32) {
+         if button == 0 {
+             self.drag_selecting = false;
+-            if self.caret != self.anchor {
+-                let (start, end) = self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor));
+-                self.anchor = start;
+-                self.caret = end;
+-            }
+             self.finish_caret_update();
+         }
+     }
+@@ -836,109 +825,50 @@
+         self.drag_selecting = false;
+     }
+ 
++    /// ⌨️ The text-input model: `chunk` replaces the exact selection, or is inserted at the caret, and the caret lands after
++    /// it — never a space the input did not type, never a token replaced because the caret sat inside it. Semantic tokens
++    /// colour and describe the text; they never move an edit (ticket 26/09/23 F1: typing a word into the trinity query
++    /// editor inserted a space before every letter once the guest's tokens for the half-typed word arrived, and a letter
++    /// typed inside a stale token replaced the whole token).
+     pub fn insert_text(&mut self, chunk: &str) {
+-        let mut start = self.caret.min(self.anchor);
+-        let mut end = self.caret.max(self.anchor);
+-        let collapsed = start == end;
+-        let mut insert = chunk.to_string();
+-        if collapsed && self.should_prefix_auto_space(start, &insert) {
+-            insert = format!(" {insert}");
+-        }
+-        if collapsed && is_insert_whitespace(&insert) {
+-            self.text.insert_str(start, &insert);
+-            self.caret = start + insert.len();
+-            self.anchor = self.caret;
+-            return;
+-        }
+-        if collapsed {
+-            for token in &self.semantic_tokens {
+-                if start > token.start && start < token.end {
+-                    start = token.start;
+-                    end = token.end;
+-                    break;
+-                }
+-            }
+-        }
+-        let (start, end) = self.normalize_edit_range(start, end);
+-        self.text.replace_range(start..end, &insert);
+-        self.caret = start + insert.len();
++        let (start, end) = self.selection_range();
++        self.text.replace_range(start..end, chunk);
++        self.caret = start + chunk.len();
+         self.anchor = self.caret;
+         self.finish_caret_update();
+     }
+ 
+-    fn should_prefix_auto_space(&self, offset: usize, chunk: &str) -> bool {
+-        let first = match chunk.chars().next() {
+-            Some(ch) => ch,
+-            None => return false,
+-        };
+-        if is_insert_whitespace(chunk) {
+-            return false;
+-        }
+-        if matches!(first, ':' | '.' | ',' | ')' | ']' | '-' | '!' | '=') {
+-            return false;
+-        }
+-        if self.token_ending_at(offset).is_none() {
+-            return false;
+-        }
+-        if offset < self.text.len() {
+-            let next = self.text[offset..].chars().next().unwrap_or(' ');
+-            if next.is_whitespace() {
+-                return false;
+-            }
+-        }
+-        true
+-    }
+-
+-    fn token_ending_at(&self, offset: usize) -> Option<&SemanticTokenJson> {
+-        self.semantic_tokens.iter().find(|token| token.end == offset && token.start < offset)
+-    }
+-
++    /// ⌫️ Deletes the exact selection, or the one character before the caret.
+     pub fn backspace(&mut self) {
+-        if self.caret != self.anchor {
+-            let (start, end) = self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor));
+-            self.caret = start;
+-            self.anchor = end;
++        let (start, end) = self.selection_range();
++        if start != end {
+             self.insert_text("");
+             return;
+         }
+         if self.caret == 0 {
+             return;
+         }
+-        for token in &self.semantic_tokens {
+-            if self.caret > token.start && self.caret <= token.end {
+-                self.text.replace_range(token.start..token.end, "");
+-                self.caret = token.start;
+-                self.anchor = self.caret;
+-                return;
+-            }
+-        }
+         let prev = prev_char_boundary(&self.text, self.caret);
+         self.text.replace_range(prev..self.caret, "");
+         self.caret = prev;
+-        self.anchor = self.caret;
++        self.anchor = prev;
++        self.finish_caret_update();
+     }
+ 
++    /// ⌦️ Deletes the exact selection, or the one character after the caret.
+     pub fn delete_forward(&mut self) {
+-        if self.caret != self.anchor {
+-            let (start, end) = self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor));
+-            self.caret = start;
+-            self.anchor = end;
++        let (start, end) = self.selection_range();
++        if start != end {
+             self.insert_text("");
+             return;
+         }
+         if self.caret >= self.text.len() {
+             return;
+         }
+-        for token in &self.semantic_tokens {
+-            if self.caret >= token.start && self.caret < token.end {
+-                self.text.replace_range(token.start..token.end, "");
+-                self.anchor = self.caret;
+-                return;
+-            }
+-        }
+         let next = next_char_boundary(&self.text, self.caret);
+         self.text.replace_range(self.caret..next, "");
+         self.anchor = self.caret;
++        self.finish_caret_update();
+     }
+ 
+     pub fn move_line_start(&mut self, extend: bool) {
+@@ -960,18 +890,32 @@
+         }
+     }
+ 
++    /// ⬅️ One character left; without `extend` a selection collapses to its start.
+     pub fn move_left(&mut self, extend: bool) {
+-        let next = self.token_left_boundary(self.caret).unwrap_or_else(|| if self.caret == 0 { 0 } else { prev_char_boundary(&self.text, self.caret) });
+-        self.caret = next;
++        let (start, end) = self.selection_range();
++        self.caret = if !extend && start != end {
++            start
++        } else if self.caret == 0 {
++            0
++        } else {
++            prev_char_boundary(&self.text, self.caret)
++        };
+         if !extend {
+             self.anchor = self.caret;
+             self.finish_caret_update();
+         }
+     }
+ 
++    /// ➡️ One character right; without `extend` a selection collapses to its end.
+     pub fn move_right(&mut self, extend: bool) {
+-        let next = self.token_right_boundary(self.caret).unwrap_or_else(|| if self.caret >= self.text.len() { self.text.len() } else { next_char_boundary(&self.text, self.caret) });
+-        self.caret = next;
++        let (start, end) = self.selection_range();
++        self.caret = if !extend && start != end {
++            end
++        } else if self.caret >= self.text.len() {
++            self.text.len()
++        } else {
++            next_char_boundary(&self.text, self.caret)
++        };
+         if !extend {
+             self.anchor = self.caret;
+             self.finish_caret_update();
+@@ -1029,99 +973,10 @@
+         None
+     }
+ 
+-    fn snap_offset_for_atomic(&self, offset: usize) -> usize {
+-        for token in &self.semantic_tokens {
+-            if offset > token.start && offset < token.end {
+-                let mid = token.start + (token.end - token.start) / 2;
+-                return if offset < mid { token.start } else { token.end };
+-            }
+-        }
+-        offset
+-    }
+-
+-    fn normalize_edit_range(&self, start: usize, end: usize) -> (usize, usize) {
+-        let (mut s, mut e) = if start <= end { (start, end) } else { (end, start) };
+-        loop {
+-            let mut changed = false;
+-            for token in &self.semantic_tokens {
+-                if s < token.end && e > token.start && (s > token.start || e < token.end) {
+-                    if s > token.start {
+-                        s = token.start;
+-                        changed = true;
+-                    }
+-                    if e < token.end {
+-                        e = token.end;
+-                        changed = true;
+-                    }
+-                }
+-            }
+-            for span in &self.selectable_spans {
+-                if span.kind == "atomic" || !ranges_overlap(s, e, span.start, span.end) {
+-                    continue;
+-                }
+-                if self.allowed_composite_selection(s, e, span) {
+-                    continue;
+-                }
+-                if s > span.start {
+-                    s = span.start;
+-                    changed = true;
+-                }
+-                if e < span.end {
+-                    e = span.end;
+-                    changed = true;
+-                }
+-            }
+-            if !changed {
+-                break;
+-            }
+-        }
+-        if start <= end {
+-            (s, e)
+-        } else {
+-            (e, s)
+-        }
+-    }
+-
+-    fn allowed_composite_selection(&self, start: usize, end: usize, span: &SelectableSpanJson) -> bool {
+-        if start == span.start && end == span.end {
+-            return true;
+-        }
+-        match span.kind.as_str() {
+-            "varLabel" => {
+-                let head_end = span.head_end.unwrap_or(span.end);
+-                start == span.start && end == head_end
+-            }
+-            "propertyAccess" => {
+-                let head_end = span.head_end.unwrap_or(span.start);
+-                let tail_start = span.tail_start.unwrap_or(span.end);
+-                (start == span.start && end == head_end) || (start == tail_start && end == span.end)
+-            }
+-            _ => false,
+-        }
+-    }
+-
+-    fn token_left_boundary(&self, offset: usize) -> Option<usize> {
+-        for token in &self.semantic_tokens {
+-            if offset > token.start && offset <= token.end {
+-                return Some(token.start);
+-            }
+-        }
+-        None
+-    }
+-
+-    fn token_right_boundary(&self, offset: usize) -> Option<usize> {
+-        for token in &self.semantic_tokens {
+-            if offset >= token.start && offset < token.end {
+-                return Some(token.end);
+-            }
+-        }
+-        None
++    fn selection_range(&self) -> (usize, usize) {
++        (self.caret.min(self.anchor), self.caret.max(self.anchor))
+     }
+ 
+-    fn selection_range(&self) -> (usize, usize) {
+-        self.normalize_edit_range(self.caret.min(self.anchor), self.caret.max(self.anchor))
+-    }
+-
+     fn text_fill_for_abs_range(&self, start: usize, end: usize) -> Color {
+         let (sel_s, sel_e) = self.selection_range();
+         if sel_s != sel_e && ranges_overlap(start, end, sel_s, sel_e) {
+@@ -1352,10 +1207,6 @@
+     }
+ }
+ 
+-fn is_insert_whitespace(chunk: &str) -> bool {
+-    !chunk.is_empty() && chunk.chars().all(|ch| matches!(ch, ' ' | '\t' | '\n' | '\r'))
+-}
+-
+ fn ranges_overlap(a_start: usize, a_end: usize, b_start: usize, b_end: usize) -> bool {
+     a_start < b_end && b_start < a_end
+ }
+@@ -1432,6 +1283,16 @@
+     offset_at_line_col(text, pos.line as usize, pos.character as usize)
+ }
+ 
++/// 📍️ The char boundary at `index` (clamped to the text), or the one before it when `index` splits a character.
++fn char_boundary_at_or_before(text: &str, index: usize) -> usize {
++    let index = index.min(text.len());
++    if text.is_char_boundary(index) {
++        index
++    } else {
++        prev_char_boundary(text, index)
++    }
++}
++
+ fn prev_char_boundary(text: &str, index: usize) -> usize {
+     text[..index].char_indices().next_back().map_or(0, |(i, _)| i)
+ }
+@@ -1788,4 +1649,8 @@
+ #[cfg(test)]
+ #[path = "🧪️tests/🔬️unit/🦀️.rs"]
+ mod tests;
++
++#[cfg(test)]
++#[path = "🧪️tests/⌨️text-input/🦀️.rs"]
++mod text_input_laws;
+ // #endregion 🔖️Tests

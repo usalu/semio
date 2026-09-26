@@ -5806,6 +5806,7 @@ dependencies = [
  "semio-framework-os-shell",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
+ "semio-framework-replication",
  "semio-framework-surface",
  "semio-framework-trace",
  "semio-framework-ui",

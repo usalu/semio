@@ -121,6 +121,32 @@ pub enum AuthorityProgressStage {
     Published,
 }
 
+impl AuthorityProgressStage {
+    /// 🏷️ The stage's stable kebab-case code, as readiness and progress bodies name it.
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::Preflight => "preflight",
+            Self::CatalogLoading => "catalog-loading",
+            Self::GuestCodecExecuting => "guest-codec-executing",
+            Self::CatalogResolved => "catalog-resolved",
+            Self::InputValidated => "input-validated",
+            Self::ApplyingOperations => "applying-operations",
+            Self::OutputValidated => "output-validated",
+            Self::Derived => "derived",
+            Self::CasChunkStored => "cas-chunk-stored",
+            Self::CasChunkVerified => "cas-chunk-verified",
+            Self::CasManifestStored => "cas-manifest-stored",
+            Self::CasManifestVerified => "cas-manifest-verified",
+            Self::PackStaged => "pack-staged",
+            Self::SprStaged => "spr-staged",
+            Self::PackVerified => "pack-verified",
+            Self::SprVerified => "spr-verified",
+            Self::CasSweep => "cas-sweep",
+            Self::Published => "published",
+        }
+    }
+}
+
 /// 📈️ Monotonic bounded authority progress.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct AuthorityProgress {

@@ -568,12 +568,12 @@ impl DatabaseCapabilityOpenState {
             lease.retire();
             return;
         }
-        match kind {
-            semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < DATABASE_CAPABILITY_OPEN_RETRY_LIMIT => {
-                *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt + 1));
+        match worker_submit_retry_attempt(kind, attempt, DATABASE_CAPABILITY_OPEN_RETRY_LIMIT) {
+            Some(next) => {
+                *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, next));
                 self.arm_retry();
             }
-            kind => {
+            None => {
                 *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, job));
                 self.set_phase(DatabaseCapabilityOpenPhase::RetainWork);
                 self.complete(Err(DbError::Unavailable(format!("database capability-open WorkerPool submission failed: {kind:?}"))), DatabaseCapabilityOpenProgress::Fault);
@@ -1938,8 +1938,8 @@ impl DatabaseCatalogReadState {
             lease.retire();
             return;
         }
-        if matches!(kind, semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated) && attempt < DATABASE_CATALOG_READ_RETRY_LIMIT {
-            *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt + 1));
+        if let Some(next) = worker_submit_retry_attempt(kind, attempt, DATABASE_CATALOG_READ_RETRY_LIMIT) {
+            *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, next));
             self.arm_retry();
         } else {
             *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, job));
@@ -5804,7 +5804,7 @@ struct DatabaseCreateCatalogRejectedClose {
     callback_close: std::sync::atomic::AtomicBool,
     callback_armed: std::sync::atomic::AtomicBool,
     #[cfg(test)]
-    submission_refusals: std::sync::atomic::AtomicUsize,
+    spent_submission_attempts: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
     callback_worker_thread: std::sync::atomic::AtomicBool,
     #[cfg(test)]
@@ -5824,7 +5824,7 @@ impl DatabaseCreateCatalogRejectedClose {
             callback_close: std::sync::atomic::AtomicBool::new(false),
             callback_armed: std::sync::atomic::AtomicBool::new(false),
             #[cfg(test)]
-            submission_refusals: std::sync::atomic::AtomicUsize::new(0),
+            spent_submission_attempts: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
             callback_worker_thread: std::sync::atomic::AtomicBool::new(false),
             #[cfg(test)]
@@ -5849,9 +5849,11 @@ impl DatabaseCreateCatalogRejectedClose {
         match self.pool.try_submit(Lane::Io, job) {
             Ok(()) => {}
             Err(error) => {
+                let next_attempt = worker_submit_retry_attempt(error.kind(), attempt, DATABASE_CREATE_CATALOG_RETRY_LIMIT).unwrap_or(DATABASE_CREATE_CATALOG_RETRY_LIMIT);
                 #[cfg(test)]
-                self.submission_refusals.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-                let next_attempt = attempt.checked_add(1).map_or(DATABASE_CREATE_CATALOG_RETRY_LIMIT, |next| next.min(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+                if next_attempt != attempt {
+                    self.spent_submission_attempts.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                }
                 *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), next_attempt));
                 if self.driver.compare_exchange(DatabaseCreateCatalogDriverAuthority::Queued as u8, DatabaseCreateCatalogDriverAuthority::Retry as u8, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok() {
                     let state = self.clone();
@@ -6299,7 +6301,7 @@ struct DatabaseCreateCatalogState {
     #[cfg(test)]
     poll_worker_thread: std::sync::atomic::AtomicBool,
     #[cfg(test)]
-    submission_refusals: std::sync::atomic::AtomicUsize,
+    spent_submission_attempts: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
     backend_polls: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
@@ -6420,9 +6422,11 @@ impl DatabaseCreateCatalogState {
         match self.pool.try_submit(Lane::Io, job) {
             Ok(()) => {}
             Err(error) => {
+                let next_attempt = worker_submit_retry_attempt(error.kind(), attempt, DATABASE_CREATE_CATALOG_RETRY_LIMIT).unwrap_or(DATABASE_CREATE_CATALOG_RETRY_LIMIT);
                 #[cfg(test)]
-                self.submission_refusals.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-                let next_attempt = attempt.checked_add(1).map_or(DATABASE_CREATE_CATALOG_RETRY_LIMIT, |next| next.min(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+                if next_attempt != attempt {
+                    self.spent_submission_attempts.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                }
                 *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), next_attempt));
                 if self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Queued as u8, DatabaseCreateCatalogDriverAuthority::Retry as u8, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok() {
                     let state = self.clone();
@@ -7469,7 +7473,7 @@ impl DatabaseCreateCatalogFuture {
             #[cfg(test)]
             poll_worker_thread: std::sync::atomic::AtomicBool::new(false),
             #[cfg(test)]
-            submission_refusals: std::sync::atomic::AtomicUsize::new(0),
+            spent_submission_attempts: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
             backend_polls: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
@@ -7979,6 +7983,21 @@ impl Drop for ArtifactHandleLease {
         if self.handles.fetch_sub(1, std::sync::atomic::Ordering::AcqRel) == 1 {
             self.unmount_idle();
         }
+    }
+}
+
+/// 🧹️ One queued compaction turn that keeps its document mounted until the turn answers: the
+/// actor mailbox refuses every queued message once the last handle unmounts the document.
+pub struct ArtifactCompactionFuture {
+    ask: db_actor::AskFuture<db_artifact::ArtifactMessage, Result<db_compact::CompactionReport, DbError>>,
+    _lease: ArtifactHandleLease,
+}
+
+impl Future for ArtifactCompactionFuture {
+    type Output = Result<Result<db_compact::CompactionReport, DbError>, DbError>;
+
+    fn poll(self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        std::pin::Pin::new(&mut self.get_mut().ask).poll(context)
     }
 }
 
@@ -9136,7 +9155,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         consolidate_snapshots: bool,
         now_ms: u64,
         cancelled: Arc<std::sync::atomic::AtomicBool>,
-    ) -> Result<db_actor::AskFuture<db_artifact::ArtifactMessage, Result<db_compact::CompactionReport, DbError>>, DatabaseDocumentOpenRejected> {
+    ) -> Result<ArtifactCompactionFuture, DatabaseDocumentOpenRejected> {
         Ok(self.document(document).await?.compact_retained(holder, consolidate_snapshots, db_compact::CompactionBudget::default(), now_ms, cancelled))
     }
 
@@ -9162,7 +9181,9 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         db_sync::DatabaseSyncHelloFuture::try_submit_with_use(self.pool.clone(), pool_use, self.storage.clone(), document, hello_frontier, session_id, origin, snapshot_chunk_bytes).map_err(DatabaseRetainedActivityRejected::Retained)
     }
 
-    /// 📡️ Mounts one retained hello authority and returns its backpressured frame session.
+    /// 📡️ Mounts one retained hello authority and returns its backpressured frame session. A hello
+    /// that finds every admission slot taken waits for one (at most [`DATABASE_HELLO_ADMISSION_WAIT_MS`])
+    /// instead of refusing its socket; any other refusal is answered at once.
     pub async fn hello(
         &self,
         document: protocol::ArtifactId,
@@ -9172,12 +9193,23 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         snapshot_chunk_bytes: usize,
     ) -> Result<db_sync::DatabaseSyncHelloSession, DbError> {
         let document = to_core_document_id(&document).await;
-        let hello = match self.hello_retained(document, hello_frontier, session_id, origin, snapshot_chunk_bytes) {
-            Ok(hello) => hello,
-            Err(DatabaseRetainedActivityRejected::Closed(error)) => return Err(error),
-            Err(DatabaseRetainedActivityRejected::Retained(rejected)) => return Err(rejected.close_and_take_error()),
-        };
-        hello.await?.close_and_take_session()
+        let deadline_ms = self.pool.now_ms().saturating_add(DATABASE_HELLO_ADMISSION_WAIT_MS);
+        loop {
+            let hello = match self.hello_retained(document.clone(), hello_frontier.clone(), session_id.clone(), origin.clone(), snapshot_chunk_bytes) {
+                Ok(hello) => hello,
+                Err(DatabaseRetainedActivityRejected::Closed(error)) => return Err(error),
+                Err(DatabaseRetainedActivityRejected::Retained(rejected)) => {
+                    let saturated = rejected.admission_saturated();
+                    let error = rejected.close_and_take_error();
+                    if !saturated {
+                        return Err(error);
+                    }
+                    db_sync::DatabaseSyncHelloAdmissionReady::new(self.pool.clone(), deadline_ms).await?;
+                    continue;
+                }
+            };
+            return hello.await?.close_and_take_session();
+        }
     }
 
     /// @emoji 🌿️ A real, `vcs`-backed checkpoint over every change `record_change` has recorded for
@@ -9192,6 +9224,10 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         self.version_graph.checkpoint(&core_document, CheckpointRequest { parent_checkpoint: None, change_ids: Vec::new(), message, authors: core_authors, timestamp_ms: now_ms().await }).await
     }
 }
+
+/// ⏳️ How long [`Database::hello`] waits for a sync-hello admission slot before it answers the
+/// refusal: the hub's document-socket frame deadline.
+pub const DATABASE_HELLO_ADMISSION_WAIT_MS: u64 = 30_000;
 //#endregion 🔖️Database
 
 //#region 🔖️ArtifactHandle
@@ -9445,12 +9481,13 @@ impl ArtifactSubmitState {
     fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
         match self.pool.try_submit(Lane::Io, job) {
             Ok(()) => {}
-            Err(error) => match error.kind() {
-                semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < ARTIFACT_SUBMIT_RETRY_LIMIT => {
-                    *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
+            Err(error) => match worker_submit_retry_attempt(error.kind(), attempt, ARTIFACT_SUBMIT_RETRY_LIMIT) {
+                Some(next) => {
+                    *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), next));
                     self.arm_retry();
                 }
-                kind => {
+                None => {
+                    let kind = error.kind();
                     let job = error.into_job();
                     self.scheduled.store(false, std::sync::atomic::Ordering::Release);
                     if let Some(work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
@@ -10186,12 +10223,13 @@ impl ArtifactHistoryState {
     fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
         match self.pool.try_submit(Lane::Io, job) {
             Ok(()) => {}
-            Err(error) => match error.kind() {
-                semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < ARTIFACT_SUBMIT_RETRY_LIMIT => {
-                    *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
+            Err(error) => match worker_submit_retry_attempt(error.kind(), attempt, ARTIFACT_SUBMIT_RETRY_LIMIT) {
+                Some(next) => {
+                    *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), next));
                     self.arm_retry();
                 }
-                kind => {
+                None => {
+                    let kind = error.kind();
                     let job = error.into_job();
                     self.scheduled.store(false, std::sync::atomic::Ordering::Release);
                     *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, job));
@@ -10857,8 +10895,8 @@ impl ArtifactHandle {
         budget: db_compact::CompactionBudget,
         now_ms: u64,
         cancelled: Arc<std::sync::atomic::AtomicBool>,
-    ) -> db_actor::AskFuture<db_artifact::ArtifactMessage, Result<db_compact::CompactionReport, DbError>> {
-        self.authority.compact_retained(holder, consolidate_snapshots, budget, now_ms, cancelled)
+    ) -> ArtifactCompactionFuture {
+        ArtifactCompactionFuture { ask: self.authority.compact_retained(holder, consolidate_snapshots, budget, now_ms, cancelled), _lease: self._lease.clone() }
     }
 
     pub async fn compact(&self, holder: &str, consolidate_snapshots: bool, cancelled: Arc<std::sync::atomic::AtomicBool>) -> Result<db_compact::CompactionReport, DbError> {

@@ -275,6 +275,10 @@ impl ArtifactOwnedToolJobFactory for TxtRetainedCommandJobFactory {
 pub struct TxtEditor;
 
 impl ArtifactEditor for TxtEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = TxtSnapshot;
     type Mutation = TxtMutation;
     type Config = NoConfig;

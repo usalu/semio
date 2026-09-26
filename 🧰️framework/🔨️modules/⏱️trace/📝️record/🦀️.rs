@@ -120,7 +120,7 @@ pub const TRACE_OUTCOMES: [TraceOutcome; 5] = [TraceOutcome::Started, TraceOutco
 /// 🛰️ The declared server span/event names, sorted. A server may emit an event outside this list —
 /// the tracer never refuses one — but everything an operator is expected to be able to alert on is
 /// here, and the fixture beside it is what a non-Rust consumer reads.
-pub const SERVER_SPAN_EVENTS: [&str; 24] = [
+pub const SERVER_SPAN_EVENTS: [&str; 25] = [
     "server.artifact.creation",
     "server.artifact.maintenance",
     "server.auth.agent.delegate",
@@ -143,6 +143,7 @@ pub const SERVER_SPAN_EVENTS: [&str; 24] = [
     "server.presence.leave",
     "server.rate-limit",
     "server.readiness",
+    "server.request",
     "server.saga.drain",
     "server.shutdown",
 ];

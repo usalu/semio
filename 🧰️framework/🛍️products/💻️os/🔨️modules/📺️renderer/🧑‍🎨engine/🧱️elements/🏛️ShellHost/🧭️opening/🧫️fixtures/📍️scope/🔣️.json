@@ -125,19 +125,23 @@
     "hostile": [
       {
         "id": "foreign-plan-scope",
-        "requestStages": ["open-plan", "manifest"]
+        "requestStages": ["open-plan", "manifest"],
+        "sessionKept": false
       },
       {
         "id": "corrupt-component",
-        "requestStages": ["open-plan", "manifest", "component", "descriptor"]
+        "requestStages": ["open-plan", "manifest", "component", "descriptor"],
+        "sessionKept": false
       },
       {
         "id": "cancel-at-manifest",
-        "requestStages": ["open-plan", "manifest"]
+        "requestStages": ["open-plan", "manifest"],
+        "sessionKept": true
       },
       {
         "id": "retire-at-component",
-        "requestStages": ["open-plan", "manifest", "component"]
+        "requestStages": ["open-plan", "manifest", "component"],
+        "sessionKept": true
       }
     ]
   }

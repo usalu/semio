@@ -20,10 +20,11 @@ import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, 
 import type { DirectoryCommand, DirectoryEvent, DirectoryStreamMessage } from "./🔨️modules/📇️directory/🟦️.ts";
 import { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
 import { documentCheckInStatusFromValueV1, type DocumentCheckInStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
+import { closeHubSocketV1 } from "./🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts";
 export { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
 import { parseInferencePortClosedV1, parseInferencePortOpeningRequestV1, parseInferencePortOpeningResultV1, type InferencePortClosedV1, type InferencePortOpeningResultV1 } from "./🔨️modules/💡️inference/🚪️opening/🟦️.ts";
 import type { ArtifactFrontier, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, GisMapInferencePortCodeV1, GisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, canonicalDirectoryCommandV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, parseDirectoryEventPageV1, parseDirectoryEventV1, parseGisMapInferencePortStatusV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_PREFERENCE_PAGE_PATH_V1, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, canonicalDirectoryCommandV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, parseDirectoryEventPageV1, parseDirectoryEventV1, parseGisMapInferencePortStatusV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, directoryAdministrationCommandAllowedV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
@@ -259,13 +260,13 @@ async function readBackboneEnvelopeOnce(uri: string, signal: AbortSignal): Promi
     return new Uint8Array(await response.arrayBuffer());
   }
   const response = (await fetchWithTimeout(`${BACKBONE_ENDPOINT_PATH}?uri=${encodeURIComponent(uri)}`, undefined, { timeoutMs: BACKBONE_ENVELOPE_HTTP_TIMEOUT_MS, signal })) as BackboneFetchResponse;
-  if (response.status === 404) return null;
+  if (response.status === 204 || response.status === 404) return null;
   if (!response.ok) throw new BackboneEnvelopeResponseError(`backbone read failed (${response.status})`);
   return new Uint8Array(await response.arrayBuffer());
 }
 
-/** 🌐️ Reads the raw bundle bytes at `uri`, or `null` for a 404 (a real, final "nothing written here
- * yet" answer — never retried). Optional `signal` cancels the whole read, including any retry in
+/** 🌐️ Reads the raw bundle bytes at `uri`, or `null` for a 204 (a real, final "nothing written here
+ * yet" answer — never retried) or a 404 (no backbone at this origin). Optional `signal` cancels the whole read, including any retry in
  * progress. RETRY-SAFE, and retried: a read has no side effect, so re-issuing it on a transport-level
  * failure (see {@link BackboneEnvelopeResponseError}) can never duplicate an effect — only a
  * definitive server response (any status) or the caller's `signal` skips further retries. Retries are
@@ -841,6 +842,12 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
     const clientInstanceId = parsed.clientInstanceId === undefined ? undefined : workerWireClientInstanceIdV1(parsed.clientInstanceId);
     if (parsed.clientInstanceId !== undefined && clientInstanceId === null) throw new Error("backbone worker request: invalid client instance id");
   }
+  if (parsed.kind === "directory-command") {
+    if (Object.keys(parsed).sort().join(",") !== "command,kind,requestId") throw new Error("backbone worker request: invalid directory command fields");
+    const requestId = workerWireCreationRequestIdV1(parsed.requestId);
+    if (requestId === null) throw new Error("backbone worker request: invalid directory command request id");
+    return { kind: "directory-command", requestId, command: canonicalDirectoryCommandV1(parsed.command) };
+  }
   if (parsed.kind === "inference-history-undo") {
     const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
     if (clientInstanceId === null || !Number.isSafeInteger(parsed.historyEpoch) || (parsed.historyEpoch as number) < 1) throw new Error("backbone worker request: invalid inference history owner");
@@ -898,15 +905,16 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
     return { ...parseBrowserActorUiPatchOfferV1(offer), clientInstanceId };
   }
   if (parsed.kind === "browser-actor-ui-mounted") {
-    const fields = ["activationGeneration", "activeCheckpointId", "browserActorSha256", "catalogGenerationId", "clientInstanceId", "componentSha256", "descriptorDigestV1", "descriptorSha256", "frontier", "instanceId", "kind", "scope", "uiRevision", "verifiedSurfaceId"];
+    const fields = ["activationGeneration", "activeCheckpointId", "browserActorSha256", "catalogGenerationId", "clientInstanceId", "componentSha256", "descriptorDigestV1", "descriptorSha256", "frontier", "instanceId", "kind", "scope", "uiRevision", "verifiedSurfaceId", "windowKindId"];
     if (Object.keys(parsed).sort().join(",") !== fields.sort().join(",")) throw new Error("backbone worker response: invalid mounted UI fields");
     const scopeRow = parsed.scope as Record<string, unknown> | undefined;
     const documentId = scopeRow === undefined ? null : workerWireIdV1(scopeRow.documentId);
     const scope = documentId === null ? null : workerWireScopeV1(parsed.scope, documentId);
     const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
     const verifiedSurfaceId = workerWireIdV1(parsed.verifiedSurfaceId);
+    const windowKindId = workerWireIdV1(parsed.windowKindId);
     const activationGeneration = typeof parsed.activationGeneration === "string" && /^[1-9][0-9]{0,19}$/u.test(parsed.activationGeneration) && BigInt(parsed.activationGeneration) <= 0xffffffffffffffffn ? parsed.activationGeneration : null;
-    if (scope === null || clientInstanceId === null || verifiedSurfaceId === null || activationGeneration === null || !Number.isSafeInteger(parsed.instanceId) || (parsed.instanceId as number) < 0 || !Number.isSafeInteger(parsed.uiRevision) || (parsed.uiRevision as number) < 1) throw new Error("backbone worker response: invalid mounted UI owner");
+    if (scope === null || clientInstanceId === null || verifiedSurfaceId === null || windowKindId === null || activationGeneration === null || !Number.isSafeInteger(parsed.instanceId) || (parsed.instanceId as number) < 0 || !Number.isSafeInteger(parsed.uiRevision) || (parsed.uiRevision as number) < 1) throw new Error("backbone worker response: invalid mounted UI owner");
     const catalogGenerationId = workerWireSha256V1(parsed.catalogGenerationId),
       componentSha256 = workerWireSha256V1(parsed.componentSha256),
       descriptorSha256 = workerWireSha256V1(parsed.descriptorSha256),
@@ -915,7 +923,7 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
       descriptorDigestV1 = workerWireSha256V1(parsed.descriptorDigestV1),
       frontier = workerWireArtifactFrontierV1(parsed.frontier, scope);
     if (catalogGenerationId === null || componentSha256 === null || descriptorSha256 === null || browserActorSha256 === null || activeCheckpointId === null || descriptorDigestV1 === null || frontier === null) throw new Error("backbone worker response: invalid mounted UI identity");
-    return { kind: "browser-actor-ui-mounted", scope, clientInstanceId, activationGeneration, instanceId: parsed.instanceId as number, verifiedSurfaceId, catalogGenerationId, componentSha256, descriptorSha256, browserActorSha256, activeCheckpointId, descriptorDigestV1, frontier, uiRevision: parsed.uiRevision as number };
+    return { kind: "browser-actor-ui-mounted", scope, clientInstanceId, activationGeneration, instanceId: parsed.instanceId as number, verifiedSurfaceId, windowKindId, catalogGenerationId, componentSha256, descriptorSha256, browserActorSha256, activeCheckpointId, descriptorDigestV1, frontier, uiRevision: parsed.uiRevision as number };
   }
   if (parsed.kind === "event" && typeof parsed.event === "object" && parsed.event !== null) {
     const documentId = workerWireIdV1(parsed.documentId);
@@ -1035,6 +1043,7 @@ function parseDirectoryAdministrationWorkerRequestV1(parsed: Readonly<Record<str
       if (requestId === null) throw new Error("backbone worker request: invalid administration request id");
       const command = canonicalDirectoryCommandV1(parsed.command);
       directoryCommandRequestJson(sealDirectoryCommandRequestV1(requestId, command));
+      if (command.kind === "record-user-preference") throw new Error("backbone worker request: a user preference is not an administration command");
       const spaceId = command.kind === "create-space" ? undefined : command.kind === "announce-document" ? command.descriptor.spaceId : command.spaceId;
       if (spaceId !== undefined && workerWireIdV1(spaceId) === null) throw new Error("backbone worker request: invalid administration command space");
       return { kind: parsed.kind, operationEpoch, requestId, command };
@@ -1275,6 +1284,12 @@ export type BackboneWorkerRequest =
   | ({ readonly kind: "directory-bootstrap-ack" } & DirectoryEventPageAckV1)
   | { readonly kind: "directory-bootstrap-reject"; readonly bootstrapEpoch: number; readonly receiptSha256: string }
   | { readonly kind: "directory-bootstrap-close"; readonly bootstrapEpoch: number }
+  /** 🌐️ The signed-in user's preference lane (`DIRECTORY_PREFERENCE_PAGE_PATH_V1`): pages from `after`, then a wake on
+   * every directory head that passes the lane's frontier. Recording a change is a `record-user-preference` directory
+   * command whose `requestId` is the change's own, so a resend is the same command. */
+  | { readonly kind: "preference-lane-open"; readonly baseUrl: string; readonly userId: string; readonly after: number }
+  | { readonly kind: "preference-lane-record"; readonly requestId: string; readonly schema: string; readonly mutation: string }
+  | { readonly kind: "preference-lane-close" }
   | { readonly kind: "directory-scope-open"; readonly baseUrl: string; readonly scope: DocumentScope; readonly since: number }
   | { readonly kind: "directory-scope-close"; readonly scope: DocumentScope }
   /** 📇️ A mounted space index's directory lane: its space's full event history (sealed pages from the first event),
@@ -1354,6 +1369,9 @@ export type BackboneWorkerResponse =
   | { readonly kind: "ready" }
   | { readonly kind: "directory-message"; readonly message: DirectoryStreamMessage }
   | ({ readonly kind: "directory-event-page"; readonly canonicalJson: string } & DirectoryEventPageAckV1 & { readonly afterSeqExclusive: number; readonly hasMore: boolean })
+  | { readonly kind: "preference-lane-page"; readonly userId: string; readonly afterSeqExclusive: number; readonly throughSeqInclusive: number; readonly hasMore: boolean; readonly events: readonly { readonly seq: number; readonly schema: string; readonly mutation: string }[] }
+  | { readonly kind: "preference-lane-recorded"; readonly requestId: string; readonly outcome: string }
+  | { readonly kind: "preference-lane-failed"; readonly requestId: string | null; readonly code: string; readonly retryable: boolean }
   | { readonly kind: "directory-bootstrap-failed"; readonly bootstrapEpoch: number; readonly code: "unauthorized" | "cancelled" | "transport" | "invalid-page"; readonly retryable: boolean }
   | { readonly kind: "directory-scope-revoked"; readonly scope: DocumentScope }
   /** 📇️ Events of one space for its mounted index lane, in ascending `seq` (history first, then live). */
@@ -1416,6 +1434,8 @@ export type BrowserActorUiMountedV1 = Readonly<{
   activationGeneration: string;
   instanceId: number;
   verifiedSurfaceId: string;
+  /** 🪟️ The lease's window: the one whose acknowledged revision `uiRevision` is. */
+  windowKindId: string;
   catalogGenerationId: string;
   componentSha256: string;
   descriptorSha256: string;
@@ -3699,6 +3719,10 @@ export class AppChannelClient {
    * ask "what does this instance's document look like right now" without a dedicated round trip. */
   private cachedPack: Uint8Array | null = null;
   private cachedSpr: Uint8Array | null = null;
+  /** 👥️ The last `AppFrame::Ephemeral` any outcome of this instance carried (every guest exchange appends one,
+   * contract-freeze §C7.6) — the presence heartbeat's pack and interaction slice, read without a round trip (the
+   * native twin: `ProgramBridge::observe_ephemeral`). */
+  private lastEphemeral: Extract<AppFrameValue, { readonly Ephemeral: unknown }>["Ephemeral"] | null = null;
 
   constructor(handle: AppChannelHandle, sequenceOwner: AppChannelRequestSequence, instanceId: number, appId: string, actor: string = "local") {
     this.handle = handle;
@@ -3745,6 +3769,7 @@ export class AppChannelClient {
       }
       const ordinary: AppFrameValue[] = [];
       for (const frame of frames) {
+        if ("Ephemeral" in frame) this.lastEphemeral = frame.Ephemeral;
         if ("LocalInteractionQuery" in frame) this.receiveLocalInteractionQuery(frame.LocalInteractionQuery.reply);
         else if ("OperationCompleted" in frame) this.publishOperationCompletion(frame.OperationCompleted);
         else if ("Invocation" in frame && frame.Invocation.in_reply_to === 0 && frame.Invocation.ui_scope.length > 0) this.publishOperationProgress(frame.Invocation.ui_scope);
@@ -3761,6 +3786,12 @@ export class AppChannelClient {
       }
       this.finishDisposal();
     }
+  }
+
+  /** 👥️ This instance's last published presence pack and interaction slice (`null` until the guest published one). */
+  ephemeral(): { readonly presence: readonly number[]; readonly presenceGeneration: number; readonly transientGeneration: number; readonly interaction: readonly number[] } | null {
+    const frame = this.lastEphemeral;
+    return frame === null ? null : { presence: frame.presence, presenceGeneration: frame.presence_generation, transientGeneration: frame.transient_generation, interaction: frame.interaction };
   }
 
   /** 🏁️ Subscribes to this instance's unsolicited typed-operation completions. A mounted operation
@@ -4389,6 +4420,73 @@ export interface CanonicalDirectorySpaceAdministrationPageV1 {
 export const HUB_RECONNECT_MIN_MS = 500;
 export const HUB_RECONNECT_MAX_MS = 30_000;
 
+//#region 🔌️DocumentLinkShortage
+/** 🔌️ The capped doubling reconnect and the longest shortage one hub document's link rides out — the TS twin of the
+ * kernel's `DOCUMENT_LINK_SHORTAGE_POLICY` (`🏪️store/🔄️sync/🦀️.rs`). The bound is twice the backoff cap.
+ * @see ./🔨️modules/🏪️store/🔄️sync/🧬️schema/document-link-shortage/🔣️.json */
+export const DOCUMENT_LINK_SHORTAGE_POLICY = Object.freeze({ reconnectMinMs: HUB_RECONNECT_MIN_MS, reconnectMaxMs: HUB_RECONNECT_MAX_MS, shortageBoundMs: 2 * HUB_RECONNECT_MAX_MS });
+/** 🚫️ HTTP statuses of a document admission that mean the hub withdrew access: the link is revoked, never retried. */
+export const DOCUMENT_LINK_ACCESS_REFUSED_STATUSES: ReadonlySet<number> = new Set([401, 403, 404, 410]);
+export type DocumentLinkShortagePolicy = Readonly<{ reconnectMinMs: number; reconnectMaxMs: number; shortageBoundMs: number }>;
+
+/** 🔌️ A hub document's link — one state machine for every shell: while `unlinked` the document stays mounted, local
+ * edits apply and queue and the link retries at `retryAtMs`; past the bound it is `expired` (long offline periods are
+ * refused), and a hub that withdraws access `revoked` it. Terminal states admit no local edit and never relink. */
+export type DocumentLink =
+  | Readonly<{ kind: "linked" }>
+  | Readonly<{ kind: "unlinked"; sinceMs: number; backoffMs: number; retryAtMs: number }>
+  | Readonly<{ kind: "expired"; sinceMs: number; atMs: number }>
+  | Readonly<{ kind: "revoked"; atMs: number }>;
+export type DocumentLinkEvent = Readonly<{ kind: "failed" | "restored" | "tick" | "refused"; nowMs: number }>;
+export type DocumentLinkStatusCode = "linked" | "reconnecting" | "link-expired" | "access-revoked";
+
+/** 🌐️ The localized line of each shortage status, EN and DE explicit (the fixture's `texts`). */
+export const DOCUMENT_LINK_STATUS_TEXT: Readonly<Record<Exclude<DocumentLinkStatusCode, "linked">, Readonly<Record<"en" | "de", string>>>> = Object.freeze({
+  reconnecting: Object.freeze({ en: "Connection lost. Your edits are kept and sent when the hub is reachable again.", de: "Verbindung unterbrochen. Ihre Änderungen bleiben erhalten und werden gesendet, sobald der Hub wieder erreichbar ist." }),
+  "link-expired": Object.freeze({ en: "The connection was lost for too long. Reconnect to keep editing this document.", de: "Die Verbindung war zu lange unterbrochen. Verbinden Sie sich erneut, um dieses Dokument weiter zu bearbeiten." }),
+  "access-revoked": Object.freeze({ en: "Your access to this document was removed.", de: "Ihr Zugriff auf dieses Dokument wurde entfernt." }),
+});
+
+/** 🌱️ A link opened at `nowMs`: not yet live, first attempt due at once, the shortage bound running. */
+export function documentLinkOpened(nowMs: number): DocumentLink {
+  return { kind: "unlinked", sinceMs: nowMs, backoffMs: 0, retryAtMs: nowMs };
+}
+
+/** ⚙️ The one transition function — twin of the kernel's `DocumentLink::apply`. */
+export function documentLinkTransition(link: DocumentLink, event: DocumentLinkEvent, policy: DocumentLinkShortagePolicy = DOCUMENT_LINK_SHORTAGE_POLICY): DocumentLink {
+  if (link.kind === "expired" || link.kind === "revoked") return link;
+  if (event.kind === "refused") return { kind: "revoked", atMs: event.nowMs };
+  if (event.kind === "restored") return { kind: "linked" };
+  if (event.kind === "failed") {
+    if (link.kind === "linked") return { kind: "unlinked", sinceMs: event.nowMs, backoffMs: policy.reconnectMinMs, retryAtMs: event.nowMs + policy.reconnectMinMs };
+    if (event.nowMs - link.sinceMs >= policy.shortageBoundMs) return { kind: "expired", sinceMs: link.sinceMs, atMs: event.nowMs };
+    const backoffMs = Math.min(Math.max(link.backoffMs * 2, policy.reconnectMinMs), policy.reconnectMaxMs);
+    return { kind: "unlinked", sinceMs: link.sinceMs, backoffMs, retryAtMs: event.nowMs + backoffMs };
+  }
+  return link.kind === "unlinked" && event.nowMs - link.sinceMs >= policy.shortageBoundMs ? { kind: "expired", sinceMs: link.sinceMs, atMs: event.nowMs } : link;
+}
+
+/** 🚦️ The status code a shell shows for a link. */
+export function documentLinkStatus(link: DocumentLink): DocumentLinkStatusCode {
+  return link.kind === "linked" ? "linked" : link.kind === "unlinked" ? "reconnecting" : link.kind === "expired" ? "link-expired" : "access-revoked";
+}
+
+/** ✍️ Whether a local edit applies (and queues while unlinked); a terminal link admits none. */
+export function documentLinkAdmitsLocalEdits(link: DocumentLink): boolean {
+  return link.kind === "linked" || link.kind === "unlinked";
+}
+
+/** ⏳️ When an unlinked link expires unless it relinks first. */
+export function documentLinkExpiresAtMs(link: DocumentLink, policy: DocumentLinkShortagePolicy = DOCUMENT_LINK_SHORTAGE_POLICY): number | undefined {
+  return link.kind === "unlinked" ? link.sinceMs + policy.shortageBoundMs : undefined;
+}
+
+if (import.meta.vitest) {
+  const { registerDocumentLinkShortageTests } = await import("./🧪️tests/🔌️document-link-shortage/🟦️.ts");
+  await registerDocumentLinkShortageTests(import.meta.vitest, { DOCUMENT_LINK_ACCESS_REFUSED_STATUSES, DOCUMENT_LINK_SHORTAGE_POLICY, DOCUMENT_LINK_STATUS_TEXT, documentLinkAdmitsLocalEdits, documentLinkExpiresAtMs, documentLinkOpened, documentLinkStatus, documentLinkTransition });
+}
+//#endregion 🔌️DocumentLinkShortage
+
 // 🎫️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet `web-directory`, coordinator
 // follow-up on finding 2 — CLAUDE.md "support short connection-shortages [...] not freeze the app"
 // means a session that has been healthy for a while must not inherit an escalated backoff from
@@ -4430,6 +4528,17 @@ export type CanonicalDirectoryEventPageV1 = Readonly<{
   throughSeqInclusive: number;
   hasMore: boolean;
   receiptSha256: string;
+}>;
+
+/** 🎚️ One page of the preference lane: the canonical page fields plus the principal's own `user.preference-recorded`
+ * events it carries, already validated by the page parser. */
+export type DirectoryPreferencePageV1 = Readonly<{
+  sessionBindingSha256: string;
+  authorizationGeneration: number;
+  afterSeqExclusive: number;
+  throughSeqInclusive: number;
+  hasMore: boolean;
+  events: readonly Readonly<{ seq: number; schema: string; mutation: string }>[];
 }>;
 
 /** ✅️ Exact retained-Home acknowledgement for one still-owned directory page. */
@@ -4839,6 +4948,31 @@ export class DirectoryClient {
     };
   }
 
+  /** 🎚️ Fetches one page of the caller's own preference lane (`DIRECTORY_PREFERENCE_PAGE_PATH_V1`): the same canonical,
+   * receipt-bound page as {@link eventPage}, holding only `user.preference-recorded` events of the principal — a page with
+   * anything else, or with another user's event, is refused. */
+  async preferencePage(after: number, userId: string, options?: DirectoryRequestOptions): Promise<DirectoryPreferencePageV1> {
+    if (!Number.isSafeInteger(after) || after < 0) throw new Error("directory preference page: invalid after frontier");
+    const path = `${DIRECTORY_PREFERENCE_PAGE_PATH_V1}?after=${after}`;
+    const response = await this.request(`${this.requestBaseUrl}${path}`, { credentials: "include", headers: this.headers(false) }, { timeoutMs: DIRECTORY_HTTP_TIMEOUT_MS, signal: options?.signal });
+    if (!response.ok) throw new DirectoryHttpError(response.status, `directory: GET ${path} failed (${response.status})`);
+    const canonicalJson = await response.text();
+    if (options?.signal?.aborted) throw options.signal.reason ?? new Error("directory preference page: cancelled");
+    if (new TextEncoder().encode(canonicalJson).byteLength > DIRECTORY_EVENT_PAGE_MAX_BYTES) throw new Error("directory preference page: response too large");
+    let page: DirectoryEventPageV1;
+    try {
+      page = await parseDirectoryEventPageV1(canonicalJson);
+    } catch {
+      throw new Error("directory preference page: invalid canonical response");
+    }
+    if (page.afterSeqExclusive !== after) throw new Error("directory preference page: response frontier mismatch");
+    const events = page.events.map((event) => {
+      if (event.body.kind !== "user.preference-recorded" || event.userId !== userId) throw new Error("directory preference page: foreign event");
+      return { seq: event.seq, schema: event.body.schema, mutation: event.body.mutation };
+    });
+    return { sessionBindingSha256: page.sessionBindingSha256, authorizationGeneration: page.authorizationGeneration, afterSeqExclusive: page.afterSeqExclusive, throughSeqInclusive: page.throughSeqInclusive, hasMore: page.hasMore, events };
+  }
+
   /** 🔌️ Opens the explicitly global directory stream, which is not document-scope authority. */
   stream(since: number, onMessage: (message: DirectoryStreamMessage) => void): DirectoryStream {
     return this.streamFor(undefined, since, onMessage, undefined, true);
@@ -4927,7 +5061,7 @@ export class DirectoryClient {
         let healthyTimer: ReturnType<typeof setTimeout> | null = null;
         ws.onopen = () => {
           if (ws.protocol !== "semio.socket.v1") {
-            ws.close(1002, "socket protocol mismatch");
+            closeHubSocketV1(ws, "protocolMismatch");
             return;
           }
           ws.send(encodeClientFrame({ SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: "semio.directory.v1", pack_schema_hash: new Array(32).fill(0), resume_token: null, frontier: null } }, "command"));

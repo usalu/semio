@@ -34,6 +34,10 @@ pub mod inference;
 #[path = "../../🗄️stores/🦀️.rs"]
 pub mod stores;
 
+// 🚧️ The one typed shape of every answer that is not a success.
+#[path = "../../🚧️refusal/🦀️.rs"]
+pub mod refusal;
+
 // 🗂️ Also under `integration-fixtures`: that feature exists to serve the crate's OTHER targets
 // (`🗿️artifact-authority/🔏️trusted-catalog`'s `trusted_catalog_fixture`), which builds its profiles
 // under this same artifact root, and a `#[cfg(test)]` module cannot serve them.

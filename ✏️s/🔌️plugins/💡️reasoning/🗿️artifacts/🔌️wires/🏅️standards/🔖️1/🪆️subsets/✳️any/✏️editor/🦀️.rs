@@ -207,7 +207,7 @@ fn wires_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Resu
     match action {
         "setActiveExample" => Ok(WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text(&["exampleId", "example_id", "id", "value"], crate::examples::demo::ID) })),
         "addNode" => Ok(WiresCommand::AddNode(add_node::AddNode { kind: text(&["kind", "value"], "identity") })),
-        "addRelationship" => Ok(WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: text(&["kind", "value"], "relates-to") })),
+        "addRelationship" => Ok(WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: text(&["kind", "value"], ""), source_id: text(&["sourceId", "source"], ""), target_id: text(&["targetId", "target"], "") })),
         "deleteSelection" => Ok(WiresCommand::DeleteSelection(delete_selection::DeleteSelection {})),
         "canvasPointerDown" => Ok(WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             id: lookup(&["id"]).and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { None }),
@@ -242,6 +242,7 @@ fn wires_retained_document_reduce(
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     match command {
         WiresCommand::DeleteSelection(payload) => delete_selection::apply_with_state(payload, &doc, interaction),
+        WiresCommand::AddRelationship(payload) => add_relationship::apply_with_state(payload, &doc, interaction),
         _ => command.dispatch(&doc, &ConfigView { snapshot: config, window: None }),
     }
 }
@@ -669,6 +670,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
     ) -> Result<Emit<WiresMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             WiresCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
+            WiresCommand::AddRelationship(payload) => add_relationship::apply(payload, doc, interaction),
             WiresCommand::NodeGraphViewport(payload) => {
                 let view = view_state.ok_or_else(|| Fault::from("wires-canvas-window-context-required"))?;
                 let mut emit = Emit::default();
@@ -759,7 +761,16 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
         .action_destructive("setActiveExample")
         .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+        .action_args("addNode", vec![semio_framework_plugin::ActionArgDef::text("kind", LocalizedLabel::native("Node Kind", "Knotenart"))])
         .mutation("addRelationship", LocalizedLabel::native("Add Relationship", "Beziehung hinzufügen"))
+        .action_args(
+            "addRelationship",
+            vec![
+                semio_framework_plugin::ActionArgDef::text("sourceId", LocalizedLabel::native("Source Node", "Quellknoten")),
+                semio_framework_plugin::ActionArgDef::text("targetId", LocalizedLabel::native("Target Node", "Zielknoten")),
+                semio_framework_plugin::ActionArgDef::text("kind", LocalizedLabel::native("Relationship Kind", "Beziehungsart")),
+            ],
+        )
         .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
         .action_destructive("deleteSelection")
         .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
@@ -801,6 +812,11 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         // truth (the trait default `ConfigSpec::empty()`: none of `NoConfig`'s fields are
         // user-visible settings, they're ephemeral view state) reused here rather than duplicated.
         .config(ReasoningWiresPlayApp::config_spec())
+        .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole reasoning board with the bundled metabolism example, or with an empty board for any other example id.", "Ersetzt das gesamte Denkbrett durch das mitgelieferte Stoffwechsel-Beispiel, bei jeder anderen Beispiel-Id durch ein leeres Brett."))
+        .action_describe("addNode", LocalizedLabel::native("Adds a new node of the given kind (identity by default) to the reasoning board and selects it.", "Fügt dem Denkbrett einen neuen Knoten der angegebenen Art (standardmäßig Identität) hinzu und wählt ihn aus."))
+        .action_describe("addRelationship", LocalizedLabel::native("Connects the node sourceId to the node targetId (or the first two selected nodes) with a new relationship edge of the given kind (owns by default) and selects it; unknown or missing nodes are refused by name.", "Verbindet den Knoten sourceId mit dem Knoten targetId (oder die ersten beiden ausgewählten Knoten) durch eine neue Beziehungskante der angegebenen Art (standardmäßig besitzt) und wählt sie aus; unbekannte oder fehlende Knoten werden namentlich abgelehnt."))
+        .action_describe("deleteSelection", LocalizedLabel::native("Deletes every currently selected node and relationship from the reasoning board; with nothing selected it is refused.", "Löscht alle aktuell ausgewählten Knoten und Beziehungen vom Denkbrett; ohne Auswahl wird es abgelehnt."))
+        .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️Manifest
@@ -811,6 +827,10 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/⚖️declared-verbs/🦀️.rs"]
+mod declared_verb_laws;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts

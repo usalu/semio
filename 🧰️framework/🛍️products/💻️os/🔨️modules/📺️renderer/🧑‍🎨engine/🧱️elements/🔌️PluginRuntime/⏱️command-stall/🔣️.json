@@ -1,0 +1,10 @@
+{
+  "schema": "semio.os.command-stall/v1",
+  "stallBoundMs": 5000,
+  "cancelledFault": "plugin.command-cancelled",
+  "labels": {
+    "band": { "en": "{program} has not answered “{command}” for {seconds} s — later input waits for it.", "de": "{program} antwortet seit {seconds} s nicht auf „{command}“ — spätere Eingaben warten darauf." },
+    "interaction": { "en": "an interaction", "de": "eine Interaktion" },
+    "cancel": { "en": "Cancel command", "de": "Befehl abbrechen" }
+  }
+}

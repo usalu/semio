@@ -224,7 +224,8 @@ $OS_HUB_DATA/
 ├── extension-modules/           # OS_HUB_EXTENSIONS_DIR, created at boot
 └── trusted-catalog/
     ├── current.json             # the pointer /readyz's artifactAuthority gate reads
-    └── generations/<id>/        # published generations
+    ├── generations/<id>/        # published generations
+    └── guest-codec-verifications/  # remembered guest pack-schema verifications (a warm boot skips them)
 ```
 
 With `OS_HUB_STORAGE_BACKEND=sqlite`, `db/` is replaced by `db.sqlite3` (or `OS_HUB_DB_SQLITE`).
@@ -331,6 +332,16 @@ list of `{gate, reason}` pairs (e.g. `artifactCasSweeper` /
 `artifact-cas-maintenance-supervisor-failed-closed`), and the authentication block carries
 `publicSessionIssuance`. Point a load balancer at `/readyz` and a process supervisor at `/healthz`.
 
+The hub binds its port **before** it opens its stores and loads the trusted catalog, so a booting hub
+answers instead of refusing connections: `/healthz` is `200 live` at once, `/readyz` is `503` with every
+component gate `hub-starting`, `artifactAuthority` `trusted-catalog-loading` and a `startup` object
+(`{stage, completedUnits, totalUnits}`, the catalog load's latest progress, e.g. `guest-codec-executing`),
+and every other route is a signed `503 unavailable` with `Retry-After: 5`. The first boot on a catalog
+interprets each package's guest once to pin its pack-schema hashes (minutes for a large catalog); the
+hub remembers each verification under `trusted-catalog/guest-codec-verifications/`, keyed by component,
+schema and interpreter identity, so every later boot — including a copied, re-signed or container build
+of the same source, and a restored backup — skips it (B2 catalog, 9 packages: 154 s cold, 14.5 s warm).
+
 The hub carries **no `tracing`/`prometheus`/`opentelemetry` dependency** — the observer is
 first-party (`semio_framework_trace`). Every HTTP route, the document and directory WebSocket
 handlers, presence join/expiry/leave, the trusted-catalog load, the directory backend faults, boot
@@ -374,7 +385,17 @@ curl -fsS http://127.0.0.1:8787/readyz | jq .
 ```
 
 Restore into an **empty** path, not over a populated one: mixing generations of an event-sourced
-store is not a supported state.
+store is not a supported state. The tree holds no absolute paths, so the same archive also restores
+into a different empty path (point `OS_HUB_DATA` at it); `trusted-catalog/` carries the catalog and the
+hub's remembered guest verifications with it, so the restored hub boots without re-verifying.
+
+> Drilled 2026-09-26 on a sqlite-directory, `fs`-store hub (production mode, catalog of 9 packages,
+> 3 spaces, a note document with 20 socket edits): `SIGTERM` → exit in 277 ms (`database=closed`) →
+> `tar -czf` of the 544 MB root (164 MB, 25 s) → original moved aside → `tar -xzf` into the same path
+> (2 s, `diff -r` identical) → `/readyz` 200 after 13.5 s → the document reopened with the identical
+> frontier (commit 20, same chain hash), byte-identical descriptor and active checkpoint pair, its
+> space listed, and its next edit accepted. The same archive restored into a different empty path
+> passed the same checks (ready after 14.6 s). Ticket 26/09/23, `📓️wp-h10.md`.
 
 With `postgres` or `neo4j` selected for either store, that database is outside the tarball — back it
 up with its own native tooling, at the same stopped moment, and restore both halves together.

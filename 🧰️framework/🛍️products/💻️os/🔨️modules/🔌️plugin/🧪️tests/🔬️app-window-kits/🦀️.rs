@@ -215,6 +215,49 @@ mod window_kits_tests {
         assert_eq!(node.children.len(), TREE_WINDOW_DEFAULT_ROWS as usize, "an unhosted first paint serves one default viewport of rows");
     }
 
+    /// 📊️ A Home-shaped row: six cells, five row actions and a row activation, each binding carrying its own
+    /// `spaceId` argument map.
+    fn heavy_table_row(index: &usize) -> UiAssemblyResult<BuiltNode> {
+        let key = format!("space:{index}");
+        let action = |name: &str| -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
+            let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("fixture.args"))?;
+            args.push("spaceId".to_owned(), UiValue::Text(UiText::try_from_str(&key).ok_or_else(|| ui_assembly_error("fixture.arg"))?)).map_err(|_| ui_assembly_error("fixture.arg"))?;
+            Ok((ActionId::try_v1("s.space.home", name).expect("bounded action"), Some(UiValue::Map(args.finish()))))
+        };
+        let name = format!("Studio {index}");
+        let actions = [("folder-open", "openSpace"), ("pencil", "renameSpace"), ("link", "shareSpace"), ("trash-2", "deleteSpace"), ("users", "manageSpace")].into_iter().map(|(icon, verb)| table_row_action(icon, verb, action(verb)?)).collect::<UiAssemblyResult<Vec<_>>>()?;
+        table_window_row(&key, &[name.as_str(), "Atelier", "Private", "1", "2026-09-25 23:05", "Hub"], actions, Some(action("openSpace")?))
+    }
+
+    fn requested(rows: u32) -> ViewModel {
+        ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 0, rows }], ..Default::default() }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn table_kit_ends_a_window_of_heavy_rows_inside_the_body_item_budget() {
+        let view = requested(100);
+        let windows = TreeWindows::for_body(&view, "body");
+        let entries: Vec<usize> = (0..500).collect();
+        let node = TableWindowKit::render_rows(&windows, "Studios", &["Name", "Kind", "Visibility", "Members", "Updated", "Origin"], Some("Actions"), &entries, heavy_table_row).expect("windowed table");
+        let Component::Table(props) = &node.component else { panic!("expected Table") };
+        let rows = node.children.len();
+        assert_eq!(props.window.map(|window| (window.total, window.offset)), Some((500, 0)), "a shortened window still spans the whole logical table");
+        assert!(rows > 0 && rows < 100, "heavy rows end the window early: {rows} of 100 requested");
+        let priced = semio_framework_ui_runtime::surface_subtree_items(&node).expect("bounded census");
+        assert!(priced <= TREE_WINDOW_BODY_ITEM_BUDGET + TREE_WINDOW_FIXED_NODE_ITEMS, "{rows} rows priced {priced} items against a body budget of {TREE_WINDOW_BODY_ITEM_BUDGET}");
+        assert_eq!(windows.nodes_remaining(), TREE_WINDOW_BODY_NODE_BUDGET - 1 - rows, "the records of the rows that were not built go back to the ledger");
+        assert!(windows.items_remaining() < semio_framework_ui_runtime::surface_subtree_items(&heavy_table_row(&0).expect("heavy row")).expect("bounded census"), "the window ends only when the next row no longer fits");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn table_kit_serves_a_whole_window_of_light_rows() {
+        let view = requested(60);
+        let windows = TreeWindows::for_body(&view, "body");
+        let node = table_fixture(&windows, 500);
+        assert_eq!(node.children.len(), 60, "rows well inside the item budget are all materialised");
+        assert!(windows.items_remaining() > 0);
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn tree_kit_renders_nested_items() {
         let view = TreeView { roots: vec![TreeNodeView { id: "root".into(), label: "Root".into(), children: vec![TreeNodeView { id: "child".into(), label: "Child".into(), children: Vec::new() }] }] };

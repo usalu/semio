@@ -264,6 +264,10 @@ impl ArtifactOwnedToolJobFactory for XmlValidRetainedCommandJobFactory {
 pub struct XmlValidEditor;
 
 impl ArtifactEditor for XmlValidEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::standards::v1_0::subsets::valid::examples::demo::source()]
+    }
     type Snapshot = XmlSnapshot;
     type Mutation = XmlValidMutation;
     type Config = NoConfig;

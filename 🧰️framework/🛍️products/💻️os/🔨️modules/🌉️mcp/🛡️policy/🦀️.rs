@@ -375,11 +375,43 @@ pub struct ApprovalCoordinator {
     elicitation: Option<crate::transport::ElicitationSlot>,
     bridge: Option<crate::ui::BridgeSlot>,
     shell_timeout_ms: u64,
+    shell_attach_grace_ms: Option<u64>,
 }
+
+/// ⏳️ How long an approval waits for a live OS session to dial a bridge nobody has attached to yet: a
+/// shell polls the rendezvous at most every `BRIDGE_DISCOVERY_MAX_INTERVAL_MS` (30 s,
+/// `🔗️AgentBridge/🛰️offer`), plus the time to dial. Without it an agent that asked for approval right
+/// after connecting was refused with "no OS shell is attached" while the human's shell was seconds
+/// from attaching (measured 2026-09-26, 2 of 4 user-path runs on hub 7800).
+pub const SHELL_ATTACH_GRACE_MS: u64 = 35_000;
 
 impl ApprovalCoordinator {
     pub fn new(elicitation: Option<crate::transport::ElicitationSlot>, bridge: Option<crate::ui::BridgeSlot>) -> Self {
-        Self { elicitation, bridge, shell_timeout_ms: SHELL_APPROVAL_TIMEOUT_MS }
+        Self { elicitation, bridge, shell_timeout_ms: SHELL_APPROVAL_TIMEOUT_MS, shell_attach_grace_ms: None }
+    }
+
+    /// ⏳️ Overrides [`SHELL_ATTACH_GRACE_MS`]; without it the grace applies only while the rendezvous
+    /// names a live OS session that can be expected to dial.
+    #[must_use]
+    pub fn with_shell_attach_grace_ms(mut self, grace_ms: u64) -> Self {
+        self.shell_attach_grace_ms = Some(grace_ms);
+        self
+    }
+
+    /// 🐚️ The shell connection to ask: the one attached now, or the first a live OS session attaches
+    /// within the grace. `None` once the grace is spent, or at once when no live session exists.
+    fn await_shell_connection(&self, bridge: &crate::bridge::BridgeHandle) -> Option<crate::bridge::ShellConnectionId> {
+        let grace_ms = self.shell_attach_grace_ms.unwrap_or_else(|| if crate::rendezvous::live_os_sessions().is_empty() { 0 } else { SHELL_ATTACH_GRACE_MS });
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(grace_ms);
+        loop {
+            if let Some(connection) = crate::ui::active_shell_connection(bridge) {
+                return Some(connection);
+            }
+            if std::time::Instant::now() >= deadline || crate::notify::active_request_cancel_requested() {
+                return None;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(SHELL_APPROVAL_POLL_INTERVAL_MS));
+        }
     }
 
     #[must_use]
@@ -427,7 +459,7 @@ impl ApprovalCoordinator {
     /// for a request nobody is waiting on.
     fn resolve_by_shell(&self, request: &ApprovalRequest<'_>) -> Result<ApprovalResolution, &'static str> {
         let Some(bridge) = self.bridge.as_ref().and_then(|slot| slot.get()) else { return Err("this gateway is serving no /bridge — no OS shell can be asked") };
-        let Some(mut connection) = crate::ui::active_shell_connection(bridge) else { return Err("a /bridge is running but no OS shell is attached to it") };
+        let Some(mut connection) = self.await_shell_connection(bridge) else { return Err("a /bridge is running but no OS shell is attached to it") };
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(self.shell_timeout_ms);
         let publish = |connection| {
             let remaining_ms = u64::try_from(deadline.saturating_duration_since(std::time::Instant::now()).as_micros().div_ceil(1_000)).unwrap_or(u64::MAX).max(1);

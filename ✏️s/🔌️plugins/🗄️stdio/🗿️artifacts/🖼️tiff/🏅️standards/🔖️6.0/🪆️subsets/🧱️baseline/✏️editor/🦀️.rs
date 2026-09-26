@@ -111,6 +111,10 @@ impl ArtifactOwnedToolJobFactory for TiffBaselineEditorExampleFactory {
 pub struct TiffBaselineEditor;
 
 impl ArtifactEditor for TiffBaselineEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = TiffSnapshot;
     type Mutation = TiffBaselineMutation;
     type Config = NoConfig;

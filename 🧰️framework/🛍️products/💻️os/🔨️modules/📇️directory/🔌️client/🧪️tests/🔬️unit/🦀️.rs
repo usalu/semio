@@ -971,3 +971,127 @@ async fn cancellation_after_socket_open_closes_before_socket_hello() {
     assert_eq!(transport.ws_closes.load(Ordering::SeqCst), 1);
 }
 //#endregion 🔖️CancellationTests
+
+/// 🧩️ Resolving the component a hub document runs, by the serving catalog generation, against the neutral
+/// fixture `🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json` over the hub's own lease corpus
+/// (`document-execution-target-lease-v1`, whose digests the hub minted independently): the local copy only on an
+/// equal content hash, a store entry only when its bytes verify, otherwise the hub's bytes — verified before they
+/// are stored — and never anything off the lease; each case names the requests and steps it takes.
+#[semio_framework_async_macros::async_test]
+async fn execution_target_module_resolution_follows_the_serving_generation() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json")).expect("resolution fixture");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+    let hex_bytes = |text: &str| -> Vec<u8> { (0..text.len() / 2).map(|index| u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).expect("hex")).collect() };
+    let component = hex_bytes(corpus["componentHex"].as_str().expect("component hex"));
+    let descriptor = hex_bytes(corpus["descriptorHex"].as_str().expect("descriptor hex"));
+    let intent: DocumentOpenIntentV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&corpus["intent"]).expect("intent json")).expect("corpus intent");
+    let lease: DocumentExecutionTargetLeaseFieldsV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).expect("manifest json")).expect("corpus manifest");
+    let body = |bytes: &[u8]| Ok(HttpResponse { status: 200, body: bytes.to_vec() });
+    let flipped = |bytes: &[u8]| {
+        let mut bytes = bytes.to_vec();
+        bytes[0] ^= 0xff;
+        bytes
+    };
+    for case in fixture["cases"].as_array().expect("cases") {
+        let id = case["id"].as_str().expect("case id");
+        let root = std::env::temp_dir().join(format!("semio-execution-target-law-{}-{id}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let store = ExecutionTargetModuleStore::new(&root);
+        let (component_path, descriptor_path) = (store.component_path(&lease.component.sha256), store.descriptor_path(&lease.descriptor.sha256));
+        let seed = |path: &std::path::Path, bytes: &[u8]| {
+            std::fs::create_dir_all(path.parent().expect("store parent")).expect("store dir");
+            std::fs::write(path, bytes).expect("seed store entry");
+        };
+        match case["store"].as_str().expect("store") {
+            "empty" => {}
+            "verified" => {
+                seed(&component_path, &component);
+                seed(&descriptor_path, &descriptor);
+            }
+            "tamperedComponent" => {
+                seed(&component_path, &flipped(&component));
+                seed(&descriptor_path, &descriptor);
+            }
+            "tamperedDescriptor" => {
+                seed(&component_path, &component);
+                seed(&descriptor_path, &flipped(&descriptor));
+            }
+            other => panic!("unknown store state {other}"),
+        }
+        let transport = FakeTransport::default();
+        let hub = case["hub"].as_str().expect("hub");
+        let mut asked = std::collections::HashMap::new();
+        for request in case["expected"]["requests"].as_array().expect("expected requests") {
+            let kind = request.as_str().expect("request");
+            let count = asked.entry(kind).or_insert(0usize);
+            *count += 1;
+            if hub == "unavailable" || (hub == "unavailableOnce" && *count == 1) {
+                transport.push_response(Ok(HttpResponse { status: 503, body: br#"{"schema":"semio.hub.document-open-plan-error/v1","code":"deadline-exceeded"}"#.to_vec() })).await;
+                continue;
+            }
+            let response = match kind {
+                "manifest" => FakeTransport::json_response(200, &corpus["manifest"]).await,
+                "component" => body(&if hub == "wrongComponent" { flipped(&component) } else { component.clone() }),
+                _ => body(&if hub == "wrongDescriptor" { flipped(&descriptor) } else { descriptor.clone() }),
+            };
+            transport.push_response(response).await;
+        }
+        let local = match case["local"].as_str().expect("local") {
+            "leaseComponent" => Some(lease.component.sha256.clone()),
+            "otherComponent" => Some("0".repeat(64)),
+            _ => None,
+        };
+        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
+        let ctx = root_ctx();
+        let mut steps = Vec::new();
+        let outcome = client
+            .resolve_execution_target_module(&ctx, &intent, local.as_deref(), &store, |step| {
+                if hub == "cancelledAtComponent" && step == ExecutionTargetModuleStep::Component {
+                    ctx.cancel.cancel_now();
+                }
+                steps.push(match step {
+                    ExecutionTargetModuleStep::Lease => "lease",
+                    ExecutionTargetModuleStep::Component => "component",
+                    ExecutionTargetModuleStep::Descriptor => "descriptor",
+                    ExecutionTargetModuleStep::Verified => "verified",
+                });
+            })
+            .await;
+        let requests: Vec<&str> = transport
+            .requests
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|request| if request.url.ends_with("/execution-target/manifest") { "manifest" } else if request.url.ends_with("/execution-target/component") { "component" } else { "descriptor" })
+            .collect();
+        let named = match &outcome {
+            Ok(resolved) => match resolved.source {
+                ExecutionTargetModuleSource::Local => "local",
+                ExecutionTargetModuleSource::Store => "store",
+                ExecutionTargetModuleSource::Hub => "hub",
+            },
+            Err(DirectoryClientError::Cancelled) | Err(DirectoryClientError::Transport(TransportError::Cancelled)) => "cancelled",
+            Err(_) => "refused",
+        };
+        assert_eq!(named, case["expected"]["outcome"], "{id}: {outcome:?}");
+        assert_eq!(serde_json::json!(requests), case["expected"]["requests"], "{id} requests");
+        assert_eq!(serde_json::json!(steps), case["expected"]["steps"], "{id} steps");
+        match &outcome {
+            Ok(resolved) if resolved.source == ExecutionTargetModuleSource::Local => assert!(resolved.files.is_none(), "{id}: the local component needs no files"),
+            Ok(resolved) => {
+                let files = resolved.files.as_ref().expect("resolved files");
+                assert_eq!(std::fs::read(&files.component).expect("stored component"), component, "{id}: the mounted component is the lease's bytes");
+                assert_eq!(std::fs::read(&files.descriptor).expect("stored descriptor"), descriptor, "{id}: the mounted descriptor is the lease's bytes");
+            }
+            Err(_) => {
+                for (path, bytes) in [(&component_path, &component), (&descriptor_path, &descriptor)] {
+                    assert!(std::fs::read(path).map_or(true, |stored| stored == *bytes || case["store"] != "empty"), "{id}: nothing off the lease is stored");
+                }
+                if case["store"] == "empty" && hub != "wrongDescriptor" {
+                    assert!(!component_path.exists(), "{id}: a refused or cancelled resolution leaves no component behind");
+                }
+            }
+        }
+        let _ = std::fs::remove_dir_all(&root);
+    }
+}

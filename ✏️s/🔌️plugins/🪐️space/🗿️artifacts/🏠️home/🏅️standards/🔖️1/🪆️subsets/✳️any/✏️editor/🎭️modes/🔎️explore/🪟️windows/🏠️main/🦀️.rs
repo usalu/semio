@@ -113,9 +113,8 @@ fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &
     }
     let columns = [table.column_name.as_str(), table.column_kind.as_str(), table.column_visibility.as_str(), table.column_members.as_str(), table.column_updated.as_str(), table.column_origin.as_str()];
     TableWindowKit::render_rows(windows, table.table_name.as_str(), &columns, Some(table.column_actions.as_str()), rows, |row| {
-        let origin = if row.origin == "hub" { table.origin_hub.as_str() } else { table.origin_local.as_str() };
-        let key = format!("space:{}", row.id);
-        table_window_row(&key, &[row.name.as_str(), row.kind.as_str(), row.visibility.as_str(), row.members.as_str(), row.updated.as_str(), origin], row_actions(actions, row)?, Some(home_space_action("openSpace", &row.id)?))
+        let cells = row.cells(table);
+        table_window_row(&format!("space:{}", row.id), &cells.each_ref().map(String::as_str), row_actions(actions, row)?, Some(home_space_action("openSpace", &row.id)?))
     })
 }
 

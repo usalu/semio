@@ -13,10 +13,13 @@
 
 // #region 🔌️Adapters
 import { readPublishedPageOrigins } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { AGENT_BRIDGE_OFFER_ENDPOINT, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, bridgeProtocols, fetchAgentBridgeConfig, nextBridgeDiscoveryIntervalMs, sameAgentBridgeOffer, type AgentBridgeConfig, type BridgeOfferFetch } from "./🛰️offer/🟦️.ts";
+export { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_OFFER_SCHEMA_V1, agentBridgeOfferAnswerV1, BRIDGE_DISCOVERY_MAX_INTERVAL_MS, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, bridgeProtocols, fetchAgentBridgeConfig, isAdmissibleBridgeUrl, nextBridgeDiscoveryIntervalMs, parseAgentBridgeOffer, sameAgentBridgeOffer, type AgentBridgeConfig, type AgentBridgeOfferAnswerV1, type BridgeOfferFetch } from "./🛰️offer/🟦️.ts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { registerUiTranslationBundles } from "@semio-tech/ui-react";
 import { defaultShellState, reduce, type ReduceResult, type ShellCommand, type ShellState } from "../../../../🖥️shell/🟦️.ts";
 import {
+  BRIDGE_VERSION,
   NO_BRIDGE_FLAGS,
   decodeGatewayToShell,
   encodeShellToGateway,
@@ -42,6 +45,8 @@ export const agentUiLabel = registerUiTranslationBundles({
             connecting: { label: { normal: "Connecting to agent…", beginner: "Connecting to agent…" } },
             reconnecting: { label: { normal: "Reconnecting to agent…", beginner: "Reconnecting to agent…" } },
             disconnected: { label: { normal: "Agent disconnected", beginner: "Agent disconnected" } },
+            unavailable: { label: { normal: "The AI client's bridge does not answer; restart the AI client to connect again", beginner: "Your AI client does not answer. Restart it to connect again." } },
+            incompatible: { label: { normal: "The AI client uses bridge version {{gateway}}, this shell version {{shell}}; update the older one", beginner: "Your AI client and this app are different versions. Update the older one." } },
             working: { label: { normal: "Agent working: {{label}}", beginner: "Agent working: {{label}}" } },
             idle: { label: { normal: "Agent idle", beginner: "Agent idle" } },
             statusLabel: { label: { normal: "Agent status", beginner: "Agent status" } },
@@ -110,6 +115,8 @@ export const agentUiLabel = registerUiTranslationBundles({
             connecting: { label: { normal: "Verbinde mit Agent…", beginner: "Verbinde mit Agent…" } },
             reconnecting: { label: { normal: "Verbindung zum Agent wird wiederhergestellt…", beginner: "Verbindung zum Agent wird wiederhergestellt…" } },
             disconnected: { label: { normal: "Agent getrennt", beginner: "Agent getrennt" } },
+            unavailable: { label: { normal: "Die Brücke des KI-Clients antwortet nicht; starte den KI-Client neu, um erneut zu verbinden", beginner: "Dein KI-Client antwortet nicht. Starte ihn neu, um erneut zu verbinden." } },
+            incompatible: { label: { normal: "Der KI-Client nutzt Brückenversion {{gateway}}, diese Oberfläche Version {{shell}}; aktualisiere die ältere", beginner: "Dein KI-Client und diese App haben verschiedene Versionen. Aktualisiere die ältere." } },
             working: { label: { normal: "Agent aktiv: {{label}}", beginner: "Agent aktiv: {{label}}" } },
             idle: { label: { normal: "Agent inaktiv", beginner: "Agent inaktiv" } },
             statusLabel: { label: { normal: "Agent-Status", beginner: "Agent-Status" } },
@@ -173,70 +180,6 @@ export const agentUiLabel = registerUiTranslationBundles({
 //#endregion 🌐️Labels
 
 //#region 🔖️DiscoverConfig
-export type AgentBridgeConfig = { readonly url: string; readonly admissionProof: string };
-
-/** 🛰️ The loopback endpoint the local supervisor (the dev server's
- * `semioAgentBridgeRendezvousVitePlugin`) serves the live gateway's own offer on. Admission never
- * travels through an environment variable or a build-time define: the supervisor reads the
- * owner-only `~/.semio/agent/bridge/offers/<pid>.json` the gateway wrote and hands it over loopback,
- * on request. `404` is the ordinary "no gateway is offering a bridge" answer, never an error. */
-export const AGENT_BRIDGE_OFFER_ENDPOINT = "/__semio/agent-bridge";
-
-/** 🔓️ A bridge URL is admissible only when it is a loopback websocket that carries **no** credential
- * of its own: the proof travels in the websocket subprotocol ({@link bridgeProtocols}), so a URL with
- * a query string, a userinfo component or a non-loopback host is a poisoned offer and is refused
- * rather than dialled. */
-export function isAdmissibleBridgeUrl(url: string): boolean {
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return false;
-  }
-  if (parsed.protocol !== "ws:" && parsed.protocol !== "wss:") return false;
-  if (parsed.username !== "" || parsed.password !== "") return false;
-  if (parsed.search !== "" || parsed.hash !== "") return false;
-  return parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost" || parsed.hostname === "[::1]" || parsed.hostname === "::1";
-}
-
-/** 📨️ Reads one supervisor offer body into a config, or `null` when it is not one. Every field is
- * checked: a body that is not an object, a missing/empty proof and an inadmissible URL all answer
- * `null`, so a malformed or poisoned offer can never become a dialled socket. */
-export function parseAgentBridgeOffer(body: unknown): AgentBridgeConfig | null {
-  if (typeof body !== "object" || body === null) return null;
-  const offer = body as { url?: unknown; admissionProof?: unknown };
-  if (typeof offer.url !== "string" || typeof offer.admissionProof !== "string") return null;
-  if (offer.admissionProof.length === 0) return null;
-  if (!isAdmissibleBridgeUrl(offer.url)) return null;
-  return { url: offer.url, admissionProof: offer.admissionProof };
-}
-
-export type BridgeOfferFetch = (input: string, init?: { readonly cache?: RequestCache; readonly signal?: AbortSignal }) => Promise<{ readonly ok: boolean; readonly status: number; json: () => Promise<unknown> }>;
-
-/** 🔎️ Asks the local supervisor for the live gateway's offer. Never throws and never rejects: a
- * missing endpoint, a `404`, a non-JSON body and a refused offer are all the same ordinary `null`
- * ("no agent is offering a bridge right now"), because the shell must render identically whether or
- * not anybody ever launches an MCP gateway. */
-export async function fetchAgentBridgeConfig(endpoint: string = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl?: BridgeOfferFetch, signal?: AbortSignal): Promise<AgentBridgeConfig | null> {
-  const request = fetchImpl ?? (globalThis.fetch as unknown as BridgeOfferFetch | undefined);
-  if (!request) return null;
-  try {
-    const response = await request(endpoint, { cache: "no-store", signal });
-    if (!response.ok) return null;
-    return parseAgentBridgeOffer(await response.json());
-  } catch {
-    return null;
-  }
-}
-
-/** ⏱️ How often the shell re-asks the supervisor. While no offer is standing the interval doubles
- * from {@link BRIDGE_DISCOVERY_MIN_INTERVAL_MS} up to the max, so a shell that will never see an
- * agent settles at one cheap loopback GET every 30 s instead of a poll storm. The poll continues at
- * the max interval once an offer IS standing, because that is the only way a shell learns that the
- * gateway restarted on a different port with a different proof. */
-export const BRIDGE_DISCOVERY_MIN_INTERVAL_MS = 2000;
-export const BRIDGE_DISCOVERY_MAX_INTERVAL_MS = 30000;
-
 export type UseDiscoveredAgentBridgeConfigOptions = {
   readonly enabled?: boolean;
   readonly endpoint?: string;
@@ -264,12 +207,8 @@ export function useDiscoveredAgentBridgeConfig(options: UseDiscoveredAgentBridge
     const poll = async (): Promise<void> => {
       const discovered = await fetchAgentBridgeConfig(endpoint, fetchImplRef.current);
       if (disposed) return;
-      setConfig((current) => {
-        if (discovered === null) return current === null ? current : null;
-        if (current !== null && current.url === discovered.url && current.admissionProof === discovered.admissionProof) return current;
-        return discovered;
-      });
-      interval = discovered === null ? Math.min(interval * 2, BRIDGE_DISCOVERY_MAX_INTERVAL_MS) : BRIDGE_DISCOVERY_MAX_INTERVAL_MS;
+      setConfig((current) => (sameAgentBridgeOffer(current, discovered) ? current : discovered));
+      interval = nextBridgeDiscoveryIntervalMs(interval, discovered);
       if (!disposed) timer = setTimeout(() => void poll(), interval);
     };
 
@@ -283,10 +222,6 @@ export function useDiscoveredAgentBridgeConfig(options: UseDiscoveredAgentBridge
   return config;
 }
 
-/** 🔗️ Exact ordered websocket subprotocols keep admission out of URLs, logs, and referrers. */
-export function bridgeProtocols(config: AgentBridgeConfig): readonly ["semio.mcp.bridge.v1", string] {
-  return ["semio.mcp.bridge.v1", config.admissionProof];
-}
 //#endregion 🔖️DiscoverConfig
 
 //#region 🔖️DefaultState
@@ -396,7 +331,14 @@ export async function answerAgentAppCommand(request: AgentAppCommandRequest, han
 //#endregion 🔖️ArtifactRoute
 
 //#region 🔖️Hook
-export type AgentBridgeStatus = "disabled" | "connecting" | "open" | "reconnecting" | "closed";
+/** 🚦️ `unavailable` and `incompatible` are terminal for one offer: the gateway did not answer the
+ * handshake within {@link BRIDGE_HANDSHAKE_DEADLINE_MS} {@link BRIDGE_UNANSWERED_ATTEMPTS} times, or
+ * refused / welcomed with another bridge version. The shell then stops dialling that offer and waits
+ * for a different one (a restarted gateway publishes a new url and proof). */
+export type AgentBridgeStatus = "disabled" | "connecting" | "open" | "reconnecting" | "closed" | "unavailable" | "incompatible";
+
+/** 🤝️ The bridge versions an `incompatible` status names, so the notice can say which side is older. */
+export type AgentBridgeVersionMismatch = { readonly gateway: number; readonly shell: number };
 
 export type AgentBridgePresence = { readonly active: boolean; readonly label: string; readonly invocationId: string | null };
 const IDLE_PRESENCE: AgentBridgePresence = { active: false, label: "", invocationId: null };
@@ -476,6 +418,8 @@ export type UseAgentBridgeResult = {
   readonly pendingApprovals: readonly PendingAgentApproval[];
   readonly conversation: readonly AgentConversationEntry[];
   readonly lastError: string | null;
+  /** 🤝️ Both bridge versions while `status` is `incompatible`, otherwise `null`. */
+  readonly versionMismatch: AgentBridgeVersionMismatch | null;
   readonly dispatch: (command: ShellCommand) => ReduceResult;
   readonly resolveApproval: (approvalId: string, decision: ApprovalDecision, note?: string) => void;
   /** 💬️ Sends one human turn to the connected agent as a `ShellToGateway.agentMessage` frame and
@@ -492,6 +436,10 @@ export type UseAgentBridgeResult = {
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 30000;
 const PING_INTERVAL_MS = 20000;
+/** ⏳️ How long a dialled gateway has to answer `hello` with `welcome` or `refused`. */
+export const BRIDGE_HANDSHAKE_DEADLINE_MS = 8000;
+/** 🔢️ How many dials in a row may go unanswered before the offer is `unavailable`. */
+export const BRIDGE_UNANSWERED_ATTEMPTS = 3;
 
 /** 🌉️ Dials the ShellBridge WebSocket (the `config` given, or the live gateway offer
  * {@link useDiscoveredAgentBridgeConfig} keeps asking the local supervisor for), keeps a `ShellState`
@@ -532,6 +480,7 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
   const [pendingApprovals, setPendingApprovals] = useState<readonly PendingAgentApproval[]>([]);
   const [conversation, setConversation] = useState<readonly AgentConversationEntry[]>([]);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [versionMismatch, setVersionMismatch] = useState<AgentBridgeVersionMismatch | null>(null);
   const nextMessageOrdinalRef = useRef(1);
 
   const socketRef = useRef<WebSocket | null>(null);
@@ -609,12 +558,40 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
   );
 
   useEffect(() => {
+    setVersionMismatch(null);
+    reconnectAttemptRef.current = 0;
     if (!config) {
       setStatus("disabled");
       return;
     }
     const admittedConfig = config;
     let disposed = false;
+    let settled = false;
+    let welcomed = false;
+    let unanswered = 0;
+    let handshakeTimer: ReturnType<typeof setTimeout> | null = null;
+    const clearHandshakeTimer = () => {
+      if (handshakeTimer !== null) {
+        clearTimeout(handshakeTimer);
+        handshakeTimer = null;
+      }
+    };
+    const settle = (terminal: "unavailable" | "incompatible", mismatch: AgentBridgeVersionMismatch | null) => {
+      settled = true;
+      clearHandshakeTimer();
+      clearReconnectTimer();
+      clearPingTimer();
+      setVersionMismatch(mismatch);
+      setStatus(terminal);
+      const socket = socketRef.current;
+      socketRef.current = null;
+      if (socket) {
+        socket.onclose = null;
+        socket.onerror = null;
+        socket.onmessage = null;
+        socket.close();
+      }
+    };
 
     const clearReconnectTimer = () => {
       if (reconnectTimerRef.current !== null) {
@@ -630,7 +607,7 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
     };
 
     const scheduleReconnect = () => {
-      if (disposed) return;
+      if (disposed || settled) return;
       clearPingTimer();
       const attempt = reconnectAttemptRef.current + 1;
       reconnectAttemptRef.current = attempt;
@@ -642,7 +619,15 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
     const handleFrame = (frame: GatewayToShell) => {
       switch (frame.variant) {
         case "welcome": {
+          clearHandshakeTimer();
+          if (frame.bridgeVersion !== BRIDGE_VERSION) {
+            settle("incompatible", { gateway: frame.bridgeVersion, shell: BRIDGE_VERSION });
+            break;
+          }
+          welcomed = true;
+          unanswered = 0;
           reconnectAttemptRef.current = 0;
+          setVersionMismatch(null);
           setStatus("open");
           setLastError(null);
           send(buildShellStateFrame(shellStateRef.current));
@@ -705,6 +690,10 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
           setLastError(frame.reason || null);
           break;
         }
+        case "refused": {
+          settle(frame.reason === "version" ? "incompatible" : "unavailable", frame.reason === "version" ? { gateway: frame.gatewayVersion, shell: BRIDGE_VERSION } : null);
+          break;
+        }
         case "appCommand": {
           // 🗿️ The live artifact route. Decoding happens here so a malformed payload answers a
           // named `channel.not-wired` error on the SAME correlation id instead of being dropped —
@@ -723,7 +712,8 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
     };
 
     function connect(): void {
-      if (disposed) return;
+      if (disposed || settled) return;
+      welcomed = false;
       setStatus(reconnectAttemptRef.current > 0 ? "reconnecting" : "connecting");
       let socket: WebSocket;
       try {
@@ -735,10 +725,15 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
       }
       socket.binaryType = "arraybuffer";
       socketRef.current = socket;
+      clearHandshakeTimer();
+      handshakeTimer = setTimeout(() => {
+        handshakeTimer = null;
+        if (!welcomed && socketRef.current === socket) socket.close();
+      }, BRIDGE_HANDSHAKE_DEADLINE_MS);
 
       socket.onopen = () => {
         if (disposed) return;
-        send({ variant: "hello", bridgeVersion: 1, shellKind, shellSessionId, principalActor, flags });
+        send({ variant: "hello", bridgeVersion: BRIDGE_VERSION, shellKind, shellSessionId, principalActor, flags });
         pingTimerRef.current = setInterval(() => send({ variant: "ping" }), PING_INTERVAL_MS);
       };
       socket.onmessage = (event) => {
@@ -757,7 +752,14 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
       socket.onclose = () => {
         socketRef.current = null;
         clearPingTimer();
-        if (!disposed) scheduleReconnect();
+        clearHandshakeTimer();
+        if (disposed || settled) return;
+        if (!welcomed) unanswered += 1;
+        if (unanswered >= BRIDGE_UNANSWERED_ATTEMPTS) {
+          settle("unavailable", null);
+          return;
+        }
+        scheduleReconnect();
       };
     }
 
@@ -767,6 +769,7 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
       disposed = true;
       clearReconnectTimer();
       clearPingTimer();
+      clearHandshakeTimer();
       const socket = socketRef.current;
       socketRef.current = null;
       if (socket) {
@@ -793,6 +796,6 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
     send({ variant: "instances", entries: [...instances] });
   }, [instances, status, send]);
 
-  return { status, shellState, presence, pendingApprovals, conversation, lastError, dispatch, resolveApproval, sendAgentMessage, cancelToolCall };
+  return { status, shellState, presence, pendingApprovals, conversation, lastError, versionMismatch, dispatch, resolveApproval, sendAgentMessage, cancelToolCall };
 }
 //#endregion 🔖️Hook

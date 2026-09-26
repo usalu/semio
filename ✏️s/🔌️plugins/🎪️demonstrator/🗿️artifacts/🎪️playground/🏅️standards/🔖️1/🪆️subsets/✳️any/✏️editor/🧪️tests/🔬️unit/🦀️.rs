@@ -92,3 +92,11 @@ fn set_active_example_loads_the_demo_schema() {
     assert_eq!(emit.artifact_mutations, vec![PlaygroundMutation::ChangeSchema(crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema { new_schema: "playground.playground".into() })]);
     assert!(create_playground_editor().actions.iter().any(|action| action.id == "setActiveExample"));
 }
+
+/// 🎯️ LAW: the editor declares the artifact kind it edits (the artifact's own `artifact_kind()`), which is
+/// what the hub's one open-target rule (`app_opens_kind`, `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`)
+/// pairs with this editor and the viewer of its dialect — so a playground document can be created and opened as a hub document.
+#[semio_framework_async_macros::async_test]
+async fn the_editor_declares_the_artifact_kind_it_edits() {
+    assert_eq!(create_playground_editor().artifact_kinds, vec![crate::artifact_kind()]);
+}

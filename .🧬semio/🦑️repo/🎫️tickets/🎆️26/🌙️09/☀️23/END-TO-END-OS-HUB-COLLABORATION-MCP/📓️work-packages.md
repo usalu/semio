@@ -177,3 +177,115 @@ catalog A publish (2026-09-24 20:46, generation `ee491213…`).
 - 16:1x **WG8: native wgpu `hub-live-collaboration-check` 12/12 on 7800 catalog B** (exit 0, 209 s): native reserved-tool jobs stepped via one shared kernel constant, native document actor socket reactor, genesis-on-open, headless presence heartbeats, status/presence no longer re-render guest bodies, `hub_verb` drives. kernel store/sync 448/448 ×2, renderer 71/71, shard 69/69. Continues: wasm32 checks, async native open (20 s frame block), native app presence (cursors to React), genesis-on-open for wasm32/React, 13 Shell test-layout rows.
 - 16:3x S15: hub documents resolve plugin module by catalog generation (live on 8040, stale local staging no longer matters; draw/writer/note en+de create/open/edit/undo/redo), durable module store with re-verify + reinstall notice + cancel, kind picker fixed (id ≠ opener id), Space index: 2 shell causes fixed; space plugin never sets `space_id` → T12. Tests os 459/459, renderer 2055/2055, hub catalog 40/40, kernel 189/189. Routed: `DB I/O process aggregate credit exhausted` after ~20 docs (likely = C10's write limit) + kind labels "Editor" → H9; note second-window commands refused → C10 wake list. S15 watcher waits for 7800 rebuild.
 - 16:4x R8 round 3: normalization mapping rebuilt on current names + 3 engine bugs (69/69 at long), 13 tests restored from pre-21fbcd3538 corruption, census-parity → exhaustive, repo-lib quick 612/85/2 and long 691/1/7 (reds = restage + rename slice), rename-slice plan in report (648 discovery + layering ratchet 255 files/6,698 refs; register `🔬️unit`). Now: delete 48 stray tracked `.js` + dead configurable-descendant code, then park until the full publish.
+- ~18:0x all session-11 Opus executors cut by the account WEEKLY limit (resets 2026-10-01 11:00); ~19:30 desktop restart killed every process. 22:5x session 12 (new coordinator, same ticket) started; session 11 handed over (`📓️session-11-handover.md`) and launches nothing further.
+
+## Session 12 (Claude Code fleet, 2026-09-25 22:50)
+
+Rules: `📓️session-12-preamble.md`; fleet handles `📓️fleet-12-agents.md`; handover from session 11 `📓️session-11-handover.md`.
+Start state: every session-11 process died ~19:30 (desktop restart); W2's restage4 verified 60/60 at 18:56 and no guest source
+changed since; hub 7800 down. Session-11 executors had been cut ~18:0x by the account's weekly limit.
+
+- **W2** catalog B2 (9 packages, current tree) → 7800 fresh root → rest 25 → `--packages all` → 7800; request inbox; describe
+  consumes component-dev bytes (rebuild convergence); `build-s-react-release` + RB1.
+- **H9** item g live (≥ 500 edits + restart writable), per-kind localized labels, compiled-guest idle release, P2-2 live restart
+  on 3 backends, db in-process flake, all-features 375/375, Dockerfile cold build, hostile-input law over every route.
+- **C10** React genesis-on-open, second-window commands, collab-e2e 10/10 + STEP 14 on 7800 B2, inspector ≤ 2 s, same-field
+  conflict, shortage reconcile, collaborative undo/redo + permissions, zero-touch timed (after `--packages all`).
+- **G10** 4b browser half + presence badge live, live-agent-loop 23/23 en+de, suites on 7800 B2, per-package MCP coverage,
+  zero-touch user MCP setup proof.
+- **S15** full matrix on restage4 guests now, space index, hub-document sweep on B2 then all packages, UX leftovers.
+- **WG7** wasm32 wgpu two-browser collaboration (attach `schema-mismatch`, jco genesis), presence with React, agent/approval
+  parity, a11y.
+- **WG8** async native open, native presence ↔ React, B2 Live, 12-step gate on B2/all, wasm32 checks.
+- **T12** S15-routed guest fixes, space `space_id`, contract 0 high, per-plugin `test quick` ×34, lib-test debt.
+- **R8** typecheck ×all, ui-contract, unbailed root quick, repo-lib reds, workspace check; rename-slice plan refreshed.
+- **U5** Home ≥ 30 spaces live, Tasks window with a real job, German label sweep, customization persistence.
+- Audits (Sonnet): `📓️audit-s12-{os-frontend,hub,collaboration,ai-mcp,build-convergence}.md`.
+- Parked: Z2 (after `--packages all`), rename slice (after the final publish).
+
+### Session 12 coordinator routing (from audits)
+
+- 23:2x os-frontend audit (`📓️audit-s12-os-frontend.md`): stdio's 26 plugin-level kinds have no hub open target → **T12**
+  (editor apps declare their kinds; ABI-safe or patch set; W2 includes it before `--packages all` if landed). Plugin absent
+  from the local registry cannot install from the hub (`missing-registry`) → **S15** (registry = local build ∪ hub catalog).
+  P1-8 architect duplicate id and P2-11 approval after cancel are STALE (G10 session 11 items 12/13).
+- 23:3x collaboration audit (`📓️audit-s12-collaboration.md`): cross-shell React↔native co-edit never run → **WG8**; one kernel
+  suspend-not-retire primitive for native + wasm32 with a TS schema twin → **WG7**; two-browser collaboration matrix over every
+  hub-creatable kind (B2, then all) → **C10**. P0-1 (reconcile after shortage) and P0-3 (React genesis-on-open) = C10 items 6 and 1.
+- 23:4x hub audit (`📓️audit-s12-hub.md`): multi-document growth proof on the current binary, pg/neo4j creation + growth +
+  restart, backup/restore live drill → **H9**. P2-3 hub boot on Linux/Windows/devcontainer → **Z2** when it resumes (B4:
+  `semio-hub` winit backends on Linux).
+- 23:5x build-convergence audit (`📓️audit-s12-build-convergence.md`): back-to-back describe→materialize in one hold converged
+  in ~40 min vs 5 h 32 m when split; Nx hit ratio 0–3 %. → **W2**: raise rest-warm parallelism by measured memory headroom
+  (now), `rebuild-all` takes one exclusive lock for the whole chain (repo-library primitive) + one end-to-end run, supervised
+  7800 restart on existing state, ElemSection check (report only). → **R8**: dependency-closure Nx `inputs` (prepared now,
+  landed after `--packages all`).
+- 00:0x MCP audit (`📓️audit-s12-ai-mcp.md`): catalog-wide empty capability descriptions + `capability-audit-check` not re-run
+  for three sessions → NEW slice **D1** (wp-d1, Opus): schema-required en+de descriptions for every verb, census law, audit to 0.
+  Prompt-injection surface (document text forwarded verbatim in tool results) → **G10** (declared untrusted-data envelope +
+  adversarial fixture). Revocation leaves a minted agent session alive up to 1 h → **H9** (next-request revocation + socket close).
+
+### Post-`--packages all` landing window (session 12, compile-atomic, each by its owner, recorded in `📓️landing.md`)
+
+- T12: stdio open targets as ONE patch set (kind ids `s.stdio.<x>` for csv/json×2/xml×2/md + editor declarations + fence
+  `local-stdio-gis-open-v1` + census law).
+- R8: `wp-r8/ui-retirement-item-metered.py` (UiFixedList meters its emptied backing as items; ui-contract 197/197, ui-runtime
+  125/125 in a scratch workspace); `wp-r8/nx-narrowed-inputs.py` (a `!{workspaceRoot}/…` negation made every task hash ~73k
+  files; HashPlanInspector: one-plugin edit invalidated 59 plugins → median 4; stdio edit → exactly its 51 dependents).
+- W2: `rebuild-all` one exclusive lock for the whole chain + end-to-end run; supervised 7800 restart on existing state.
+- D1: `wp-d1/d1-frozen.py --apply` (gis/stdio/vcs capability descriptions + flags; dry run clean), then `cargo check` + describe
+  gis/stdio/vcs/demonstrator; projected 0 audit findings, 0 description findings, `search::long` 4/4.
+- H10: owned-interpreter speedup in `semio-framework-plugin-host` (fuel-identical, wasmtime + trust-record oracle) and hardware
+  SHA-256 in `semio-framework-hash` (digest-identical, runtime-detected) — both recompile framework dependents.
+- H10: codec calls construct only the owning app (SDK `plugin_artifact_codec_app`; puzzle.3d pack-schema-hash 830 M instr today).
+- P8: agent lane ≡ shell lane (SDK `preview_addressed_action` runs the retained work inline) + dead-command migrations.
+  FIRST in the window: P8 test-only leftovers (flow law placeholder `probes.len()==0`, temporary `p8_scratch_flow_probe_dump`).
+- F1/U5/C10/S15 host (TS) fixes are live already; guest/framework-wasm fixes (F1 label cache, T12, P8, D1) need the restage.
+- F1: typed text coalesces into one amendable ledger edit in EVERY TextEditor-based editor (jack stopped saving at the 65th
+  keystroke; vcs same; writer already amends) + insert_text caret model; `wp-f1/patches/`.
+- W2: `VersionReq` in `semio-framework` admits only exact pins + the 22 extension `*`/`^` declarations + an emitter refusal.
+- T12: prepared patches in `📓️wp-t12.md` §S12-4 item 5 (fem3d, outline row ids, example-geometry, energy, kit pack twin, brep, txt
+  oracle refusal, `postpublish-open-kinds.py`) + re-run the 28 stale-descriptor `test quick`s.
+- F1: `wp-f1/patches/typing-coalescing/apply.py` (jack coalesce key, vcs amend, SDK `typing_run()` fixture, ≥ 1000-char laws).
+- U5: `wp-u5/patches/u5-preference-lane-apply.py` (Rust twin + hub command/page/policy for cross-device preferences).
+- WG7: `wp-wg7/s12-link-expiry-patch.py` (cuts > ~31.5 s expired the link). H9: `wp-h9/codemods/creation-progress/`.
+- C10 → guest store: `flush_apply_outbound` never drains `pending_report.outbound`, so the next flush re-announces an Accepted
+  op and the hub rejects writer typing (blocks collab-e2e STEPs 4/8/11/12/13) — needs a patch + law (owner: C10 on resume).
+- H10: Linux `winit` backends for ui `wgpu-engine` (`wp-h10/patches/linux-winit-backends.py`; = Z2 B4).
+- NEW SLICES after the window: (a) content-addressed composed-child ids (`hash::content_id`, sha256/16 hex) replacing
+  `DefaultHasher` at ~18 minting sites + regenerate 661 carriers + law (T12 F9); (b) 18 cases whose differential rows never run
+  (7 missing `adapter()`, 11 missing TS adapters) + contract rule (T12 F10); (c) the kernel derive macro reads a narrow generated
+  input instead of the whole taxonomy/nx/project.json (W2); (d) rename slice (R8 plan); (e) Z2 cross-platform + devcontainer.
+- Then ONE consolidated describe → generate → check → restage s → verify (W2) + the next catalog publish.
+- ~01:40 the account's 5-hour usage limit cut all 12 Opus executors (reset 03:40). W2's detached chain survived: B2 lanes
+  done 02:14 (8 packages, 10709 s; stdio earlier), os-hub built 02:17, **catalog B2 published 03:18** (`.🧬semio/🌐hub/w2-catalog-b2`,
+  3689 s), REST lanes (25 packages) running since 03:18. 7800 was NOT started (W2 was cut first). 03:4x all 12 resumed by
+  SendMessage; W2's first task: 7800 on B2. Landed before the cut: S15 matrix en 75/75, de 75/75, viewers 70/70 (trinity
+  root = GraphWasmCanvas continuous repaint, host-side); U5 focused-program tools + ToolRun in `s`; C10 React presence ×3 + Share
+  dead-wire fix + second-window commands; G10 untrusted-content envelope + 69/71 artifact_create coverage; WG8 async native
+  open + native presence; WG7 jco genesis twin + shared link primitive; D1 done (782 descriptions). New slices: P8 (handler
+  correctness + BatchOnly migration), F1 (frontend runtime performance).
+- 03:59 **hub 7800 READY on catalog B2** (generation `f485bf7e…e2e1`, 9 packages, 16 creatable kinds incl. T12's 4 wfc kinds;
+  binary `.🧬semio/🌐hub/s12-w2-bin/os-hub-s12-w2-hub-7800-b2`, fresh root `s12-w2-hub-7800-b2`, supervised hold NI 0). Relayed to
+  C10, G10, S15, WG7, WG8, U5, H9. Boot took 16.7 min (codec interpretation at ~10 % CPU under load) → H9 (cached compiled
+  artifacts, lazy codecs, `/readyz` progress). WG8 blocker (catalog block sha ≠ local builds) → **decision**: the native shell
+  resolves a hub document's plugin module from the hub catalog like React (one resolver for native + wasm32), no local materialize.
+- 04:4x 7800 open-plan probe 16/16 PASS (RSS 669 MB after 16 creations; first creation per package 229–422 s under load).
+  Hub queue split: NEW slice **H10** (wp-h10, Opus) = hub performance + operations (compiled-guest pipeline cached across
+  boots/first uses + residency bound, session mint 8.5 s, Dockerfile cold build, hostile-input law, backup drill); **H9** keeps
+  correctness (growth + pg/neo4j, directory fanout race from C10, 2d.puzzle creation stuck in "accepted" from S15, revocation,
+  labels, db flake). C10: collab-e2e STEP 1+2 PASS on 7800; reconcile after a 15 s cut PASS live (de).
+- 05:23 W2 REST lanes 25/25 (7499 s); 05:29 `--packages all` publish started → `.🧬semio/🌐hub/w2-catalog-all` (T12 items 20 trinity
+  rewriting kind + 22 note args are in the tree). 7800 stays on B2 until the coordinator confirms H9 (reader-writer authority
+  gates) + H10 (residency by capacity) for the restart binary. G10 4b GREEN on 7800 (en 8/8, de 8/8; agent shown as agent).
+  S15 registry union live; F1 jack keydown→paint 217 → 11 ms, gismap paint 354 → 23 ms.
+- ~06:40 second 5-hour usage cut of all executors (reset 08:40). While down: `--packages all` publish FAILED 06:34 (rc=1, 3856 s)
+  — `trusted descriptor dependency is not exact and bounded`: demonstrator's manifest declares cad/gis/procedural/process/puzzle/
+  sourcing with `version: "*"`. WG7's short-lane renderer release rc=0 (05:59). 08:4x all resumed; W2: exact-pin dependency type
+  (no wildcard possible), fail-fast descriptor validation before any build/probe, describe demonstrator, re-run `--packages all`.
+  HARD guest freeze (rule 20) stays until the re-run is DONE. 7800 still READY on B2.
+- 09:0x–11:2x: 7800 creation/exec-target 503s root = routes hashing whole 5–24 MB assets under an 8 s deadline → S15 streamed
+  them (8040: 62/108 × 503 → 0/108). F1 done (146/146 programs idle at 0 fps; typing laws; jack 217 → 11 ms). T12 done (patches
+  prepared; F9 DefaultHasher ids, F10 dead differential rows). C10 paused at 4/14 collab-e2e on 7800 (load 57–62; guest store
+  re-announce blocks typing steps). W2 publish 2 restarted closure builds twice (root Cargo.toml profile edit 04:34 → new unit
+  identity; taxonomy.json 10:44 → kernel via derive macro): rule 21. H10: cold boot 484 → 154 s, warm restart 14.5 s.

@@ -110,9 +110,13 @@ async fn settle(app: &mut JackTestApp) -> artifact_app_laws::TypedOperationFixtu
 }
 
 fn jack_envelope_wire() -> Vec<u8> {
+    jack_envelope_wire_of(crate::empty_trinity_graph_fixture())
+}
+
+/// 📦️ The exact envelope wire a host hands the guest for `snapshot` (initial snapshot, no edits).
+fn jack_envelope_wire_of(snapshot: crate::JackSnapshot) -> Vec<u8> {
     use store::ArtifactPack;
 
-    let snapshot = crate::empty_trinity_graph_fixture();
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = pack::json_to_string(&pack::json!({
@@ -714,6 +718,91 @@ async fn patch_nodes_from_the_rail_renames_the_selection_or_the_listed_nodes() {
     assert_eq!(renamed(&app, &first), "S15 Selected");
     dispatch_rail(&mut app, "patchNodes", &[("nodeIds", &format!("{first}, {second}")), ("field", "name"), ("value", "S15 Listed")]).await.expect("a comma list names both nodes");
     assert_eq!((renamed(&app, &first), renamed(&app, &second)), ("S15 Listed".to_string(), "S15 Listed".to_string()));
+}
+
+/// ⏪️ LAW: a rail `patchNodes` is one undoable edit of the local user, whether it renames one node or the whole
+/// selection — undo restores every renamed node and redo renames them again (S15, session 12: after `selectAll` the
+/// row had no ↶ and undo left the document renamed).
+#[semio_framework_async_macros::async_test]
+async fn a_rail_patch_nodes_is_undone_and_redone_as_one_local_edit() {
+    for selected in [1usize, 2] {
+        let mut app = new_app().await;
+        let ids: Vec<String> = (0..selected).map(|index| node_id_at(&app, index)).collect();
+        let names = |app: &JackTestApp| app.snapshot().expect("projection").nodes().into_iter().filter(|node| ids.contains(&node.id)).map(|node| node.name).collect::<Vec<_>>();
+        let before = names(&app);
+        select_ast(&mut app, &ids.iter().map(String::as_str).collect::<Vec<_>>()).await;
+        dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 Undo")]).await.expect("patch the selection");
+        assert_eq!(names(&app), vec!["S15 Undo".to_string(); selected], "{selected} selected");
+        artifact_app_laws::settle_history_verb(&mut app.app, "undo", JACK_TEST_INSTANCE).await;
+        assert_eq!(names(&app), before, "undo restores all {selected} renamed nodes");
+        artifact_app_laws::settle_history_verb(&mut app.app, "redo", JACK_TEST_INSTANCE).await;
+        assert_eq!(names(&app), vec!["S15 Undo".to_string(); selected], "redo renames all {selected} again");
+    }
+}
+
+/// 🕹️ Presses one argument-less framework verb (`selectAll`, `clearSelection`, `undo`, `redo`) the whole way a shell
+/// does: admission, its reserved job, then the typed publication.
+async fn framework_verb(app: &mut JackTestApp, action: &str) {
+    let admitted = app.app.handle_action(action, None, &meta("local")).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("{action} reserved job: {fault:?}"));
+    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+}
+
+/// ⏪️ LAW: the shell's own round trip — `selectAll`, `patchNodes` with an empty `nodeIds`, a neutral
+/// `clearSelection`, then undo and redo — renames every node, restores every name, and renames them again.
+#[semio_framework_async_macros::async_test]
+async fn the_shells_select_all_patch_undo_redo_round_trip_restores_every_node() {
+    let mut app = new_app().await;
+    let names = |app: &JackTestApp| app.snapshot().expect("projection").nodes().into_iter().map(|node| node.name).collect::<Vec<_>>();
+    let before = names(&app);
+    framework_verb(&mut app, "selectAll").await;
+    dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 All")]).await.expect("patch the whole selection");
+    let patched = names(&app);
+    assert!(patched.iter().all(|name| name == "S15 All"), "every selected node renamed: {patched:?}");
+    framework_verb(&mut app, "clearSelection").await;
+    framework_verb(&mut app, "undo").await;
+    assert_eq!(names(&app), before, "undo restores every node");
+    framework_verb(&mut app, "redo").await;
+    assert_eq!(names(&app), patched, "redo renames them again");
+}
+
+/// ⏪️ LAW: after the host LOADS the curated example (envelope ingress, swapped store), the shell's `selectAll` →
+/// `patchNodes` → `clearSelection` → undo → redo round trip still treats the rename as the local user's edit.
+#[semio_framework_async_macros::async_test]
+async fn a_loaded_example_keeps_the_local_users_patch_undoable() {
+    let mut app = new_app().await;
+    let example = <crate::JackSnapshot as store::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_FIXTURE_DSL).expect("curated example parses");
+    let handle = admit_jack_envelope(&mut app, &jack_envelope_wire_of(example));
+    assert_eq!(drive_jack_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert!(app.acknowledge_artifact_store_replacement(handle).expect("exact load acknowledgement"));
+    let names = |app: &JackTestApp| app.snapshot().expect("projection").nodes().into_iter().map(|node| node.name).collect::<Vec<_>>();
+    let before = names(&app);
+    assert!(!before.is_empty(), "the curated example has nodes");
+    framework_verb(&mut app, "selectAll").await;
+    dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 Loaded")]).await.expect("patch the whole selection");
+    let patched = names(&app);
+    assert!(patched.iter().all(|name| name == "S15 Loaded"), "every selected node renamed: {patched:?}");
+    framework_verb(&mut app, "clearSelection").await;
+    framework_verb(&mut app, "undo").await;
+    assert_eq!(names(&app), before, "undo restores every node of the loaded example");
+    framework_verb(&mut app, "redo").await;
+    assert_eq!(names(&app), patched, "redo renames them again");
+}
+
+/// 🧹️ LAW: `clearSelection` on a graph with nothing selected settles like any other turn and leaves the program's
+/// dispatch lane free — the next verb and undo run (S15, session 12: the empty clear never settled and held every
+/// later undo, Cmd+Z and patchNodes).
+#[semio_framework_async_macros::async_test]
+async fn clear_selection_on_an_empty_selection_settles_and_frees_the_lane() {
+    let mut app = new_app().await;
+    framework_verb(&mut app, "clearSelection").await;
+    let first = node_id_at(&app, 0);
+    dispatch_rail(&mut app, "patchNodes", &[("nodeIds", &first), ("field", "name"), ("value", "S15 After Clear")]).await.expect("the lane is free after an empty clear");
+    let name = |app: &JackTestApp| app.snapshot().expect("projection").nodes().into_iter().find(|node| node.id == first).map(|node| node.name).expect("node");
+    assert_eq!(name(&app), "S15 After Clear");
+    framework_verb(&mut app, "clearSelection").await;
+    framework_verb(&mut app, "undo").await;
+    assert_ne!(name(&app), "S15 After Clear", "undo after a clear still reaches the edit");
 }
 
 /// ⚖️ LAW: a `patchNodes` that cannot move the document is refused by name — an unknown id is

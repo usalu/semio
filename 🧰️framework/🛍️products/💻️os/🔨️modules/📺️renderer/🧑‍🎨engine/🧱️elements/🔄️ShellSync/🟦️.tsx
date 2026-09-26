@@ -183,7 +183,7 @@ export type HubSessionPresenceV1 = "signedIn" | "signedOut" | "none";
 export type HubLinkV1 = "verifying" | "reachable" | "unreachable";
 
 /** 📶️ What the always-visible chrome badge reports about the hub link as a whole. */
-export type HubConnectionIndicatorStateV1 = "local" | "signedOut" | "live" | "online" | "connecting" | "reconnecting" | "offline";
+export type HubConnectionIndicatorStateV1 = "local" | "signedOut" | "live" | "online" | "connecting" | "reconnecting";
 
 /** 📶️ The aggregate a single badge can honestly show for however many documents are attached. */
 export interface HubConnectionSummaryV1 {
@@ -199,7 +199,8 @@ export interface HubConnectionSummaryV1 {
  * state first. No hub configured is `local`; no session is `signedOut`, because no transport state means
  * anything without one. A live document means the hub answers right now, so `live` wins over everything
  * else; an unreachable session link is a shortage in progress (`reconnecting`), which outranks a document
- * still dialling; a verified, reachable link with no live document is `online`; nothing at all is `offline`.
+ * still dialling; a verified, reachable link with no live document is `online`. The three link states are exhaustive, so
+ * there is no further "offline" state (the hub projection schema's twin, `🧬️schema/🔗️hub-projection`, dropped it too).
  * Pure — the indicator below is the only place this is rendered. */
 export function hubConnectionSummaryV1(statuses: readonly ArtifactSyncStatus[], session: HubSessionPresenceV1, link: HubLinkV1): HubConnectionSummaryV1 {
   const documentCount = statuses.length;
@@ -210,8 +211,7 @@ export function hubConnectionSummaryV1(statuses: readonly ArtifactSyncStatus[], 
   if (link === "unreachable") return { state: "reconnecting", peerCount: 0, documentCount };
   if (link === "verifying" || statuses.some((status) => status.remote.kind === "connecting")) return { state: "connecting", peerCount: 0, documentCount };
   if (statuses.some((status) => status.remote.kind === "backoff")) return { state: "reconnecting", peerCount: 0, documentCount };
-  if (link === "reachable") return { state: "online", peerCount: 0, documentCount };
-  return { state: "offline", peerCount: 0, documentCount };
+  return { state: "online", peerCount: 0, documentCount };
 }
 
 /** 🎨️ One icon per state — the badge carries icon AND text, never colour alone, so it survives a
@@ -223,7 +223,6 @@ const HUB_CONNECTION_ICON: Readonly<Record<HubConnectionIndicatorStateV1, IconNa
   online: "cloud",
   connecting: "loader-2",
   reconnecting: "rotate-ccw",
-  offline: "link-2-off",
 };
 
 const HUB_CONNECTION_TONE: Readonly<Record<HubConnectionIndicatorStateV1, string>> = {
@@ -233,7 +232,6 @@ const HUB_CONNECTION_TONE: Readonly<Record<HubConnectionIndicatorStateV1, string
   online: "text-emphasized",
   connecting: "text-muted-foreground",
   reconnecting: "text-amber-400",
-  offline: "text-muted-foreground",
 };
 
 export interface HubConnectionIndicatorProps {
@@ -264,7 +262,6 @@ export function HubConnectionIndicator({ statuses, session, link, onSignIn }: Hu
     online: useLabel("ui.sync.online"),
     connecting: useLabel("ui.sync.connecting"),
     reconnecting: useLabel("ui.sync.reconnecting"),
-    offline: useLabel("ui.sync.offline"),
   };
   const text = summary.state === "live" ? `${stateText.live} · ${summary.peerCount === 1 ? peerOne : peerMany}` : stateText[summary.state];
   return (

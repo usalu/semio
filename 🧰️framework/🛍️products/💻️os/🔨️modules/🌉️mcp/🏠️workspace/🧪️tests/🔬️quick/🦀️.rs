@@ -337,18 +337,65 @@ fn unbound_plugin_artifacts() -> Arc<Mutex<HashMap<String, PluginArtifactBinding
 fn a_routed_channel_resolves_the_artifact_its_plugin_session_document_is() {
     let bound = unbound_plugin_artifacts();
     let router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), Arc::clone(&bound));
-    assert_eq!(router.session_artifact_for("note"), None, "nothing bound yet");
+    let note = AppRoute { plugin_id: "note".to_string(), app_id: Some("note.editor".to_string()) };
+    let cad = AppRoute { plugin_id: "cad".to_string(), app_id: Some("cad.editor".to_string()) };
+    assert_eq!(router.session_artifact_for(&note), None, "nothing bound yet");
     bound
         .lock()
         .expect("binding map")
-        .insert("journey-note-typed".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)) });
-    assert_eq!(router.session_artifact_for("note").as_deref(), Some("journey-note-typed"));
-    assert_eq!(router.session_artifact_for("cad"), None, "a plugin with no bound artifact stays unnamed");
+        .insert("journey-note-typed".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default() });
+    assert_eq!(router.session_artifact_for(&note).as_deref(), Some("journey-note-typed"));
+    assert_eq!(router.session_artifact_for(&cad), None, "a plugin with no bound artifact stays unnamed");
+    assert_eq!(router.session_artifact_for(&AppRoute { plugin_id: "note".to_string(), app_id: Some("note.viewer".to_string()) }), None, "an artifact of one app is never another app's session document");
     bound
         .lock()
         .expect("binding map")
-        .insert("journey-note-second".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)) });
-    assert_eq!(router.session_artifact_for("note"), None, "two artifacts on one plugin: no single stamp could name either truthfully");
+        .insert("journey-note-second".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default() });
+    assert_eq!(router.session_artifact_for(&note), None, "two artifacts on one app: no single stamp could name either truthfully");
+}
+
+/// 🪪️ A plugin with several apps (block 2d/3d/5d, wfc bitmap/grid*) routes every verb to an
+/// instance of the verb's OWN app: one slot per app plus the plugin's default route, each decoding
+/// back to exactly the route it encodes. Before this, every verb of a plugin reached the instance
+/// of its first editor app, and `block3d`'s verbs answered `action app owner … does not match
+/// s.block.block2d@1/*#editor` (measured 2026-09-26, `wp-g10` coverage run 2).
+#[test]
+fn every_app_of_a_multi_app_plugin_routes_to_its_own_instance_slot() {
+    let capability = |id: &str, app_id: Option<&str>| crate::catalog::CapabilityDefinition {
+        id: crate::catalog::CapabilityRef(id.to_string()),
+        version: 1,
+        owner: CapabilityOwner::Plugin { plugin_id: "block".to_string(), label: None, app_id: app_id.map(str::to_string), window_kind_id: None, mode_id: None },
+        kind: crate::catalog::CapabilityKind::Mutation,
+        audience: crate::catalog::CapabilityAudience::Agent,
+        title: id.to_string(),
+        description: "test".to_string(),
+        artifact_kind: None,
+        use_when: Vec::new(),
+        input_schema: serde_json::json!({ "type": "object" }),
+        output_schema: serde_json::json!({ "type": "object" }),
+        effects: Default::default(),
+        policy: Default::default(),
+        execution: Default::default(),
+        exposure: crate::catalog::ToolExposure::CatalogOnly,
+        presentation: crate::catalog::CapabilityPresentation { icon_id: None, category: None, keys: None, in_palette: false, args: Vec::new() },
+        examples: Vec::new(),
+        source: crate::catalog::CapabilitySource::Gateway,
+    };
+    let mut entries = vec![
+        capability("block.s.block.block2d@1/*#editor.addHandle", Some("s.block.block2d@1/*#editor")),
+        capability("block.s.block.block3d@1/*#editor.addVortex", Some("s.block.block3d@1/*#editor")),
+        capability("block.s.block.block5d@1/*#editor.addGrip", Some("s.block.block5d@1/*#editor")),
+        capability("block.importLibrary", None),
+    ];
+    entries.sort_by(|left, right| left.id.as_str().cmp(right.id.as_str()));
+    let catalog = Catalog { hash: "multi-app".to_string(), entries };
+    assert_eq!(distinct_routes(&catalog).len(), 4, "three apps plus the plugin's default route");
+    let slots: Vec<u32> = ["block.s.block.block2d@1/*#editor.addHandle", "block.s.block.block3d@1/*#editor.addVortex", "block.s.block.block5d@1/*#editor.addGrip", "block.importLibrary"].iter().map(|id| capability_instance_slot(&catalog, id).expect("a plugin capability has a slot")).collect();
+    assert_eq!(slots.iter().collect::<std::collections::BTreeSet<_>>().len(), 4, "every app and the plugin scope own a distinct slot: {slots:?}");
+    assert_eq!(route_for_slot(&catalog, slots[1]), Some(AppRoute { plugin_id: "block".to_string(), app_id: Some("s.block.block3d@1/*#editor".to_string()) }));
+    assert_eq!(route_for_slot(&catalog, slots[3]), Some(AppRoute { plugin_id: "block".to_string(), app_id: None }), "a plugin-scope verb runs on the plugin's default route");
+    assert_eq!(plugin_instance_slot(&catalog, "block"), Some(slots[3]));
+    assert_eq!(app_instance_slot(&catalog, "block", "s.block.block5d@1/*#editor"), Some(slots[2]), "a bound artifact's app finds the slot its verbs use");
 }
 
 #[test]
@@ -404,22 +451,32 @@ fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_ope
             return;
         }
     }
-    let catalog = note_and_cad_catalog();
-    let note_instance = plugin_instance_slot(&catalog, "note").expect("note is in the fixture catalog");
-    let cad_instance = plugin_instance_slot(&catalog, "cad").expect("cad is in the fixture catalog");
-    let mut router = RoutingArtifactChannel::new(catalog, Some(crate::workspace::PluginComponentSource::Repo(repo_root)), "agent:routing-test#sess".to_string(), unbound_plugin_artifacts());
+    let descriptors = ["note", "cad"].map(|plugin_id| load_package_descriptor(&find_plugin_entry(&registry, plugin_id).expect("registered above").owner_root).expect("committed descriptor"));
+    let catalog = Arc::new(crate::compile(&crate::CatalogSource { descriptors: descriptors.to_vec(), ..Default::default() }, semio_framework::Locale::En, semio_framework::Terminology::Native).expect("the real note+cad descriptors compile"));
+    let first_app_verb = |plugin_id: &str| {
+        catalog
+            .entries
+            .iter()
+            .find(|entry| matches!(&entry.owner, CapabilityOwner::Plugin { plugin_id: owner, app_id: Some(_), .. } if owner == plugin_id) && entry.kind == crate::catalog::CapabilityKind::Mutation)
+            .map(|entry| entry.id.as_str().to_string())
+            .expect("the plugin declares an app mutation")
+    };
+    let (note_verb, cad_verb) = (first_app_verb("note"), first_app_verb("cad"));
+    let note_instance = capability_instance_slot(&catalog, &note_verb).expect("note's verb has a route slot");
+    let cad_instance = capability_instance_slot(&catalog, &cad_verb).expect("cad's verb has a route slot");
+    let mut router = RoutingArtifactChannel::new(Arc::clone(&catalog), Some(crate::workspace::PluginComponentSource::Repo(repo_root)), "agent:routing-test#sess".to_string(), unbound_plugin_artifacts());
 
-    let note_result = router.exchange(note_instance, vec![AppCommand::PureCommand { capability_id: "note.editor.setGridVisible".to_string(), input: serde_json::json!({}) }]);
-    assert_ne!(note_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "note.editor.setGridVisible must route to a real note channel: {note_result:?}");
+    let note_result = router.exchange(note_instance, vec![AppCommand::PureCommand { capability_id: note_verb.clone(), input: serde_json::json!({}) }]);
+    assert_ne!(note_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "{note_verb} must route to a real note channel: {note_result:?}");
 
-    let cad_result = router.exchange(cad_instance, vec![AppCommand::PureCommand { capability_id: "cad.editor.addObject".to_string(), input: serde_json::json!({}) }]);
-    assert_ne!(cad_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "cad.editor.addObject must route to a real cad channel: {cad_result:?}");
+    let cad_result = router.exchange(cad_instance, vec![AppCommand::PureCommand { capability_id: cad_verb.clone(), input: serde_json::json!({}) }]);
+    assert_ne!(cad_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "{cad_verb} must route to a real cad channel: {cad_result:?}");
 
     // 🔁️ Re-exchange against `note` via `ReadHistory`, which carries no capability id at all —
-    // proving `plugin_for_instance_slot` decodes the SAME plugin the earlier `PureCommand` did,
-    // and that this second call reuses the cached channel rather than opening a second one.
+    // proving `route_for_slot` decodes the SAME app the earlier `PureCommand` did, and that this
+    // second call reuses the cached channel rather than opening a second one.
     let _ = router.exchange(note_instance, vec![AppCommand::ReadHistory]);
-    assert_eq!(router.channels.lock().expect("cache lock").len(), 2, "exactly one cached channel per distinct plugin routed to (note, cad), never one per call");
+    assert_eq!(router.channels.lock().expect("cache lock").len(), 2, "exactly one cached channel per distinct app routed to (note, cad), never one per call");
 }
 
 #[test]
@@ -517,7 +574,8 @@ fn only_a_backbone_effect_addressed_at_this_channel_is_document_egress() {
 fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() {
     let bound = unbound_plugin_artifacts();
     let router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), Arc::clone(&bound));
-    let unbound = router.relay_backbone_egress("note", vec![vec![1, 2, 3]]).expect_err("no bound document at all");
+    let note = AppRoute { plugin_id: "note".to_string(), app_id: Some("note.editor".to_string()) };
+    let unbound = router.relay_backbone_egress(&note, vec![vec![1, 2, 3]]).expect_err("no bound document at all");
     assert_eq!(unbound.code, "channel.not-wired");
     assert!(unbound.message.contains("has bound no document to it"), "{}", unbound.message);
     bound.lock().expect("binding map").insert(
@@ -531,9 +589,10 @@ fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() 
             backbone: None,
             backbone_blocked_by: Some("no `store::ArtifactCodec` is registered for artifact schema `s.note.note`".to_string()),
             relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)),
+            relay: Arc::default(),
         },
     );
-    let blocked = router.relay_backbone_egress("note", vec![vec![1, 2, 3]]).expect_err("bound, but no document actor");
+    let blocked = router.relay_backbone_egress(&note, vec![vec![1, 2, 3]]).expect_err("bound, but no document actor");
     assert_eq!(blocked.code, "channel.not-wired");
     assert!(blocked.message.contains("hub-note") && blocked.message.contains("no `store::ArtifactCodec` is registered"), "the fault carries the binding's own recorded reason: {}", blocked.message);
 }
@@ -702,4 +761,34 @@ fn isolated_compile_worker_entry() {
         eprintln!("{error}");
     }
     std::process::exit(i32::from(result.is_err()));
+}
+
+/// 📮️ A hub commit is acknowledged only by a status the document actor reports AFTER the relay: a live
+/// link, nothing pending and an acknowledged head. A stale acknowledgement from before the relay, a
+/// link in backoff and a link that expired all answer `acknowledged: false` with the link state and
+/// the last coded fault, so `action_invoke` says `relay-pending` instead of an unqualified success.
+/// Measured 2026-09-26 on hub 7800: 1 of 3 agent commits answered SUCCEEDED while the hub head never moved.
+#[test]
+fn a_hub_commit_is_acknowledged_only_by_a_live_status_reported_after_its_relay() {
+    let head = semio_framework_os_kernel::os_directory::EditedArtifactFrontierV1 { document_id: "doc".to_string(), head_edit_ordinal: 1, head_edit_id: "edit".to_string(), last_commit_seq: 1, chain_sha256: "0".repeat(64) };
+    let live = |pending: usize, acknowledged: bool| store::sync::ArtifactSyncStatus { persisted: true, pending_mutations: pending, remote: store::sync::RemoteState::Live { peer_count: 1 }, acknowledged_head: acknowledged.then(|| head.clone()) };
+    let relay = HubRelay::default();
+    relay.record(Some(live(0, true)), None);
+    let since = relay.version();
+    let stale = relay.await_acknowledged(since, 20);
+    assert!(!stale.acknowledged, "an acknowledgement from before the relay does not cover it: {stale:?}");
+    relay.record(Some(live(1, false)), None);
+    assert!(!relay.await_acknowledged(since, 20).acknowledged, "a pending mutation is not acknowledged");
+    relay.record(Some(store::sync::ArtifactSyncStatus { persisted: true, pending_mutations: 1, remote: store::sync::RemoteState::Backoff { retry_in_ms: 4_000 }, acknowledged_head: None }), Some("document.link.expired: the link to the hub expired".to_string()));
+    let backoff = relay.await_acknowledged(since, 20);
+    assert!(!backoff.acknowledged && backoff.detail.contains("backoff") && backoff.detail.contains("document.link.expired"), "{backoff:?}");
+    let waiter = std::thread::scope(|scope| {
+        let handle = scope.spawn(|| relay.await_acknowledged(since, 5_000));
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        relay.record(Some(live(0, true)), None);
+        handle.join().expect("waiter")
+    });
+    assert!(waiter.acknowledged, "a later live, fully acknowledged status wakes the waiting commit: {waiter:?}");
+    assert_eq!(relay.report()["remote"], "live");
+    assert_eq!(relay.report()["lastFault"], "document.link.expired: the link to the hub expired");
 }

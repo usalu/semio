@@ -31,10 +31,22 @@
     "leaseTtlMs": 15000,
     "hoveredPath": "two-client/probe"
   },
+  "agent": {
+    "agentLabel": "Two Client Agent",
+    "audience": "edit",
+    "ttlSecs": 3600,
+    "agentInstanceId": "mcp.e2e.two-client",
+    "revocationWithinMs": 5000,
+    "closeCode": 4401,
+    "refusedStatus": 401,
+    "reexchangeStatus": 403,
+    "reexchangeError": "delegation-revoked"
+  },
   "shutdown": {
     "closeCode": 1012,
     "gracefulExitWithinMs": 15000,
     "restartWithinMs": 1000,
+    "reopenWithinMs": 30000,
     "crashReleaseSlackMs": 30000,
     "databaseClosedMarker": "database=closed",
     "liveWriterProbe": {
@@ -56,6 +68,8 @@
     "ack-frontier-advances",
     "late-joiner-welcome-at-ack-frontier-with-presence-replay",
     "late-joiner-leaves-roster-drops-it",
+    "agent-joins-with-a-delegated-session-b-sees-the-agent",
+    "a-revokes-the-delegation-agent-socket-closes-4401-roster-drops-agent-next-request-401",
     "a-stops-beating-lease-expiry-strips-a-to-identity",
     "b-disconnect-a-sends-again-b-reconnect-resume",
     "sigterm-with-open-socket-closes-1012-drains-and-exits-zero",
@@ -74,7 +88,8 @@
     "reconnectDeliversMissedOrRebootstrap": true,
     "restartPreservesArtifactAndFrontier": true,
     "gracefulShutdownClosesSocketsAndReleasesWriters": true,
-    "crashReleasesWritersPerBackendContract": true
+    "crashReleasesWritersPerBackendContract": true,
+    "revocationEndsAgentSession": true
   },
   "nonclaims": [
     "plugin-ui-mount",

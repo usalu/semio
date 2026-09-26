@@ -1,0 +1,12 @@
+{
+  "note": "Keybinding capture (Settings ▸ Hotkeys ▸ Record): each row is the keydown sequence a hand produces for one chord — modifiers first — and the capture's outcome. `pending` keeps the capture running, `cancel` ends it without an override, `chord` records the override in the dispatcher's spelling (ctrl, meta, alt, shift, then the key).",
+  "rows": [
+    { "id": "ctrl-alt-k", "keys": [{ "key": "Control", "ctrlKey": true }, { "key": "Alt", "ctrlKey": true, "altKey": true }, { "key": "k", "ctrlKey": true, "altKey": true }], "expected": ["pending", "pending", "chord:ctrl+alt+k"] },
+    { "id": "meta-shift-z", "keys": [{ "key": "Meta", "metaKey": true }, { "key": "Shift", "metaKey": true, "shiftKey": true }, { "key": "Z", "metaKey": true, "shiftKey": true }], "expected": ["pending", "pending", "chord:meta+shift+z"] },
+    { "id": "plain-key", "keys": [{ "key": "g" }], "expected": ["chord:g"] },
+    { "id": "space", "keys": [{ "key": "Control", "ctrlKey": true }, { "key": " ", "ctrlKey": true }], "expected": ["pending", "chord:ctrl+space"] },
+    { "id": "function-key", "keys": [{ "key": "Shift", "shiftKey": true }, { "key": "F5", "shiftKey": true }], "expected": ["pending", "chord:shift+f5"] },
+    { "id": "escape-cancels", "keys": [{ "key": "Control", "ctrlKey": true }, { "key": "Escape", "ctrlKey": true }], "expected": ["pending", "cancel"] },
+    { "id": "modifier-alone-never-records", "keys": [{ "key": "Alt", "altKey": true }], "expected": ["pending"] }
+  ]
+}

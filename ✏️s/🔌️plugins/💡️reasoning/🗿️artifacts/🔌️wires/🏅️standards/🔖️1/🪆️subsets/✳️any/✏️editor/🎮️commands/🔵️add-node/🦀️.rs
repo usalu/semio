@@ -15,11 +15,12 @@ pub struct AddNode {
     pub kind: String,
 }
 
-/// 🕹️ Creates the node and selects it through the framework interaction effect.
+/// 🕹️ Creates the node under the first unused `node-<n>` id and selects it through the framework interaction effect.
 pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WiresMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     let kind = if payload.kind.is_empty() { "identity" } else { payload.kind.as_str() };
-    let id = format!("node-{}", fixture_nodes(&crate::wires_working_board(document)).len() + 1);
+    let board = crate::wires_working_board(document);
+    let id = (1..).map(|ordinal| format!("node-{ordinal}")).find(|candidate| !fixture_nodes(&board).iter().any(|node| crate::schema::entity_id(node, "id") == Some(candidate.as_str()))).unwrap_or_default();
     let node = DslValue::object([
         ("id".into(), DslValue::String(id.clone())),
         ("nodeKind".into(), DslValue::String(kind.into())),

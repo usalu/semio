@@ -1645,7 +1645,6 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
         .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-        .action_destructive("setActiveExample")
         .action_args("setActiveExample", vec![semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), generation3d_view_example_options()).required()])
         // 📤️ The reader's own io verb. `ActionKind::View` for the same reason `setActiveExample` is:
         // `ShellHost` refuses a `Mutation`-kind action on a viewer session outright, and an export
@@ -1722,6 +1721,15 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
             "setSunElevation".into(),
             "setSunIntensity".into(),
         ])
+        .action_describe("setShowMode", LocalizedLabel::native("Sets what the 3D viewer shows of the generated result; only the view changes.", "Legt fest, was der 3D-Betrachter vom erzeugten Ergebnis zeigt; nur die Ansicht ändert sich."))
+        .action_describe("setLodMode", LocalizedLabel::native("Sets the level of detail the 3D viewer draws with; only the view changes.", "Legt die Detailstufe fest, mit der der 3D-Betrachter zeichnet; nur die Ansicht ändert sich."))
+        .action_describe("toggleSun", LocalizedLabel::native("Switches the 3D viewer's sun light on or off; only the view changes.", "Schaltet das Sonnenlicht des 3D-Betrachters ein oder aus; nur die Ansicht ändert sich."))
+        .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the compass direction the 3D viewer's sun shines from; only the view changes.", "Legt die Himmelsrichtung fest, aus der die Sonne des 3D-Betrachters scheint; nur die Ansicht ändert sich."))
+        .action_describe("setSunElevation", LocalizedLabel::native("Sets how high the 3D viewer's sun stands above the horizon; only the view changes.", "Legt fest, wie hoch die Sonne des 3D-Betrachters über dem Horizont steht; nur die Ansicht ändert sich."))
+        .action_describe("setSunIntensity", LocalizedLabel::native("Sets the brightness of the 3D viewer's sun; only the view changes.", "Legt die Helligkeit der Sonne des 3D-Betrachters fest; nur die Ansicht ändert sich."))
+        .action_describe("setActiveExample", LocalizedLabel::native("Shows one of the bundled generator examples in this viewer instead of the document; the document itself is not changed.", "Zeigt in diesem Betrachter eines der mitgelieferten Generatorbeispiele statt des Dokuments; das Dokument selbst ändert sich nicht."))
+        .action_describe("exportDocument", LocalizedLabel::native("Writes the 3D result shown in the viewer in the chosen format to a downloaded file on the user's machine.", "Schreibt das im Betrachter gezeigte 3D-Ergebnis im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."))
+        .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️Manifest

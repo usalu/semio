@@ -5,6 +5,32 @@ Captures `wp-w2/generated/`. Scripts `wp-w2/*.ts|sh`.
 
 ## Hub Handoff
 
+**CATALOG B2, READY since 2026-09-26 03:59:22** (boot 16 min 41 s under load ~40: the hub interprets each package's guest codec at startup and got ~10 % of a core).
+Current tree (restage4 + session-12 ABI-safe edits up to each lane build). Measured `/readyz` (`.🧬semio/🌐hub/s12-w2-logs/readyz-7800-b2.json`): `status: ready`,
+`artifactAuthority.ready`, `features.openPlan`, `openPlanExchange`, `rebootstrap`, `mcpWorkspace`, `inferenceServices [s.gis.gismap.inference]`.
+Creation catalog: **16 creatable kinds** (2d.block, 2d.drawing, 2d.puzzle, 2d.wfc2d, 2d.wfcbitmap, 2d.wfcgrid2d, 3d.block, 3d.puzzle, 3d.wfc3d, 3d.wfcgrid3d,
+5d.block, 5d.puzzle, animate.presentation, s.gis.gismap, s.note.note, text.document). Open-plan probe (`s12-w2-logs/open-plan-probe-7800-b2.txt`): **16/16 PASS** (creation → Ready → `POST …/open-plan` 200, editor surface, closed browser actor). Footprint after 16 creations **669 MB** (`footprint-7800-b2-after-16-creations.txt`).
+
+| what | value |
+|---|---|
+| URL | `http://127.0.0.1:7800` (loopback, development) |
+| catalog | `/Users/ueli/Documents/semio/.🧬semio/🌐hub/w2-catalog-b2` (published 03:18:31, rc=0, 3689 s): profile `local-stdio-gis-note-animate-block-writer-draw-puzzle-wfc-open-v1`, generation `f485bf7e725255cd5b70787796e477a249578d788a49960564d7613dce46f2e1`, bundle sha256 `6f2d396e564a4cb3bd6f2e5b7617d01e141a2ee3de2affc750183e020e9e2bae`; packages stdio, gis, note, animate, block, writer, draw, puzzle, wfc (wasm-release) |
+| binary | `/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-w2-bin/os-hub-s12-w2-hub-7800-b2` = signed copy of the bootstrap's own build `⚡️cache/cargo/target/debug/os-hub` (02:31, inside the publish): source sha256 `771fc75b8b05f5fef00f417798dcf0b7e26c537bc93d5270355cd648c983288d`, signed `f29b155c9df64a026575279e6a0d9debe821b2894996804c05efc396b933bc08` |
+| data root (`OS_HUB_DATA`) | `/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-w2-hub-7800-b2` (fresh, `0700`, fresh `inference/` sqlite) |
+| hold | supervised hold pid `31578` (NI 0, restarts the hub on the same root on a crash, ≤ 5 per 30 min), hub pid `31581`, runId `6e9ecb80bfc004c8b31255d3806f82b3` |
+| state | `/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-w2-state-7800/{pids.txt,status.txt,hold.txt,capture.txt,ready.json,admin-capability.json,restarts.txt}` |
+| users | `user1@semio.dev` / `gm1-local-dev-pass-1` (`01a0db60-f3c5-7787-84cb-2a7c7124d5cf`), `user2@semio.dev` / `gm1-local-dev-pass-2` (`01a0db60-fb61-7150-a1b5-aa1323bc51e9`) |
+| admin | `/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-w2-state-7800/admin-capability.json` (`0600`, one `admin-relay` session, 15 min); fresh one: `touch /Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-w2-state-7800/admin-request` (issued within 5 s; ≤ 60 per hub run) |
+| stop / resume | stop: `touch /Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-w2-state-7800/stop`; after a whole-process loss: `zsh .tmp-ticket/wp-w2/w2-hub-resume.sh s12-w2-hub-7800-b2` (same root, nothing re-derived) |
+
+HTTP sign-in: `POST /auth/sessions` `{"schema":"semio.hub.auth.credential-sign-in/v1","email":…,"password":…,"deviceInstanceId":"<32 chars>","clientClass":"browser"}`.
+Agent credential: a signed-in human `POST /auth/agent-delegations` `{"schema":"semio.hub.auth.agent-delegation-create/v1","spaceId":…,"agentLabel":…,"audience":"edit","ttlSecs":900}`
+→ `{delegationId, agentPrincipalId, token}`; write `0600` `{"schema":"semio.hub.agent-credential/v1","hubOrigin":"http://127.0.0.1:7800","spaceId":…,"audience":"edit","token":…}` and run the
+semio MCP as `stdio --hub http://127.0.0.1:7800 --space <id> --credential-file <file> --scopes workspace.read,artifact.write`.
+Two-client e2e recipe: `OS_HUB_TRUSTED_CATALOG_SOURCE=/Users/ueli/Documents/semio/.🧬semio/🌐hub/w2-catalog-b2 OS_HUB_BINARY=/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-w2-bin/os-hub-s12-w2-hub-7800-b2`.
+
+### Historical (session 11)
+
 **CATALOG B, READY since 2026-09-25 12:45:06** (restart after the 12:29 sweep deleted the previous data root; boot 3 min 46 s). This is the post-landing tree: H9 replay-envelopes ABI, the Rust open-target rule, lazy on-disk
 retention and compressed closed actors. Measured `/readyz` (`wp-w2/generated/readyz-7800-b.json`): `status: ready`, `artifactAuthority.ready`,
 `features.openPlan`, `openPlanExchange`, `rebootstrap`, `mcpWorkspace`, `inferenceServices [s.gis.gismap.inference]`, `publicSessionIssuance: true`.
@@ -47,6 +73,148 @@ exchanges per run and exits on the 65th** (`LOCAL_BOOTSTRAP_REPLAY_MAX`, a non-e
 | 2 | All-package catalog blockers (derive-path, codec probes, descriptor bounds, bootstrap verbs) + request triage | Blockers found (§2); fixes IN PROGRESS per coordinator decisions 01:2x |
 | 3 | Final rebuild (describe-all → generate → check → restage s → full catalog → hub 7800 restart → second hub) | describe-all 60/60, generate + check green, activate s + **verify 60/60** (05:57); **catalog B published + hub 7800 on it (11:50), open plans 12/12**; rest-warm (25) RUNNING → `--packages all` → restart → second hub |
 | 4 | Requests (`wp-w1/requests/`, `wp-w2/requests/`) | PENDING |
+
+## Session 12
+
+| # | Item | Status |
+|---|---|---|
+| S12-1 | Catalog B2 (9 B packages released from the current tree) → `.🧬semio/🌐hub/w2-catalog-b2` → hub 7800 on a fresh root `s12-w2-hub-7800-b2` → users + open-plan probe | **DONE** 04:35: published 03:18 (rc=0), 7800 ready 03:59:22, open plans **16/16**, coordinator messaged |
+| S12-2 | Rest (25) → `--packages all` → `.🧬semio/🌐hub/w2-catalog-all` → 7800 once onto it (`s12-w2-hub-7800-all`), probe every kind, `/readyz`, RSS | RUNNING: publish 1 failed 06:34 (demonstrator `*` pins) → root-fixed + preflight; publish 2 chain started 08:52 |
+| S12-3 | Requests inbox triage + one consolidated restage if needed | IN PROGRESS (triage) |
+| S12-4 | Rebuild convergence root fix (describe consumes component-dev bytes) + one launch row | PREPARED, dry runs clean (23 files + codemod 120 files); lands after the publish |
+| S12-5 | P1-4 `build-s-react-release` + RB1 release-bundle probes, measured | PENDING |
+
+### Session 12 Request Triage (`wp-w1/requests/*.txt`, `wp-w2/requests/*`, read 23:0x)
+
+The restage4 tree (describe 18:16–18:48, materialize, activate, verify 60/60) is the tree every B2/all package is released from; no
+Rust/WIT/TOML source changed after 18:16 (measured: `find … -newermt '2026-09-25 18:16'` lists only the two generated registry `.rs`).
+
+| request | verdict |
+|---|---|
+| c7, c8, wg8 (writer/draw/puzzle/block in the hub catalog, from the post-fix tree) | **served by B2** (all four are B packages); paths appended when B2 is live |
+| g10 (wfc restage + stdio/gis/note/wfc catalog; `INPUT_MAX_BYTES` 1 MiB in the hub) | **served by B2** + the current-tree os-hub (built 00:10) |
+| h7, h8 (tree-consistent catalog + matching os-hub for the two-client e2e) | **served by B2**; recipe `OS_HUB_TRUSTED_CATALOG_SOURCE=.🧬semio/🌐hub/w2-catalog-b2 OS_HUB_BINARY=<s12-w2-bin copy>` |
+| g4, g5, g6, g7, g9, h4, m5b, p6, r1, t3, t7, t9, u5 (labels, space, hover label), s3 (15 missing core.wasm) | **done by restage4** (every one of the 60 components re-described, materialized, activated; verify 60/60 incl. every `core.wasm`) |
+| t12 items 1–16 (incl. 16: space fold of the one space, file mtime 17:55 < 18:16), s15 guest items (stdio kit verbs, curation, trinity, norm, viewers, space fold) | **done by restage4** (sources landed before 18:16); release builds of B/all take them too |
+| s15 13:0x/13:4x (plugin-module index `dialectArtifactKinds` + `extendsPluginId`) | **served by the current-tree os-hub** of B2 |
+| wg7 (note release bytes == catalog note bytes) | superseded by S15's plugin-module delivery (hub documents run the catalog's own module); B2 note component sha appended for WG7 |
+| r8 (flow_core wasm-pack bindings: `🕸️wasm/🖥️host/🏃️runtime/🟨️.js` 09-25 01:53 ≠ published `🫀️core/🕸️bindings/🖥️host/🟨️.js` 09-24 19:45) | **needs a run** of `semio-framework-os-flow-core:wasm` under the wasm mutex → in the post-publish consolidated pass |
+| u5 surface-rs wasm-pack | done by someone at 09-25 06:12 (bindings newer than the 01:44 source) |
+| t12 17 (stdio txt/tsv/html declare kinds) | withdrawn by T12 (coordinator 00:0x); stdio stays codec-only in B2/all per the `local-stdio-gis-open-v1` fence |
+| t12 18 (wfc bitmap/grid2d/wfc2d/wfc3d + demonstrator playground declare their kinds) | landed before wfc's lane build → B2's wfc open-target count should rise; measured by the probe |
+
+### Session 12 Log
+
+- 18:56 (session 11, recorded now) **restage4 DONE**: describe-all rc=0 (1899 s), materialize-all rc=0 (278 s, Nx cache hits for the components restage3 had built),
+  generate rc=0 (29 s), check rc=0 (125 s), activate-s rc=0 (37 s), **verify rc=0: `components=60 consistent=60 diverged=0`**, receipt 60
+  (`.🧬semio/🌐hub/w2-logs/restage.txt`, `restage4-verify.txt`). Every session-11 process died ~19:30 (desktop app restart), including hub 7800 on catalog B.
+- 22:53 state: no wasm/hub lock, 0 rustc, 161 GiB free, load 9.8, port 7800 free.
+- 22:54 **release batch b** launched from the restage4 tree: `w2-release-par.sh b-warm` (chain pid **83333**, setsid via `w2-detach.py`), 9 packages
+  3-parallel in ONE wasm hold, then os-hub build (hub mutex) → publish `w2-catalog-b2` → rest-warm (25, one hold) → publish `w2-catalog-all`. The wasm lock is
+  released between phases (each phase is its own `fleet-mutex.sh` call). Markers and logs moved to `.🧬semio/🌐hub/s12-w2-logs/` (`release-par.txt` +
+  per-phase captures). `w2-restart-7800.sh` now keeps the binary copy in `.🧬semio/🌐hub/s12-w2-bin/` and hold state in `.🧬semio/🌐hub/s12-w2-state-7800/`.
+- 22:59 **correction (measured):** the "3-parallel" batches were never parallel. `component-dev`/`component-release` are inferred with `parallelism: false`
+  (`📚️library/🟨️.mjs` `componentTargets`), so `nx run-many --parallel=3` runs them one at a time: session 11's `release-par-rest-1.txt` shows dag, raster,
+  architect, cad strictly in sequence, and tonight's batch starts with stdio alone. I keep it serial on purpose: concurrent wasm plugin cargos on the shared
+  build-dir are the documented `prebuild_lock_exclusive` lock cycle (fleet incidents 09-15, 09-20). Each cargo already uses every core for the shared units.
+- 23:15 stdio released serially: **20 min 46 s** (`Finished wasm-release … in 20m 46s`, 50 754 958 B). gis's cargo then recompiled `semio_framework_os_kernel` and
+  `…_ui_contract` (a different feature set than stdio's), so shared framework units are NOT all fresh between packages.
+- 23:16 **coordinator R4 (audit-s12-build-convergence §3): real lanes.** The audit's premise ("3-parallel cut batch B to 668 s/package") is wrong: that batch
+  was serial (above), so 668 s/package IS the serial rate. Real parallelism needs N concurrent Nx processes in one hold: `w2-release-lanes.sh`
+  (phases `b-lanes → b-publish → rest-lanes → all-publish`, N lanes round-robin over a priority order, big packages first; a package is ok only when its
+  `dist/component-release/semio_s_plugin_<p>.wasm` is newer than the lane stamp). Memory before: swap 1.79/3.07 GB used, ~4.5 GB free + 8.9 GB inactive, the
+  stdio plugin rustc 1.8 GB RSS, each Nx process ~0.9 GB. I stopped my serial chain (83333 → its nx 83350, which cancelled its cargo; lock released cleanly,
+  WG7 took it at 23:16:07), kept stdio (`release-stdio.ok`), and launched **lanes chain pid 4212** with 3 lanes: [gis, note, animate], [writer, draw, wfc],
+  [puzzle, block]. Risk: concurrent cargos on shared units can form the lock cycle; I watch for lane cargos at 0 % CPU with no rustc child and fall back to serial.
+- 23:16–23:50+ lanes chain queued in the wasm FIFO behind WG7's hold (`wp-wg7/s12-wasm-hold.sh`: renderer wasm32 check, then `framework-renderer-wgpu:wasm-release`,
+  which compiles plugin crates for wasm32-unknown-unknown; load 50–72 from peers' native test builds). Coordinator informed (23:5x).
+- 23:51 coordinator preempted WG7's renderer hold; **lanes started 23:50:52**. 23:52 os-hub prewarm (`nice`, hub mutex, capture `s12-w2-logs/hub-build-prewarm.txt`)
+  so the publish's hub build is a no-op: done 00:10 (14 min 11 s). At 00:00 load 199, swap 8.2/9.2 GB, but `memory_pressure` 58 % free (swap is the high-water mark,
+  not active paging); 00:10 75 % free. Measured lock behaviour: the writer lane's cargo sat in `prebuild_lock_exclusive → LockManager::lock` (sampled) with no
+  rustc child from 23:51 until the gis lane's cargo ENDED (00:22), then compiled at once: a cargo that needs to rebuild a unit another live cargo holds shared
+  waits for that whole build, so lanes overlap only partly. Not a cycle (the holder progressed). Per package under load ~60: puzzle 28 min 54 s, gis 31 min 10 s.
+- 00:52 lanes are effectively serial on this moving tree: block, note and draw cargos all sat in the lock wait while writer (50 min 49 s incl. ~30 min
+  waiting for gis) built, because each package re-plans shared units (stdio_semio, kernel, framework) that peers' 23:23–00:11 framework edits invalidated.
+  Real overlap only happens for package-specific units. **Rule 17 (BG_NICE):** my lane cargos run at NI 5 (the inner `zsh -c "… & … & wait"` backgrounds them);
+  the chain zsh, the publish and the hold (python `Popen`, no `&`) are NI 0. Not restarted (coordinator). `w2-release-lanes.sh` now runs the lanes under
+  `setopt no_bg_nice` (new inode, the running chain keeps the parsed old one); the running chain is stopped once it enters the B2 publish, and the rest
+  batch starts from the fixed script (it also yields the wasm FIFO once between B2 and rest, as asked).
+- 02:14 lanes B END (10 709 s wall incl. 34 min FIFO wait): gis 31m10s, puzzle 28m54s, writer 50m49s, block 49m44s, note 74m03s, draw 75m58s, animate, wfc; all 8 `ok`
+  (dist newer than the stamp). 02:14–02:17 hub build (2m18s, the prewarm made it short). **02:17–03:18 publish B2 rc=0 (3689 s**, bootstrap 48m26s; it rebuilt os-hub at
+  02:31 for its candidate). ~03:40 usage-limit cut; the chain survived and started the rest lanes at 03:18 (inner `&` → NI 5, left running per coordinator).
+- 03:42 7800 restarted with `w2-restart-7800.sh` → supervised hold 31578 (NI 0), hub 31581, fresh root `s12-w2-hub-7800-b2`, binary copy of the 02:31 bootstrap build.
+  **Ready 03:59:22** (16 min 41 s: `GuestCodecExecuting` progress at ~10 % of one core under load ~40, `sample`: one thread 100 % in the owned interpreter's
+  `CoreInstance::step`). `/readyz` ready with openPlan, openPlanExchange, rebootstrap, mcpWorkspace, gis inference. Coordinator messaged at once.
+- 04:02–04:35 open-plan probe: **16 creatable kinds (was 12: +2d.wfc2d, 2d.wfcbitmap, 2d.wfcgrid2d, 3d.wfc3d from T12 req 18), 16/16 PASS.** First-use creation times under
+  load: 3d.puzzle 422 s, 2d.puzzle 354 s, 5d.puzzle 308 s, gis 229 s, 2d.wfc2d 177 s, others 7–94 s. Footprint after 16 creations 669 MB (session-11 catalog B: 1002 MB after 12).
+- Rest lanes are fast (units shared with B, tree quieter): 21/25 by 04:32, mostly 1–5 min each; norm's plugin crate took 34 min at NI 5.
+- 03:18–05:23 **rest lanes 25/25 ok** (7499 s wall; most 1–5 min, norm 34m41s, playbook 24m37s, dag 21m50s, vcs ~25 min, NI 5). 05:23–05:29 hub build.
+  **05:29:46 `--packages all` publish started** → `.🧬semio/🌐hub/w2-catalog-all`. T12 req 20 (trinity rewriting declares `text.rewriting`) and 22 (note verb args)
+  landed before it, so the bootstrap's own fresh builds carry them. Found in passing: an uncommitted peer change (file mtime 04:18) adds a persistent
+  guest-codec verification cache (`<hub data>/guest-codec-verifications/`, keyed by component sha256 + schema + hub executable), which makes a warm restart on
+  the same root skip the interpreter; B2's binary predates it (its root has no such directory). Coordinator: ask before building the restart binary (H9 authority
+  gates + H10 residency fix).
+- 06:34 **`--packages all` publish FAILED rc=1 after 3856 s** (usage-limit cut ~06:0x–08:40): `trusted descriptor dependency is not exact and bounded`
+  (`trustedBootstrapDescriptorClaims`) on demonstrator, the 8th of 34 packages, AFTER 8 fresh release builds. Demonstrator declared
+  `depends_on(cad|gis|procedural|process|puzzle|sourcing, VersionReq::Any)` → descriptor `version: "*"`; the trusted catalog admits only exact `=x.y.z`
+  pins inside its closure. Census of committed descriptors: demonstrator is the only PLUGIN (catalog member) with non-exact pins; 20 extensions carry `*`
+  and 2 carry `^0.1.0` (extensions are not catalog packages); gis and vcs pin stdio exactly through stdio's own `native_artifact_catalog_dependency()`.
+- 08:4x **root fix, demonstrator (coordinator's freeze exception):** `PLUGIN_VERSION = env!("CARGO_PKG_VERSION")` (every plugin crate is
+  `version.workspace = true`, workspace 0.1.0 = every builder's version) and `same_tree_pin()` = `VersionReq::Exact(<that version>)` for all six composed
+  plugins (`🪪️manifest/🎪️demonstrator/🦀️.rs`). `cargo check -p semio-s-plugin-demonstrator --lib` rc=0 (4 pre-existing warnings). The SDK-type narrowing
+  (the manifest `VersionReq` admits only `Exact`, `depends_on` pins at the tree version, the 22 extension declarations, emitter refusal) is NOT landed now:
+  `VersionReq` lives in `semio-framework`, which every artifact crate links, so it would force a recompile of every unit of all 34 packages inside the publish
+  (hours). It is prepared for the post-publish landing window, where the consolidated restage rebuilds everything anyway.
+- 08:4x **fail fast:** `trustedBootstrapPreflightDescriptorsV1` (hub `📜️script.ts`) runs first in `materializeTrustedCatalogBundle`: every selected package's
+  COMMITTED owner-root descriptor must pass the same claim rules as its fresh build (canonical bounded Pack, exact pins, dependencies inside the selected
+  closure at that package's own version), naming the `describe` fix. Measured on the committed tree: **REFUSED in 129 ms** with the demonstrator message
+  (was 63 min). tsc on the hub script: only the pre-existing leb128 typing error.
+- 08:52 `w2-publish-all.sh demonstrator` (pid 14734, NI 0, ONE wasm hold): describe demonstrator → preflight → `--packages all` → `.🧬semio/🌐hub/w2-catalog-all`
+  (capture `s12-w2-logs/publish-w2-catalog-all-2.txt`). Disk 90 GiB free.
+- 09:02:57 demonstrator described (9 min 10 s): committed descriptor now pins `cad|gis|procedural|process|puzzle|sourcing` at `=0.1.0`. Preflight over all 34
+  committed descriptors **PASS in 731 ms**. 09:02:59 publish 2 started. Sampler `w2-publish-sampler.sh` → `s12-w2-logs/publish-all-2-samples.txt` (every 20 s:
+  packages complete, stage, wasm rustc crates).
+- **What the bootstrap recompiles and why (measured 09:0x–09:2x):** everything from `semio_framework` up, for stdio first (`semio_framework`, `…_ui` →
+  20 stdio artifact crates → `stdio_semio` → `semio_s_plugin_stdio`, ~13 min). Cause 1: the `semio-framework` wasm-release unit got a NEW unit hash
+  (`build/wasm32-wasip2/wasm-release/build/semio-framework/485589…`, 09:03); its fingerprint differs from the 03:35 rest-lane unit in `profile`
+  (2342545200074580010 → 8924815852372134537) and in dependency hashes; the 23:51 B-lane unit had 8924…, so the profile hash flipped twice during the
+  session. Root `Cargo.toml` was last edited 04:34 (H9: `[profile.dev.package.semio-framework-hash] opt-level = 3` + a `wasm-dev` override); rustflags,
+  features, target and config hashes are identical. Cause 2: a rule-20 breach — the guest-linked kernel `#[path]`-includes
+  `📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs`, edited 08:45 after the freeze. Coordinator informed.
+- 09:25 stdio alone took ~20 min in publish 2 (its plugin crate ~10 min single-threaded LTO). Bootstrap and lanes share the unit identity at any given
+  time (23:51 lanes and 09:03 bootstrap both profile 8924…, 03:18 and 03:35 both 2342…), so lanes DO warm the bootstrap. Launched two warm-behind lanes
+  inside my own hold (`w2-warm-behind.sh`, NI 0, pids 37011/37017): lane a = writer, vcs, space, shooting, reasoning, puzzle, procedural, norm, lowpoly,
+  imperative, fem; lane b = wfc, trinity, sourcing, sequence, remodel, raster, process, playbook, note, mathematical, layout, forms, flow, energy — the
+  publication order from the END while the bootstrap walks it from the front (gis, animate, architect, block, cad, dag, demonstrator, draw, …).
+- 11:0x **third full-recompile trigger (measured, kernel dep-info parsed):** the guest-linked `semio_framework_os_kernel` wasm-release unit tracks 102 inputs
+  incl. `📚️library/🔣️taxonomy.json`, root `nx.json` and `📋️project.json` (read at compile time by the `🗣️dsl/✨️derive` mutation-source-authority proc macro).
+  `🔣️taxonomy.json` was edited 10:44 → the kernel unit went dirty (fingerprint cleared 10:52, recompiled 10:57 under demonstrator), so every package not yet
+  built recompiles from the kernel up. Coordinator asked to freeze those files too. Structural follow-up: the derive macro should read a narrow generated
+  input instead of the repo taxonomy.
+- 09:3x–09:5x **item 4 prepared** (`wp-w2/item4/`, applied only after the publish): `w2-item4-apply.py` (anchored edits, aborts on any missing anchor;
+  dry run **23 files OK**) + `w2-item4-describe-codemod.py` (dry run **120 files, 0 problems**). Contents: (a) `describe` = ONE inferred component target
+  (`📚️library/🟨️.mjs` `componentTargets`, `dependsOn: ["component-dev"]`, command `🖨️describe/…/📜️script.ts component --manifest <Cargo.toml>`), which reads
+  `<crate>/dist/component-dev/<crate>.wasm` and builds nothing (`describeComponentDeliverable`; `buildPluginComponent` deleted; the 60 hand-declared
+  targets and 60 `DescribeScript` wrappers deleted); (b) every runtime reader of cargo's internal `wasm32-wasip2/wasm-dev` path moves to the crate
+  deliverable `dist/component-{dev,release}`: MCP gateway (Rust `PluginRegistryEntry.crate_path` + TS preflight), `os run` bootstrap (generated
+  `PLUGIN_WASM_ARTIFACTS` now carries the crate path, `PLUGIN_COMPONENT_PROFILE_DIRS`), root `os run` preflight, norm's budget law, three host/run tests;
+  (c) the chain (`🔁️rebuild/🔣️.json`): `components` = ONE `nx run-many -t describe materialize-dev` (component-dev once per component), generate, check,
+  activate-s, **verify-s** (new `plugin-registry:verify-staged --variant s`, the product port of `w2-verify-staged.ts`: committed == dist == staged +
+  receipt + every staged file incl. `core.wasm`), publish-catalog; `rebuild-all [--from] [--to]` holds ONE queued exclusive `wasm-build` lease for the
+  whole span; (d) the repo library gains `acquireQueuedResourceLease` (arrival-order tickets over the existing SQLite lease, crashed waiters swept,
+  cancel-safe) + `⚡️caching/📜️script.ts lease <mode> <resource> <owner> -- <cmd>` for shell callers (the fleet mutex as a product primitive), with a
+  FIFO/crash/cancel law in the leases suite; laws `🧪️tests/🔁️rebuild` (chain + `--from/--to`), registry launch + generated-projection laws rewritten
+  for the deliverable rule. The launch row `🔁️rebuild-all🔌️plugin-registry` stays the one registered command.
+- 23:2x **R2 supervised hold (ticket scripts, used from B2 on):** `w2-hub-hold.ts` now restarts the hub child on the SAME data root and binary when it exits
+  without a stop request (5 s backoff, at most 5 restarts per 30 min, then `HOLD_END crash loop`), re-issues the admin capability at each readiness, and stops
+  cleanly on `<state>/stop` (pipe EOF). `w2-hub-resume.sh <data root name>` brings 7800 back after a whole-process loss (desktop restart) on the existing root
+  + binary copy, copying/provisioning nothing. `bunx tsc --noEmit` on the hold rc=0. Surviving a desktop restart without anyone running `resume` would need a
+  launchd agent (persistent user configuration), which I did not create.
+- 23:3x **item 4 prepared (not applied):** `wp-w2/item4/w2-item4-describe-codemod.py` (dry run: 120 files, 0 problems) deletes the 60 hand-declared `describe`
+  targets and the 60 per-crate `DescribeScript` wrappers; `describe` becomes one inferred component target (`dependsOn: component-dev`) that reads
+  `dist/component-dev`. Every reader of cargo's internal `wasm32-wasip2/wasm-dev` path (MCP gateway Rust + TS preflight, `os run` bootstrap + generated
+  `PLUGIN_WASM_TARGET_DIR`, root `os run` preflight, norm's budget law, 3 host tests) moves to the crate's `dist/component-{dev,release}` deliverable, because
+  after the change nothing writes the shared path any more. Lands after the all-package publish.
 
 ## Log
 

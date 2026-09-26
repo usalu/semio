@@ -415,6 +415,74 @@ export function createSessionAppSwitchGateV1<TApp, TViewState>(): SessionAppSwit
   };
 }
 
+/** 🔗️ The shell's hub connection surface. It is an OVERLAY route: the workspace opens over whatever is already open and
+ * never touches the session, precisely so the app stays usable while no hub is reachable. `parseShellRoute` (owned by
+ * `ShellHelpers`) has no `/hub` concept and classifies it `notFound`, so every consumer of that classification must exempt
+ * this one path or it undoes the overlay contract — which is what tore the host app's canvas down the moment anyone
+ * opened the hub workspace to sign in (ticket 26/09/18, S3: `s-home-main` present signed out, gone after the sign-in,
+ * canvas reading `Route not found: /hub`). */
+export const SHELL_HUB_ROUTE = "/hub";
+
+/** 🔗️ Whether `uri` addresses an overlay rather than a session: the route effect opens or closes the overlay on the
+ * spot and never hands such a route to {@link createShellSessionLaneV1}, where it would wait behind a session switch
+ * (G10 S4, ticket 26/09/23 U5: "Open Hub and Spaces" set `/hub` and showed no overlay while a space route was in
+ * flight). Rows: `🧫️fixtures/🧭️session-lane/🔣️.json` `routes`. */
+export function shellRouteIsOverlayV1(uri: string): boolean {
+  return (uri.split(/[?#]/u, 1)[0] ?? "/") === SHELL_HUB_ROUTE;
+}
+
+/** 🧭️ The ONE lane for everything that replaces the shell's session from outside a user gesture: applying the
+ * route and re-establishing the session for a new human. Jobs run one at a time in request order; a route
+ * request waiting at the END of the lane absorbs a later one (latest wins), so a burst of re-renders costs one
+ * application of the newest route, and nothing is ever dropped.
+ *
+ * It replaces a reentrancy guard that DROPPED every route asked for while another application was in flight:
+ * a hard load of `/spaces/<id>` whose hub identity was restored mid-route re-established Home, and the route
+ * application that should have followed was the one the guard threw away — 2 of 3 loads ended on Home with the
+ * URL still naming the space (ticket 26/09/23 U5, C10 relay; `wp-u5/generated/u5-space-route-revoked-b.json`).
+ * The same serial order keeps the identity re-establishment from interleaving with a route's own session
+ * switch. Laws: `🧪️tests/🔀️surface-switch` over `🧫️fixtures/🧭️session-lane/🔣️.json`, with a `p-limit`
+ * oracle. */
+export type ShellSessionLaneV1<TRoute> = {
+  readonly route: (request: TRoute) => Promise<void>;
+  readonly run: (job: () => Promise<void>) => Promise<void>;
+  readonly idle: () => boolean;
+};
+
+export function createShellSessionLaneV1<TRoute>(applyRoute: (request: TRoute) => Promise<void>): ShellSessionLaneV1<TRoute> {
+  let tail: Promise<void> = Promise.resolve();
+  let queued = 0;
+  let waitingRoute: { request: TRoute; done: Promise<void> } | null = null;
+  const enqueue = (job: () => Promise<void>): Promise<void> => {
+    queued += 1;
+    const done = tail.then(job).finally(() => {
+      queued -= 1;
+    });
+    tail = done.catch(() => undefined);
+    return done;
+  };
+  return {
+    route: (request) => {
+      if (waitingRoute !== null) {
+        waitingRoute.request = request;
+        return waitingRoute.done;
+      }
+      const slot: { request: TRoute; done: Promise<void> } = { request, done: Promise.resolve() };
+      waitingRoute = slot;
+      slot.done = enqueue(() => {
+        if (waitingRoute === slot) waitingRoute = null;
+        return applyRoute(slot.request);
+      });
+      return slot.done;
+    },
+    run: (job) => {
+      waitingRoute = null;
+      return enqueue(job);
+    },
+    idle: () => queued === 0,
+  };
+}
+
 /** 🎛️ The mode one step away from `activeModeId` in declaration order, wrapping at both ends, or `null`
  * when the app declares fewer than two modes. The keyboard half of the navbar mode group
  * (`ui.shell.mode.next`/`.previous`): positional rather than one binding per mode id, because mode ids

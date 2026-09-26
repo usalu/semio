@@ -119,6 +119,30 @@ fn preview_ops_and_the_ops_actually_committed_are_the_same_bytes() {
 }
 //#endregion 🔖️PreviewVsCommit
 
+//#region 🔖️NoChange
+#[test]
+fn an_action_whose_preview_produced_no_operation_commits_nothing_and_says_so() {
+    let (adapter, channel, _handles, audit) = harness(AutoApprovePolicy::Never);
+    let catalog = single_capability_catalog(synthetic_capability("note.editor.duplicateSelection", &["artifacts.write"], ApprovalMode::Never, false));
+    let session = SessionHandle::new("sess_no_change");
+    let principal = principal(&["artifact.write"]);
+    channel.force_empty_preview(0);
+
+    let prepared = adapter.prepare(&catalog, &principal, &session, "note.editor.duplicateSelection", serde_json::json!({}), 0, 0).unwrap();
+    assert_eq!(prepared.preview["opsCount"], serde_json::json!({ "document": 0, "config": 0, "draft": 0 }));
+    let report = adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle.clone()), ..Default::default() }, 0, 1).unwrap();
+
+    assert_eq!(report.status, InvocationStatus::Succeeded);
+    assert_eq!(report.warnings, vec![NO_CHANGE_WARNING.to_string()]);
+    assert_eq!(report.revision_after, report.revision_before, "nothing committed, so the head did not move");
+    assert_eq!(report.undo_token, None, "there is nothing to undo");
+    assert!(report.postconditions.is_empty());
+    assert!(!channel.frame_log().iter().any(|(_, command)| matches!(command, AppCommand::TransactionPrepare { .. } | AppCommand::TransactionCommit { .. })), "no guest transaction is opened over an empty op list");
+    assert!(assert_events(&audit).iter().any(|event| event.outcome == "no_change"), "the audit lane records the no-change outcome");
+    assert!(adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, 2).is_err(), "the prepared handle is spent");
+}
+//#endregion 🔖️NoChange
+
 //#region 🔖️RevisionConflict
 #[test]
 fn stale_expected_revision_is_a_revision_conflict_with_no_mutation_sent() {
@@ -343,12 +367,17 @@ fn every_fault_code_maps_to_the_right_gateway_error_code() {
         ("transaction.generation-mismatch", GatewayErrorCode::RevisionConflict),
         ("transaction.instance-busy", GatewayErrorCode::PreconditionFailed),
         ("budget.exceeded", GatewayErrorCode::BudgetExceeded),
+        ("transaction.member-rejected", GatewayErrorCode::PreconditionFailed),
+        ("interactive-job.not-ui-safe", GatewayErrorCode::PluginUnavailable),
+        ("interactive-job.preview-output", GatewayErrorCode::InputInvalid),
+        ("interactive-job.worker-pump", GatewayErrorCode::Internal),
         ("some.unrecognised.code", GatewayErrorCode::Internal),
     ];
     for (code, expected) in cases {
         let mapped = map_fault(&Fault { code: code.to_string(), message: "x".into() });
         assert_eq!(mapped.code, expected, "fault code {code} mapped to {:?}, expected {:?}", mapped.code, expected);
     }
+    assert!(!map_fault(&Fault { code: "interactive-job.not-ui-safe".into(), message: "x".into() }).retryable, "a verb kept out of the agent lane does not come back by retrying");
 }
 //#endregion 🔖️FaultMapping
 

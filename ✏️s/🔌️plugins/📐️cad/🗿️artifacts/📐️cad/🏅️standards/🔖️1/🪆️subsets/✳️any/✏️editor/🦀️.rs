@@ -2017,6 +2017,10 @@ pub(crate) fn cad_interaction_scope(verb: semio_framework_plugin::InteractionVer
 }
 
 impl ArtifactEditor for CadPlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = CadSnapshot;
     type Mutation = CadMutation;
     type Config = CadConfig;

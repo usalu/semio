@@ -153,6 +153,95 @@ impl DbConfig {
 }
 //#endregion 🔖️Config
 
+//#region 🔖️WorkerSubmitRetry
+/// @emoji 🔁️ The attempt a worker-pool submission refused with `kind` retries with, or `None` when
+/// the refusal is terminal for its owner.
+///
+/// `Contended` says another thread held that lane's queue lock for an instant (idle workers scan
+/// and steal from every queue), never that the pool is full, so it spends no attempt: counting it
+/// refused a document's edit after eight 1 ms lock races while 24 documents were busy (ticket
+/// 26/09/23 H9 session 12, growth e2e g14). `Saturated` (a full lane) spends one attempt of
+/// `limit`; `Shutdown` and `Poisoned` never retry. The decision table is the language-agnostic
+/// fixture `🧫️fixtures/🔁️worker-submit-retry/🔣️.json`.
+pub fn worker_submit_retry_attempt(kind: semio_framework_async::WorkerSubmitErrorKind, attempt: u8, limit: u8) -> Option<u8> {
+    match kind {
+        semio_framework_async::WorkerSubmitErrorKind::Contended => Some(attempt),
+        semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < limit => Some(attempt + 1),
+        semio_framework_async::WorkerSubmitErrorKind::Saturated | semio_framework_async::WorkerSubmitErrorKind::Shutdown | semio_framework_async::WorkerSubmitErrorKind::Poisoned => None,
+    }
+}
+//#endregion 🔖️WorkerSubmitRetry
+
+//#region 🔖️AdmissionWaiters
+/// @emoji 🎟️ The tasks waiting for a fixed-slot admission to free a slot, in a table of `N` entries
+/// that never grows. A retained owner's exact admission still refuses at capacity (its laws pin
+/// the refusal and the owners it hands back); an async caller that wants the slot rather than the
+/// refusal registers here and is woken whenever a slot is released, then claims again. Every
+/// waiter is woken on release (at most `N`), so no wake is lost to a waiter that was cancelled
+/// between its wake and its claim.
+pub struct AdmissionWaiters<const N: usize> {
+    entries: [Option<(u64, std::task::Waker)>; N],
+    next_id: u64,
+}
+
+impl<const N: usize> AdmissionWaiters<N> {
+    /// @emoji 🆕️ An empty table, usable in a `static`.
+    pub const fn new() -> Self {
+        Self { entries: [const { None }; N], next_id: 1 }
+    }
+
+    /// @emoji ✍️ Registers `waker` under `*id` (allocating the id on first use) or refreshes it;
+    /// `false` when all `N` entries are taken by other waiters.
+    pub fn register(&mut self, id: &mut Option<u64>, waker: &std::task::Waker) -> bool {
+        if let Some(current) = *id {
+            if let Some((_, held)) = self.entries.iter_mut().flatten().find(|(entry, _)| *entry == current) {
+                if !held.will_wake(waker) {
+                    held.clone_from(waker);
+                }
+                return true;
+            }
+        }
+        let Some(free) = self.entries.iter_mut().find(|entry| entry.is_none()) else { return false };
+        let assigned = id.unwrap_or_else(|| {
+            let next = self.next_id;
+            self.next_id = self.next_id.wrapping_add(1).max(1);
+            next
+        });
+        *free = Some((assigned, waker.clone()));
+        *id = Some(assigned);
+        true
+    }
+
+    /// @emoji 🧹️ Removes the waiter `id`, if it is still registered.
+    pub fn remove(&mut self, id: u64) {
+        if let Some(entry) = self.entries.iter_mut().find(|entry| entry.as_ref().is_some_and(|(held, _)| *held == id)) {
+            *entry = None;
+        }
+    }
+
+    /// @emoji 📣️ Clones every registered waker, for the releasing owner to wake after it drops its lock.
+    pub fn wakers(&self) -> [Option<std::task::Waker>; N] {
+        std::array::from_fn(|index| self.entries[index].as_ref().map(|(_, waker)| waker.clone()))
+    }
+
+    /// @emoji 🔢️ How many waiters are registered.
+    pub fn len(&self) -> usize {
+        self.entries.iter().flatten().count()
+    }
+
+    /// @emoji 🈳️ Whether no waiter is registered.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+impl<const N: usize> Default for AdmissionWaiters<N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+//#endregion 🔖️AdmissionWaiters
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

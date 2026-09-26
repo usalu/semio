@@ -11,16 +11,23 @@ const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "�
 const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🔗️hub-projection", "🔣️.json"), "utf8"));
 
 type Remote = { kind: "detached" | "connecting" } | { kind: "live"; peerCount: number } | { kind: "backoff"; retryInMs: number };
-type Projection = { authority: { kind: "noVerifiedSession" } | { kind: "verifiedSession"; authorizationGeneration: number }; documents: Array<{ documentKey: string; remote: Remote }> };
+type Projection = { session: "none" | "signedOut" | "signedIn"; link: "verifying" | "reachable" | "unreachable"; documents: Array<{ documentKey: string; remote: Remote }> };
 type Summary = { state: string; peerCount: number; documentCount: number };
 
 const independentSummary = (projection: Projection): Summary => {
-  if (projection.authority.kind === "noVerifiedSession") return { state: "signedOut", peerCount: 0, documentCount: projection.documents.length };
-  const peerCount = projection.documents.reduce((best, document) => document.remote.kind === "live" ? Math.max(best, document.remote.peerCount) : best, 0);
-  if (projection.documents.some((document) => document.remote.kind === "live")) return { state: "live", peerCount, documentCount: projection.documents.length };
-  if (projection.documents.some((document) => document.remote.kind === "connecting")) return { state: "connecting", peerCount: 0, documentCount: projection.documents.length };
-  if (projection.documents.some((document) => document.remote.kind === "backoff")) return { state: "reconnecting", peerCount: 0, documentCount: projection.documents.length };
-  return { state: "offline", peerCount: 0, documentCount: projection.documents.length };
+  const documentCount = projection.documents.length;
+  const kinds = new Set(projection.documents.map((document) => document.remote.kind));
+  const liveCounts = projection.documents.flatMap((document) => (document.remote.kind === "live" ? [document.remote.peerCount] : []));
+  const ladder: Array<[boolean, string]> = [
+    [projection.session === "none", "local"],
+    [projection.session === "signedOut", "signedOut"],
+    [liveCounts.length > 0, "live"],
+    [projection.link === "unreachable", "reconnecting"],
+    [projection.link === "verifying" || kinds.has("connecting"), "connecting"],
+    [kinds.has("backoff"), "reconnecting"],
+  ];
+  const state = ladder.find(([holds]) => holds)?.[1] ?? "online";
+  return { state, peerCount: state === "live" ? Math.max(...liveCounts) : 0, documentCount };
 };
 
 describe("🔗️ target-neutral Hub projection", () => {
@@ -29,7 +36,7 @@ describe("🔗️ target-neutral Hub projection", () => {
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   });
 
-  test("the independent fold matches every authority and multi-document vector", () => {
+  test("the independent fold matches every session, link and multi-document vector", () => {
     for (const row of fixture.cases as Array<{ projection: Projection; expected: Summary }>) expect(independentSummary(row.projection)).toEqual(row.expected);
   });
 
@@ -47,8 +54,7 @@ describe("🔗️ target-neutral Hub projection", () => {
   test("React is the third-party renderer oracle for the same fold", () => {
     for (const row of fixture.cases as Array<{ projection: Projection; expected: Summary }>) {
       const statuses = row.projection.documents.map((document) => ({ persisted: true, pendingMutations: 0, remote: document.remote }));
-      const session = row.projection.authority.kind === "verifiedSession" ? "signedIn" : "signedOut";
-      expect(hubConnectionSummaryV1(statuses, session)).toEqual(row.expected);
+      expect(hubConnectionSummaryV1(statuses, row.projection.session, row.projection.link)).toEqual(row.expected);
     }
   });
 

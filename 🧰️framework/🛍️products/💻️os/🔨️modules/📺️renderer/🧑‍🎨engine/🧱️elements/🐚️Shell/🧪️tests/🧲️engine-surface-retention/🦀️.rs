@@ -19,6 +19,7 @@ use serde_json::Value;
 
 #[test]
 fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route() {
+    let _serialized = crate::engine_canvas::engine_surface_law_guard();
     let fixture = law();
     let case = fixture["cases"]
         .as_array()

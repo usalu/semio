@@ -74,6 +74,17 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "document-growth-e2e": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts document-growth-e2e",
+        "forwardAllArgs": true
+      },
+      "outputs": []
     }
   }
 }

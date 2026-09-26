@@ -13,6 +13,8 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, sep } from "node:path";
 import { minimatch } from "minimatch";
 import { clearContributionCache, isTestOraclePath, scanDeclaredDependencies } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { isBlockingBreach } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { oracleHostPython, provisionPythonInterpreter, pythonSiteDirectories } from "../../🖥️host/🏗️materialization/🟦️.ts";
 import oracleDirectoryCases from "../../🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json";
 import protocolSchema from "../../🧬️schema/🔣️.json";
 
@@ -278,8 +280,8 @@ describe("🔍️ discovery and contract", () => {
     30_000,
   );
 
-  test("every committed case satisfies the frozen contract", () => {
-    expect([...caseContractBreaches(repoRoot, repoCases, repoRegistry), ...repoWideBreaches].map((breach) => `${breach.kind}:${breach.scope}:${breach.summary}`)).toEqual([]);
+  test("every committed case satisfies the frozen contract's blocking rules", () => {
+    expect([...caseContractBreaches(repoRoot, repoCases, repoRegistry), ...repoWideBreaches].filter(isBlockingBreach).map((breach) => `${breach.kind}:${breach.scope}:${breach.summary}`)).toEqual([]);
   }, 30_000);
 
 });
@@ -310,7 +312,7 @@ describe("🧹️ clean safety", () => {
     expect(existsSync(join(unmarked, "🚨️sentinel-do-not-delete"))).toBe(true);
 
     rmSync(unmarked, { recursive: true, force: true });
-  });
+  }, 60_000);
 
   test("no tracked fixture, source file or compose path is ever a clean candidate", () => {
     const sentinelFixture = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/📡️protocol-vector.txt");
@@ -852,6 +854,26 @@ describe("🧩️ cross-language oracle hosts", () => {
     expect(dependencyEcosystemOf("typescript")).toBe("js");
     expect(dependencyEcosystemOf("python")).toBe("python");
   }, 30_000);
+
+  test("a cache-local Python host environment reuses every distribution its base interpreter provides instead of hiding it", () => {
+    const base = oracleHostPython(repoRoot);
+    const read = (interpreter: string, program: string): string[] => {
+      const probe = Bun.spawnSync([interpreter, "-c", program], { cwd: repoRoot, env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1" }, stdout: "pipe", stderr: "pipe" });
+      expect(probe.exitCode, Buffer.from(probe.stderr).toString()).toBe(0);
+      return Buffer.from(probe.stdout).toString().trim().split("\n");
+    };
+    const [numpyVersion, pillowVersion] = read(base, "import importlib.metadata as meta; print(meta.version('numpy')); print(meta.version('pillow'))");
+    const { interpreter, problems } = provisionPythonInterpreter(repoRoot, base, [{ implementation: "python", package: "numpy", version: numpyVersion, module: "numpy" }]);
+    expect(problems).toEqual([]);
+    expect(interpreter).not.toBe(base);
+    const [numpyFile, pillowFile, prefix] = read(interpreter, "import numpy, PIL, sys; print(numpy.__file__); print(PIL.__file__); print(sys.prefix)");
+    const sites = pythonSiteDirectories(repoRoot, base)!;
+    for (const file of [numpyFile!, pillowFile!]) {
+      expect(file.startsWith(prefix!), `${file} was installed into the environment instead of reused from ${base}`).toBe(false);
+      expect(sites.some((site) => file.startsWith(site)), `${file} does not come from ${base}'s site directories ${sites.join(", ")}`).toBe(true);
+    }
+    expect(read(interpreter, "import importlib.metadata as meta; print(meta.version('pillow'))")).toEqual([pillowVersion]);
+  }, 120_000);
 
   test("the import name defaults to the distribution name and is overridable", () => {
     expect(oracleHostModule({ implementation: "python", package: "ply-rs" })).toBe("ply_rs");

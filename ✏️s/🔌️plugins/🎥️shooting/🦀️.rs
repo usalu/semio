@@ -3,7 +3,7 @@
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{ExampleSource, ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -14,17 +14,6 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     }
 }
 //#endregion 🗃️Apps
-
-//#region 📚️Examples
-/// 📚️ Document fixtures the react dev shell's example dropdown reads (`activePluginManifest.examples`).
-/// `📚️examples/🎬️demo` is the base-icon carrier; `✏️editor/📚️examples/🎬️demo-session` is a command replay only.
-fn examples() -> Vec<ExampleSource> {
-    vec![
-        semio_s_artifact_shooting_shooting::examples::demo::source(),
-        semio_s_artifact_shooting_shooting::examples::hexagonal_cut_concrete_forest_left::source(),
-    ]
-}
-//#endregion 📚️Examples
 
 /// 🔌️ Builds the plugin surface for host registration. `.editor()`/`.viewer()` (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) replace the old single `.document_app(…)` call —
@@ -38,7 +27,7 @@ pub fn plugin() -> Result<Plugin<ShootingApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:shooting")
         .artifact(crate::artifacts::shooting::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor_with_examples::<crate::editor::shooting::ShootingPlayApp>(crate::editor::shooting::create_shooting_app(), examples())
+        .editor::<crate::editor::shooting::ShootingPlayApp>(crate::editor::shooting::create_shooting_app())
         .editor_mutation_roster::<crate::editor::shooting::ShootingPlayApp>()
         .viewer::<crate::viewer::shooting::ShootingViewer>(crate::viewer::shooting::create_shooting_viewer())
         .viewer_mutation_roster::<crate::viewer::shooting::ShootingViewer>()

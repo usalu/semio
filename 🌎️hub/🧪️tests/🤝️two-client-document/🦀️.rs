@@ -27,6 +27,10 @@ mod tests {
         assert_eq!(fixture["expectations"]["frontierDocumentIdIsPlainArtifactId"], true);
         assert_eq!(fixture["expectations"]["gracefulShutdownClosesSocketsAndReleasesWriters"], true);
         assert_eq!(fixture["expectations"]["crashReleasesWritersPerBackendContract"], true);
+        assert_eq!(fixture["expectations"]["revocationEndsAgentSession"], true);
+        assert_eq!(fixture["agent"]["closeCode"], 4401);
+        assert_eq!(fixture["agent"]["refusedStatus"], 401);
+        assert!(fixture["agent"]["revocationWithinMs"].as_u64().unwrap_or(u64::MAX) <= 5_000);
         assert_eq!(fixture["shutdown"]["closeCode"], super::super::HUB_SHUTDOWN_CLOSE_CODE);
         assert!(fixture["shutdown"]["gracefulExitWithinMs"].as_u64().unwrap_or(0) >= (super::super::SOCKET_DRAIN_DEADLINE + super::super::DATABASE_SHUTDOWN_DEADLINE).as_millis() as u64);
     }

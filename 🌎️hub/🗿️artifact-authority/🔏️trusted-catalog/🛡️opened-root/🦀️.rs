@@ -7,7 +7,7 @@ use std::path::{Component, Path};
 use tokio::io::AsyncReadExt;
 
 const TRUSTED_RELATIVE_PATH_MAX_SEGMENTS: usize = 64;
-const TRUSTED_READ_CHUNK_BYTES: usize = 64 * 1024;
+pub(super) const TRUSTED_READ_CHUNK_BYTES: usize = 64 * 1024;
 
 /// 🧭 One parsed bundle-relative path whose segments can be opened without reparsing.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -163,6 +163,12 @@ impl TrustedCatalogOpenedFile {
     fn new(file: File) -> Result<Self, AuthorityError> {
         let length = platform::fstat_regular_length(&file).map_err(catalog_error)?;
         Ok(Self { file, length })
+    }
+
+    /// 🚰️ The opened handle as an async reader with the length its `fstat` answered, for a caller that verifies the
+    /// bytes while it streams them.
+    pub(super) fn into_reader(self) -> (tokio::fs::File, u64) {
+        (tokio::fs::File::from_std(self.file), self.length)
     }
 
     pub(super) async fn read_bounded(self, maximum: u64, context: &OperationContext<'_>) -> Result<Vec<u8>, AuthorityError> {

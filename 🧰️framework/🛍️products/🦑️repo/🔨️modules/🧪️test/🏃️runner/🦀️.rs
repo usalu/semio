@@ -6,6 +6,26 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 //#region 🔖️Adapter
+/// 🔗️ The fixture URIs one line of feature text names: `shared://`, `local://`, `asset://` or `schema://` at a word
+/// start, up to whitespace or one of `"'`,;)]` — `FIXTURE_URI_RE` of `🧪️test/🟦️.ts`.
+pub fn fixture_uris_in(text: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    let mut at = 0;
+    while at < text.len() {
+        let rest = &text[at..];
+        let Some((offset, scheme)) = ["shared://", "local://", "asset://", "schema://"].iter().filter_map(|scheme| rest.find(scheme).map(|offset| (offset, *scheme))).min() else { break };
+        let start = at + offset;
+        let word_start = text[..start].chars().next_back().is_none_or(|previous| !(previous.is_alphanumeric() || previous == '_'));
+        let body = &text[start + scheme.len()..];
+        let length = body.find(|character: char| character.is_whitespace() || "\"'`,;)]".contains(character)).unwrap_or(body.len());
+        if word_start && length > 0 {
+            found.push(text[start..start + scheme.len() + length].to_string());
+        }
+        at = start + scheme.len() + length;
+    }
+    found
+}
+
 /// 🧭️ Everything one scenario handler is given. Fixtures are immutable; mutation happens on copies.
 pub struct Context<'a> {
     pub plan: &'a Plan,
@@ -21,6 +41,13 @@ impl<'a> Context<'a> {
     /// 🧫️ Absolute path of a resolved fixture.
     pub fn fixture(&self, uri: &str) -> Result<PathBuf, String> {
         self.plan.fixture(uri).map(|relative| self.repo_root.join(relative))
+    }
+
+    /// 🔗️ Every fixture URI the scenario's steps name, in step order and whatever scheme the feature uses — the
+    /// platform's one fixture-URI grammar (`FIXTURE_URI_RE`, `🧪️test/🟦️.ts`). The feature is the single place a
+    /// vector path is written down.
+    pub fn step_fixture_uris(&self) -> Vec<String> {
+        self.scenario.steps.iter().flat_map(|(_, text)| fixture_uris_in(text)).collect()
     }
 
     /// 🧫️ Bytes of a resolved fixture.

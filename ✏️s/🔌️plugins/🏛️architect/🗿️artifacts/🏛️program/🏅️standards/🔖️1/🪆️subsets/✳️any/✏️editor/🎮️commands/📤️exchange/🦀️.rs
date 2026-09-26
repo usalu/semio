@@ -26,7 +26,7 @@ pub mod import_registers_csv {
     use crate::op::ProgramMutation;
     use crate::ProgramSnapshot;
     use dsl::{FromValue, ToValue};
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "import-registers-csv")]
@@ -39,12 +39,11 @@ pub mod import_registers_csv {
         let strategy = match payload.strategy.as_str() {
             "replace" => MergeStrategy::Replace,
             "skipDuplicates" => MergeStrategy::SkipDuplicates,
-            _ => MergeStrategy::Upsert,
+            "upsert" => MergeStrategy::Upsert,
+            other => return Err(Fault::new(FaultOrigin::App, FaultCode::new("architect.import-strategy-unknown"), format!("importRegistersCsv has no merge strategy \"{other}\""))),
         };
         let mut next_program = doc.snapshot.clone();
-        if import_registers_csv(&mut next_program, &payload.csv, strategy).is_err() {
-            return Ok(Emit::default());
-        }
+        import_registers_csv(&mut next_program, &payload.csv, strategy).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("architect.import-csv-invalid"), format!("importRegistersCsv cannot read the CSV starting {:?}: {error:?}", payload.csv.chars().take(48).collect::<String>())))?;
         Ok(Emit { effects: vec![crate::editor::architect::reset_document_effect(&next_program)], ..Default::default() })
     }
 }
@@ -94,7 +93,7 @@ pub mod import_program {
     use crate::op::ProgramMutation;
     use crate::ProgramSnapshot;
     use dsl::{FromValue, ToValue};
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "import-program")]
@@ -103,9 +102,7 @@ pub mod import_program {
     }
 
     pub fn handle(payload: &ImportProgram, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let Ok(next_program) = crate::document_dsl::parse(&payload.payload) else {
-            return Ok(Emit::default());
-        };
+        let next_program = crate::document_dsl::parse(&payload.payload).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("architect.import-program-invalid"), format!("importProgram cannot read the ProgramSnapshot DSL starting {:?}: {error:?}", payload.payload.chars().take(48).collect::<String>())))?;
         Ok(Emit { effects: vec![crate::editor::architect::reset_document_effect(&next_program)], ..Default::default() })
     }
 }

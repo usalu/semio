@@ -200,6 +200,10 @@ impl ArtifactOwnedToolJobFactory for DxfAnyEditorExampleFactory {
 pub struct DxfAnyEditor;
 
 impl ArtifactEditor for DxfAnyEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = DxfSnapshot;
     type Mutation = DxfMutation;
     type Config = NoConfig;

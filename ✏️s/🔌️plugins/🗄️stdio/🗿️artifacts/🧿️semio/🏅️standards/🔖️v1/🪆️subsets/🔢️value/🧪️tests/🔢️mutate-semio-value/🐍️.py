@@ -568,27 +568,6 @@ def doc_string(ctx: Context) -> str:
     raise AssertionError("scenario %s carries no doc string" % ctx.scenario["id"])
 
 
-def step_fixtures(ctx: Context) -> list:
-    """🧫️ Every fixture URI the scenario's steps name, in step order and whatever scheme it uses. The
-    feature is the single place a vector path is written down; both adapters read it from there."""
-    found = []
-    for step in ctx.scenario["steps"]:
-        text = step.get("text", "")
-        at = 0
-        while at < len(text):
-            marks = [(text.find(scheme, at), scheme) for scheme in ("shared://🔢️mutate-semio-value/", "asset://", "shared://")]
-            marks = [(where, scheme) for where, scheme in marks if where != -1]
-            if not marks:
-                break
-            where, _ = min(marks)
-            end = where
-            while end < len(text) and not text[end].isspace():
-                end += 1
-            found.append(text[where:end])
-            at = end
-    return found
-
-
 def forest(ctx: Context) -> dict:
     """🌲️ The real building model, read through this implementation's own DSL parser."""
     return parse_dsl(ctx.fixture_bytes(FOREST_DSL).decode("utf-8"))
@@ -627,7 +606,7 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed `(before, mutation, after)` vector — a THIRD statement of
     what the verb means, independent of both implementations."""
-    before_uri, mutation_uri, after_uri = step_fixtures(ctx)[:3]
+    before_uri, mutation_uri, after_uri = ctx.step_fixture_uris()[:3]
     before = fixture_json(ctx, before_uri)
     after = fixture_json(ctx, after_uri)
     mutation = fixture_json(ctx, mutation_uri)

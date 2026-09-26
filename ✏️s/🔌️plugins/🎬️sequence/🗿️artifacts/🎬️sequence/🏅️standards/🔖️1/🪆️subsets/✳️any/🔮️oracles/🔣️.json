@@ -61,7 +61,14 @@
       ],
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
-      "productionReachable": false,
+      "productionReachable": true,
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs"
+        ],
+        "owner": "🧰️framework/🔨️modules/🎯️action-bus",
+        "plan": "serde_json is production-reachable repo-wide (211 manifests in 🔒️dependencies.json; the framework action bus itself takes a serde_json::Value in `optional_json_to_dsl`), so registering it as this subset's carrier oracle records the debt instead of claiming a purity the baseline contradicts. The sequence subset's own production no longer reaches it (session 12: every production JSON read/write moved onto the first-party pack JSON tree, serde_json is a dev-dependency there), so the reference stays independent of the code it judges. The debt shrinks as every production caller moves to pack JSON, starting with `optional_json_to_dsl`; it retires when 🔒️dependencies.json no longer classifies serde_json as production."
+      },
       "networkDuringExecution": false,
       "platforms": [
         "darwin-arm64",

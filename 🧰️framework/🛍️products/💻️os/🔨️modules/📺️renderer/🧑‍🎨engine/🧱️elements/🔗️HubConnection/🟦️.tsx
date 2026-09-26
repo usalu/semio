@@ -44,6 +44,7 @@ import {
   archiveSpaceCommandV1,
   createInviteCommandV1,
   createSpaceCommandV1,
+  directoryCommandAnsweredV1,
   filterSpaceRowsV1,
   inviteRedemptionErrorFromStatusV1,
   parseInviteTokenV1,
@@ -1282,7 +1283,7 @@ export function createHubConnectionFetchPortV1(options: {
     submitCommand: async (origin, command, signal) => {
       const sealed = options.sealCommand(command);
       const response = await options.request(`${origin}/directory/commands`, { method: "POST", headers: authorized(true), body: sealed.body }, signal);
-      if (response.status !== 200) throw new Error("hub.command.refused");
+      if (!directoryCommandAnsweredV1(response.status)) throw new Error("hub.command.refused");
       return sealed.parseReceipt(await response.text());
     },
     redeemInvite: async (origin, token, signal) => {

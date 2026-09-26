@@ -311,3 +311,11 @@ fn every_retained_tool_is_a_declared_migrated_action_of_the_built_manifest() {
         );
     }
 }
+
+/// 🎯️ LAW: the editor declares the artifact kind it edits (the artifact's own `artifact_kind()`), which is
+/// what the hub's one open-target rule (`app_opens_kind`, `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`)
+/// pairs with this editor and the viewer of its dialect — so a WFC 2D rule set can be created and opened as a hub document.
+#[test]
+fn the_editor_declares_the_artifact_kind_it_edits() {
+    assert_eq!(create_wfc2d_editor().artifact_kinds, vec![crate::artifact_kind()]);
+}

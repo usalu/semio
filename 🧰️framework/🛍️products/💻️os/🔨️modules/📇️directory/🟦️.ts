@@ -214,6 +214,7 @@ export function fold(model: DirectoryReadModel, event: DirectoryEvent): Director
       break;
     case "artifact.checkpoint-published":
     case "artifact.retention-advanced":
+    case "user.preference-recorded":
       break;
   }
   return next;

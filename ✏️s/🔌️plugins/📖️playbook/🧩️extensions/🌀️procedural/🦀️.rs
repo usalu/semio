@@ -926,6 +926,8 @@ async fn create_module_app() -> Result<App, PluginAssemblyError> {
             // in `materialize dev`'s descriptor probe. Both verbs now own `ModuleRetainedCommandJobFactory`, the
             // bounded first-step tool factory `validate_ui_dispatch_classification` demands, so `Migrated` is the
             // truthful disposition and the shell can dispatch them (ticket 26/09/18 S10).
+            .action_describe("exportSolidGeometry", LocalizedLabel::native("Exports the block's preview geometry as STEP, OBJ, STL or GLB and stores the result in the block's parameters for the shell to read back; nothing is written to disk.", "Exportiert die Vorschaugeometrie des Bausteins als STEP, OBJ, STL oder GLB und legt das Ergebnis in den Parametern des Bausteins ab, damit die Shell es ausliest; auf die Festplatte wird nichts geschrieben.")).await
+            .action_describe("importSolidGeometry", LocalizedLabel::native("Imports solid geometry in the given format (STEP or OBJ text, STL or GLB as base64) into the block and stores the resulting geometry handles in its parameters.", "Importiert Volumengeometrie im angegebenen Format (STEP- oder OBJ-Text, STL oder GLB als Base64) in den Baustein und legt die entstandenen Geometrie-Handles in seinen Parametern ab.")).await
             .action_interactive_job(ACTION_EXPORT_SOLID, InteractiveJobClassification::Migrated).await
             .action_interactive_job(ACTION_IMPORT_SOLID, InteractiveJobClassification::Migrated).await,
     )

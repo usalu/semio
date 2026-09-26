@@ -4,7 +4,7 @@ use super::*;
 fn typed_wire_neutral_component_defaults_match_serde() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
     let rows = fixture["components"].as_array().expect("component vectors");
-    assert_eq!(rows.len(), 19);
+    assert_eq!(rows.len(), 23);
     for row in rows {
         let sparse: Component = serde_json::from_value(row["wire"].clone()).expect("native sparse component");
         let normalized: Component = serde_json::from_value(row["expected"].clone()).expect("native normalized component");

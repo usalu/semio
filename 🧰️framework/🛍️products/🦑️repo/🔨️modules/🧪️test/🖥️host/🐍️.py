@@ -17,6 +17,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import shutil
 import sys
 import time
@@ -79,6 +80,10 @@ class Outcome:
         return self
 
 
+#: 🧫️ The platform's one fixture-URI grammar — the Python twin of `FIXTURE_URI_RE` in `🧪️test/🟦️.ts`.
+FIXTURE_URI = re.compile(r"\b(shared|local|asset|schema)://([^\s\"'`,;)\]]+)")
+
+
 class Context:
     """🧭️ Everything one scenario handler is given: its plan slice, fixtures and work directory."""
 
@@ -116,6 +121,11 @@ class Context:
             if entry["uri"] == uri:
                 return os.path.join(self.repo_root, entry["path"])
         raise KeyError("fixture %s is not part of this plan — declare it in the feature file" % uri)
+
+    def step_fixture_uris(self) -> List[str]:
+        """🔗️ Every fixture URI the scenario's steps name — step text and data-table cells, in step order, whatever
+        scheme the feature uses. The feature is the single place a vector path is written down."""
+        return [match.group(0) for step in self.scenario["steps"] for text in [step.get("text", "")] + [cell for row in (step.get("dataTable") or []) for cell in row] for match in FIXTURE_URI.finditer(text)]
 
     def fixture_bytes(self, uri: str) -> bytes:
         """🧫️ Bytes of a declared fixture."""

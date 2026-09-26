@@ -2,6 +2,7 @@
 /** @emoji 🧊️ `@semio-tech/framework-renderer-wgpu` — raw wgpu WASM renderer boot for declarative Rust program UI trees. */
 // #endregion 🧲️Header
 
+import { watchAgentBridgeOffer } from "../../../🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 import { ICON_NAMES, ICONS } from "@semio-tech/assets";
 import { loadPluginModule, pluginHandleForBridge } from "../🐚️plugin-bridge/🟦️.ts";
 import { installWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
@@ -173,7 +174,9 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
     semioWgpuSetHubEnv?: (hubUrl: string, user: string, dataDir: string) => void;
     semioWgpuSetHostAppearance?: (preference: string, systemDark: boolean) => void;
     semioWgpuSetHostPlatform?: (platform: string) => void;
+    semioWgpuSetHostLocale?: (locale: string) => void;
     semioWgpuSetHostStorage?: (snapshotJson: string) => void;
+    semioWgpuSetAgentBridgeConfig?: (url: string, admissionProof: string) => void;
     uploadIconAtlas?: (width: number, height: number, pixels: Uint8Array, entriesJson: string) => void;
   };
   if (rendererModule.default) await rendererModule.default();
@@ -200,16 +203,20 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   // ⌨️ Constant for the life of a navigation, so it is published once and never listened to — unlike
   // the two above, no user action can change which machine this is.
   rendererModule.semioWgpuSetHostPlatform?.(resolveWgpuHostPlatform(window));
+  // 🗣️ Read once, as React's `ShellHost` reads `navigator.language` once per scope.
+  rendererModule.semioWgpuSetHostLocale?.(window.navigator?.language ?? "");
   const darkQuery = window.matchMedia?.(WGPU_PREFERS_DARK_MEDIA_QUERY);
   darkQuery?.addEventListener("change", publishAppearance);
   window.addEventListener("storage", publishAppearance);
   window.addEventListener("storage", publishHostStorage);
   rendererModule.semioWgpuMount(canvas, handles, descriptor.pluginVariant);
+  const stopAgentBridgeOffer = watchAgentBridgeOffer((offer) => rendererModule.semioWgpuSetAgentBridgeConfig?.(offer?.url ?? "", offer?.admissionProof ?? ""));
   if (rendererModule.uploadIconAtlas) {
     rendererModule.uploadIconAtlas(iconAtlas.width, iconAtlas.height, iconAtlas.pixels, JSON.stringify(iconAtlas.entries));
   }
   await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
   return async () => {
+    stopAgentBridgeOffer();
     darkQuery?.removeEventListener("change", publishAppearance);
     window.removeEventListener("storage", publishAppearance);
     window.removeEventListener("storage", publishHostStorage);

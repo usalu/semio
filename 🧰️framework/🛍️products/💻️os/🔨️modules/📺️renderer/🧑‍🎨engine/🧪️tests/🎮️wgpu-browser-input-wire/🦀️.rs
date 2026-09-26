@@ -7,7 +7,7 @@
 //! expectation is read out of the fixture file, so a change on either side of the wire that the other
 //! side does not follow fails here rather than silently dropping input in a browser.
 
-use super::{stateless_dispatch, BrowserBatch, BrowserWireEvent};
+use super::{accessibility_address_within_credits, stateless_dispatch, BrowserBatch, BrowserWireEvent};
 use serde_json::Value;
 use ui_render::{AccessibilityEvent, DispatchEvent, ImeEvent, PointerButton, PointerKind};
 
@@ -169,4 +169,27 @@ fn accessibility_fixture_decodes_into_node_addressed_dispatch_without_coordinate
         assert_eq!(matches!(event, AccessibilityEvent::Value(_)), row["wire"]["kind"].as_str() == Some("accessibility-value"));
         assert!(row["wire"].get("x").is_none() && row["wire"].get("y").is_none());
     }
+}
+
+/// ♿️ LAW (`transportCredits`): the Worker admits an address by its credits alone. A document's root —
+/// node id 0, the first id `UiNodeIdAllocator` mints — and an unpublished generation decode, project and
+/// fit; an over-long, empty or control-laden id, a negative id and a fractional generation never do. The
+/// TS transport walks the same rows (`🧪️tests/📨️browser-frame-transport/🟦️.ts`).
+#[test]
+fn accessibility_addresses_are_admitted_by_credits_and_node_zero_is_an_address() {
+    let fixture: Value = serde_json::from_str(ACCESSIBILITY_FIXTURE).expect("accessibility interaction fixture parses");
+    let credits = &fixture["transportCredits"];
+    let admitted = |wire: &Value| {
+        serde_json::from_value::<BrowserWireEvent>(wire.clone()).ok().is_some_and(|event| match stateless_dispatch(&event) {
+            Some(DispatchEvent::Accessibility { target, .. }) => accessibility_address_within_credits(&target.window_id, &target.node_key),
+            _ => false,
+        })
+    };
+    for row in credits["admitted"].as_array().expect("admitted rows") {
+        assert!(admitted(&row["wire"]), "{} is admitted", row["id"]);
+    }
+    for row in credits["refused"].as_array().expect("refused rows") {
+        assert!(!admitted(&row["wire"]), "{} is refused", row["id"]);
+    }
+    assert!(credits["admitted"].as_array().expect("admitted rows").iter().any(|row| row["wire"]["nodeId"].as_u64() == Some(0)), "node id 0 is pinned as an address");
 }

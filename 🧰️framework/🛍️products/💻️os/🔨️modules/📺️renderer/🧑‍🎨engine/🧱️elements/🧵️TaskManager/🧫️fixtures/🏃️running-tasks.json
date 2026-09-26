@@ -1,27 +1,209 @@
 {
   "schema": "semio.os.task-manager.running-tasks/v1",
-  "description": "Language-agnostic law for the task manager's running-task rows: every live spawned job, plugin installation and agent tool call becomes exactly one cancellable task; settled tool calls and other conversation rows become none.",
+  "description": "Language-agnostic law for the task manager's running-task rows: every live spawned job, plugin installation, agent tool call and live tool run of the focused program becomes exactly one task (only a tool run is suspendable, and it reads suspended while paused); settled tool calls and other conversation rows become none.",
   "jobs": [
-    { "key": "actor-7#3", "pluginId": "s.puzzle", "actorId": "actor-7", "instanceId": 4, "job": "3", "kind": "semio.puzzle3d.fill", "steps": 128, "reportsProgress": true, "startedAtMs": 1000, "progressAtMs": 5000, "cancelling": false },
-    { "key": "actor-9#1", "pluginId": "s.stdio", "actorId": "actor-9", "instanceId": 2, "job": "1", "kind": "semio.io-run", "steps": 0, "reportsProgress": false, "startedAtMs": 2000, "progressAtMs": 2000, "cancelling": true }
+    {
+      "key": "actor-7#3",
+      "pluginId": "s.puzzle",
+      "actorId": "actor-7",
+      "instanceId": 4,
+      "job": "3",
+      "kind": "semio.puzzle3d.fill",
+      "steps": 128,
+      "reportsProgress": true,
+      "startedAtMs": 1000,
+      "progressAtMs": 5000,
+      "cancelling": false
+    },
+    {
+      "key": "actor-9#1",
+      "pluginId": "s.stdio",
+      "actorId": "actor-9",
+      "instanceId": 2,
+      "job": "1",
+      "kind": "semio.io-run",
+      "steps": 0,
+      "reportsProgress": false,
+      "startedAtMs": 2000,
+      "progressAtMs": 2000,
+      "cancelling": true
+    }
   ],
-  "installs": { "pluginIds": ["s.raster"], "startedAtMs": { "s.raster": 3000 } },
+  "installs": {
+    "pluginIds": [
+      "s.raster"
+    ],
+    "startedAtMs": {
+      "s.raster": 3000
+    }
+  },
   "conversation": [
-    { "kind": "userMessage", "id": "u1", "text": "go", "atMs": 100 },
-    { "kind": "toolCall", "id": "inv_1", "toolName": "action_invoke", "args": "{}", "state": "running", "summary": null, "atMs": 4000 },
-    { "kind": "toolCall", "id": "inv_2", "toolName": "artifact_snapshot", "args": "{}", "state": "ok", "summary": "done", "atMs": 4100 },
-    { "kind": "toolCall", "id": "inv_3", "toolName": "inference_run", "args": "{}", "state": "cancelling", "summary": null, "atMs": 4200 }
+    {
+      "kind": "userMessage",
+      "id": "u1",
+      "text": "go",
+      "atMs": 100
+    },
+    {
+      "kind": "toolCall",
+      "id": "inv_1",
+      "toolName": "action_invoke",
+      "args": "{}",
+      "state": "running",
+      "summary": null,
+      "atMs": 4000
+    },
+    {
+      "kind": "toolCall",
+      "id": "inv_2",
+      "toolName": "artifact_snapshot",
+      "args": "{}",
+      "state": "ok",
+      "summary": "done",
+      "atMs": 4100
+    },
+    {
+      "kind": "toolCall",
+      "id": "inv_3",
+      "toolName": "inference_run",
+      "args": "{}",
+      "state": "cancelling",
+      "summary": null,
+      "atMs": 4200
+    }
   ],
   "expected": [
-    { "id": "job:actor-7#3", "lane": "job", "title": "semio.puzzle3d.fill", "owner": "s.puzzle", "startedAtMs": 1000, "steps": 128, "state": "running" },
-    { "id": "job:actor-9#1", "lane": "job", "title": "semio.io-run", "owner": "s.stdio", "startedAtMs": 2000, "steps": 0, "state": "cancelling" },
-    { "id": "install:s.raster", "lane": "activation", "title": "s.raster", "owner": "", "startedAtMs": 3000, "steps": null, "state": "running" },
-    { "id": "tool:inv_1", "lane": "toolCall", "title": "action_invoke", "owner": "", "startedAtMs": 4000, "steps": null, "state": "running" },
-    { "id": "tool:inv_3", "lane": "toolCall", "title": "inference_run", "owner": "", "startedAtMs": 4200, "steps": null, "state": "cancelling" }
+    {
+      "id": "job:actor-7#3",
+      "lane": "job",
+      "title": "semio.puzzle3d.fill",
+      "owner": "s.puzzle",
+      "startedAtMs": 1000,
+      "steps": 128,
+      "state": "running",
+      "progress": null,
+      "suspendable": false
+    },
+    {
+      "id": "job:actor-9#1",
+      "lane": "job",
+      "title": "semio.io-run",
+      "owner": "s.stdio",
+      "startedAtMs": 2000,
+      "steps": 0,
+      "state": "cancelling",
+      "progress": null,
+      "suspendable": false
+    },
+    {
+      "id": "install:s.raster",
+      "lane": "activation",
+      "title": "s.raster",
+      "owner": "",
+      "startedAtMs": 3000,
+      "steps": null,
+      "state": "running",
+      "progress": null,
+      "suspendable": false
+    },
+    {
+      "id": "tool:inv_1",
+      "lane": "toolCall",
+      "title": "action_invoke",
+      "owner": "",
+      "startedAtMs": 4000,
+      "steps": null,
+      "state": "running",
+      "progress": null,
+      "suspendable": false
+    },
+    {
+      "id": "tool:inv_3",
+      "lane": "toolCall",
+      "title": "inference_run",
+      "owner": "",
+      "startedAtMs": 4200,
+      "steps": null,
+      "state": "cancelling",
+      "progress": null,
+      "suspendable": false
+    }
   ],
   "elapsed": [
-    { "startedAtMs": 1000, "nowMs": 1000, "seconds": 0 },
-    { "startedAtMs": 1000, "nowMs": 13999, "seconds": 12 },
-    { "startedAtMs": 5000, "nowMs": 1000, "seconds": 0 }
-  ]
+    {
+      "startedAtMs": 1000,
+      "nowMs": 1000,
+      "seconds": 0
+    },
+    {
+      "startedAtMs": 1000,
+      "nowMs": 13999,
+      "seconds": 12
+    },
+    {
+      "startedAtMs": 5000,
+      "nowMs": 1000,
+      "seconds": 0
+    }
+  ],
+  "toolRuns": {
+    "program": {
+      "pluginId": "s.wfc",
+      "spawnedId": "wfc-2"
+    },
+    "startedAtMs": {
+      "toolRun:wfc-2#1": 6000
+    },
+    "runs": [
+      {
+        "run": "1",
+        "label": "Fill",
+        "completed": 3,
+        "total": 10,
+        "valueText": "Filling (1/2): 3 of 10 cells (30 %)",
+        "paused": false
+      },
+      {
+        "run": "2",
+        "label": "Reconstruct",
+        "completed": 0,
+        "total": null,
+        "valueText": "Matching (2/5): 0 pairs",
+        "paused": true
+      }
+    ],
+    "expected": [
+      {
+        "id": "toolRun:wfc-2#1",
+        "lane": "toolRun",
+        "title": "Fill",
+        "owner": "s.wfc",
+        "startedAtMs": 6000,
+        "steps": null,
+        "progress": {
+          "completed": 3,
+          "total": 10,
+          "text": "Filling (1/2): 3 of 10 cells (30 %)"
+        },
+        "suspendable": true,
+        "state": "running"
+      },
+      {
+        "id": "toolRun:wfc-2#2",
+        "lane": "toolRun",
+        "title": "Reconstruct",
+        "owner": "s.wfc",
+        "startedAtMs": 7000,
+        "steps": null,
+        "progress": {
+          "completed": 0,
+          "total": null,
+          "text": "Matching (2/5): 0 pairs"
+        },
+        "suspendable": true,
+        "state": "suspended"
+      }
+    ],
+    "nowMs": 7000
+  }
 }

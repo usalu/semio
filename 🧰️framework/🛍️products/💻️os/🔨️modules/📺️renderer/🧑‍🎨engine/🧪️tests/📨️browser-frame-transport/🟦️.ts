@@ -102,6 +102,19 @@ describe("browser frame worker transport", () => {
     expect(subject.flush(10)).toBe(true);
   });
 
+  it("hands the page's agent-bridge offer to the Worker on the current lifecycle, and its withdrawal as null", () => {
+    const worker = new FakeWorker();
+    const subject = transport(worker);
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    subject.setHostAgentBridge({ url: "ws://127.0.0.1:6300/bridge", admissionProof: "proof" });
+    subject.setHostAgentBridge(null);
+    const offers = worker.messages.filter((message) => message.kind === "host-agent-bridge");
+    expect(offers).toEqual([
+      { kind: "host-agent-bridge", lifecycle: 1, offer: { url: "ws://127.0.0.1:6300/bridge", admissionProof: "proof" } },
+      { kind: "host-agent-bridge", lifecycle: 1, offer: null },
+    ]);
+  });
+
   it("coalesces pointer, wheel, and resize storms into one bounded batch", () => {
     const worker = new FakeWorker();
     const subject = transport(worker);
@@ -220,6 +233,23 @@ describe("browser frame worker transport", () => {
       expect(subject.enqueueLossless(event)).toBe(false);
       expect(subject.fault?.code).toBe("lossless-overflow");
       expect(worker.messages.map((message) => message.kind)).toEqual(["boot", "close"]);
+    }
+  });
+
+  it("admits an accessibility address by its credits alone: a document root (node id 0) is an address, liveness is the renderer's", () => {
+    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json"), "utf8")) as { readonly transportCredits: Record<"admitted" | "refused", readonly { readonly id: string; readonly wire: Parameters<BrowserFrameTransport["enqueueLossless"]>[0] }[]> };
+    for (const row of fixture.transportCredits.admitted) {
+      const worker = new FakeWorker();
+      const subject = transport(worker);
+      worker.reply({ kind: "booted", lifecycle: 1 });
+      expect(subject.enqueueLossless(row.wire), row.id).toBe(true);
+      expect(subject.fault, row.id).toBeUndefined();
+    }
+    for (const row of fixture.transportCredits.refused) {
+      const worker = new FakeWorker();
+      const subject = transport(worker);
+      expect(subject.enqueueLossless(row.wire), row.id).toBe(false);
+      expect(subject.fault?.code, row.id).toBe("lossless-overflow");
     }
   });
 

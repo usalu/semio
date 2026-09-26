@@ -3194,6 +3194,8 @@ export const uiChromeTranslationBundles = {
           degraded: { label: { normal: "Beeinträchtigt", beginner: "Übernommen, aber mit Warnungen." } },
           hubRejected: { label: { normal: "Änderung vom Hub abgelehnt", beginner: "Der Hub hat deine Änderung nicht angenommen; sie wurde zurückgenommen." } },
           hubTransformed: { label: { normal: "Änderung angepasst", beginner: "Eine gleichzeitige Änderung hatte Vorrang; deine Änderung wurde angepasst übernommen." } },
+          hubConcurrentEdit: { label: { normal: "Jemand anderes hat gleichzeitig dieselbe Stelle geändert", beginner: "Jemand anderes hat gleichzeitig dieselbe Stelle geändert; deine Änderung wurde nicht übernommen." } },
+          hubConcurrentInvariant: { label: { normal: "Widerspricht einer gleichzeitigen Änderung", beginner: "Deine Änderung widerspricht einer gleichzeitigen Änderung einer anderen Person und wurde nicht übernommen." } },
         },
         presence: {
           roster: { label: { normal: "Anwesende", beginner: "Anwesende" } },
@@ -4113,6 +4115,8 @@ export const uiChromeTranslationBundles = {
           degraded: { label: { normal: "Degraded", beginner: "Applied, but with warnings." } },
           hubRejected: { label: { normal: "Change refused by the hub", beginner: "The hub did not accept your change; it was rolled back." } },
           hubTransformed: { label: { normal: "Change adjusted", beginner: "A concurrent change won; your change was applied in adjusted form." } },
+          hubConcurrentEdit: { label: { normal: "Someone else changed the same part at the same time", beginner: "Someone else changed the same part at the same time; your change was not applied." } },
+          hubConcurrentInvariant: { label: { normal: "Conflicts with a simultaneous change", beginner: "Your change conflicts with someone else's simultaneous change and was not applied." } },
         },
         presence: {
           roster: { label: { normal: "People here", beginner: "People here" } },
@@ -4386,6 +4390,7 @@ function registerUiChromeTranslationBundles() {
 function createUiI18nPort(instance: typeof i18next): UiI18nPort {
   return {
     t: ((key, options) => instance.t(key as never, options as never)) as UiTranslateFn,
+    exists: (key) => instance.exists(key),
     changeLanguage: (locale) => instance.changeLanguage(locale),
     get language() {
       return instance.language;

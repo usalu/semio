@@ -23,7 +23,7 @@ export default defineConfig({
     // 🩹️ `include` MUST stay empty: these are in-source (`import.meta.vitest`) suites collected via
     // `includeSource`. Listing the same files in BOTH keys made vitest collect each twice and report
     // double the real test count. Add new in-source files to `includeSource`/`coverage.include` only.
-    include: ["../../🧪️tests/🗃️persistence-data-class/🟦️.ts", "../../🧪️tests/🗂️surface-opens-kind/🟦️.ts", "../../🧪️tests/🧩️plugin-module-bundle/🟦️.ts", "../../🧪️tests/🗄️plugin-module-store/🟦️.ts", "../../🧪️tests/🔍️plugin-module-resolution/🟦️.ts"],
+    include: ["../../🧪️tests/🗃️persistence-data-class/🟦️.ts", "../../🧪️tests/🗂️surface-opens-kind/🟦️.ts", "../../🧪️tests/🧩️plugin-module-bundle/🟦️.ts", "../../🧪️tests/🗄️plugin-module-store/🟦️.ts", "../../🧪️tests/🔍️plugin-module-resolution/🟦️.ts", "../../🧪️tests/🚪️hub-socket-close/🟦️.ts", "../../🧪️tests/🔁️execution-target-retry/🟦️.ts"],
     coverage: { include: ["../../🟦️.ts", "../../🔨️modules/🏪️store/👷️worker/🟦️.ts", "../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts", "../../🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts", "../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts", "../../🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts"] },
     includeSource: ["../../🟦️.ts", "../../🔨️modules/🏪️store/👷️worker/🟦️.ts", "../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts", "../../🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts", "../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts", "../../🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts"],
     passWithNoTests: false,

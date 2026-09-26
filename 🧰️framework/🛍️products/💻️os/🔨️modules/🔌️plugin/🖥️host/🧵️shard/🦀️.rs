@@ -1791,6 +1791,7 @@ impl ShardLoop {
             let job_budget = job_budget_from_grant(self.granted_budget(actor_id));
             let actor_lane = self.actor_lane(actor_id);
             let watchdog_stage = interactive_stage_for(actor_lane);
+            let replayable = self.replay_seeds.iter().flatten().any(|seed| seed.actor == actor_id && seed.job == job && seed.replayable);
             let Some(instance) = self.instances.get_mut(&actor_id) else {
                 self.close_replay_job(actor_id, job, ReplaySeedCloseReason::ActorLost);
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
@@ -1806,7 +1807,7 @@ impl ShardLoop {
                     let step_outcome = match step {
                         JobStep::Running { progress: Some(preview) } => JobStepOutcome::PreviewReady { preview },
                         JobStep::Running { progress: None } => JobStepOutcome::Yield,
-                        JobStep::Done { output } => match self.runtime.checkpoint(instance).await {
+                        JobStep::Done { output } => match if replayable { self.runtime.checkpoint(instance).await } else { Ok(Vec::new()) } {
                             Ok(state) => {
                                 self.close_replay_job(actor_id, job, ReplaySeedCloseReason::Completed);
                                 defer_completion(

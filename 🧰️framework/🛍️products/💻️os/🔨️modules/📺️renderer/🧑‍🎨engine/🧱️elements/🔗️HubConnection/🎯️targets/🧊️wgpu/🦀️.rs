@@ -28,6 +28,7 @@ use semio_framework_os_kernel::os_directory::client::{DirectoryTransport, HttpMe
 use semio_framework_os_kernel::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationCatalogV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationReadyV1};
 use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
 use semio_framework_os_kernel::DslValue;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use ui_wgpu::wgpu::component::ui::UiState;
 use ui_wgpu::wgpu::{ActionDescriptor, Label, Locale, UiButtonNode, UiInputNode, UiNode, UiPresence, UiStackNode, UiTextNode};
@@ -92,23 +93,37 @@ pub enum HubDocumentRemote {
     Detached,
 }
 
-/// 🪪️ Whether a hub session exists at all. `None` — no sign-in surface mounted — is deliberately not
-/// the same as `SignedOut`: only the latter is actionable, and only it offers an entry point.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// 🪪️ Whether a hub session exists at all — the hub projection schema's `session` axis
+/// (`🧬️schema/🔗️hub-projection`). `None` — no hub configured at all — is deliberately not the same as
+/// `SignedOut`: only the latter is actionable, and only it offers an entry point.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum HubSessionPresence {
     SignedIn,
     SignedOut,
     None,
 }
 
-/// 📶️ The aggregate the footer pill paints.
+/// 🔗️ What the shell's own session revalidation last learned about the hub link, independent of any
+/// document — the hub projection schema's `link` axis: a held session still `Verifying`, `Reachable`, or
+/// `Unreachable`, a short shortage ridden out on a bounded backoff while the verified authority is kept.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum HubLink {
+    Verifying,
+    Reachable,
+    Unreachable,
+}
+
+/// 📶️ The aggregate the footer pill paints — the hub projection schema's `summary.state`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HubConnectionState {
+    Local,
     SignedOut,
     Live { peer_count: usize },
+    Online,
     Connecting,
     Reconnecting,
-    Offline,
 }
 
 /// 📶️ The whole fold result: what to paint, and whether the pill is an actionable entry point.
@@ -118,19 +133,22 @@ pub struct HubConnectionSummary {
     pub actionable: bool,
 }
 
-/// 📶️ Folds every attached document's remote state into one aggregate, best state first.
+/// 📶️ Folds the shell's own hub link and every attached document's remote state into one aggregate,
+/// best state first — the rules of the hub projection schema (`🧬️schema/🔗️hub-projection`), whose
+/// fixture both this fold and React's `hubConnectionSummaryV1` pass.
 ///
-/// 🧮️ The three laws U1 §8 pinned, restated so a reader need not chase the TypeScript: one `Live`
-/// document means the hub is reachable; a document still dialling outranks one already in backoff;
-/// everything detached — or nothing attached at all — is `Offline`. `peer_count` is the **max** over
-/// live documents, never a sum: a sum would double-count a peer who has two documents open, which no
-/// reader could interpret. `SignedOut` outranks every transport state, because no transport state
-/// means anything without a session.
-pub fn hub_connection_summary(statuses: &[HubDocumentRemote], session: HubSessionPresence) -> HubConnectionSummary {
-    if session == HubSessionPresence::SignedOut {
-        return HubConnectionSummary { state: HubConnectionState::SignedOut, actionable: true };
+/// 🧮️ No hub configured is `Local`; no session is `SignedOut`, because no transport state means anything
+/// without one. One `Live` document means the hub answers right now, so it wins over everything else
+/// and `peer_count` is the **max** over live documents, never a sum (a sum would double-count a peer who
+/// has two documents open). An `Unreachable` link is a shortage in progress (`Reconnecting`), which
+/// outranks a document still dialling; a `Verifying` link or a dialling document is `Connecting`, which
+/// outranks a document in backoff (`Reconnecting`); a reachable link with no live document is `Online`.
+pub fn hub_connection_summary(statuses: &[HubDocumentRemote], session: HubSessionPresence, link: HubLink) -> HubConnectionSummary {
+    match session {
+        HubSessionPresence::None => return HubConnectionSummary { state: HubConnectionState::Local, actionable: false },
+        HubSessionPresence::SignedOut => return HubConnectionSummary { state: HubConnectionState::SignedOut, actionable: true },
+        HubSessionPresence::SignedIn => {}
     }
-    let actionable = session == HubSessionPresence::SignedIn;
     let mut peer_count: Option<usize> = None;
     let mut connecting = false;
     let mut backoff = false;
@@ -142,13 +160,15 @@ pub fn hub_connection_summary(statuses: &[HubDocumentRemote], session: HubSessio
             HubDocumentRemote::Detached => continue,
         }
     }
-    let state = match (peer_count, connecting, backoff) {
-        (Some(peer_count), _, _) => HubConnectionState::Live { peer_count },
-        (None, true, _) => HubConnectionState::Connecting,
-        (None, false, true) => HubConnectionState::Reconnecting,
-        (None, false, false) => HubConnectionState::Offline,
+    let state = match (peer_count, link) {
+        (Some(peer_count), _) => HubConnectionState::Live { peer_count },
+        (None, HubLink::Unreachable) => HubConnectionState::Reconnecting,
+        (None, HubLink::Verifying) => HubConnectionState::Connecting,
+        (None, HubLink::Reachable) if connecting => HubConnectionState::Connecting,
+        (None, HubLink::Reachable) if backoff => HubConnectionState::Reconnecting,
+        (None, HubLink::Reachable) => HubConnectionState::Online,
     };
-    HubConnectionSummary { state, actionable }
+    HubConnectionSummary { state, actionable: true }
 }
 
 impl HubConnectionState {
@@ -156,22 +176,24 @@ impl HubConnectionState {
     /// readable word, which is what makes the pill legible to a colour-blind reader.
     pub fn icon_id(self) -> &'static str {
         match self {
+            Self::Local => "link-2-off",
             Self::SignedOut => "user",
-            Self::Live { .. } => "cloud",
+            Self::Live { .. } | Self::Online => "cloud",
             Self::Connecting => "loader-2",
             Self::Reconnecting => "rotate-ccw",
-            Self::Offline => "link-2-off",
         }
     }
 
-    /// 🏷️ The state's own wire spelling, so a probe reads the state without parsing a translation.
+    /// 🏷️ The state's own wire spelling (the schema's `summary.state`), so a probe reads the state
+    /// without parsing a translation.
     pub fn as_str(self) -> &'static str {
         match self {
+            Self::Local => "local",
             Self::SignedOut => "signedOut",
             Self::Live { .. } => "live",
+            Self::Online => "online",
             Self::Connecting => "connecting",
             Self::Reconnecting => "reconnecting",
-            Self::Offline => "offline",
         }
     }
 }
@@ -593,8 +615,18 @@ fn hub_sign_in_section(state: &HubWorkspaceState, locale: Locale) -> UiNode {
 ///
 /// 🏠️ Rows stay rendered and openable in the `Stale` phase — the local-first rule AU2 defended: a
 /// hub that stopped answering must not empty a list the human was reading.
+/// 🪟️ How many space rows the workspace tree carries at once. One retained panel document holds at most
+/// `ui_contract::UI_DOCUMENT_NODES` (128) nodes and one row costs up to four, so a user with many spaces sees
+/// the first rows the search leaves (plus the open space, wherever it sorts) and a line naming how many more
+/// the search reaches — measured: two-user gate run 22 on hub 7800 B2 faulted `panel 'framework.hub'
+/// exceeds 128 document nodes` once user1 held a few dozen spaces (ticket 26/09/23 slice WG8, session 12).
+pub const HUB_WORKSPACE_VISIBLE_SPACE_ROWS: usize = 8;
+
 fn hub_spaces_section(state: &HubWorkspaceState, locale: Locale) -> UiNode {
-    let rows = filter_space_rows(&state.rows, &state.search_draft);
+    let matching = filter_space_rows(&state.rows, &state.search_draft);
+    let hidden = matching.len().saturating_sub(HUB_WORKSPACE_VISIBLE_SPACE_ROWS);
+    let rows: Vec<_> = matching.iter().enumerate().filter(|(index, row)| *index < HUB_WORKSPACE_VISIBLE_SPACE_ROWS || state.open_space_id.as_deref() == Some(row.id.as_str())).map(|(_, row)| row).collect();
+    let hidden = hidden - usize::from(rows.len() > HUB_WORKSPACE_VISIBLE_SPACE_ROWS);
     let usable = crate::space_browser::space_browser_rows_usable(state.phase, rows.len());
     let mut children = vec![
         tagged_row(space_browser_label(SpaceBrowserLabel::Title, locale), &[("data-semio-hub-spaces-phase", state.phase.as_str())]),
@@ -611,7 +643,7 @@ fn hub_spaces_section(state: &HubWorkspaceState, locale: Locale) -> UiNode {
     if rows.is_empty() {
         children.push(text_row(space_browser_label(SpaceBrowserLabel::Empty, locale)));
     }
-    for row in &rows {
+    for row in rows {
         let current = state.open_space_id.as_deref() == Some(row.id.as_str());
         children.push(tagged_row(&row.name, &[("data-semio-hub-space", row.id.as_str()), ("data-semio-hub-space-access", row.access.as_str()), ("data-semio-hub-space-current", if current { "true" } else { "false" })]));
         children.push(text_row(&space_row_summary(row, locale)));
@@ -625,6 +657,9 @@ fn hub_spaces_section(state: &HubWorkspaceState, locale: Locale) -> UiNode {
                 state.phase != SpaceBrowserPhase::Submitting,
             ));
         }
+    }
+    if hidden > 0 {
+        children.push(tagged_row(&format!("{hidden} {}", space_browser_label(SpaceBrowserLabel::MoreRows, locale)), &[("data-semio-hub-spaces-hidden", hidden.to_string().as_str())]));
     }
     children.push(input(HUB_SPACE_NAME_INPUT_ID, &state.space_name_draft, space_browser_label(SpaceBrowserLabel::CreateName, locale), action::SET_SPACE_NAME, Some(action::CREATE_SPACE)));
     children.push(button(

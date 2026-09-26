@@ -1473,6 +1473,18 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             // "Writer", "text.document") that used to chain here are dropped, not silently lost.
             // The subset-level examples facet (moved whole into this editor) still ships the demo
             // fixture; the app-level example PICKER UI is the actual regression until this SDK gap closes.
+            .action_describe("formatDocument", LocalizedLabel::native("Reformats the whole text with the formatter of the document's language; text that is already formatted writes nothing.", "Formatiert den gesamten Text mit dem Formatierer der Dokumentsprache neu; bereits formatierter Text schreibt nichts."))
+            .action_describe("lintDocument", LocalizedLabel::native("Checks the text with the linter of the document's language and shows the diagnostics in the editor window; the text is not changed.", "Prüft den Text mit dem Linter der Dokumentsprache und zeigt die Befunde im Editorfenster an; der Text ändert sich nicht."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole document with a bundled example (the Jack demo or the DAG Jack example), or with an empty document for any other id.", "Ersetzt das gesamte Dokument durch ein mitgeliefertes Beispiel (die Jack-Demo oder das DAG-Jack-Beispiel), bei jeder anderen Id durch ein leeres Dokument."))
+            .action_describe("setText", LocalizedLabel::native("Replaces the document's entire text with the given text; the previous text is gone unless the edit is undone.", "Ersetzt den gesamten Text des Dokuments durch den angegebenen Text; der bisherige Text ist fort, sofern die Änderung nicht rückgängig gemacht wird."))
+            .action_describe("commitRename", LocalizedLabel::native("With the caret on a Jack variable, renames every occurrence of it to the given text; otherwise replaces the editor's selected range with that text.", "Steht die Einfügemarke auf einer Jack-Variablen, werden alle ihre Vorkommen in den angegebenen Text umbenannt; sonst ersetzt der Text den ausgewählten Bereich des Editors."))
+            .action_describe("setSnapshot", LocalizedLabel::native("Replaces the whole writer document, its text, language and metadata, with the supplied document; nothing of the previous one is kept.", "Ersetzt das gesamte Writer-Dokument mit Text, Sprache und Metadaten durch das übergebene; vom bisherigen Dokument bleibt nichts erhalten."))
+            .action_describe("openDocument", LocalizedLabel::native("Opens the given text under a URI as the writer document, detecting its language from the content or extension; the current document is replaced.", "Öffnet den angegebenen Text unter einer URI als Writer-Dokument und erkennt die Sprache aus Inhalt oder Dateiendung; das aktuelle Dokument wird ersetzt."))
+            .action_describe("setSnapshotJson", LocalizedLabel::native("Replaces the whole writer document with one parsed from the given document JSON; invalid JSON changes nothing.", "Ersetzt das gesamte Writer-Dokument durch eines, das aus dem angegebenen Dokument-JSON gelesen wird; ungültiges JSON ändert nichts."))
+            .action_describe("setFixtureJson", LocalizedLabel::native("Loads a test fixture given as JSON as the whole writer document, replacing the current one; invalid JSON changes nothing.", "Lädt eine als JSON übergebene Test-Fixture als gesamtes Writer-Dokument und ersetzt das aktuelle; ungültiges JSON ändert nichts."))
+            .action_audience("textEdit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_destructive("setText")
+            .action_destructive("openDocument")
             .build_definition()
 }
 //#endregion 🔖️Manifest

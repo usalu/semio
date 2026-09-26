@@ -20,6 +20,406 @@ Inherits: T10 (`📓️wp-t10.md`, `wp-t10/`), T11 (`📓️wp-t11.md`, `wp-t11/
 | 7. Lib tests of every touched plugin | **re-measured after the sweep** (`remeasure.txt`, `followup.txt` in the captures folder): see §8 for the per-crate table. One red was mine: the 00:41 outcome switch rewrote leaf `outcomeClasses` but left the literal copies in 5 `🔬️structural-correspondence` laws (curation, writer, gisterrain, imperative, space) — settled from the declarations (`wp-t12/structural-outcomes.py`) | `test-curation.txt` (red), `followup-lib-*.txt` |
 | 8. Coordinator add-on: per-plugin `test quick` for gis, lowpoly, mathematical, wfc, fem, architect (audit P1-7) | **re-measured 14:3x: 6/6 green** (lowpoly and wfc after W2's descriptor refresh; gis after the fix below). gis was red once, and it was mine: `gismap_viewer_never_mutates` drove the generic `assert_viewer_never_mutates`, whose `expect("viewer adapter command succeeds")` cannot hold for a viewer whose only verb is a retained window-config write (S15's gis camera lane, `handle` refuses by design). The gis surface law now states the guarantee over the seam that decides it, exactly as the energy viewer's does: every verb the map viewer declares is `Migrated` (`followup-quick-gis.txt`, 10/10). Earlier run (03:xx): **gis green** (native codec receipts 2 + hostile 8; nextest 10/10; 758 s, almost all build; the 09-23 document-id fixture drift is gone). **lowpoly red, 2/3: `descriptor_is_fresh`** — the committed `🛂️.descriptor.semio` (09-24 16:32) differs from the live one in 4 bytes: `semantics.effects.destructive` of two actions and one `policy.approval` (peer action-semantics edits since; the 09-23 `ENOENT .tmp-wp-c3` is gone). Regenerating descriptors is W2's describe-all, so it is left to the rebuild. **mathematical green** (nextest 4/4, 623 s; the 09-23 budget timeout was build time). **wfc 27/28: `descriptor_is_fresh`** — the committed descriptor predates G10's landed `InferenceCommitBinding` (the inference `payload` object gained a field: 6 vs 5 members at byte 13 184); same class as lowpoly, refreshed by W2's describe-all. **fem green** (5/5, 545 s), **architect green** (3/3, 355 s). Net: 4/6 green; the 09-23 budget timeouts were build time under fleet load, not tests; lowpoly/wfc wait only on W2's descriptor refresh | `test-quick-<plugin>.txt` |
 
+## Session 12
+
+Slice T12, session 12 (2026-09-25 22:5x). Captures: **`.🧬semio/🌐hub/s12-t12-captures/`**. ABI freeze until W2's
+`--packages all`. Hubs 8060–8069, serves 6560–6569 (none started yet).
+
+| # | item | state | evidence |
+|---|------|-------|----------|
+| 1 | S15-routed guest failures | **trinity**: rewriting `addRuleClause` fixed + 2 laws (refuses 2nd WHERE/unknown/undecodable by name; kind=create publishes only EditRhs), rewriting lib 162/162, request 19. The "no ↶ / undo held" and `clearSelection` wedge were NOT guest defects — S15 found the host-side root (GraphWasmCanvas repainted every frame, ~98 ms/frame on an idle jack editor, so the undo landed ~20 s later) and fixed it; my 5 native round-trip laws stay as regression laws | `rewriting-lib-1.txt`, `jack-undo-1..4.txt`, `jack-clear-1.txt` |
+| 1b | **editors that open no kind (coordinator add-on 23:0x + decision 23:3x)** | census 77 editors / 58 with a kind (staged). **Landed (ABI-safe):** wfc bitmap/grid2d/wfc2d/wfc3d + demonstrator playground declare their kind (+10 targets; request 18). **stdio: first landing (23:18) REVERTED at 23:5x** — the hub's `local-stdio-gis-open-v1` fence pins stdio at zero open targets and a stdio with targets would need a closed actor → all of stdio in ONE post-publish patch set (canonical kind ids `s.stdio.<x>` + declarations + fence + census law), in preparation. **trinity rewriting landed 00:5x** (after writer's lane; request 20). gisterrain → patch set (gis fence); allow-list (reasons in the law): space home/studio, playbook-module-procedural. Final census: §S12-3 | `open-target-census-staged-1.txt`, `editor-kinds-laws-1.txt`, `editor-kinds-laws-grid2d.txt` |
+| 2 | space index `space_id` guest link (S15 §13) | **verified on the current tree**: fold selects the one space of an index without `space_id`; fix in tree since 17:55 and in restage4 (`space` rebuilt 18:15:24); fold laws **5/5** natively. Live proof = S15/G10 on 7800 | `space-fold-laws.txt` |
+| 3 | contract → 0 high (F3, 37 Python oracles, sequence 8 + fem3d, 31 story imports) | **high 54 → 10 (00:0x) → 4 (04:31)**: pdf F3 row gone (inventory refreshed, 60/60), fem3d `__pycache__` removed, sequence off serde_json. **The 4 left need the rename slice** (§S12-4): trinity F1 (1) + `💻️os/🧫️fixtures/⚖️scale` executable owners imported by dev benchmarks/script (3, a root Cargo workspace member move — not during W2's lanes). Medium 104 (103 surveyed oracle gaps + cad deferral). Python oracles: 9 semio cases fixed at the root (host `step_fixture_uris`), drawing reference repaired (codemod damage) + 6 stale case fixtures; Rust adapters of 8 semio cases on the same host helper (parity chain running) | `contract-2.txt`, `oracle-*-1.txt`, `parity-progress.txt` |
+| 4 | `test quick` for all 34 plugins + 26 extensions | **measured, 60/60 ran** (chain 00:46–02:21 + aec-building re-run 03:5x): **32 green, 28 red — every red is ONLY `descriptor_is_fresh`** (committed `🛂️.descriptor.semio` older than the tree: session-12 D1 descriptions, T12 kind/arg declarations, peers); 0 other failures (nextest summaries count 338 passed / 25 failed; the other 3 stale packages report through libtest). aec-building's first run hit a shared build-dir race (`extern location … does not exist`), green on re-run (8/8). Fix = W2's describe-all → request 23 | `quick-table-1.md`, `quick/` |
+| 1c | **note verb args (G10 relay)** | **landed 01:3x** (after note's lane): 11 verbs declare their args, 4 block verbs refuse by name; census law red(11)→green, + 2 laws; note lib **400/400**; request 22. Cross-plugin heuristic census: 522 candidates in 27 plugins → framework law post-publish | `note-lib-1.txt`, `undeclared-args-census-1.txt` |
+| 5 | plugin lib-test debt | wfc bitmap oracle-vector test: filesystem walk of `.🧬semio` (> 17 min) → committed fixture + `include_str!` (root fix); bitmap solve laws red only under load (runtime overrun quarantine, measured at load 34/103); remodel/raster fixed in session 11; F4 (`assert_viewer_never_mutates` vs retained-route viewers) waits for the framework landing window | `wfc-bitmap-lib-1.txt`, `wfc-bitmap-serial-1.txt` |
+| 1d | **post-publish patch set** (stdio kind ids + declarations, gis terrain kind, hub fence, census law, bootstrap, rotation) | prepared, **dry run 79 files / 0 problems** (re-verified 04:4x); lands in the landing window after `--packages all` | §S12-1, `wp-t12/postpublish-open-kinds.py` |
+| 3b | Python oracle reds (sweep #2: 25, all under `✏️s/🔌️plugins/**` → rule 20) | **fem3d ×7 cases: prepared + validated** (`wp-t12/fem3d-oracles/`: 200/200 rows, committed corpus 118/118 by status). **energy ×2 + procedural io: prepared + validated** (`wp-t12/outline-row-ids/`: platform refuses id-less outline rows; bestest 29/29, io 6/6; bestest's stale 10 °C ground clause replaced by §5.2's raised floor). **generation3d example-geometry: prepared + validated** (8/8). **image: root cause in the platform's Python host, LANDED** (TS host; `.venv` packages were hidden by `--system-site-packages`): image oracle 40/40, platform 117/118 + 1 new law. **energy model: prepared + validated** (1 148/1 148). **en1990: the reference is right** — finding F9 (persisted ids from `DefaultHasher`, 661 committed carriers), main messaged. **kit pack twin: prepared + validated** (writer byte-faithful, twin regenerated in scratch). **brep: prepared + validated** (40/40 in a scratch mirror; Rust-written solid re-encoded byte for byte). Left after the patches: en1990 (F9), 9 declared refusals | `kit-tower-pack.py`, `energy-reference-drift.py`, `fem3d-oracles/check.py`, `outline-row-ids/patch.py`, `example-geometry-paths.py`, `oracle-image-pth-2.txt` |
+| 6 | trinity rewriting window vocabulary (F1) | **needs the rename slice** — recorded precisely in §S12-4 | §S12-4 |
+
+### Log
+
+- 22:57 start. Load 33, 11 rustc; W2 holds the wasm mutex (`component-release` of the 9 catalog-B2 packages).
+- 22:5x state recovered from disk: the session-11 story move (`story-coordination-merge.py --write`, 17:26) is applied —
+  fem, block, remodel `📖️stories/🧭️coordination/🧫️fixtures/*` are merged into `🧭️coordination/🟦️.ts`; tsc/vitest of it
+  were not yet recorded. The space fold fix (session-11 request item 16) is in the tree (file mtime 17:55:06) and in
+  restage4 (receipt `space` `rebuiltAt` 18:15:24).
+- 23:0x space fold laws on the current tree: `cargo test -p semio-s-artifact-space-space --features component-app-assembly --lib -- fold_directory` **5/5** (218 s, `space-fold-laws.txt`).
+- 23:0x coordinator add-on: stdio has no hub open target. Measured the one rule over every staged descriptor
+  (`wp-t12/open-target-census.py`, a ticket-local replay of `app_opens_kind`/`descriptor_open_targets`; the law stays the
+  hub's): **77 editor surfaces, 58 open a kind** (`open-target-census-staged-1.txt`). No kind: stdio 9 (all), wfc 4
+  (bitmap, grid2d, wfc2d, wfc3d), gis gisterrain, trinity rewriting, demonstrator playground, space home + studio,
+  playbook-module-procedural. Cause for stdio, two classes: (a) txt/tsv/html have no plugin-level kind and their editors
+  declared none; (b) csv/json/xml/md ARE plugin-level kinds (the 26 native-codec kinds `stdio.<x>`), and the rule opens a
+  plugin-level kind only through a dialect that names it — the dialects are `s.stdio.<x>` (canonical grammar, forced by
+  `preflight_artifact_identity`), so an app-level declaration is ignored by design (fixture case
+  `plugin-level-kind-no-dialect-names`). The source fix for (b) is the kind id `s.stdio.<x>` (gltf already is
+  `s.stdio.gltf`; vcs moved to `s.vcs.vcs` in session 11), which rewrites the native-codec receipts → ABI freeze.
+- 23:18 (after stdio's b-warm release ended, nx on gis) landed (a): `.artifact_kind(crate::artifact_kind())` in the txt,
+  tsv and html editors; native check of the 3 crates with `component-app-assembly` EXIT 0 (57 s); laws
+  `the_editor_declares_the_artifact_kind_it_edits` ×3 + editor tests 13/13, 12/12, 11/11 (83 s). Replaying the rule over
+  the staged stdio descriptor with the three declarations: 6 targets (txt/tsv/html × editor + viewer). Request 17 in
+  `wp-w1/requests/t12.txt`.
+- 23:3x coordinator: csv/json/xml/md → kind id `s.stdio.<x>` as a post-publish patch set (approved; every
+  fixture/receipt/manifest in one go); extend to wfc ×4, gisterrain, trinity rewriting, playbook-module-procedural;
+  shells go to the census law's allow-list with a reason.
+- 23:4x W2 switched to 3 release lanes at 23:16 (gis, note, animate | writer, draw, wfc | puzzle, block); stdio `.ok`.
+  Landed before wfc's lane reached it: `.artifact_kind(crate::artifact_kind())` in the wfc bitmap, grid2d, wfc2d, wfc3d
+  editors and the demonstrator playground editor (`wp-t12/editor-kind-declarations.py`), one law each. Tests:
+  playground 12/12, wfc2d 45/45, wfc3d 56/56, grid2d 56/56, bitmap law ok; bitmap's 3 solver tests were red in the
+  parallel run and pass alone (80 s) and its `the_python_oracle_vector_matches_the_rust_payload_shape` ran > 17 min at load
+  30+ (killed, my pid 10726) — lib-test debt, not this change.
+- 23:5x **stdio landing reverted** (the 6 files equal HEAD 19:34 again). Measured in the hub: `validate_bundle`'s
+  `local-stdio-gis-open-v1` fence requires stdio = 26 native codecs + 0 open targets, and `📜️script.ts`'s gate laws
+  all publish `stdio,gis`; open targets on stdio would also make the bootstrap build a stdio closed actor (39 MB release
+  component; gis's actor was 121 KB under the 64 MiB bound). Not ABI in the freeze's letter, but it would change W2's
+  B2 publish path mid-chain → the whole stdio change moves to the post-publish patch set. Request 17 withdrawn, 18 filed.
+- 00:0x contract re-run (529 s, cached inventory): **high 10** (from 54): 3 fem3d case `__pycache__` (created 17:16 by my
+  session-11 `🔨️run-fem3d-oracle.py` run without `PYTHONDONTWRITEBYTECODE`) — removed; 2 sequence `testing/dependency`
+  (production imports `serde_json`, the crate its subset registers as the third-party oracle) — fixed below; 3 os dev
+  benchmark/`🧑‍💻dev` script imports of `🧫️fixtures/⚖️scale/*` executable TS; pdf `set-pattern` outcomes (F3, stdio =
+  hub-native codec crate → frozen); trinity rewriting window vocabulary (F1). Medium 104 (103 surveyed oracle gaps + cad
+  deferral). The 31 story imports are gone (session-11 story move verified: tsc 0 story errors, fem viewport vitest 2/2).
+- 00:1x S15 relay trinity: see status row 1 and §S12-2. 00:2x rewriting fix landed while writer's lane was still in the
+  stdio crates; rewriting checked at once (EXIT 0, warnings present).
+- 00:3x sequence: `wp-t12/sequence-first-party-json.py` — editor, node-graph command, script-window transient, wasm
+  component, csv importer read/write JSON through `dsl::os_pack::json`; `serde_json` moved to `[dev-dependencies]`
+  (tests + oracle); `From<serde_json::Error>` removed. Native `--lib --tests` EXIT 0, **lib 210/210**. wasm32 check
+  (the component is cfg(wasm32)) queued through the mutex, nohup pid 57241, capture `sequence-wasm-check-1.txt`.
+- 00:4x G10 relay (note args): census law `every_note_verb_that_reads_arguments_declares_them` written and measured
+  **red with 11 offenders** (setGridSpacing, setGridSubdivisions, setGridOpacity, setSnapGridSpacing, setPencilWidth,
+  setEraserRadius, setCameraZoom, moveBlock, deleteBlock, duplicateBlock, patchBlocks); codemod
+  `wp-t12/note-verb-args.py` (declarations + by-name refusals) dry-run clean; applied once note's release lane is done
+  (note is compiling in W2's lane 1). Two more laws written (declared-args decode, refusals).
+- 00:4x chain launched (note last); 01:1x coordinator rule 18: every cargo/nx build under `nice -n 15` — reniced my
+  chain (63376), the oracle sweep (84816) and the queued wasm check (57241) incl. children (macOS `renice -n` is
+  relative: they sit at nice 20); the chain script now prefixes `nice -n 15` for every later package.
+- 00:5x S15 relay 2 (trinity `clearSelection` wedges the lane): NOT reproduced — new jack law
+  `clear_selection_on_an_empty_selection_settles_and_frees_the_lane` green (`jack-clear-1.txt`); S15's own
+  `s15-lane-wedge-jack-trace2.json` shows the clear settling and the next verb starting; asked for the held verb's trace.
+- 01:0x `test quick` measured so far: it runs ONLY `descriptor_is_fresh` at quick level (5–13 others filtered). Every
+  red so far is a stale committed descriptor (D1's session-12 descriptions, my kind declarations), which W2's
+  describe-all regenerates; gis and vcs are fresh and green. Table: `wp-t12/test-quick-table.py`.
+- 01:1x Python oracle sweep relaunched (`test-oracle --implementation python`, exhaustive, `PYTHONDONTWRITEBYTECODE=1`
+  so no `__pycache__` lands in case dirs; nohup pid 84816, capture `oracle-python-all.txt`). Session 11's 17:4x fixes
+  (jack 25/25 + parity 25/25, block5d 83/83, lowpoly 35/35, procedural 2d/3d 29/29, block3d 69/75) were never written
+  into this report; the sweep re-measures all of them.
+- 01:2x census of verbs that READ arguments but declare none (heuristic over staged descriptors + `command_from_action`
+  arms, `wp-t12/undeclared-args-census.py`, `undeclared-args-census-1.txt`): 522 candidates in 27 plugins (space 60,
+  puzzle 84, wfc 38, procedural 34, block 33, lowpoly 31, …). Heuristic overcounts (note: 25 candidates vs 11 by the
+  real law), so the real law belongs in `artifact_app_laws` (framework crate → post-publish), called by every app.
+- Found on the way (plugin contracts, recorded for owners): reasoning `addRelationship` hard-coded `node-1 → node-2`
+  (a peer's uncommitted working-tree edit at 05:2x already takes `sourceId`/`targetId` or two selected nodes and maps
+  identities by `nodeId` — left to that peer); 42 commands are
+  `BatchOnlyPendingRewrite` = unreachable in the running app (space studio 24, architect 8 incl. runAnalysis/Report/
+  Validation/search/import/export, cad 5, home 4, animate 1); architect `runAnalysis` is a View action that emits an
+  artifact mutation; the wires editor builds interaction args with `serde_json` in production (`✏️editor/🦀️.rs:108`).
+- 01:3x note's lane done → `note-verb-args.py --write`; `nice -n 15 cargo check -p semio-s-artifact-note-note --lib --tests` EXIT 0 (132 s); `cargo test --lib` **400/400** incl. the census and the two block-verb laws (376 s). Request 22. Coordinator: trinity clearSelection item dropped (host-side root found and fixed by S15).
+- 02:21 test-quick chain ALL_DONE (all three detached jobs ended on their own: chain, oracle sweep 62 min, sequence
+  wasm32 check **EXIT 0**). 03:40 resumed after the usage-limit cut.
+- 03:5x `quick-table-1.md` (60 packages): 32 green; 28 `descriptor_is_fresh`-only reds (writer, mathematical, wfc,
+  procedural, flow, animate, shooting, demonstrator, sequence, fem, architect, process, lowpoly, reasoning, norm, playbook
+  + its procedural module, imperative, remodel, energy, trinity, dag, stdio, note, puzzle, block, space, sourcing). At
+  `quick` level the plugin crates run only the freshness law (others filtered). Request 23: describe-all.
+- 03:4x F7 fixed: one blocking predicate `isBlockingBreach` (`📚️library/🟦️.ts`, used by `runPolicyExit`), and the
+  platform law `every committed case satisfies the frozen contract's blocking rules` filters by it (it demanded zero rows
+  of every priority, so 103 surveyed medium rows kept it red); `clean safety` timeout 5 s → 60 s (walks the repo).
+  The sequence move off serde_json surfaced a real registry inconsistency: the `serde-json-sequence-carrier-reader`
+  entry claimed `productionReachable: false` while `🔒️dependencies.json` classifies serde_json production-reachable in
+  211 manifests → recorded as shrink-only `productionDebt` (owner `🎯️action-bus`, whose `optional_json_to_dsl` takes a
+  `serde_json::Value`; plan in the entry). Platform suite **116/117**; the one red is the contract law's 2 remaining
+  blocking rows (trinity F1 = rename slice, pdf F3 — see next line). Bun 1.3.14 segfaults (exit 133) when `bun test`
+  gets an emoji path WITHOUT `./` (it treats it as a filter); with `./` it runs.
+- 03:5x pdf inventory refreshed (`--artifact s.stdio.pdf`, 10 min): 1.7/base 60 runtime / 60 declared, 0 differences
+  (set-pattern's refusal is in the tree since 18:14); the contract row reads the per-kind dispatch outcomes, re-run next.
+- 03:5x oracle sweep (`oracle-python-all.txt`): 506 cases, 7 090 rows, passed 6 202, failed 601, errored 287, not
+  exercised 177. Only 90 result directories survive in the cache, so the per-case table covers 83 cases
+  (`oracle-sweep-1.md`): python 24 run / 11 red — all `🧿️semio` subsets + writer's declared refusal; rust 58 / 1 (txt).
+  Root cause of 9 semio reds: each reference re-parsed its steps for ONE hard-coded scheme (`asset://`/`local://`)
+  while the features moved their vectors to `shared://`. Fix (`wp-t12/semio-step-fixture-uris.py`): the Python host
+  `Context.step_fixture_uris()` answers every fixture URI a scenario's steps name through the platform's one grammar
+  (Python twin of `FIXTURE_URI_RE`), the nine references use it (their own scans deleted). Re-run: kit 30/46 → 45/46,
+  brep 26/40 → 36/40, graph 23/34 → **34/34**, object 19/28 → **28/28**, table 18/26 → **26/26**, text 15/22 →
+  **22/22**, model 23/34 → **34/34**, value → **29/29**, flow 27/40 → **40/40** (captures `oracle-<case>-1.txt`).
+  Left (owners' reference maintenance, real disagreements): kit `identity-round-trip` (the pack twin decodes to a
+  different kit than the text — reference pack decoder drift), brep `spec-vector-create-{vertex,edge,face}` + its
+  identity round trip (`exactly 7 body lines, found 9` — the brep document gained two members the reference rejects);
+  drawing (`KeyError 'group'` — the reference's node-kind table lacks `group`), image (Pillow not installed in the
+  host Python), writer (declared refusal).
+- 04:0x lib-test debt, wfc bitmap: `the_python_oracle_vector_matches_the_rust_payload_shape` walked the WHOLE
+  `.🧬semio` tree (hub data roots, cargo build dir, caches) looking for a ticket file — the > 17 min "hang" of 23:5x.
+  Root fix: the vector is committed as the fill tool's fixture
+  `✏️editor/🎭️modes/✏️edit/🛠️tools/🌡fill/🧫️fixtures/🐍️python-fill-oracle/🔣️.json` (byte copy of the WFC ticket's
+  `bitmap-fill-oracle-vector.json`, generated by that ticket's `📜️bitmap-fill-oracle.py`) and `include_str!`-ed.
+  Bitmap lib 206/214 at load 34: the other 7 reds are solve laws ending in `job-session.terminal-fault` — the runtime's
+  `StepOverrunLedger` quarantines after 4 consecutive over-ceiling WALL steps; serial at load 103 still 3 red, alone at
+  load ~20 (23:5x) green. Environment-bound (10× oversubscription), not a code defect; recorded, not "fixed".
+- 04:1x drawing reference (`🖊️mutate-semio-drawing/🐍️.py`) carried a rename codemod's damage: node kind `group` read
+  `group-nodes` (the mutation id) and the transform key `scale` read `scale-node` → `KeyError 'group'` on every
+  committed document; and its verb table used the pre-09-05 variant names (`Rotate`, `Scale`, `Group`, `Ungroup`,
+  `Flatten`, `Unflatten`; the Rust enum is `RotateNode` … `UnflattenNode`). Repaired (`wp-t12/semio-drawing-node-kind.py`
+  + verb table). The case's own 6 mutation fixtures (`🧫️fixtures/🖊️mutate-semio-drawing/*/🦠️mutation/🔣️.json`) still
+  carried the old variant names — the RUST subject refused them too (`unknown variant Rotate`, measured in
+  `parity-🖊️mutate-semio-drawing-1.txt`, 23/52 parity) → renamed to the enum's names (no digest registered on them).
+  drawing, image, presentation `step_uris` now filter the host's `step_fixture_uris()`.
+- 04:2x Rust side of the same drift: the Rust runner `Context::step_fixture_uris()` + `fixture_uris_in` (the grammar of
+  `FIXTURE_URI_RE`), and the kit/object/graph/brep/table/text/drawing/image Rust adapters use it instead of their
+  `asset://` scans (`wp-t12/semio-step-fixture-uris-rust.py`); presentation passed its oracle 46/46 unchanged.
+  Parity chain for the 8 cases detached (pid 58646, `parity-progress.txt`).
+- 04:31 **contract: high 4** (`contract-2.txt`, 5 m 53 s): trinity F1 + the 3 `⚖️scale` fixture imports. pdf F3's row is
+  gone after the pdf inventory refresh. Medium 104.
+- 05:07 semio parity chain (Rust subject + Python oracle, `parity-progress.txt`): graph **68/68, parity 34/34**; text
+  **44/44, parity 22/22**; drawing Rust 51/52 (was 23/52 parity: the 6 renamed fixtures + host URIs), Python 52/52;
+  image Rust 39/40, Python 25/40 (14 need Pillow in the host Python, 1 `spec-vector-no-mutation` has no registration in
+  either adapter); kit Rust 37/46, Python 45/46; object Rust 22/28, Python 28/28; brep Rust 13/40, Python 36/40; table
+  Python 26/26, Rust host does not compile (the adapter imports `semio_s_artifact_stdio_csv`, which the generated host
+  never links: not the subject, not a contributed host package — pre-existing, since 09-24).
+  Real subject failures left for the stdio owner (stdio = hub-native codec crate → post-publish): drawing
+  `inverse-unflatten-node` does not restore the drawing; kit create-object/model/properties and object
+  create-brep/mesh/properties refused `mutation.child-identity` ("Semio child identity or dialect mismatch"); brep 27
+  rows `vertex: expected 3 fields, got 2` (vector shape vs Rust reader); kit pack twin ≠ text (Python reference).
+- 05:1x full Python oracle sweep relaunched with its per-row results copied at the end (`oracle-sweep-run.sh`, pid
+  66722; the cache keeps only the latest report, so the 01:1x sweep's per-case rows were overwritten).
+- 05:3x jack full lib **220/220** (incl. the 5 session-12 round-trip laws; `jack-lib-1.txt`).
+- 05:2x image adapters (Rust + Python) register the feature's plain scenario `spec-vector-no-mutation` (both handlers
+  already implement the doc-string variant); verification waits (rule 20).
+- 05:5x **coordinator rule 20: HARD guest freeze** until W2's `--packages all` — no edits under `✏️s/🔌️plugins/**`,
+  guest-linked framework crates, root Cargo. My test-only edits inside stdio's 🧿️semio subsets (04:0x–05:2x) are
+  release-input changes for nx (every plugin linking stdio semio recompiled its closure) — lesson recorded: test files
+  inside a plugin crate dir are NOT free during a catalog build. Further guest work only as `wp-t12/` patches.
+- 06:09 full Python oracle sweep #2 (`oracle-sweep-2.md`; the 600 MB raw row copy summarised and deleted): 506 cases,
+  7 090 rows — passed **6 318** (was 6 202), failed 591, errored **181** (was 287). Python 111 cases / **25 red** (session
+  11 end: 37), Rust 90 / 6, TypeScript 128 / 2. The 25: 9 declared refusals by design (identity round trips of carriers a
+  second implementation cannot read, refused kinds), fem3d scenario-id drift ×5 cases (`hall-vector-*` rows, 51 rows) +
+  solids shape drift ×2, energy scenario-id drift ×2 (`case-parameters-*`, `schema-validity-*`), procedural `read-1`,
+  cad `example-geometry-3d` (8), image (Pillow absent), brep (vertex vectors), en1990 (applied vs refused), energy
+  fenestration (6/1149), kit pack twin. All of them live under `✏️s/🔌️plugins/**` → rule 20 → prepared patches only.
+- 08:40 resumed after the second usage cut; rule 20 still active (W2's `--packages all` failed 06:34, re-running).
+- Findings for the allow-list decision: space `home` = launcher, snapshot `{schema, catalog_generation}` (no user
+  content); space `studio` = the `s` shell's `SpaceApp`, snapshot is the framework-owned OS `WorkflowSnapshot` ("no
+  document type of its own", `⚙️engine/🪐️space/🦀️.rs` header); `playbook-module-procedural` = a `playbook.blockKind`
+  module whose snapshot is the host block's `ModuleRenderPayload` (foreign document codec). The demonstrator playground
+  IS a document (`playground.playground` schema, mutations) → declared, not allow-listed.
+- 08:5x **fem3d Python oracles (7 of the 25 sweep-#2 reds) → prepared patch `wp-t12/fem3d-oracles/patch.py`** (rule 20;
+  dry run 7 files / 0 problems; refuses a second run). (a) load/material/boundary/analysis/mesh references register
+  the `hall-vector` and `reject` outline bases (51 rows answered "no oracle registration"). (b) Registering `reject`
+  exposed the real defect: the references applied **29 committed refusals** — they knew only duplicate ids and missing
+  selected targets. Each gains `refuse`, run first in `apply_mutation`, written from the vocabulary's statement:
+  `id-mismatch` on a renaming replace, `target-missing` on every foreign key (element start/end/material/section,
+  solid material, support node, load carrier, combination term), `target-referenced` on every guarded delete (element
+  ← member UDLs, solid ← area loads, section ← elements, material ← elements+solids, load case ← combinations;
+  `delete-node` cascade-free by its own vector, supports/combinations leaves), `invariant` on the solver's value
+  bounds (finite node; e,g,rho > 0 and nu in (-1, 0.5); section area/iy/iz/j > 0; meshable solid incl. zero-area
+  outline and holes inside; finite factors/magnitudes; ≥ 1 mode and buckling factor, positive deformation scale).
+  (c) `add-load` of a present load id is the committed no-op, not a refusal. (d) mesh + any-mesh features: the 4
+  `create-solid`/`replace-solid` rows each predate `axis`, which `FemSolid` requires (no value default) → neither
+  implementation could decode them; `"axis":"z"` added, tables re-aligned. **Scratch validation (`check.py`, real
+  host `Context`, committed fixtures): 200/200 outline rows of the 6 cases, and the whole committed vector corpus
+  agrees — applied 58/58 land on the after-model, rejected 49/49 raise, no-op 11/11 keep the before-model.**
+- 09:0x **scenario-id drift (energy ×2, procedural `read-1`) → one root cause, prepared patch
+  `wp-t12/outline-row-ids/patch.py`** (dry run 9 files / 0 problems; refuses a second run). A Scenario Outline row's
+  id is `<base>-<id cell>`, and the parser silently fell back to the row INDEX when a table had no `id` column. Census
+  over all 508 features: exactly these 3 features lack one (7 032 other rows all carry a kebab-case `id`), and all 3
+  were red in BOTH roles (Rust and Python register `case-parameters-600`, `read-stl`; the plan said
+  `case-parameters-1`, `read-1`). Patch: (A) platform `materializeScenario` refuses a row without a kebab-case `id`
+  cell (the index fallback is gone) + platform law; (B) bestest/epJSON tables gain `| id | case |` (`600ff` keys the
+  scenario, `600FF` keeps naming the committed model dir), procedural io's `format` column IS its id; (C) both energy
+  adapters (Rust + Python) register the kebab id. (D) Registering bestest exposed what the index names hid: all 14
+  `case-parameters-*` asserted a 10 °C ground temperature, yet no committed case touches the ground — models and the
+  committed EnergyPlus translation expose the floor to outdoor air, NoSun/NoWind, no ground object (18 °C is the
+  engine default for an unused boundary; the Rust projection never had the member). The reference now asserts §5.2's
+  raised floor and projects exactly the Rust members. **Scratch validation:** patched parser over all 508 features:
+  8 057 scenarios, 0 rows without an id; platform "feature profile" 6/6 (+1 new law); oracle rows through the real
+  host: bestest 29/29, procedural io 6/6, epJSON 16/16 need the subject phase first (byte-decoding oracle, by design);
+  Python registrations == parsed ids for all three cases.
+- 09:1x **generation3d `example-geometry-3d-1` (8 rows "unregistered") → prepared patch
+  `wp-t12/example-geometry-paths.py`** (dry run 2 files / 0 problems): the reference registers one handler per example
+  it DISCOVERS and still globbed the retired `<example>/🧪️tests/🧩️example/🔣️.json`; the fixtures live at
+  `<example>/🧫️fixtures/🧩️example/🔣️.json`, which the Rust subject (`include_str!`) and the TS lane already read.
+  Scratch: **8/8 rows pass** through the real host; standalone `🐍️.py` "numpy + scipy agree with all 23 committed
+  expectations across 8 examples".
+- 09:1x **image "No module named 'PIL'" → root cause in the test platform's Python host (TS, not guest) → LANDED.**
+  `.venv` HAS Pillow 12.2.0 (and numpy, scipy). But any case whose owner chain declares an external Python package
+  (stdio: pypdf, simplejson, ifcopenshell) runs in a cache-local venv created from `.venv/bin/python3` with
+  `--system-site-packages` — which exposes the `.venv`'s BASE (uv CPython) and hides every `.venv` package (proved in
+  scratch: numpy and PIL both `ModuleNotFoundError`). Fix in `🖥️host/🏗️materialization/🟦️.ts`: new
+  `pythonSiteDirectories` (the interpreter's own purelib/platlib via sysconfig); the env's site dir carries
+  `semio-base-interpreter.pth` (`site.addsitedir(<base site>)`, so the base's own `.pth` files work too) instead of
+  `--system-site-packages`; a stamp without `baseSites` is not current. Second finding while proving it: the `.venv`'s
+  `ifcopenshell 0.8.4.post1` is uv's platform-less `py3-none-any` wheel that cannot import on darwin/py3.14 ("not
+  built for darwin/64bit/python3.14") — pip picks the real `py314-none-macosx_11_0_arm64` wheel — so a declared
+  package the base provides but cannot import is installed INTO the env with `--ignore-installed` (shadows the base).
+  README + doc updated, composition fixture declares `pythonSiteDirectories`. **Verified:** new platform law "a
+  cache-local Python host environment reuses every distribution its base interpreter provides instead of hiding it"
+  1/1 (numpy and PIL resolve from `.venv`'s site dir, not the env); platform suite **117/118** (the 1 = trinity F1,
+  unchanged); command-composition-source 7/10 — the 3 reds are peers' and pre-existing (taxonomy `🖥️host` context,
+  `Bun` in `⚖️parity/📋️orchestration`, launch-route name); **image Python oracle through the platform: 40/40 passed**
+  (`oracle-image-pth-2.txt`; sweep #2 had 27/40 red).
+- 09:2x **en1990 (2 rows "applied vs refused") is NOT a reference defect — it exposed a cross-cutting one (finding
+  F9, main messaged).** The shared norm Python vocabulary refuses `insert-variable-action` because `qK` is a composed
+  child whose `childId` is "content-addressed by a function no specification states". True: `en1990_qk_scene_id`
+  hashes the entries' JSON with `std::collections::hash_map::DefaultHasher`, whose algorithm Rust explicitly leaves
+  unspecified across releases. Census: ~18 persisted-id minting sites (en1990 qK, din18599 climate, forms scene,
+  sequence content, architect benchmarks/knowledge, block/curation catalogs, puzzle5d kind catalogs, puzzle3d
+  objects/suggestions, remodeling mesh io, drawing, energy/binary/space inference digests …) and **661 committed
+  files** (architect 539, block 82, norm 26, sequence 7, sourcing 5, puzzle 2) carry such ids — a toolchain bump can
+  re-key every one, and no second implementation can mint them. Plan (§S12-4 rename-slice class, guest freeze):
+  `hash::content_id(prefix, canonical_json)` = `prefix-` + first 16 hex of SHA-256 over the `pack::json` bytes (the
+  hash crate already owns `sha256_hex` and `format_number_for_hash`), stated in the composition schema's `childId`;
+  every site migrates; the 661 carriers are regenerated in one sweep; a law forbids `DefaultHasher` for persisted ids;
+  the norm reference then mints child ids instead of refusing. Until then the en1990 red is the reference being right.
+- 09:2x **energy fenestration (5 red of 1 149) → prepared patch `wp-t12/energy-reference-drift.py`** (dry run 3 files /
+  0 problems; refuses a second run): the reference fell behind `Material.roughness` (in `create-material`'s payload)
+  and `Fenestration.vertices_m` (created empty; `replace-fenestration-vertices` shapes it). Creation writes both;
+  undoing a delete re-creates the aperture first and restores a non-empty polygon second (this reference applies
+  inverse steps in list order; the Rust store replays reversed). Also drops two dead `if false { return Vec::new(); }`
+  blocks in the Rust delete-fenestration / delete-shading-surface inverses. **Scratch: 1 148/1 148 registered rows pass**
+  (the 1 unregistered is the subject-only identity round trip).
+- 09:3x **kit "pack twin" (1 row, red in BOTH roles — the Rust subject makes the same check) → prepared patch
+  `wp-t12/kit-tower-pack.py`**: the capsule tower's binary twin (08-26) predates the 09-20 text edit that made the
+  properties child's target id equal its child id (`kit-props` → `props-01`); decoded, the two kits differ in exactly
+  that member. The script regenerates the twin from the text through the reference's pack writer only after proving
+  the writer byte-faithful (re-encodes the committed twin to the identical 50 019 bytes) and that the new twin decodes
+  back to the text's kit; scratch: 50 019 → 50 018 bytes, second run refuses.
+- 09:3x rule-20 check on the image case's Rust side (`spec-vector-no-mutation` subject registration): not run — load
+  20–27 with W2's cargo fleet; the Python side is proven (40/40 through the platform, including those rows).
+- 09:4x **brep (4 rows; the case is red in BOTH roles) → prepared patch `wp-t12/brep-reference-carrier.py`** (dry run 4
+  files / 0 problems; refuses a second run). The brep v1 carrier grew per-item `tol`, a `coedges` line (p-curve
+  `~curve2`/`-`, prange, loop ring) and `nextLabel` (committed grammar 09-24: 9 body lines, was 7); the Rust codec,
+  schema, spec vectors and the Rust-written `✉️base` solid moved, but (1) the Python reference still read 7 lines and
+  dropped `tol` in create verbs (3 spec vectors + identity red), (2) the feature's 9 create doc strings carry no `tol`,
+  which the Rust payloads require (the Rust subject cannot decode them), (3) the concrete-forest pair was written by the
+  reference in the OLD layout (the Rust codec cannot read it). The patch teaches the reference the grammar's new
+  productions + the pack twin's matching fields, adds `"tol":1e-7` to the 9 doc strings (tables re-aligned), and
+  re-emits the forest pair (tol 1e-7 on every vertex/edge/face, no coedges, nextLabel 0). **Proven in a scratch mirror
+  of the subset: the patched reference re-encodes the Rust-written solid pair byte for byte (the cross-language pin),
+  13/13 committed vectors agree by status, all 26 feature rows apply (+ the 13 inverse rows restore) on the re-emitted
+  forest, and the whole case runs 40/40 through the real host.** Rust side (subject decode of the new forest and doc
+  strings) to confirm with `test-parity --case 🧊️mutate-semio-brep` after landing (load 20–27 now).
+  Remaining sweep-#2 Python reds after all prepared patches: en1990 (F9) and the 9 declared refusals (by design).
+- 09:5x **Finding F10 — 7 cases have never run under the platform (sweep-#2 `problems`, not rows).** Census over all 508
+  features' adapters: Python 120 files / **7 without `def adapter()`** (wfc: `mutate-wfc2d-1`, `mutate-wfc3d-1`,
+  `mutate-bitmap-1`, `mutate-grid2d-1`, `mutate-wfc-grid3d-1`, `mount-contract`; surface: `web-mercator-tile-oracle`),
+  Rust 389 / **5 without `pub fn adapter()`** (the same wfc cases minus wfc3d), TypeScript 154 / 2 (`wfc/mount-contract`,
+  and `os/dev/activation`, to check). They are standalone replay scripts / "host-runner shape" stubs from the extraction
+  tickets (`python3 🐍️.py` works; the platform host raises "must define `def adapter() -> Adapter`"), so their features'
+  differential rows never execute in either role — and the contract does not notice (the 4 high rows are unrelated).
+  Root fix, for the wfc owner + the landing window (guest-crate test files, rule 20): wire each case (Rust subject
+  replays the committed quintet through the production mutation path and projects `(diff, messages, after)`; the
+  Python `adapter()` registers `mutate`/`inverse` over the existing `mutate`/`inverse`/`apply_diff`), and add a platform
+  contract rule "an adapter file defines its language's entry point" (high) in the SAME landing, so the gate goes
+  red→green together instead of blocking W2's chain mid-publish. The other sweep-#2 `problems` (11 cases whose
+  registered oracle is a TS third-party reader — jszip bcf ×3/docx, three gltf ×6/obj — "needs a typescript adapter")
+  are the same class for the TS side.
+- 10:4x **Regression check of the landed Python-host change over every case it touches** (26 Python cases run in a
+  cache-local env: 21 stdio, 3 energy, 2 puzzle2d): `test-oracle --owner 🗄️stdio` (all 126 stdio cases, 70 min under
+  load 34–47): executed 2 154, **passed 2 131, failed 23**, 16 not-exercised (11 = F10's missing TS adapters, 5 =
+  recorded no-oracle decisions). The 23: Python brep 4 + kit 1 (both prepared above) and Rust-hosted oracles 18 —
+  dxf r12 header 2 / entities 4 / tables 10 (owner item, diagnosed: the rows name targets the real input
+  `asset://🚏️bus-shelter/🖊️.dxf` does not contain — layer `DIMS`, style `NOTES`, linetype `DASHED`, entity index 5 —
+  so `remove-*` moves nothing and `set-*` finds nothing; the rows must name what the bus shelter carries) and
+  txt utf-8 2 → **prepared patch `wp-t12/txt-oracle-refusal.py`**: the feature documents those two rows as a refusal
+  (the fixture's last line is empty) and the reference states it as an `Err` naming the loss (asserted by its own unit
+  laws), but the case adapter's ORACLE handlers propagated that `Err` as a failed row while the SUBJECT handlers already
+  answer the documented refusal with the untouched document; one helper now admits exactly that kind + reason in both
+  oracle handlers (anything else still fails). Rust test-host file → compile with the case's parity run at landing. Every cache-local case that sweep #2 had red for a hidden package
+  is green now: image 40/40, ifc-4 15/15, ifc-2x3 8/8, i-json 22/22, pdf text 2/2 (ifcopenshell installed into the
+  env past the `.venv`'s platform-less wheel). Energy mutate 1 143 + the 5 prepared, puzzle2d 124/124, third-party
+  puzzle2d 6/6 (`oracle-stdio-pth-1.txt`, `oracle-pth-*.txt`).
+- 10:5x **State: every T12 item that does not need W2's `--packages all` is done.** Waiting on the coordinator's DONE for
+  the landing window, in this order (each script refuses a second run; `cargo check -p`/parity after each): (1)
+  `postpublish-open-kinds.py`; (2) `outline-row-ids/patch.py` (platform + 3 features + 4 adapters together); (3)
+  `fem3d-oracles/patch.py`, `example-geometry-paths.py`, `energy-reference-drift.py`, `kit-tower-pack.py`,
+  `brep-reference-carrier.py`, `txt-oracle-refusal.py`; (4) re-run the 28 stale-descriptor `test quick`s and the
+  Python oracle sweep. F9 (DefaultHasher ids) and F10 (unwired cases) are messaged to main for owners.
+
+### S12-1. Post-publish patch set: every editor that edits a document opens a kind (`wp-t12/postpublish-open-kinds.py`)
+
+**Dry run 00:0x: 79 files, 0 problems** (`python3 .tmp-ticket/wp-t12/postpublish-open-kinds.py --dry-run`). Not applied
+(ABI freeze: part A rewrites the stdio native-codec receipts the hub links). Parts:
+
+| part | what | hunks |
+|---|---|---:|
+| A | stdio kind ids `stdio.<x>` → `s.stdio.<x>` (the id the dialects, artifact definitions and codec ids already use; gltf's precedent): 35 `artifact_kind()` ids, 25 artifact-definition `native_factory.artifact_kind`, 25 receipts in `📜️native-codec-factories.json` + the receipt schema's kind enum, hub provider fixture + bin-unit viewer, TS trusted-stdio-catalog code/test/fixture/schema. Schemas, format kinds (`*_stdio_kinds`), codec/factory/language ids unchanged | 118 |
+| B | txt/tsv/html editors declare their kind + law each (csv/json×2/xml×2/md then pair through their dialect) | 6 |
+| C | gis terrain: `semio_s_artifact_gis_gisterrain::artifact_kind()` (`s.gis.gisterrain`, `gis.terrain` — its existing native codec) declared at plugin level + activation | 3 |
+| D | hub fence `local-stdio-gis-open-v1` keeps the exact 2-package / 28-codec closure and requires the profile to open every package target; the hard-coded "gis map only, stdio none" target list is dropped — every target is validated against its verified descriptor by the one rule at load (`validate_descriptor_open_target`, trusted-catalog `:977`) and grants by role (`:1506`). Fence law renamed + terrain case (outside the profile → refused; inside → admitted) | 3 |
+| E | census law `every_committed_editor_that_edits_a_document_opens_a_kind_through_the_one_rule` over every committed `🛂️.descriptor.semio` (isolated packages), allow-list with reasons in the law: space home (launcher, snapshot = catalog generation), space studio (the `s` shell's studio over the OS-owned `WorkflowSnapshot`), playbook-module-procedural (a `playbook.blockKind` module over the host block's payload) | 1 |
+| F | bootstrap package table: stdio `opensDocuments: true` | 1 |
+| G | `materializeTrustedStdioGisRotation` demanded exactly ONE profile target — already stale (the profile opens map editor + viewer since session 11); now mirrors the fence | 1 |
+
+Landing order (landing window after `--packages all`): `--write` → `cargo check -p semio-s-plugin-stdio --features
+full-app-catalog --lib --tests`, `-p semio-s-plugin-gis`, `-p semio-hub --lib --tests --features native-artifact-execution`
+(+ wasm32 check of stdio and gis through the mutex) → stdio registry tests, stdio `native_openable_provider`, hub
+`trusted_catalog` + `native_openable_provider` + bin-unit, TS trusted-stdio-catalog → W2 describe-all + generate (plugin
+`🔣️.json`, `🛂️.descriptor.semio`, `trusted-stdio-catalog.json` regenerate) → census law (needs the fresh descriptors) →
+release stdio, gis. Expected census after it: every editor opens a kind except the 3 allow-listed shells.
+Trinity rewriting (`text.rewriting`) lands separately once writer's release is `.ok` (writer links trinity).
+
+### S12-2. Trinity "no ↶, undo does nothing" (S15 session 12) — open
+
+- Measured in the browser by S15 (`wp-s15/generated/s15-matrix-r4en.json`): jack `patchNodes` (after `selectAll`) and
+  rewriting `addRuleClause kind=create` move Check in 0→1, their History row has no `framework.history.entry.N.revert`
+  (↶) and the rail undo leaves Check in at 1 (`attempts … :-/-`, both lanes fail).
+- In `build_history_view` (`🔌️plugin/🦀️.rs` ~25385) a row with op lines and `applied` is revertible exactly when
+  `edit.actor == store.local_actor_id()` (or no actor); so in the browser the edit's actor differs from the document
+  store's local actor. Nothing in the trinity guests sets an actor.
+- NOT reproduced natively (all green, `jack-undo-1..4.txt`, `rewriting-lib-1.txt`): one and two selected nodes; the
+  shell's own order `selectAll → patchNodes(empty nodeIds) → clearSelection → undo → redo`; the same after the host
+  LOADS the curated Nakagin example through envelope ingress (swapped store); rewriting `addRuleClause create → undo →
+  redo`. All with one actor (`local`) — the native harness cannot produce two actors.
+- Browser reproduction by T12 failed: my copy of S15's probe (`wp-t12/t12-matrix.mjs`, captures `browser/`) against
+  S15's serve 6540 opens trinity and loses its windows within 3.5 s, three runs, load 40–65.
+- Asked S15 (via coordinator, 00:5x): after `patchNodes` and BEFORE the neutral dispatch, does the ↶ exist and is
+  `action.undo` enabled; then one undo with no neutral dispatch.
+- Landed on the way (real defects, laws): rewriting `addRuleClause` refuses by name (2nd WHERE / unknown kind /
+  undecodable rule) and writes only the side it changed (no re-printed LHS in a create).
+
+### S12-3. Open-target census (editors vs editors-with-kind)
+
+| stage | editors | open a kind | no kind |
+|---|---:|---:|---|
+| staged restage4 descriptors (measured 23:0x) | 77 | 58 | stdio 9, wfc 4, gis gisterrain, trinity rewriting, demonstrator playground, space home + studio, playbook-module-procedural |
+| + landed declarations (wfc ×4, playground, rewriting), after W2's describe | 77 | 64 | stdio 9, gisterrain, 3 shells |
+| + post-publish patch set (§S12-1) | 77 | 74 | the 3 allow-listed shells (reasons in the law) |
+
+Rows 2–3 are the rule replayed over the declarations (`open-target-census.py` logic), not yet measured on fresh
+descriptors; the census law in the patch set measures it after W2's describe-all.
+
+### S12-4. What the rename slice must do (T12 cannot land these under the freeze / without a taxonomy move)
+
+1. **F1 trinity rewriting window vocabulary** (`contract` high row): `RewritingWindowConfig` lives at
+   `♻️rewriting/…/✳️any/✏️editor/🪟️window/🎚️config` and is SHARED by the four graph windows of mode `✏️edit`
+   (`👈️lhs`, `➡️rhs`, `⬅️before`, `⏭️after`). The surface grammar `<✏️editor|👁️viewer>[/🎭️modes/<mode>[/🪟️windows/<window>]]/<lane>`
+   has no position for a mode-shared window config, so moving it under one window would be wrong. Decision needed:
+   extend the grammar with `✏️editor/🎭️modes/<mode>/🪟️windows/🎚️config` (a config shared by the mode's windows), move
+   the directory there, then update `✏️editor/🦀️.rs` (the `window_config` module path + the bounded-proof owner path
+   string `…/🪟️window/🎚️config/🧵️job/🦀️.rs`), the two leaf `🔣️.json` `owner` fields (`🎥️set-camera`, `🔍️set-lod-mode`),
+   the repo `📜️script.ts` reference, and register the vocabulary as a state lane like the 35 of session 11
+   (`wp-t12/editor-register.py` pattern: surface manifest + decision + vectors + one case).
+2. **`💻️os/🧫️fixtures/⚖️scale`** (3 contract high rows): executable owners (`📽️projection/🟦️.ts`,
+   `📤️publication/🟦️.ts`, the `semio_framework_os_scale_fixture` crate + component) live under `🧫️fixtures` and are
+   imported by the os dev benchmarks and the `🧑‍💻dev` script. Move the generator package to a non-fixture owner
+   (the `🏭️generator` position, e.g. `💻️os/🏭️generator/⚖️scale`), keep only its generated output under `🧫️fixtures`;
+   touches the root Cargo workspace member path, `🔣️taxonomy.json`, the library + dev `📋️project.json`,
+   `.vscode/launch.json` (7076) and `🧫️fixtures/🧑‍💻os-dev-composition-ownership`. Not during W2's chain (workspace edit).
+3. **pdf `remove-pattern`** (F3 rest): the reader lifts a shading pattern's inline shading into its own `<id>Shading`
+   item, so removing the pattern leaves that shading behind and a round trip writes one extra `/Shading`. Reader/lift
+   decision in a hub-native codec crate (frozen) → pdf owner, post-publish. (`set-pattern`'s refusal of a dangling
+   shading/state landed in session 11 at 18:14 with 3 laws; the contract row still shows `[applied]` because the
+   cached stdio inventory predates it — refresh the stdio inventory.)
+4. **F9 persisted ids minted by `DefaultHasher`** (log 09:2x): one specified `hash::content_id(prefix, canonical
+   json)` (SHA-256, first 16 hex), stated in the composition schema; migrate the ~18 minting sites; regenerate the 661
+   committed carriers in one sweep (ticket codemod, not a repo migration); law: no persisted id from `DefaultHasher`;
+   the norm Python vocabulary then mints `childId` instead of refusing (turns en1990's 2 rows green).
+5. **Prepared T12 patches for the landing window** (each refuses a second run): `postpublish-open-kinds.py` (79 files),
+   `fem3d-oracles/patch.py` (7), `outline-row-ids/patch.py` (9; includes a platform parser change that must land
+   together with its 3 features), `example-geometry-paths.py` (2), `energy-reference-drift.py` (3; 2 are Rust dead-code
+   deletions — `cargo check -p` the energy crate after applying), `kit-tower-pack.py` (1 regenerated binary fixture), `brep-reference-carrier.py` (4: reference, feature, forest DSL + pack;
+   then `test-parity --case 🧊️mutate-semio-brep`).
+   `txt-oracle-refusal.py` (1 Rust case adapter; then `test-parity --case 📝️mutate-txt-utf-8`).
+
 ## S. S15 guest defects
 
 W2 release order (w2-final.sh): stdio, gis, animate (done .ok), architect (queued), block … trinity vcs wfc writer. Rule: edit a package only before its `START release` or after its `.ok`.

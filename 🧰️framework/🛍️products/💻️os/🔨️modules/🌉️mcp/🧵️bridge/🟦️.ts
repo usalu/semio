@@ -182,6 +182,17 @@ export type ApprovalWithdrawal = "cancelled" | "timed_out" | "superseded";
 const APPROVAL_WITHDRAWAL_TO_TAG: Record<ApprovalWithdrawal, number> = { cancelled: 0, timed_out: 1, superseded: 2 };
 const APPROVAL_WITHDRAWAL_FROM_TAG: readonly ApprovalWithdrawal[] = ["cancelled", "timed_out", "superseded"];
 
+/** 🚫️ Why a gateway refused a shell's connection instead of welcoming it (Rust `BridgeRefusal`). */
+export type BridgeRefusal = "version" | "capacity";
+const BRIDGE_REFUSAL_TO_TAG: Record<BridgeRefusal, number> = { version: 0, capacity: 1 };
+const BRIDGE_REFUSAL_FROM_TAG: readonly BridgeRefusal[] = ["version", "capacity"];
+
+function bridgeRefusalFromTag(tag: number): BridgeRefusal {
+  const reason = BRIDGE_REFUSAL_FROM_TAG[tag];
+  if (reason === undefined) throw new Error(`bridge frame: unknown BridgeRefusal tag ${tag}`);
+  return reason;
+}
+
 function approvalWithdrawalFromTag(tag: number): ApprovalWithdrawal {
   const reason = APPROVAL_WITHDRAWAL_FROM_TAG[tag];
   if (reason === undefined) throw new Error(`bridge frame: unknown ApprovalWithdrawal tag ${tag}`);
@@ -356,7 +367,8 @@ export type GatewayToShell =
   | { variant: "agentReply"; replyId: string; inReplyTo: string | null; text: string; complete: boolean }
   /** 🪦️ The approval request is withdrawn — its call was cancelled, it timed out, or a newer shell now
    * carries it — so the shell retires its affordance and says why. */
-  | { variant: "approvalWithdrawn"; approvalId: string; reason: ApprovalWithdrawal };
+  | { variant: "approvalWithdrawn"; approvalId: string; reason: ApprovalWithdrawal }
+  | { variant: "refused"; reason: BridgeRefusal; gatewayVersion: number };
 
 export function encodeGatewayToShell(frame: GatewayToShell): Uint8Array {
   const writer = new Writer();
@@ -426,6 +438,11 @@ export function encodeGatewayToShell(frame: GatewayToShell): Uint8Array {
       writer.string(frame.approvalId);
       writer.u8(APPROVAL_WITHDRAWAL_TO_TAG[frame.reason]);
       break;
+    case "refused":
+      writer.u8(12);
+      writer.u8(BRIDGE_REFUSAL_TO_TAG[frame.reason]);
+      writer.u16(frame.gatewayVersion);
+      break;
   }
   return writer.finish();
 }
@@ -470,6 +487,9 @@ export function decodeGatewayToShell(bytes: Uint8Array): GatewayToShell {
       break;
     case 11:
       frame = { variant: "approvalWithdrawn", approvalId: reader.string(), reason: approvalWithdrawalFromTag(reader.u8()) };
+      break;
+    case 12:
+      frame = { variant: "refused", reason: bridgeRefusalFromTag(reader.u8()), gatewayVersion: reader.u16() };
       break;
     default:
       throw new Error(`bridge frame: unknown GatewayToShell tag ${tag}`);

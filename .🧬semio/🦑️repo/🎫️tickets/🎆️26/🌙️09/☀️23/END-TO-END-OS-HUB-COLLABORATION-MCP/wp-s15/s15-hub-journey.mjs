@@ -21,9 +21,25 @@
  * Usage: bun 🐍️s12-hub-document.mjs <baseUrl> <tag> [kindFilter] [verb]
  */
 import { chromium } from "playwright";
-import { mutateUndoRedo as sweepMutateUndoRedo, readShell as sweepReadShell } from "../../../☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🐍️s6-all-kinds-sweep.mjs";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+
+/** 📌️ The rail verb each catalog B2 kind round-trips, keyed by the hub's kind id (the same pins the local matrix uses per program:
+ * one `wfc` default cannot serve bitmap, grid2d and grid3d, whose rails lead with non-document verbs). */
+const B2_KIND_VERBS = {
+  "2d.wfcbitmap": { wfc: "change-seed" },
+  "2d.wfcgrid2d": { wfc: "create-tile" },
+  "3d.wfcgrid3d": { wfc: "changeSeed" },
+  "s.gis.gismap": { gis: "addFeature" },
+  "2d.puzzle": { puzzle: "addNode" },
+  "3d.puzzle": { puzzle: "duplicateSelection" },
+};
+/** ✋️ A rail verb a kind's pinned verb needs first (the local matrix's `KIND_PRE`): puzzle3d's selection verbs act on the live selection. */
+const B2_KIND_PRE = { "3d.puzzle": "selectAll" };
+const b2Kinds = fileURLToPath(new URL("./generated/s15-b2-kinds.txt", import.meta.url));
+const b2KindId = process.env.S12_KIND_INDEX !== undefined && existsSync(b2Kinds) ? readFileSync(b2Kinds, "utf8").split("\n").find((line) => line.startsWith(`${process.env.S12_KIND_INDEX} `))?.split(" ")[1] : undefined;
+if (b2KindId && B2_KIND_VERBS[b2KindId] && !process.env.S6_VERBS) process.env.S6_VERBS = JSON.stringify(B2_KIND_VERBS[b2KindId]);
+const { mutateUndoRedo: sweepMutateUndoRedo, readShell: sweepReadShell, unfoldActionsRail: sweepUnfoldActionsRail } = await import("../../../☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🐍️s6-all-kinds-sweep.mjs");
 
 const baseUrl = process.argv[2] ?? "http://127.0.0.1:6072/";
 const tag = process.argv[3] ?? "s12";
@@ -227,6 +243,27 @@ const context = persistent
   : await browser.newContext({ viewport: { width: 1600, height: 1000 }, locale: process.env.S15_LOCALE ?? "en-US" });
 const page = context.pages()[0] ?? (await context.newPage());
 await installNoticeRecorder(page);
+/** 🔌️ `S15_WS_TRACE=1` logs every page WebSocket's open (url, negotiated protocol), every close() call (code) and every close
+ * event (code, reason, wasClean) as `[s15-ws]` console lines. */
+if (process.env.S15_WS_TRACE === "1")
+  await context.addInitScript(() => {
+    const Native = WebSocket;
+    const Traced = function (url, protocols) {
+      const socket = protocols === undefined ? new Native(url) : new Native(url, protocols);
+      const name = String(url).replace(/^.*\/_semio\/hub/u, "").slice(0, 90);
+      socket.addEventListener("open", () => console.log(`[s15-ws] open ${name} protocol=${socket.protocol}`));
+      socket.addEventListener("close", (event) => console.log(`[s15-ws] closed ${name} code=${event.code} clean=${event.wasClean} reason=${event.reason}`));
+      const close = socket.close.bind(socket);
+      socket.close = (code, reason) => {
+        console.log(`[s15-ws] close() ${name} code=${code} reason=${reason}`);
+        return close(code, reason);
+      };
+      return socket;
+    };
+    Traced.prototype = Native.prototype;
+    Object.assign(Traced, { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 });
+    globalThis.WebSocket = Traced;
+  });
 /** 🚫️ `S15_BLOCK_PLUGIN=<dir>` answers 404 for every locally staged module of that plugin — the served lane then holds
  * no local copy of it, exactly like a plugin that was never staged on this device. */
 if (process.env.S15_BLOCK_PLUGIN) {
@@ -257,7 +294,7 @@ page.on("requestfinished", async (request) => {
 });
 page.on("response", (response) => {
   const url = decodeURIComponent(response.url());
-  if (/\/_semio\/hub\/|plugin-modules/u.test(url)) hubRequests.push(`${response.status()} ${response.request().method()} ${url.replace(/^https?:\/\/[^/]+/u, "")} ${response.headers()["content-length"] ?? "?"}`.slice(0, 220));
+  if (/\/_semio\/hub\/|plugin-modules/u.test(url)) hubRequests.push(`${response.status()} ${response.request().method()} ${url.replace(/^https?:\/\/[^/]+/u, "")} ${response.headers()["content-length"] ?? "?"} @${Math.round(performance.now())}`.slice(0, 240));
 });
 page.on("pageerror", (error) => faults.push(`pageerror: ${String(error)}`.slice(0, 240)));
 /** 👷️ Worker consoles (the store worker owns the browser actor's action lane): every line naming an actor, action or patch. */
@@ -269,7 +306,7 @@ page.on("worker", (worker) => worker.on("console", (message) => {
 const consoleAll = [];
 page.on("console", (message) => {
   const text = message.text();
-  if (process.env.S15_CONSOLE_ALL === "1" && !/\[vite\]|transform freshness/u.test(text)) consoleAll.push(`${message.type()} ${text}`.slice(0, 500));
+  if (process.env.S15_CONSOLE_ALL === "1" && !/\[vite\]|transform freshness/u.test(text)) consoleAll.push(`@${Math.round(performance.now())} ${message.type()} ${text}`.slice(0, 500));
   if (/refused:|dropped|rejected|\[os-shell\]|\[DEBUG\]|program load failed|program module unavailable|plugin install|no surface registered|descriptor/iu.test(text)) shellLines.push(`${message.type()} ${text}`.slice(0, 400));
 });
 
@@ -356,7 +393,8 @@ try {
     await page.waitForTimeout(800);
     result.stagedControls = await page.evaluate(() => [...document.querySelectorAll('[data-slot="window-action-pane"] [id*=".arg."]')].map((element) => `${element.id}|${element.tagName.toLowerCase()}|${element.getAttribute("role") ?? ""}`));
     const name = page.locator('[data-slot="window-action-pane"] [id$=".arg.name"]:is(input,textarea), [data-slot="window-action-pane"] [id$=".arg.name"] :is(input,textarea)').first();
-    result.filledName = (await name.count()) > 0 ? await name.fill(`S12 Hub Document ${Date.now() % 100000}`).then(() => "ok").catch((error) => String(error).split("\n")[0].slice(0, 60)) : "absent";
+    result.documentName = `S12 Hub Document ${Date.now() % 100000}`;
+    result.filledName = (await name.count()) > 0 ? await name.fill(result.documentName).then(() => "ok").catch((error) => String(error).split("\n")[0].slice(0, 60)) : "absent";
     // 🎛️ The kind picker is a select trigger (`button#kindChoice`, role combobox) inside the staged tree row; a forced
     // click lands on the row and never opens it. Keyboard first (focus + Enter / ArrowDown), then a real pointer press.
     const kind = page.locator('[data-slot="window-action-pane"] [id$=".arg.kindChoice"] [role="combobox"], [data-slot="window-action-pane"] button#kindChoice, [data-slot="window-action-pane"] select[id$=".arg.kindChoice"]').first();
@@ -452,11 +490,31 @@ try {
   result.rowsAfter = await indexRows(page);
   await page.screenshot({ path: `${generated}s15-hub-document-${tag}-created.png` }).catch(() => undefined);
 
-  const target = result.rowsAfter.filter((row) => row.id !== null).at(-1) ?? result.rowsAfter.at(-1);
+  const target = result.rowsAfter.find((row) => row.id !== null && result.documentName !== undefined && row.text.includes(result.documentName));
+  /** ⏳️ The creation saga opens the new document by itself once the hub reports it ready; a row open issued while the saga
+   * still runs races it and retires it, so the probe waits for the saga (bounded) before opening the row itself. */
+  const sagaDeadline = Date.now() + Number(process.env.S15_SAGA_WAIT_MS ?? 180_000);
+  while (Date.now() < sagaDeadline) {
+    const ids = await windowIds(page);
+    if (!ids.includes("framework.window.table") && ids.length > 0) break;
+    const creating = await page.evaluate(() => [...document.querySelectorAll('[role="status"], [role="alert"]')].some((element) => /Creating artifact|Artefakt wird erstellt|Opening the artifact|wird geöffnet/iu.test(element.textContent ?? "")));
+    if (!creating) break;
+    await page.waitForTimeout(1_000);
+  }
+  result.sagaWaitMs = Number(process.env.S15_SAGA_WAIT_MS ?? 180_000) - (sagaDeadline - Date.now());
   const afterCreation = await windowIds(page);
   if (!afterCreation.includes("framework.window.table") && afterCreation.length > 0) {
     result.openedWindows = afterCreation;
     result.opened = "opened by the creation saga";
+    if (process.env.S15_OPEN_TRACE === "1") {
+      result.openTrace = [];
+      for (let sample = 0; sample < 60; sample += 1) {
+        const row = await page.evaluate(() => `${location.pathname} | ${[...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id")).join(",")} | ${(document.querySelector('[data-slot="navbar"]')?.textContent ?? "").replace(/\s+/gu, " ").slice(0, 60)}`);
+        if (result.openTrace.at(-1)?.row !== row) result.openTrace.push({ atMs: sample * 250, row });
+        await page.waitForTimeout(250);
+      }
+      log(`open trace ${JSON.stringify(result.openTrace).slice(0, 1500)}`);
+    }
   } else if (target === undefined) result.opened = "space index rendered no artifact row to open";
   else {
     const before = await windowIds(page);
@@ -480,14 +538,28 @@ try {
     }
     result.opened = result.openedWindows.length > 0 ? "ok" : `row "${(target.text ?? "").slice(0, 40)}" opened no new window`;
   }
+  await page.waitForTimeout(3_000);
+  result.openedChrome = await page.evaluate(() => ({
+    uri: `${location.pathname}${location.search}`,
+    tabs: [...document.querySelectorAll('[data-slot="mode-dock-tab"]')].map((tab) => `${tab.getAttribute("data-window-id")}:${(tab.textContent ?? "").trim().slice(0, 30)}`),
+    chips: [...document.querySelectorAll('[id$=".engagement.toggle"], [id$=".utilityBar.unfold"], [id$=".utilityBar.fold"]')].map((chip) => chip.id),
+    windows: [...document.querySelectorAll("[data-window-id]")].map((element) => `${element.getAttribute("data-window-id")}|${element.tagName}|${(element.getAttribute("data-slot") ?? "")}`).slice(0, 12),
+    breadcrumb: (document.querySelector('[data-slot="navbar"]')?.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 120),
+  }));
   log(`open → ${result.opened} ${JSON.stringify(result.openedWindows)}`);
   await page.screenshot({ path: `${generated}s15-hub-document-${tag}-opened.png` }).catch(() => undefined);
 
   if (result.openedWindows.length > 0) {
     result.breadcrumb = await page.evaluate(() => (document.querySelector('[data-slot="navbar"]')?.textContent ?? "").replace(/\s+/gu, " ").slice(0, 160));
     const sweepRefusals = [];
+    if (b2KindId && B2_KIND_PRE[b2KindId]) {
+      await sweepUnfoldActionsRail(page);
+      await page.locator(`[data-slot="window-action-pane"] [id="action.${B2_KIND_PRE[b2KindId]}"]`).first().click({ force: true, timeout: 10_000 }).then(() => (result.preVerb = `${B2_KIND_PRE[b2KindId]}:ok`), (error) => (result.preVerb = `${B2_KIND_PRE[b2KindId]}:${String(error).slice(0, 80)}`));
+      await page.waitForTimeout(2_000);
+      log(`pre-verb ${result.preVerb}`);
+    }
     const sweep = await sweepMutateUndoRedo(page, sweepRefusals, kindFilter);
-    result.sweep = { railRows: sweep.railRows, verb: sweep.mutation, detail: sweep.mutationDetail, edits: sweep.edits, applied: sweep.applied, mutated: sweep.mutated, undone: sweep.undone, redone: sweep.redone, redoDiffersFromUndo: sweep.redoDiffersFromUndo, undoLane: sweep.undoLane, redoLane: sweep.redoLane, attempts: sweep.attempts, refusals: sweepRefusals.slice(0, 5) };
+    result.sweep = { railRows: sweep.railRows, railRowIds: sweep.railRowIds, verb: sweep.mutation, detail: sweep.mutationDetail, edits: sweep.edits, applied: sweep.applied, mutated: sweep.mutated, undone: sweep.undone, redone: sweep.redone, redoDiffersFromUndo: sweep.redoDiffersFromUndo, undoLane: sweep.undoLane, redoLane: sweep.redoLane, attempts: sweep.attempts, refusals: sweepRefusals.slice(0, 5) };
     result.ledgerAfterSweep = (await sweepReadShell(page)).ledger.slice(-6);
     log(`sweep ${JSON.stringify(result.sweep)}`);
     await raiseHistory(page);
@@ -551,7 +623,7 @@ result.faults = faults.slice(0, 8);
 result.moduleTraffic = moduleTraffic;
 result.hubModuleDownloads = hubRequests.filter((line) => /\/_semio\/hub\/trusted-catalog\/plugin-modules\/[0-9a-f]{64}\//u.test(line)).length;
 result.storeServed = hubRequests.filter((line) => line.includes("/_semio/plugin-modules/")).length;
-if (process.env.S15_CONSOLE_ALL === "1") result.consoleAll = consoleAll.filter((line) => /note|plugin|program|surface|descriptor|install|error/iu.test(line)).slice(-200);
+if (process.env.S15_CONSOLE_ALL === "1") result.consoleAll = consoleAll.filter((line) => new RegExp(process.env.S15_CONSOLE_FILTER ?? "note|plugin|program|surface|descriptor|install|error", "iu").test(line)).slice(-200);
 writeFileSync(`${generated}s15-hub-document-${tag}.txt`, JSON.stringify(result, null, 2));
 log(`=== ${generated}s15-hub-document-${tag}.txt ===`);
 await (browser ?? context).close();

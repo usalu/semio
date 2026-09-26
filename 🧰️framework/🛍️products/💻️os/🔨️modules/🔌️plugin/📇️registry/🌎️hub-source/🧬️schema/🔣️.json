@@ -27,6 +27,18 @@
       "description": "Where a hub program's verified bytes came from: store (this device already holds the generation's bundle complete), local (every file of the bundle is byte-identical in this device's staged module), hub (installed from the hub).",
       "enum": ["store", "local", "hub"]
     },
+    "PluginModuleTransferRetryV1": {
+      "description": "How one plugin module file download survives a transient hub or proxy answer: only a declared transient answer (one of transientStatuses, or the connection failing before any status) is retried, at most maxAttempts times per file with a backoff from backoffInitialMs doubling to backoffMaxMs; files already verified are kept, the failed file alone is fetched again, and the install band names the retry. Any other status refuses the install at once.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transientStatuses", "maxAttempts", "backoffInitialMs", "backoffMaxMs"],
+      "properties": {
+        "transientStatuses": { "const": [502, 503, 504] },
+        "maxAttempts": { "const": 4 },
+        "backoffInitialMs": { "const": 500 },
+        "backoffMaxMs": { "const": 8000 }
+      }
+    },
     "PluginModuleStoreRecordV1": {
       "description": "One installed plugin module of one catalog generation, written last, after its manifest and every file, so a record always names a complete bundle.",
       "type": "object",
@@ -47,5 +59,6 @@
     "lockPrefix": "semio.plugin-module:",
     "storeLock": "semio.plugin-module-store",
     "programSeparator": "@"
-  }
+  },
+  "x-semio-transfer-retry": { "transientStatuses": [502, 503, 504], "maxAttempts": 4, "backoffInitialMs": 500, "backoffMaxMs": 8000 }
 }

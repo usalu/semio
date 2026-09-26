@@ -1,0 +1,81 @@
+{
+  "schema": "semio.infinite.canvas.label-shapes/v1",
+  "provenance": {
+    "what": "Laws of the shaped-label cache: its least-recently-used admission and eviction, and that a label painted or measured through it is exactly what usvg shapes directly, shaped once.",
+    "lru": "Each case runs its steps in order on one empty cache with the case's bounds. `get` answers `hit` (and makes the key most recent) or `miss`. `admit` stores the key with its accounted bytes after evicting least-recently-used keys until the entry count and byte total fit (`stored` lists the evicted keys, oldest first); a key larger than `maximumEntryBytes` is `bypassed` and any older entry under that key is dropped; re-admitting a present key replaces it. `keys` is the resident set after the case, least recent first.",
+    "labels": "Every row is painted twice and measured twice at the fixture's origin. The draw list of each paint equals the draw list of the SAME markup shaped by usvg directly (the third-party oracle); the second paint and the second measure shape nothing.",
+    "implementations": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🦀️.rs — canvas::text::{BoundedLru, append_label, append_label_tspans, label_byte_world_x}"
+    ]
+  },
+  "lru": [
+    {
+      "id": "entry-bound-evicts-the-least-recently-used",
+      "bounds": { "maximumEntries": 2, "maximumBytes": 1000, "maximumEntryBytes": 1000 },
+      "steps": [
+        { "do": "get", "key": "a", "expect": "miss" },
+        { "do": "admit", "key": "a", "bytes": 10, "expect": { "stored": [] } },
+        { "do": "admit", "key": "b", "bytes": 10, "expect": { "stored": [] } },
+        { "do": "get", "key": "a", "expect": "hit" },
+        { "do": "admit", "key": "c", "bytes": 10, "expect": { "stored": ["b"] } },
+        { "do": "get", "key": "b", "expect": "miss" },
+        { "do": "get", "key": "a", "expect": "hit" },
+        { "do": "get", "key": "c", "expect": "hit" },
+        { "do": "admit", "key": "d", "bytes": 10, "expect": { "stored": ["a"] } }
+      ],
+      "keys": ["c", "d"],
+      "bytes": 20
+    },
+    {
+      "id": "byte-bound-evicts-until-the-new-entry-fits",
+      "bounds": { "maximumEntries": 100, "maximumBytes": 100, "maximumEntryBytes": 100 },
+      "steps": [
+        { "do": "admit", "key": "a", "bytes": 40, "expect": { "stored": [] } },
+        { "do": "admit", "key": "b", "bytes": 40, "expect": { "stored": [] } },
+        { "do": "get", "key": "a", "expect": "hit" },
+        { "do": "admit", "key": "c", "bytes": 40, "expect": { "stored": ["b"] } },
+        { "do": "admit", "key": "d", "bytes": 70, "expect": { "stored": ["a", "c"] } },
+        { "do": "admit", "key": "e", "bytes": 101, "expect": "bypassed" },
+        { "do": "get", "key": "e", "expect": "miss" },
+        { "do": "get", "key": "d", "expect": "hit" }
+      ],
+      "keys": ["d"],
+      "bytes": 70
+    },
+    {
+      "id": "readmission-replaces-and-an-oversized-entry-drops-the-old-one",
+      "bounds": { "maximumEntries": 3, "maximumBytes": 100, "maximumEntryBytes": 60 },
+      "steps": [
+        { "do": "admit", "key": "a", "bytes": 30, "expect": { "stored": [] } },
+        { "do": "admit", "key": "b", "bytes": 30, "expect": { "stored": [] } },
+        { "do": "admit", "key": "a", "bytes": 50, "expect": { "stored": [] } },
+        { "do": "admit", "key": "c", "bytes": 30, "expect": { "stored": ["b"] } },
+        { "do": "admit", "key": "a", "bytes": 70, "expect": "bypassed" },
+        { "do": "get", "key": "a", "expect": "miss" }
+      ],
+      "keys": ["c"],
+      "bytes": 30
+    }
+  ],
+  "labels": [
+    { "id": "gutter-number", "text": "12", "px": 14, "fill": [0, 17, 23, 158], "halo": [240, 236, 221, 255], "measure": [0, 1, 2] },
+    { "id": "query-line", "text": "MATCH (n:Person)-[:KNOWS]->(m) RETURN n.name, m.name", "px": 14, "fill": [0, 17, 23, 255], "halo": [240, 236, 221, 255], "measure": [0, 5, 17, 51] },
+    { "id": "node-caption", "text": "extrude", "px": 11, "fill": [0, 17, 23, 255], "halo": [255, 255, 255, 255], "measure": [3, 7] },
+    { "id": "diacritics", "text": "Zürich — Straße", "px": 12, "fill": [166, 0, 9, 255], "halo": [255, 255, 255, 200], "measure": [0, 3, 12] }
+  ],
+  "tspans": [
+    {
+      "id": "colored-query-tokens",
+      "text": "MATCH (n) RETURN n",
+      "px": 14,
+      "halo": [240, 236, 221, 255],
+      "spans": [
+        { "start": 0, "end": 5, "fill": [255, 52, 79, 255] },
+        { "start": 5, "end": 10, "fill": [0, 17, 23, 255] },
+        { "start": 10, "end": 16, "fill": [255, 52, 79, 255] },
+        { "start": 16, "end": 18, "fill": [52, 209, 191, 255] }
+      ]
+    }
+  ],
+  "origin": [40, 30]
+}

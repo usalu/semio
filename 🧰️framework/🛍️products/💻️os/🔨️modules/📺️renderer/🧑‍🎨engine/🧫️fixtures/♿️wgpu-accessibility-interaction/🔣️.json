@@ -355,5 +355,92 @@
       { "id": "framework.settings.conflicts", "label": "Conflicts" }
     ],
     "tailIds": ["framework.settings.default-apps", "framework.settings.conflicts"]
+  },
+  "transportCredits": {
+    "note": "The transport and the Worker admit an address by its CREDITS only (bounded, control-free ids; non-negative safe integers). Liveness — a retired generation, an absent window, an id/key mismatch — is the renderer's answer (`rejections`), never a transport fault: a document's first minted node id is 0 (`UiNodeIdAllocator`), and refusing it tore the whole browser shell down the moment a keyboard user tabbed from the canvas into the mirror (ticket 26/09/23 session 12, WG7 S12-4).",
+    "admitted": [
+      {
+        "id": "a-document-root-node",
+        "wire": {
+          "kind": "accessibility-focus",
+          "windowId": "note-composite",
+          "windowGeneration": 1,
+          "nodeId": 0,
+          "nodeKey": "note.play.composite"
+        }
+      },
+      {
+        "id": "an-unpublished-window-generation",
+        "wire": {
+          "kind": "accessibility-activate",
+          "windowId": "procedural-main",
+          "windowGeneration": 0,
+          "nodeId": 2,
+          "nodeKey": "#apply"
+        }
+      },
+      {
+        "id": "a-key-at-its-byte-credit",
+        "wire": {
+          "kind": "accessibility-blur",
+          "windowId": "procedural-main",
+          "windowGeneration": 7,
+          "nodeId": 2,
+          "nodeKey": "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"
+        }
+      }
+    ],
+    "refused": [
+      {
+        "id": "an-empty-node-key",
+        "wire": {
+          "kind": "accessibility-focus",
+          "windowId": "procedural-main",
+          "windowGeneration": 7,
+          "nodeId": 2,
+          "nodeKey": ""
+        }
+      },
+      {
+        "id": "a-key-past-its-byte-credit",
+        "wire": {
+          "kind": "accessibility-focus",
+          "windowId": "procedural-main",
+          "windowGeneration": 7,
+          "nodeId": 2,
+          "nodeKey": "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+        }
+      },
+      {
+        "id": "a-control-character-in-the-window-id",
+        "wire": {
+          "kind": "accessibility-activate",
+          "windowId": "bad\u0000window",
+          "windowGeneration": 7,
+          "nodeId": 2,
+          "nodeKey": "#apply"
+        }
+      },
+      {
+        "id": "a-negative-node-id",
+        "wire": {
+          "kind": "accessibility-focus",
+          "windowId": "procedural-main",
+          "windowGeneration": 7,
+          "nodeId": -1,
+          "nodeKey": "#apply"
+        }
+      },
+      {
+        "id": "a-fractional-window-generation",
+        "wire": {
+          "kind": "accessibility-focus",
+          "windowId": "procedural-main",
+          "windowGeneration": 1.5,
+          "nodeId": 2,
+          "nodeKey": "#apply"
+        }
+      }
+    ]
   }
 }

@@ -52,6 +52,10 @@ semio_framework_plugin::app_commands! {
 pub struct En1991PlayApp;
 
 impl ArtifactEditor for En1991PlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::retail_hydrocarbon_fire::source()]
+    }
     type Snapshot = En1991Snapshot;
     type Mutation = En1991Mutation;
     type Config = NoConfig;
@@ -241,6 +245,10 @@ pub fn create_en1991_app() -> semio_framework_plugin::AppDefinition {
             // gaps" #4), so the old app-level example/workflow registration is dropped here, not
             // silently: the subset's own `📚️examples/🎬️demo-session` facet (real content, moved
             // verbatim below) is the modern role-agnostic replacement surface for this.
+            .action_describe("setSnapshot", LocalizedLabel::native("Replaces the whole EN 1991 (Eurocode 1, actions on structures) compliance document with the supplied document JSON; the previous inputs are discarded.", "Ersetzt das gesamte Nachweisdokument nach EN 1991 (Eurocode 1, Einwirkungen auf Tragwerke) durch das übergebene Dokument-JSON; die bisherigen Eingaben werden verworfen."))
+            .action_describe("evaluate", LocalizedLabel::native("Recomputes every EN 1991 (Eurocode 1, actions on structures) check from the document's inputs and refreshes the results window; the document is not changed.", "Berechnet alle Nachweise nach EN 1991 (Eurocode 1, Einwirkungen auf Tragwerke) aus den Eingaben des Dokuments neu und aktualisiert das Ergebnisfenster; das Dokument ändert sich nicht."))
+            .action_describe("setSelectedCheckIndex", LocalizedLabel::native("Points the inspection panel at one computed check by its index in the results list; only the view changes.", "Richtet das Inspektionspanel anhand seines Index in der Ergebnisliste auf einen berechneten Nachweis aus; nur die Ansicht ändert sich."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Loads one of the bundled EN 1991 (Eurocode 1, actions on structures) examples into the open compliance document, replacing its inputs, by example id.", "Lädt eines der mitgelieferten Beispiele nach EN 1991 (Eurocode 1, Einwirkungen auf Tragwerke) in das offene Nachweisdokument und ersetzt dessen Eingaben, anhand der Beispiel-Id."))
             .build_definition()
 }
 //#endregion ðï¸Manifest

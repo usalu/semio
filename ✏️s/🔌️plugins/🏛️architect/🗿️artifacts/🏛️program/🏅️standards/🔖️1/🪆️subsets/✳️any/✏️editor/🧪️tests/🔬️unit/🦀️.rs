@@ -383,10 +383,10 @@ async fn analysis_kind_picker_maps_all_variants() {
     let options = analysis_kind_picker_options();
     assert_eq!(options.len(), 20);
     for option in &options {
-        let kind = analysis_kind_from_str(&option.value);
-        assert!(!format!("{kind:?}").is_empty(), "missing mapping for {}", option.value);
+        assert!(analysis_kind_from_str(&option.value).is_some(), "missing mapping for {}", option.value);
     }
-    assert_eq!(analysis_kind_from_str("relationshipAnalysis"), AnalysisKind::RelationshipAnalysis);
+    assert_eq!(analysis_kind_from_str("relationshipAnalysis"), Some(AnalysisKind::RelationshipAnalysis));
+    assert_eq!(analysis_kind_from_str("unknown"), None);
 }
 
 #[semio_framework_async_macros::async_test]

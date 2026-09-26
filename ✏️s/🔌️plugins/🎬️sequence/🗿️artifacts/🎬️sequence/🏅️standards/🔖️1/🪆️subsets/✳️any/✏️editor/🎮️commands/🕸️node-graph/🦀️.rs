@@ -6,7 +6,7 @@ use crate::mutations::SequenceMutation;
 use crate::{SequenceCamera, SequenceSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-use serde_json::Value;
+use dsl::os_pack::json::{self, Value};
 
 //#region 🔖️NodeGraphEdit
 pub mod node_graph_edit {
@@ -19,7 +19,10 @@ pub mod node_graph_edit {
     }
 
     fn edit_with_selection(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, selected: &[String]) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
+        let sub_operations: Vec<Value> = match json::parse(&payload.operations_json) {
+            Ok(Value::Array(operations)) => operations,
+            _ => Vec::new(),
+        };
         sequence_child_emit_from_host_mutation(doc, |host| {
             for operation in &sub_operations {
                 match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {

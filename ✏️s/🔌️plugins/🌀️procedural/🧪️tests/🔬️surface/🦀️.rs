@@ -37,10 +37,9 @@ async fn generation3d_editor_and_viewer_share_dialect() {
     semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<Generation3dPlayApp, Generation3dViewer>().await;
 }
 
-/// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `.editor_with_examples::<Generation3dPlayApp>`
-/// must stamp the eight `semio_s_artifact_procedural_generation3d::editor::generation3d::examples()`
-/// fixtures onto the manifest addressed to the gen3d DIALECT, or the react shell's example dropdown
-/// (`activePluginManifest.examples`) stays hidden for `generation3d`.
+/// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `.editor::<Generation3dPlayApp>` stamps
+/// `Generation3dPlayApp::examples()` onto the manifest addressed to the gen3d dialect, which is
+/// what the navbar dropdown reads.
 ///
 /// 👁️ The same eight resolve for BOTH surfaces of that dialect: `manifest::examples_for_app` answers
 /// the editor and the viewer identically, which is what gives the read-only surface its own picker

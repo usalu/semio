@@ -291,3 +291,25 @@ mod long {
         assert!(!credential_schema.is_valid_json(&serde_json::to_string("pbkdf2-sha512$1000$00$00").expect("credential json")));
     }
 }
+
+/// ⏱️ Benchmark law: a sign-in's credential derivation at the default cost (210 000 PBKDF2-HMAC-SHA256
+/// iterations) costs what its 420 000 SHA-256 compressions cost — the HMAC keyed once, two compressions
+/// per iteration, never four — measured against the same number of compressions hashed in bulk in the
+/// same moment, so machine load cancels out; and the best of five fits the sub-second session-mint
+/// budget on a loaded machine.
+#[test]
+fn a_default_cost_credential_derivation_fits_the_session_mint_budget() {
+    let bulk = vec![0x5au8; 420_000 * 64];
+    let (mut derivation, mut compressions) = (std::time::Duration::MAX, std::time::Duration::MAX);
+    for _ in 0..5 {
+        let started = std::time::Instant::now();
+        std::hint::black_box(semio_framework_hash::Sha256::digest(std::hint::black_box(&bulk)));
+        compressions = compressions.min(started.elapsed());
+        let started = std::time::Instant::now();
+        let credential = PasswordCredentialV1::derive("correct horse battery staple", [0x2a; 16], password::DEFAULT_ITERATIONS).expect("derive");
+        derivation = derivation.min(started.elapsed());
+        assert_eq!(credential.iterations(), password::DEFAULT_ITERATIONS);
+    }
+    assert!(derivation < compressions * 3, "a derivation ({derivation:?}) costs more than its compressions ({compressions:?}) allow");
+    assert!(derivation < std::time::Duration::from_secs(1), "one default-cost derivation took {derivation:?}");
+}

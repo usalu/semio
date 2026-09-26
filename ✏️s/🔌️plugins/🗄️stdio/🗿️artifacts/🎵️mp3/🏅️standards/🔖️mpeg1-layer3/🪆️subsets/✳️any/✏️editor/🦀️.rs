@@ -111,6 +111,10 @@ impl ArtifactOwnedToolJobFactory for Mp3EditorExampleFactory {
 pub struct Mp3Editor;
 
 impl ArtifactEditor for Mp3Editor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = Mp3Snapshot;
     type Mutation = Mp3Mutation;
     type Config = NoConfig;

@@ -14,7 +14,9 @@
         "surfaceId",
         "spaceName",
         "command",
+        "growth",
         "presence",
+        "agent",
         "shutdown",
         "steps",
         "expectations"
@@ -82,6 +84,50 @@
             }
           }
         },
+        "growth": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "editsBeforeRestart",
+            "editsAfterRestart",
+            "payloadBytes",
+            "distinctPaths",
+            "batchIdBase",
+            "mutationIdPrefix"
+          ],
+          "properties": {
+            "editsBeforeRestart": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000
+            },
+            "editsAfterRestart": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000
+            },
+            "payloadBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "distinctPaths": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "x-semio-note": "a pathmap document retains at most 64 distinct paths (RETAINED_STATE_ENTRIES)"
+            },
+            "batchIdBase": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "mutationIdPrefix": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        },
         "presence": {
           "type": "object",
           "additionalProperties": false,
@@ -112,12 +158,70 @@
             }
           }
         },
+        "agent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "agentLabel",
+            "audience",
+            "ttlSecs",
+            "agentInstanceId",
+            "revocationWithinMs",
+            "closeCode",
+            "refusedStatus",
+            "reexchangeStatus",
+            "reexchangeError"
+          ],
+          "x-semio-note": "a delegated agent on the same document: revoking its delegation closes its open socket, drops it from the other client's roster and refuses its next request (401), all within revocationWithinMs; the revoked delegation itself is refused 403 delegation-revoked, the cause a holder of its secret is entitled to know",
+          "properties": {
+            "agentLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "audience": {
+              "enum": [
+                "read",
+                "edit"
+              ]
+            },
+            "ttlSecs": {
+              "type": "integer",
+              "minimum": 60,
+              "maximum": 86400
+            },
+            "agentInstanceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "revocationWithinMs": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 60000
+            },
+            "closeCode": {
+              "const": 4401
+            },
+            "refusedStatus": {
+              "const": 401
+            },
+            "reexchangeStatus": {
+              "const": 403
+            },
+            "reexchangeError": {
+              "const": "delegation-revoked"
+            }
+          }
+        },
         "shutdown": {
           "type": "object",
           "additionalProperties": false,
           "required": [
             "closeCode",
             "gracefulExitWithinMs",
+            "restartWithinMs",
+            "reopenWithinMs",
             "crashReleaseSlackMs",
             "databaseClosedMarker",
             "liveWriterProbe"
@@ -160,6 +264,17 @@
                   "maxLength": 512
                 }
               }
+            },
+            "restartWithinMs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60000
+            },
+            "reopenWithinMs": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 120000,
+              "x-semio-note": "a restarted hub welcomes the first socket of a grown document within this bound (the document's WAL replays on that open)"
             }
           }
         },
@@ -185,7 +300,8 @@
             "presenceLeaveDropsPeer",
             "presenceLeaseExpiryStripsA",
             "gracefulShutdownClosesSocketsAndReleasesWriters",
-            "crashReleasesWritersPerBackendContract"
+            "crashReleasesWritersPerBackendContract",
+            "revocationEndsAgentSession"
           ],
           "properties": {
             "bReceivesCommandsEnvelope": {
@@ -222,6 +338,9 @@
               "type": "boolean"
             },
             "crashReleasesWritersPerBackendContract": {
+              "type": "boolean"
+            },
+            "revocationEndsAgentSession": {
               "type": "boolean"
             }
           }

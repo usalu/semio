@@ -68,6 +68,7 @@ import { foldAll as foldDirectoryIndexEvents } from "../../../🧰️framework/�
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, descriptorDigestEncodingV1, validDocumentIndexEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import type { TestBrowserHostRootsV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🟦️.ts";
 import { stageTestBrowserHostV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🏗️staging/🟦️.ts";
+import { pluginModulesRootIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { produceFreshComponentV1, testFreshComponentStagingV1, testFreshComponentProcessV1, testFreshComponentSourceEpochV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
 import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
@@ -1183,8 +1184,8 @@ async function proveCheckInMcpProcess(repoRoot: string, root: string): Promise<v
       const read = await waitForJsonRpcResponse(child, stdout, 3);
       const text = read.result?.contents?.[0]?.text;
       const resource = typeof text === "string" ? (JSON.parse(text) as Record<string, any>) : undefined;
-      const decodedPack = typeof resource?.pack?.base64 === "string" ? Buffer.from(resource.pack.base64, "base64") : Buffer.alloc(0);
-      const decodedSpr = typeof resource?.spr?.base64 === "string" ? Buffer.from(resource.spr.base64, "base64") : Buffer.alloc(0);
+      const decodedPack = typeof resource?.untrusted?.content?.packBase64 === "string" ? Buffer.from(resource.untrusted.content.packBase64, "base64") : Buffer.alloc(0);
+      const decodedSpr = typeof resource?.untrusted?.content?.sprBase64 === "string" ? Buffer.from(resource.untrusted.content.sprBase64, "base64") : Buffer.alloc(0);
       if (
         resource?.schema !== "semio.mcp.canonical-checkpoint-resource/v1" ||
         resource?.scope?.spaceId !== spaceId ||
@@ -7833,6 +7834,37 @@ function trustedBootstrapResolveDependencies(claims: TrustedBootstrapDescriptorC
   return Object.freeze([...expected].sort((left, right) => trustedBootstrapTupleOrder([left.pluginId, left.packageId, left.version], [right.pluginId, right.packageId, right.version])));
 }
 
+/** 🛫️ Fails a publication in seconds, before any build or codec probe: every selected package's COMMITTED owner-root
+ * descriptor must pass the same claim rules its fresh build is held to later (canonical bounded Pack, exact `=x.y.z`
+ * dependency pins, every dependency inside the selected closure at that package's own version). A stale or malformed
+ * declaration therefore surfaces before an hour of fresh release builds, and `describe` is the fix it names. */
+export function trustedBootstrapPreflightDescriptorsV1(repoRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): void {
+  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
+  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun nx run @semio-tech/plugin-registry:generate`);
+  const registry = JSON.parse(readFileSync(registryPath, "utf8")) as readonly { pluginId?: unknown; cratePath?: unknown }[];
+  const claims = selection.map((spec) => {
+    const row = registry.find((entry) => entry.pluginId === spec.pluginId);
+    if (typeof row?.cratePath !== "string") throw new Error(`trusted catalog preflight: ${spec.pluginId} is not a row of the generated plugin registry`);
+    const bytes = trustedBootstrapReadRegular(join(repoRoot, row.cratePath, "..", "..", "🛂️.descriptor.semio"), DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, `committed ${spec.pluginId} descriptor`, () => {});
+    try {
+      return { spec, claims: trustedBootstrapDescriptorClaims(bytes) };
+    } catch (error) {
+      throw new Error(`trusted catalog preflight: committed ${spec.pluginId} descriptor refused (${error instanceof Error ? error.message : String(error)}); fix the declaration, then bun nx run @semio-tech/${spec.pluginId}-plugin:describe`);
+    } finally {
+      bytes.fill(0);
+    }
+  });
+  const closure = claims.map((row) => ({ pluginId: row.spec.pluginId, packageId: row.spec.componentPackageId, version: row.claims.identity.version }));
+  for (const row of claims) {
+    try {
+      trustedBootstrapResolveDependencies(row.claims, closure);
+    } catch (error) {
+      throw new Error(`trusted catalog preflight: ${row.spec.pluginId} dependencies refused (${error instanceof Error ? error.message : String(error)})`);
+    }
+  }
+  console.log(`trusted-catalog-preflight: ${claims.length} committed descriptors carry exact, bounded dependencies inside the selected closure`);
+}
+
 /** 🧮️ Frames all resolved dependency identities in the native generation format. */
 function trustedBootstrapDependencyEncoding(value: unknown): Buffer {
   const dependencies = trustedBootstrapDependencies(value);
@@ -9892,6 +9924,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
     console.log(`trusted-catalog-bind: source=${bindSource} generation=${bound.generationId} packages=${selection.map((spec) => spec.pluginId).join(",")} wasm=skipped`);
     return bound;
   }
+  trustedBootstrapPreflightDescriptorsV1(repoRoot, selection);
   const trustedRoot = join(dataRoot, "trusted-catalog");
   mkdirSync(trustedRoot, { recursive: true, mode: 0o700 });
   if (lstatSync(trustedRoot).isSymbolicLink() || !lstatSync(trustedRoot).isDirectory()) throw new Error("trusted catalog root must be a regular private directory");
@@ -11487,8 +11520,8 @@ async function readGisMapProcessCheckpoint(client: GisMapProcessMcpClientV1, spa
   const response = await callGisMapProcessMcp(client, "resources/read", { uri });
   const text = response.result?.contents?.[0]?.text;
   const resource = typeof text === "string" ? (JSON.parse(text) as Record<string, any>) : undefined;
-  const pack = typeof resource?.pack?.base64 === "string" ? Buffer.from(resource.pack.base64, "base64") : Buffer.alloc(0);
-  const spr = typeof resource?.spr?.base64 === "string" ? Buffer.from(resource.spr.base64, "base64") : Buffer.alloc(0);
+  const pack = typeof resource?.untrusted?.content?.packBase64 === "string" ? Buffer.from(resource.untrusted.content.packBase64, "base64") : Buffer.alloc(0);
+  const spr = typeof resource?.untrusted?.content?.sprBase64 === "string" ? Buffer.from(resource.untrusted.content.sprBase64, "base64") : Buffer.alloc(0);
   try {
     const scope = { spaceId, documentId };
     const frontier = resource?.frontier as ArtifactFrontier | undefined;
@@ -14123,7 +14156,7 @@ async function proveDirectoryHomeBrowserControllerRuntime(repoRoot: string, fixt
 }
 
 function assertDirectoryHomeBrowserComponentAttestation(repoRoot: string, fixture: DirectoryHomeBrowserProcessFixture): void {
-  const moduleRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules", fixture.home.moduleDirectory);
+  const moduleRoot = join(pluginModulesRootIn(repoRoot, "dev"), fixture.home.moduleDirectory);
   const manifest = JSON.parse(readFileSync(join(moduleRoot, "🔣️.json"), "utf8")) as Record<string, any>;
   const wasmPath = join(moduleRoot, "semio_s_plugin_space_component.core.wasm");
   const actual = createHash("sha256").update(readFileSync(wasmPath)).digest("hex");
@@ -14154,7 +14187,7 @@ async function proveDirectoryHomeBrowserStaticWasmProcessRuntime(
     bundleModule(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx")),
     bundleModule(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx")),
   ]);
-  const pluginRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules");
+  const pluginRoot = pluginModulesRootIn(repoRoot, "dev");
   const mime = (path: string): string => (path.endsWith(".wasm") ? "application/wasm" : path.endsWith(".json") ? "application/json; charset=utf-8" : "text/javascript; charset=utf-8");
   const physicalPluginPath = (urlPath: string): string | undefined => {
     const prefix = "/🔌️plugin-modules/";

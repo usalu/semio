@@ -1,0 +1,28 @@
+/// 📋️ A typed list's emptied backing retires one page per turn as an ITEM: the byte grant meters payload, so a
+/// one-byte grant still finishes the list, every page release reports zero bytes, and a zero grant touches nothing.
+#[test]
+fn retained_fixed_list_pages_typed_retirement_meters_backing_as_items() {
+    let mut values = UiFixedList::<u64, 600>::default();
+    let mut backings = 0;
+    while !values.has_reserved_slot() {
+        backings += usize::from(values.try_reserve_one(4096).unwrap().progressed);
+    }
+    let allocated = values.allocated_bytes();
+    let mut cursor = crate::UiTypedRetirementCursor::empty();
+    let idle = cursor.advance(&mut values, 1, 0).unwrap();
+    assert!(!idle.progressed);
+    assert_eq!(values.allocated_bytes(), allocated);
+    let mut released_items = 0;
+    for _ in 0..32 {
+        let step = cursor.advance(&mut values, 1, 1).unwrap();
+        assert!(step.released_items <= 1);
+        assert_eq!(step.released_bytes, 0);
+        released_items += step.released_items;
+        if step.complete { break; }
+    }
+    assert!(cursor.terminal_is_empty());
+    assert!(values.terminal_is_empty());
+    assert_eq!(values.allocated_bytes(), 0);
+    assert_eq!(released_items, backings);
+}
+

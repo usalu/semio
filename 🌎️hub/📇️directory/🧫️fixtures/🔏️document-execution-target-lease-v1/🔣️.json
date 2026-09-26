@@ -291,6 +291,10 @@
         "en": "Verifying document component…",
         "de": "Dokumentkomponente wird überprüft…"
       },
+      "retrying": {
+        "en": "The hub is busy. Asking again for the document component…",
+        "de": "Der Hub ist ausgelastet. Die Dokumentkomponente wird erneut angefragt…"
+      },
       "integrity-failed": {
         "en": "The document component could not be verified. Reopen the document.",
         "de": "Die Dokumentkomponente konnte nicht verifiziert werden. Öffnen Sie das Dokument erneut."
@@ -318,6 +322,7 @@
     },
     "statusRoles": {
       "verifying": "status",
+      "retrying": "status",
       "integrity-failed": "alert",
       "stale": "alert",
       "cancelled": "alert",

@@ -35,6 +35,17 @@ export interface UiPreferences {
 export const OS_UI_PREFERENCES_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/os/config/ui-preferences.json";
 export const osUiPreferencesSchemaDocument = uiPreferencesSchema;
 
+/** 🗂️ One UiPreferences key. */
+export type UiPreferenceKey = keyof UiPreferences;
+
+/** 🗂️ Where a preference lives (AGENTS: persisted shared vs persisted local-only): `persistedShared` follows the signed-in
+ * user to every device through the hub's per-user preference lane, `persistedLocalOnly` stays on this device. */
+export type UiPreferenceDataClass = "persistedShared" | "persistedLocalOnly";
+
+/** 🗂️ The data class of every key, read from the schema itself (`🎨️ui-preferences/🔣️.json` `$defs.DataClasses`) — the one
+ * declaration the TypeScript and Rust twins both read. Rows: `🎨️ui-preferences/🧫️fixtures/🗂️data-classes/🔣️.json`. */
+export const UI_PREFERENCE_DATA_CLASSES: Readonly<Record<UiPreferenceKey, UiPreferenceDataClass>> = uiPreferencesSchema.$defs.DataClasses.const as Readonly<Record<UiPreferenceKey, UiPreferenceDataClass>>;
+
 export class OsConfigSchemaError extends Error {
   constructor(readonly exportId: string, readonly problems: readonly string[]) {
     super(`${exportId} does not satisfy ${OS_UI_PREFERENCES_SCHEMA_ID}: ${problems.join("; ")}`);

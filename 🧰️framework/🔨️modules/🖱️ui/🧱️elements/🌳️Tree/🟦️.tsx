@@ -1622,6 +1622,9 @@ interface TreeRootProps {
   onSelectionChange?: (selectedIds: string[], items: TreeDataItem[]) => void;
   highlightedIds?: readonly string[];
   dragAndDropController?: TreeDragAndDropController;
+  /** @emoji 🈳️ What the tree shows while it has no sections — a message or a whole window (Tasks, Chat). It is
+   * CONTENT, so it reads in its own direction (`dir="auto"`): a panel mirrored for its anchor (`useFlow().inline`
+   * `"rtl"` on the right edge) mirrors its chrome, never a sentence — ".No task is running" was measured live. */
   emptyState?: React.ReactNode;
   indentMultiplier?: number;
   /** @emoji 🧭️ `"up"` makes every foldable group in this tree unfold above its own header (children in reverse order), mirroring the {@link Ribbon} `"up"` pattern — for trees hosted in a panel that grows upward. Defaults to `"down"`. */
@@ -4075,7 +4078,11 @@ export const Tree = (({
               </TreeHighlightContext.Provider>
             </TreeSelectionContext.Provider>
           </TreeHoverPathRefreshContext.Provider>
-          {resolvedSections.length === 0 && emptyState}
+          {resolvedSections.length === 0 && emptyState ? (
+            <div data-slot="tree-empty-state" dir="auto" className="w-full min-w-0">
+              {emptyState}
+            </div>
+          ) : null}
         </div>
       </TreeContext.Provider>
     </TreeStateProvider>

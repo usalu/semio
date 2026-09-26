@@ -122,7 +122,7 @@ fn collected<T>(node: &UiNode, walk: fn(&UiNode, &mut Vec<T>)) -> Vec<T> {
 //#region 📶️FoldLaws
 #[test]
 fn signed_out_outranks_every_transport_state_and_is_always_an_entry_point() {
-    let summary = hub_connection_summary(&[HubDocumentRemote::Live { peer_count: 9 }], HubSessionPresence::SignedOut);
+    let summary = hub_connection_summary(&[HubDocumentRemote::Live { peer_count: 9 }], HubSessionPresence::SignedOut, HubLink::Reachable);
     assert_eq!(summary.state, HubConnectionState::SignedOut);
     assert!(summary.actionable, "signed out is the one state that must offer a way in");
 }
@@ -130,45 +130,48 @@ fn signed_out_outranks_every_transport_state_and_is_always_an_entry_point() {
 #[test]
 fn one_live_document_means_the_hub_is_reachable_however_many_others_are_detached() {
     let statuses = [HubDocumentRemote::Detached, HubDocumentRemote::Backoff, HubDocumentRemote::Live { peer_count: 2 }, HubDocumentRemote::Connecting];
-    assert_eq!(hub_connection_summary(&statuses, HubSessionPresence::SignedIn).state, HubConnectionState::Live { peer_count: 2 });
+    assert_eq!(hub_connection_summary(&statuses, HubSessionPresence::SignedIn, HubLink::Unreachable).state, HubConnectionState::Live { peer_count: 2 });
 }
 
 #[test]
 fn the_peer_count_is_the_max_over_live_documents_and_never_a_sum() {
     let statuses = [HubDocumentRemote::Live { peer_count: 3 }, HubDocumentRemote::Live { peer_count: 1 }, HubDocumentRemote::Live { peer_count: 2 }];
-    assert_eq!(hub_connection_summary(&statuses, HubSessionPresence::SignedIn).state, HubConnectionState::Live { peer_count: 3 }, "a sum would double-count a peer with two documents open, which no reader could interpret");
+    assert_eq!(hub_connection_summary(&statuses, HubSessionPresence::SignedIn, HubLink::Reachable).state, HubConnectionState::Live { peer_count: 3 }, "a sum would double-count a peer with two documents open, which no reader could interpret");
 }
 
 #[test]
 fn a_document_still_dialling_outranks_one_already_in_backoff() {
-    assert_eq!(hub_connection_summary(&[HubDocumentRemote::Backoff, HubDocumentRemote::Connecting], HubSessionPresence::SignedIn).state, HubConnectionState::Connecting);
-    assert_eq!(hub_connection_summary(&[HubDocumentRemote::Backoff], HubSessionPresence::SignedIn).state, HubConnectionState::Reconnecting);
+    assert_eq!(hub_connection_summary(&[HubDocumentRemote::Backoff, HubDocumentRemote::Connecting], HubSessionPresence::SignedIn, HubLink::Reachable).state, HubConnectionState::Connecting);
+    assert_eq!(hub_connection_summary(&[HubDocumentRemote::Backoff], HubSessionPresence::SignedIn, HubLink::Reachable).state, HubConnectionState::Reconnecting);
 }
 
 #[test]
-fn everything_detached_and_nothing_attached_are_the_same_offline() {
-    assert_eq!(hub_connection_summary(&[HubDocumentRemote::Detached, HubDocumentRemote::Detached], HubSessionPresence::SignedIn).state, HubConnectionState::Offline);
-    assert_eq!(hub_connection_summary(&[], HubSessionPresence::SignedIn).state, HubConnectionState::Offline);
+fn an_unreachable_link_is_a_shortage_that_outranks_a_dialling_document() {
+    assert_eq!(hub_connection_summary(&[HubDocumentRemote::Connecting], HubSessionPresence::SignedIn, HubLink::Unreachable).state, HubConnectionState::Reconnecting);
+    assert_eq!(hub_connection_summary(&[HubDocumentRemote::Detached], HubSessionPresence::SignedIn, HubLink::Verifying).state, HubConnectionState::Connecting);
 }
 
 #[test]
-fn a_shell_with_no_sign_in_surface_at_all_offers_no_button() {
-    let summary = hub_connection_summary(&[], HubSessionPresence::None);
-    assert_eq!(summary.state, HubConnectionState::Offline);
+fn a_reachable_link_with_nothing_live_is_online_whatever_is_detached() {
+    assert_eq!(hub_connection_summary(&[HubDocumentRemote::Detached, HubDocumentRemote::Detached], HubSessionPresence::SignedIn, HubLink::Reachable).state, HubConnectionState::Online);
+    assert_eq!(hub_connection_summary(&[], HubSessionPresence::SignedIn, HubLink::Reachable).state, HubConnectionState::Online);
+}
+
+#[test]
+fn a_shell_with_no_hub_at_all_is_local_and_offers_no_button() {
+    let summary = hub_connection_summary(&[HubDocumentRemote::Live { peer_count: 1 }], HubSessionPresence::None, HubLink::Reachable);
+    assert_eq!(summary.state, HubConnectionState::Local);
     assert!(!summary.actionable, "`none` is deliberately not `signedOut`: only the latter is actionable");
 }
 
 #[test]
-fn every_pill_state_carries_its_own_icon_and_its_own_wire_spelling() {
-    let states = [HubConnectionState::SignedOut, HubConnectionState::Live { peer_count: 1 }, HubConnectionState::Connecting, HubConnectionState::Reconnecting, HubConnectionState::Offline];
-    let mut icons: Vec<&str> = states.iter().map(|state| state.icon_id()).collect();
+fn every_pill_state_carries_an_icon_and_its_own_wire_spelling() {
+    let states = [HubConnectionState::Local, HubConnectionState::SignedOut, HubConnectionState::Live { peer_count: 1 }, HubConnectionState::Online, HubConnectionState::Connecting, HubConnectionState::Reconnecting];
     let mut spellings: Vec<&str> = states.iter().map(|state| state.as_str()).collect();
-    icons.sort_unstable();
-    icons.dedup();
     spellings.sort_unstable();
     spellings.dedup();
-    assert_eq!(icons.len(), states.len(), "icon plus text, never colour alone — and never one icon for two states");
-    assert_eq!(spellings.len(), states.len());
+    assert_eq!(spellings.len(), states.len(), "icon plus text, never colour alone: the text tells `live` from `online`, which share React's cloud icon");
+    assert!(states.iter().all(|state| !state.icon_id().is_empty()));
 }
 //#endregion 📶️FoldLaws
 
@@ -263,6 +266,36 @@ fn every_space_row_is_addressable_by_id_and_carries_its_access_class() {
     assert!(ids.iter().any(|id| id == &format!("{HUB_SPACES_LIST_ID}.open.a1")));
     assert!(ids.iter().any(|id| id == &format!("{HUB_SPACES_LIST_ID}.invite.a1")), "an author may issue an invitation");
     assert!(!ids.iter().any(|id| id == &format!("{HUB_SPACES_LIST_ID}.invite.m1")), "a member may not");
+}
+
+/// 🔢️ Every node a tree carries, the way the shell's panel projection spends one retained record per node.
+fn node_count(node: &UiNode) -> usize {
+    match node {
+        UiNode::Stack(stack) => 1 + stack.children.iter().map(node_count).sum::<usize>(),
+        _ => 1,
+    }
+}
+
+/// 🪟️ A user with many spaces still gets a workspace that fits one retained panel document: the first
+/// `HUB_WORKSPACE_VISIBLE_SPACE_ROWS` rows the search leaves, the open space wherever it sorts, and a line naming
+/// how many more the search reaches — in both tongues; a search that leaves few rows shows them all.
+#[test]
+fn many_spaces_fit_one_panel_document_with_the_open_space_and_a_count_of_the_rest() {
+    let mut state = signed_in(workspace());
+    state.rows = (0..64).map(|index| row(&format!("s{index:02}"), SpaceAccess::Author)).collect();
+    state.open_space_id = Some("s63".into());
+    for locale in [Locale::En, Locale::De] {
+        let tree = build_hub_workspace_ui(&state, locale);
+        assert!(node_count(&tree) <= ui_contract::UI_DOCUMENT_NODES, "{locale:?}: {} nodes", node_count(&tree));
+        let spaces: Vec<String> = collected(&tree, attributes).into_iter().filter(|(key, _)| key == "data-semio-hub-space").map(|(_, value)| value).collect();
+        assert_eq!(spaces.len(), HUB_WORKSPACE_VISIBLE_SPACE_ROWS + 1, "{locale:?}: the first rows plus the open one");
+        assert!(spaces.contains(&"s63".to_string()), "{locale:?}: the open space stays reachable");
+        let hidden = collected(&tree, attributes).into_iter().find(|(key, _)| key == "data-semio-hub-spaces-hidden").map(|(_, value)| value);
+        assert_eq!(hidden.as_deref(), Some("55"), "{locale:?}: 64 − 8 shown − the open one");
+    }
+    state.search_draft = "s6".into();
+    let narrowed = build_hub_workspace_ui(&state, Locale::En);
+    assert!(collected(&narrowed, attributes).iter().all(|(key, _)| key != "data-semio-hub-spaces-hidden"), "a narrow search shows every match");
 }
 
 #[test]

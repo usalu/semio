@@ -416,7 +416,7 @@ describe("Tree windowed containers", () => {
     expect(treeWindowPathOf("objects", "shared")).toBe(`objects${TREE_WINDOW_PATH_SEPARATOR}shared`);
     expect(treeWindowPathOf("a", undefined)).toBeUndefined();
 
-    const nested = (parent: string) => ({ id: `${parent}/shared`, label: "Shared", defaultOpen: true, windowKey: "shared", windowPath: `${parent}${TREE_WINDOW_PATH_SEPARATOR}shared`, window: { rowExtent: "standard", total: 9, offset: 0 }, items: [{ id: `${parent}/shared/0`, label: "Child" }] });
+    const nested = (parent: string) => ({ id: `${parent}/shared`, label: "Shared", defaultOpen: true, windowKey: "shared", windowPath: `${parent}${TREE_WINDOW_PATH_SEPARATOR}shared`, window: { rowExtent: "standard" as const, total: 9, offset: 0 }, items: [{ id: `${parent}/shared/0`, label: "Child" }] });
     const { container } = render(
       <Tree
         sections={[
@@ -641,3 +641,20 @@ describe("capTreeWindowRequests", () => {
   });
 });
 // #endregion 🧮️BodyNodeBudget
+
+// #region 🈳️EmptyStateDirection
+describe("Tree empty state reading direction", () => {
+  it("mirrors the tree for a right-edge panel but lets its empty-state content read in its own direction", async () => {
+    const { FlowProvider } = await import("../../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx");
+    const view = render(
+      <FlowProvider inline="rtl">
+        <Tree sections={[]} emptyState={<p>No task is running.</p>} />
+      </FlowProvider>,
+    );
+    expect(view.getByRole("tree").getAttribute("dir")).toBe("rtl");
+    const message = view.getByText("No task is running.");
+    expect(message.closest("[dir]")?.getAttribute("dir")).toBe("auto");
+    expect(message.closest('[data-slot="tree-empty-state"]')).not.toBeNull();
+  });
+});
+// #endregion 🈳️EmptyStateDirection

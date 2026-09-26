@@ -237,6 +237,10 @@ impl ArtifactOwnedToolJobFactory for TsvRetainedCommandJobFactory {
 pub struct TsvEditor;
 
 impl ArtifactEditor for TsvEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = TsvSnapshot;
     type Mutation = TsvMutation;
     type Config = NoConfig;

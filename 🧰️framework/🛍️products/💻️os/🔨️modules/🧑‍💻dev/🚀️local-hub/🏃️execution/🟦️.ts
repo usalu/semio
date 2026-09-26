@@ -20,8 +20,8 @@ import {
 } from "../../../../../../../🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts";
 
 export const DEV_LOCAL_HUB_DEFAULT_URL = "http://127.0.0.1:8787";
-export const DEV_LOCAL_HUB_SESSION_PATH = "/_semio/dev/local-session";
-/** 🗄️ Env naming the data root whose session broker a serve's `/_semio/dev/local-session` asks. */
+/** 🗄️ Env naming the data root whose session broker a serve's `/_semio/dev/local-session` asks
+ * (`📇️directory/🎫️local-session`). */
 export const DEV_LOCAL_HUB_DATA_ENV = "SEMIO_DEV_LOCAL_HUB_DATA";
 /** 👤️ Env naming the local profile a serve signs in as (`developer`, `user-1`, `user-2`). */
 export const DEV_LOCAL_HUB_PROFILE_ENV = "SEMIO_DEV_LOCAL_HUB_PROFILE";

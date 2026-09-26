@@ -111,6 +111,10 @@ impl ArtifactOwnedToolJobFactory for SvgBasicEditorExampleFactory {
 pub struct SvgBasicEditor;
 
 impl ArtifactEditor for SvgBasicEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = SvgSnapshot;
     type Mutation = SvgBasicMutation;
     type Config = NoConfig;

@@ -2,8 +2,9 @@
 
 use crate::op::NoteMutation;
 use crate::schema::mutations::delete_block as delete_block_mutation;
+use crate::schema::find_block;
 use crate::NoteSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -16,6 +17,9 @@ pub struct DeleteBlock {
 // the "blocks" domain's selection is now the framework's job (`revalidate_interaction_state_after_document_change`
 // prunes stale ids against `interaction_topology` after every document dispatch) — this handler no
 // longer touches selection at all.
-pub fn handle(payload: &DeleteBlock, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn handle(payload: &DeleteBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+    if find_block(&doc.snapshot.blocks, &payload.block_id).is_none() {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the note has no block {}", payload.block_id)));
+    }
     Ok(Emit::mutations(vec![delete_block_mutation(payload.block_id.clone())]))
 }

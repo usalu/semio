@@ -49,7 +49,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 128,
-          "description": "\ud83e\udded\ufe0f Why this gate is closed, as a stable kebab-case code. Present only when ready is false, so an operator or launcher waiting on /readyz reads the blocking condition instead of polling a silent boolean."
+          "description": "🧭️ Why this gate is closed, as a stable kebab-case code. Present only when ready is false, so an operator or launcher waiting on /readyz reads the blocking condition instead of polling a silent boolean."
         }
       }
     },
@@ -70,6 +70,31 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 128
+        }
+      }
+    },
+    "startupProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "completedUnits",
+        "totalUnits"
+      ],
+      "description": "📈️ How far a booting hub's startup work has come: the stage its trusted-catalog load last reported and that stage's units. Present only while the hub starts, when every component gate is closed with `hub-starting` and the artifact authority with `trusted-catalog-loading`.",
+      "properties": {
+        "stage": {
+          "type": "string",
+          "pattern": "^[a-z]+(?:-[a-z]+)*$",
+          "maxLength": 64
+        },
+        "completedUnits": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalUnits": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -506,6 +531,9 @@
         "authentication",
         "directory",
         "storage",
+        "artifactCasBarrier",
+        "artifactPublication",
+        "artifactCasSweeper",
         "artifactAuthority",
         "adminAssets",
         "features"
@@ -532,7 +560,11 @@
           ]
         },
         "bindScope": {
-          "const": "loopback"
+          "enum": [
+            "loopback",
+            "network"
+          ],
+          "description": "🌐️ Where the hub's socket is bound: loopback, or a network interface (production mode only, behind a TLS-terminating proxy)."
         },
         "authentication": {
           "type": "object",
@@ -554,7 +586,7 @@
             },
             "publicSessionIssuance": {
               "type": "boolean",
-              "description": "\ud83c\udfab\ufe0f Whether this hub also mints sessions from public credentials (POST /auth/sessions). A development hub issues through the pipe alone by default and reports false; an operator who sets OS_HUB_CREDENTIAL_SIGN_IN reports true, and a local run that did not ask for that must still refuse it \u2014 see localHubReadinessAdmitted, which compares this against the run's own expectation rather than against a constant."
+              "description": "🎫️ Whether this hub also mints sessions from public credentials (POST /auth/sessions). A development hub issues through the pipe alone by default and reports false; an operator who sets OS_HUB_CREDENTIAL_SIGN_IN reports true, and a local run that did not ask for that must still refuse it — see localHubReadinessAdmitted, which compares this against the run's own expectation rather than against a constant."
             }
           }
         },
@@ -563,6 +595,38 @@
         },
         "storage": {
           "$ref": "#/$defs/readyComponent"
+        },
+        "artifactCasBarrier": {
+          "$ref": "#/$defs/readyComponent"
+        },
+        "artifactPublication": {
+          "$ref": "#/$defs/readyComponent"
+        },
+        "artifactCasSweeper": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ready",
+            "execute",
+            "defaultMode"
+          ],
+          "properties": {
+            "ready": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "execute": {
+              "type": "boolean",
+              "description": "🧹️ Whether swept chunks are deleted (OS_HUB_ARTIFACT_CAS_SWEEP_EXECUTE) rather than only reported."
+            },
+            "defaultMode": {
+              "const": "dry-run"
+            }
+          }
         },
         "artifactAuthority": {
           "$ref": "#/$defs/readyComponent"
@@ -575,12 +639,16 @@
           "additionalProperties": false,
           "required": [
             "openPlan",
+            "openPlanExchange",
             "rebootstrap",
             "mcpWorkspace",
-            "inference"
+            "inferenceServices"
           ],
           "properties": {
             "openPlan": {
+              "type": "boolean"
+            },
+            "openPlanExchange": {
               "type": "boolean"
             },
             "rebootstrap": {
@@ -589,8 +657,29 @@
             "mcpWorkspace": {
               "type": "boolean"
             },
-            "inference": {
-              "type": "boolean"
+            "inferenceServices": {
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "serviceId",
+                  "route"
+                ],
+                "properties": {
+                  "serviceId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "route": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  }
+                }
+              }
             }
           }
         },
@@ -601,6 +690,9 @@
           "items": {
             "$ref": "#/$defs/closedReadinessGate"
           }
+        },
+        "startup": {
+          "$ref": "#/$defs/startupProgress"
         }
       },
       "allOf": [
@@ -667,7 +759,8 @@
                   }
                 }
               },
-              "blockedBy": false
+              "blockedBy": false,
+              "startup": false
             }
           },
           "else": {
@@ -776,7 +869,7 @@
       }
     },
     "LocalSessionBrokerRecordV1": {
-      "description": "\ud83c\udfab\ufe0f The local session broker record the owner of a loopback development hub writes 0600 into its data root.",
+      "description": "🎫️ The local session broker record the owner of a loopback development hub writes 0600 into its data root.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -817,7 +910,7 @@
       }
     },
     "LocalSessionRequestV1": {
-      "description": "\ud83c\udfab\ufe0f One loopback request for a fresh react-relay session of a declared local profile.",
+      "description": "🎫️ One loopback request for a fresh react-relay session of a declared local profile.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -834,7 +927,7 @@
       }
     },
     "LocalSessionV1": {
-      "description": "\ud83c\udfab\ufe0f One issued development session: the react-relay capability and the user it resolves to.",
+      "description": "🎫️ One issued development session: the react-relay capability and the user it resolves to.",
       "type": "object",
       "additionalProperties": false,
       "required": [

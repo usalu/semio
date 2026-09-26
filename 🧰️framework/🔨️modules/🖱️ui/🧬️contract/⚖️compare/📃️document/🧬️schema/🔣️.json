@@ -40,7 +40,7 @@
           "const": 256
         },
         "componentCount": {
-          "const": 19
+          "const": 21
         },
         "grants": {
           "const": [

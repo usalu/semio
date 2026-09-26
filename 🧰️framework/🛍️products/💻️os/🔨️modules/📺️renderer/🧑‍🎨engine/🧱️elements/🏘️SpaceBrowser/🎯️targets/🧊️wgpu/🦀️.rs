@@ -351,12 +351,15 @@ pub enum SpaceBrowserLabel {
     Owner,
     RoleAuthor,
     RoleSpectator,
+    MoreRows,
 }
 
 /// 🏷️ One chrome label, in both languages this product owns. Both columns are written in the same
 /// match, so a half-translated key cannot compile.
 pub fn space_browser_label(key: SpaceBrowserLabel, locale: Locale) -> &'static str {
     match (key, locale) {
+        (SpaceBrowserLabel::MoreRows, Locale::En) => "more spaces — narrow the search to reach them",
+        (SpaceBrowserLabel::MoreRows, Locale::De) => "weitere Spaces — Suche eingrenzen, um sie zu erreichen",
         (SpaceBrowserLabel::Title, Locale::En) => "Spaces",
         (SpaceBrowserLabel::Title, Locale::De) => "Spaces",
         (SpaceBrowserLabel::Search, Locale::En) => "Search spaces",

@@ -1,0 +1,21 @@
+{
+  "schema": "semio.os.browser-actor-command-windows-corpus/v1",
+  "description": "App commands of an actor-bound (hub) document are admitted in EVERY window kind of the verified app, never only the lease's window: note opens `note-composite` + `note-navigator`, and the navigator's commands (and the shell's `noteShellCommand` while it is focused) were refused as `command owner mismatch` (ticket 26/09/23 C10, S15 finding b). A window-addressed action names its window kind and base instance; a command addressed by id is issued in the view state's active window, or the lease window when the view names none. `admitted` is the window whose painted revision the command is judged against; `refused` is the worker's exact error.",
+  "pluginId": "s.note",
+  "appId": "note",
+  "leaseWindow": "note-composite",
+  "windows": ["note-composite", "note-navigator"],
+  "cases": [
+    { "name": "action in the lease window", "address": { "kind": "window", "windowKindId": "note-composite", "windowInstanceId": "note-composite" }, "view": { "activeWindowKindId": "note-composite", "windowId": "note-composite" }, "admitted": "note-composite" },
+    { "name": "action in the second window (S15 b)", "address": { "kind": "window", "windowKindId": "note-navigator", "windowInstanceId": "note-navigator" }, "view": { "activeWindowKindId": "note-navigator", "windowId": "note-navigator" }, "admitted": "note-navigator" },
+    { "name": "action in the second window with a windowless view", "address": { "kind": "window", "windowKindId": "note-navigator", "windowInstanceId": "note-navigator" }, "view": {}, "admitted": "note-navigator" },
+    { "name": "command by id in the second window", "address": { "kind": "command" }, "view": { "activeWindowKindId": "note-navigator", "windowId": "note-navigator" }, "admitted": "note-navigator" },
+    { "name": "command by id with a windowless view runs in the lease window", "address": { "kind": "command" }, "view": {}, "admitted": "note-composite" },
+    { "name": "action in a window the verified app does not declare", "address": { "kind": "window", "windowKindId": "note-outline", "windowInstanceId": "note-outline" }, "view": { "activeWindowKindId": "note-outline", "windowId": "note-outline" }, "refused": "document browser actor: command owner mismatch" },
+    { "name": "action in a split instance of a verified window", "address": { "kind": "window", "windowKindId": "note-navigator", "windowInstanceId": "note-navigator#2" }, "view": { "activeWindowKindId": "note-navigator", "windowId": "note-navigator" }, "refused": "document browser actor: command owner mismatch" },
+    { "name": "action whose view is bound to another window", "address": { "kind": "window", "windowKindId": "note-navigator", "windowInstanceId": "note-navigator" }, "view": { "activeWindowKindId": "note-composite", "windowId": "note-composite" }, "refused": "document browser actor: command view owner mismatch" },
+    { "name": "action whose view names another window id", "address": { "kind": "window", "windowKindId": "note-navigator", "windowInstanceId": "note-navigator" }, "view": { "activeWindowKindId": "note-navigator", "windowId": "note-composite" }, "refused": "document browser actor: command view owner mismatch" },
+    { "name": "command by id in a window the verified app does not declare", "address": { "kind": "command" }, "view": { "activeWindowKindId": "note-outline", "windowId": "note-outline" }, "refused": "document browser actor: command owner mismatch" },
+    { "name": "action of a foreign app", "address": { "kind": "window", "appId": "draw", "windowKindId": "note-navigator", "windowInstanceId": "note-navigator" }, "view": { "activeWindowKindId": "note-navigator", "windowId": "note-navigator" }, "refused": "document browser actor: command owner mismatch" }
+  ]
+}

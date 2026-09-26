@@ -139,7 +139,7 @@ function AgentChatEntry({
 
 /** 💬️ Chat side panel with MCP agent presence in the header, the live agent conversation as its body,
  * and a composer that sends one human turn per submit to the connected agent. */
-export function AgentChatPanel({ status, presence, conversation, onSendMessage, onCancelToolCall, onResolveApproval }: AgentChatPanelProps): ReactElement {
+export function AgentChatPanel({ status, presence, versionMismatch = null, conversation, onSendMessage, onCancelToolCall, onResolveApproval }: AgentChatPanelProps): ReactElement {
   const title = useLabel(agentUiLabel("os.agent.chat.panelTitle"));
   const transcriptLabel = useLabel(agentUiLabel("os.agent.chat.transcriptLabel"));
   const emptyLabel = useLabel(agentUiLabel("os.agent.chat.empty"));
@@ -167,7 +167,7 @@ export function AgentChatPanel({ status, presence, conversation, onSendMessage, 
     <div data-semio-agent-chat-panel="" className="flex w-full min-w-0 flex-col gap-single">
       <div className="flex shrink-0 items-center justify-between gap-double border-b border-border px-single py-single">
         <span className="text-sm font-medium">{title}</span>
-        <AgentPresence status={status} presence={presence} />
+        <AgentPresence status={status} presence={presence} versionMismatch={versionMismatch} />
       </div>
       <ol ref={feedRef} id="framework.chat.feed" data-semio-agent-chat-feed="" aria-label={transcriptLabel} aria-live="polite" className="min-h-huge flex min-w-0 flex-col divide-y divide-border overflow-y-auto px-single">
         {conversation.length === 0 ? <li className="py-single text-xs text-muted-foreground">{emptyLabel}</li> : conversation.map((entry) => <AgentChatEntry key={`${entry.kind}:${entry.id}`} entry={entry} onCancelToolCall={onCancelToolCall} onResolveApproval={onResolveApproval} />)}

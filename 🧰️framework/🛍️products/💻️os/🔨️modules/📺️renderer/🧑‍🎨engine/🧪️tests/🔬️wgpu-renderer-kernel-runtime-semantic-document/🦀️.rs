@@ -985,6 +985,103 @@ mod semantic_document_tests {
         drop(guard);
     }
 
+    /// 📥️ A producer whose kernel request meets a blocked lane — the queue's lock held for a moment, or
+    /// the queue full — is never parked without a wake: driven only by the wakes the lane itself
+    /// arranges, exactly the fixture's count of producers is admitted after each release. tokio's own
+    /// blocked lanes (a held `sync::Mutex`, a full bounded `mpsc` channel) are the oracle, under the same
+    /// wake-only executor. A detached render parked on one contended push and hung a whole 180 s law
+    /// (ticket 26/09/23 slice WG8, session 12).
+    #[test]
+    fn kernel_request_admission_never_parks_without_a_wake() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        struct CountingWake(AtomicUsize);
+
+        impl std::task::Wake for CountingWake {
+            fn wake(self: Arc<Self>) {
+                self.0.fetch_add(1, Ordering::SeqCst);
+            }
+
+            fn wake_by_ref(self: &Arc<Self>) {
+                self.0.fetch_add(1, Ordering::SeqCst);
+            }
+        }
+
+        struct Producer<'a> {
+            future: Pin<Box<dyn Future<Output = ()> + 'a>>,
+            wake: Arc<CountingWake>,
+            seen: usize,
+            admitted: bool,
+        }
+
+        impl<'a> Producer<'a> {
+            fn new(future: impl Future<Output = ()> + 'a) -> Self {
+                Self { future: Box::pin(future), wake: Arc::new(CountingWake(AtomicUsize::new(0))), seen: 0, admitted: false }
+            }
+
+            fn poll(&mut self) {
+                self.seen = self.wake.0.load(Ordering::SeqCst);
+                let waker = Waker::from(self.wake.clone());
+                self.admitted = self.future.as_mut().poll(&mut Context::from_waker(&waker)).is_ready();
+            }
+        }
+
+        fn admitted_per_release(producers: &mut [Producer<'_>], releases: usize, mut release: impl FnMut()) -> Vec<usize> {
+            producers.iter_mut().for_each(Producer::poll);
+            assert!(producers.iter().all(|producer| !producer.admitted), "a blocked lane admits nothing");
+            (0..releases)
+                .map(|_| {
+                    release();
+                    while let Some(producer) = producers.iter_mut().find(|producer| !producer.admitted && producer.wake.0.load(Ordering::SeqCst) != producer.seen) {
+                        producer.poll();
+                    }
+                    producers.iter().filter(|producer| producer.admitted).count()
+                })
+                .collect()
+        }
+
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️kernel-pool-future/🔣️.json")).expect("neutral kernel admission traces");
+        for case in fixture["admissions"].as_array().expect("admission cases") {
+            let id = case["id"].as_str().unwrap();
+            let producers = case["producers"].as_u64().unwrap() as u32;
+            let expected: Vec<usize> = case["admittedAfterRelease"].as_array().unwrap().iter().map(|count| count.as_u64().unwrap() as usize).collect();
+            let (oracle, actual) = match case["blockedBy"].as_str().unwrap() {
+                "contended" => {
+                    let mutex = tokio::sync::Mutex::new(());
+                    let mut held = Some(mutex.try_lock().expect("oracle lock"));
+                    let mut lane: Vec<Producer<'_>> = (0..producers).map(|_| Producer::new(async { drop(mutex.lock().await) })).collect();
+                    let oracle = admitted_per_release(&mut lane, expected.len(), || drop(held.take()));
+                    let queue = KernelRequestQueue::default();
+                    let mut held = Some(queue.state.lock().unwrap());
+                    let mut lane: Vec<Producer<'_>> = (0..producers).map(|instance| Producer::new(queue.enqueue_retained(destroy_request(instance), Arc::new(ResponseSlot::default())))).collect();
+                    let actual = admitted_per_release(&mut lane, expected.len(), || drop(held.take()));
+                    (oracle, actual)
+                }
+                "full" => {
+                    let (sender, mut receiver) = tokio::sync::mpsc::channel::<u32>(1);
+                    sender.try_send(u32::MAX).expect("oracle lane fills");
+                    let mut lane: Vec<Producer<'_>> = (0..producers)
+                        .map(|value| {
+                            let sender = sender.clone();
+                            Producer::new(async move { sender.send(value).await.expect("oracle receiver remains live") })
+                        })
+                        .collect();
+                    let oracle = admitted_per_release(&mut lane, expected.len(), || drop(receiver.try_recv().expect("oracle lane holds a value")));
+                    let queue = KernelRequestQueue::default();
+                    for instance in 0..KERNEL_REQUEST_QUEUE_CAPACITY as u32 {
+                        queue.try_push(destroy_request(1000 + instance), Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
+                    }
+                    let mut lane: Vec<Producer<'_>> = (0..producers).map(|instance| Producer::new(queue.enqueue_retained(destroy_request(instance), Arc::new(ResponseSlot::default())))).collect();
+                    let actual = admitted_per_release(&mut lane, expected.len(), || drop(queue.try_next().expect("the full lane holds a request")));
+                    (oracle, actual)
+                }
+                other => panic!("unknown neutral blocked lane {other}"),
+            };
+            assert_eq!(oracle, expected, "{id}: the tokio oracle admits the fixture's counts");
+            assert_eq!(actual, expected, "{id}: the kernel request queue admits the fixture's counts");
+        }
+    }
+
     #[test]
     fn fixed_kernel_close_registry_returns_the_exact_modulo_collision_and_reuses_only_after_terminal_generation() {
         let registry = Arc::new(KernelCloseSubmissionRegistry::new());

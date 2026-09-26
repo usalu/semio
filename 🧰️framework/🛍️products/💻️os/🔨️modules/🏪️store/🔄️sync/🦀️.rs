@@ -1083,6 +1083,174 @@ pub fn replica_hlc_seed() -> Result<u64, crate::os_identity::EntropyError> {
 }
 //#endregion 🔖️DocumentSocketConnect
 
+//#region 🔖️DocumentLinkShortage
+/// @emoji 🔌️ The capped doubling reconnect and the longest shortage one hub document's link rides out
+/// (`🧬️schema/document-link-shortage/🔣️.json` `$defs/Policy`). The bound is twice the backoff cap, so at
+/// least two capped reconnect attempts fall inside it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DocumentLinkShortagePolicy {
+    pub reconnect_min_ms: u64,
+    pub reconnect_max_ms: u64,
+    pub shortage_bound_ms: u64,
+}
+
+/// 🔌️ The policy every shell drives (`🧫️fixtures/document-link-shortage-v1` `policy`, the React twin
+/// `DOCUMENT_LINK_SHORTAGE_POLICY` in `🏪️store/🟦️.ts`).
+pub const DOCUMENT_LINK_SHORTAGE_POLICY: DocumentLinkShortagePolicy = DocumentLinkShortagePolicy {
+    reconnect_min_ms: crate::os_directory::client::HUB_RECONNECT_MIN_MS,
+    reconnect_max_ms: crate::os_directory::client::HUB_RECONNECT_MAX_MS,
+    shortage_bound_ms: 2 * crate::os_directory::client::HUB_RECONNECT_MAX_MS,
+};
+
+/// 🚫️ The HTTP statuses of a document admission that mean the hub withdrew access (`accessRefusedStatuses`):
+/// the link is revoked, never retried.
+pub const DOCUMENT_LINK_ACCESS_REFUSED_STATUSES: [u16; 4] = [401, 403, 404, 410];
+
+/// 🚫️ Whether a document admission failed because the hub withdrew access rather than because the link is short.
+pub fn document_admission_refuses_access(error: &crate::os_directory::client::DirectoryClientError) -> bool {
+    match error {
+        crate::os_directory::client::DirectoryClientError::Unauthorized => true,
+        crate::os_directory::client::DirectoryClientError::Http { status, .. } => DOCUMENT_LINK_ACCESS_REFUSED_STATUSES.contains(status),
+        _ => false,
+    }
+}
+
+/// 📣️ The message a document actor emits once its link turns terminal: the status code is the fault code a
+/// shell localizes ([`DocumentLinkStatus::text`]), the message the English line for logs.
+pub fn document_link_terminal_message(document_id: &str, status: DocumentLinkStatus) -> MutationMessage {
+    MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new(status.code()), message: status.text(false).unwrap_or_default().to_string(), target: vec![document_id.to_string()], op_index: None }
+}
+
+/// @emoji 🔌️ A hub document's link, the ONE state machine the native actor, the browser actor and the
+/// React worker drive (ticket 26/09/23 audit P2-2): while `Unlinked` the document stays mounted, local
+/// edits keep applying and queue, and the link retries at `retry_at_ms`; a shortage that outlasts the
+/// policy bound becomes `Expired` (AGENTS.md: short shortages, never long offline periods) and a hub that
+/// withdraws access makes it `Revoked`. Both terminal states admit no local edit and never relink — the
+/// human reopens. Schema: `🧬️schema/document-link-shortage/🔣️.json`; law: `🧫️fixtures/document-link-shortage-v1`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DocumentLink {
+    Linked,
+    Unlinked { since_ms: u64, backoff_ms: u64, retry_at_ms: u64 },
+    Expired { since_ms: u64, at_ms: u64 },
+    Revoked { at_ms: u64 },
+}
+
+/// 🔌️ What happened to a link: an attempt failed or the socket was lost, the link is live again, time
+/// passed, or the hub refused access (401/403/404/410).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DocumentLinkEvent {
+    Failed { now_ms: u64 },
+    Restored { now_ms: u64 },
+    Tick { now_ms: u64 },
+    Refused { now_ms: u64 },
+}
+
+/// 🚦️ The status a shell shows for a link (`$defs/Status`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DocumentLinkStatus {
+    Linked,
+    Reconnecting,
+    LinkExpired,
+    AccessRevoked,
+}
+
+impl DocumentLinkStatus {
+    /// 🏷️ The schema's status code.
+    pub fn code(self) -> &'static str {
+        match self {
+            Self::Linked => "linked",
+            Self::Reconnecting => "reconnecting",
+            Self::LinkExpired => "link-expired",
+            Self::AccessRevoked => "access-revoked",
+        }
+    }
+
+    /// 🌐️ The localized line a shell shows for a shortage status (the fixture's `texts`); `None` while linked.
+    pub fn text(self, is_de: bool) -> Option<&'static str> {
+        match (self, is_de) {
+            (Self::Linked, _) => None,
+            (Self::Reconnecting, false) => Some("Connection lost. Your edits are kept and sent when the hub is reachable again."),
+            (Self::Reconnecting, true) => Some("Verbindung unterbrochen. Ihre Änderungen bleiben erhalten und werden gesendet, sobald der Hub wieder erreichbar ist."),
+            (Self::LinkExpired, false) => Some("The connection was lost for too long. Reconnect to keep editing this document."),
+            (Self::LinkExpired, true) => Some("Die Verbindung war zu lange unterbrochen. Verbinden Sie sich erneut, um dieses Dokument weiter zu bearbeiten."),
+            (Self::AccessRevoked, false) => Some("Your access to this document was removed."),
+            (Self::AccessRevoked, true) => Some("Ihr Zugriff auf dieses Dokument wurde entfernt."),
+        }
+    }
+}
+
+impl DocumentLink {
+    /// 🌱️ A link opened at `now_ms`: not yet live, first attempt due at once, the shortage bound running.
+    pub fn opened(now_ms: u64) -> Self {
+        Self::Unlinked { since_ms: now_ms, backoff_ms: 0, retry_at_ms: now_ms }
+    }
+
+    /// ⚙️ The one transition function (`$defs/Event` → `$defs/State`).
+    #[must_use]
+    pub fn apply(self, policy: &DocumentLinkShortagePolicy, event: DocumentLinkEvent) -> Self {
+        match (self, event) {
+            (Self::Expired { .. } | Self::Revoked { .. }, _) => self,
+            (_, DocumentLinkEvent::Refused { now_ms }) => Self::Revoked { at_ms: now_ms },
+            (_, DocumentLinkEvent::Restored { .. }) => Self::Linked,
+            (Self::Linked, DocumentLinkEvent::Failed { now_ms }) => Self::Unlinked { since_ms: now_ms, backoff_ms: policy.reconnect_min_ms, retry_at_ms: now_ms.saturating_add(policy.reconnect_min_ms) },
+            (Self::Unlinked { since_ms, backoff_ms, .. }, DocumentLinkEvent::Failed { now_ms }) => {
+                if now_ms.saturating_sub(since_ms) >= policy.shortage_bound_ms {
+                    return Self::Expired { since_ms, at_ms: now_ms };
+                }
+                let backoff_ms = backoff_ms.saturating_mul(2).clamp(policy.reconnect_min_ms, policy.reconnect_max_ms);
+                Self::Unlinked { since_ms, backoff_ms, retry_at_ms: now_ms.saturating_add(backoff_ms) }
+            }
+            (Self::Unlinked { since_ms, .. }, DocumentLinkEvent::Tick { now_ms }) if now_ms.saturating_sub(since_ms) >= policy.shortage_bound_ms => Self::Expired { since_ms, at_ms: now_ms },
+            (_, DocumentLinkEvent::Tick { .. }) => self,
+        }
+    }
+
+    /// 🚦️ The status a shell shows.
+    pub fn status(self) -> DocumentLinkStatus {
+        match self {
+            Self::Linked => DocumentLinkStatus::Linked,
+            Self::Unlinked { .. } => DocumentLinkStatus::Reconnecting,
+            Self::Expired { .. } => DocumentLinkStatus::LinkExpired,
+            Self::Revoked { .. } => DocumentLinkStatus::AccessRevoked,
+        }
+    }
+
+    /// ✍️ Whether a local edit applies (and queues while unlinked); a terminal link admits none.
+    pub fn admits_local_edits(self) -> bool {
+        matches!(self, Self::Linked | Self::Unlinked { .. })
+    }
+
+    /// ⏳️ When an unlinked link expires unless it relinks first.
+    pub fn expires_at_ms(self, policy: &DocumentLinkShortagePolicy) -> Option<u64> {
+        match self {
+            Self::Unlinked { since_ms, .. } => Some(since_ms.saturating_add(policy.shortage_bound_ms)),
+            _ => None,
+        }
+    }
+
+    /// 🔁️ When the next reconnect attempt is due; `None` while linked or terminal.
+    pub fn retry_at_ms(self) -> Option<u64> {
+        match self {
+            Self::Unlinked { retry_at_ms, .. } => Some(retry_at_ms),
+            _ => None,
+        }
+    }
+
+    /// 🔁️ Whether a reconnect attempt may start now.
+    pub fn retry_due(self, now_ms: u64) -> bool {
+        self.retry_at_ms().is_some_and(|at| at <= now_ms)
+    }
+
+    /// ⏰️ The earliest instant this link needs a turn of its own: its retry or its expiry.
+    pub fn next_deadline_ms(self, policy: &DocumentLinkShortagePolicy) -> Option<u64> {
+        match (self.retry_at_ms(), self.expires_at_ms(policy)) {
+            (Some(retry), Some(expiry)) => Some(retry.min(expiry)),
+            (retry, expiry) => retry.or(expiry),
+        }
+    }
+}
+//#endregion 🔖️DocumentLinkShortage
+
 //#region 🔖️DocumentSocketDoor
 /// @emoji 📬️ One observation of a browser document socket's receive side.
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
@@ -1718,7 +1886,25 @@ mod native_actor {
         }
     }
 
-    type ConnectFuture = std::pin::Pin<Box<dyn std::future::Future<Output = Result<ConnectedDocumentSocket, ()>> + Send>>;
+    type ConnectFuture = std::pin::Pin<Box<dyn std::future::Future<Output = Result<ConnectedDocumentSocket, DocumentConnectFailure>> + Send>>;
+
+    /// 🔌️ Why a hub dial did not produce a socket: the hub withdrew access (the link is revoked), or the
+    /// link is short (it backs off along [`DOCUMENT_LINK_SHORTAGE_POLICY`]).
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum DocumentConnectFailure {
+        Refused,
+        Short,
+    }
+
+    /// ⏰️ The wall clock the link state machine reads.
+    fn wall_ms() -> u64 {
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
+    }
+
+    /// ⏰️ The `Instant` of a wall-clock deadline, for the actor's timer-driven drive.
+    fn instant_at(at_ms: u64, now_ms: u64) -> Instant {
+        Instant::now() + Duration::from_millis(at_ms.saturating_sub(now_ms))
+    }
 
     struct HubConn {
         write: WsSink,
@@ -1867,8 +2053,10 @@ mod native_actor {
         required_tail_frontier: Option<RuntimeFrontierSummary>,
         artifact_rebootstrap_required: bool,
         artifact_bootstrap: Option<PendingArtifactBootstrap>,
-        backoff_ms: u64,
+        /// 🔌️ The hub link ([`DocumentLink`]): `reconnect_at` and `link_expires_at` are its two deadlines as instants.
+        link: DocumentLink,
         reconnect_at: Option<Instant>,
+        link_expires_at: Option<Instant>,
         /// @emoji 🧺️ Outbound `Commands` batches awaiting an `Ack`, keyed by `batch_id`, so `Rejected`/
         /// `Transformed` can roll back exactly the envelopes that batch sent.
         pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
@@ -1970,8 +2158,9 @@ mod native_actor {
                 required_tail_frontier: None,
                 artifact_bootstrap: None,
                 artifact_rebootstrap_required: false,
-                backoff_ms: 500,
+                link: DocumentLink::opened(wall_ms()),
                 reconnect_at: None,
+                link_expires_at: None,
                 pending_batches: std::collections::HashMap::new(),
                 outbox: Vec::new(),
                 document_backbone_retention: DocumentBackboneRetentionV1::default(),
@@ -2119,6 +2308,7 @@ mod native_actor {
                     }
                 }
                 ArtifactDrivePhase::Status => {
+                    self.tick_link().await;
                     if self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
                         self.invalidate_socket_authority().await;
                         return ArtifactDrive::MoreWork;
@@ -2131,7 +2321,7 @@ mod native_actor {
                         self.drive_phase = ArtifactDrivePhase::Backbone;
                         return ArtifactDrive::MoreWork;
                     }
-                    return ArtifactDrive::Idle { deadline: [self.reconnect_at, self.fs_deadline, self.socket_authority_deadline].into_iter().flatten().min() };
+                    return ArtifactDrive::Idle { deadline: [self.reconnect_at, self.link_expires_at, self.fs_deadline, self.socket_authority_deadline].into_iter().flatten().min() };
                 }
             }
             ArtifactDrive::MoreWork
@@ -2470,9 +2660,7 @@ mod native_actor {
             self.semio_hub = None;
             self.clear_socket_epoch();
             self.set_remote_state(RemoteState::Connecting).await;
-            let retry = self.backoff_ms;
-            self.reconnect_at = Some(Instant::now() + Duration::from_millis(retry));
-            self.backoff_ms = (self.backoff_ms * 2).min(30_000);
+            self.fail_link().await;
         }
 
         async fn flush_outbox(&mut self) {
@@ -2499,7 +2687,7 @@ mod native_actor {
 
         async fn start_connect_hub(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
-            if self.semio_hub.is_some() || self.connect_future.is_some() || self.reconnect_at.is_some_and(|deadline| deadline > Instant::now()) {
+            if self.semio_hub.is_some() || self.connect_future.is_some() || !self.link.admits_local_edits() || self.reconnect_at.is_some_and(|deadline| deadline > Instant::now()) {
                 return;
             }
             let Some(credential) = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone() else {
@@ -2532,12 +2720,12 @@ mod native_actor {
                     let _ = admission_sender.send(admission);
                 });
                 pool.submit_at(pool.now_ms(), semio_framework_async::Lane::Io, admission_job);
-                let admission = admission_receiver.await.map_err(|_| ())?.map_err(|_| ())?;
+                let admission = admission_receiver.await.map_err(|_| DocumentConnectFailure::Short)?.map_err(|error| if document_admission_refuses_access(&error) { DocumentConnectFailure::Refused } else { DocumentConnectFailure::Short })?;
                 if ctx.cancel.is_cancelled_now() || admission.authority.expires_at_unix_ms <= now_ms().await {
-                    return Err(());
+                    return Err(DocumentConnectFailure::Short);
                 }
                 if base_url.trim_end_matches('/') != admission.authority.hub_origin.trim_end_matches('/') {
-                    return Err(());
+                    return Err(DocumentConnectFailure::Short);
                 }
                 let crate::os_directory::client::DocumentSocketAdmissionV1 { mut socket, authority } = admission;
                 let url = hub_ws_url(
@@ -2547,24 +2735,24 @@ mod native_actor {
                     Some(&authority.surface.surface_id),
                 )
                 .await;
-                let mut request = url.into_client_request().map_err(|_| ())?;
-                let session = credential.capability().map_err(|_| ())?;
+                let mut request = url.into_client_request().map_err(|_| DocumentConnectFailure::Short)?;
+                let session = credential.capability().map_err(|_| DocumentConnectFailure::Short)?;
                 let protocol_header = format!("{}, {session}", socket.protocol);
                 request.headers_mut().insert(
                     tokio_tungstenite::tungstenite::http::header::SEC_WEBSOCKET_PROTOCOL,
-                    protocol_header.parse().map_err(|_| ())?,
+                    protocol_header.parse().map_err(|_| DocumentConnectFailure::Short)?,
                 );
-                let (mut stream, _response) = tokio::time::timeout(Duration::from_secs(5), tokio_tungstenite::connect_async(request)).await.map_err(|_| ())?.map_err(|_| ())?;
+                let (mut stream, _response) = tokio::time::timeout(Duration::from_secs(5), tokio_tungstenite::connect_async(request)).await.map_err(|_| DocumentConnectFailure::Short)?.map_err(|_| DocumentConnectFailure::Short)?;
                 if ctx.cancel.is_cancelled_now() || authority.expires_at_unix_ms <= now_ms().await {
                     let _ = stream.close(None).await;
-                    return Err(());
+                    return Err(DocumentConnectFailure::Short);
                 }
                 let socket_actor = std::mem::take(&mut socket.actor_id);
                 Ok(ConnectedDocumentSocket { stream, socket_actor, authority })
             }));
         }
 
-        async fn finish_connect_hub(&mut self, connection: Result<ConnectedDocumentSocket, ()>) {
+        async fn finish_connect_hub(&mut self, connection: Result<ConnectedDocumentSocket, DocumentConnectFailure>) {
             match connection {
                 Ok(ConnectedDocumentSocket { mut stream, socket_actor, authority }) => {
                     let local_schema_hash = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await;
@@ -2593,22 +2781,63 @@ mod native_actor {
                     self.socket_authority_deadline = Some(Instant::now() + Duration::from_millis(authority.expires_at_unix_ms.saturating_sub(now)));
                     self.socket_authority = Some(authority);
                     self.session_color = None;
-                    self.backoff_ms = 500;
                     let hello = ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: self.schema.clone(), pack_schema_hash, resume_token: self.resume_token.clone(), frontier: self.server_frontier.clone() };
                     self.send_client_frame(hello, Lane::Command).await;
                 }
-                Err(()) => {
+                Err(DocumentConnectFailure::Refused) => {
+                    self.clear_socket_epoch();
+                    self.link_event(DocumentLinkEvent::Refused { now_ms: wall_ms() }).await;
+                }
+                Err(DocumentConnectFailure::Short) => {
                     self.clear_socket_epoch();
                     self.schedule_reconnect().await;
                 }
             }
         }
 
+        /// 🔁️ A failed attempt or a lost socket: the link backs off along [`DOCUMENT_LINK_SHORTAGE_POLICY`] — or
+        /// expires, once the shortage outlasts its bound.
         async fn schedule_reconnect(&mut self) {
-            let retry = self.backoff_ms;
-            self.set_remote_state(RemoteState::Backoff { retry_in_ms: retry }).await;
-            self.reconnect_at = Some(Instant::now() + Duration::from_millis(retry));
-            self.backoff_ms = (self.backoff_ms * 2).min(30_000);
+            if let Some(retry_in_ms) = self.fail_link().await {
+                self.set_remote_state(RemoteState::Backoff { retry_in_ms }).await;
+            }
+        }
+
+        /// 🔌️ Applies `Failed` to the link and arms its two deadlines; the retry delay while it stays unlinked.
+        async fn fail_link(&mut self) -> Option<u64> {
+            let now_ms = wall_ms();
+            self.link_event(DocumentLinkEvent::Failed { now_ms }).await;
+            let retry_at_ms = self.link.retry_at_ms()?;
+            self.reconnect_at = Some(instant_at(retry_at_ms, now_ms));
+            self.link_expires_at = self.link.expires_at_ms(&DOCUMENT_LINK_SHORTAGE_POLICY).map(|at_ms| instant_at(at_ms, now_ms));
+            Some(retry_at_ms.saturating_sub(now_ms))
+        }
+
+        /// 🔌️ Applies one link event; a link that turns terminal drops its socket and deadlines, reports
+        /// `Detached` and emits the coded terminal message a shell localizes ([`document_link_terminal_message`]).
+        async fn link_event(&mut self, event: DocumentLinkEvent) {
+            let was_open = self.link.admits_local_edits();
+            self.link = self.link.apply(&DOCUMENT_LINK_SHORTAGE_POLICY, event);
+            if was_open && !self.link.admits_local_edits() {
+                self.abort_artifact_bootstrap();
+                self.requeue_pending_batches();
+                self.connect_future = None;
+                if let Some(mut connection) = self.semio_hub.take() {
+                    let _ = tokio::time::timeout(Duration::from_millis(4), connection.write.close()).await;
+                }
+                self.clear_socket_epoch();
+                self.reconnect_at = None;
+                self.link_expires_at = None;
+                self.set_remote_state(RemoteState::Detached).await;
+                let _ = self.events.send(ArtifactEvent::Conflict(document_link_terminal_message(&self.document_id, self.link.status())));
+            }
+        }
+
+        /// ⏳️ Lets time pass for an unlinked hub link: past the shortage bound it expires.
+        async fn tick_link(&mut self) {
+            if self.hub_base_url.is_some() && matches!(self.link, DocumentLink::Unlinked { .. }) {
+                self.link_event(DocumentLinkEvent::Tick { now_ms: wall_ms() }).await;
+            }
         }
 
         async fn on_hub_message(&mut self, message: Option<Result<Message, tokio_tungstenite::tungstenite::Error>>) {
@@ -3132,6 +3361,10 @@ mod native_actor {
         }
 
         async fn set_remote_state(&mut self, state: RemoteState) {
+            if matches!(state, RemoteState::Live { .. }) {
+                self.link = self.link.apply(&DOCUMENT_LINK_SHORTAGE_POLICY, DocumentLinkEvent::Restored { now_ms: wall_ms() });
+                self.link_expires_at = None;
+            }
             self.remote_state = state;
             self.emit_status_if_changed().await;
         }
@@ -3913,8 +4146,7 @@ mod wasm_actor {
         hlc_counter: u64,
         remote_state: RemoteState,
         last_status: Option<ArtifactSyncStatus>,
-        backoff_ms: u64,
-        reconnect_at_ms: Option<u64>,
+        link: DocumentLink,
     }
 
     impl WasmActor {
@@ -3926,6 +4158,9 @@ mod wasm_actor {
         }
 
         fn set_remote_state(&mut self, state: RemoteState) {
+            if matches!(state, RemoteState::Live { .. }) {
+                self.link = self.link.apply(&DOCUMENT_LINK_SHORTAGE_POLICY, DocumentLinkEvent::Restored { now_ms: wall_ms() });
+            }
             self.remote_state = state;
             self.emit_status_if_changed();
         }
@@ -3945,10 +4180,9 @@ mod wasm_actor {
         /// is dialed until credential, grant source, dialer, replica seed and kind identity all exist.
         async fn connect(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
-            if self.socket.is_some() || self.operation_cancel.is_cancelled_now() || self.reconnect_at_ms.is_some_and(|at| at > wall_ms()) {
+            if self.socket.is_some() || self.operation_cancel.is_cancelled_now() || !self.link.retry_due(wall_ms()) {
                 return;
             }
-            self.reconnect_at_ms = None;
             let credential = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
             let source = self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
             let dialer = self.dialer.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
@@ -3966,9 +4200,16 @@ mod wasm_actor {
             self.set_remote_state(RemoteState::Connecting);
             let ctx = semio_framework_async::OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 1, deadline_ms: None, cancel: self.operation_cancel.child_now(), capability: None };
             let admission = source.admit_document_socket(&ctx, &space_id, &self.document_id, &expectation, &client_instance_id, DOCUMENT_ADMISSION_TIMEOUT_MS).await;
-            let Ok(crate::os_directory::client::DocumentSocketAdmissionV1 { mut socket, authority }) = admission else {
-                self.schedule_reconnect();
-                return;
+            let crate::os_directory::client::DocumentSocketAdmissionV1 { mut socket, authority } = match admission {
+                Ok(admission) => admission,
+                Err(error) if document_admission_refuses_access(&error) => {
+                    self.link_event(DocumentLinkEvent::Refused { now_ms: wall_ms() });
+                    return;
+                }
+                Err(_) => {
+                    self.schedule_reconnect();
+                    return;
+                }
             };
             let binding = DocumentSocketBinding {
                 hub_base_url: &base_url,
@@ -4004,11 +4245,35 @@ mod wasm_actor {
             self.session_color = None;
         }
 
+        /// 🔁️ A failed attempt or a lost socket: the link backs off along [`DOCUMENT_LINK_SHORTAGE_POLICY`] — or
+        /// expires, once the shortage outlasts its bound.
         fn schedule_reconnect(&mut self) {
-            let retry = self.backoff_ms;
-            self.set_remote_state(RemoteState::Backoff { retry_in_ms: retry });
-            self.reconnect_at_ms = Some(wall_ms().saturating_add(retry));
-            self.backoff_ms = crate::os_directory::client::next_backoff_ms(self.backoff_ms);
+            let now_ms = wall_ms();
+            self.link_event(DocumentLinkEvent::Failed { now_ms });
+            if let Some(retry_at_ms) = self.link.retry_at_ms() {
+                self.set_remote_state(RemoteState::Backoff { retry_in_ms: retry_at_ms.saturating_sub(now_ms) });
+            }
+        }
+
+        /// 🔌️ Applies one link event; a link that turns terminal closes its socket, reports `Detached` and emits the
+        /// coded terminal message a shell localizes ([`document_link_terminal_message`]). Local work stays queued.
+        fn link_event(&mut self, event: DocumentLinkEvent) {
+            let was_open = self.link.admits_local_edits();
+            self.link = self.link.apply(&DOCUMENT_LINK_SHORTAGE_POLICY, event);
+            if was_open && !self.link.admits_local_edits() {
+                self.abort_artifact_bootstrap();
+                self.requeue_pending_batches();
+                self.close_socket();
+                self.set_remote_state(RemoteState::Detached);
+                let _ = self.events.send(ArtifactEvent::Conflict(document_link_terminal_message(&self.document_id, self.link.status())));
+            }
+        }
+
+        /// ⏳️ Lets time pass for an unlinked hub link: past the shortage bound it expires.
+        fn tick_link(&mut self) {
+            if self.hub_base_url.is_some() && matches!(self.link, DocumentLink::Unlinked { .. }) {
+                self.link_event(DocumentLinkEvent::Tick { now_ms: wall_ms() });
+            }
         }
 
         fn clear_socket_epoch(&mut self) {
@@ -4040,7 +4305,7 @@ mod wasm_actor {
             if self.socket.is_some() {
                 return DOCUMENT_SOCKET_POLL_MS;
             }
-            match (self.hub_base_url.as_ref(), self.reconnect_at_ms) {
+            match (self.hub_base_url.as_ref(), self.link.next_deadline_ms(&DOCUMENT_LINK_SHORTAGE_POLICY)) {
                 (Some(_), Some(at)) => at.saturating_sub(wall_ms()).clamp(1, DOCUMENT_ACTOR_IDLE_MS),
                 _ => DOCUMENT_ACTOR_IDLE_MS,
             }
@@ -4062,7 +4327,6 @@ mod wasm_actor {
                     self.disconnect();
                     return;
                 }
-                self.backoff_ms = crate::os_directory::client::HUB_RECONNECT_MIN_MS;
             }
             for _ in 0..DOCUMENT_SOCKET_FRAMES_PER_TURN {
                 let Some(socket) = self.socket.as_mut() else { return };
@@ -4595,11 +4859,11 @@ mod wasm_actor {
             hlc_counter: 0,
             remote_state: RemoteState::Detached,
             last_status: None,
-            backoff_ms: crate::os_directory::client::HUB_RECONNECT_MIN_MS,
-            reconnect_at_ms: None,
+            link: DocumentLink::opened(wall_ms()),
         };
         semio_framework_async::browser::spawn_local(async move {
             loop {
+                actor.tick_link();
                 actor.connect().await;
                 let wake_ms = actor.next_wake_ms();
                 tokio::select! {
@@ -5243,3 +5507,6 @@ mod persistence_data_class_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️document-socket-connect/🦀️.rs"]
 mod document_socket_connect_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️document-link-shortage/🦀️.rs"]
+mod document_link_shortage_tests;

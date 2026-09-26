@@ -840,23 +840,6 @@ def doc_string(ctx: Context) -> str:
     raise AssertionError("scenario %s carries no doc string" % ctx.scenario["id"])
 
 
-def step_fixtures(ctx: Context, scheme: str) -> list:
-    """🧫️ Every `<scheme>://` URI the scenario's steps name, in step order — including the ones a
-    data table carries, which is how the specification vectors are declared."""
-    found = []
-    for step in ctx.scenario["steps"]:
-        haystacks = [step.get("text", "")] + [cell for row in (step.get("dataTable") or []) for cell in row]
-        for text in haystacks:
-            at = text.find(scheme + "://")
-            while at != -1:
-                end = at
-                while end < len(text) and not text[end].isspace():
-                    end += 1
-                found.append(text[at:end])
-                at = text.find(scheme + "://", end)
-    return found
-
-
 def tower(ctx: Context) -> dict:
     """🏗️ The real 181-element capsule tower, read through this implementation's own DSL parser."""
     return parse_dsl(ctx.fixture_bytes(TOWER_DSL).decode("utf-8"))
@@ -895,7 +878,7 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed `(before, mutation, after)` vector, whose before-snapshot is
     the real committed building artifact decoded — a THIRD statement of what the verb means."""
-    before_uri, mutation_uri, after_uri = step_fixtures(ctx, "local")[:3]
+    before_uri, mutation_uri, after_uri = ctx.step_fixture_uris()[:3]
     before = fixture_json(ctx, before_uri)
     after = fixture_json(ctx, after_uri)
     applied = apply_mutation(before, fixture_json(ctx, mutation_uri))

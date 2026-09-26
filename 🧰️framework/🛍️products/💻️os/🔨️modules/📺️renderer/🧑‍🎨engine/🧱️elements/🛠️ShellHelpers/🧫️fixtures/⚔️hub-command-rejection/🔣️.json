@@ -1,0 +1,15 @@
+{
+  "description": "A hub refusal of one human's command batch, as the Shell tells the human (ticket 26/09/23 C10, audit G-P2-3). `messages` is the refusal's canonical MutationMessage array exactly as the hub encodes it (`🌎️hub` `encode_messages`); `null` is an empty payload (an admission or transport refusal). The outcome step grades a region another human's concurrent command touched as `mutation.clamped` and a violated structural constraint as `mutation.invariant` (`🛢️db/🗿️artifact` `grade_conflict_record`). `notice` is the exact notice text per locale; the hub's own English `reason` never appears in it.",
+  "rows": [
+    { "name": "same field edited by two humans at once", "reason": "command c-2 touches region(s) also touched by concurrent command c-1", "messages": [{ "level": "warning", "code": "mutation.clamped", "message": "command c-2 touches region(s) also touched by concurrent command c-1", "target": ["features/f-1/properties/name"] }], "reasonKey": "ui.conflict.hubConcurrentEdit", "notice": { "en": "Change refused by the hub: Someone else changed the same part at the same time", "de": "Änderung vom Hub abgelehnt: Jemand anderes hat gleichzeitig dieselbe Stelle geändert" } },
+    { "name": "a constraint a concurrent change now holds", "reason": "command c-2 violates constraint 'unique-name' held by concurrent command c-1", "messages": [{ "level": "fatal", "code": "mutation.invariant", "message": "command c-2 violates constraint 'unique-name' held by concurrent command c-1", "target": ["unique-name"] }], "reasonKey": "ui.conflict.hubConcurrentInvariant", "notice": { "en": "Change refused by the hub: Conflicts with a simultaneous change", "de": "Änderung vom Hub abgelehnt: Widerspricht einer gleichzeitigen Änderung" } },
+    { "name": "both conflict kinds: the structural one is named", "reason": "rejected", "messages": [{ "level": "warning", "code": "mutation.clamped", "message": "region" }, { "level": "fatal", "code": "mutation.invariant", "message": "constraint" }], "reasonKey": "ui.conflict.hubConcurrentInvariant", "notice": { "en": "Change refused by the hub: Conflicts with a simultaneous change", "de": "Änderung vom Hub abgelehnt: Widerspricht einer gleichzeitigen Änderung" } },
+    { "name": "an admission refusal names no conflict", "reason": "socket subject actor mismatch", "messages": null, "reasonKey": null, "notice": { "en": "Change refused by the hub", "de": "Änderung vom Hub abgelehnt" } },
+    { "name": "an unrelated message code names no conflict", "reason": "rejected", "messages": [{ "level": "error", "code": "mutation.target-missing", "message": "target missing" }], "reasonKey": null, "notice": { "en": "Change refused by the hub", "de": "Änderung vom Hub abgelehnt" } }
+  ],
+  "hostile": [
+    { "name": "not an array", "bytes": "{\"code\":\"mutation.clamped\"}" },
+    { "name": "a message without a code", "bytes": "[{\"level\":\"warning\"}]" },
+    { "name": "not JSON", "bytes": "mutation.clamped" }
+  ]
+}

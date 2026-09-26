@@ -34,7 +34,7 @@ pub fn plugin() -> Result<Plugin<ImperativeApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:imperative")
         .artifact(crate::artifacts::procedure::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor_with_examples::<crate::editor::procedure::ImperativePlayApp>(crate::editor::procedure::create_imperative_app(), vec![semio_s_artifact_imperative_procedure::examples::demo::source()])
+        .editor::<crate::editor::procedure::ImperativePlayApp>(crate::editor::procedure::create_imperative_app())
         .editor_mutation_roster::<crate::editor::procedure::ImperativePlayApp>()
         .viewer::<crate::viewer::procedure::ImperativeViewer>(crate::viewer::procedure::create_imperative_viewer())
         .viewer_mutation_roster::<crate::viewer::procedure::ImperativeViewer>()

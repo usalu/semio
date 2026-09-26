@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema;
-use schema::{publication_revision, TrustedBundleFileV1, TrustedBundleGrantV1, TrustedBundleIdentityV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageRole, TrustedBundlePackageV1, TrustedBundleProfileV1, TrustedBundleRendererTarget, TrustedBundleV1, TrustedPluginModuleBundleV1, TrustedPluginModuleFileV1, TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA, TrustedCatalogCurrentPointerV1, TrustedCatalogPublicationCommandV1, TrustedCatalogPublicationReceiptV1, TRUSTED_CATALOG_PUBLICATION_MAX_BYTES, TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED, TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, TRUSTED_CATALOG_PUBLICATION_SCHEMA};
+use schema::{publication_revision, TrustedBundleFileV1, TrustedBundleGrantV1, TrustedBundleIdentityV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageRole, TrustedBundlePackageV1, TrustedBundleProfileV1, TrustedBundleRendererTarget, TrustedBundleV1, TrustedPluginModuleBundleV1, TrustedPluginModuleFileV1, TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA, TrustedCatalogCurrentPointerV1, TrustedCatalogPublicationCommandV1, TrustedCatalogPublicationReceiptV1, TRUSTED_CATALOG_PUBLICATION_MAX_BYTES, TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED, TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, TRUSTED_CATALOG_PUBLICATION_SCHEMA, TRUSTED_CATALOG_GUEST_RESIDENCY, GuestCodecVerificationV1, GUEST_CODEC_VERIFICATION_SCHEMA};
 
 #[path = "🌐️browser-actor/🦀️.rs"]
 mod browser_actor;
@@ -22,7 +22,7 @@ pub mod plugin_module;
 use plugin_module::{decode_plugin_module_bundle, plugin_module_blob_path, verify_plugin_module_file, TrustedPluginModuleSourceV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES};
 #[path = "🛡️opened-root/🦀️.rs"]
 mod opened_root;
-use opened_root::{TrustedCatalogDataRoot, TrustedCatalogGenerationRoot, TrustedCatalogRelativePathV1};
+use opened_root::{TrustedCatalogDataRoot, TrustedCatalogGenerationRoot, TrustedCatalogRelativePathV1, TRUSTED_READ_CHUNK_BYTES};
 #[cfg(all(test, unix))]
 use opened_root::create_fifo_fixture;
 use directory::os_directory::schema::{DocumentBrowserActorSourceV1, DocumentOpenBrowserActorV1, DOCUMENT_BROWSER_ACTOR_MAX_BYTES};
@@ -90,7 +90,7 @@ impl TrustedCatalogPublisher {
         let bundle_bytes = generation.read_regular(&relative, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
         if sha256(&bundle_bytes, context).await? != bundle_digest { return Err(catalog("trusted publication candidate bundle differs from its digest")); }
         let bundle: TrustedBundleV1 = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
-        let (verified, _) = TrustedCatalogLoader::verify_selected(&generation, relative, bundle_bytes, &command.profile_id, providers, context).await?;
+        let (verified, _) = TrustedCatalogLoader::verify_selected(&generation, relative, bundle_bytes, &command.profile_id, providers, &GuestCodecVerificationCacheV1::beside(data_path), context).await?;
         if verified.generation_id() != command.generation_id { return Err(catalog("trusted publication candidate generation differs from the verified profile")); }
         let mut published_module_files = BTreeSet::new();
         for package in &verified.packages {
@@ -259,6 +259,107 @@ impl TrustedCatalogAsset {
             TrustedCatalogAssetSource::Resident(bytes) => Ok(Arc::clone(bytes)),
         }
     }
+
+    /// 🚰️ The verified bytes as a chunked stream with no request deadline: a retained asset is reopened beneath its
+    /// generation root and hashed while it streams (see [`TrustedCatalogAssetStream`]).
+    pub fn stream(&self) -> Result<TrustedCatalogAssetStream, AuthorityError> {
+        match &self.source {
+            TrustedCatalogAssetSource::Retained(file) => {
+                let (reader, length) = file.root.open_regular(&file.path)?.into_reader();
+                if length != file.byte_length {
+                    return Err(catalog("retained trusted file differs from the length its catalog verified"));
+                }
+                Ok(TrustedCatalogAssetStream {
+                    byte_length: file.byte_length,
+                    source: TrustedCatalogAssetStreamSource::Retained { reader, streamed: 0, sha256: Sha256::new(), blake3: Hasher::new(), expected: (file.sha256, file.blake3), held: None },
+                })
+            }
+            TrustedCatalogAssetSource::Resident(bytes) => Ok(TrustedCatalogAssetStream { byte_length: bytes.len() as u64, source: TrustedCatalogAssetStreamSource::Resident { bytes: Arc::clone(bytes), offset: 0 } }),
+        }
+    }
+}
+
+/// 🚰️ One verified asset served in bounded chunks. Serving has no absolute deadline — bytes flow while the file is
+/// hashed, so a large module on a loaded host is slow, never refused — and the final chunk is released only once the
+/// streamed length, SHA-256 and BLAKE3 equal what the catalog verified: a file changed on disk after verification ends
+/// the stream in an error before its last bytes, so a reader holding the declared length never completes it. A
+/// resident asset streams the bytes the catalog already verified. Dropping the stream stops reading.
+pub struct TrustedCatalogAssetStream {
+    byte_length: u64,
+    source: TrustedCatalogAssetStreamSource,
+}
+
+enum TrustedCatalogAssetStreamSource {
+    Retained { reader: tokio::fs::File, streamed: u64, sha256: Sha256, blake3: Hasher, expected: ([u8; 32], Option<[u8; 32]>), held: Option<Vec<u8>> },
+    Resident { bytes: Arc<[u8]>, offset: usize },
+    Finished,
+}
+
+impl TrustedCatalogAssetStream {
+    /// 📏️ The verified byte length the stream delivers in full or not at all.
+    pub fn byte_length(&self) -> u64 {
+        self.byte_length
+    }
+
+    /// 📦️ The next chunk, `None` after the last one; an error ends the stream.
+    pub async fn next_chunk(&mut self) -> Option<Result<Vec<u8>, AuthorityError>> {
+        let outcome = match &mut self.source {
+            TrustedCatalogAssetStreamSource::Finished => return None,
+            TrustedCatalogAssetStreamSource::Resident { bytes, offset } => {
+                let end = offset.saturating_add(TRUSTED_READ_CHUNK_BYTES).min(bytes.len());
+                let chunk = (*offset < end).then(|| bytes[*offset..end].to_vec());
+                *offset = end;
+                chunk.map(Ok)
+            }
+            TrustedCatalogAssetStreamSource::Retained { reader, streamed, sha256, blake3, expected, held } => match Self::next_retained(self.byte_length, reader, streamed, sha256, blake3, *expected, held).await {
+                Some(Ok((chunk, verified_last))) => {
+                    if verified_last {
+                        self.source = TrustedCatalogAssetStreamSource::Finished;
+                    }
+                    return Some(Ok(chunk));
+                }
+                refused => refused.map(|chunk| chunk.map(|(chunk, _)| chunk)),
+            },
+        };
+        if !matches!(outcome, Some(Ok(_))) {
+            self.source = TrustedCatalogAssetStreamSource::Finished;
+        }
+        outcome
+    }
+
+    /// 🔐️ The next held-back chunk of a retained file, `true` beside the last one, which is released only after the
+    /// streamed length and digests equal the verified ones.
+    async fn next_retained(byte_length: u64, reader: &mut tokio::fs::File, streamed: &mut u64, sha256: &mut Sha256, blake3: &mut Hasher, expected: ([u8; 32], Option<[u8; 32]>), held: &mut Option<Vec<u8>>) -> Option<Result<(Vec<u8>, bool), AuthorityError>> {
+        use tokio::io::AsyncReadExt;
+        loop {
+            let remaining = byte_length.saturating_sub(*streamed);
+            let mut chunk = vec![0u8; usize::try_from(remaining.saturating_add(1)).map_or(TRUSTED_READ_CHUNK_BYTES, |limit| limit.min(TRUSTED_READ_CHUNK_BYTES))];
+            let read = match reader.read(&mut chunk).await {
+                Ok(read) => read,
+                Err(error) => return Some(Err(catalog_error(error))),
+            };
+            if read == 0 {
+                if *streamed != byte_length {
+                    return Some(Err(catalog("retained trusted file length changed while streaming")));
+                }
+                let digests = (std::mem::replace(sha256, Sha256::new()).finalize(), *blake3.finalize().as_bytes());
+                if digests.0 != expected.0 || expected.1.is_some_and(|verified| verified != digests.1) {
+                    return Some(Err(catalog("retained trusted file differs from the digests its catalog verified")));
+                }
+                return held.take().map(|chunk| Ok((chunk, true)));
+            }
+            *streamed = streamed.saturating_add(read as u64);
+            if *streamed > byte_length {
+                return Some(Err(catalog("retained trusted file grew beyond its verified length while streaming")));
+            }
+            chunk.truncate(read);
+            sha256.update(&chunk);
+            blake3.update(&chunk);
+            if let Some(previous) = held.replace(chunk) {
+                return Some(Ok((previous, false)));
+            }
+        }
+    }
 }
 
 /// 🧩️ One package's verified plugin module: its canonical manifest, addressed by the manifest's SHA-256,
@@ -362,30 +463,127 @@ impl VerifiedTrustedPackage {
 const GUEST_CODEC_BUDGET: semio_framework::kernel::Budget =
     semio_framework::kernel::Budget { fuel: 4_000_000_000, deadline_ms: 30_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
 
-/// 📡️ Reports one guest codec call's consumed fuel outward. The owned interpreter calls back every
-/// 25 M fuel or 5 s, so a long `pack-schema-hash`/`genesis` inside a catalog load is visible to a
-/// readiness waiter as progress instead of silence, and the report's checkpoint keeps the no-progress bound.
-fn report_guest_codec_fuel(context: &OperationContext<'_>, fuel: u64) {
-    let _ = context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCodecExecuting, completed_units: fuel.min(GUEST_CODEC_BUDGET.fuel), total_units: GUEST_CODEC_BUDGET.fuel });
+/// 🧊️ Compiled values held within a declared memory budget: every value is charged its source's
+/// byte length, a newly compiled value makes room by releasing the least recently used values no
+/// call holds, and nothing is ever released for having been idle. A value a running call holds is
+/// never released, so a burst of held values may exceed the budget until they are dropped; the next
+/// compile then brings it back under. A released value compiles again on its next use.
+pub(crate) struct GuestResidencyLedgerV1<T> {
+    maximum_bytes: u64,
+    clock: std::sync::atomic::AtomicU64,
+    released: std::sync::atomic::AtomicU64,
+    slots: std::sync::Mutex<Vec<Arc<GuestResidencySlotV1<T>>>>,
 }
 
-/// 🗜️ One verified package's actor, compiled at most once and only when a document operation
-/// actually needs it. Catalog verification compiles a guest-codec package once to pin its pack
-/// fingerprints and drops that compile again, so a hub holds compiled guests only for the kinds its
-/// documents use, never one per package in the closure.
+struct GuestResidencySlotV1<T> {
+    resident: tokio::sync::Mutex<Option<Arc<T>>>,
+    charge_bytes: u64,
+    last_used: std::sync::atomic::AtomicU64,
+}
+
+/// 📏️ What a residency ledger holds now: values resident, the bytes they are charged, the declared
+/// budget, and how many releases it made since the hub started.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct GuestResidencyStateV1 {
+    pub resident: usize,
+    pub resident_bytes: u64,
+    pub maximum_bytes: u64,
+    pub released: u64,
+}
+
+impl<T> GuestResidencyLedgerV1<T> {
+    pub(crate) fn new(maximum_bytes: u64) -> Arc<Self> {
+        Arc::new(Self { maximum_bytes, clock: std::sync::atomic::AtomicU64::new(0), released: std::sync::atomic::AtomicU64::new(0), slots: std::sync::Mutex::new(Vec::new()) })
+    }
+
+    /// 🪪️ Registers one value charged `charge_bytes` once resident; answers its residency handle.
+    pub(crate) fn register(self: &Arc<Self>, charge_bytes: u64) -> GuestResidencyV1<T> {
+        let slot = Arc::new(GuestResidencySlotV1 { resident: tokio::sync::Mutex::new(None), charge_bytes, last_used: std::sync::atomic::AtomicU64::new(0) });
+        self.slots.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(Arc::clone(&slot));
+        GuestResidencyV1 { ledger: Arc::clone(self), slot }
+    }
+
+    /// 🧺️ Releases least recently used values no call holds until the resident charge fits the
+    /// budget, never `keep`. A slot someone is compiling or acquiring right now counts as resident.
+    fn make_room(&self, keep: &Arc<GuestResidencySlotV1<T>>) {
+        let slots = self.slots.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+        let mut resident_bytes: u64 = slots.iter().filter(|slot| slot.resident.try_lock().map_or(true, |resident| resident.is_some())).map(|slot| slot.charge_bytes).sum();
+        let mut candidates: Vec<&Arc<GuestResidencySlotV1<T>>> = slots.iter().filter(|slot| !Arc::ptr_eq(slot, keep)).collect();
+        candidates.sort_by_key(|slot| slot.last_used.load(std::sync::atomic::Ordering::Acquire));
+        for slot in candidates {
+            if resident_bytes <= self.maximum_bytes {
+                break;
+            }
+            let Ok(mut resident) = slot.resident.try_lock() else { continue };
+            if resident.as_ref().is_some_and(|value| Arc::strong_count(value) == 1) {
+                resident.take();
+                resident_bytes = resident_bytes.saturating_sub(slot.charge_bytes);
+                self.released.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            }
+        }
+    }
+
+    /// 📏️ The ledger's state now.
+    pub(crate) fn state(&self) -> GuestResidencyStateV1 {
+        let slots = self.slots.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+        let resident: Vec<_> = slots.iter().filter(|slot| slot.resident.try_lock().map_or(true, |resident| resident.is_some())).collect();
+        GuestResidencyStateV1 { resident: resident.len(), resident_bytes: resident.iter().map(|slot| slot.charge_bytes).sum(), maximum_bytes: self.maximum_bytes, released: self.released.load(std::sync::atomic::Ordering::Acquire) }
+    }
+}
+
+/// 🔑️ One value's place in a [`GuestResidencyLedgerV1`].
+pub(crate) struct GuestResidencyV1<T> {
+    ledger: Arc<GuestResidencyLedgerV1<T>>,
+    slot: Arc<GuestResidencySlotV1<T>>,
+}
+
+impl<T> GuestResidencyV1<T> {
+    /// 🔑️ The resident value, compiled by `compile` when none is resident (one compile at a time);
+    /// a new compile makes room within the ledger's budget.
+    pub(crate) async fn acquire<F, Fut>(&self, compile: F) -> Result<Arc<T>, AuthorityError>
+    where
+        F: FnOnce() -> Fut,
+        Fut: std::future::Future<Output = Result<T, AuthorityError>>,
+    {
+        let mut resident = self.slot.resident.lock().await;
+        let tick = self.ledger.clock.fetch_add(1, std::sync::atomic::Ordering::AcqRel) + 1;
+        self.slot.last_used.store(tick, std::sync::atomic::Ordering::Release);
+        if let Some(value) = resident.as_ref() {
+            return Ok(Arc::clone(value));
+        }
+        let value = Arc::new(compile().await?);
+        *resident = Some(Arc::clone(&value));
+        drop(resident);
+        self.ledger.make_room(&self.slot);
+        Ok(value)
+    }
+
+    /// 📏️ Whether a compiled value is resident now.
+    #[cfg(test)]
+    pub(crate) fn is_resident(&self) -> bool {
+        self.slot.resident.try_lock().map_or(true, |resident| resident.is_some())
+    }
+}
+
+/// 🗜️ One verified package's actor, compiled when a document operation needs it and kept within the
+/// catalog's residency budget (`TrustedCatalogGuestResidencyV1.residentComponentBytesMaximum`, least
+/// recently used first). Catalog verification compiles a guest-codec package once to pin its pack
+/// fingerprints and drops that compile again, so a hub's compiled guests are bounded by the budget,
+/// never one per package it ever served.
 struct GuestArtifactComponent {
     runtime: Arc<semio_framework_plugin_host::OwnedRuntime>,
     package: PackageRef,
     component: TrustedCatalogAsset,
-    compiled: tokio::sync::OnceCell<Arc<semio_framework_plugin_host::CompiledHandle>>,
+    compiled: GuestResidencyV1<semio_framework_plugin_host::CompiledHandle>,
 }
 
 impl GuestArtifactComponent {
-    async fn compiled(&self, context: &OperationContext<'_>) -> Result<&Arc<semio_framework_plugin_host::CompiledHandle>, AuthorityError> {
+    async fn compiled(&self, context: &OperationContext<'_>) -> Result<Arc<semio_framework_plugin_host::CompiledHandle>, AuthorityError> {
         self.compiled
-            .get_or_try_init(|| async {
+            .acquire(|| async {
                 let bytes = self.component.read(context).await?;
-                self.runtime.compile_component(&self.package, &bytes).map(Arc::new).map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))
+                let (runtime, package) = (Arc::clone(&self.runtime), self.package.clone());
+                interpret_off_worker(context, move |_handle, _progress| runtime.compile_component(&package, &bytes).map_err(semio_framework_plugin_host::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))
             })
             .await
     }
@@ -405,28 +603,22 @@ impl GuestArtifactCodecBinding {
     /// does — the interpreter walks a ≈ 48 MB component's whole app bundle — so the guest's own
     /// fuel progress is reported into the caller's context as it happens: under a stall bound a
     /// checkpoint is what says "still moving", and without these an honest interpreter would look
-    /// exactly like a wedged one. Cancellation is not read here: the interpreter cannot be steered
-    /// from an observation, and the caller's checkpoint on the far side of this call is where a
-    /// cancelled creation stops.
+    /// exactly like a wedged one. Cancellation is not read inside the interpretation: a caller that
+    /// stops waiting is released at once and the call ends on its own fuel bound.
     async fn genesis(&self, document_id: &str, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         let compiled = self.component.compiled(context).await?;
-        let pair = self
-            .component
-            .runtime
-            .as_ref()
-            .codec_genesis_observed(compiled, &self.artifact_schema, document_id, GUEST_CODEC_BUDGET, |fuel, _elapsed| report_guest_codec_fuel(context, fuel))
-            .await
+        let (runtime, schema, document_id) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), document_id.to_string());
+        let pair = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_genesis_observed(&compiled, &schema, &document_id, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
+            .await?
             .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: bounded_message(error) })?;
         Ok(ArtifactPair { pack: pair.pack, spr: pair.spr })
     }
 
     async fn print_mirror(&self, pair: &ArtifactPair, stage: ArtifactValidationStage, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         let compiled = self.component.compiled(context).await.map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
-        let mirror = self
-            .component
-            .runtime
-            .codec_print_mirror(compiled, &self.artifact_schema, &pair.pack, &pair.spr, GUEST_CODEC_BUDGET)
-            .await
+        let (runtime, schema, pack, spr) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), pair.pack.clone(), pair.spr.clone());
+        let mirror = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_print_mirror_observed(&compiled, &schema, &pack, &spr, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
+            .await?
             .map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
         if mirror.dsl.len().checked_add(mirror.ops.len()).is_none_or(|length| length > AUTHORITY_MAX_CODEC_TEXT_BYTES) {
             return Err(AuthorityError::ResourceLimit("codec text byte"));
@@ -434,29 +626,54 @@ impl GuestArtifactCodecBinding {
         Ok(())
     }
 
-    async fn apply_ops(&self, pair: &ArtifactPair, encoded: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+    async fn apply_ops(&self, pair: ArtifactPair, encoded: Vec<u8>, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         let compiled = self.component.compiled(context).await?;
-        let next = self
-            .component
-            .runtime
-            .codec_apply_ops(compiled, &self.artifact_schema, &pair.pack, &pair.spr, encoded, GUEST_CODEC_BUDGET)
-            .await
+        let (runtime, schema) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone());
+        let next = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_apply_ops_observed(&compiled, &schema, &pair.pack, &pair.spr, &encoded, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
+            .await?
             .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
         Ok(ArtifactPair { pack: next.pack, spr: next.spr })
     }
 
     /// 📜️ The guest's own replica fold of a ledger stream; fuel progress reaches the caller's stall
     /// bound exactly as [`Self::genesis`]'s does.
-    async fn replay_envelopes(&self, pair: &ArtifactPair, envelopes: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+    async fn replay_envelopes(&self, pair: ArtifactPair, envelopes: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         let compiled = self.component.compiled(context).await?;
-        let next = self
-            .component
-            .runtime
-            .codec_replay_envelopes_observed(compiled, &self.artifact_schema, &pair.pack, &pair.spr, envelopes, GUEST_CODEC_BUDGET, |fuel, _elapsed| report_guest_codec_fuel(context, fuel))
-            .await
-            .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
+        let (runtime, schema, envelopes) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), envelopes.to_vec());
+        let next = interpret_off_worker(context, move |handle, progress| {
+            handle.block_on(runtime.codec_replay_envelopes_observed(&compiled, &schema, &pair.pack, &pair.spr, &envelopes, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel)))
+        })
+        .await?
+        .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
         Ok(ArtifactPair { pack: next.pack, spr: next.spr })
     }
+}
+
+/// 🧵️ Interprets one guest codec call on the hub runtime's blocking pool, never on the async worker
+/// that awaits it: a call interprets for seconds to minutes, and on a worker it would stall every
+/// request, socket and timer queued behind it (a sign-in, a presence heartbeat, an edit's ack). The
+/// call's fuel observations reach the caller's context while it runs — each one a checkpoint of its
+/// stall bound — and the first observation after the caller cancelled (or stalled) releases the caller
+/// with that outcome while the call ends on its own fuel bound; dropping the caller releases it at once.
+/// The outer result is the caller's own outcome, the inner one the guest's answer. Guest codec calls
+/// belong to the hub's runtime; outside one they are refused.
+async fn interpret_off_worker<T, F>(context: &OperationContext<'_>, call: F) -> Result<Result<T, semio_framework_plugin_host::TurnFault>, AuthorityError>
+where
+    T: Send + 'static,
+    F: FnOnce(&tokio::runtime::Handle, &mut dyn FnMut(u64)) -> Result<T, semio_framework_plugin_host::TurnFault> + Send + 'static,
+{
+    let handle = tokio::runtime::Handle::try_current().map_err(|_| catalog("guest codec calls run on the hub runtime"))?;
+    let (sender, mut observations) = tokio::sync::mpsc::unbounded_channel::<u64>();
+    let blocking = handle.clone();
+    let joined = handle.spawn_blocking(move || {
+        call(&blocking, &mut |fuel| {
+            let _ = sender.send(fuel);
+        })
+    });
+    while let Some(fuel) = observations.recv().await {
+        context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCodecExecuting, completed_units: fuel.min(GUEST_CODEC_BUDGET.fuel), total_units: GUEST_CODEC_BUDGET.fuel })?;
+    }
+    Ok(joined.await.unwrap_or_else(|error| Err(semio_framework_plugin_host::TurnFault::Trapped(format!("guest codec call ended abnormally: {error}")))))
 }
 
 /// 🧪️ One immutable authority identity bound to its executable. `codec` is `Some` only for a package
@@ -491,7 +708,7 @@ impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
         context.checkpoint()?;
         let encoded = directory::os_spr::encode_ops_vec(std::slice::from_ref(&operation.encoded));
         let Some(codec) = &self.codec else {
-            let next = self.guest.apply_ops(&pair, &encoded, context).await?;
+            let next = self.guest.apply_ops(pair, encoded, context).await?;
             context.checkpoint()?;
             return Ok(next);
         };
@@ -508,7 +725,7 @@ impl TrustedArtifactReplayCodec for VerifiedNativeArtifactCodec {
     async fn replay_envelopes(&self, pair: ArtifactPair, envelopes: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         context.checkpoint()?;
         let Some(codec) = &self.codec else {
-            let next = self.guest.replay_envelopes(&pair, envelopes, context).await?;
+            let next = self.guest.replay_envelopes(pair, envelopes, context).await?;
             context.checkpoint()?;
             return Ok(next);
         };
@@ -541,6 +758,7 @@ impl TrustedArtifactGenesisCodec for VerifiedNativeArtifactCodec {
 
 /// 🗂️ Process-lifetime snapshot produced only after complete bundle verification and codec activation.
 pub struct VerifiedTrustedCatalog {
+    residency: Arc<GuestResidencyLedgerV1<semio_framework_plugin_host::CompiledHandle>>,
     packages: Box<[VerifiedTrustedPackage]>,
     codecs: Box<[VerifiedNativeArtifactCodec]>,
     open_targets: Box<[VerifiedDocumentOpenSelectionV1]>,
@@ -572,6 +790,12 @@ impl VerifiedTrustedCatalog {
     /// 📦️ Returns selected packages in deterministic dependency-first order.
     pub fn packages(&self) -> &[VerifiedTrustedPackage] {
         &self.packages
+    }
+
+    /// 📏️ How many compiled guests are resident now, the bytes they are charged, the declared budget
+    /// and the releases made so far.
+    pub fn guest_residency(&self) -> GuestResidencyStateV1 {
+        self.residency.state()
     }
 
     /// 🧪️ Returns the exact number of activated artifact identities.
@@ -742,6 +966,153 @@ impl TrustedArtifactCatalog for Arc<VerifiedTrustedCatalog> {
     }
 }
 
+/// 🪪️ What a remembered verification was computed by: the owned engine's semantic identity and the
+/// fuel ceiling every guest codec call runs under.
+pub(crate) fn guest_codec_engine_identity() -> String {
+    format!("{}:fuel-{}", semio_framework_plugin_host::owned_engine_identity(), GUEST_CODEC_BUDGET.fuel)
+}
+
+/// 🗃️ The hub's content-addressed memory of guest codec verifications (`GuestCodecVerificationV1`),
+/// one file per verification under `<hub data>/trusted-catalog/guest-codec-verifications/`, named by
+/// the SHA-256 of its canonical key. A record is used only when its component SHA-256 — taken from the
+/// bytes this very load re-read and re-hashed — its artifact schema and its engine all match. The
+/// engine is the owned interpreter's semantic identity plus the codec budget, never the executable's
+/// path, inode or signature, so a copied, re-signed or container build of the same engine boots warm
+/// on a catalog another build verified or published, and a changed engine verifies afresh. The records
+/// live inside `trusted-catalog/` so they travel with a copied or restored catalog. Reading or writing a
+/// record never decides a verification: an unreadable record is a miss, and a record that cannot be
+/// written is recomputed on the next boot.
+pub(crate) struct GuestCodecVerificationCacheV1 {
+    root: Option<std::path::PathBuf>,
+    engine: String,
+}
+
+impl GuestCodecVerificationCacheV1 {
+    /// 📂️ The cache inside a hub's trusted catalog, keyed to the owned engine that interprets its guests.
+    pub(crate) fn beside(data_path: &Path) -> Self {
+        Self { root: Some(data_path.join("trusted-catalog").join("guest-codec-verifications")), engine: guest_codec_engine_identity() }
+    }
+
+    /// 🚫️ No memory at all: every verification interprets its component.
+    pub(crate) fn disabled() -> Self {
+        Self { root: None, engine: String::new() }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn at(root: std::path::PathBuf, engine: &str) -> Self {
+        Self { root: Some(root), engine: engine.into() }
+    }
+
+    fn record(&self, component_sha256: &[u8; 32], artifact_schema: &str, pack_schema_hash: &[u8; 32]) -> GuestCodecVerificationV1 {
+        GuestCodecVerificationV1 { schema: GUEST_CODEC_VERIFICATION_SCHEMA.into(), component_sha256: hex_lower(component_sha256), artifact_schema: artifact_schema.into(), engine: self.engine.clone(), pack_schema_hash: hex_lower(pack_schema_hash) }
+    }
+
+    fn path(&self, component_sha256: &[u8; 32], artifact_schema: &str) -> Option<std::path::PathBuf> {
+        let root = self.root.as_ref()?;
+        let key = serde_json::to_vec(&(GUEST_CODEC_VERIFICATION_SCHEMA, hex_lower(component_sha256), artifact_schema, &self.engine)).ok()?;
+        let mut hash = Sha256::new();
+        hash.update(&key);
+        Some(root.join(format!("{}.json", hex_lower(&hash.finalize()))))
+    }
+
+    /// 🔎️ The pack-schema hash remembered for exactly this component, schema and engine.
+    pub(crate) async fn recall(&self, component_sha256: &[u8; 32], artifact_schema: &str) -> Option<[u8; 32]> {
+        let bytes = tokio::fs::read(self.path(component_sha256, artifact_schema)?).await.ok()?;
+        if bytes.len() > 4096 {
+            return None;
+        }
+        let record: GuestCodecVerificationV1 = serde_json::from_slice(&bytes).ok()?;
+        let hash = decode_digest(&record.pack_schema_hash, "remembered pack schema hash").ok()?;
+        (record == self.record(component_sha256, artifact_schema, &hash) && hash != [0; 32]).then_some(hash)
+    }
+
+    /// 💾️ Remembers one verification: written to a sibling temporary file, then renamed into place.
+    pub(crate) async fn remember(&self, component_sha256: &[u8; 32], artifact_schema: &str, pack_schema_hash: &[u8; 32]) -> bool {
+        let Some(path) = self.path(component_sha256, artifact_schema) else { return false };
+        let Ok(bytes) = serde_json::to_vec(&self.record(component_sha256, artifact_schema, pack_schema_hash)) else { return false };
+        let staged = path.with_extension(format!("{}.tmp", std::process::id()));
+        let written = async {
+            tokio::fs::create_dir_all(path.parent().ok_or_else(|| std::io::Error::other("cache path has no parent"))?).await?;
+            tokio::fs::write(&staged, &bytes).await?;
+            tokio::fs::rename(&staged, &path).await
+        }
+        .await;
+        if written.is_err() {
+            let _ = tokio::fs::remove_file(&staged).await;
+        }
+        written.is_ok()
+    }
+}
+
+/// 🔐️ One package whose unlinked codec rows must be pinned against its own component's answer.
+struct GuestVerificationV1 {
+    position: usize,
+    package: PackageRef,
+    component: TrustedCatalogAsset,
+    component_sha256: [u8; 32],
+    rows: Vec<(String, [u8; 32])>,
+}
+
+/// 🧵️ How many packages a catalog load verifies at once: the declared residency bound, never more
+/// than half the cores this hub may use, never fewer than one.
+pub(crate) fn guest_verification_concurrency() -> usize {
+    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+    TRUSTED_CATALOG_GUEST_RESIDENCY.concurrent_verifications.min(cores / 2).max(1)
+}
+
+/// 🔐️ Pins every unlinked codec row against its component's own `pack-schema-hash`, several rows at
+/// once ([`guest_verification_concurrency`]) — rows of one package too, since each row interprets on its
+/// own instance of the package's one compile. The largest components start first, because a load
+/// lasts as long as its slowest package. A package compiles once, on its first row, and its compile is
+/// dropped with its last row; every observed hash is compared with its trust record and remembered for
+/// this engine. Answers the `(package position, artifact schema)` rows it verified.
+async fn verify_guest_rows(runtime: &Arc<semio_framework_plugin_host::OwnedRuntime>, mut packages: Vec<GuestVerificationV1>, verifications: &GuestCodecVerificationCacheV1, context: &OperationContext<'_>) -> Result<BTreeSet<(usize, String)>, AuthorityError> {
+    use futures::StreamExt;
+    packages.sort_by_key(|package| std::cmp::Reverse(package.component.byte_length()));
+    let rows = packages.into_iter().flat_map(|mut package| {
+        let rows = std::mem::take(&mut package.rows);
+        let schemas = rows.iter().map(|(schema, _)| schema.as_str()).collect::<Vec<_>>().join(", ");
+        let slot = Arc::new(GuestVerificationSlotV1 { package, schemas, compiled: tokio::sync::OnceCell::new() });
+        rows.into_iter().map(move |(schema, expected)| (Arc::clone(&slot), schema, expected))
+    });
+    let mut running = futures::stream::iter(rows.map(|(slot, schema, expected)| verify_guest_row(runtime, slot, schema, expected, verifications, context))).buffer_unordered(guest_verification_concurrency());
+    let mut verified = BTreeSet::new();
+    while let Some(row) = running.next().await {
+        verified.insert(row?);
+    }
+    Ok(verified)
+}
+
+/// 🧩️ One package under verification: its one compile, shared by its rows and dropped with the last.
+struct GuestVerificationSlotV1 {
+    package: GuestVerificationV1,
+    schemas: String,
+    compiled: tokio::sync::OnceCell<Arc<semio_framework_plugin_host::CompiledHandle>>,
+}
+
+async fn verify_guest_row(runtime: &Arc<semio_framework_plugin_host::OwnedRuntime>, slot: Arc<GuestVerificationSlotV1>, schema: String, expected: [u8; 32], verifications: &GuestCodecVerificationCacheV1, context: &OperationContext<'_>) -> Result<(usize, String), AuthorityError> {
+    context.checkpoint()?;
+    let compiled = slot
+        .compiled
+        .get_or_try_init(|| async {
+            let bytes = slot.package.component.read(context).await?;
+            let (compiler, reference) = (Arc::clone(runtime), slot.package.package.clone());
+            let compiled = interpret_off_worker(context, move |_handle, _progress| compiler.compile_component(&reference, &bytes).map_err(semio_framework_plugin_host::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", slot.schemas)))?;
+            Ok::<_, AuthorityError>(Arc::new(compiled))
+        })
+        .await?;
+    let (interpreter, compiled, row_schema) = (Arc::clone(runtime), Arc::clone(compiled), schema.clone());
+    let observed = interpret_off_worker(context, move |handle, progress| handle.block_on(interpreter.codec_pack_schema_hash_observed(&compiled, &row_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
+        .await?
+        .map_err(|error| catalog_error(format!("{schema}: {error}")))?;
+    context.checkpoint()?;
+    if observed != expected {
+        return Err(catalog("guest artifact codec schema hash differs from its trust record"));
+    }
+    verifications.remember(&slot.package.component_sha256, &schema, &observed).await;
+    Ok((slot.package.position, schema))
+}
+
 /// 🏗️ Stateless verifier for one explicitly selected immutable trust bundle.
 pub struct TrustedCatalogLoader;
 
@@ -764,7 +1135,8 @@ impl TrustedCatalogLoader {
         if sha256(&bundle_bytes, context).await? != expected_bundle_sha256 {
             return Err(catalog("trusted bundle differs from the current pointer digest"));
         }
-        let verified = Self::load_selected(&generation_root, bundle_path, bundle_bytes, &current.profile_id, providers, context).await?;
+        let verifications = GuestCodecVerificationCacheV1::beside(data_path);
+        let verified = Self::load_selected(&generation_root, bundle_path, bundle_bytes, &current.profile_id, providers, &verifications, context).await?;
         if verified.generation_id() != current.generation_id {
             return Err(catalog("trusted current pointer generation differs from the selected profile"));
         }
@@ -778,11 +1150,19 @@ impl TrustedCatalogLoader {
         let generation_root = Arc::new(TrustedCatalogGenerationRoot::open_fixture_owned(fixture_root)?);
         let bundle_path = TrustedCatalogRelativePathV1::parse(path.file_name().and_then(|name| name.to_str()).ok_or_else(|| catalog("fixture bundle name is not UTF-8"))?)?;
         let bundle_bytes = generation_root.read_regular(&bundle_path, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
-        Self::load_selected(&generation_root, bundle_path, bundle_bytes, profile_id, providers, context).await
+        Self::load_selected(&generation_root, bundle_path, bundle_bytes, profile_id, providers, &GuestCodecVerificationCacheV1::disabled(), context).await
     }
 
-    async fn load_selected(root: &Arc<TrustedCatalogGenerationRoot>, bundle_path: TrustedCatalogRelativePathV1, bundle_bytes: Vec<u8>, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
-        let (catalog, registration_codecs) = Self::verify_selected(root, bundle_path, bundle_bytes, profile_id, providers, context).await?;
+    async fn load_selected(
+        root: &Arc<TrustedCatalogGenerationRoot>,
+        bundle_path: TrustedCatalogRelativePathV1,
+        bundle_bytes: Vec<u8>,
+        profile_id: &str,
+        providers: &dyn NativeCodecProviderSourceV1,
+        verifications: &GuestCodecVerificationCacheV1,
+        context: &OperationContext<'_>,
+    ) -> Result<VerifiedTrustedCatalog, AuthorityError> {
+        let (catalog, registration_codecs) = Self::verify_selected(root, bundle_path, bundle_bytes, profile_id, providers, verifications, context).await?;
         let assembly = os_store::begin_artifact_assembly().map_err(catalog_error)?;
         os_store::preflight_document_codecs_in_assembly(&assembly, &registration_codecs).map_err(catalog_error)?;
         context.checkpoint()?;
@@ -790,9 +1170,18 @@ impl TrustedCatalogLoader {
         Ok(catalog)
     }
 
-    async fn verify_selected(root: &Arc<TrustedCatalogGenerationRoot>, bundle_path: TrustedCatalogRelativePathV1, bundle_bytes: Vec<u8>, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<(VerifiedTrustedCatalog, Vec<ArtifactCodec>), AuthorityError> {
+    async fn verify_selected(
+        root: &Arc<TrustedCatalogGenerationRoot>,
+        bundle_path: TrustedCatalogRelativePathV1,
+        bundle_bytes: Vec<u8>,
+        profile_id: &str,
+        providers: &dyn NativeCodecProviderSourceV1,
+        verifications: &GuestCodecVerificationCacheV1,
+        context: &OperationContext<'_>,
+    ) -> Result<(VerifiedTrustedCatalog, Vec<ArtifactCodec>), AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
         let guest_runtime = Arc::new(semio_framework_plugin_host::OwnedRuntime::new());
+        let residency = GuestResidencyLedgerV1::new(TRUSTED_CATALOG_GUEST_RESIDENCY.resident_component_bytes_maximum);
         let bundle: TrustedBundleV1 = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
         let SelectedTrustedBundleV1 { package_indices: order, profile } = validate_bundle(&bundle, profile_id)?;
         let order_len = u64::try_from(order.len()).map_err(|error| catalog_error(error))?;
@@ -886,10 +1275,39 @@ impl TrustedCatalogLoader {
             staged.push(StagedTrustedPackage { position, record, component, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_asset, plugin_module });
         }
 
-        for stage in staged {
-            let StagedTrustedPackage { position, record, component, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_asset, plugin_module } = stage;
+        let mut previews = Vec::with_capacity(staged.len());
+        let mut guest_rows = Vec::new();
+        let mut pinned_guest_rows = BTreeSet::new();
+        for stage in &staged {
             context.checkpoint()?;
-            let native_bindings = providers.preview(NativeCodecProviderPackageV1 { plugin_id: &record.plugin_id, package_id: &record.package_id, version: &record.version }, &descriptor, context)?;
+            let native_bindings = providers.preview(NativeCodecProviderPackageV1 { plugin_id: &stage.record.plugin_id, package_id: &stage.record.package_id, version: &stage.record.version }, &stage.descriptor, context)?;
+            context.checkpoint()?;
+            let bound = validate_native_bindings(&native_bindings)?.into_keys().collect::<BTreeSet<_>>();
+            let mut rows = Vec::new();
+            for expected in &stage.record.native_codecs {
+                if bound.contains(&CodecKey::from_parts(&stage.record.plugin_id, &stage.record.package_id, &expected.artifact_kind, &expected.artifact_schema)) {
+                    continue;
+                }
+                let expected_hash = decode_digest(&expected.pack_schema_hash, "pack schema hash")?;
+                if expected_hash == [0; 32] {
+                    return Err(catalog("artifact codec schema hash is zero"));
+                }
+                if verifications.recall(&stage.component_sha256, &expected.artifact_schema).await == Some(expected_hash) {
+                    context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCodecExecuting, completed_units: GUEST_CODEC_BUDGET.fuel, total_units: GUEST_CODEC_BUDGET.fuel })?;
+                    pinned_guest_rows.insert((stage.position, expected.artifact_schema.clone()));
+                    continue;
+                }
+                rows.push((expected.artifact_schema.clone(), expected_hash));
+            }
+            if !rows.is_empty() {
+                guest_rows.push(GuestVerificationV1 { position: stage.position, package: PackageRef { package: PackageId(stage.record.package_id.clone()), hash: PackageHash(stage.component_blake3) }, component: stage.component.clone(), component_sha256: stage.component_sha256, rows });
+            }
+            previews.push(native_bindings);
+        }
+        pinned_guest_rows.extend(verify_guest_rows(&guest_runtime, guest_rows, verifications, context).await?);
+
+        for (stage, native_bindings) in staged.into_iter().zip(previews) {
+            let StagedTrustedPackage { position, record, component, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_asset, plugin_module } = stage;
             context.checkpoint()?;
             let binding_map = validate_native_bindings(&native_bindings)?;
             let mut consumed_bindings = BTreeSet::new();
@@ -898,9 +1316,8 @@ impl TrustedCatalogLoader {
                 runtime: Arc::clone(&guest_runtime),
                 package: package_ref.clone(),
                 component: component.clone(),
-                compiled: tokio::sync::OnceCell::new(),
+                compiled: residency.register(record.component.byte_length),
             });
-            let mut verification_compile: Option<Arc<semio_framework_plugin_host::CompiledHandle>> = None;
 
             for expected in &record.native_codecs {
                 if codecs.len() >= TRUSTED_CATALOG_MAX_CODECS {
@@ -919,32 +1336,11 @@ impl TrustedCatalogLoader {
                         }
                         consumed_bindings.insert(key);
                     }
-                    // 🔐️ No linked codec for this package, so the carried row is pinned against the
-                    // COMPONENT's own answer instead, on bytes reread and re-verified against the digests
-                    // above. The compile serves this package's rows only and is dropped with them.
-                    None => {
-                        context.checkpoint()?;
-                        let compiled = match &verification_compile {
-                            Some(compiled) => Arc::clone(compiled),
-                            None => {
-                                let bytes = component.read(context).await?;
-                                let compiled = Arc::new(guest_runtime.compile_component(&package_ref, &bytes).map_err(|error| catalog_error(format!("{}: {error}", expected.artifact_schema)))?);
-                                drop(bytes);
-                                verification_compile = Some(Arc::clone(&compiled));
-                                compiled
-                            }
-                        };
-                        context.checkpoint()?;
-                        let observed = guest_runtime
-                            .as_ref()
-                            .codec_pack_schema_hash_observed(&compiled, &expected.artifact_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| report_guest_codec_fuel(context, fuel))
-                            .await
-                            .map_err(|error| catalog_error(format!("{}: {error}", expected.artifact_schema)))?;
-                        context.checkpoint()?;
-                        if observed != expected_hash {
-                            return Err(catalog("guest artifact codec schema hash differs from its trust record"));
-                        }
-                    }
+                    // 🔐️ No linked codec for this package, so the carried row was pinned against the
+                    // COMPONENT's own answer — remembered for this engine, or interpreted above on bytes
+                    // reread and re-verified against the digests.
+                    None if pinned_guest_rows.contains(&(position, expected.artifact_schema.clone())) => {}
+                    None => return Err(catalog("guest artifact codec row was never verified against its component")),
                 }
                 let identity = TrustedArtifactIdentity {
                     plugin_id: record.plugin_id.clone(),
@@ -1044,7 +1440,7 @@ impl TrustedCatalogLoader {
         if generation_id != profile.generation_id {
             return Err(catalog("trusted profile generation differs from the completely verified package, codec, and target closure"));
         }
-        let catalog = VerifiedTrustedCatalog { packages: packages.into_boxed_slice(), codecs: codecs.into_boxed_slice(), open_targets: open_targets.into_boxed_slice(), generation_id };
+        let catalog = VerifiedTrustedCatalog { residency, packages: packages.into_boxed_slice(), codecs: codecs.into_boxed_slice(), open_targets: open_targets.into_boxed_slice(), generation_id };
         context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogResolved, completed_units: total_units, total_units })?;
         Ok((catalog, registration_codecs))
     }

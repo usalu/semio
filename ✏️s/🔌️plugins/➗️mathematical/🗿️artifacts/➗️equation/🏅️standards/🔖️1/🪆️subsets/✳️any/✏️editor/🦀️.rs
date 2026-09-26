@@ -1566,6 +1566,14 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         // WORKFLOWS-END-TO-END-TYPED-PORTS) — `equation_io()` (this file's own `🔖️Io` region) is
         // this port information's single source of truth, reused here rather than duplicated.
         .io(equation_io())
+        .action_describe("setDocument", LocalizedLabel::native("Replaces the equation's whole graph and point geometry with the supplied ones; parts that differ are overwritten.", "Ersetzt den gesamten Graphen und die Punktgeometrie der Gleichung durch die übergebenen; abweichende Teile werden überschrieben."))
+        .action_describe("setAlgorithm", LocalizedLabel::native("Chooses the graph algorithm the equation evaluates: topological order, connected components, strongly connected components or breadth-first distances.", "Wählt den Graphalgorithmus, den die Gleichung auswertet: topologische Ordnung, Zusammenhangskomponenten, starke Zusammenhangskomponenten oder Breitensuche-Distanzen."))
+        .action_describe("setDirected", LocalizedLabel::native("Sets whether the equation's graph is treated as directed or undirected, which changes every algorithm result.", "Legt fest, ob der Graph der Gleichung gerichtet oder ungerichtet behandelt wird, was jedes Algorithmusergebnis ändert."))
+        .action_describe("nodeGraphEdit", LocalizedLabel::native("Applies a JSON list of graph edits (addNode at x, y; move; connect; deleteSelection) to the equation's graph in one step.", "Wendet eine JSON-Liste von Graphänderungen (addNode an x, y; move; connect; deleteSelection) in einem Schritt auf den Graphen der Gleichung an."))
+        .action_describe("setPoints", LocalizedLabel::native("Replaces the point set of the equation's geometry with the supplied points.", "Ersetzt die Punktmenge der Geometrie der Gleichung durch die übergebenen Punkte."))
+        .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole equation document with the bundled demo example; any other example id changes nothing.", "Ersetzt das gesamte Gleichungsdokument durch das mitgelieferte Demo-Beispiel; jede andere Beispiel-Id ändert nichts."))
+        .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_destructive("setPoints")
         .build_definition()
 }
 //#endregion 🔖️Manifest

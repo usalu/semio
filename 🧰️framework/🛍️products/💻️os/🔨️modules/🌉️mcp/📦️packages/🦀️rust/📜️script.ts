@@ -20,6 +20,7 @@ import {
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
+import { capabilityDescriptionCensus } from "../../🗂️catalog/🟦️.ts";
 
 import { buildCargoArtifacts, packageNativeRelease, signExecutableForDistribution, workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 
@@ -46,10 +47,12 @@ function gisContract(repoRoot: string, exportId: string) {
 }
 
 /** 🧬️ One compiled export of the `os.mcp.workspace` module contract — draft-07, `$defs`-addressed,
- * read straight off `🏠️workspace/🧬️schema/🔣️.json` so no oracle carries a schema of its own. */
+ * read straight off `🏠️workspace/🧬️schema/🔣️.json` so no oracle carries a schema of its own. The
+ * `os.mcp` component it references (`UntrustedContentV1`) is registered beside it. */
 function workspaceContract(root: string, exportId: string) {
   const schema = JSON.parse(readFileSync(join(root, "..", "..", "🏠️workspace", "🧬️schema", "🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(JSON.parse(readFileSync(join(root, "..", "..", "🧬️schema", "🔣️.json"), "utf8")));
   ajv.addSchema(schema);
   const validate = ajv.getSchema(`${schema.$id}#/$defs/${exportId}`);
   if (!validate) throw new Error(`os.mcp.workspace publishes no ${exportId} export`);
@@ -402,14 +405,18 @@ class CanonicalCheckpointResourceOracleScript extends BundleScript {
     const validate = workspaceContract(this.root, "CanonicalCheckpointResourceContractV1");
     if (!validate(fixture)) throw new Error("invalid canonical checkpoint resource fixture: " + JSON.stringify(validate.errors));
     const digest = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
-    const pack = Buffer.from(fixture.resource.value.pack.base64, "base64");
-    const spr = Buffer.from(fixture.resource.value.spr.base64, "base64");
+    const untrusted = fixture.resource.value.untrusted;
+    const pack = Buffer.from(untrusted.content.packBase64, "base64");
+    const spr = Buffer.from(untrusted.content.sprBase64, "base64");
     deepStrictEqual(
       {
-        pack: { byteLength: pack.byteLength, sha256: digest(pack), base64: pack.toString("base64") },
-        spr: { byteLength: spr.byteLength, sha256: digest(spr), base64: spr.toString("base64") },
+        pack: { byteLength: pack.byteLength, sha256: digest(pack) },
+        spr: { byteLength: spr.byteLength, sha256: digest(spr) },
+        content: { packBase64: pack.toString("base64"), sprBase64: spr.toString("base64") },
+        revision: { contentSha256: digest(Buffer.concat([pack, spr])), headEditId: fixture.resource.value.frontier.headEditId, commitSeq: fixture.resource.value.frontier.lastCommitSeq },
+        authors: { kind: "space-writers", spaceId: fixture.resource.value.scope.spaceId },
       },
-      { pack: fixture.resource.value.pack, spr: fixture.resource.value.spr },
+      { pack: fixture.resource.value.pack, spr: fixture.resource.value.spr, content: untrusted.content, revision: untrusted.provenance.revision, authors: untrusted.provenance.authors },
     );
     const scopedUri = (spaceId: string, documentId: string): string => `semio://workspace/scopes/${encodeURIComponent(spaceId)}/${encodeURIComponent(documentId)}/checkpoint`;
     if (scopedUri(fixture.resource.value.scope.spaceId, fixture.resource.value.scope.documentId) !== fixture.resource.uri) throw new Error("checkpoint URI is not exact percent-encoded scope");
@@ -417,7 +424,7 @@ class CanonicalCheckpointResourceOracleScript extends BundleScript {
     const base64Length = (length: number): number => Math.ceil(length / 3) * 4;
     if (rawLength > fixture.limits.pairBytes || base64Length(pack.byteLength) + base64Length(spr.byteLength) + fixture.limits.metadataBytes > fixture.limits.textBytes)
       throw new Error("fixture violates checkpoint resource budgets");
-    console.log(`canonical-checkpoint-resource-oracle: AJV=1 parts=2 hostile=${fixture.hostile.length} lifecycle=${fixture.lifecycle.length}`);
+    console.log(`canonical-checkpoint-resource-oracle: AJV=1 parts=2 untrusted=1 hostile=${fixture.hostile.length} lifecycle=${fixture.lifecycle.length}`);
   }
 }
 
@@ -519,15 +526,30 @@ class DevScript extends BundleScript {
  *  two language mirrors from the ONE Rust registry, by running the built binary's own
  *  `semio-os-mcp schemas` emitter. `--check` writes nothing and fails on any drift, so a stale
  *  mirror is a red gate rather than a silently divergent contract. */
-/** 🚨️ The capability-audience/destructive gate (ticket 26/09/18 slice M5a §7.4): runs the built
- * gateway's own `audit` mode over every committed plugin descriptor in this repo and fails on any
- * finding — a gesture-named route published to agents with no declared audience, or a
- * delete/clear/replace mutation whose `effects.destructive` is false so `WhenDestructive` never
- * fires. `derive_audience` guessing right is not evidence; a human declaring it is. */
+/** 🚨️ The capability-audience/destructive/description gate (ticket 26/09/18 slice M5a §7.4, ticket
+ * 26/09/23 slice D1): runs the built gateway's own `audit` mode over every committed plugin
+ * descriptor in this repo and fails on any finding — a gesture-named route published to agents with
+ * no declared audience, a delete/clear/replace mutation whose `effects.destructive` is false so
+ * `WhenDestructive` never fires, or an agent-published verb that does not explain itself in English
+ * and German under the manifest's `CapabilityDescription` contract. The description census is held
+ * against its AJV twin (`🗂️catalog/🟦️.ts`) over the same descriptors: both must name the identical
+ * `(capability, problem)` set. `derive_audience` guessing right is not evidence; a human declaring it is. */
 class CapabilityAuditCheckScript extends BundleScript {
   run(): void {
     const audited = runProbe(requireMcpBinary(this.repoRoot), ["audit", "--folder", this.repoRoot], { cwd: this.repoRoot, budgetMs: 120_000 });
     process.stdout.write(audited.stdout);
+    const rustPlugin = new Set(
+      audited.stdout
+        .split("\n")
+        .map((line) => /^(\S+) \[(missing|schema|untranslated|repeatsTitle|sharedWithinApp)\] /u.exec(line))
+        .filter((match): match is RegExpExecArray => match !== null && !(match[1] as string).startsWith("framework."))
+        .map((match) => `${match[1]} ${match[2]}`),
+    );
+    const oracle = new Set(capabilityDescriptionCensus(this.repoRoot).map((finding) => `${finding.capabilityId} ${finding.problem}`));
+    const onlyRust = [...rustPlugin].filter((finding) => !oracle.has(finding));
+    const onlyOracle = [...oracle].filter((finding) => !rustPlugin.has(finding));
+    console.log(`capability-description oracle: rust=${rustPlugin.size} ajv=${oracle.size} rust-only=${onlyRust.length} ajv-only=${onlyOracle.length}`);
+    if (onlyRust.length > 0 || onlyOracle.length > 0) throw new Error(`capability-audit-check: the Rust and AJV description censuses disagree:\nrust-only ${onlyRust.slice(0, 20).join("\n")}\najv-only ${onlyOracle.slice(0, 20).join("\n")}`);
     if (audited.status !== 0) throw new Error(`capability-audit-check found unreviewed agent capabilities:\n${audited.stdout.slice(-8_000)}${audited.stderr.slice(-2_000)}`);
   }
 }

@@ -1,6 +1,9 @@
 {
-  "description": "Per-surface verdicts of one browser-actor patch offer on the shell (G-P1-4). Each step applies `patches` to the stores the previous steps retained; `retained: false` starts an opening.",
-  "windowKey": "gis2d-main",
+  "description": "Per-surface verdicts of one browser-actor patch offer on the shell (G-P1-4, S15 finding b). Every window kind of the app and every bodied panel is a surface of the document's one actor. Each step applies `patches` to the stores the previous steps retained; `retained: false` starts an opening.",
+  "windowKeys": [
+    "note-composite",
+    "note-navigator"
+  ],
   "panelTabs": [
     {
       "kind": {
@@ -55,21 +58,68 @@
   ],
   "steps": [
     {
-      "name": "first offer paints window and panel",
+      "name": "first offer paints both windows and a panel",
       "retained": false,
       "patches": [
         {
-          "surface": "gis2d-main",
+          "surface": "note-composite",
           "baseRevision": 0,
           "revision": 1,
           "ops": [
             {
               "type": "upsert",
               "id": 1,
-              "key": "gis2d-main.body",
+              "key": "note-composite.body",
               "component": {
                 "type": "text",
-                "value": "gis2d-main.body",
+                "value": "note-composite.body",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        },
+        {
+          "surface": "note-navigator",
+          "baseRevision": 0,
+          "revision": 1,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "note-navigator.body",
+              "component": {
+                "type": "text",
+                "value": "note-navigator.body",
                 "emphasize": null,
                 "dataAttributes": null
               },
@@ -155,7 +205,12 @@
       ],
       "verdicts": [
         {
-          "surface": "gis2d-main",
+          "surface": "note-composite",
+          "outcome": "acknowledged",
+          "revision": 1
+        },
+        {
+          "surface": "note-navigator",
           "outcome": "acknowledged",
           "revision": 1
         },
@@ -166,11 +221,12 @@
         }
       ],
       "stored": true,
-      "panelsAdded": true,
       "revisions": {
-        "gis2d-main": 1,
+        "note-composite": 1,
+        "note-navigator": 1,
         "framework.panel.inspection": 1
-      }
+      },
+      "surfacesAdded": true
     },
     {
       "name": "remote edit moves only the panel",
@@ -202,9 +258,47 @@
         }
       ],
       "stored": true,
-      "panelsAdded": false,
       "revisions": {
-        "gis2d-main": 1,
+        "note-composite": 1,
+        "note-navigator": 1,
+        "framework.panel.inspection": 2
+      },
+      "surfacesAdded": false
+    },
+    {
+      "name": "the second window's own frame moves alone",
+      "retained": true,
+      "patches": [
+        {
+          "surface": "note-navigator",
+          "baseRevision": 1,
+          "revision": 2,
+          "ops": [
+            {
+              "type": "setComponent",
+              "id": 1,
+              "component": {
+                "type": "text",
+                "value": "area 152",
+                "emphasize": null,
+                "dataAttributes": null
+              }
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "note-navigator",
+          "outcome": "acknowledged",
+          "revision": 2
+        }
+      ],
+      "stored": true,
+      "surfacesAdded": false,
+      "revisions": {
+        "note-composite": 1,
+        "note-navigator": 2,
         "framework.panel.inspection": 2
       }
     },
@@ -213,17 +307,17 @@
       "retained": true,
       "patches": [
         {
-          "surface": "gis2d-main",
+          "surface": "note-composite",
           "baseRevision": 1,
           "revision": 2,
           "ops": [
             {
               "type": "upsert",
               "id": 1,
-              "key": "gis2d-main.body",
+              "key": "note-composite.body",
               "component": {
                 "type": "text",
-                "value": "gis2d-main.body",
+                "value": "note-composite.body",
                 "emphasize": null,
                 "dataAttributes": null
               },
@@ -268,7 +362,7 @@
       ],
       "verdicts": [
         {
-          "surface": "gis2d-main",
+          "surface": "note-composite",
           "outcome": "acknowledged",
           "revision": 2
         },
@@ -280,11 +374,12 @@
         }
       ],
       "stored": true,
-      "panelsAdded": false,
       "revisions": {
-        "gis2d-main": 2,
+        "note-composite": 2,
+        "note-navigator": 2,
         "framework.panel.inspection": 0
-      }
+      },
+      "surfacesAdded": false
     },
     {
       "name": "full resend after the reset applies from zero",
@@ -346,11 +441,12 @@
         }
       ],
       "stored": true,
-      "panelsAdded": false,
       "revisions": {
-        "gis2d-main": 2,
+        "note-composite": 2,
+        "note-navigator": 2,
         "framework.panel.inspection": 1
-      }
+      },
+      "surfacesAdded": false
     },
     {
       "name": "a surface this app does not render is refused",
@@ -413,14 +509,15 @@
         }
       ],
       "stored": true,
-      "panelsAdded": false,
       "revisions": {
-        "gis2d-main": 2,
+        "note-composite": 2,
+        "note-navigator": 2,
         "framework.panel.inspection": 1
-      }
+      },
+      "surfacesAdded": false
     },
     {
-      "name": "an opening whose first offer leaves the window unpainted retains nothing",
+      "name": "an opening whose first offer leaves every window unpainted retains nothing",
       "retained": false,
       "patches": [
         {
@@ -480,25 +577,25 @@
         }
       ],
       "stored": false,
-      "panelsAdded": false,
-      "revisions": {}
+      "revisions": {},
+      "surfacesAdded": false
     },
     {
       "name": "a failing first window patch refuses every surface",
       "retained": false,
       "patches": [
         {
-          "surface": "gis2d-main",
+          "surface": "note-composite",
           "baseRevision": 4,
           "revision": 5,
           "ops": [
             {
               "type": "upsert",
               "id": 1,
-              "key": "gis2d-main.body",
+              "key": "note-composite.body",
               "component": {
                 "type": "text",
-                "value": "gis2d-main.body",
+                "value": "note-composite.body",
                 "emphasize": null,
                 "dataAttributes": null
               },
@@ -584,7 +681,7 @@
       ],
       "verdicts": [
         {
-          "surface": "gis2d-main",
+          "surface": "note-composite",
           "outcome": "rejected",
           "revision": 0,
           "reason": "revisionMismatch"
@@ -597,8 +694,73 @@
         }
       ],
       "stored": false,
-      "panelsAdded": false,
-      "revisions": {}
+      "revisions": {},
+      "surfacesAdded": false
+    },
+    {
+      "name": "an opening whose first offer paints only the second window is retained",
+      "retained": false,
+      "patches": [
+        {
+          "surface": "note-navigator",
+          "baseRevision": 0,
+          "revision": 1,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "note-navigator.body",
+              "component": {
+                "type": "text",
+                "value": "note-navigator.body",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "note-navigator",
+          "outcome": "acknowledged",
+          "revision": 1
+        }
+      ],
+      "stored": true,
+      "surfacesAdded": true,
+      "revisions": {
+        "note-navigator": 1
+      }
     }
   ]
 }

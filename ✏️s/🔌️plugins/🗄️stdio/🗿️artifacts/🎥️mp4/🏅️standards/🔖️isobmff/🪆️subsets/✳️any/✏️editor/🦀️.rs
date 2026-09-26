@@ -111,6 +111,10 @@ impl ArtifactOwnedToolJobFactory for Mp4EditorExampleFactory {
 pub struct Mp4Editor;
 
 impl ArtifactEditor for Mp4Editor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = Mp4Snapshot;
     type Mutation = Mp4Mutation;
     type Config = NoConfig;

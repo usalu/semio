@@ -13,14 +13,16 @@ import { setUiLocale } from "@semio-tech/ui-react";
 import Ajv from "ajv";
 import { useEffect, useState, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { parseDirectoryCommandV1, sealDirectoryCommandRequestV1, type DirectoryCommandReceiptV1, type DirectorySpaceListEntryV1, type DirectoryCommand } from "@semio-tech/framework-os";
+import { directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, sealDirectoryCommandRequestV1, type DirectoryCommandReceiptV1, type DirectorySpaceListEntryV1, type DirectoryCommand } from "@semio-tech/framework-os";
 import fixture from "../../../../../../📇️directory/🏘️spaces/🔣️.json";
+import receiptFixture from "../../../../../../../🧫️fixtures/📇️directory/🧾️command-receipt-v1.json";
 import fixtureSchema from "../../../../../../📇️directory/🏘️spaces/🧬️.schema.json";
 import {
   INVITE_TTL_CHOICES_SECS_V1,
   archiveSpaceCommandV1,
   createInviteCommandV1,
   createSpaceCommandV1,
+  directoryCommandAnsweredV1,
   filterSpaceRowsV1,
   inviteLinkV1,
   inviteRedeemPathV1,
@@ -35,7 +37,7 @@ import {
   type SpaceMemberPresenceV1,
 } from "../../../../../../📇️directory/🏘️spaces/🟦️.ts";
 import { SpaceBrowser, spaceBrowserPresencePeersV1 } from "../../🟦️.tsx";
-import { parseHubSpaceMemberRowsV1, useHubConnection, type HubConnectionPortV1, type HubSpaceMemberRowV1 } from "../../../🔗️HubConnection/🟦️.tsx";
+import { createHubConnectionFetchPortV1, parseHubSpaceMemberRowsV1, useHubConnection, type HubConnectionPortV1, type HubSpaceMemberRowV1 } from "../../../🔗️HubConnection/🟦️.tsx";
 import { type HubConnectionStorageV1, type HubSignInTransportV1 } from "../../../../../../📇️directory/🔐️sign-in/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -522,6 +524,47 @@ describe("space members from the hub's own projection", () => {
       },
     };
     expect(parseHubSpaceMemberRowsV1(JSON.stringify(hostile)).map((row) => row.userId)).toStrictEqual(["usr_keep"]);
+  });
+});
+
+// 📮️ ticket 26/09/23 slice S15 — the hub answers an accepted directory command `202 Accepted` with its canonical receipt
+// (`🌎️hub/🏗️bootstrap` `post_directory_command`, and the receipt fixture's transport trace retries into a 202). The real
+// fetch port refused every status but 200, so creating a space in the React shell always read "The hub did not accept
+// that" while the hub had created it (measured on hub 8040). The platform's own `Response.ok` is the 2xx oracle.
+describe("the hub fetch port's directory command lane", () => {
+  const request = receiptFixture.requests.find((row) => row.name === "create-space")!;
+  const accepted = receiptFixture.receipts.find((row) => row.name === "accepted-create-space")!;
+  const portAnswering = (status: number) =>
+    createHubConnectionFetchPortV1({
+      request: async () => ({ status, headers: { get: () => null }, text: async () => accepted.canonical }),
+      storage: null,
+      bootstrapOrigin: ORIGIN,
+      deviceInstanceId: "s15-command-lane-device-0000000000",
+      clientClass: "browser",
+      parseSpaces: () => [],
+      sealCommand: (command) => {
+        const sealed = sealDirectoryCommandRequestV1(request.requestId, command);
+        return { body: directoryCommandRequestJson(sealed), parseReceipt: (text) => parseDirectoryCommandReceiptV1(text, sealed) };
+      },
+    });
+  const command = request.command as DirectoryCommand;
+
+  it("reads the receipt of every 2xx answer the transport trace delivers, the hub's 202 Accepted first", async () => {
+    const delivered = (receiptFixture.transport.traces as readonly { readonly attempts?: readonly { readonly status: number }[] }[]).flatMap((trace) => trace.attempts ?? []).map((attempt) => attempt.status).filter((status) => new Response(null, { status }).ok);
+    expect(delivered).toContain(202);
+    for (const status of [...new Set([...delivered, 200])]) {
+      const receipt = await portAnswering(status).submitCommand(ORIGIN, command, new AbortController().signal);
+      expect(receipt.outcome).toBe("accepted");
+      expect(receipt.requestId).toBe(request.requestId);
+    }
+  });
+
+  it("refuses every status the transport table names, before reading any body", async () => {
+    for (const row of receiptFixture.transport.statusCodes) await expect(portAnswering(row.status).submitCommand(ORIGIN, command, new AbortController().signal)).rejects.toThrow("hub.command.refused");
+  });
+
+  it("classifies every status exactly as the platform's Response.ok does", () => {
+    for (let status = 200; status <= 599; status += 1) expect(directoryCommandAnsweredV1(status)).toBe(new Response(null, { status }).ok);
   });
 });
 

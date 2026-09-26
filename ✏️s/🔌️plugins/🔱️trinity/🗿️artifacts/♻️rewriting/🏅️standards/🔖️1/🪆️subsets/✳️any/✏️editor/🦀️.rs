@@ -577,7 +577,7 @@ fn rewriting_document_reduce(
         TrinityRewritingCommand::SetLhsJson { value } => commands::set_lhs_json(state, value),
         TrinityRewritingCommand::SetRhsJson { value } => commands::set_rhs_json(state, value),
         TrinityRewritingCommand::SetParameter { name, value } => commands::set_parameter(state, name, value),
-        TrinityRewritingCommand::AddRuleClause { kind } => commands::add_rule_clause_command(state, kind),
+        TrinityRewritingCommand::AddRuleClause { kind } => commands::add_rule_clause_command(state, kind)?,
         TrinityRewritingCommand::ResetRule => commands::reset_rule(state),
         TrinityRewritingCommand::SetActiveExample { example_id } => commands::set_active_example(example_id),
         TrinityRewritingCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(state, node_ids, interaction.selection.get("graph").map_or(&[][..], |selection| selection.ids.as_slice()), field, value)?,
@@ -901,7 +901,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TrinityRewritingCommand::SetLhsJson { value } => crate::editor::rewriting::commands::set_lhs_json(state, value),
             TrinityRewritingCommand::SetRhsJson { value } => crate::editor::rewriting::commands::set_rhs_json(state, value),
             TrinityRewritingCommand::SetParameter { name, value } => crate::editor::rewriting::commands::set_parameter(state, name, value),
-            TrinityRewritingCommand::AddRuleClause { kind } => crate::editor::rewriting::commands::add_rule_clause_command(state, kind),
+            TrinityRewritingCommand::AddRuleClause { kind } => crate::editor::rewriting::commands::add_rule_clause_command(state, kind)?,
             TrinityRewritingCommand::ResetRule => crate::editor::rewriting::commands::reset_rule(state),
             TrinityRewritingCommand::SetActiveExample { example_id } => crate::editor::rewriting::commands::set_active_example(example_id),
             TrinityRewritingCommand::PatchNodes { node_ids, field, value } => crate::editor::rewriting::commands::patch_nodes(state, node_ids, &interaction.selection("graph").ids, field, value)?,
@@ -1028,6 +1028,7 @@ use crate::editor::rewriting::modes::edit;
 /// `nodeIds` is optional: left empty, the verb patches the selected nodes.
 pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TRINITY_REWRITING_DIALECT).document(["semio", "trinity", "rewriting"])
+            .artifact_kind(crate::artifact_kind())
             .icon_id("trinity-rewriting")
             .mode_def(edit::definition())
             .default_mode_id(edit::TRINITY_REWRITING_MODE_EDIT)
@@ -1148,6 +1149,20 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+alt+s", "commitCheckpoint")
             .io(rewriting_io())
+            .action_describe("setLodMode", LocalizedLabel::native("Sets the level of detail the rule's graph window draws with; only that window's view changes.", "Legt die Detailstufe fest, mit der das Graphfenster der Regel zeichnet; nur die Ansicht dieses Fensters ändert sich."))
+            .action_describe("patchNodes", LocalizedLabel::native("Sets the name or kind of the given nodes in the rule's example graph.", "Setzt Name oder Art der angegebenen Knoten im Beispielgraphen der Regel."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole rewriting rule with the bundled demo rule, or with the blank default rule, by example id.", "Ersetzt die gesamte Umschreiberegel durch die mitgelieferte Demo-Regel oder die leere Standardregel, anhand der Beispiel-Id."))
+            .action_describe("addRuleClause", LocalizedLabel::native("Adds a clause of the given kind (where, create, merge, set, delete or parameter) to the rewriting rule; a where clause is only added once.", "Fügt der Umschreiberegel eine Klausel der angegebenen Art hinzu (where, create, merge, set, delete oder parameter); eine where-Klausel wird nur einmal hinzugefügt."))
+            .action_describe("resetRule", LocalizedLabel::native("Resets the rewriting rule to the blank default rule, discarding its pattern, clauses and parameters.", "Setzt die Umschreiberegel auf die leere Standardregel zurück und verwirft Muster, Klauseln und Parameter."))
+            .action_describe("setParameter", LocalizedLabel::native("Sets the bound value of one named rule parameter, parsed as a number, boolean or string according to its declared kind.", "Setzt den gebundenen Wert eines benannten Regelparameters, gelesen als Zahl, Wahrheitswert oder Zeichenkette gemäß seiner deklarierten Art."))
+            .action_describe("setLhsJson", LocalizedLabel::native("Replaces the rule's left-hand side, the graph pattern it matches, with the given JSON.", "Ersetzt die linke Seite der Regel, das Graphmuster, das sie erkennt, durch das angegebene JSON."))
+            .action_describe("setRhsJson", LocalizedLabel::native("Replaces the rule's right-hand side, what it writes for each match, with the given JSON and resets the parameter bindings to their defaults.", "Ersetzt die rechte Seite der Regel, was sie für jeden Treffer schreibt, durch das angegebene JSON und setzt die Parameterbindungen auf ihre Standardwerte zurück."))
+            .action_describe("reorganize", LocalizedLabel::native("Drops every manual node position of the rule graph so it is laid out automatically again.", "Verwirft alle manuellen Knotenpositionen des Regelgraphen, sodass er wieder automatisch angeordnet wird."))
+            .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_destructive("setLhsJson")
+            .action_destructive("setRhsJson")
+            .action_destructive("reorganize")
             .build_definition()
 }
 //#endregion 🔖️Manifest

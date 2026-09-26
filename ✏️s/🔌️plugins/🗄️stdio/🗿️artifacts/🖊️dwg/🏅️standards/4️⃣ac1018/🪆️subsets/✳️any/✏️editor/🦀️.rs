@@ -200,6 +200,10 @@ impl ArtifactOwnedToolJobFactory for DwgAc1018EditorExampleFactory {
 pub struct DwgAc1018Editor;
 
 impl ArtifactEditor for DwgAc1018Editor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = DwgSnapshot;
     type Mutation = DwgMutation;
     type Config = NoConfig;

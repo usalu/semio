@@ -45,6 +45,10 @@ describe("two-client document collaboration fixture", () => {
     const fixtures = pick(hubRoot, (n) => n.includes("fixtures"));
     const fixtureDir = pick(fixtures, (n) => n.includes("two-client-document"));
     const fixture = JSON.parse(readFileSync(join(fixtureDir, "🔣️.json"), "utf8"));
+    const scenarioSchema = JSON.parse(readFileSync(join(pick(pick(hubRoot, (n) => n.includes("schema")), (n) => n.includes("two-client-document")), "🔣️.json"), "utf8"));
+    const validate = new Ajv({ allErrors: true, strict: false }).compile(scenarioSchema.$defs.TwoClientDocumentScenarioV1);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({ ...fixture, agent: { ...fixture.agent, closeCode: 1000 } }), "a revoked agent's socket closes 4401").toBe(false);
     expect(fixture.schema).toBe("semio.hub.two-client-document-scenario/v1");
     expect(fixture.authors).toEqual(["author-a", "author-b"]);
     expect(fixture.steps.length).toBeGreaterThanOrEqual(8);
@@ -59,6 +63,8 @@ describe("two-client document collaboration fixture", () => {
     expect(fixture.growth.payloadBytes).toBeGreaterThanOrEqual(16384);
     expect(fixture.expectations.gracefulShutdownClosesSocketsAndReleasesWriters).toBe(true);
     expect(fixture.expectations.crashReleasesWritersPerBackendContract).toBe(true);
+    expect(fixture.expectations.revocationEndsAgentSession).toBe(true);
+    expect(fixture.agent.revocationWithinMs).toBeLessThanOrEqual(5000);
   });
 });
 
@@ -228,6 +234,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         }
         expect(documentId.startsWith("artifact-")).toBe(true);
 
+        let hubOutput = (): string => run.output();
         const waitFrame = async (holder: Holder, pred: (f: Frame) => boolean, label: string, ms = 15000) => {
           const until = Date.now() + ms;
           const hit = holder.frames.find(pred);
@@ -246,7 +253,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
               holder.waiters = holder.waiters.filter((w) => w !== onFrame);
               const kinds = [...new Set(holder.frames.map((f) => Object.keys(f)[0]))].join(",");
               const errors = holder.frames.filter((f) => "Error" in f).map((f) => JSON.stringify(f.Error));
-              reject(new Error(`${holder.label} missing ${label}: ${kinds} (n=${holder.frames.length}) errors=${errors.join(";")}`));
+              reject(new Error(`${holder.label} missing ${label} within ${ms} ms: ${kinds} (n=${holder.frames.length}) errors=${errors.join(";")}\nhub-output:\n${hubOutput().slice(-8000)}`));
             }, 100);
           });
         };
@@ -288,7 +295,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           };
         };
 
-        const openSocket = async (minted: Minted, resumeToken: string | null = null): Promise<Holder> => {
+        const openSocket = async (minted: Minted, resumeToken: string | null = null, admitWithinMs = 15000): Promise<Holder> => {
           let closeCode: number | null = null;
           let closeReason = "";
           const socket = new WebSocket(minted.wsUrl, [...minted.protocols]);
@@ -322,7 +329,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           ).toBe(WebSocket.OPEN);
           const packSchemaHash = [...(minted.packSchemaHashHex.match(/../gu) ?? [])].map((p) => Number.parseInt(p, 16));
           socket.send(encodeClientFrame({ SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: minted.artifactSchema, pack_schema_hash: packSchemaHash, resume_token: resumeToken, frontier: null } }, "command"));
-          const admitted = await waitFrame(holder, (f) => "Welcome" in f || "Error" in f, "Welcome");
+          const admitted = await waitFrame(holder, (f) => "Welcome" in f || "Error" in f, "Welcome", admitWithinMs);
           if ("Error" in admitted) {
             socket.close();
             throw new Error(`${minted.label} refused: ${JSON.stringify(admitted.Error)}`);
@@ -388,6 +395,48 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         c.socket.close();
         await waitFrame(b, afterLeave(rosterWithout(c.actor)), "roster after the late joiner left");
 
+        const humanHeaders = { "content-type": "application/json", authorization: `Bearer ${tokenA}`, origin: "http://127.0.0.1:6066" };
+        const delegated = await fetchTimed(`${origin}/auth/agent-delegations`, {
+          method: "POST",
+          headers: humanHeaders,
+          body: JSON.stringify({ schema: "semio.hub.auth.agent-delegation-create/v1", spaceId, agentLabel: fixture.agent.agentLabel, audience: fixture.agent.audience, ttlSecs: fixture.agent.ttlSecs }),
+        });
+        const delegationText = await delegated.text();
+        expect(delegated.status, delegationText.slice(0, 200)).toBe(201);
+        const delegation = JSON.parse(delegationText) as { delegationId: string; token: string };
+        const exchanged = await fetchTimed(`${origin}/auth/agent-sessions`, {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${delegation.token}`, origin: "http://127.0.0.1:6066" },
+          body: JSON.stringify({ schema: "semio.hub.auth.agent-session/v1", audience: fixture.agent.audience, agentInstanceId: fixture.agent.agentInstanceId }),
+        });
+        const exchangedText = await exchanged.text();
+        expect(exchanged.status, exchangedText.slice(0, 200)).toBe(200);
+        const agentToken = (JSON.parse(exchangedText) as { token: string }).token;
+        const agent = await openSocket(await mint("agent", agentToken));
+        expect(agent.actor).not.toBe(a.actor);
+        await waitFrame(agent, (f) => "Session" in f, "agent Session");
+        beat(agent);
+        await waitFrame(b, rosterWith(agent.actor), "presence of the agent");
+        const afterRevocation = since(b);
+        const revokedAt = Date.now();
+        const revoked = await fetchTimed(`${origin}/auth/agent-delegations/${encodeURIComponent(delegation.delegationId)}`, { method: "DELETE", headers: humanHeaders });
+        expect(revoked.status).toBe(204);
+        const agentClosed = await Promise.race([agent.closed, sleep(fixture.agent.revocationWithinMs).then(() => null)]);
+        expect(agentClosed?.code, "the agent's open document socket closes on revocation").toBe(fixture.agent.closeCode);
+        await waitFrame(b, afterRevocation(rosterWithout(agent.actor)), "roster after the agent was revoked", fixture.agent.revocationWithinMs);
+        const agentRevocationMs = Date.now() - revokedAt;
+        expect(agentRevocationMs, "revocation reached the socket and the roster within the declared bound").toBeLessThanOrEqual(fixture.agent.revocationWithinMs);
+        const agentAfter = await fetchTimed(`${origin}/auth/sessions/me`, { headers: { authorization: `Bearer ${agentToken}` } });
+        expect(agentAfter.status, "the revoked agent's next request is refused").toBe(fixture.agent.refusedStatus);
+        const reexchanged = await fetchTimed(`${origin}/auth/agent-sessions`, {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${delegation.token}`, origin: "http://127.0.0.1:6066" },
+          body: JSON.stringify({ schema: "semio.hub.auth.agent-session/v1", audience: fixture.agent.audience, agentInstanceId: fixture.agent.agentInstanceId }),
+        });
+        const reexchangedText = await reexchanged.text();
+        expect(reexchanged.status, `a revoked delegation mints no further session: ${reexchangedText.slice(0, 200)}`).toBe(fixture.agent.reexchangeStatus);
+        expect(JSON.parse(reexchangedText).error).toBe(fixture.agent.reexchangeError);
+
         const afterExpiry = since(b);
         beat(a);
         const expired = await waitFrame(b, afterExpiry((f) => "Presence" in f && roster(f).some((peer) => peer.actor === a.actor && peer.ui === undefined)), "roster after A's lease expired", fixture.presence.leaseTtlMs + 5000);
@@ -401,7 +450,6 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         const mutationId2 = `${fixture.command.mutationIdPrefix}2`;
         a.socket.send(encodeClientFrame({ Commands: { batch_id: fixture.command.batchId + 1, envelopes: [{ ...envelope, mutation_id: mutationId2, diff: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue({ value: "two-client-a2" })) } }] } }, "command"));
         await waitFrame(a, (f) => "Ack" in f && f.Ack.batch_id === fixture.command.batchId + 1, "Ack2");
-        let hubOutput = (): string => run.output();
         const grow = async (holder: Holder, from: number, count: number, parent: string): Promise<string> => {
           let previous = parent;
           for (let index = from; index < from + count; index++) {
@@ -459,6 +507,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         };
         note("growthEditsAcceptedBeforeRestart", fixture.growth.editsBeforeRestart);
         note("growthMsBeforeRestart", growthMsBeforeRestart);
+        note("agentRevocationMs", agentRevocationMs);
         const fenceRelease = writerFence.backends.find((row: any) => row.backend === backend)?.crashRelease as string | undefined;
         const exitOf = (hubRun: typeof run, ms: number) =>
           new Promise<{ code: number | null; signal: string | null }>((resolve, reject) => {
@@ -473,7 +522,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           let refused = 0;
           for (;;) {
             try {
-              return { holder: await openSocket(await mint(`${label}-${refused}`, token)), refused };
+              return { holder: await openSocket(await mint(`${label}-${refused}`, token), null, fixture.shutdown.reopenWithinMs), refused };
             } catch (error) {
               refused++;
               if (Date.now() >= until) throw error;
@@ -551,9 +600,11 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           const tokenA2 = await signIn(ADA.email, ADA.password, "device-ada-2");
           const spaces = await (await fetchTimed(`${origin}/directory/spaces`, { headers: { authorization: `Bearer ${tokenA2}` } })).json();
           expect(spaces.some((r: any) => r?.space?.id === spaceId)).toBe(true);
-          const a3 = await openSocket(await mint("a-restart", tokenA2));
-          note("reopenedOnFirstAttemptAfterSigterm", true);
           hubOutput = () => run2.output();
+          const reopenAt = Date.now();
+          const a3 = await openSocket(await mint("a-restart", tokenA2), null, fixture.shutdown.reopenWithinMs);
+          note("reopenedOnFirstAttemptAfterSigterm", true);
+          note("readyToReopenedWelcomeMs", Date.now() - reopenAt);
           await grow(a3, fixture.growth.editsBeforeRestart, fixture.growth.editsAfterRestart, lastGrown);
           note("growthEditsAcceptedAfterRestart", fixture.growth.editsAfterRestart);
           const gracefulReopenMs = Date.now() - sigtermAt;
@@ -578,6 +629,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           await finishLocalHub(run2);
           const run3 = await startLocalHub(repoRoot, hubRustRoot, profiles, { port, dataDir: dataRoot, binaryPath: bin, capture: true });
           try {
+            hubOutput = () => run3.output();
             await waitReady(run3, "crash-restart");
             const bootedAfterCrashMs = Date.now() - crashAt;
             const tokenA3 = await signIn(ADA.email, ADA.password, "device-ada-3");

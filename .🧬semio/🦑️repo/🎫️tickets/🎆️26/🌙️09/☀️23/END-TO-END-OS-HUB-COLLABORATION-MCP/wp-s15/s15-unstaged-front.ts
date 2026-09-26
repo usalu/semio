@@ -14,6 +14,13 @@ const registryRow = new RegExp(`^\\s*\\{ (?:variant: "[^"]+", )?pluginId: "${plu
 const blocked = `/🔌️plugin-modules/${directory}/`;
 const hubModules = `${upstream}/_semio/hub/trusted-catalog/plugin-modules`;
 const mirrored = new Map<string, string>();
+/** 🌩️ `S15_FLAKY_ONCE=<status>`: the FIRST request for every hub plugin-module FILE and for every document's execution-target
+ * component / browser actor answers that status (a declared transient answer); every later request for the same path passes
+ * through — the live double of the store's and the worker's failing-once laws. */
+const flakyOnce = Number(process.env.S15_FLAKY_ONCE ?? 0);
+const flakyAnswered = new Set<string>();
+const hubModuleFile = /^\/_semio\/hub\/trusted-catalog\/plugin-modules\/[0-9a-f]{64}\/.+/u;
+const hubExecutionTargetBody = /^\/_semio\/hub\/spaces\/[^/]+\/documents\/[^/]+\/execution-target\/(?:component|browser-actor)$/u;
 if (mode === "mirror") {
   const index = await (await fetch(hubModules)).json() as { modules: { pluginId: string; bundleSha256: string }[] };
   const bundleSha256 = index.modules.find((row) => row.pluginId === pluginId)!.bundleSha256;
@@ -50,6 +57,11 @@ Bun.serve<Tunnel>({
       return new Response(request.method === "HEAD" ? null : bytes, { headers: { "content-type": type, "content-length": String(bytes.byteLength), "cache-control": "no-store" } });
     }
     if (mode !== "mirror" && path.startsWith(blocked)) return new Response("not staged on this device", { status: 404 });
+    if (flakyOnce > 0 && ((request.method === "GET" && hubModuleFile.test(path)) || (request.method === "POST" && hubExecutionTargetBody.test(path))) && !flakyAnswered.has(path)) {
+      flakyAnswered.add(path);
+      console.log(`flaky ${flakyOnce} once ${path.slice(0, 140)}`);
+      return new Response("busy", { status: flakyOnce });
+    }
     const headers = new Headers(request.headers);
     headers.delete("accept-encoding");
     const response = await fetch(`${upstream}${url.pathname}${url.search}`, { method: request.method, headers, body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer(), redirect: "manual" });

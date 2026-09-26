@@ -200,6 +200,10 @@ impl ArtifactOwnedToolJobFactory for StepCc2EditorExampleFactory {
 pub struct StepCc2Editor;
 
 impl ArtifactEditor for StepCc2Editor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = StepSnapshot;
     type Mutation = StepMutation;
     type Config = NoConfig;

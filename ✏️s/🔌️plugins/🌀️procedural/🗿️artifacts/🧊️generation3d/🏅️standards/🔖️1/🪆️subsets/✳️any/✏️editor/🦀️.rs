@@ -1682,6 +1682,10 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dConfig, Generation3dConf
 //#endregion 📬️ConfigStorePreparation
 
 impl ArtifactEditor for Generation3dPlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        examples()
+    }
     /// 🧩️ The loaded-parent child projection every archive load and maintenance swap asks for before a
     /// decoded document may replace the store. `Generation3dSnapshot` declares no child slot, so the
     /// projection is honestly empty; without it every replacement faulted with `editor did not declare
@@ -2623,13 +2627,47 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("arrowright", "selectDownstreamNode")
             .config(Generation3dPlayApp::config_spec())
             .io(semio_framework::io::resolve_ready(generation3d_io()))
+            .action_describe("addGeneration", LocalizedLabel::native("Adds a new generation, a named set of input values for the 3D generator, to the generation list and selects it.", "Fügt der Generationsliste eine neue Generation hinzu, einen benannten Satz von Eingabewerten für den 3D-Generator, und wählt sie aus."))
+            .action_describe("selectGeneration", LocalizedLabel::native("Selects the generation with the given id, whose input values the generator then evaluates and shows.", "Wählt die Generation mit der angegebenen Id aus, deren Eingabewerte der Generator dann auswertet und zeigt."))
+            .action_describe("renameGeneration", LocalizedLabel::native("Renames one generation of the generation list.", "Benennt eine Generation der Generationsliste um."))
+            .action_describe("removeGeneration", LocalizedLabel::native("Removes one generation by id from the generation list, with its input values.", "Entfernt eine Generation anhand ihrer Id samt ihrer Eingabewerte aus der Generationsliste."))
+            .action_describe("updateGenerationValues", LocalizedLabel::native("Sets the value one input question takes in a generation (the selected one when no id is given) and re-evaluates the result.", "Setzt den Wert, den eine Eingabefrage in einer Generation annimmt (ohne Id in der ausgewählten), und wertet das Ergebnis neu aus."))
+            .action_describe("addWidget", LocalizedLabel::native("Adds a new widget of the given kind (an input or an operator of the 3D generator graph) to the canvas.", "Fügt der Fläche ein neues Widget der angegebenen Art hinzu (eine Eingabe oder einen Operator des 3D-Generatorgraphen)."))
+            .action_describe("removeWidget", LocalizedLabel::native("Removes one widget by id from the generator graph together with its connections.", "Entfernt ein Widget anhand seiner Id samt seiner Verbindungen aus dem Generatorgraphen."))
+            .action_describe("reorganize", LocalizedLabel::native("Lays out every widget of the generator graph automatically from left to right, overwriting their manual positions.", "Ordnet alle Widgets des Generatorgraphen automatisch von links nach rechts an und überschreibt ihre manuellen Positionen."))
+            .action_describe("setShowMode", LocalizedLabel::native("Sets what the editor shows, such as the generator graph or the generated result; only the view changes.", "Legt fest, was der Editor zeigt, etwa den Generatorgraphen oder das erzeugte Ergebnis; nur die Ansicht ändert sich."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole 3D generator with one of the plugin's bundled examples, by example id.", "Ersetzt den gesamten 3D-Generator durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))
+            .action_describe("setLodMode", LocalizedLabel::native("Sets the level of detail the 3D preview draws the generated result with; only the view changes.", "Legt die Detailstufe fest, mit der die 3D-Vorschau das erzeugte Ergebnis zeichnet; nur die Ansicht ändert sich."))
+            .action_describe("selectNextNode", LocalizedLabel::native("Moves the graph selection to the next widget in the generator graph.", "Bewegt die Auswahl im Generatorgraphen zum nächsten Widget."))
+            .action_describe("selectPreviousNode", LocalizedLabel::native("Moves the graph selection to the previous widget in the generator graph.", "Bewegt die Auswahl im Generatorgraphen zum vorherigen Widget."))
+            .action_describe("selectUpstreamNode", LocalizedLabel::native("Moves the graph selection to a widget feeding the selected one.", "Bewegt die Auswahl im Generatorgraphen zu einem Widget, das das ausgewählte speist."))
+            .action_describe("selectDownstreamNode", LocalizedLabel::native("Moves the graph selection to a widget fed by the selected one.", "Bewegt die Auswahl im Generatorgraphen zu einem Widget, das vom ausgewählten gespeist wird."))
+            .action_describe("activateSelection", LocalizedLabel::native("Opens the ports of the selected widget in the graph window, as pressing Enter on it does; only the view changes.", "Öffnet die Ports des ausgewählten Widgets im Graphfenster, wie ein Druck auf die Eingabetaste; nur die Ansicht ändert sich."))
+            .action_describe("toggleSun", LocalizedLabel::native("Switches the sun light of the 3D preview on or off; only the view changes.", "Schaltet das Sonnenlicht der 3D-Vorschau ein oder aus; nur die Ansicht ändert sich."))
+            .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the compass direction the 3D preview's sun shines from; only the view changes.", "Legt die Himmelsrichtung fest, aus der die Sonne der 3D-Vorschau scheint; nur die Ansicht ändert sich."))
+            .action_describe("setSunElevation", LocalizedLabel::native("Sets how high the 3D preview's sun stands above the horizon; only the view changes.", "Legt fest, wie hoch die Sonne der 3D-Vorschau über dem Horizont steht; nur die Ansicht ändert sich."))
+            .action_describe("setSunIntensity", LocalizedLabel::native("Sets the brightness of the 3D preview's sun; only the view changes.", "Legt die Helligkeit der Sonne der 3D-Vorschau fest; nur die Ansicht ändert sich."))
+            .action_describe("translateSelection", LocalizedLabel::native("Moves the given or selected generated objects by dx, dy and dz through a translate transform in the generator graph; consecutive drags merge into one undo step.", "Verschiebt die angegebenen oder ausgewählten erzeugten Objekte über eine Verschiebe-Transformation im Generatorgraphen um dx, dy und dz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."))
+            .action_describe("rotateSelection", LocalizedLabel::native("Rotates the given or selected generated objects around an axis by an angle through a rotate transform in the generator graph.", "Dreht die angegebenen oder ausgewählten erzeugten Objekte über eine Dreh-Transformation im Generatorgraphen um eine Achse und einen Winkel."))
+            .action_describe("scaleSelection", LocalizedLabel::native("Scales the given or selected generated objects by per-axis factors through a scale transform in the generator graph.", "Skaliert die angegebenen oder ausgewählten erzeugten Objekte über eine Skalier-Transformation im Generatorgraphen um Faktoren je Achse."))
+            .action_describe("deleteSelection", LocalizedLabel::native("Deletes every selected widget from the generator graph together with its connections.", "Löscht alle ausgewählten Widgets samt ihrer Verbindungen aus dem Generatorgraphen."))
+            .action_describe("patchFlowWidgets", LocalizedLabel::native("Sets one numeric field (such as a slider value) on several widgets at once; drags with the same gesture merge into one undo step.", "Setzt ein Zahlenfeld (etwa einen Schiebereglerwert) auf mehreren Widgets zugleich; Züge derselben Geste werden zu einem Rückgängig-Schritt zusammengefasst."))
+            .action_describe("importDocumentRequest", LocalizedLabel::native("Opens the host's file picker for a 3D artifact file; the chosen file is then imported as the generator document.", "Öffnet die Dateiauswahl des Hosts für eine 3D-Artefaktdatei; die gewählte Datei wird dann als Generatordokument importiert."))
+            .action_describe("exportDocument", LocalizedLabel::native("Writes the generated 3D result in the chosen format to a downloaded file on the user's machine.", "Schreibt das erzeugte 3D-Ergebnis im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."))
+            .action_describe("importDocument", LocalizedLabel::native("Replaces the generator document with one read from an imported 3D artifact file, delivered in chunks.", "Ersetzt das Generatordokument durch eines aus einer importierten 3D-Artefaktdatei, die in Teilen geliefert wird."))
+            .action_describe("cycleShowMode", LocalizedLabel::native("Switches the editor to the next show mode in turn (such as graph, result or wireframe); only the view changes.", "Wechselt den Editor reihum in den nächsten Anzeigemodus (etwa Graph, Ergebnis oder Drahtgitter); nur die Ansicht ändert sich."))
+            .action_describe("cycleLodMode", LocalizedLabel::native("Switches the 3D preview to the next level of detail in turn; only the view changes.", "Wechselt die 3D-Vorschau reihum zur nächsten Detailstufe; nur die Ansicht ändert sich."))
+            .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_destructive("reorganize")
+            .action_destructive("importDocument")
             .build_definition()
 }
 
 /// 📚️ The eight bundled `📚️examples/🎬️<slug>` fixtures, in `schema::is_generation3d_example_id`'s
-/// order — plugged into `.editor_with_examples::<Generation3dPlayApp>(create_generation3d_app(), …)`
-/// at the plugin root so the react shell's example dropdown (`NavbarExampleSelect/🟦️.tsx`, fed by
-/// `activePluginManifest.examples`) stops being hidden for `generation3d`.
+/// order. `Generation3dPlayApp::examples` returns this catalogue, and `.editor` stamps it onto
+/// the manifest the navbar dropdown reads.
 ///
 /// 🚫️ `✏️editor/📚️examples/🎬️demo-session` is deliberately NOT here, and its absence is a statement,
 /// not an oversight (`📓️audit-user-journey-gaps-2026-09-13.md` §9 item 12 read it as one). That leaf

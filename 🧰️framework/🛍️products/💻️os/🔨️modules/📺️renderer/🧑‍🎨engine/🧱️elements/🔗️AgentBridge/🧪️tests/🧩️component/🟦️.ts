@@ -8,9 +8,12 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import { type AgentBridgeConfig, type BridgeOfferFetch, AGENT_BRIDGE_OFFER_ENDPOINT, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, useAgentBridge, useDiscoveredAgentBridgeConfig, applyInboundShellCommand, bridgeProtocols, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, fetchAgentBridgeConfig, isAdmissibleBridgeUrl, parseAgentBridgeOffer, encodeJsonPayload } from "../../🟦️.tsx";
+import Ajv from "ajv";
+import { type AgentBridgeConfig, type BridgeOfferFetch, AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_OFFER_SCHEMA_V1, agentBridgeOfferAnswerV1, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, useAgentBridge, useDiscoveredAgentBridgeConfig, applyInboundShellCommand, bridgeProtocols, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, fetchAgentBridgeConfig, isAdmissibleBridgeUrl, parseAgentBridgeOffer, encodeJsonPayload } from "../../🟦️.tsx";
 import { bytesToHex, decodeShellToGateway, decodeGatewayToShell, encodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "../../../../../../🌉️mcp/🧵️bridge/🟦️.ts";
 import { answerAgentAppCommand, NO_ARTIFACT_ROUTE_MESSAGE } from "../../🟦️.tsx";
+import { BRIDGE_HANDSHAKE_DEADLINE_MS, BRIDGE_UNANSWERED_ATTEMPTS, type AgentBridgeStatus, type AgentBridgeVersionMismatch } from "../../🟦️.tsx";
+import { BRIDGE_VERSION } from "../../../../../../🌉️mcp/🧵️bridge/🟦️.ts";
 import { shellAppFault } from "../../../../../../🌉️mcp/🐚️channel/🟦️.ts";
 import { decodeChannelBase64, decodeShellAppCommand, encodeChannelBase64, shellAppFrameToJson, type ShellAppFrameV1 } from "../../../../../../🌉️mcp/🐚️channel/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -23,6 +26,14 @@ const cancellationFixture = JSON.parse(readFileSync(join(here, "../../🧫️fix
   readonly terminalResult: { readonly ok: boolean; readonly summary: string; readonly state: string };
 };
 
+type HandshakeDial = "silence" | "close" | { readonly frame: GatewayToShell; readonly thenClose?: boolean };
+const handshakeFixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🤝️handshake/🔣️.json"), "utf8")) as {
+  readonly handshakeDeadlineMs: number;
+  readonly unansweredAttempts: number;
+  readonly shellVersion: number;
+  readonly scenarios: readonly { readonly name: string; readonly dials: readonly HandshakeDial[]; readonly status: AgentBridgeStatus; readonly versionMismatch: AgentBridgeVersionMismatch | null }[];
+};
+
 //#region 🔖️ConfigDiscovery
 /** 🧪️ Ticket `26/09/18` slice M7: discovery is a real loopback request to the local supervisor
  * (`🔌️vite-plugins`' `semioAgentBridgeRendezvousVitePlugin`), which reads the owner-only offer file
@@ -30,8 +41,9 @@ const cancellationFixture = JSON.parse(readFileSync(join(here, "../../🧫️fix
  * inadmissible offer is refused rather than dialled, and an unchanged offer polled repeatedly keeps
  * one object identity so the socket effect never redials. */
 describe("parseAgentBridgeOffer / isAdmissibleBridgeUrl", () => {
-  it("accepts the exact offer shape the gateway publishes", () => {
-    expect(parseAgentBridgeOffer({ url: "ws://127.0.0.1:6300/bridge", admissionProof: "deadbeef", principal: "agent:local", pid: 42 })).toEqual({ url: "ws://127.0.0.1:6300/bridge", admissionProof: "deadbeef" });
+  it("accepts exactly the typed offered answer the supervisor sends", () => {
+    expect(parseAgentBridgeOffer({ schema: AGENT_BRIDGE_OFFER_SCHEMA_V1, offered: true, url: "ws://127.0.0.1:6300/bridge", admissionProof: "deadbeef" })).toEqual({ url: "ws://127.0.0.1:6300/bridge", admissionProof: "deadbeef" });
+    expect(parseAgentBridgeOffer({ url: "ws://127.0.0.1:6300/bridge", admissionProof: "deadbeef", principal: "agent:local", pid: 42 })).toBeNull();
   });
 
   it("refuses an offer that is not an object, has no proof, or has an empty proof", () => {
@@ -51,15 +63,41 @@ describe("parseAgentBridgeOffer / isAdmissibleBridgeUrl", () => {
   });
 });
 
+/** 🛰️ LAW over the language-neutral answer rows (`🧫️fixtures/🛰️offer-answers/🔣️.json`): the supervisor always answers
+ * 200 with a typed answer — the encoder produces exactly the fixture's answers, the shell's parser dials exactly the
+ * fixture's configs, and Ajv (third-party oracle) agrees with the fixture on which bodies are well-formed answers of
+ * `🧬️schema.json`. Ticket 26/09/23 U5: "no gateway" used to be a 404, a console error on every canonical session. */
+describe("agent-bridge offer answers", () => {
+  it("encode and decode every fixture row, and agree with the JSON-schema oracle on the answer shape", () => {
+    const fixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🛰️offer-answers/🔣️.json"), "utf8")) as {
+      readonly encode: readonly { readonly id: string; readonly offer: AgentBridgeConfig | null; readonly answer: unknown }[];
+      readonly decode: readonly { readonly id: string; readonly body: unknown; readonly shape: boolean; readonly expected: AgentBridgeConfig | null }[];
+    };
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🛰️offer-answers/🧬️schema.json"), "utf8")) as object);
+    expect(fixture.encode.length).toBeGreaterThanOrEqual(2);
+    for (const row of fixture.encode) {
+      expect(agentBridgeOfferAnswerV1(row.offer), row.id).toEqual(row.answer);
+      expect(validate(row.answer), `${row.id}: the encoded answer is a schema answer`).toBe(true);
+    }
+    expect(fixture.decode.length).toBeGreaterThanOrEqual(12);
+    for (const row of fixture.decode) {
+      expect(parseAgentBridgeOffer(row.body), row.id).toEqual(row.expected);
+      expect(validate(row.body), `${row.id}: Ajv shape`).toBe(row.shape);
+      if (row.expected !== null) expect(row.shape, `${row.id}: only a well-formed answer is ever dialled`).toBe(true);
+    }
+  });
+});
+
 describe("fetchAgentBridgeConfig", () => {
   const offerFetch = (status: number, body: unknown): BridgeOfferFetch => async () => ({ ok: status >= 200 && status < 300, status, json: async () => body });
 
   it("reads a live offer off the supervisor endpoint", async () => {
-    await expect(fetchAgentBridgeConfig(AGENT_BRIDGE_OFFER_ENDPOINT, offerFetch(200, { url: "ws://127.0.0.1:6300/bridge", admissionProof: "proof" }))).resolves.toEqual({ url: "ws://127.0.0.1:6300/bridge", admissionProof: "proof" });
+    await expect(fetchAgentBridgeConfig(AGENT_BRIDGE_OFFER_ENDPOINT, offerFetch(200, agentBridgeOfferAnswerV1({ url: "ws://127.0.0.1:6300/bridge", admissionProof: "proof" })))).resolves.toEqual({ url: "ws://127.0.0.1:6300/bridge", admissionProof: "proof" });
   });
 
-  it("treats 404 (no gateway is offering a bridge) as the ordinary null, not an error", async () => {
-    await expect(fetchAgentBridgeConfig(AGENT_BRIDGE_OFFER_ENDPOINT, offerFetch(404, { error: "no live semio-os-mcp gateway is offering a bridge" }))).resolves.toBeNull();
+  it("treats the typed not-offered answer — and a host without the endpoint — as the ordinary null, not an error", async () => {
+    await expect(fetchAgentBridgeConfig(AGENT_BRIDGE_OFFER_ENDPOINT, offerFetch(200, agentBridgeOfferAnswerV1(null)))).resolves.toBeNull();
+    await expect(fetchAgentBridgeConfig(AGENT_BRIDGE_OFFER_ENDPOINT, offerFetch(404, ""))).resolves.toBeNull();
   });
 
   it("never rejects when the endpoint is absent or the body is not JSON", async () => {
@@ -72,6 +110,45 @@ describe("fetchAgentBridgeConfig", () => {
   });
 });
 
+/** 🛰️ LAW: the page-realm watcher both wgpu page entries run (`🚀️browser-boot` → frame Worker, `🎬️renderer-boot` →
+ * page-mounted renderer) walks React's discovery schedule and publishes only CHANGES: an offer appearing, the gateway
+ * restarting with another proof, and the offer going away — never an unchanged offer twice, so the wgpu bridge never
+ * redials on a poll. */
+describe("watchAgentBridgeOffer", () => {
+  it("publishes appear/change/vanish once each and backs off exactly like React's hook", async () => {
+    const { watchAgentBridgeOffer, nextBridgeDiscoveryIntervalMs, BRIDGE_DISCOVERY_MAX_INTERVAL_MS } = await import("../../🛰️offer/🟦️.ts");
+    const served: (AgentBridgeConfig | null)[] = [null, null, { url: "ws://127.0.0.1:6300/bridge", admissionProof: "first" }, { url: "ws://127.0.0.1:6300/bridge", admissionProof: "first" }, { url: "ws://127.0.0.1:6301/bridge", admissionProof: "second" }, null];
+    let call = 0;
+    const fetchImpl: BridgeOfferFetch = async () => {
+      const offer = served[Math.min(call, served.length - 1)] ?? null;
+      call += 1;
+      return { ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1(offer) };
+    };
+    const published: (AgentBridgeConfig | null)[] = [];
+    const delays: number[] = [];
+    const pending: (() => void)[] = [];
+    const stop = watchAgentBridgeOffer((offer) => published.push(offer), { fetchImpl, setTimer: (run, delayMs) => { delays.push(delayMs); pending.push(run); return pending.length; }, clearTimer: () => {} });
+    for (let step = 0; step < served.length; step += 1) {
+      await vi.waitFor(() => expect(delays.length).toBe(step + 1));
+      if (step + 1 < served.length) pending[step]!();
+    }
+    stop();
+    expect(published).toEqual([served[2], served[4], null]);
+    expect(delays).toEqual([4000, 8000, BRIDGE_DISCOVERY_MAX_INTERVAL_MS, BRIDGE_DISCOVERY_MAX_INTERVAL_MS, BRIDGE_DISCOVERY_MAX_INTERVAL_MS, BRIDGE_DISCOVERY_MAX_INTERVAL_MS]);
+    expect(nextBridgeDiscoveryIntervalMs(BRIDGE_DISCOVERY_MIN_INTERVAL_MS, null)).toBe(2 * BRIDGE_DISCOVERY_MIN_INTERVAL_MS);
+  });
+
+  it("refuses a poisoned offer as no offer at all", async () => {
+    const { watchAgentBridgeOffer } = await import("../../🛰️offer/🟦️.ts");
+    const published: (AgentBridgeConfig | null)[] = [];
+    let armed = 0;
+    const stop = watchAgentBridgeOffer((offer) => published.push(offer), { fetchImpl: async () => ({ ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1({ url: "ws://evil.example.com:6300/bridge", admissionProof: "x" }) }), setTimer: () => { armed += 1; return armed; }, clearTimer: () => {} });
+    await vi.waitFor(() => expect(armed).toBe(1));
+    stop();
+    expect(published).toEqual([]);
+  });
+});
+
 describe("useDiscoveredAgentBridgeConfig", () => {
   it("returns the live offer, keeps ONE object identity while it is unchanged, and swaps when the gateway restarts", async () => {
     const { renderHook, waitFor } = await import("@testing-library/react");
@@ -79,7 +156,7 @@ describe("useDiscoveredAgentBridgeConfig", () => {
     let calls = 0;
     const fetchImpl: BridgeOfferFetch = async () => {
       calls += 1;
-      return served === null ? { ok: false, status: 404, json: async () => ({}) } : { ok: true, status: 200, json: async () => served };
+      return { ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1(served) };
     };
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const hook = renderHook(() => useDiscoveredAgentBridgeConfig({ fetchImpl }));
@@ -110,7 +187,7 @@ describe("useDiscoveredAgentBridgeConfig", () => {
     let calls = 0;
     const fetchImpl: BridgeOfferFetch = async () => {
       calls += 1;
-      return { ok: false, status: 404, json: async () => ({}) };
+      return { ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1(null) };
     };
     const hook = renderHook(() => useDiscoveredAgentBridgeConfig({ enabled: false, fetchImpl }));
     try {
@@ -146,7 +223,7 @@ describe("useAgentBridge discovery", () => {
     }
     vi.stubGlobal("WebSocket", Socket);
     let served: { url: string; admissionProof: string } | null = null;
-    const fetchImpl: BridgeOfferFetch = async () => (served === null ? { ok: false, status: 404, json: async () => ({}) } : { ok: true, status: 200, json: async () => served });
+    const fetchImpl: BridgeOfferFetch = async () => ({ ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1(served) });
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const hook = renderHook(() => useAgentBridge({ discoveryFetch: fetchImpl }));
     try {
@@ -778,3 +855,121 @@ describe("agent artifact-bytes route", () => {
   });
 });
 //#endregion 🔖️ArtifactBytesRoute
+
+//#region 🤝️Handshake
+/** 🤝️ Ticket `26/09/23` G10 bridge item: every dialled gateway either answers the handshake or is
+ * given up on. The scenarios in `🧫️fixtures/🤝️handshake/🔣️.json` (replayed by the wgpu twin's dialer
+ * too) pin the bounded ladder: a silent or refusing gateway ends `unavailable` after
+ * {@link BRIDGE_UNANSWERED_ATTEMPTS} dials, a typed refusal or a foreign welcome ends the offer at
+ * once, and nothing is dialled again nor logged to the console afterwards. */
+describe("useAgentBridge handshake", () => {
+  it("dials under the fixture's own constants", () => {
+    expect([BRIDGE_HANDSHAKE_DEADLINE_MS, BRIDGE_UNANSWERED_ATTEMPTS, BRIDGE_VERSION]).toEqual([handshakeFixture.handshakeDeadlineMs, handshakeFixture.unansweredAttempts, handshakeFixture.shellVersion]);
+  });
+
+  for (const scenario of handshakeFixture.scenarios) {
+    it(scenario.name, async () => {
+      const { renderHook, act } = await import("@testing-library/react");
+      vi.useFakeTimers();
+      const consoleError = vi.spyOn(console, "error");
+      const consoleWarn = vi.spyOn(console, "warn");
+      const sockets: Socket[] = [];
+      class Socket {
+        static CONNECTING = 0;
+        static OPEN = 1;
+        static CLOSED = 3;
+        readyState = 0;
+        onopen: (() => void) | null = null;
+        onmessage: ((event: { data: ArrayBuffer }) => void) | null = null;
+        onerror: (() => void) | null = null;
+        onclose: (() => void) | null = null;
+        binaryType = "arraybuffer";
+        constructor() {
+          sockets.push(this);
+        }
+        send(): void {}
+        close(): void {
+          if (this.readyState === 3) return;
+          this.readyState = 3;
+          setTimeout(() => this.onclose?.(), 0);
+        }
+        drop(): void {
+          this.readyState = 3;
+          this.onerror?.();
+          this.onclose?.();
+        }
+      }
+      vi.stubGlobal("WebSocket", Socket);
+      const config: AgentBridgeConfig = { url: "ws://127.0.0.1:6300/bridge", admissionProof: "session.v1.handshake.proof" };
+      const hook = renderHook(() => useAgentBridge({ config }));
+      try {
+        for (const [index, dial] of scenario.dials.entries()) {
+          while (sockets.length <= index) await act(async () => void (await vi.advanceTimersToNextTimerAsync()));
+          const socket = sockets[index]!;
+          if (dial === "close") {
+            act(() => socket.drop());
+            continue;
+          }
+          act(() => {
+            socket.readyState = 1;
+            socket.onopen?.();
+          });
+          if (dial === "silence") {
+            await act(async () => void (await vi.advanceTimersByTimeAsync(handshakeFixture.handshakeDeadlineMs + 1)));
+            continue;
+          }
+          const wire = encodeGatewayToShell(dial.frame);
+          act(() => socket.onmessage?.({ data: wire.buffer.slice(wire.byteOffset, wire.byteOffset + wire.byteLength) as ArrayBuffer }));
+          if (dial.thenClose) act(() => socket.drop());
+        }
+        await act(async () => void (await vi.advanceTimersByTimeAsync(10 * 30_000)));
+        expect(sockets.length).toBe(scenario.dials.length);
+        expect(hook.result.current.status).toBe(scenario.status);
+        expect(hook.result.current.versionMismatch).toEqual(scenario.versionMismatch);
+        expect(consoleError).not.toHaveBeenCalled();
+        expect(consoleWarn).not.toHaveBeenCalled();
+      } finally {
+        hook.unmount();
+        consoleError.mockRestore();
+        consoleWarn.mockRestore();
+        vi.useRealTimers();
+        vi.unstubAllGlobals();
+      }
+    });
+  }
+
+  it("a different offer restarts the ladder after a terminal state", async () => {
+    const { renderHook, act } = await import("@testing-library/react");
+    const sockets: { onopen: (() => void) | null; onmessage: ((event: { data: ArrayBuffer }) => void) | null; readyState: number }[] = [];
+    class Socket {
+      static OPEN = 1;
+      readyState = 0;
+      onopen: (() => void) | null = null;
+      onmessage: ((event: { data: ArrayBuffer }) => void) | null = null;
+      onerror: (() => void) | null = null;
+      onclose: (() => void) | null = null;
+      binaryType = "arraybuffer";
+      constructor() {
+        sockets.push(this);
+      }
+      send(): void {}
+      close(): void {}
+    }
+    vi.stubGlobal("WebSocket", Socket);
+    const refused = encodeGatewayToShell({ variant: "refused", reason: "version", gatewayVersion: 2 });
+    const initialProps = { config: { url: "ws://127.0.0.1:6300/bridge", admissionProof: "session.v1.old" } as AgentBridgeConfig };
+    const hook = renderHook(({ config }) => useAgentBridge({ config }), { initialProps });
+    try {
+      act(() => sockets[0]!.onmessage?.({ data: refused.buffer.slice(refused.byteOffset, refused.byteOffset + refused.byteLength) as ArrayBuffer }));
+      expect(hook.result.current.status).toBe("incompatible");
+      hook.rerender({ config: { url: "ws://127.0.0.1:6301/bridge", admissionProof: "session.v1.new" } });
+      expect(sockets.length).toBe(2);
+      expect(hook.result.current.status).toBe("connecting");
+      expect(hook.result.current.versionMismatch).toBeNull();
+    } finally {
+      hook.unmount();
+      vi.unstubAllGlobals();
+    }
+  });
+});
+//#endregion 🤝️Handshake

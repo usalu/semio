@@ -113,6 +113,20 @@
       "loads": 0,
       "describes": 0,
       "activated": 0
+    },
+    {
+      "name": "canonical-pair-busy",
+      "bodies": 1,
+      "loads": 1,
+      "describes": 1,
+      "activated": 1
+    },
+    {
+      "name": "canonical-pair-refused",
+      "bodies": 0,
+      "loads": 0,
+      "describes": 0,
+      "activated": 0
     }
   ]
 }

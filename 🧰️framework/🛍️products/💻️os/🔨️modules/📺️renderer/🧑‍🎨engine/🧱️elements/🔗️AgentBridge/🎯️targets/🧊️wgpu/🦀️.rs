@@ -36,6 +36,14 @@ pub const RECONNECT_BASE_MS: f64 = 1000.0;
 pub const RECONNECT_MAX_MS: f64 = 30_000.0;
 pub const PING_INTERVAL_MS: f64 = 20_000.0;
 
+/// ⏳️ React's `BRIDGE_HANDSHAKE_DEADLINE_MS`: how long a dialled gateway has, from the dial, to
+/// answer with `Welcome` or `Refused` before the socket is retired as unanswered.
+pub const BRIDGE_HANDSHAKE_DEADLINE_MS: f64 = 8_000.0;
+
+/// 🔢️ React's `BRIDGE_UNANSWERED_ATTEMPTS`: unanswered dials in a row before the offer is
+/// [`AgentBridgeStatus::Unavailable`] and nothing is dialled again until a different config arrives.
+pub const BRIDGE_UNANSWERED_ATTEMPTS: u32 = 3;
+
 /// ⏱️ `min(RECONNECT_BASE_MS * 2^(attempt-1), RECONNECT_MAX_MS)` — attempt `0` means "not
 /// reconnecting yet" and yields the base delay, matching `scheduleReconnect`'s own first step.
 pub fn reconnect_delay_ms(attempt: u32) -> f64 {
@@ -169,6 +177,31 @@ pub enum ApprovalDecision {
     Deny,
     Once,
     Session,
+}
+
+/// 🚧️ Why the gateway refused this shell's connection — the wgpu twin of `🌉️mcp/🧵️bridge`'s
+/// `BridgeRefusal`, same tags.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BridgeRefusal {
+    Version,
+    Capacity,
+}
+
+impl BridgeRefusal {
+    pub fn to_tag(self) -> u8 {
+        match self {
+            BridgeRefusal::Version => 0,
+            BridgeRefusal::Capacity => 1,
+        }
+    }
+
+    pub fn from_tag(tag: u8) -> Result<Self, BridgeFrameFault> {
+        match tag {
+            0 => Ok(BridgeRefusal::Version),
+            1 => Ok(BridgeRefusal::Capacity),
+            other => Err(BridgeFrameFault::UnknownTag(other)),
+        }
+    }
 }
 
 /// 🪦️ Why the gateway withdrew an approval request — the wgpu twin of `🌉️mcp/🧵️bridge`'s
@@ -357,7 +390,7 @@ mod wire {
 //#endregion 🔖️Wire
 
 //#region 🔖️GatewayToShell
-/// 📤️ Gateway→Shell frames, tags `0..11` in SSOT declaration order.
+/// 📤️ Gateway→Shell frames, tags `0..12` in SSOT declaration order.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GatewayToShell {
     Welcome {
@@ -425,6 +458,12 @@ pub enum GatewayToShell {
         approval_id: String,
         reason: ApprovalWithdrawal,
     },
+    /// 🚧️ The gateway answered this connection with a typed refusal instead of `Welcome`, naming its
+    /// own bridge version; the socket closes right after.
+    Refused {
+        reason: BridgeRefusal,
+        gateway_version: u16,
+    },
 }
 
 impl GatewayToShell {
@@ -443,6 +482,7 @@ impl GatewayToShell {
             9 => GatewayToShell::AgentToolResult { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, ok: reader.read_bool()?, summary: reader.read_string()? },
             10 => GatewayToShell::AgentReply { reply_id: reader.read_string()?, in_reply_to: reader.read_option_string()?, text: reader.read_string()?, complete: reader.read_bool()? },
             11 => GatewayToShell::ApprovalWithdrawn { approval_id: reader.read_string()?, reason: ApprovalWithdrawal::from_tag(reader.read_u8()?)? },
+            12 => GatewayToShell::Refused { reason: BridgeRefusal::from_tag(reader.read_u8()?)?, gateway_version: reader.read_u16()? },
             other => return Err(BridgeFrameFault::UnknownTag(other)),
         };
         reader.finish()?;
@@ -517,6 +557,11 @@ impl GatewayToShell {
                 wire::write_u8(&mut buf, 11);
                 wire::write_string(&mut buf, approval_id);
                 wire::write_u8(&mut buf, reason.to_tag());
+            }
+            GatewayToShell::Refused { reason, gateway_version } => {
+                wire::write_u8(&mut buf, 12);
+                wire::write_u8(&mut buf, reason.to_tag());
+                wire::write_u16(&mut buf, *gateway_version);
             }
         }
         buf
@@ -626,7 +671,10 @@ impl ShellToGateway {
 //#endregion 🔖️ShellToGateway
 
 //#region 🔖️State
-/// 🚦️ Connection status, one-for-one with React's `AgentBridgeStatus` string union.
+/// 🚦️ Connection status, one-for-one with React's `AgentBridgeStatus` string union; React carries
+/// the incompatible pair beside the status as `versionMismatch`, this twin carries it inside.
+/// `Unavailable` and `Incompatible` are terminal for one config: nothing is dialled again until a
+/// different config arrives.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum AgentBridgeStatus {
     #[default]
@@ -635,6 +683,22 @@ pub enum AgentBridgeStatus {
     Open,
     Reconnecting,
     Closed,
+    Unavailable,
+    Incompatible(AgentBridgeVersionMismatch),
+}
+
+/// 🤝️ Both bridge versions of an incompatible pair — React's `AgentBridgeVersionMismatch`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AgentBridgeVersionMismatch {
+    pub gateway: u16,
+    pub shell: u16,
+}
+
+impl AgentBridgeStatus {
+    /// 🛑️ Whether this config is given up on.
+    pub fn is_terminal(self) -> bool {
+        matches!(self, AgentBridgeStatus::Unavailable | AgentBridgeStatus::Incompatible(_))
+    }
 }
 
 /// 🤖️ What the agent is doing right now, as the last `agentPresence` frame reported it.
@@ -719,6 +783,8 @@ pub struct AgentBridgeState {
     pub conversation: Vec<AgentConversationEntry>,
     pub last_error: Option<String>,
     pub reconnect_attempt: u32,
+    /// 🔢️ Dials in a row that closed or timed out before any `Welcome`.
+    pub unanswered: u32,
     next_message_ordinal: u64,
     outbox: Vec<ShellToGateway>,
     inbound_shell_commands: Vec<InboundShellCommand>,
@@ -797,11 +863,19 @@ impl AgentBridgeState {
         self.outbox.push(ShellToGateway::ShellCommandResult { in_reply_to: seq, ok, fault });
     }
 
-    /// 🔌️ The socket closed: the next dial is a reconnect, and presence can no longer be trusted.
+    /// 🔌️ The socket closed: the next dial is a reconnect, and presence can no longer be trusted. A
+    /// close before any `Welcome` counts as unanswered, and the [`BRIDGE_UNANSWERED_ATTEMPTS`]th one
+    /// makes the config [`AgentBridgeStatus::Unavailable`]; a terminal status is never left here.
     pub fn note_socket_closed(&mut self) {
-        self.reconnect_attempt = self.reconnect_attempt.saturating_add(1);
-        self.status = AgentBridgeStatus::Reconnecting;
         self.presence = AgentBridgePresence::default();
+        if self.status.is_terminal() {
+            return;
+        }
+        if matches!(self.status, AgentBridgeStatus::Connecting | AgentBridgeStatus::Reconnecting) {
+            self.unanswered = self.unanswered.saturating_add(1);
+        }
+        self.reconnect_attempt = self.reconnect_attempt.saturating_add(1);
+        self.status = if self.unanswered >= BRIDGE_UNANSWERED_ATTEMPTS { AgentBridgeStatus::Unavailable } else { AgentBridgeStatus::Reconnecting };
     }
 
     /// ⏱️ How long to wait before the next dial.
@@ -814,10 +888,20 @@ impl AgentBridgeState {
     /// claiming `ok` would lie to the gateway.
     pub fn apply_frame(&mut self, frame: GatewayToShell, now_ms: f64) {
         match frame {
+            GatewayToShell::Welcome { bridge_version, .. } if bridge_version != BRIDGE_VERSION => {
+                self.status = AgentBridgeStatus::Incompatible(AgentBridgeVersionMismatch { gateway: bridge_version, shell: BRIDGE_VERSION });
+            }
             GatewayToShell::Welcome { .. } => {
                 self.reconnect_attempt = 0;
+                self.unanswered = 0;
                 self.status = AgentBridgeStatus::Open;
                 self.last_error = None;
+            }
+            GatewayToShell::Refused { reason: BridgeRefusal::Version, gateway_version } => {
+                self.status = AgentBridgeStatus::Incompatible(AgentBridgeVersionMismatch { gateway: gateway_version, shell: BRIDGE_VERSION });
+            }
+            GatewayToShell::Refused { reason: BridgeRefusal::Capacity, .. } => {
+                self.status = AgentBridgeStatus::Unavailable;
             }
             GatewayToShell::ShellCommand { seq, command } => match decode_inbound_shell_command(seq, &command) {
                 Ok(inbound) => self.inbound_shell_commands.push(inbound),
@@ -1026,6 +1110,7 @@ pub struct AgentBridgeDialer {
     config: Option<AgentBridgeConfig>,
     reconnect_at_ms: Option<f64>,
     next_ping_ms: Option<f64>,
+    handshake_deadline_ms: Option<f64>,
     announced: bool,
 }
 
@@ -1040,8 +1125,10 @@ impl AgentBridgeDialer {
         self.config = config;
         self.reconnect_at_ms = None;
         self.next_ping_ms = None;
+        self.handshake_deadline_ms = None;
         self.announced = false;
         state.reconnect_attempt = 0;
+        state.unanswered = 0;
         state.status = if self.config.is_some() { AgentBridgeStatus::Connecting } else { AgentBridgeStatus::Disabled };
         true
     }
@@ -1054,19 +1141,31 @@ impl AgentBridgeDialer {
         self.config.is_some()
     }
 
-    /// 🎬️ One turn. The order is React's own: a dead socket is retired and its backoff armed before
-    /// anything else, an armed backoff is respected, an absent socket is dialled, a freshly opened
-    /// one is announced exactly once, and only a settled open socket pings.
+    /// 🎬️ One turn. The order is React's own: a given-up config retires its socket and dials
+    /// nothing, a dead socket or one that outlived the handshake deadline is retired and its backoff
+    /// armed, an armed backoff is respected, an absent socket is dialled, a freshly opened one is
+    /// announced exactly once, and only a settled open socket pings.
     pub fn turn(&mut self, state: &mut AgentBridgeState, socket: AgentBridgeSocketState, now_ms: f64) -> AgentBridgeDialTurn {
         let Some(config) = self.config.clone() else {
             state.status = AgentBridgeStatus::Disabled;
             return AgentBridgeDialTurn::Idle;
         };
-        if matches!(socket, AgentBridgeSocketState::Closed) {
+        if state.status.is_terminal() {
+            self.reconnect_at_ms = None;
+            self.next_ping_ms = None;
+            self.handshake_deadline_ms = None;
+            return if matches!(socket, AgentBridgeSocketState::Absent) { AgentBridgeDialTurn::Idle } else { AgentBridgeDialTurn::Retire };
+        }
+        if state.status == AgentBridgeStatus::Open {
+            self.handshake_deadline_ms = None;
+        }
+        let unanswered = self.handshake_deadline_ms.is_some_and(|due| now_ms >= due) && matches!(socket, AgentBridgeSocketState::Connecting | AgentBridgeSocketState::Open);
+        if matches!(socket, AgentBridgeSocketState::Closed) || unanswered {
             self.announced = false;
             self.next_ping_ms = None;
+            self.handshake_deadline_ms = None;
             state.note_socket_closed();
-            self.reconnect_at_ms = Some(now_ms + state.reconnect_delay_ms());
+            self.reconnect_at_ms = (!state.status.is_terminal()).then(|| now_ms + state.reconnect_delay_ms());
             return AgentBridgeDialTurn::Retire;
         }
         if matches!(socket, AgentBridgeSocketState::Absent) {
@@ -1078,6 +1177,7 @@ impl AgentBridgeDialer {
                 self.reconnect_at_ms = None;
             }
             self.announced = false;
+            self.handshake_deadline_ms = Some(now_ms + BRIDGE_HANDSHAKE_DEADLINE_MS);
             state.note_connecting();
             return AgentBridgeDialTurn::Dial { protocols: bridge_protocols(&config), url: config.url.clone() };
         }

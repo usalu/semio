@@ -16,3 +16,9 @@
   in the full-catalog rebuild; the bindings step also clears `production_reachability_fixture_and_hostile_source_census_reject_the_old_route`
   (compares 🕸️wasm/🖥️host/🏃️runtime/🟨️.js with the gitignored published 🫀️core/🕸️bindings/🖥️host/🟨️.js).
   evidence: `wp-r8/generated/flow-held-check-1.txt` (cargo check both crates EXIT 0), `flow-nextest-10.txt` (260/261, the 1 = bindings copy).
+
+2026-09-25 23:3x (session 12, R8) STILL OWED after restage4: the flow_core wasm-pack bindings step
+  `bun 🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts wasm` (under the wasm mutex, after the --packages all publish is fine).
+  evidence: 🫀️core/🕸️bindings/ is dated 2026-09-24 19:45; `cmp 🫀️core/🕸️bindings/🖥️host/🟨️.js 🕸️wasm/🖥️host/🏃️runtime/🟨️.js` differs at line 30
+  (source 09-25 01:53 = the pump fairness fix + 2608 admission). Clears flow `test-browser-ownership` and the last flow nextest red
+  (`production_reachability_fixture_and_hostile_source_census_reject_the_old_route`). No ABI change: bindings of the frozen tree.

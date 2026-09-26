@@ -318,6 +318,73 @@ async fn command_from_action_bridges_host_control_contracts() {
     assert_eq!(NotePlayApp::command_from_action("deleteSelection", Some(&args(serde_json::json!({ "windowId": "note-composite" })))).expect("keybound verb"), NoteCommand::DeleteSelection(delete_selection::DeleteSelection {}));
     assert!(NotePlayApp::command_from_action("deleteBlock", None).is_err(), "a required field must not be defaulted silently");
 }
+/// 🧾️ LAW (census): every note verb that cannot be built without arguments declares the arguments it reads, so a
+/// schema-driven caller (an agent through the semio MCP, a staged rail form) can address it at all — `patchBlocks`,
+/// `deleteBlock`, `moveBlock` and `duplicateBlock` declared none, so their MCP input schema was `{}` (G10, session 12).
+#[semio_framework_async_macros::async_test]
+async fn every_note_verb_that_reads_arguments_declares_them() {
+    let definition = create_note_app();
+    let undeclared: Vec<&str> = definition
+        .actions
+        .iter()
+        .chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter()))
+        .filter(|action| action.args.is_empty() && NotePlayApp::command_from_action(&action.id, None).is_err_and(|fault| fault.code.0 == "app.command.invalid-args"))
+        .map(|action| action.id.as_str())
+        .collect();
+    assert!(undeclared.is_empty(), "verbs that read arguments but declare none: {undeclared:?}");
+}
+/// 🎯️ LAW: an agent addresses a block by the arguments the block verbs DECLARE — an object keyed only by the declared
+/// ids (`blockId`, `targetRowId`, `dropPosition`, `blockIds`, `field`, `value`) decodes to the typed command.
+#[semio_framework_async_macros::async_test]
+async fn the_block_verbs_decode_from_exactly_their_declared_arguments() {
+    let definition = create_note_app();
+    let declared = |verb: &str| definition.actions.iter().find(|action| action.id == verb).map(|action| action.args.iter().map(|arg| arg.id.clone()).collect::<Vec<_>>()).unwrap_or_default();
+    let args = |json: serde_json::Value| dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&json.to_string()).expect("agent arguments"));
+    assert_eq!(declared("deleteBlock"), ["blockId"]);
+    assert_eq!(declared("duplicateBlock"), ["blockId"]);
+    assert_eq!(declared("moveBlock"), ["blockId", "targetRowId", "dropPosition"]);
+    assert_eq!(declared("patchBlocks"), ["blockIds", "field", "value"]);
+    assert_eq!(NotePlayApp::command_from_action("deleteBlock", Some(&args(serde_json::json!({ "blockId": "b1" })))).expect("delete"), NoteCommand::DeleteBlock(delete_block::DeleteBlock { block_id: "b1".into() }));
+    assert_eq!(NotePlayApp::command_from_action("duplicateBlock", Some(&args(serde_json::json!({ "blockId": "b1" })))).expect("duplicate"), NoteCommand::DuplicateBlock(duplicate_block::DuplicateBlock { block_id: "b1".into() }));
+    assert_eq!(
+        NotePlayApp::command_from_action("moveBlock", Some(&args(serde_json::json!({ "blockId": "b1", "targetRowId": "row-b2", "dropPosition": "before" })))).expect("move"),
+        NoteCommand::MoveBlock(move_block::MoveBlock { block_id: "b1".into(), target_row_id: "row-b2".into(), drop_position: "before".into() })
+    );
+    assert_eq!(
+        NotePlayApp::command_from_action("patchBlocks", Some(&args(serde_json::json!({ "blockIds": ["b1", "b2"], "field": "textContent", "value": "Hello" })))).expect("patch"),
+        NoteCommand::PatchBlocks(patch_blocks::PatchBlocks { block_ids: vec!["b1".into(), "b2".into()], field: "textContent".into(), value: "Hello".into() })
+    );
+}
+
+/// 🚫️ LAW: a block verb that cannot move the document is refused by name — an id the note does not hold is
+/// `mutation.target-missing`; no ids, an unknown field or a value the field cannot read is `app.command.invalid-args`
+/// — and a valid patch still sets the text an agent asked for.
+#[semio_framework_async_macros::async_test]
+async fn the_block_verbs_refuse_what_they_cannot_apply() {
+    use crate::schema::mutations::apply_note_mutation;
+    let mut ids = crate::schema::NoteIdOwner::new("block-verb-refusals", 0);
+    let block = crate::schema::create_block_by_kind(&mut ids, "text", 0.0, 0.0);
+    let target = crate::schema::block_id(&block).to_string();
+    let document = NoteSnapshot { blocks: vec![block], ..crate::schema::empty_note_snapshot() };
+    let history = semio_framework_plugin::HistoryView::empty();
+    let config = semio_framework_plugin::NoConfig::default();
+    let doc = semio_framework_plugin::ArtifactView::new(&document, &history);
+    let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+    let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("block-verb-refusals", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
+    let patch = |ids: &[&str], field: &str, value: &str| patch_blocks::PatchBlocks { block_ids: ids.iter().map(|id| (*id).to_string()).collect(), field: field.into(), value: value.into() };
+    let code = |result: Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
+    assert_eq!(code(patch_blocks::handle(&patch(&["no-such-block"], "name", "x"), &doc, &cfg, &mut ctx)), "mutation.target-missing");
+    assert_eq!(code(patch_blocks::handle(&patch(&[], "name", "x"), &doc, &cfg, &mut ctx)), "app.command.invalid-args");
+    assert_eq!(code(patch_blocks::handle(&patch(&[&target], "rotation", "5"), &doc, &cfg, &mut ctx)), "app.command.invalid-args");
+    assert_eq!(code(patch_blocks::handle(&patch(&[&target], "x", "left"), &doc, &cfg, &mut ctx)), "app.command.invalid-args");
+    assert_eq!(code(patch_blocks::handle(&patch(&[&target], "visible", "maybe"), &doc, &cfg, &mut ctx)), "app.command.invalid-args");
+    assert_eq!(code(delete_block::handle(&delete_block::DeleteBlock { block_id: "no-such-block".into() }, &doc, &cfg, &mut ctx)), "mutation.target-missing");
+    assert_eq!(code(duplicate_block::handle(&duplicate_block::DuplicateBlock { block_id: "no-such-block".into() }, &doc, &cfg, &mut ctx)), "mutation.target-missing");
+    assert_eq!(code(move_block::handle(&move_block::MoveBlock { block_id: "no-such-block".into(), target_row_id: String::new(), drop_position: "inside".into() }, &doc, &cfg, &mut ctx)), "mutation.target-missing");
+    let emit = patch_blocks::handle(&patch(&[&target], "textContent", "Hello agent"), &doc, &cfg, &mut ctx).expect("a valid patch applies");
+    let next = emit.artifact_mutations.iter().try_fold(document.clone(), |current, mutation| apply_note_mutation(&current, mutation)).expect("apply patch");
+    assert!(dsl::os_pack::to_json_string(&next).contains("Hello agent"), "the patched text is in the document");
+}
 //#endregion 🔖️ActionBridge
 
 //#region 🔖️ManifestSanity

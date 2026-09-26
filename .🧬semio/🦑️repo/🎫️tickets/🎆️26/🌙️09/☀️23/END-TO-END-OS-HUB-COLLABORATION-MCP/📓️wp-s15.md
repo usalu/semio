@@ -23,8 +23,197 @@ Status legend: **measured** = ran here, capture named; **unverified** = read fro
 | 9 | durable local-first store for hub-installed plugin modules (Cache Storage + service worker, re-verify every load, persist, eviction/quota notices en/de, GC) | **measured live** on 8040: every hub program commits to the store; a later session loads from it with **0** hub files; an evicted 14.9 MB core is reinstalled alone with the en/de notice; a band cancel at 19.4/29.0 MB commits nothing; laws os **459/459** | §12, §13 |
 | 10 | design decision: a hub document's module is resolved by the serving catalog generation (hub programs `pluginId@bundleSha256`; staged module used only when byte-identical) | **measured live** on 8040 (catalog B) with STALE staging: draw, writer, note × en + de create → open → edit/undo/redo on the hub's module, **0** "document target changed"; identical staging → **local** (0 hub files); never staged → **hub**; later session → **store**. Laws: resolution fixture + Ajv/`node:crypto`, hub `extendsPluginId` 40/40, quick 12/12, engine 696/696. **7800 blocked** on W2's os-hub rebuild | §13 |
 | 11 | shell refused catalog kinds whose kind id ≠ dialect (`2d.drawing` → `s.draw.drawing`); probe kind picker | **fixed + laws**; kind picker lists catalog B's 12 kinds and creates draw/writer/note | §13 |
-| 12 | G10 4b / C10 F5: Space app index empty, `documents/index/socket-grants` 404 | **root-caused (3-link chain), host links fixed + laws** (space lane, full-history fold, index space fill; 0× 404 measured); guest link (index `space_id` never set → fold selects no space) **requested** from T12/W2 | §13 |
-| 13 | re-run the full matrix after T12's guest fixes and W2's restage | **waiting**: W2 restage3 materializing at 17:5x; 7800 proof chain armed (auto-runs when 7800 serves the new index) | §6, §13 |
+| 12 | G10 4b / C10 F5: Space app index empty, `documents/index/socket-grants` 404 | **root-caused (3-link chain), host links fixed + laws** (space lane, full-history fold, index space fill; 0× 404 measured); guest link (index `space_id` never set → fold selects no space) fixed by T12 (17:55) → **measured PASS on restage4** (session 12, S12-2) | §13, S12 |
+| 13 | re-run the full matrix after T12's guest fixes and W2's restage | **session 12**: running on W2's restage4 (`consistent=60`) — see `## Session 12` | S12 |
+
+## Session 12
+
+Session 12 (2026-09-25 22:5x). Every process of session 11 died at ~19:30 (the 7800 proof chain with it). Guests = W2's restage4
+(18:56, `consistent=60 diverged=0`), which carries T12's guest fixes (stdio ×9, curation ×2, trinity ×2, norm ×2, gis/generation2d/vcs
+viewers) and T12's space `fold-directory-events` fix (17:55, T12 request item 16). Durable logs `.🧬semio/🌐hub/s12-s15-logs/`.
+
+| # | item | state | evidence |
+|---|---|---|---|
+| S12-1 | full matrix on restage4: editors en + de, viewers | **measured PASS: editors en 75/75, de 75/75 (every History row German), viewers 70/70** — confirmation re-run on the final code, every row first pass, 0 FAIL, 0 retries, strict clean-round-trip criterion (00:15) | `s15-matrix-r5{en,de,viewers}.json` |
+| S12-1e | tool-run column (every program declaring a tool: start → progress → pause/resume/abort → result committed + undoable, en + de) | **measured, 18 programs × en + de** (`s15-toolrun-t5{en,de}.json`, remodel en `t6remodel`): judged against each tool's DECLARED `mutating` flag. **Read-only (10: wfc ×5 fill, generation ×4 previewEval, energy simulation): PASS en + de**: Finalized, nothing written (by contract, e.g. wfc `commit-fill` "nothing is written to the document"). **Mutating: commit + ↶ + undo PASS en + de for reasoning (Demo), trinity, dag, puzzle2d (Concrete Forest), remodel (Synthetic Orbit)**. Pause freezes and Abort ends "Aborted, nothing was changed" with no edit on every run long enough to press them (9 runs; the other runs finish in < 1 s). Not judgeable: puzzle3d/5d and demonstrator puzzle3d. Their fill ends at "Searching an open handle" with 0 placements on every shipped example (empty, Nakagin), so there is nothing to commit (a guest example gap, routed). Minor: the bitmap panel keeps its last tick (4/10, 57 %) on the Finalized row | `s15-toolrun-t5*.json`, `s15-toolrun-t6*.json` |
+| S12-1d | coordinator: a command turn holding its lane must never be a silent hold | **landed + laws**: `⏱️command-stall` contract (bound 5 000 ms, en/de labels) + watch on every command turn; the shell shows a localized band naming program + command with a Cancel that rejects the turn (`plugin.command-cancelled`) and releases the lane; law 6/6 on the real per-actor lane with the fake clock as oracle; renderer tsc 0, quick 12/12, engine-contract 671/671; **live PASS en + de (09:3x)** with `s15-stall-live.mjs` (new). A real dag command, made slower than the bound only by CDP CPU throttling (×40), shows the band. en: `semio · mathematical · graph · port · directed · dag has not answered “Note Shell Command” for 15 s — later input waits for it. [Cancel command]`. de: `… antwortet seit 5 s nicht auf „Shell-Befehl vermerken“ … [Befehl abbrechen]`, counting to 27 s. Lane diagnostics log `[os-shell] command stalled: dag noteShellCommand has held dag#2's lane for 5000 ms`. Cancel refuses the turn with `plugin.command-cancelled`, the band closes, and later inputs run: the next addNode dispatches and moves the document. Found live and fixed: the first paint of the de band read "seit 0 s", because the display clock had not ticked since the report. `commandStallHeldSecondsV1` now floors a reported stall at the bound; law 7/7, renderer tsc rc 0 | `s15-law-command-stall-{1,2}.txt`, `s15-stall-live-dag-{en-4,de-5}.json` |
+| S12-1c | trinity "undo does nothing after Clear Selection" | **root-fixed HOST-side**: `GraphWasmCanvas` repainted every animation frame; an idle trinity query editor paints at ~98 ms/frame (main thread 100 % busy), so a 211 k-step retained patch intake waited a frame per yield and took 11–22 s. Now render-on-demand (one shared `createDemandFrameScheduler`); law 5/5 (red with a continuous loop), engine-contract 671/671; idle jack 100 % → 9 % busy | `s15-idle-profile-*.json`, `s15-undo-state-jack-*.json` |
+| S12-1b | found on the way: hub plugin-module file route answered **500** for every large core module under load (per-request reread under the 8 s execution-target deadline; reproduced: 7/7 cores ≥ 17 MB at 8.0–8.2 s) | **root-fixed + measured**: verified content streamed with incremental SHA-256 + BLAKE3, final chunk withheld until verified, no deadline; law 41/41; live burst 198 files / 331.9 MB 0 bad (direct + proxy) | `s15-module-burst.ts`, `s15-hub-laws-lib-s12-2.txt` |
+| S12-2 | Space index `space_id` guest link on restage4 | **measured PASS** on hub 8040: a later session opening the space lists its existing document at once (index rows 2 = header + doc); a created note adds its row live (2 → 3) and opens → addBlock/undo/redo `[0,1,0,1]` | `s15-hub-document-r4-space-{2,3}.txt` |
+| S12-2b | found on the way: creating a space in the React shell always read "The hub did not accept that" (hub answers `202 Accepted`, the fetch port admitted only 200) | **fixed at the root + 3 laws** (93/93), renderer typecheck rc 0, live: spaces list + create | `s15-law-hub-command-lane-2.txt` |
+| S12-3 | hub documents for every B2 kind inside `s` (7800 on catalog B2), lazy-install row | **first pass measured, re-run pending** (`s15-b2-sweep.sh`, serve 6543 → 7800, space `S15 B2 Sweep`). Rows are judged by the program that actually loaded (`hub program <plugin>@<bundle> … loaded from hub\|store`), not the journey's own verdict. **en: 8/16 genuine PASS**: block2d, draw, block3d, wfc3d, block5d, animate, note, writer. Each ran verb/undo/redo `[0,1,0,1]`, with the right program from generation `f485bf7e…`. **Lazy install**: the first kind of each plugin was fetched from the hub (block 22 files / 27.5 MB, draw 5 / 15.6 MB, wfc 5 / 25.8 MB, animate 5 / 21.1 MB, note 5 / 15.7 MB, writer 5 / 20.1 MB). Every later kind of that plugin came from the device store with 0 hub bytes. **en failures**: bitmap, grid2d and grid3d took the wrong rail verb (now pinned per kind; de bitmap `change-seed` and grid2d `create-tile` PASS). puzzle2d stayed accepted until "outcome unknown" (H9). puzzle3d: the creation waited 5 min (the elapsed line was shown), then the open got `component` 503 (S12-3e) and the verb did not round-trip. gis: the saga did not open within 180 s. Two en rows were false PASSes of the old journey and are now marked FAIL: wfc2d opened the late puzzle2d document and puzzle5d opened block5d, because the fallback row open took the last row. That open now targets the created name only. **de: 5/16 PASS** (block2d, draw, wfc2d, bitmap, grid2d). puzzle2d has the same H9 issue. Rows 6–14 opened the right program through the saga, but it was then replaced by the space index (host regression S12-3g). The writer saga did not open. The creation notice's elapsed line was seen live in en and de | `s15-hub-document-b2-*.txt`, log `s12-s15-logs/b2-sweep.txt` |
+| S12-3b | found on the way: a hub document opened after its plugin module install read "The document target changed" (draw, 3/3 on the unregistered front, 1/2 registered) | **root-fixed + law**: a CANCELLED document open (the shell re-opens once the module install lands) called `clearHubSessionCapability()`, which signs the worker out of the hub and marks EVERY open document stale; now only a hostile plan/asset revokes the session; fixture rows `sessionKept` (schema-first), law red→green, worker 125/125; live: stale gone (the re-open completes: open-plan → manifest → component → descriptor → socket → actor) | `s15-law-open-cancel-keeps-session*.txt`, `s15-worker-suite-s12-2.txt` |
+| S12-3c | coordinator: the creation saga must never end "The creation outcome is unknown" while the hub still answers | **landed + laws**: contract `🏪️store/👷️worker/🌱️creation-polling/🔣️.json` (poll 100 ms → 2 s backoff, conclude `indeterminate` only after the hub has not answered for 60 s; the old fixed 120 s client deadline is gone); the notice shows how long the hub has been working on it (en/de, schema-owned copy `waiting`) and keeps Cancel; slow-hub double law (accepted 10 min → ready; unanswered 60 s → indeterminate) red→green; worker 126/126, engine-contract 673/673, renderer tsc 0 | `s15-law-creation-polling-*.txt`, `s15-engine-contract-creation-1.txt` |
+| S12-3d | C10 relay: one plugin-module file 5xx fails the whole hub-program install | **landed + laws**: policy `PluginModuleTransferRetryV1` (schema-first: transient = 502/503/504 or connection lost before an answer; ≤ 4 attempts per file, backoff 500 ms → 8 s, cancellable); verified files kept, only the failed file refetched; the install band names the retry en/de; any other status refuses at once; failing-once double law red→green, store suite 25/25, quick 12/12. Proxy root: C10's hub 8021 binary is from 23:57, before S12-1b (the 8 s reread → 500); 7800 B2 (02:31 build) carries the streaming route — note bundle burst via the 6543 proxy 22 files 0 bad ×2. **Live (09:3x)**: front 6544 (`S15_FLAKY_ONCE=503`) answers the first request for every hub module file with 503 while draw is unregistered. Marketplace → Install: the band reads `Loading plugin draw · 14.8 of 24.5 MB verified · the hub did not answer, trying again (2 of 4)` / `Plugin wird geladen draw · 14,8 von 24,5 MB geprüft · der Hub hat nicht geantwortet, neuer Versuch (2 von 4)` with Cancel. The install completes verified, the retry text clears, and addLayer/undo/redo gives `[0,1,0,1]` in en and de | `s15-law-module-retry-*.txt`, `s15-module-burst-7800-note.txt`, `s15-registry-union-flaky-{en,de2}.json` |
+| S12-6 | coordinator (audit P1-7): the shell's plugin registry = local build ∪ serving hub's trusted catalog | **landed + law + live PASS en + de**: `hubCatalogOnlyPluginsV1` (pinned generation/bundle/dependencies, root plugins only; fixture `catalogOnlyCases` 5 cases, resolution law 17/17); ShellHost reads the hub catalog (mount + 60 s) and lists catalog-only plugins in the Marketplace under `Source: hub · <generation>`; Install acquires from the hub (verified, into the store). Live on front 6542 (draw removed from every local registry): palette offers no draw → Marketplace `draw · Available` under `hub · e8167ce8ed3e` → Install → band `Loading plugin draw · 0.0 … 24.5 of 24.5 MB verified` + Cancel (de `Plugin wird geladen draw · … geprüft`, `Abbrechen`) → `Draw · 0.1.0 · Loaded` in 11.5–14 s → palette `spawn.draw` → addLayer/undo/redo `[0,1,0,1]` | `s15-registry-union-r3{en,de}.json` |
+| S12-3e | found on the way (B2 puzzle3d open: `execution-target/component` **503** after a slow creation) | **root-fixed + measured**: the twin of S12-1b on the document open lane. The route read and hashed the whole component or browser actor (5–24 MB) under its 8 s deadline, so every large body answered 503 `deadline-exceeded`/`component-unavailable` once the hub was busy. Now the deadline bounds only the selection that authorizes the body. The body streams from the verified catalog asset (`document_execution_target_stream`; the last chunk is withheld until length + SHA-256 + BLAKE3 match). Load case on 8040 (9 docs × 3 × component + actor, beside a 198-file module burst). **Before: 37/54 and 25/54 answered 503 at 8.1 s. After: 0/54 twice, slowest 2.9 s.** Hub laws: execution-target 3/3 and the HTTP body law `admin_removal_…` 1/1. **7800 still runs the old route (needs W2/H9 rebuild)** | `s15-target-burst-{before,after}.txt`, `s15-hub-test-target-stream*.txt` |
+| S12-3h | coordinator principle (C10 relay) applied to the document open lane: one `execution-target` 503 ended the opening ("created, but it could not be opened": B2 wfc2d, gis, writer on 7800) | **landed + laws + live en + de**. Contract `🏪️store/👷️worker/🔁️execution-target-retry/🔣️.json`: transient = 502/503/504 only; ≤ 4 requests per asset; backoff 500 ms ×2 up to 8 s; cancellable; the transient body is released. It covers manifest, component, descriptor and browser actor. The retry is announced as a new status `retrying` (en "The hub is busy. Asking again for the document component…" / de "Der Hub ist ausgelastet. Die Dokumentkomponente wird erneut angefragt…", role status, attempt n/4 as progress, Cancel opening). The status vocabulary is extended in the directory schema and in the hub fixture `🔏️document-execution-target-lease-v1`. **Laws**: `🧪️tests/🔁️execution-target-retry` 4/4 (the npm `retry` schedule as oracle for every delay; transient set; attempts; body release; a cancel ends the wait) + worker law on the real lease lane with a failing-once hub double (503 ×1 → installed with one announced retry; 502 ×4 → refused after 3 retries; 404 → no retry). os suite: 477 of 481 pass; the 4 failures are not mine (2 Ajv strict `x-semio-note` from a peer's directory schema edit; 1 load-timeout that passes alone). os tsc clean except the peer's `⌨️text-input-oracle`, renderer tsc rc 0. **Live** on front 6544 (`S15_FLAKY_ONCE=503`, the first component and actor request answers 503): the notice shows the retry at 2/4, the next request answers 200, the lease verifies and the document opens, in en and de | `s15-law-target-retry-*.txt`, `s15-hub-document-flaky-target-{en,de}.txt` |
+| S12-3f | found on the way (B2 gis: page error `Failed to execute 'close' on 'WebSocket' … 1008 is neither`) | **fixed + law**: browsers accept only 1000 or 3000..4999 in `WebSocket.close`. The store worker (actor activation failed, checkpoint pair refused, actor mismatch, protocol mismatch) and the shell's directory stream closed with RFC codes 1008/1002. Each close threw and left the hub socket open. Contract `📇️directory/🔌️client/🚪️socket-close/🔣️.json` (4002/4008, RFC meaning preserved) + `closeHubSocketV1`. Law `🧪️tests/🚪️hub-socket-close` 4/4, with jsdom's WHATWG `close()` as oracle (every declared code closes; every RFC code throws; admissibility matches the oracle over 17 codes; no inadmissible literal left in the sources; red on the HEAD sources: 1008 ×2, 1002 ×2). os suite 476/476, os tsc clean for these files | `s15-law-socket-close-1.txt`, `s15-os-suite-socket-close.txt` |
+| S12-3g | host regression since ~05:33 (not mine): a hub document opened by the creation saga (or a row) is replaced within 500–750 ms by the space index session, which remounts empty | **routed to U5 via coordinator** with a trace (`S15_OPEN_TRACE`: `/spaces/<id> \| block2d-board` → `/spaces/<id> \| framework.window.table`), reproduced on 7800/6543 and 8040/6541. Likely cause: U5's new `createShellSessionLaneV1` re-applies the unchanged `/spaces/<id>` route over the document. B2 de rows 6–15 are void for this; re-run after U5's fix | `s15-hub-document-chk-*.txt` |
+| S12-4 | hub-document sweep for every kind of every package (`--packages all`) | waiting for W2 | |
+| S12-5 | UX leftovers (keyboard/focus, WCAG, mobile/tablet, customization persistence) | **measured on the current code (6540, 09:1x)**. **WCAG**: default theme chrome pairs 18/18 AA in both appearances (lowest 4.84 dark muted/panel, 4.88 light hover). **Keyboard**: 29 tab stops on Home, every one with a visible focus ring; the ⌘K palette opens with focus in its input, and Enter opens dag. After the palette opens a program, focus moves to that program's dock tab panel (`mode-dock-panel-0`, `role=tabpanel`, labelled by the `dag-main` tab: the WAI-ARIA tabs pattern), and the next Tab enters the window body. No leftover. **Phone 375×812 / tablet 768×1024**: no horizontal scroll; Home and a note program fit (phone: one 357 px window; tablet: composite + navigator side by side), palette by chord. **Customization persistence**: Dark survives a reload (stored event-sourced `os.config.ui-preferences`), restored to System. **en/de chrome**: 92/91 strings, identical ones only names/loan words (Chat, Editor, Layout, Name, System, Tooltips, ids) | `s15-ux-{persist,locale,keyboard,devices}.json`, `s15-contrast-census-s12.txt` |
+
+### Session 12 log
+
+- 22:55 read preambles, report, audit. Nothing listening on 6540–6549 / 8040–8049 / 7800. Serve 6540 (local-only, HMR off) started:
+  nx pid **85035** (→ `script.ts serve` 87029 → vite 87082), log `.🧬semio/🌐hub/s12-s15-logs/serve-6540.txt`; it prints
+  `[fresh] 60 staged components match their sources and the activation receipt`. Census (`s15-programs.mjs`): `ready:s`, 60/60 plugins
+  `loaded`, 148 programs (77 editors, 71 viewers; matrix = 75 editors + 70 viewers without space home/studio).
+- 22:58 matrix `r4en` (pid 87918) and `r4viewers` (pid 88392) launched detached on 6540 (logs `s12-s15-logs/matrix-r4*.txt`).
+- 23:0x hub **8040** for the Space-index proof: `wp-s15/s15-hub-8040.sh` (new) = fresh data root `.🧬semio/🌐hub/s12-s15-hub-8040`, a real copy of
+  catalog B (`e8167ce8…`, from `s11-s15-hub-8040`), binary = my 15:38 tree build (index `dialectArtifactKinds` + `extendsPluginId`; no hub source
+  change since except tests), user1/user2 by `credential set`, hold `s15-hub-hold.ts` detached (hold pid **91565**, state
+  `.🧬semio/🌐hub/s12-s15-hub-8040-state`). Ready + ADMIN at 23:08. Serve **6541** → 8040 (`S_HUB_URL`, HMR off) from the dev package dir, pid **98202**.
+- 23:15 **Found: creating a space in the React shell always fails.** Journey `r4-space-1`: sign in ok, "Create space" → the hub workspace reads
+  "The hub did not accept that. Nothing was changed." and lists no space — but the hub HAD created it (`s15-hub-spaces.ts`, new: HTTP sign-in +
+  `GET /directory/spaces` lists `S15 Space 14949`). Root: `post_directory_command` answers **202 Accepted** with the canonical receipt (since 09-12,
+  and the receipt fixture's own transport trace delivers into a 202), while `createHubConnectionFetchPortV1.submitCommand` threw
+  `hub.command.refused` for every status but 200 (since 09-19). The Rust directory client reads any 2xx. Reproduced over HTTP with the shell's own
+  seal + `parseDirectoryCommandReceiptV1`: status 202, receipt parse ok. **Fix:** `directoryCommandAnsweredV1` (`📇️directory/🏘️spaces/🟦️.ts`, every
+  2xx, the Rust client's rule) used by the fetch port (`🔗️HubConnection/🟦️.tsx`). **Laws** (`🏘️SpaceBrowser/🧪️tests/🧩️component`, fixture
+  `💻️os/🧫️fixtures/📇️directory/🧾️command-receipt-v1.json`): the real fetch port reads the receipt of every 2xx the transport trace delivers (202
+  first) + 200; refuses every status of the transport table before reading a body; classifies 200–599 exactly as the platform's `Response.ok`
+  (oracle). `hub-sign-in-spaces-check` **93/93**, renderer typecheck rc 0 (`s15-typecheck-renderer-s12-3.txt`).
+- 23:2x **S12-2 measured PASS** (serve 6541 → 8040, the restage4 `space` guest): `r4-space-2` opens the empty `S15 Space 14949` (index rows 1 = header),
+  creates a hub document → the index row appears live (**1 → 2 rows**: `S12 Hub Document 43472 · text.document`); `r4-space-3` = a LATER session
+  (fresh browser) opens the same space → the index lists that document at once (**rows before 2**), creates a note (**2 → 3**), the creation saga opens
+  `note-composite` + `note-navigator`, `addBlock` → undo → redo `[0,1,0,1]` on the rail, plugin module from the store (`records e8167ce8ed3e/…`).
+  Session 11's `draw-*-unstaged` runs listed only the header over a 13-document space. T12's fold fix (request item 16) is live.
+- 23:3x viewers **70/70 PASS** (`s15-matrix-r4viewers.json`): the three session-11 viewer FAILs (gis `setCamera`, generation2d guest panic, vcs empty
+  tree) PASS, 0 faults. Editors en at 37/37 PASS so far (incl. norm en1990). `r4de` launched (pid 4804).
+- 23:5x en first pass **67/75**. FAIL analysis: stdio csv/tsv/json×2/xml×2 open EMPTY (a fresh document: "No data" / `null` / "(empty document)"):
+  `set-cell (0,0)` on the empty grid journals a non-undoable `Set Cell` and changes nothing; `set-node` needs internal node paths the probe could
+  not harvest. Probe pins (not product changes): a `!` pre-verb = the editor's own `Load Example` (default `demo`) pressed + executed first, and
+  T12's law node paths (`$␟k=name`, `$␟2␟0`, i-json `$␟k=id`, xml/valid `$␟0␟0␟0`). PASS criterion tightened: `Check in (n)` must read a clean
+  round trip (verb adds an edit or coalesces into the pending one, undo removes exactly one, redo restores it) — space/space pinned to
+  `renameArtifact` after a `createArtifact` pre-verb (coalesced `[1,1,0,1]`). Resume → **en 73/75**: all 6 stdio PASS (`Set Cell↶`, `Set Node↶`).
+  Routed to T12 (`wp-w1/requests/s15.txt` 00:1x): the empty-document UX of the stdio structured editors (no create path, silent no-op).
+- 00:0x draw hub document on hub 8040 failed to open twice (`hub program unavailable … core.wasm answered HTTP 500`), once through the unregistered
+  front 6542 and once on 6541 directly; the same file answers 200 by curl afterwards. **Reproduced**: `wp-s15/s15-module-burst.ts` (new) fetching
+  every file of all 9 bundles concurrently → **7 of 198 files 500** in both rounds, exactly the 7 core modules ≥ 17 MB, each at 8.04–8.20 s.
+  Root: `get_trusted_plugin_module_file` reread + re-hashed (SHA-256 + BLAKE3, debug build) the whole file under
+  `DOCUMENT_EXECUTION_TARGET_DEADLINE_MS = 8_000` and mapped every error to 500. Coordinator direction: root-fix, no 503+retry.
+  **Fix (hub, mine from session 11):** `TrustedCatalogAsset::stream()` → `TrustedCatalogAssetStream` (trusted-catalog `🦀️.rs`): reopens the retained
+  file beneath its generation root (`TrustedCatalogOpenedFile::into_reader`), checks the fstat length, streams 64 KiB chunks while hashing
+  incrementally, and HOLDS BACK the final chunk until length + SHA-256 + BLAKE3 equal the verified ones (a file changed on disk after verification
+  ends in an error, so a reader holding the declared `Content-Length` never completes it); no deadline, bytes flow from the first chunk, dropping
+  the response stops the read. The route (`🏗️bootstrap/🦀️.rs`) serves it with `Content-Length` via `Body::from_stream`. **Law**
+  `a_verified_file_streams_its_exact_bytes_without_a_deadline_and_withholds_its_last_chunk_once_tampered` (196 625-byte multi-chunk file: intact →
+  exact bytes; one byte flipped at the start / middle / last byte → error before the final chunk; truncated → refused; resident asset) + the
+  existing serving law now also drains the tampered stream. The law caught one bug of mine before landing (the verified last chunk re-entered the
+  EOF branch and failed on the reset hasher). `cargo check -p semio-hub --lib --bin os-hub --tests` rc 0 (warnings = peers'); `trusted_catalog`
+  **41/41** (`s15-hub-laws-lib-s12-2.txt`). Binary built (`wp-s15/target`, 40 s), hub 8040 restarted on it with the same data root (hold pid **48516**
+  → hub 48517, nice 0). Live re-measure of the burst: pending (next).
+- 00:2x **trinity (T12's question):** `wp-s15/s15-undo-state.mjs` (new) reads the History rows, their `.revert`, `action.undo` and `Check in` after ONE
+  verb with no neutral dispatch, then ONE undo. jack `patchNodes` (selection, `field=name`): `Patch Nodes↶` + `.revert`, undo enabled, Check In (1);
+  one rail undo → Check In 0, row undone, `Undo` row — **no actor mismatch; patchNodes is undoable in the browser**. The matrix FAIL is the probe's
+  neutral `clearSelection` between verb and undo: on trinity it **wedges the program's dispatch lane** — afterwards 3 rail undos, the Cmd+Z chord and
+  a second patchNodes neither apply, journal, log nor refuse, while every shard worker answers an `evaluate` in ≤ 5 ms (`s15-lane-wedge.mjs`, new).
+  jack wedges even when `clearSelection` comes FIRST on a fresh document; rewriting wedges when it follows an edit (verb → clear → undo), not before.
+  dag, reasoning, flow: `clearSelection` journals `Clear Selection` and verb + undo round-trip. Sent to T12 via `main`; host-side gap: a command turn
+  that never settles holds the per-actor FIFO silently (no stall notice).
+- 00:3x de first pass **67/75** (the same 8 as en before the pins; every PASS row's History row German). Serves 6540/6541 and the front restarted
+  without `BG_NICE` (rule 17): 6540 nx pid **65198**, 6541 pid **65199** (both nice 0). de resume with the pins: pid 68324.
+- 01:0x hub plugin-module streaming re-measured on the new binary (8040): the all-bundle burst at 16 concurrent downloads, direct AND through the
+  serve's `/_semio/hub` proxy: **198 files, 331.9 MB, 0 bad**, slowest file 15–20 s (was: 7 cores refused at 8 s). At 198 simultaneous
+  connections the client sees socket refusals (`Unable to connect`, 14–37 ms, tiny vendor files) — connection admission, not the route; H9's
+  hub-wide admission, not touched (the shell downloads a bundle's files sequentially). Capture `s15-module-burst-stream-1.txt`.
+- 01:1x **trinity root cause (S15 owns it end to end, coordinator 00:4x).** Traced the HELD verb with temporary `[DEBUG]` lines in
+  `🔌️PluginRuntime` (removed; file restored byte-identical to its pre-trace state): `undo seq=18` is queued in the host per-actor
+  command-ingress FIFO behind `clearSelection seq=17`, whose serialized run sits in `commitReservedToolSpawnsWhileSerialized` →
+  `deliverJobCompletionTurn` → `settlePluginTurn` → `acceptUiPatches`: ONE retained patch of `trinity-jack-graph` (ops = 1) whose `scenes` phase
+  is 211 k intake steps — **72 ms at open, 11.5–22.6 s after an edit**. A CPU profile of that window (`s15-undo-state.mjs` `S15_PROFILE=1`,
+  CDP `Profiler`) attributes **10.1 of 11.5 s to `GraphWasmCanvas.tick → renderFrame` (framework_editor wasm: ttf_parser / rustybuzz / usvg text
+  shaping)**; the intake itself costs ~0.1 s. `s15-idle-profile.mjs` (new): an IDLE jack editor keeps the main thread **100 % busy at 10 fps**
+  (~98 ms per frame, the query text window's `EditorSession` repainted every frame); an idle dag 100 % at 50 fps; reasoning (Canvas2dHost) 12 %.
+  Every host continuation (`MessageChannel`) therefore waited behind a frame. Not the guest, not an actor identity (T12's hypothesis): T12 saw it
+  green natively because no canvas runs there.
+  **Fix:** `GraphWasmCanvas` (`♾️infinite/🖼️canvas/🎨️react-renderer/🟦️.tsx`) paints on demand. The owner receives `frameDemandingSessionV1(session,
+  invalidate)` — every call except `renderFrame` invalidates, `renderFrame` paints at once; resize, wheel and double-click invalidate; a pointer
+  gesture is continuous; the appearance observer invalidates; unmount disposes. The ONE scheduler `createDemandFrameScheduler` moved from
+  `🪪️WasmSessionLoader` to beside `scheduleDemandFrame` (its lower layer) — importers updated (NodeGraph, TiledMapHost, react target), the
+  engine-contract spy now targets the canvas package. **Law** `🧪️tests/🪶️demand-frames` over the fixture `🖼️canvas/🧫️fixtures/🪶️demand-frames/🔣️.json`
+  (mounted by React DOM on a faked frame + wall clock): idle paints 0 frames, an owner call paints ≤ one trailing window, `renderFrame` exactly 1,
+  unmount 0 → **5/5**; red run with the loop made continuous: 63 frames per mount → 3 FAIL. engine-contract **671/671**, renderer `tsc` rc 0.
+  **Live:** idle jack busy **100 % → 9 %**, dag **100 % → 12 %** (302 frames / 5 s free); verb → Clear Selection → ONE undo → Check In 1 → 0 at
+  once; matrix resume → **en 75/75, de 75/75** (`Patch Nodes↶`/`Knoten aktualisieren↶`, `Add Rule Clause↶`/`Regelklausel hinzufügen↶`).
+  Found, not fixed (editor wasm owner): `EditorSession.renderFrame` re-parses the font face (`Face::collect_tables`) and reshapes every glyph run on
+  every frame — ~98 ms per paint for a one-line query; with demand rendering it costs only when the text changes.
+- 01:3x full confirmation matrix on the final code launched (nice 5): `r5en` pid 2933, `r5de` pid 3125, `r5viewers` pid 3248.
+- 04:0x **hub document "document target changed" (draw).** On the unregistered-draw front (6542, restarted pid 32418, no bg nice) the hub draw
+  document opened with "The document target changed. Reopen the document." 3/3 and no Actions chip; on the registered serve 1 of 2 runs
+  (`s15-hub-document-r5-draw-{en,en-2,unregistered-en,unreg-t1..t4}.txt`). Timed hub requests: open-plan → manifest → (no component) → stale.
+  Temporary `[DEBUG]` traces in `🏪️store/👷️worker` (removed, file restored byte-identical before the fix): `retireBrowserSessionAuthority` is
+  reached from `clearHubSessionCapability ← requestDocumentSocketAuthority`, site = the execution-target lease install's catch, with
+  `docAbort.aborted = true`: the shell cancels the first open (the plugin module install landed and the opening is re-issued) and that
+  CANCELLATION revoked the hub session capability — the worker drops its capability, every open document's authority is retired and marked
+  stale, so the re-issued open dies too. **Fix** (worker, 2 sites: plan parse catch + lease install catch): `if (!cancelled)
+  clearHubSessionCapability()` — a cancelled or retired open says nothing about the hub; a hostile plan or asset still revokes it.
+  **Law** (schema-first): `DocumentFirstOpenV1.hostile[].sessionKept` (renderer schema `🔣️.json` + TS twin), the opening corpus rows
+  (`foreign-plan-scope`/`corrupt-component` false, `cancel-at-manifest`/`retire-at-component` true), asserted through a new read-only seam
+  `hubSessionCapabilityHeld` in the existing law "browser document first open rejects hostile assets…" → green; red with the old catch
+  (`cancel-at-manifest … expected false to be true`); worker suite **125/125**, opening law 3/3, renderer tsc rc 0 (os tsc: 1 error in U5's
+  in-flight TaskManager test, not mine). Live after: no stale; the re-issued open runs manifest → component → descriptor → socket → actor.
+  Remaining on the UNREGISTERED front only: the draw window mounts without its dock tab and Actions chip while the creation notice keeps
+  "Opening the artifact…" (registered serve: tab + rail + addLayer/undo/redo `[0,1,0,1]`, `r5-draw-en-2`) — the registry-union item (next).
+- 04:2x 7800 B2 ready (coordinator 04:0x). Serve **6543** → 7800 (pid 47043, nice 0). Space `S15 B2 Sweep` (`01a0db83-cc19-…`) created over HTTP;
+  creation catalog (`s15-b2-kinds.txt`): 16 kinds, every label still "Editor/Editor" (H9 item L). Trial note en PASS (hub install). Sweep chain
+  en 0–15 then de 0–15 detached: pid **48138**, log `s12-s15-logs/b2-sweep.txt`.
+- 04:1x tool-run column first pass en (`s15-toolrun-t3en.json`): all 18 programs arm their tool from the shell's Tool category and start a run
+  (trinity/dag reorganize start only on the second press); wfc ×5 + generation ×4 reach `Finalized` but no `↶` History row / Check-in change
+  (wfc2d journals `Commit Fill` without ↶); puzzle ×4 + reasoning stop at "Complete, ready to finalize" (the probe did not press Finalize — fixed
+  in the probe); remodel fails "0 frames accepted" on the demo; energy's run never reaches the panel; Pause pressed on bitmap/generation did not
+  freeze a run that finished within its slice. Re-run with Finalize + de next.
+- 03:4x (after the usage-limit cut 02:1x–03:40) confirmation matrix finished at 00:16 on the final code: **en 75/75, de 75/75, viewers 70/70**,
+  every row first pass (0 FAIL, 0 retries, 8 boots each). Catalog B2 published 03:18 (coordinator); W2 brings 7800 up on it.
+- 02:0x **command stall watch (coordinator 00:5x: never a silent hold).** Contract `🔌️PluginRuntime/⏱️command-stall/🔣️.json` (`stallBoundMs`
+  5 000, `cancelledFault` `plugin.command-cancelled`, en/de band + cancel labels) and `🟦️.ts`: `createCommandStallWatchV1(clock, bound)` →
+  `watch(label, run)` starts the clock when the lane STARTS the turn, reports `{actorId, programId, commandId, startedAtMs}` after the bound
+  (plus one `[os-shell] command stalled …` warning — the lane's diagnostic line), clears it on settle; `cancel(id)` rejects the held turn with
+  `CommandCancelledErrorV1`, which releases the per-actor ingress lane (later inputs run) and reaches the waiting channel as a turn fault
+  (the shell's existing loud refusal line). `PluginRuntime.runQueuedTurn` wraps every command turn in the process-wide `commandStallWatch`.
+  ShellHost renders a `role=status` band (`data-semio-command-stall`) per held turn: en "{program} has not answered “{command}” for {n} s —
+  later input waits for it." / de "{program} antwortet seit {n} s nicht auf „{command}“ — spätere Eingaben warten darauf." with the program's
+  breadcrumb and the command's own manifest label, seconds counting, and "Cancel command" / "Befehl abbrechen". **Law** `🧪️tests/⏱️command-stall`
+  replaying `🔌️PluginRuntime/🧫️fixtures/⏱️command-stall.json` (settles before the bound; slow but settles after it; never settles → cancel →
+  the queued undo runs; a queued command is never reported while it waits) on the real `serializePerActor` lane with vitest's fake timers as the
+  clock oracle, plus the en/de text → **6/6**. Renderer tsc rc 0, quick 12/12; engine-contract 671/671 + input-ledger + more-work-drive green;
+  `🪟️spawned-program-session` has 2 REDs that are source-text laws on U5's in-flight ShellHost refactor (`utilitySpawnedId…`,
+  `buildUiRefreshRequest({ kind: "full" }…)` no longer in the source) — not these edits.
+
+- 05:1x **registry union (coordinator add-on, audit P1-7) — live PASS en + de.** Probe `s15-registry-union.mjs` (new) on the unregistered-draw
+  front 6542 (hub 8040): palette before install `[]`; Marketplace section order `plugin.draw` under `source.hub · e8167ce8ed3e` (the local
+  source `dev+extensions+hub` lists the other 59); Install → install band with verified-bytes progress (24 498 613 B) and Cancel,
+  row `Installing…` → `Draw · 0.1.0 · Loaded` (r3: en 14.0 s, de 11.5 s incl. the 300 ms sampling); palette after `spawn.draw`, `spawn.draw.s.draw.drawing@1/*#viewer`;
+  spawn `draw-2::drawing-composite` → addLayer/undo/redo `[0,1,0,1]`; 0 refusals. Only console noise: `/_semio/dev/local-session` 404
+  (local-only serve) and `/🧩️extension-modules/watch` 404 (serves predate U5's fix) — on every serve, not the front.
+
+- 08:4x (after the usage-limit cut 06:0x–08:40) resumed. **Tool-run column t5 en + de finished** (S12-1e): a probe regex fix for the German states
+  ("Abgeschlossen", "Fertig, bereit zum Abschließen"; t4de void). Per-tool examples are now picked from the navbar fixture picker (puzzle2d
+  Concrete Forest, remodel Synthetic Orbit, reasoning/energy Demo). Verdicts are judged against the declared `mutating` flag. Remodel en needed
+  more than the 120 s bound under load: `t6remodel` (300 s) PASS. `t6nopause`: bitmap still ends on "4/10" without any pause, so it is the
+  panel's last tick, not a pause fault.
+- 08:5x **B2 regression isolated (S12-3g, routed to U5):** from 05:35 every saga-opened hub document vanishes after 500–750 ms (journey trace
+  `S15_OPEN_TRACE=1`). Same on 8040/6541 and in a fresh space (`S15 B2 Sweep 2`, created over HTTP), so it is not space size. A temporary
+  `[DEBUG]` in `closeHubSocketV1` (removed) proved my close-code change never ran in these journeys. The remaining 05:33 edit is U5's
+  `createShellSessionLaneV1`. Also seen on the way: the space's `foldDirectoryEvents` answers `interactive-job.publication-stalled`
+  (4096 units without moving its ladder) on the 36-document `S15 B2 Sweep`; that is guest SDK code, frozen (rule 20), noted for T12.
+- 09:0x **execution-target streaming (S12-3e)**: `s15-target-burst.ts` (new) reproduced 62/108 × 503 at 8.1 s on 8040. The route now streams
+  the verified asset. os-hub rebuilt (`wp-s15/target`, 19 s), 8040 restarted on it (hold **25618** → hub **25620**, same data root):
+  0/108 bad, slowest 2.9 s. Hub laws green.
+- 05:3x **socket close codes (S12-3f)** + law 4/4 (jsdom oracle); os suite 476/476. Two os tsc errors from my earlier laws were fixed:
+  plugin-module-store `retry` typing, and ready-opening `issuedAtMs`. The remaining os tsc error `⌨️text-input-oracle` belongs to a peer.
+
+- 09:1x **UX bar re-measured (S12-5)** on 6540: 18/18 AA, 29 tab stops with visible focus, phone/tablet without horizontal scroll, Dark
+  persists, en/de 92/91. The earlier "focus outside every window" was a probe reading: focus is on the opened program's `tabpanel`.
+- 09:2x **module transfer retry, live (S12-3d)**: `s15-unstaged-front.ts` got an `S15_FLAKY_ONCE=<status>` mode (the first request of every
+  hub module file answers 503). Front 6544 (started and stopped by me) + `s15-registry-union.mjs`: the band names the retry en + de, the
+  install completes verified, and draw edits `[0,1,0,1]`.
+- 09:3x **command stall band, live (S12-1d)**: `s15-stall-live.mjs` (new; CDP CPU throttling ×40 on a real dag command). Band en + de,
+  Cancel → `plugin.command-cancelled`, later inputs run. Fixed the "seit 0 s" first paint (`commandStallHeldSecondsV1`, law 7/7, tsc 0).
+- 09:4x the session-lane regression (S12-3g) is gone on the current code: the saga-opened note stays for the whole 15 s trace, addBlock
+  `[0,1,0,1]`. **B2 re-run** `b3` launched in the fresh space `S15 B2 Sweep 2` with fresh profiles (lazy install re-measured) and per-kind
+  verb pins; the row-open fallback now targets the created name only. Chain pid **44424** (en 0–15 then de 0–15), log `s12-s15-logs/b3-sweep.txt`.
 
 ## 0. Infrastructure (measured)
 

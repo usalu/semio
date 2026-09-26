@@ -4,8 +4,11 @@ import { BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, BROWSER_ACTOR_ACTION_PACK_MAXIMU
 
 /** 🕰️ A pack-encoded `HistoryPatch` the guest published with a result, forwarded verbatim to the Shell's History projection. */
 export type BrowserActorHistoryPatchBytesV1 = readonly number[] | null;
+/** 👥️ The guest's own presence pack and declared-broadcast interaction slice, as its last `AppFrame::Ephemeral` carried
+ * them (contract-freeze §C7.6) — what a presence heartbeat of the actor-bound document publishes for this human. */
+export type BrowserActorEphemeralSnapshotV1 = Readonly<{ presence: readonly number[]; presenceGeneration: number; transientGeneration: number; interaction: readonly number[] }>;
 export type BrowserActorUnsolicitedPublicationV1 =
-  | { readonly kind: "ephemeral" }
+  | { readonly kind: "ephemeral"; readonly snapshot: BrowserActorEphemeralSnapshotV1 }
   | { readonly kind: "merge-report" }
   | { readonly kind: "operation-completed"; readonly historyPatch: BrowserActorHistoryPatchBytesV1 }
   | { readonly kind: "completion"; readonly projection: BrowserActorCommandMutationProjectionV1; readonly historyPatch: BrowserActorHistoryPatchBytesV1 };
@@ -93,6 +96,10 @@ function projection(value: unknown): BrowserActorHostEffectV1 {
   return { requestInferenceProposal: { kind: proposal.kind } };
 }
 
+function ephemeralPublication(frame: Extract<ReturnType<typeof decodeAppFrame>, { readonly Ephemeral: unknown }>["Ephemeral"]): Extract<BrowserActorUnsolicitedPublicationV1, { readonly kind: "ephemeral" }> {
+  return { kind: "ephemeral", snapshot: { presence: Array.from(frame.presence), presenceGeneration: frame.presence_generation, transientGeneration: frame.transient_generation, interaction: Array.from(frame.interaction) } };
+}
+
 /** 📬️ Accepts only ordinary, unsolicited intent completion frames, the `Ephemeral` snapshot every guest exchange appends
  * (contract-freeze §C7.6) and a typed operation's unsolicited UI progress; operation bytes remain guest-owned. */
 export function decodeBrowserActorIntentPublicationV1(bytes: Uint8Array): BrowserActorIntentPublicationV1 {
@@ -101,7 +108,7 @@ export function decodeBrowserActorIntentPublicationV1(bytes: Uint8Array): Browse
   canonical(bytes, encodeAppFrame(frame));
   if ("Emit" in frame && frame.Emit.in_reply_to === 0) return { kind: "emit" };
   if ("Error" in frame && frame.Error.in_reply_to === null) return { kind: "error", reason: "action-guest-refused" };
-  if ("Ephemeral" in frame) return { kind: "ephemeral" };
+  if ("Ephemeral" in frame) return ephemeralPublication(frame.Ephemeral);
   if (("MergeReport" in frame && frame.MergeReport.in_reply_to === null) || ("Conflicts" in frame && frame.Conflicts.in_reply_to === null)) return { kind: "merge-report" };
   const completion = unsolicitedCompletion(frame);
   if (completion !== null) return completion;
@@ -138,7 +145,7 @@ export function decodeBrowserActorUnsolicitedPublicationV1(bytes: Uint8Array): B
   if (bytes.length === 0 || bytes.length > BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES) throw new Error("browser-actor-publication: invalid frame size");
   const frame = decodeAppFrame(bytes);
   canonical(bytes, encodeAppFrame(frame));
-  if ("Ephemeral" in frame) return { kind: "ephemeral" };
+  if ("Ephemeral" in frame) return ephemeralPublication(frame.Ephemeral);
   if (("MergeReport" in frame && frame.MergeReport.in_reply_to === null) || ("Conflicts" in frame && frame.Conflicts.in_reply_to === null)) return { kind: "merge-report" };
   const completion = unsolicitedCompletion(frame);
   if (completion !== null) return completion;
@@ -151,7 +158,7 @@ export function decodeBrowserActorCommandPublicationV1(bytes: Uint8Array, action
   const frame = decodeAppFrame(bytes);
   canonical(bytes, encodeAppFrame(frame));
   if ("Error" in frame && frame.Error.in_reply_to === actionSequence) return { kind: "error", reason: "action-guest-refused" };
-  if ("Ephemeral" in frame) return { kind: "ephemeral" };
+  if ("Ephemeral" in frame) return ephemeralPublication(frame.Ephemeral);
   if (("MergeReport" in frame && frame.MergeReport.in_reply_to === null) || ("Conflicts" in frame && frame.Conflicts.in_reply_to === null)) return { kind: "merge-report" };
   const completion = unsolicitedCompletion(frame);
   if (completion !== null) return completion;

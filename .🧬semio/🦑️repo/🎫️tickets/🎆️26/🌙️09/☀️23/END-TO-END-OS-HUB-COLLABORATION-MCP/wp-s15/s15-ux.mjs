@@ -135,7 +135,10 @@ async function keyboard() {
     opened = (await windowIds(page)).filter((id) => !before.includes(id));
   }
   await page.waitForTimeout(3_000);
-  const focusAfterOpen = await page.evaluate(() => ({ tag: document.activeElement?.tagName ?? null, window: document.activeElement?.closest('[data-slot="window"]')?.id ?? null }));
+  const focusAfterOpen = await page.evaluate(() => {
+    const active = document.activeElement;
+    return { tag: active?.tagName ?? null, window: active?.closest('[data-slot="window"]')?.id ?? active?.closest("[data-window-id]")?.getAttribute("data-window-id") ?? null, id: active?.id ?? null, slot: active?.getAttribute("data-slot") ?? null, role: active?.getAttribute("role") ?? null, body: active === document.body, html: (active?.outerHTML ?? "").slice(0, 200) };
+  });
   await page.keyboard.press("Tab");
   await page.waitForTimeout(300);
   const nextFocus = await page.evaluate(() => ({ tag: document.activeElement?.tagName ?? null, id: document.activeElement?.id ?? null, window: document.activeElement?.closest('[data-slot="window"]')?.id ?? null }));

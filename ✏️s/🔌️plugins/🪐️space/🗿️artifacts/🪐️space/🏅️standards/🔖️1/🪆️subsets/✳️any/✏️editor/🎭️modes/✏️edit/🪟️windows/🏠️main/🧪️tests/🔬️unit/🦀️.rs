@@ -60,7 +60,7 @@ async fn a_directory_row_stamps_the_artifact_row_id_and_carries_only_the_safe_op
         indexed_artifacts: vec![SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() }],
         ..Default::default()
     };
-    observe(render_table(&config, &TreeWindows::unhosted()).expect("Space artifact rows"), |root| {
+    observe(render_table(&config, &SpaceIndexTableLabels::NATIVE_EN, &TreeWindows::unhosted()).expect("Space artifact rows"), |root| {
         let row = root.children.iter().find(|node| node.key.as_str() == "artifact:artifact-1").expect("Space artifact row id");
         let buttons = buttons(row);
         assert_eq!(buttons.len(), 1, "Directory-owned rows expose only the authority-safe open action");

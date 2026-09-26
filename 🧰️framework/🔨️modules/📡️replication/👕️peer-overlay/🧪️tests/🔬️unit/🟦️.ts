@@ -50,8 +50,9 @@ describe("👕️peer-overlay-v1", () => {
       }
       if (row.expected.frustumCornerCount) {
         const peer = spec.artifactPeers[0]!;
-        expect(peer.view.kind).toBe("orbit");
-        const view = peer.view as { position: [number, number, number]; target: [number, number, number]; up: [number, number, number]; fov: number };
+        const view = peer.view;
+        expect(view.kind).toBe("orbit");
+        if (view.kind !== "orbit") return;
         const corners = orbitFrustumCorners(view.position, view.target, view.up, view.fov, peer.size[0] / peer.size[1], 4);
         expect(corners).toHaveLength(row.expected.frustumCornerCount);
         expect(orbitFrustumSegments(corners)).toHaveLength(row.expected.frustumSegmentCount);

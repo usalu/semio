@@ -23,6 +23,7 @@ import {
   getActiveCataloguePointerDragData,
 } from "@semio-tech/ui-react";
 import { STYLING_METRICS, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
+import { type DemandFrameSchedulerV1, createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/infinite-canvas-react-renderer";
 import { GestureRecognizer, applyPinchToCamera, type ComponentSceneHostProps, type Board2dScene, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type Board2dWasmSession, type Board2dPeer, type BoardPeerScope, BoardSessionFactoryContext, createBoardPeerScope } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
@@ -515,11 +516,13 @@ export function board2dPinchCamera(cameraJson: string, step: Parameters<typeof a
 //#endregion FixtureDrop
 
 //#region Sync
+/** @emoji 🔁️ Applies one scene sync through the demand handle: its calls invalidate the canvas, so every sync of one React
+ * commit paints ONE coalesced frame instead of one synchronous full repaint each (ticket 26/09/23 F1: one scene update
+ * repainted a board up to 16 times). */
 function applyToSession(session: Board2dWasmSession | null, action: (session: Board2dWasmSession) => void): void {
   if (!session) return;
   try {
     action(session);
-    session.renderFrame();
   } catch {
     /* session not ready */
   }
@@ -644,13 +647,15 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionRef = useRef<Board2dWasmSession | null>(null);
+  const rawSessionRef = useRef<Board2dWasmSession | null>(null);
+  const schedulerRef = useRef<DemandFrameSchedulerV1 | null>(null);
   const bootSyncedRef = useRef(false);
   const pendingFixtureSceneRef = useRef<Board2dScene | null>(null);
   const pendingEventRowsRef = useRef<BoardEventRow[]>([]);
   const hoverActiveRef = useRef(false);
   const cameraInteractionActiveRef = useRef(false);
   const cameraSettleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const renderScheduledRef = useRef(false);
+  const vitalsPendingRef = useRef(false);
   const pendingCameraDispatchRef = useRef<{ readonly camera: BoardCamera } | null>(null);
   const [gestureRecognizer] = useState(() => new GestureRecognizer());
   const pendingSelectionJsonRef = useRef<string | null>(null);
@@ -703,7 +708,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const publishBoardVitals = useCallback((): void => {
     const container = containerRef.current;
     if (!container) return;
-    const session = sessionRef.current;
+    const session = rawSessionRef.current;
     try {
       container.setAttribute("data-board-interaction-json", session?.interactionJson?.() ?? "{}");
       container.setAttribute("data-board-transform-json", session?.transformGumballJson?.() ?? "{}");
@@ -718,20 +723,15 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     container.setAttribute("data-board-status-json", board2dStatusJson(boardStatusRef.current));
   }, []);
 
-  /** @emoji 🎞️ Coalesces renderFrame() to at most one per animation frame, no matter how many raw pointer/wheel events fire in between — mirrors the premigration `scheduleInputInvalidate()` pattern. */
+  const publishBoardVitalsRef = useRef(publishBoardVitals);
+  publishBoardVitalsRef.current = publishBoardVitals;
+
+  /** @emoji 🎞️ Coalesces renderFrame() to at most one per animation frame, no matter how many raw pointer/wheel events fire in
+   * between, through the one shared demand scheduler — the paint also republishes the probe vitals. */
   const scheduleRender = useCallback((): void => {
-    if (renderScheduledRef.current) return;
-    renderScheduledRef.current = true;
-    requestAnimationFrame(() => {
-      renderScheduledRef.current = false;
-      try {
-        sessionRef.current?.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
-      publishBoardVitals();
-    });
-  }, [publishBoardVitals]);
+    vitalsPendingRef.current = true;
+    schedulerRef.current?.invalidate();
+  }, []);
 
   const readContainerSize = useCallback((): { w: number; h: number } => {
     const container = containerRef.current;
@@ -1030,14 +1030,18 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     if (!factory) throw new Error("The current app has no registered board session factory.");
     let disposed = false;
     let resizeObserver: ResizeObserver | null = null;
-    let raf = 0;
     let owner: Board2dWasmSession | null = null;
+    let ownerHandle: Board2dWasmSession | null = null;
+    let ownerScheduler: DemandFrameSchedulerV1 | null = null;
     let peer: Board2dPeer | null = null;
     let booting = false;
     const release = (): void => {
       const session = owner;
       owner = null;
-      if (sessionRef.current === session) sessionRef.current = null;
+      ownerScheduler?.dispose();
+      if (schedulerRef.current === ownerScheduler) schedulerRef.current = null;
+      if (sessionRef.current === ownerHandle) sessionRef.current = null;
+      if (rawSessionRef.current === session) rawSessionRef.current = null;
       session?.free();
     };
     const fail = (error: unknown): void => {
@@ -1053,8 +1057,23 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
         return;
       }
       owner = session;
-      sessionRef.current = session;
-      peer = { session, onPeerGestureEnded: (flushed) => onPeerGestureEndedRef.current(flushed) };
+      const scheduler = createDemandFrameScheduler(() => {
+        try {
+          session.renderFrame();
+        } catch {
+          return;
+        }
+        if (!vitalsPendingRef.current) return;
+        vitalsPendingRef.current = false;
+        publishBoardVitalsRef.current();
+      });
+      const handle = frameDemandingSessionV1(session, scheduler);
+      ownerScheduler = scheduler;
+      ownerHandle = handle;
+      schedulerRef.current = scheduler;
+      rawSessionRef.current = session;
+      sessionRef.current = handle;
+      peer = { session: handle, onPeerGestureEnded: (flushed) => onPeerGestureEndedRef.current(flushed) };
       peerRef.current = peer;
       registerBoard2dPeer(peerScope, node.controllerId, node.surfaceId, peer);
 
@@ -1062,6 +1081,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
         const nextDpr = globalThis.devicePixelRatio || 1;
         const { w, h } = readContainerSize();
         session.setSize(w, h, nextDpr);
+        scheduler.invalidate();
       };
 
       const boot = async (): Promise<void> => {
@@ -1079,16 +1099,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
         if (disposed) return;
         applySize();
         syncSessionCanvasTheme(session);
-        const tick = () => {
-          if (disposed) return;
-          try {
-            session.renderFrame();
-          } catch {
-            /* gpu not ready */
-          }
-          raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
+        scheduler.paintNow();
         setSessionEpoch((epoch) => epoch + 1);
       };
 
@@ -1109,10 +1120,10 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     return () => {
       disposed = true;
       resizeObserver?.disconnect();
-      if (raf) cancelAnimationFrame(raf);
+      ownerScheduler?.dispose();
       unregisterBoard2dPeer(peerScope, node.controllerId, node.surfaceId, peer);
       if (peerRef.current === peer) peerRef.current = null;
-      if (sessionRef.current === owner) sessionRef.current = null;
+      if (sessionRef.current === ownerHandle) sessionRef.current = null;
       if (!booting) release();
     };
   }, [node.controllerId, node.surfaceId, readContainerSize, factory?.create, factory?.pluginId, factory?.appId, factory?.instanceId, peerScope]);
@@ -1759,7 +1770,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
         locale={typeof document !== "undefined" ? document.documentElement.lang : undefined}
         localCanvas={toolRunTraceCamera}
         localSizePx={[readContainerSize().w, readContainerSize().h]}
-        domain="layer"
+        domain={interactionDomainId}
         scenePath={`board/${presenceWindowId}`}
       />
     </div>

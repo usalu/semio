@@ -1,0 +1,237 @@
+{
+  "note": "Shell session lane (ticket 26/09/23 U5): route applications and session re-establishments run one at a time in request order; a route waiting at the end of the lane absorbs later route requests (latest wins); nothing is dropped; a failure settles only its own requests. Steps: route <uri> | job <name> request work; finish <name> | fail <name> settle the application running now. `started` is the order applications began; `requests` is each request step's outcome in step order. `routes`: whether a shell URI addresses an overlay (`/hub`, opened on the spot and never queued) or a session route (queued on the lane).",
+  "scenarios": [
+    {
+      "id": "route-asked-mid-flight-runs-after-it",
+      "steps": [
+        {
+          "route": "/"
+        },
+        {
+          "route": "/spaces/s1"
+        },
+        {
+          "finish": "/"
+        },
+        {
+          "finish": "/spaces/s1"
+        }
+      ],
+      "expected": {
+        "started": [
+          "/",
+          "/spaces/s1"
+        ],
+        "requests": [
+          "resolved",
+          "resolved"
+        ]
+      }
+    },
+    {
+      "id": "burst-of-routes-coalesces-to-the-latest",
+      "steps": [
+        {
+          "route": "/spaces/s1"
+        },
+        {
+          "route": "/"
+        },
+        {
+          "route": "/spaces/s2"
+        },
+        {
+          "route": "/spaces/s3"
+        },
+        {
+          "finish": "/spaces/s1"
+        },
+        {
+          "finish": "/spaces/s3"
+        }
+      ],
+      "expected": {
+        "started": [
+          "/spaces/s1",
+          "/spaces/s3"
+        ],
+        "requests": [
+          "resolved",
+          "resolved",
+          "resolved",
+          "resolved"
+        ]
+      }
+    },
+    {
+      "id": "identity-reestablishment-keeps-its-place-between-routes",
+      "steps": [
+        {
+          "route": "/spaces/s1"
+        },
+        {
+          "job": "reestablish"
+        },
+        {
+          "route": "/spaces/s1"
+        },
+        {
+          "finish": "/spaces/s1"
+        },
+        {
+          "finish": "reestablish"
+        },
+        {
+          "finish": "/spaces/s1"
+        }
+      ],
+      "expected": {
+        "started": [
+          "/spaces/s1",
+          "reestablish",
+          "/spaces/s1"
+        ],
+        "requests": [
+          "resolved",
+          "resolved",
+          "resolved"
+        ]
+      }
+    },
+    {
+      "id": "route-waiting-before-a-job-is-not-overtaken-by-one-after-it",
+      "steps": [
+        {
+          "route": "/"
+        },
+        {
+          "route": "/spaces/s1"
+        },
+        {
+          "job": "reestablish"
+        },
+        {
+          "route": "/spaces/s2"
+        },
+        {
+          "finish": "/"
+        },
+        {
+          "finish": "/spaces/s1"
+        },
+        {
+          "finish": "reestablish"
+        },
+        {
+          "finish": "/spaces/s2"
+        }
+      ],
+      "expected": {
+        "started": [
+          "/",
+          "/spaces/s1",
+          "reestablish",
+          "/spaces/s2"
+        ],
+        "requests": [
+          "resolved",
+          "resolved",
+          "resolved",
+          "resolved"
+        ]
+      }
+    },
+    {
+      "id": "failed-route-does-not-wedge-the-lane",
+      "steps": [
+        {
+          "route": "/spaces/s1"
+        },
+        {
+          "route": "/"
+        },
+        {
+          "fail": "/spaces/s1"
+        },
+        {
+          "finish": "/"
+        }
+      ],
+      "expected": {
+        "started": [
+          "/spaces/s1",
+          "/"
+        ],
+        "requests": [
+          "rejected",
+          "resolved"
+        ]
+      }
+    },
+    {
+      "id": "failed-reestablishment-still-lets-the-route-follow",
+      "steps": [
+        {
+          "job": "reestablish"
+        },
+        {
+          "route": "/spaces/s1"
+        },
+        {
+          "fail": "reestablish"
+        },
+        {
+          "finish": "/spaces/s1"
+        }
+      ],
+      "expected": {
+        "started": [
+          "reestablish",
+          "/spaces/s1"
+        ],
+        "requests": [
+          "rejected",
+          "resolved"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "uri": "/hub",
+      "overlay": true
+    },
+    {
+      "uri": "/hub?from=palette",
+      "overlay": true
+    },
+    {
+      "uri": "/hub#spaces",
+      "overlay": true
+    },
+    {
+      "uri": "/",
+      "overlay": false
+    },
+    {
+      "uri": "/spaces/s1",
+      "overlay": false
+    },
+    {
+      "uri": "/spaces/s1/studio",
+      "overlay": false
+    },
+    {
+      "uri": "/spaces/s1/studio/instances/i1",
+      "overlay": false
+    },
+    {
+      "uri": "/hubs",
+      "overlay": false
+    },
+    {
+      "uri": "/hub/other",
+      "overlay": false
+    }
+  ]
+}

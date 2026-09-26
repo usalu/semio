@@ -24,13 +24,13 @@ fn insert_space_at_token_end_appends() {
 }
 
 #[test]
-fn auto_space_before_next_token_at_token_end() {
+fn no_space_is_implied_before_an_insertion_at_a_token_end() {
     let mut host = EditorHost::new();
     host.set_text("MATCH".into());
     host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
     host.set_caret_anchor(5);
     host.insert_text("(");
-    assert_eq!(host.text(), "MATCH (");
+    assert_eq!(host.text(), "MATCH(");
 }
 
 #[test]
@@ -69,14 +69,14 @@ fn select_all_sets_range() {
 }
 
 #[test]
-fn selection_snaps_var_label_composite() {
+fn a_selection_across_a_var_label_composite_stays_exact() {
     let mut host = EditorHost::new();
     host.set_text("MATCH (a1:Piece)".into());
     host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":15,"class":"ident"}]"#);
     host.set_selectable_spans_json(r#"[{"start":7,"end":9,"kind":"atomic"},{"start":7,"end":15,"kind":"varLabel","headEnd":9},{"start":10,"end":15,"kind":"atomic"}]"#);
     host.set_selection(8, 12);
-    assert_eq!(host.anchor(), 7);
-    assert_eq!(host.caret(), 15);
+    assert_eq!(host.anchor(), 8);
+    assert_eq!(host.caret(), 12);
 }
 
 #[test]
@@ -91,13 +91,13 @@ fn select_span_at_picks_ident() {
 }
 
 #[test]
-fn selection_snaps_fixed_keywords() {
+fn a_selection_inside_a_keyword_stays_exact() {
     let mut host = EditorHost::new();
     host.set_text("MATCH x".into());
     host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
     host.set_selection(2, 4);
-    assert_eq!(host.anchor(), 0);
-    assert_eq!(host.caret(), 5);
+    assert_eq!(host.anchor(), 2);
+    assert_eq!(host.caret(), 4);
 }
 
 #[test]
@@ -177,14 +177,14 @@ fn build_scene_has_content() {
 }
 
 #[test]
-fn backspace_deletes_fixed_keyword_tokenwise() {
+fn backspace_inside_a_keyword_removes_one_character() {
     let mut host = EditorHost::new();
     host.set_text("MATCH (a:Piece)".into());
     host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"},{"start":5,"end":6,"class":"operator"}]"#);
     host.set_caret_anchor(3);
     host.backspace();
-    assert_eq!(host.text(), " (a:Piece)");
-    assert_eq!(host.caret(), 0);
+    assert_eq!(host.text(), "MACH (a:Piece)");
+    assert_eq!(host.caret(), 2);
 }
 
 #[test]
@@ -552,13 +552,13 @@ fn delete_forward_at_end_is_noop() {
 }
 
 #[test]
-fn delete_forward_removes_token_wholly() {
+fn delete_forward_at_a_keyword_start_removes_one_character() {
     let mut host = EditorHost::new();
     host.set_text("MATCH x".into());
     host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
     host.set_caret_anchor(0);
     host.delete_forward();
-    assert_eq!(host.text(), " x");
+    assert_eq!(host.text(), "ATCH x");
     assert_eq!(host.caret(), 0);
     assert_eq!(host.anchor(), 0);
 }
@@ -587,24 +587,24 @@ fn move_line_start_and_end_navigate_and_extend() {
 }
 
 #[test]
-fn move_left_jumps_token_boundary() {
+fn move_left_moves_one_character_inside_a_token() {
     let mut host = EditorHost::new();
     host.set_text("MATCH x".into());
     host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
     host.set_caret_anchor(3);
     host.move_left(false);
-    assert_eq!(host.caret(), 0);
-    assert_eq!(host.anchor(), 0);
+    assert_eq!(host.caret(), 2);
+    assert_eq!(host.anchor(), 2);
 }
 
 #[test]
-fn move_right_jumps_token_boundary_and_extends() {
+fn move_right_extends_one_character_inside_a_token() {
     let mut host = EditorHost::new();
     host.set_text("MATCH x".into());
     host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"}]"#);
     host.set_caret_anchor(2);
     host.move_right(true);
-    assert_eq!(host.caret(), 5);
+    assert_eq!(host.caret(), 3);
     assert_eq!(host.anchor(), 2);
 }
 
@@ -697,7 +697,7 @@ fn select_span_at_screen_selects_atomic_span() {
 }
 
 #[test]
-fn selection_snaps_property_access_tail_allowed() {
+fn a_selection_of_a_property_access_tail_stays_exact() {
     let mut host = EditorHost::new();
     host.set_text("RETURN a1.name".into());
     host.set_semantic_tokens_json(r#"[{"start":0,"end":6,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":14,"class":"ident"}]"#);
@@ -708,7 +708,7 @@ fn selection_snaps_property_access_tail_allowed() {
 }
 
 #[test]
-fn var_label_without_head_end_falls_back_to_span_end() {
+fn a_selection_over_a_var_label_stays_exact() {
     let mut host = EditorHost::new();
     host.set_text("RETURN a1".into());
     host.set_selectable_spans_json(r#"[{"start":7,"end":9,"kind":"varLabel"}]"#);
@@ -784,13 +784,6 @@ fn build_scene_without_line_numbers_skips_gutter() {
 }
 
 #[test]
-fn is_insert_whitespace_detects_whitespace_only() {
-    assert!(is_insert_whitespace("  \t\n"));
-    assert!(!is_insert_whitespace("a "));
-    assert!(!is_insert_whitespace(""));
-}
-
-#[test]
 fn ranges_overlap_detects_overlap_and_disjoint() {
     assert!(ranges_overlap(0, 5, 3, 8));
     assert!(!ranges_overlap(0, 5, 5, 8));
@@ -835,16 +828,6 @@ fn hit_byte_in_line_empty_line_returns_zero() {
 }
 
 #[test]
-fn snap_offset_for_atomic_snaps_to_nearest_boundary() {
-    let mut host = EditorHost::new();
-    host.set_text("MATCH".into());
-    host.set_semantic_tokens_json(r#"[{"start":0,"end":6,"class":"keyword"}]"#);
-    assert_eq!(host.snap_offset_for_atomic(2), 0);
-    assert_eq!(host.snap_offset_for_atomic(4), 6);
-    assert_eq!(host.snap_offset_for_atomic(10), 10);
-}
-
-#[test]
 fn token_span_at_offset_returns_none_outside_tokens() {
     let mut host = EditorHost::new();
     host.set_text("abc".into());
@@ -853,23 +836,27 @@ fn token_span_at_offset_returns_none_outside_tokens() {
     assert_eq!(host.token_span_at_offset(0), Some((0, 1)));
 }
 
+/// 🗃️ An editor frame whose text, tokens, caret and theme did not change reshapes no label: every gutter number, line
+/// and caret measure is served by the shaped-label cache (ticket 26/09/23 F1: each paint of a one-line query spent
+/// ~85 ms re-parsing the font face and reshaping every glyph run).
 #[test]
-fn token_boundaries_detect_adjacent_tokens() {
+fn an_unchanged_frame_reshapes_no_label() {
     let mut host = EditorHost::new();
-    host.set_text("ab cd".into());
-    host.set_semantic_tokens_json(r#"[{"start":0,"end":2,"class":"x"},{"start":3,"end":5,"class":"y"}]"#);
-    assert_eq!(host.token_left_boundary(1), Some(0));
-    assert_eq!(host.token_left_boundary(2), Some(0));
-    assert_eq!(host.token_left_boundary(6), None);
-    assert_eq!(host.token_right_boundary(4), Some(5));
-    assert_eq!(host.token_right_boundary(2), None);
-}
-
-#[test]
-fn allowed_composite_selection_matches_full_span_or_default_false() {
-    let mut host = EditorHost::new();
-    host.set_text("abc".into());
-    let span = SelectableSpanJson { start: 0, end: 3, kind: "custom".into(), head_end: None, tail_start: None };
-    assert!(host.allowed_composite_selection(0, 3, &span));
-    assert!(!host.allowed_composite_selection(0, 2, &span));
+    host.set_size(640, 360, 2.0);
+    host.set_text("MATCH (n:Person)\nRETURN n.name".into());
+    host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"},{"start":17,"end":23,"class":"keyword"}]"#);
+    host.set_caret_anchor(9);
+    let cold = host.build_scene();
+    let before = canvas_text::label_shape_stats();
+    let warm = host.build_scene();
+    let after = canvas_text::label_shape_stats();
+    assert!(before.shapes > 0, "the first frame shapes its labels: {before:?}");
+    assert_eq!(after.shapes, before.shapes, "an unchanged frame reshaped: {before:?} → {after:?}");
+    assert!(after.hits > before.hits, "an unchanged frame reuses shaped labels: {before:?} → {after:?}");
+    assert_eq!(warm.path_count(), cold.path_count());
+    host.insert_text("x");
+    let _ = host.build_scene();
+    let edited = canvas_text::label_shape_stats();
+    assert!(edited.shapes > after.shapes, "an edited line is shaped again: {after:?} → {edited:?}");
+    assert!(edited.shapes - after.shapes <= 4, "an edit reshapes only its own line, caret and gutter: {after:?} → {edited:?}");
 }

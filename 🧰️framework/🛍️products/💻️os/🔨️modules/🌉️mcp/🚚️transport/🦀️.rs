@@ -600,8 +600,17 @@ impl HttpTransport {
     /// answers 404. `run_stdio` uses this so a live os session can attach to a gateway whose MCP
     /// surface is stdin/stdout. The bound port is read back off the run, because the caller binds
     /// `:0` and only then knows what to publish into its rendezvous offer.
+    ///
+    /// 🧹️ Nobody drains a bridge-only run's terminal connections (`run_stdio` never calls
+    /// [`HttpTransportRun::wait`]), so it closes them itself from the start. Retaining them leaked one
+    /// slot per shell connection that ever ended until [`HTTP_CONNECTION_CAPACITY`] was reached, after
+    /// which the listener parked for good: every later shell's TCP connect was accepted by the kernel
+    /// and never answered (measured 2026-09-26: an 8.6 h old gateway holding exactly 64 CLOSED sockets).
     pub fn start_bridge_only(&mut self) -> Result<HttpTransportRun, GatewayError> {
-        self.start_with(None)
+        let run = self.start_with(None)?;
+        run.inner.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).terminal_policy = HttpTerminalPolicy::Close;
+        run.inner.request_schedule();
+        Ok(run)
     }
 
     fn start_with(&mut self, server: Option<McpServer>) -> Result<HttpTransportRun, GatewayError> {
@@ -700,6 +709,21 @@ impl HttpTerminalConnection {
     }
 }
 
+/// 🏁️ A waitable view of one run's completion, see [`HttpTransportRun::completion`].
+pub struct HttpTransportCompletion {
+    inner: Arc<HttpTransportAuthority>,
+}
+
+impl HttpTransportCompletion {
+    pub fn wait(&self) {
+        let (lock, wake) = &self.inner.completion;
+        let mut completion = lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        while completion.is_none() {
+            completion = wake.wait(completion).unwrap_or_else(std::sync::PoisonError::into_inner);
+        }
+    }
+}
+
 /// 🕹️ Opaque owner returned by [`HttpTransport::start`]. Waiting is permitted only at the process
 /// entry boundary; every socket operation itself remains a finite `Lane::Io` pool turn.
 pub struct HttpTransportRun {
@@ -727,6 +751,13 @@ impl HttpTransportRun {
         state.run_generation = state.run_generation.wrapping_add(1).max(1);
         drop(state);
         self.inner.request_schedule();
+    }
+
+    /// 🏁️ Blocks until this run has completed (cancelled, closed or failed) without consuming it or
+    /// changing how it treats terminal connections — for a caller that must act when the listener
+    /// can no longer serve, e.g. withdraw the rendezvous offer that points at it.
+    pub fn completion(&self) -> HttpTransportCompletion {
+        HttpTransportCompletion { inner: Arc::clone(&self.inner) }
     }
 
     pub fn take_terminal_connection(&self) -> Option<HttpTerminalConnection> {
@@ -771,6 +802,12 @@ const HTTP_REQUEST_BYTES: usize = 1_048_576;
 const HTTP_RESPONSE_BYTES: usize = 1_048_576;
 const HTTP_IO_PAGE_BYTES: usize = 16_384;
 const HTTP_SLOWLORIS_MS: u64 = 15_000;
+/// ⏳️ How long an upgraded `/bridge` socket may stay open without its `Hello` before the gateway
+/// closes it: every accepted connection ends in a bounded time, answered or not.
+pub const BRIDGE_OPENING_DEADLINE_MS: u64 = 10_000;
+/// 🚫️ What a connection accepted while every slot is taken is answered with before it is closed: a
+/// typed refusal, never a silent wait in the kernel's accept queue.
+const HTTP_CAPACITY_REFUSAL: &[u8] = b"HTTP/1.1 503 Service Unavailable\r\nContent-Type: application/json\r\nContent-Length: 60\r\nConnection: close\r\n\r\n{\"schema\":\"semio.mcp.transport-refusal/v1\",\"reason\":\"capacity\"}";
 const HTTP_READINESS_POLL_MS: u64 = 4;
 const HTTP_RETRY_MS: u64 = 1;
 const WEBSOCKET_FRAME_BYTES: usize = 1_048_576;
@@ -1073,7 +1110,7 @@ impl HttpTransportState {
 
     fn accept_one(&mut self, now_ms: u64) -> HttpTurn {
         if self.active_connections() + self.terminal.len() >= HTTP_CONNECTION_CAPACITY {
-            return HttpTurn::Parked;
+            return self.refuse_one_at_capacity();
         }
         let Some(index) = self.connections.iter().position(Option::is_none) else { return HttpTurn::PollReadiness };
         let Some(listener) = self.listener.as_ref() else {
@@ -1117,6 +1154,23 @@ impl HttpTransportState {
         }
     }
 
+    /// 🚫️ At capacity the next waiting connection is still accepted — and answered with
+    /// [`HTTP_CAPACITY_REFUSAL`] and closed — so a client learns why instead of waiting on a socket the
+    /// gateway will never read. Nothing waiting: the run parks until a slot frees.
+    fn refuse_one_at_capacity(&mut self) -> HttpTurn {
+        let Some(listener) = self.listener.as_ref() else { return HttpTurn::Parked };
+        match listener.accept() {
+            Ok((mut stream, _peer)) => {
+                let _ = stream.set_nonblocking(true);
+                let _ = stream.write(HTTP_CAPACITY_REFUSAL);
+                let _ = stream.shutdown(Shutdown::Both);
+                HttpTurn::MoreWork
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::Interrupted => HttpTurn::MoreWork,
+            Err(_) => HttpTurn::Parked,
+        }
+    }
+
     fn begin_failure(&mut self, error: GatewayError) -> HttpTurn {
         self.terminal_result = Some(error);
         self.mode = HttpTransportMode::Closing;
@@ -1126,7 +1180,7 @@ impl HttpTransportState {
 
     fn drive_connection(&mut self, index: usize, now_ms: u64) -> HttpTurn {
         let mut connection = self.connections[index].take().expect("http connection slot disappeared");
-        if now_ms >= connection.header_deadline_ms && matches!(connection.phase, HttpConnectionPhase::ReadHttp | HttpConnectionPhase::ParseHttp) {
+        if now_ms >= connection.header_deadline_ms && (matches!(connection.phase, HttpConnectionPhase::ReadHttp | HttpConnectionPhase::ParseHttp) || (connection.bridge.opening && matches!(connection.phase, HttpConnectionPhase::ReadWebSocket | HttpConnectionPhase::ParseWebSocket))) {
             self.terminalize(connection, HttpTerminalReason::Interrupted);
             return HttpTurn::MoreWork;
         }
@@ -1304,6 +1358,9 @@ impl HttpTransportState {
         connection.egress = response.bytes;
         connection.written = 0;
         connection.bridge.opening = response.upgrade;
+        if response.upgrade {
+            connection.header_deadline_ms = connection.last_progress_ms.saturating_add(BRIDGE_OPENING_DEADLINE_MS);
+        }
         ConnectionTurn::Keep(HttpConnectionPhase::Write(if response.upgrade { HttpAfterWrite::Upgrade } else { HttpAfterWrite::Close }))
     }
 
@@ -1445,6 +1502,11 @@ impl HttpTransportState {
         };
         let consumed = connection.bridge.inbound.as_ref().expect("bridge inbound cursor disappeared").frame.consumed;
         match message {
+            crate::bridge::ShellToGateway::Hello { bridge_version, .. } if connection.bridge.opening && bridge_version != crate::bridge::BRIDGE_VERSION => {
+                self.consume_websocket_ingress(connection, consumed);
+                let refused = crate::bridge::GatewayToShell::Refused { reason: crate::bridge::BridgeRefusal::Version, gateway_version: crate::bridge::BRIDGE_VERSION };
+                self.queue_websocket_payload(connection, 0x2, &refused.encode(), HttpAfterWrite::WebSocketClose)
+            }
             crate::bridge::ShellToGateway::Hello { flags, .. } if connection.bridge.opening => {
                 self.consume_websocket_ingress(connection, consumed);
                 let (id, outbox) = self.bridge.register();

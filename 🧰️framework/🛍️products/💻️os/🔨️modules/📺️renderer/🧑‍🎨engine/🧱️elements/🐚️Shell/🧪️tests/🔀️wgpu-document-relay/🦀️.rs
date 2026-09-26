@@ -178,3 +178,76 @@ fn a_panel_action_is_dispatched_in_the_active_window() {
     assert_eq!(action_window_instance_id(Some("note-navigator"), &panels, None, Some("note-composite"), "note-composite"), "note-navigator");
     assert_eq!(action_window_instance_id(None, &panels, None, None, "note-composite"), "note-composite");
 }
+
+/// 🔌️ The document link a shell speaks follows the kernel's one `DocumentLink` (ticket 26/09/23 audit P2-2): a
+/// backoff is a short link and the Sync card says so, live relinks and clears the line, the actor's coded
+/// terminal conflict (`link-expired`, `access-revoked`) ends the link until the next open — in both tongues,
+/// with the texts of `🏪️store/🧫️fixtures/document-link-shortage-v1`.
+#[test]
+fn a_short_link_is_spoken_and_a_terminal_link_ends_until_the_next_open() {
+    use store_sync::sync::DocumentLinkStatus;
+    assert_eq!(shell_sync_link_after_status(DocumentLinkStatus::Linked, &RemoteState::Backoff { retry_in_ms: 500 }), DocumentLinkStatus::Reconnecting);
+    assert_eq!(shell_sync_link_after_status(DocumentLinkStatus::Reconnecting, &RemoteState::Connecting), DocumentLinkStatus::Reconnecting);
+    assert_eq!(shell_sync_link_after_status(DocumentLinkStatus::Reconnecting, &RemoteState::Live { peer_count: 1 }), DocumentLinkStatus::Linked);
+    assert_eq!(shell_sync_link_after_status(DocumentLinkStatus::Linked, &RemoteState::Connecting), DocumentLinkStatus::Linked, "a first dial is not a shortage");
+    assert_eq!(shell_sync_link_after_status(DocumentLinkStatus::LinkExpired, &RemoteState::Live { peer_count: 0 }), DocumentLinkStatus::LinkExpired, "a late socket never relinks an expired link");
+    assert_eq!(shell_sync_link_terminal("link-expired"), Some(DocumentLinkStatus::LinkExpired));
+    assert_eq!(shell_sync_link_terminal("access-revoked"), Some(DocumentLinkStatus::AccessRevoked));
+    assert_eq!(shell_sync_link_terminal("artifactBootstrap"), None);
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let quiet = serde_json::to_string(&shell.build_sync_attach_ui()).expect("sync ui json");
+    assert!(!quiet.contains("framework.sync.link."), "a linked document speaks no link line");
+    for (status, locale) in [(DocumentLinkStatus::Reconnecting, "en"), (DocumentLinkStatus::LinkExpired, "de"), (DocumentLinkStatus::AccessRevoked, "en")] {
+        shell.sync_link = status;
+        shell.locale_id = locale.into();
+        let tree = serde_json::to_string(&shell.build_sync_attach_ui()).expect("sync ui json");
+        let line = status.text(locale == "de").expect("a shortage status speaks");
+        assert!(tree.contains(&format!("framework.sync.link.{}", status.code())) && tree.contains(line), "{} in {locale}", status.code());
+    }
+}
+
+/// 👤️ A wgpu peer shows up in every roster (React's and wgpu's) under the person's name — React's
+/// `presenceClientIdentity` rule — never under the app id it used to send; a shell nobody signed into is a guest.
+#[test]
+fn a_presence_heartbeat_names_the_signed_in_person() {
+    let identity = Identity { user_id: "01a0d91d-2b03".into(), email: "user2@semio.dev".into(), display_name: "User Two".into(), hub_base_url: "http://127.0.0.1:8050".into(), issued_at_ms: 0 };
+    assert_eq!(shell_presence_label(Some(&identity), "user:01a0d91d-2b03#shell-7"), "User Two");
+    assert_eq!(shell_presence_label(None, "wgpu-shell-9f3c"), "Guest 9F3C");
+    let blank = Identity { display_name: "  ".into(), ..identity };
+    assert_eq!(shell_presence_label(Some(&blank), "wgpu-shell-ab12"), "Guest AB12");
+}
+
+/// 🔁️ The frame loop owes the shell's sync pump on both builds: measured live (run s12b), a browser document actor
+/// exchanged hello → Welcome → Commands → Session with the hub while its shell, whose pump cadence was native-only,
+/// never received a single `Status`, `Presence` or `RemoteMutations` event — and the browser's directory lane, creation
+/// door and agent bridge ride the same pump. Pinned on the source because the gate lives in wasm32-only control flow.
+#[test]
+fn the_sync_pump_cadence_is_not_gated_off_the_browser_build() {
+    let renderer = include_str!("../../../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+    let deferred = renderer.split("FrameFinishPhase::Deferred => {").nth(1).expect("the deferred finish phase exists");
+    let deferred = &deferred[..deferred.find("FrameFinishPhase::IconRaster => {").expect("the phase ends before the icon raster")];
+    assert!(deferred.contains("cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= SHELL_SYNC_PUMP_INTERVAL_MS;"), "the pump is owed on a fixed cadence");
+    assert!(!deferred.contains("cfg(not(target_arch") && !deferred.contains("cfg(target_arch"), "one cadence on both builds");
+}
+
+/// 🚦️ The footer speaks the document's CURRENT link, and names the chips it paints without a hit target: measured
+/// live (run s12c) the sync pill — and its accessible name — kept `Remote: detached` after the actor was live until a
+/// full refresh rebuilt the dock, and the presence roster was painted but absent from the accessibility tree
+/// (React's `#s-presence-peers` is a labelled status).
+#[test]
+fn the_footer_speaks_its_live_sync_pill_and_names_its_status_chips() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let pill = shell_sync_pill_text(shell.sync_pill(), false);
+    shell.dock_tabs.tabs_mut(PanelAnchor::BottomLeft).push(DockTabNode::leaf(FRAMEWORK_SYNC_PANEL_TAB_ID, pill, "refresh-cw", 0));
+    let detached = shell.dock_tabs.tabs(PanelAnchor::BottomLeft)[0].label.clone();
+    shell.sync_status = Some(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None });
+    shell.relabel_sync_tab();
+    let live = shell.dock_tabs.tabs(PanelAnchor::BottomLeft)[0].label.clone();
+    assert_ne!(live, detached, "a live document never keeps the detached pill");
+    assert_eq!(live, shell_sync_pill_text(shell.sync_pill(), false));
+    let nodes = shell.chrome_accessibility_nodes(&[]);
+    let roster = nodes.iter().find(|node| node.key == "s-presence-peers").expect("the roster chip is a named node");
+    assert_eq!(roster.role, "status");
+    assert!(!roster.focusable && !roster.actionable, "a status is read, never a tab stop");
+    assert_eq!(roster.label.as_deref(), Some(ui_wgpu::wgpu::presence_empty_label(Locale::En).as_str()));
+}

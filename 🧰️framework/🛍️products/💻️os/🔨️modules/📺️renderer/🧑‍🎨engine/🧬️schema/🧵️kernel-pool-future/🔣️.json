@@ -5,7 +5,8 @@
   "additionalProperties": false,
   "required": [
     "cases",
-    "responses"
+    "responses",
+    "admissions"
   ],
   "properties": {
     "cases": {
@@ -70,6 +71,47 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 4294967295
+          }
+        }
+      }
+    },
+    "admissions": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "blockedBy",
+          "producers",
+          "admittedAfterRelease"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "blockedBy": {
+            "enum": [
+              "contended",
+              "full"
+            ]
+          },
+          "producers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "admittedAfterRelease": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            }
           }
         }
       }

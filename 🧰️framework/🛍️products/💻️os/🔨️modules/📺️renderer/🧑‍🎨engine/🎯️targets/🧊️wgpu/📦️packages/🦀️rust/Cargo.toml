@@ -41,6 +41,9 @@ infinite_canvas = { path = "../../../../../../♾️infinite/📦️packages/�
 semio-framework-3d = { path = "../../../../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 puzzle = { path = "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+# 👕️ The replication contract's pure peer-overlay derivation (`peers_for_window`, `canvas_point_to_screen`, …) the wgpu
+# canvas-presence twin (`🧱️elements/👕️canvas-presence/🎯️targets/🧊️wgpu`) paints peers with. Workspace-internal.
+replication = { path = "../../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-os-config = { workspace = true }
 semio-framework-os-shell = { workspace = true }
 ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }

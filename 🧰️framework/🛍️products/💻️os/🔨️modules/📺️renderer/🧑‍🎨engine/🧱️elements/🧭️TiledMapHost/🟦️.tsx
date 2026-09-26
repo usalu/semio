@@ -28,7 +28,8 @@ import {
   type IconName,
 } from "@semio-tech/ui-react";
 import { GestureRecognizer, applyPinchToCamera, type ComponentSceneHostProps, type MergeMode } from "@semio-tech/framework";
-import { type MapWasmSession, createMapSession, createDemandFrameScheduler } from "../🪪️WasmSessionLoader/🟦️.tsx";
+import { type MapWasmSession, createMapSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
+import { EASED_SURFACE_TRAILING_WINDOW_MS, createDemandFrameScheduler } from "@semio-tech/infinite-canvas-react-renderer";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`🟦️Interpreter` already landed in a prior batch.
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
@@ -696,11 +697,14 @@ export class MapRenderer {
    * instead of forever. */
   startLoop(): void {
     if (this.scheduler) return;
-    this.scheduler = createDemandFrameScheduler(() => {
-      if (this.disposed) return;
-      this.pollVisibleTilesForRefresh();
-      void this.session.renderFrame();
-    });
+    this.scheduler = createDemandFrameScheduler(
+      () => {
+        if (this.disposed) return;
+        this.pollVisibleTilesForRefresh();
+        void this.session.renderFrame();
+      },
+      { trailingWindowMs: EASED_SURFACE_TRAILING_WINDOW_MS },
+    );
     this.scheduler.invalidate();
   }
 

@@ -392,8 +392,45 @@
               "$ref": "#/$defs/ArtifactRetention"
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "userId",
+            "schema",
+            "mutation"
+          ],
+          "x-semio-note": "one preference change of ONE user, visible to that user only and never on the default directory lane: `GET /directory/preference-page/v1` carries these and nothing else, the default page and socket fold skip them. `schema` names the preference vocabulary (the hub is domain-neutral and never reads `mutation`); `mutation` is that vocabulary's canonical JSON text",
+          "properties": {
+            "kind": {
+              "const": "user.preference-recorded"
+            },
+            "userId": {
+              "type": "string"
+            },
+            "schema": {
+              "$ref": "#/$defs/UserPreferenceSchemaIdV1"
+            },
+            "mutation": {
+              "$ref": "#/$defs/UserPreferenceMutationTextV1"
+            }
+          }
         }
       ]
+    },
+    "UserPreferenceSchemaIdV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9.-]*[a-z0-9]$"
+    },
+    "UserPreferenceMutationTextV1": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 4096,
+      "x-semio-note": "canonical JSON text of one object; the byte bound (4096 UTF-8 bytes) is enforced by both twins"
     },
     "DirectoryEvent": {
       "type": "object",
@@ -692,6 +729,26 @@
             },
             "descriptor": {
               "$ref": "#/$defs/DocumentDescriptor"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "mutation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "record-user-preference"
+            },
+            "schema": {
+              "$ref": "#/$defs/UserPreferenceSchemaIdV1"
+            },
+            "mutation": {
+              "$ref": "#/$defs/UserPreferenceMutationTextV1"
             }
           }
         }

@@ -397,9 +397,11 @@ pub fn decide_credential_sign_in(policy: CredentialSignInPolicyV1, request: &Ver
     if !policy.is_enabled() {
         return CredentialSignInDecisionV1::Refuse(AuthErrorCodeV1::CredentialSignInDisabled);
     }
-    let Some(subject) = subject else { return CredentialSignInDecisionV1::Refuse(AuthErrorCodeV1::InvalidCredentials) };
-    let Some(encoded) = subject.password_hash.as_deref() else { return CredentialSignInDecisionV1::Refuse(AuthErrorCodeV1::InvalidCredentials) };
-    let Ok(credential) = password::PasswordCredentialV1::parse(encoded) else { return CredentialSignInDecisionV1::Refuse(AuthErrorCodeV1::InvalidCredentials) };
+    let stored = subject.and_then(|subject| subject.password_hash.as_deref().and_then(|encoded| password::PasswordCredentialV1::parse(encoded).ok()).map(|credential| (subject, credential)));
+    let Some((subject, credential)) = stored else {
+        password::PasswordCredentialV1::absent().verify(request.password());
+        return CredentialSignInDecisionV1::Refuse(AuthErrorCodeV1::InvalidCredentials);
+    };
     if credential.verify(request.password()) {
         CredentialSignInDecisionV1::Mint { user_id: subject.user_id.clone(), ttl_secs: policy.session_ttl_secs() }
     } else {

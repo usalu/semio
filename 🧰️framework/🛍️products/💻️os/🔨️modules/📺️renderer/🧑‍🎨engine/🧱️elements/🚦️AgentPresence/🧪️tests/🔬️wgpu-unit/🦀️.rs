@@ -21,6 +21,8 @@ fn every_status_presence_pair_maps_to_the_react_tone() {
         (AgentBridgeStatus::Reconnecting, &busy, AgentPresenceTone::Connecting),
         (AgentBridgeStatus::Open, &busy, AgentPresenceTone::Working),
         (AgentBridgeStatus::Open, &idle, AgentPresenceTone::Connected),
+        (AgentBridgeStatus::Unavailable, &busy, AgentPresenceTone::Blocked),
+        (AgentBridgeStatus::Incompatible(crate::agent_bridge::AgentBridgeVersionMismatch { gateway: 2, shell: 1 }), &idle, AgentPresenceTone::Blocked),
     ];
     for (status, presence, expected) in table {
         assert_eq!(agent_presence_tone(status, presence), expected, "{status:?} + active={}", presence.active);
@@ -58,6 +60,7 @@ fn the_four_tones_take_four_distinct_theme_tokens() {
     assert_eq!(colors[1], theme.accent);
     assert_eq!(colors[2], theme.warning);
     assert_eq!(colors[3], theme.text_muted);
+    assert_eq!(agent_presence_color(AgentPresenceTone::Blocked, &theme), theme.error);
 }
 
 #[test]
@@ -70,6 +73,11 @@ fn status_text_follows_the_react_precedence_in_both_locales() {
     assert_eq!(agent_presence_text(AgentBridgeStatus::Closed, &busy, Locale::En), "Agent disconnected");
     assert_eq!(agent_presence_text(AgentBridgeStatus::Open, &busy, Locale::De), "Agent aktiv: compile");
     assert_eq!(agent_presence_text(AgentBridgeStatus::Closed, &busy, Locale::De), "Agent getrennt");
+    let incompatible = AgentBridgeStatus::Incompatible(crate::agent_bridge::AgentBridgeVersionMismatch { gateway: 2, shell: 1 });
+    assert_eq!(agent_presence_text(AgentBridgeStatus::Unavailable, &busy, Locale::En), "The AI client's bridge does not answer; restart the AI client to connect again");
+    assert_eq!(agent_presence_text(AgentBridgeStatus::Unavailable, &busy, Locale::De), "Die Brücke des KI-Clients antwortet nicht; starte den KI-Client neu, um erneut zu verbinden");
+    assert_eq!(agent_presence_text(incompatible, &busy, Locale::En), "The AI client uses bridge version 2, this shell version 1; update the older one");
+    assert_eq!(agent_presence_text(incompatible, &busy, Locale::De), "Der KI-Client nutzt Brückenversion 2, diese Oberfläche Version 1; aktualisiere die ältere");
 }
 
 #[test]
@@ -78,4 +86,5 @@ fn the_tone_string_matches_the_react_data_attribute_vocabulary() {
     assert_eq!(AgentPresenceTone::Working.as_str(), "working");
     assert_eq!(AgentPresenceTone::Connecting.as_str(), "connecting");
     assert_eq!(AgentPresenceTone::Disconnected.as_str(), "disconnected");
+    assert_eq!(AgentPresenceTone::Blocked.as_str(), "blocked");
 }

@@ -1293,6 +1293,23 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             // reported in this packet's migration notes). The subset's own `📚️examples/🎬️demo` facet
             // (`crate::examples::...`, real content, pre-existing) is the modern,
             // role-agnostic replacement surface for this.
+            .action_describe("seedGrid", LocalizedLabel::native("Replaces every tile of the deck with a fresh grid of the given rows and columns cut from the source image; the previous tiles are discarded.", "Ersetzt alle Kacheln des Decks durch ein neues Raster mit den angegebenen Zeilen und Spalten aus dem Quellbild; die bisherigen Kacheln werden verworfen."))
+            .action_describe("addTile", LocalizedLabel::native("Adds one new tile cropping the given region of the source image (a small square near the top left when none is given) and selects it.", "Fügt eine neue Kachel hinzu, die den angegebenen Bereich des Quellbilds ausschneidet (ohne Angabe ein kleines Quadrat oben links), und wählt sie aus."))
+            .action_describe("deleteTile", LocalizedLabel::native("Deletes one tile by id from the deck; its crop and name are gone unless the edit is undone.", "Löscht eine Kachel anhand ihrer Id aus dem Deck; Zuschnitt und Name sind fort, sofern die Änderung nicht rückgängig gemacht wird."))
+            .action_describe("deleteSelection", LocalizedLabel::native("Deletes every currently selected tile from the deck.", "Löscht alle aktuell ausgewählten Kacheln aus dem Deck."))
+            .action_describe("renameTiles", LocalizedLabel::native("Gives every tile with the given ids the same new name; an empty name changes nothing.", "Gibt allen Kacheln mit den angegebenen Ids denselben neuen Namen; ein leerer Name ändert nichts."))
+            .action_describe("patchTileCrops", LocalizedLabel::native("Sets one crop coordinate (x, y, width or height, as a fraction of the source image) on every tile with the given ids.", "Setzt eine Zuschnittkoordinate (x, y, Breite oder Höhe, als Anteil des Quellbilds) auf allen Kacheln mit den angegebenen Ids."))
+            .action_describe("setSource", LocalizedLabel::native("Sets the source image the tiles are cut from; choosing a different image discards every existing tile.", "Legt das Quellbild fest, aus dem die Kacheln geschnitten werden; ein anderes Bild verwirft alle vorhandenen Kacheln."))
+            .action_describe("setFrame", LocalizedLabel::native("Moves and resizes the frame the source image is shown in within the presentation (x, y, width, height).", "Verschiebt und skaliert den Rahmen, in dem das Quellbild in der Präsentation erscheint (x, y, Breite, Höhe)."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole presentation with the bundled demo deck; any other example id changes nothing.", "Ersetzt die gesamte Präsentation durch das mitgelieferte Demo-Deck; jede andere Beispiel-Id ändert nichts."))
+            .action_describe("clearTiles", LocalizedLabel::native("Removes every tile from the deck and keeps only the source image.", "Entfernt alle Kacheln aus dem Deck und behält nur das Quellbild."))
+            .action_describe("copyPrompt", LocalizedLabel::native("Writes a tile-morph prompt describing the source image and every tile to a downloaded tile-morph-prompt.md file on the user's machine.", "Schreibt einen Tile-Morph-Prompt, der das Quellbild und jede Kachel beschreibt, in eine heruntergeladene Datei tile-morph-prompt.md auf dem Rechner des Nutzers."))
+            .action_describe("exportVideoFromDeck", LocalizedLabel::native("Renders a presentation scene (JSON) to video assets in the given output directory and downloads their list as animate-video-export.ops.", "Rendert eine Präsentationsszene (JSON) als Videodateien in das angegebene Ausgabeverzeichnis und lädt deren Liste als animate-video-export.ops herunter."))
+            .action_describe("resetGrid", LocalizedLabel::native("Replaces every tile of the deck with the default 3 by 5 grid cut from the source image; the previous tiles are discarded.", "Ersetzt alle Kacheln des Decks durch das Standardraster von 3 mal 5 aus dem Quellbild; die bisherigen Kacheln werden verworfen."))
+            .action_audience("noMutation", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_destructive("seedGrid")
+            .action_destructive("setSource")
+            .action_destructive("copyPrompt")
             .build_definition()
 }
 //#endregion 🔖️Manifest

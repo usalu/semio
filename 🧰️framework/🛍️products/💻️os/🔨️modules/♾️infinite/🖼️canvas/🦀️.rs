@@ -783,6 +783,11 @@ mod renderer {
         pub fn retirement_backing_bytes(&self) -> usize {
             self.0.capacity().saturating_mul(size_of::<SceneCommand>())
         }
+        /// 📦️ Bytes this scene keeps resident: its command list plus every command's own backing (path elements,
+        /// stroke dashes, image pixels) — what a cache holding the scene accounts it at.
+        pub fn retained_bytes(&self) -> usize {
+            self.0.iter().fold(self.retirement_backing_bytes(), |total, command| total.saturating_add(command.retirement_backing_bytes()))
+        }
         pub fn fill<'a>(&mut self, rule: FillRule, transform: Affine, paint: impl Into<Paint>, brush_transform: Option<Affine>, shape: impl Into<ShapeRef<'a>>) {
             self.0.push(SceneCommand::Fill { rule, transform, paint: paint.into(), brush_transform, shape: shape.into().into() });
         }
@@ -1692,6 +1697,12 @@ pub mod text {
     //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`,
     //! `🔍️research/📓️infinite-text-shaping.md`.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    use std::cell::RefCell;
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    use std::collections::HashMap;
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    use std::rc::Rc;
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use std::sync::{Arc, OnceLock};
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -1714,6 +1725,256 @@ pub mod text {
             let family = db.faces().next().and_then(|face| face.families.first().map(|(name, _)| name.clone())).unwrap_or_else(|| ui_styling::canvas_fonts::MAP_LABEL_SANS_FALLBACK.into());
             usvg::Options { fontdb: Arc::new(db), font_family: family, ..Default::default() }
         })
+    }
+
+    /// @emoji 🗂️ The schema whose `const`s are the shaped-label cache's bounds — their only source.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    pub const LABEL_SHAPES_SCHEMA: &str = include_str!("🧬️schema/🏷️label-shapes/🔣️.json");
+
+    /// @emoji 📏️ Entry, byte and per-entry byte bounds of one [`BoundedLru`].
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct LabelShapeBounds {
+        pub maximum_entries: usize,
+        pub maximum_bytes: usize,
+        pub maximum_entry_bytes: usize,
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    impl LabelShapeBounds {
+        /// @emoji 📜️ Reads the bounds a label-shapes schema declares as `properties.<bound>.const`; refuses a
+        /// schema without them, with no entry, or whose single entry could exceed the total.
+        pub fn from_schema(schema: &str) -> Result<Self, String> {
+            let document: serde_json::Value = serde_json::from_str(schema).map_err(|error| format!("label-shapes schema: {error}"))?;
+            let bound = |name: &str| document["properties"][name]["const"].as_u64().and_then(|value| usize::try_from(value).ok()).ok_or_else(|| format!("label-shapes schema declares no integer `properties.{name}.const`"));
+            let bounds = Self { maximum_entries: bound("maximumEntries")?, maximum_bytes: bound("maximumBytes")?, maximum_entry_bytes: bound("maximumEntryBytes")? };
+            if bounds.maximum_entries == 0 || bounds.maximum_entry_bytes > bounds.maximum_bytes {
+                return Err(format!("label-shapes schema bounds are inconsistent: {bounds:?}"));
+            }
+            Ok(bounds)
+        }
+
+        /// @emoji 🏷️ The bounds [`LABEL_SHAPES_SCHEMA`] declares.
+        pub fn declared() -> Self {
+            static DECLARED: OnceLock<LabelShapeBounds> = OnceLock::new();
+            *DECLARED.get_or_init(|| Self::from_schema(LABEL_SHAPES_SCHEMA).expect("the label-shapes schema declares consistent bounds"))
+        }
+    }
+
+    /// @emoji 🧾️ What one [`BoundedLru::admit`] did: stored after evicting these keys (least recent first), or bypassed
+    /// because the entry alone exceeds `maximum_entry_bytes`.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub enum LruAdmission {
+        Stored { evicted: Vec<String> },
+        Bypassed,
+    }
+
+    /// @emoji 🔁️ A least-recently-used map bounded by entry count, total accounted bytes and per-entry bytes — the
+    /// policy of the shaped-label cache, generic so its laws replay without a font.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    pub struct BoundedLru<V> {
+        bounds: LabelShapeBounds,
+        entries: HashMap<String, (V, usize, u64)>,
+        bytes: usize,
+        clock: u64,
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    impl<V> BoundedLru<V> {
+        pub fn new(bounds: LabelShapeBounds) -> Self {
+            Self { bounds, entries: HashMap::new(), bytes: 0, clock: 0 }
+        }
+
+        /// @emoji 🔎️ The value under `key`, made the most recent.
+        pub fn get(&mut self, key: &str) -> Option<&V> {
+            self.clock += 1;
+            let clock = self.clock;
+            let entry = self.entries.get_mut(key)?;
+            entry.2 = clock;
+            Some(&entry.0)
+        }
+
+        /// @emoji ➕️ Stores `value` under `key`, accounted at `bytes`, after evicting least-recently-used keys until
+        /// both the entry count and the byte total fit; replaces a present key.
+        pub fn admit(&mut self, key: String, value: V, bytes: usize) -> LruAdmission {
+            if let Some((_, previous, _)) = self.entries.remove(&key) {
+                self.bytes -= previous;
+            }
+            if bytes > self.bounds.maximum_entry_bytes {
+                return LruAdmission::Bypassed;
+            }
+            let mut evicted = Vec::new();
+            while self.entries.len() >= self.bounds.maximum_entries || self.bytes + bytes > self.bounds.maximum_bytes {
+                let Some(oldest) = self.entries.iter().min_by_key(|(_, entry)| entry.2).map(|(oldest, _)| oldest.clone()) else {
+                    break;
+                };
+                if let Some((_, released, _)) = self.entries.remove(&oldest) {
+                    self.bytes -= released;
+                }
+                evicted.push(oldest);
+            }
+            self.clock += 1;
+            self.bytes += bytes;
+            self.entries.insert(key, (value, bytes, self.clock));
+            LruAdmission::Stored { evicted }
+        }
+
+        pub fn len(&self) -> usize {
+            self.entries.len()
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.entries.is_empty()
+        }
+
+        /// @emoji ⚖️ Accounted bytes of every resident entry.
+        pub fn bytes(&self) -> usize {
+            self.bytes
+        }
+
+        /// @emoji 🗝️ Resident keys, least recent first.
+        pub fn keys(&self) -> Vec<String> {
+            let mut rows: Vec<(u64, &String)> = self.entries.iter().map(|(key, entry)| (entry.2, key)).collect();
+            rows.sort_unstable();
+            rows.into_iter().map(|(_, key)| key.clone()).collect()
+        }
+    }
+
+    /// @emoji 🖋️ One shaped label: the usvg content bounds of its markup and, once painted, its outline scene.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    struct LabelShape {
+        bounds: (f64, f64, f64, f64),
+        scene: Option<Scene>,
+    }
+
+    /// @emoji 📊️ Counters of the calling thread's shaped-label cache: `shapes` counts usvg shapings (font face parse +
+    /// glyph shaping + outlining), `hits` the paints and measures that reused one.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+    pub struct LabelShapeStats {
+        pub hits: u64,
+        pub shapes: u64,
+        pub evictions: u64,
+        pub bypasses: u64,
+        pub entries: usize,
+        pub bytes: usize,
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    struct LabelShapeCache {
+        lru: BoundedLru<Rc<LabelShape>>,
+        stats: LabelShapeStats,
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    thread_local! {
+        static LABEL_SHAPES: RefCell<LabelShapeCache> = RefCell::new(LabelShapeCache { lru: BoundedLru::new(LabelShapeBounds::declared()), stats: LabelShapeStats::default() });
+    }
+
+    /// @emoji 📊️ The calling thread's shaped-label cache counters (a browser canvas session runs on one thread; every
+    /// native test thread owns its own cache).
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    pub fn label_shape_stats() -> LabelShapeStats {
+        LABEL_SHAPES.with(|cache| {
+            let cache = cache.borrow();
+            LabelShapeStats { entries: cache.lru.len(), bytes: cache.lru.bytes(), ..cache.stats }
+        })
+    }
+
+    /// @emoji 🗃️ Shapes `markup` with usvg once per content: every later paint (`paint`) or measure of the same markup
+    /// reuses the shaped outline scene and bounds, so an unchanged frame re-parses no font face and reshapes no glyph
+    /// run (measured ticket 26/09/23 F1: an idle-then-typed trinity query editor spent ~85 ms of every paint in
+    /// `usvg::Tree::from_str`). The markup carries every input of the shaping — text, size, family, fill, halo.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn shaped_label(markup: &str, paint: bool) -> Option<Rc<LabelShape>> {
+        let cached = LABEL_SHAPES.with(|cache| {
+            let mut cache = cache.borrow_mut();
+            let shape = cache.lru.get(markup).filter(|shape| !paint || shape.scene.is_some()).cloned();
+            if shape.is_some() {
+                cache.stats.hits += 1;
+            }
+            shape
+        });
+        if cached.is_some() {
+            return cached;
+        }
+        let tree = usvg::Tree::from_str(markup, usvg_options_map_labels()).ok()?;
+        let bounds = super::svg_icon::svg_icon_content_bounds(&tree);
+        let scene = paint.then(|| {
+            let mut scene = Scene::new();
+            render_svg_tree_literal(&mut scene, &tree);
+            scene
+        });
+        let bytes = markup.len() + size_of::<LabelShape>() + scene.as_ref().map_or(0, Scene::retained_bytes);
+        let shape = Rc::new(LabelShape { bounds, scene });
+        LABEL_SHAPES.with(|cache| {
+            let mut cache = cache.borrow_mut();
+            cache.stats.shapes += 1;
+            match cache.lru.admit(markup.to_owned(), Rc::clone(&shape), bytes) {
+                LruAdmission::Stored { evicted } => cache.stats.evictions += evicted.len() as u64,
+                LruAdmission::Bypassed => cache.stats.bypasses += 1,
+            }
+        });
+        Some(shape)
+    }
+
+    /// @emoji 📐️ Measure markup of one label line: its box, no paint — shared by the line layout and every prefix advance.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn label_measure_markup(text: &str, px: f64) -> String {
+        let pad = px * ui_styling::metrics::label::PAD_RATIO;
+        let (w, h) = label_extent(text, px);
+        let text_y = pad + px;
+        let family = usvg_options_map_labels().font_family.clone();
+        format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="{family}">{text}</text></svg>"##,
+            family = escape_xml_attr(&family),
+            text = escape_xml_attr(text),
+        )
+    }
+
+    /// @emoji 🖌️ Paint markup of one single-color label with its halo.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn label_paint_markup(text: &str, px: f64, fill: Color, halo: Color) -> String {
+        let pad = px * ui_styling::metrics::label::PAD_RATIO;
+        let (w, h) = label_extent(text, px);
+        let text_y = pad + px;
+        let family = usvg_options_map_labels().font_family.clone();
+        format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="{family}" fill="{fill}" stroke="{halo}" stroke-width="{stroke}" paint-order="stroke">{text}</text></svg>"##,
+            family = escape_xml_attr(&family),
+            fill = color_to_svg(fill),
+            halo = color_to_svg(halo),
+            stroke = (px * ui_styling::metrics::label::HALO_STROKE_RATIO).max(ui_styling::metrics::label::HALO_STROKE_MIN),
+            text = escape_xml_attr(text),
+        )
+    }
+
+    /// @emoji 🌈️ Paint markup of one line with colored inline tspans; `None` when no span paints anything.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn label_tspans_markup(line: &str, spans: &[(usize, usize, Color)], px: f64) -> Option<String> {
+        let pad = px * ui_styling::metrics::label::PAD_RATIO;
+        let (w, h) = label_extent(line, px);
+        let text_y = pad + px;
+        let family = usvg_options_map_labels().font_family.clone();
+        let mut inner = String::new();
+        for &(start, end, fill) in spans {
+            if start >= end || end > line.len() {
+                continue;
+            }
+            let slice = &line[start..end];
+            if slice.is_empty() {
+                continue;
+            }
+            inner.push_str(&format!(r#"<tspan fill="{fill}">{text}</tspan>"#, fill = color_to_svg(fill), text = escape_xml_attr(slice)));
+        }
+        if inner.is_empty() {
+            return None;
+        }
+        Some(format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="{family}">{inner}</text></svg>"##,
+            family = escape_xml_attr(&family),
+        ))
     }
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -1814,23 +2075,7 @@ pub mod text {
             return None;
         }
         let pad = px * ui_styling::metrics::label::PAD_RATIO;
-        let extent_line = if line.is_empty() { " " } else { line };
-        let (w, h) = label_extent(extent_line, px);
-        let text_y = pad + px;
-        let family = usvg_options_map_labels().font_family.clone();
-        let body = if line.is_empty() { " " } else { line };
-        let svg = format!(
-            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="{family}">{text}</text></svg>"##,
-            w = w,
-            h = h,
-            pad = pad,
-            text_y = text_y,
-            px = px,
-            family = escape_xml_attr(&family),
-            text = escape_xml_attr(body),
-        );
-        let tree = usvg::Tree::from_str(&svg, usvg_options_map_labels()).ok()?;
-        let (bx, _, bw, bh) = super::svg_icon::svg_icon_content_bounds(&tree);
+        let (bx, _, bw, bh) = shaped_label(&label_measure_markup(if line.is_empty() { " " } else { line }, px), false)?.bounds;
         if bw <= 0.0 || bh <= 0.0 {
             return None;
         }
@@ -1850,23 +2095,10 @@ pub mod text {
         }
         let prefix = &line[..end];
         let pad = px * ui_styling::metrics::label::PAD_RATIO;
-        let (w, h) = label_extent(prefix, px);
-        let text_y = pad + px;
-        let family = usvg_options_map_labels().font_family.clone();
-        let svg = format!(
-            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="{family}">{text}</text></svg>"##,
-            w = w,
-            h = h,
-            pad = pad,
-            text_y = text_y,
-            px = px,
-            family = escape_xml_attr(&family),
-            text = escape_xml_attr(prefix),
-        );
-        let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
+        let Some(shape) = shaped_label(&label_measure_markup(prefix, px), false) else {
             return label_advance(prefix, px);
         };
-        let (bx, _, bw, bh) = super::svg_icon::svg_icon_content_bounds(&tree);
+        let (bx, _, bw, bh) = shape.bounds;
         if bw <= 0.0 || bh <= 0.0 {
             return label_advance(prefix, px);
         }
@@ -1902,42 +2134,29 @@ pub mod text {
         (label_byte_world_x(line, byte_start, origin_x, px), label_byte_world_x(line, byte_end, origin_x, px))
     }
 
-    /// @emoji 🏷️ Renders a single map label via SVG text at `origin` (screen px, baseline).
+    /// @emoji 🏷️ Renders a single map label via SVG text at `origin` (screen px, baseline), shaped once per content.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn append_label(scene: &mut Scene, label: &str, origin: Point, px: f64, fill: Color, halo: Color) {
         let trimmed = label.trim();
         if trimmed.is_empty() || px < ui_styling::metrics::label::MIN_PX {
             return;
         }
-        let pad = px * ui_styling::metrics::label::PAD_RATIO;
-        let (w, h) = label_extent(trimmed, px);
-        let text_y = pad + px;
-        let family = usvg_options_map_labels().font_family.clone();
-        let svg = format!(
-            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="{family}" fill="{fill}" stroke="{halo}" stroke-width="{stroke}" paint-order="stroke">{text}</text></svg>"##,
-            w = w,
-            h = h,
-            pad = pad,
-            text_y = text_y,
-            px = px,
-            family = escape_xml_attr(&family),
-            fill = color_to_svg(fill),
-            halo = color_to_svg(halo),
-            stroke = (px * ui_styling::metrics::label::HALO_STROKE_RATIO).max(ui_styling::metrics::label::HALO_STROKE_MIN),
-            text = escape_xml_attr(trimmed),
-        );
-        let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
+        let Some(shape) = shaped_label(&label_paint_markup(trimmed, px, fill, halo), true) else {
             return;
         };
-        let (bx, by, bw, bh) = super::svg_icon::svg_icon_content_bounds(&tree);
-        if bw <= 0.0 || bh <= 0.0 {
+        append_shaped_label(scene, &shape, origin, px);
+    }
+
+    /// @emoji 📌️ Places one shaped label's outline scene at `origin` (screen px, baseline) at its fitted scale.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn append_shaped_label(scene: &mut Scene, shape: &LabelShape, origin: Point, px: f64) {
+        let (bx, by, bw, bh) = shape.bounds;
+        let Some(label_scene) = shape.scene.as_ref().filter(|_| bw > 0.0 && bh > 0.0) else {
             return;
-        }
+        };
         let scale = (px * ui_styling::metrics::label::SCALE_RATIO / bh).min(ui_styling::metrics::label::SCALE_MAX);
-        let mut label_scene = Scene::new();
-        render_svg_tree_literal(&mut label_scene, &tree);
         let aff = Affine::IDENTITY.translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)).scale(scale);
-        scene.append(&label_scene, Some(aff));
+        scene.append(label_scene, Some(aff));
     }
 
     /// 🚫️ `wasm32-wasip2` arm: label *painting* (rasterizing shaped glyphs into `Scene`) is
@@ -1949,58 +2168,25 @@ pub mod text {
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     pub fn append_label(_scene: &mut Scene, _label: &str, _origin: Point, _px: f64, _fill: Color, _halo: Color) {}
 
-    /// @emoji 🏷️ Renders one label with colored inline tspans (single padding box, no per-span gaps).
+    /// @emoji 🏷️ Renders one label with colored inline tspans (single padding box, no per-span gaps), shaped once per content.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn append_label_tspans(scene: &mut Scene, line: &str, spans: &[(usize, usize, Color)], origin: Point, px: f64, _halo: Color) {
         if line.is_empty() || spans.is_empty() || px < ui_styling::metrics::label::MIN_PX {
             return;
         }
-        let pad = px * ui_styling::metrics::label::PAD_RATIO;
-        let (w, h) = label_extent(line, px);
-        let text_y = pad + px;
-        let family = usvg_options_map_labels().font_family.clone();
-        let mut inner = String::new();
-        for &(start, end, fill) in spans {
-            if start >= end || end > line.len() {
-                continue;
-            }
-            let slice = &line[start..end];
-            if slice.is_empty() {
-                continue;
-            }
-            inner.push_str(&format!(r#"<tspan fill="{fill}">{text}</tspan>"#, fill = color_to_svg(fill), text = escape_xml_attr(slice),));
-        }
-        if inner.is_empty() {
-            return;
-        }
-        let svg = format!(
-            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="{family}">{inner}</text></svg>"##,
-            w = w,
-            h = h,
-            pad = pad,
-            text_y = text_y,
-            px = px,
-            family = escape_xml_attr(&family),
-            inner = inner,
-        );
-        let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
+        let Some(shape) = label_tspans_markup(line, spans, px).and_then(|markup| shaped_label(&markup, true)) else {
             return;
         };
-        let (bx, by, bw, bh) = super::svg_icon::svg_icon_content_bounds(&tree);
-        if bw <= 0.0 || bh <= 0.0 {
-            return;
-        }
-        let scale = (px * ui_styling::metrics::label::SCALE_RATIO / bh).min(ui_styling::metrics::label::SCALE_MAX);
-        let mut label_scene = Scene::new();
-        render_svg_tree_literal(&mut label_scene, &tree);
-        let aff = Affine::IDENTITY.translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)).scale(scale);
-        scene.append(&label_scene, Some(aff));
+        append_shaped_label(scene, &shape, origin, px);
     }
 
     /// 🚫️ `wasm32-wasip2` arm: see `append_label`'s `wasm32-wasip2` arm docstring — identical
     /// reasoning, this is the multi-span sibling.
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     pub fn append_label_tspans(_scene: &mut Scene, _line: &str, _spans: &[(usize, usize, Color)], _origin: Point, _px: f64, _halo: Color) {}
+
+    #[cfg(all(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
+    include!("🧪️tests/🏷️label-shapes/🦀️.rs");
 }
 // #endregion 🔖️Text
 

@@ -243,3 +243,35 @@ fn shell_chrome_string_matches_react_bundle_samples() {
 fn introduction_seen_key_format_matches_react() {
     assert_eq!(format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}framework-os"), "ui.introduction.seen.framework-os");
 }
+
+/// 🗣️ LAW: the shell's tongue is React `ShellHost`'s
+/// `locks?.locale ?? readUiPreferences(storage).locale ?? detectShellLocale(navigator.language)`,
+/// term for term — and the browser's own language read reaches it through the 🗣️HostLocale door on
+/// both wasm entry points. A de-DE browser with no stored preference booted English chrome before
+/// the door existed (ticket 26/09/23 session 12, run s12e).
+#[test]
+fn the_host_language_is_the_fallback_after_a_lock_and_the_stored_preference() {
+    let before = crate::host_locale();
+    for (tag, expected) in [("de-DE", Some("de")), ("de", Some("de")), ("DE-at", Some("de")), ("en-US", Some("en")), ("fr-CH", Some("en")), ("", None)] {
+        crate::set_host_locale(tag);
+        assert_eq!(crate::host_locale(), expected, "🗣️ `normalizeUiLocale` folds {tag:?}");
+    }
+    crate::set_host_locale("de-DE");
+    assert_eq!(resolve_locale_id(None, &stored(None)), "de", "the host speaks when nothing else does");
+    assert_eq!(resolve_locale_id(None, &stored(Some(OsUiLocale::En))), "en", "a stored preference outranks the host");
+    assert_eq!(resolve_locale_id(Some("en".to_string()), &stored(Some(OsUiLocale::De))), "en", "a lock outranks both");
+    crate::set_host_locale("");
+    assert_eq!(resolve_locale_id(None, &stored(None)), "en", "`detectShellLocale(undefined)` answers en");
+    crate::set_host_locale(before.unwrap_or(""));
+
+    let engine = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../..").canonicalize().expect("engine root");
+    let read = |relative: &str| std::fs::read_to_string(engine.join(relative)).unwrap_or_else(|error| panic!("read {relative}: {error}"));
+    assert!(read("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs").contains("js_name = semioWgpuSetHostLocale"), "the renderer exports the locale door");
+    assert!(read("🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts").contains("semioWgpuSetHostLocale?.(message.locale)"), "the frame Worker forwards the page's read before the shell boots");
+    assert!(read("🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts").contains("semioWgpuSetHostLocale?.(window.navigator?.language"), "the embeddable door reads the page's own navigator");
+}
+
+/// 🗂️ A stored preference record carrying only a locale.
+fn stored(locale: Option<OsUiLocale>) -> UiPreferences {
+    UiPreferences { locale, ..UiPreferences::default() }
+}

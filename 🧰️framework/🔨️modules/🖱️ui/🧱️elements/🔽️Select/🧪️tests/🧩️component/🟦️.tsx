@@ -132,7 +132,9 @@ describe("Select", () => {
     expect(normal.popupWidth).toBe(Math.max(selectPopupGeometryFixture.triggerWidth, selectPopupGeometryFixture.minimumContentWidth));
     expect(normal.popupHeight).toBe(selectPopupGeometryFixture.borderWidth * 2 + selectPopupGeometryFixture.scrollBandHeight * 2 + normal.scrollViewportHeight);
     expect(constrained.popupHeight).toBe(selectPopupGeometryFixture.borderWidth * 2 + selectPopupGeometryFixture.scrollBandHeight * 2 + constrained.scrollViewportHeight);
-    expect(constrained.initialScroll + constrained.wheelDelta).toBeGreaterThan(constrained.scrollAfterWheel);
+    const { wheelDelta, scrollAfterWheel } = constrained;
+    if (wheelDelta === undefined || scrollAfterWheel === undefined) throw new Error("the constrained select geometry case must carry its wheel oracle");
+    expect(constrained.initialScroll + wheelDelta).toBeGreaterThan(scrollAfterWheel);
 
     const scrollIntoView = vi.fn();
     const descriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollIntoView");

@@ -74,6 +74,8 @@ import { issueLocalCredential } from "../../../../../../../🌎️hub/🚀️loc
 
 import { ensureTrustedCatalog } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 
+import { decodeClientFrame } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
+
 
 
 
@@ -117,8 +119,8 @@ const COLLAB_E2E_USER1_DISPLAY = "Collab User One";
 const COLLAB_E2E_USER2_DISPLAY = "Collab User Two";
 
 const COLLAB_E2E_STEP_NAMES = [
-  "user1 creates a public studio space from Home; user2's Home shows the same row",
-  "user1 shares the space with user2 as author; user2 opens /spaces/{id}",
+  "user1 creates a public studio space from Home; the row appears in user1's Home",
+  "user1 shares the space with user2 as author; user2's Home lists it and user2 opens /spaces/{id}",
   "user1 creates a writer artifact; the row appears in both tables and opens an editor for user1",
   "user2 opens the same artifact; user1 types and user2 sees the text",
   "#s-presence-peers shows 2 peers, in distinct hub-assigned session colours, in both shells",
@@ -500,18 +502,29 @@ async function collabSelectOption(page: import("playwright").Page, triggerId: st
   await page.waitForTimeout(150);
 }
 
-/** 🏷️ The artifact-creation catalog labels of the three collaboration editors STEP 3 and STEP 14 create. */
-const COLLAB_E2E_KIND_LABELS = { writer: /writer/i, draw: /draw/i, puzzle3d: /puzzle.*3\s*d/i } as const;
+/** 🏷️ The hub creation catalog's kind ids of the three collaboration editors STEP 3 and STEP 14 create. The picker is
+ * driven by the kind id inside the option's encoded choice (`data-value`), never by its label: the hub labels a kind with its editor
+ * app's label, so writer, draw and puzzle all read "Editor" (ticket 26/09/23 S15 finding c). */
+const COLLAB_E2E_KINDS = { writer: "text.document", draw: "2d.drawing", puzzle3d: "3d.puzzle" } as const;
 
-/** 🌱️ Creates one artifact of `kindLabel` in the open Space through `#s-space-create-artifact` and its
- * `createArtifact` dialog (`name` + the `kindChoice` catalog picker), returning the new row's bare id.
+/** 🌱️ Creates one artifact of catalog kind `kindId` in the open Space through `#s-space-create-artifact` and its
+ * `createArtifact` dialog (`name` + the `kindChoice` catalog picker, opened from the keyboard), returning the new row's
+ * bare id.
  * @see ../../../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs */
-async function collabCreateArtifact(page: import("playwright").Page, name: string, kindLabel: string | RegExp): Promise<string> {
+async function collabCreateArtifact(page: import("playwright").Page, name: string, kindId: string): Promise<string> {
   const before = await collabRowIds(page, "artifact");
   await collabClickToolbarButton(page, "s-space-create-artifact");
   await collabWaitForDialog(page);
   await page.locator("#name").fill(name);
-  await collabSelectOption(page, "kindChoice", kindLabel);
+  const option = page.locator(`[role="option"][data-value*='"kindId":"${kindId}"']`).first();
+  const deadline = Date.now() + 90_000;
+  for (;;) {
+    await page.locator("#kindChoice").focus();
+    await page.keyboard.press("Enter");
+    if (await option.waitFor({ state: "visible", timeout: 5_000 }).then(() => true).catch(() => false)) break;
+    if (Date.now() > deadline) throw new Error(`the kind picker never offered ${kindId} (catalog kinds load with the dialog)`);
+  }
+  await option.click();
   await collabSubmitDialog(page);
   return collabWaitForNewRow(page, "artifact", before, 60_000);
 }
@@ -542,10 +555,123 @@ async function collabWaitForNewRow(page: import("playwright").Page, prefix: "spa
   throw new Error(`timeout waiting for a new ${prefix}: row`);
 }
 
+/** ⏳️ Polls `page` until a `prefix` row whose text holds `name` appears, returning its bare id: a freshly signed-in Home
+ * streams its existing rows in over several pages, so "a row that was not there before" can be an OLD space. */
+async function collabWaitForNamedRow(page: import("playwright").Page, prefix: "space" | "artifact", name: string, deadlineMs: number): Promise<string> {
+  const deadline = Date.now() + deadlineMs;
+  while (Date.now() < deadline) {
+    const key = await collabFindRow(page, prefix, (row) => row.text.includes(name));
+    if (key !== null) return key.slice(prefix.length + 1);
+    await page.waitForTimeout(500);
+  }
+  throw new Error(`timeout waiting for a ${prefix}: row named ${JSON.stringify(name)}`);
+}
+
+/** 🧭️ Finds a `prefix` row of a WINDOWED table — only the rows inside its scroll window exist in the DOM ("Rows 1–47 of
+ * 53" measured on a Home with 52 hub spaces): the rendered rows first, then every `table-window-scroll` container paged from
+ * top to bottom, as a human scrolls. Leaves the table scrolled to the row it found. */
+async function collabFindRow(page: import("playwright").Page, prefix: "space" | "artifact", matches: (row: { readonly key: string; readonly text: string }) => boolean): Promise<string | null> {
+  const rendered = async (): Promise<string | null> =>
+    (await page.locator(`[data-ui-node-key^="${prefix}:"]`).evaluateAll((elements) => elements.map((element) => ({ key: element.getAttribute("data-ui-node-key") ?? "", text: element.textContent ?? "" })))).find(matches)?.key ?? null;
+  const shown = await rendered();
+  if (shown !== null) return shown;
+  const scrollers = page.locator('[data-slot="table-window-scroll"]');
+  for (let index = 0, count = await scrollers.count(); index < count; index += 1) {
+    const scroller = scrollers.nth(index);
+    for (let top = 0; ; ) {
+      const metrics = await scroller.evaluate((element, y) => {
+        element.scrollTop = y;
+        return { top: element.scrollTop, scrollHeight: element.scrollHeight, clientHeight: element.clientHeight };
+      }, top);
+      await page.waitForTimeout(400);
+      const found = await rendered();
+      if (found !== null) return found;
+      if (metrics.top + metrics.clientHeight >= metrics.scrollHeight) break;
+      top = metrics.top + Math.max(1, Math.floor(metrics.clientHeight * 0.8));
+    }
+  }
+  return null;
+}
+
+/** 🏘️ Every load of `/spaces/<id>` that did not mount the Space app, with the window fault it showed instead — printed in
+ * the summary, never silently absorbed (a hard load measured landing on a faulted window: `actor-activation.revoked`). */
+const collabRouteMisses: string[] = [];
+
+/** 🖱️ Activates one named row action (`Open: <id>`, `Share: <name>`, case-insensitive) from the keyboard — the ACTIONS column can sit past
+ * the window's right edge, where a pointer click times out. */
+async function collabRowAction(page: import("playwright").Page, prefix: "space" | "artifact", id: string, verb: "open" | "share"): Promise<void> {
+  const action = page.locator(`[data-ui-node-key="${prefix}:${id}"] button[aria-label^="${verb}:" i]`).first();
+  await action.waitFor({ state: "attached", timeout: 30_000 });
+  await action.focus();
+  await action.press("Enter");
+}
+
+/** ⏳️ Waits for an editable text surface — a hub document's editor mounts only after its plugin module is installed from
+ * the hub catalog (the "Loading plugin …" band), which takes tens of seconds on a fresh device. */
+async function collabWaitForEditor(page: import("playwright").Page, deadlineMs: number): Promise<boolean> {
+  return page.locator('textarea, [contenteditable="true"]').first().waitFor({ state: "attached", timeout: deadlineMs }).then(() => true).catch(() => false);
+}
+
+/** 🔁️ When each page last re-opened its Space app or re-bootstrapped its directory (see {@link collabSettleAfterLoad}). */
+const collabSpaceReopenedAt = new WeakMap<import("playwright").Page, number>();
+
+/** ⏳️ A hard load mounts the Space app, then the restored identity re-establishes the session and the route re-opens the
+ * space ~5–7 s later ("space index opening failed: document closed", routed to U5 on 26/09/26), closing whatever was opened
+ * in between: waits until the page has been quiet for `quietMs` and the Space app is mounted again. */
+async function collabSettleAfterLoad(page: import("playwright").Page, quietMs = 12_000, deadlineMs = 90_000): Promise<boolean> {
+  const started = Date.now();
+  while (Date.now() - started < deadlineMs) {
+    const quietSince = Math.max(started, collabSpaceReopenedAt.get(page) ?? 0);
+    if (Date.now() - quietSince >= quietMs && (await page.locator('[data-ui-node-key="s-space-create-artifact"]').count()) > 0) return true;
+    await page.waitForTimeout(500);
+  }
+  return false;
+}
+
+/** 📌️ Opens the History panel of the document open on `page` and unfolds its History section (a tree section that renders
+ * closed), returning the `#s-checkin` control. */
+async function collabOpenCheckin(page: import("playwright").Page): Promise<import("playwright").Locator> {
+  const historyTab = page.locator('[data-slot="panel-tab-button"][id="framework.panel.history"]');
+  spaceE2eAssert((await historyTab.count()) > 0, "no framework.panel.history tab found — cannot reach #s-checkin");
+  await historyTab.first().click();
+  const checkin = page.locator('[id="s-checkin"]');
+  const deadline = Date.now() + 20_000;
+  while (Date.now() < deadline && !(await checkin.first().isVisible().catch(() => false))) {
+    const closed = page.locator('[data-slot="tree-section-row"]:not([data-state="open"])').filter({ hasText: /^\s*(history|verlauf)\b/iu });
+    if ((await closed.count()) > 0) await closed.first().click();
+    await page.waitForTimeout(500);
+  }
+  await checkin.first().waitFor({ state: "visible", timeout: 1_000 });
+  return checkin.first();
+}
+
+/** 🪪️ The hub user id of the human signed in on `page`: the connection report names users only by id, and the shell
+ * remembers its minted capability (`semio.os.hub-session-capability.v1`) with that id. */
+async function collabHubUserId(page: import("playwright").Page): Promise<string | null> {
+  return page.evaluate(() => {
+    for (const storage of [globalThis.sessionStorage, globalThis.localStorage]) {
+      const stored = storage?.getItem("semio.os.hub-session-capability.v1");
+      if (stored) return (JSON.parse(stored) as { readonly userId?: string }).userId ?? null;
+    }
+    return null;
+  });
+}
+
+/** 🏘️ Loads `/spaces/<id>` until the Space app mounts and settles (at most three loads), recording every miss. */
+async function collabOpenSpace(page: import("playwright").Page, spaceId: string): Promise<void> {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    await page.goto(`${new URL(page.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+    if (await collabWaitForApp(page, "s-space-create-artifact", 30_000).then(() => true).catch(() => false) && (await collabSettleAfterLoad(page))) return;
+    const shown = await page.evaluate(() => (document.querySelector('[data-slot="window-body"]')?.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 160)).catch(() => "");
+    collabRouteMisses.push(`/spaces/${spaceId} load ${attempt}: ${JSON.stringify(shown)}`);
+  }
+  throw new Error(`the Space app never mounted at /spaces/${spaceId} in 3 loads`);
+}
+
 async function collabWaitForRow(page: import("playwright").Page, prefix: "space" | "artifact", id: string, deadlineMs: number): Promise<void> {
   const deadline = Date.now() + deadlineMs;
   while (Date.now() < deadline) {
-    if ((await page.locator(`[data-ui-node-key="${prefix}:${id}"]`).count()) > 0) return;
+    if ((await collabFindRow(page, prefix, (row) => row.key === `${prefix}:${id}`)) !== null) return;
     await page.waitForTimeout(500);
   }
   throw new Error(`timeout waiting for [data-ui-node-key="${prefix}:${id}"]`);
@@ -665,6 +791,36 @@ function collabCountCommandFrames(page: import("playwright").Page): CollabComman
   return counter;
 }
 
+/** 🪪️ Every `ClientFrame::Commands` envelope one page SENDS on its document sockets, in send order: the live witness that
+ * a door-created artifact's editor authors under the artifact's own id from its very first edit (its genesis arrives
+ * with the hub's canonical checkpoint pair before the actor activates — ticket 26/09/23 C10 item 1). A frame this
+ * harness cannot decode is recorded, never skipped. */
+type CollabSentCommands = { readonly documentIds: string[]; readonly socketDocumentIds: string[]; readonly undecodable: string[] };
+
+function collabRecordSentCommands(page: import("playwright").Page): CollabSentCommands {
+  const sent: CollabSentCommands = { documentIds: [], socketDocumentIds: [], undecodable: [] };
+  page.on("websocket", (ws) => {
+    const url = ws.url();
+    if (url.includes("/directory/") || !url.includes("/scopes/") || !url.includes("/document/ws")) return;
+    const segments = new URL(url).pathname.split("/"),
+      scope = decodeURIComponent(segments[segments.indexOf("scopes") + 1] ?? "");
+    ws.on("framesent", (frame) => {
+      if (typeof frame.payload === "string") return;
+      try {
+        const decoded = decodeClientFrame(new Uint8Array(frame.payload)).frame;
+        if (typeof decoded !== "object" || !("Commands" in decoded)) return;
+        for (const envelope of decoded.Commands.envelopes) {
+          sent.documentIds.push(envelope.document_id);
+          sent.socketDocumentIds.push(scope.slice(scope.indexOf("/") + 1));
+        }
+      } catch (error) {
+        sent.undecodable.push(error instanceof Error ? error.message : String(error));
+      }
+    });
+  });
+  return sent;
+}
+
 /** ⏳️ Polls `editor` until it shows `text`, returning how many `ServerFrame::Commands` frames the page
  * received between the call and the moment the text was first observed. Throws with the last value it
  * saw when the budget runs out, so a failure names what the editor actually held. */
@@ -698,13 +854,13 @@ async function collabRunScenario(
   hubBaseUrl: string,
   user2Commands: CollabCommandFrameCounter,
   adminCapability: () => string,
+  user1Sent: CollabSentCommands,
 ): Promise<{ readonly spaceId: string | undefined; readonly artifactId: string | undefined }> {
   let spaceId: string | undefined;
   let artifactId: string | undefined;
 
   // STEP 1
   try {
-    const beforeUser1 = await collabRowIds(user1, "space");
     const spaceName = `Collab Studio ${Date.now()}`;
     await collabClickToolbarButton(user1, "s-home-create-space");
     await collabWaitForDialog(user1);
@@ -712,9 +868,8 @@ async function collabRunScenario(
     await collabSelectOption(user1, "kind", "Studio");
     await collabSelectOption(user1, "visibility", "Public");
     await collabSubmitDialog(user1);
-    spaceId = await collabWaitForNewRow(user1, "space", beforeUser1, 30_000);
-    await collabWaitForRow(user2, "space", spaceId, 60_000);
-    record(1, true, `space ${spaceId} created and replicated to user2's Home within budget`);
+    spaceId = await collabWaitForNamedRow(user1, "space", spaceName, 30_000);
+    record(1, true, `space ${spaceId} created; user1's Home lists it`);
   } catch (error) {
     await collabScreenshot(user1, "step1-user1");
     await collabScreenshot(user2, "step1-user2");
@@ -724,15 +879,24 @@ async function collabRunScenario(
   // STEP 2
   if (spaceId) {
     try {
-      const row = user1.locator(`[data-ui-node-key="space:${spaceId}"]`);
-      await row.locator('button[aria-label="share"]').click();
+      await collabRowAction(user1, "space", spaceId, "share");
       await collabWaitForDialog(user1);
       await user1.locator("#email").fill(COLLAB_E2E_USER2_EMAIL);
       await collabSelectOption(user1, "role", "Author");
       await collabSubmitDialog(user1);
-      await user2.goto(`${new URL(user2.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
-      await collabWaitForApp(user2, "s-space-create-artifact", 30_000);
-      record(2, true, `user2 opened /spaces/${spaceId} and the Space app mounted with its create-artifact affordance`);
+      const live = await collabWaitForRow(user2, "space", spaceId, 60_000).then(() => true).catch(() => false);
+      if (!live) {
+        await user2.reload({ waitUntil: "domcontentloaded" });
+        await collabWaitForRow(user2, "space", spaceId, 120_000);
+      }
+      await collabOpenSpace(user2, spaceId);
+      record(
+        2,
+        live,
+        live
+          ? `user2's Home listed ${spaceId} live once shared as author; /spaces/${spaceId} mounted the Space app with its create-artifact affordance`
+          : `user2's Home was NOT told live that ${spaceId} was shared (no directory event within 60 s); it listed the space only after a reload — later steps continue on it`,
+      );
     } catch (error) {
       await collabScreenshot(user1, "step2-user1");
       await collabScreenshot(user2, "step2-user2");
@@ -745,11 +909,10 @@ async function collabRunScenario(
   // STEP 3
   if (spaceId) {
     try {
-      await user1.goto(`${new URL(user1.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
-      await collabWaitForApp(user1, "s-space-create-artifact", 30_000);
-      artifactId = await collabCreateArtifact(user1, "Collab Writer", COLLAB_E2E_KIND_LABELS.writer);
+      await collabOpenSpace(user1, spaceId);
+      artifactId = await collabCreateArtifact(user1, "Collab Writer", COLLAB_E2E_KINDS.writer);
+      const editorOpened = await collabWaitForEditor(user1, 240_000);
       await collabWaitForRow(user2, "artifact", artifactId, 30_000);
-      const editorOpened = (await user1.locator('textarea, [contenteditable="true"]').count()) > 0;
       spaceE2eAssert(
         editorOpened,
         "no editable text surface appeared for user1 after createArtifact — inspect the direct Space opening effect, exact Shell session and scope, Hub open-plan/catalog verification, socket Session and retained document UI; the Space relay already includes documentId, spaceId and schema",
@@ -767,9 +930,8 @@ async function collabRunScenario(
   // STEP 4
   if (spaceId && artifactId) {
     try {
-      const row2 = user2.locator(`[data-ui-node-key="artifact:${artifactId}"]`);
-      await row2.locator('button[aria-label="open"]').click();
-      await user2.waitForTimeout(1_000);
+      await collabRowAction(user2, "artifact", artifactId, "open");
+      await collabWaitForEditor(user2, 240_000);
       const editor1 = user1.locator('textarea, [contenteditable="true"]').first();
       const editor2 = user2.locator('textarea, [contenteditable="true"]').first();
       spaceE2eAssert((await editor1.count()) > 0, "user1 has no editable text surface open (see STEP 3)");
@@ -788,7 +950,13 @@ async function collabRunScenario(
         seen.includes(probeText),
         `user2's editor never showed user1's typed text ${JSON.stringify(probeText)} (last seen: ${JSON.stringify(seen.slice(-200))}) — both editors are likely unbound ephemeral instances rather than the same hub-synced document (same root cause as STEP 3)`,
       );
-      record(4, true, "user1's typed text propagated to user2's editor");
+      spaceE2eAssert(user1Sent.undecodable.length === 0, `user1 sent document frames this harness could not decode: ${JSON.stringify(user1Sent.undecodable.slice(0, 3))}`);
+      spaceE2eAssert(user1Sent.documentIds.length > 0, "user1 typed into the fresh door artifact but sent no ClientFrame::Commands envelope");
+      spaceE2eAssert(
+        user1Sent.documentIds[0] === artifactId && user1Sent.documentIds.every((documentId, index) => documentId === user1Sent.socketDocumentIds[index]),
+        `the fresh door artifact's first outbound Commands envelope named ${JSON.stringify(user1Sent.documentIds[0])}, not the artifact ${JSON.stringify(artifactId)} (socket documents ${JSON.stringify([...new Set(user1Sent.socketDocumentIds)])})`,
+      );
+      record(4, true, `user1's typed text propagated to user2's editor; the fresh door artifact's first ${user1Sent.documentIds.length} outbound Commands envelope(s) all name documentId ${artifactId}`);
     } catch (error) {
       await collabScreenshot(user1, "step4-user1");
       await collabScreenshot(user2, "step4-user2");
@@ -833,7 +1001,7 @@ async function collabRunScenario(
   // STEP 6
   if (spaceId && artifactId) {
     try {
-      await user1.goto(`${new URL(user1.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+      await collabOpenSpace(user1, spaceId);
       await collabWaitForRow(user1, "artifact", artifactId, 30_000);
       const rowBefore1 =
         (await user1
@@ -845,18 +1013,16 @@ async function collabRunScenario(
           .locator(`[data-ui-node-key="artifact:${artifactId}"]`)
           .innerText()
           .catch(() => "")) ?? "";
-      const historyTab = user1.locator('[data-slot="panel-tab-button"][id="framework.panel.history"]');
-      spaceE2eAssert((await historyTab.count()) > 0, "no framework.panel.history tab found — cannot reach #s-checkin");
-      await historyTab.click();
-      const checkinButton = user1.locator('[id="s-checkin"]');
-      await checkinButton.waitFor({ state: "visible", timeout: 10_000 });
+      await collabRowAction(user1, "artifact", artifactId, "open");
+      spaceE2eAssert(await collabWaitForEditor(user1, 120_000), "user1's writer editor never mounted, so there is no document to check in");
+      const checkinButton = await collabOpenCheckin(user1);
       await checkinButton.click();
       const message = `collab check-in ${Date.now()}`;
       await user1.locator('[id="s-checkin-message"]').fill(message);
       const historyEntryVisible = user1.getByText(message, { exact: false });
       await user1.locator('[id="s-checkin-message"]').press("Enter");
       await historyEntryVisible.first().waitFor({ state: "visible", timeout: 15_000 });
-      await user1.goto(`${new URL(user1.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+      await collabOpenSpace(user1, spaceId);
       await collabWaitForRow(user1, "artifact", artifactId, 30_000);
       const rowAfter1Deadline = Date.now() + 30_000;
       let rowAfter1 = rowBefore1;
@@ -870,7 +1036,7 @@ async function collabRunScenario(
         await user1.waitForTimeout(1_000);
       }
       spaceE2eAssert(rowAfter1 !== rowBefore1, `user1's space table row for ${artifactId} did not change after check-in (before: ${JSON.stringify(rowBefore1)}, after: ${JSON.stringify(rowAfter1)})`);
-      await user2.goto(`${new URL(user2.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+      await collabOpenSpace(user2, spaceId);
       await collabWaitForRow(user2, "artifact", artifactId, 30_000);
       const rowAfter2Deadline = Date.now() + 30_000;
       let rowAfter2 = rowBefore2;
@@ -902,8 +1068,9 @@ async function collabRunScenario(
     spaceE2eAssert(connectionsRes.ok, `GET /admin/api/connections returned ${connectionsRes.status}`);
     const connections = (await connectionsRes.json()) as readonly Record<string, unknown>[];
     const text = JSON.stringify(connections);
-    spaceE2eAssert(text.includes(COLLAB_E2E_USER1_EMAIL) || text.includes("user1"), `/admin/api/connections does not mention user1: ${text.slice(0, 500)}`);
-    spaceE2eAssert(text.includes(COLLAB_E2E_USER2_EMAIL) || text.includes("user2"), `/admin/api/connections does not mention user2: ${text.slice(0, 500)}`);
+    const [user1Id, user2Id] = [await collabHubUserId(user1), await collabHubUserId(user2)];
+    spaceE2eAssert(user1Id !== null && text.includes(user1Id), `/admin/api/connections does not name user1's hub user ${JSON.stringify(user1Id)}: ${text.slice(0, 500)}`);
+    spaceE2eAssert(user2Id !== null && text.includes(user2Id), `/admin/api/connections does not name user2's hub user ${JSON.stringify(user2Id)}: ${text.slice(0, 500)}`);
     const adminRes = await fetch(`${hubBaseUrl}/admin`, { headers: { authorization: `Bearer ${capability}` } });
     spaceE2eAssert(adminRes.ok, `GET /admin returned ${adminRes.status}`);
     const contentType = adminRes.headers.get("content-type") ?? "";
@@ -911,7 +1078,7 @@ async function collabRunScenario(
     record(
       7,
       true,
-      "/admin/api/connections names both users; /admin returns HTML — note: /admin is a client-rendered SPA shell, so the raw HTML byte stream itself does not literally embed the user names (verified via /admin/api/connections instead)",
+      "/admin/api/connections names both humans' hub user ids; /admin returns HTML — note: /admin is a client-rendered SPA shell, so the raw HTML byte stream itself does not literally embed the user names (verified via /admin/api/connections instead)",
     );
   } catch (error) {
     record(7, false, error instanceof Error ? error.message : String(error));
@@ -920,10 +1087,9 @@ async function collabRunScenario(
   // STEP 8
   if (spaceId && artifactId) {
     try {
-      await user1.goto(`${new URL(user1.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
-      const row1 = user1.locator(`[data-ui-node-key="artifact:${artifactId}"]`);
+      await collabOpenSpace(user1, spaceId);
       await collabWaitForRow(user1, "artifact", artifactId, 30_000);
-      await row1.locator('button[aria-label="open"]').click();
+      await collabRowAction(user1, "artifact", artifactId, "open");
       const editor1 = user1.locator('textarea, [contenteditable="true"]').first();
       const editor2 = user2.locator('textarea, [contenteditable="true"]').first();
       await editor1.waitFor({ state: "visible", timeout: 30_000 });
@@ -999,7 +1165,7 @@ async function collabRunRestartStep(opts: {
     }
     liveHub = await collabStartHub(opts.hubPort, opts.hubDataDir, join(collabOutDir(), "🧪️3-c-hub-restart.txt"));
     await opts.user2.reload({ waitUntil: "domcontentloaded" });
-    await opts.user2.goto(`${new URL(opts.user2.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
+    await collabOpenSpace(opts.user2, opts.spaceId!);
     await collabWaitForRow(opts.user2, "artifact", opts.artifactId, 60_000);
     opts.record(9, true, `hub restarted against the same OS_HUB_DATA (${opts.hubDataDir}) on the same port; user2 still sees space ${opts.spaceId} and artifact ${opts.artifactId} after reload`);
   } catch (error) {
@@ -1013,8 +1179,7 @@ async function collabRunRestartStep(opts: {
       inFlightMarker !== undefined,
       "user1 had no open editor at restart time, so nothing was ever in flight — STEP 10 needs STEP 3/4's editor surface to exist before it can prove a resume",
     );
-    const row2 = opts.user2.locator(`[data-ui-node-key="artifact:${opts.artifactId}"]`);
-    await row2.locator('button[aria-label="open"]').click();
+    await collabRowAction(opts.user2, "artifact", opts.artifactId, "open");
     const editor2 = opts.user2.locator('textarea, [contenteditable="true"]').first();
     await editor2.waitFor({ state: "visible", timeout: 30_000 });
     const frames = await collabWaitForEditorText(opts.user2, editor2, opts.user2Commands, inFlightMarker!, 120_000);
@@ -1085,7 +1250,7 @@ async function collabRunCollaborationBehaviours(opts: {
   readonly artifactId: string | undefined;
 }): Promise<void> {
   if (!opts.spaceId || !opts.artifactId) {
-    for (const step of [11, 12, 13]) opts.record(step, false, "skipped — no space/artifact id from earlier steps");
+    for (const step of [11, 12, 13, 14]) opts.record(step, false, "skipped — no space/artifact id from earlier steps");
     return;
   }
   const editor1 = opts.user1.locator('textarea, [contenteditable="true"]').first();
@@ -1176,12 +1341,12 @@ async function collabRunCollaborationBehaviours(opts: {
     } catch (error) {
       // Re-open space artifact editors if step 6+ navigated away.
       if (opts.spaceId && opts.artifactId) {
-        await opts.user1.goto(`${new URL(opts.user1.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
-        await opts.user2.goto(`${new URL(opts.user2.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
+        await collabOpenSpace(opts.user1, opts.spaceId!);
+        await collabOpenSpace(opts.user2, opts.spaceId!);
         await collabWaitForRow(opts.user1, "artifact", opts.artifactId, 30_000);
         await collabWaitForRow(opts.user2, "artifact", opts.artifactId, 30_000);
-        await opts.user1.locator(`[data-ui-node-key="artifact:${opts.artifactId}"]`).locator('button[aria-label="open"]').click().catch(() => undefined);
-        await opts.user2.locator(`[data-ui-node-key="artifact:${opts.artifactId}"]`).locator('button[aria-label="open"]').click().catch(() => undefined);
+        await collabRowAction(opts.user1, "artifact", opts.artifactId, "open").catch(() => undefined);
+        await collabRowAction(opts.user2, "artifact", opts.artifactId, "open").catch(() => undefined);
         await opts.user1.waitForTimeout(1_000);
         details.push(await collabAssertPeerCursorMoves({ mover: opts.user1, observer: opts.user2, host: writerHost, label: "writer" }));
       } else {
@@ -1189,17 +1354,17 @@ async function collabRunCollaborationBehaviours(opts: {
       }
     }
     for (const [label, kind, host] of [
-      ["draw", COLLAB_E2E_KIND_LABELS.draw, '[data-slot="canvas-presence-overlay"], canvas'],
-      ["puzzle3d", COLLAB_E2E_KIND_LABELS.puzzle3d, '[data-peer-cursor-world], [data-slot="canvas-presence-overlay"], canvas'],
+      ["draw", COLLAB_E2E_KINDS.draw, '[data-slot="canvas-presence-overlay"], canvas'],
+      ["puzzle3d", COLLAB_E2E_KINDS.puzzle3d, '[data-peer-cursor-world], [data-slot="canvas-presence-overlay"], canvas'],
     ] as const) {
       try {
-        await opts.user1.goto(`${new URL(opts.user1.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
+        await collabOpenSpace(opts.user1, opts.spaceId!);
         await collabWaitForApp(opts.user1, "s-space-create-artifact", 30_000);
         const id = await collabCreateArtifact(opts.user1, `Collab ${label}`, kind);
-        await opts.user2.goto(`${new URL(opts.user2.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
+        await collabOpenSpace(opts.user2, opts.spaceId!);
         await collabWaitForRow(opts.user2, "artifact", id, 30_000);
-        await opts.user1.locator(`[data-ui-node-key="artifact:${id}"]`).locator('button[aria-label="open"]').click();
-        await opts.user2.locator(`[data-ui-node-key="artifact:${id}"]`).locator('button[aria-label="open"]').click();
+        await collabRowAction(opts.user1, "artifact", id, "open");
+        await collabRowAction(opts.user2, "artifact", id, "open");
         await opts.user1.waitForTimeout(1_000);
         details.push(await collabAssertPeerCursorMoves({ mover: opts.user1, observer: opts.user2, host, label }));
       } catch (error) {
@@ -1334,10 +1499,14 @@ async function runCollabE2eVerify(): Promise<void> {
      * `ShellHost` was invisible even though it was the only place the real failing branch could show up. */
     const attachBrowserDiagnostics = (page: import("playwright").Page, label: string): void => {
       page.on("pageerror", (err) => pageErrors.push(`${label}: ${String(err)}`));
-      page.on("console", (msg) => console.log(`[collab-e2e:console] ${label} [${msg.type()}] ${msg.text()}`));
+      page.on("console", (msg) => {
+        if (msg.text().includes("space index opening failed")) collabSpaceReopenedAt.set(page, Date.now());
+        console.log(`[collab-e2e:console] ${label} [${msg.type()}] ${msg.text()}`);
+      });
       page.on("requestfailed", (request) => console.log(`[collab-e2e:network] ${label} requestfailed: ${request.method()} ${request.url()} — ${request.failure()?.errorText ?? "unknown"}`));
       page.on("response", (response) => {
         const url = response.url();
+        if (url.includes("/directory/event-page/v1?after=0")) collabSpaceReopenedAt.set(page, Date.now());
         if (!url.includes("/auth/") && !url.includes("/directory/")) return;
         const status = response.status();
         const auth = response.request().headers()["authorization"] ?? "none";
@@ -1354,6 +1523,7 @@ async function runCollabE2eVerify(): Promise<void> {
     attachBrowserDiagnostics(user1Page, "user1");
     attachBrowserDiagnostics(user2Page, "user2");
     const user2Commands = collabCountCommandFrames(user2Page);
+    const user1Sent = collabRecordSentCommands(user1Page);
 
     await user1Page.goto(`http://127.0.0.1:${user1Port}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
     await user2Page.goto(`http://127.0.0.1:${user2Port}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
@@ -1368,7 +1538,7 @@ async function runCollabE2eVerify(): Promise<void> {
     await user1Page.waitForTimeout(2_000);
     await user2Page.waitForTimeout(2_000);
 
-    const scenario = await collabRunScenario(record, user1Page, user2Page, hubBaseUrl, user2Commands, () => (external ? collabExternalAdminCapability(external) : hubDaemon!.adminCapability));
+    const scenario = await collabRunScenario(record, user1Page, user2Page, hubBaseUrl, user2Commands, () => (external ? collabExternalAdminCapability(external) : hubDaemon!.adminCapability), user1Sent);
 
     if (hubDaemon) hubDaemon = await collabRunRestartStep({ record, hubDaemon, hubPort, hubDataDir, user1: user1Page, user2: user2Page, user2Commands, spaceId: scenario.spaceId, artifactId: scenario.artifactId });
     else for (const step of [9, 10]) record(step, null, `skipped — the external hub ${hubBaseUrl} is not owned by this run, so it is not restarted`);
@@ -1385,6 +1555,7 @@ async function runCollabE2eVerify(): Promise<void> {
   const passed = results.filter((outcome) => outcome.pass === true).length;
   const skipped = results.filter((outcome) => outcome.pass === null).length;
   console.log(`[collab-e2e] summary: ${passed}/${results.length} steps passed, ${skipped} skipped, ${results.length - passed - skipped} failed`);
+  console.log(`[collab-e2e] /spaces/<id> loads that did not mount the Space app: ${collabRouteMisses.length}${collabRouteMisses.length > 0 ? ` — ${collabRouteMisses.join(" | ")}` : ""}`);
   for (const outcome of [...results].sort((left, right) => left.step - right.step)) console.log(`  STEP ${outcome.step}: ${collabVerdict(outcome.pass)}: ${outcome.name}`);
   if (passed !== results.length) process.exitCode = 1;
 }

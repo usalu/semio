@@ -1,0 +1,6 @@
+{
+  "why": "Example invocations of the wires editor's verbs that act on its boot example (the metabolism board, nodes node-1 … node-7). The declared-verb law (`artifact_app_laws::assert_declared_verbs_honour_their_declarations`) overlays them on the staged declared defaults, so every declared argument is probed on an invocation that can act.",
+  "verbs": {
+    "addRelationship": { "sourceId": "node-3", "targetId": "node-6", "kind": "owns" }
+  }
+}

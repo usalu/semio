@@ -56,7 +56,7 @@ import treeDragHandleFixture from "../../../../../../../🔨️modules/🖱️ui
 import sceneListTransferFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json" with { type: "json" };
 import { BlockListHost } from "../../🧱️elements/🧩️BlockListHost/🟦️.tsx";
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🔣️.json";
-import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
+import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectOwnerIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
 import admittedInstanceFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🛂️admission/🔣️.json";
 import artifactCreationProgressFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🔣️.json";
 import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json";
@@ -512,6 +512,18 @@ describe("Shell dialog origin", () => {
     console.log("[DEBUG] Shell dialog origin: admitted-instance neutral=3 stale-target-retirement=1");
   });
 
+  it("admits a spawned program's own progress and completion passes only when the primary session presents them", () => {
+    const program = { pluginId: dialogOriginFixture.owner.pluginId, instanceId: dialogOriginFixture.owner.sessionInstanceId, app: { id: dialogOriginFixture.owner.appId, controllerId: dialogOriginFixture.owner.controllerId } };
+    const primary = { pluginId: "host", instanceId: 1, app: { id: "host", controllerId: "host" } };
+    const spawned = [{ pluginId: program.pluginId, appId: program.app.id, instanceId: program.instanceId }];
+    const current = { presentation: shellDialogOriginV1(primary, []), mounted: shellDialogOriginV1(program, []), primary, spawned };
+    expect(shellEffectOwnerIsCurrentV1({ presentation: shellDialogOriginV1(primary, []), source: shellDialogOriginV1(program, []) }, current), "presented by the primary session, sourced by the live program").toBe(true);
+    expect(shellEffectOwnerIsCurrentV1({ presentation: shellDialogOriginV1(program, []), source: shellDialogOriginV1(program, []) }, current), "the defect: a program presenting its own pass is never current").toBe(false);
+    expect(shellEffectOwnerIsCurrentV1({ presentation: shellDialogOriginV1(primary, []), source: shellDialogOriginV1(program, []) }, { ...current, spawned: [] }), "a retired program's pass is dropped").toBe(false);
+    expect(shellEffectOwnerIsCurrentV1({ presentation: shellDialogOriginV1(primary, []), source: shellDialogOriginV1(primary, []) }, { ...current, mounted: shellDialogOriginV1(primary, []) }), "the primary session's own lane").toBe(true);
+    expect(shellEffectOwnerIsCurrentV1({ presentation: shellDialogOriginV1(primary, []), source: shellDialogOriginV1(program, []) }, { ...current, presentation: shellDialogOriginV1({ ...primary, instanceId: 2 }, []) }), "a replaced primary session drops every pass it presented").toBe(false);
+  });
+
   it("retires a spawned source independently of its still-visible primary presentation owner", async () => {
     const source = dialogOriginFixture.owner;
     const primary = { pluginId: "host", instanceId: 1, app: { id: "host", controllerId: "host" } };
@@ -957,8 +969,8 @@ describe("Space artifact creation host owner", () => {
   it("retains exact sibling owners through one-shot cancellation and accepts a racing Ready", () => {
     const progressOwner: ArtifactCreationProgressOwnerV1 = owner;
     const sibling: ArtifactCreationProgressOwnerV1 = { ...progressOwner, requestId: "2".repeat(32), name: "Second Map" };
-    let state = reduceArtifactCreationProgressUiV1({}, { kind: "issued", owner: progressOwner });
-    state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: sibling });
+    let state = reduceArtifactCreationProgressUiV1({}, { kind: "issued", owner: progressOwner, atMs: 0 });
+    state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: sibling, atMs: 0 });
     const unchanged = state;
     expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId: "3".repeat(32), spaceId: "space-a", catalogGenerationId: owner.expectedCatalogGenerationId, phase: "failed" } })).toBe(unchanged);
     expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId, spaceId: "foreign-space", catalogGenerationId: owner.expectedCatalogGenerationId, phase: "failed" } })).toBe(unchanged);
@@ -995,15 +1007,15 @@ describe("Space artifact creation host owner", () => {
       requestId: index.toString(16).padStart(32, "0"),
       name: `Map ${index}`,
     }));
-    for (const candidate of owners) state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: candidate });
+    for (const candidate of owners) state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: candidate, atMs: 0 });
     const full = state;
     const replacement = { ...owner, requestId: "f".repeat(32), name: "Replacement" };
-    expect(reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: replacement })).toBe(full);
+    expect(reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: replacement, atMs: 0 })).toBe(full);
     state = reduceArtifactCreationProgressUiV1(state, {
       kind: "status",
       message: { kind: "space-artifact-creation-status", requestId: owners[0]!.requestId, spaceId: owner.spaceId, catalogGenerationId: owner.expectedCatalogGenerationId, phase: "failed" },
     });
-    state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: replacement });
+    state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: replacement, atMs: 0 });
     expect(Object.keys(state)).toHaveLength(ARTIFACT_CREATION_PROGRESS_CAPACITY);
     expect(state[owners[0]!.requestId]).toBeUndefined();
     expect(state[replacement.requestId]).toMatchObject({ phase: "accepted", cancelRequested: false });
@@ -1026,7 +1038,7 @@ describe("Space artifact creation host owner", () => {
       expect(artifactCreationProgressRoleV1(phase, row.openingDisposition as "idle" | "opening" | "failed"), row.id).toBe(row.role);
       expect(artifactCreationProgressTerminalV1(phase), row.id).toBe(["ready", "indeterminate", "failed", "cancelled"].includes(phase));
       const view = render(createElement(ArtifactCreationProgressNotice, {
-        state: { ...owner, phase, cancelRequested: row.cancelRequested, openingDisposition: row.openingDisposition as "idle" | "opening" | "failed" },
+        state: { ...owner, issuedAtMs: Date.now(), phase, cancelRequested: row.cancelRequested, openingDisposition: row.openingDisposition as "idle" | "opening" | "failed" },
         locale,
         onCancel: () => {},
         onOpen: () => {},
@@ -1058,16 +1070,33 @@ describe("Space artifact creation host owner", () => {
     }
     for (const locale of artifactCreationProgressFixture.unsupportedLocales) {
       expect(artifactCreationProgressLocaleV1(locale), locale).toBeNull();
-      expect(renderToStaticMarkup(createElement(ArtifactCreationProgressNotice, { state: { ...owner, phase: "accepted", cancelRequested: false, openingDisposition: "idle" }, locale, onCancel: () => {}, onOpen: () => {} })), locale).toBe("");
+      expect(renderToStaticMarkup(createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now(), phase: "accepted", cancelRequested: false, openingDisposition: "idle" }, locale, onCancel: () => {}, onOpen: () => {} })), locale).toBe("");
+    }
+  });
+
+  // 🐢️ ticket 26/09/23 S15: a creation the hub keeps working on says how long, in the person's language, and keeps its Cancel.
+  it("tells how long the hub has been working on a running creation and keeps the Cancel, en and de", () => {
+    for (const [locale, elapsed] of [["en", "2 min 5 s"], ["de", "2 Min. 5 s"]] as const) {
+      const view = render(createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now() - 125_400, phase: "accepted", cancelRequested: false, openingDisposition: "idle" }, locale, onCancel: () => {}, onOpen: () => {} }));
+      const region = view.getByRole("status");
+      expect(region.querySelector("[data-semio-artifact-creation-elapsed]")?.textContent).toBe(artifactCreationProgressFixture.locales[locale].waiting.replace("{elapsed}", elapsed));
+      expect(view.getByRole("button", { name: `${artifactCreationProgressFixture.locales[locale].cancel}: Shared Map` }).hasAttribute("disabled")).toBe(false);
+      view.unmount();
+      const fresh = render(createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now(), phase: "accepted", cancelRequested: false, openingDisposition: "idle" }, locale, onCancel: () => {}, onOpen: () => {} }));
+      expect(fresh.container.querySelector("[data-semio-artifact-creation-elapsed]"), "no waiting line before the threshold").toBeNull();
+      fresh.unmount();
+      const done = render(createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now() - 125_400, phase: "indeterminate", cancelRequested: false, openingDisposition: "idle" }, locale, onCancel: () => {}, onOpen: () => {} }));
+      expect(done.container.querySelector("[data-semio-artifact-creation-elapsed]"), "a concluded creation shows no waiting line").toBeNull();
+      done.unmount();
     }
   });
 
   it("dispatches cancel once with the exact retained owner", () => {
     const onCancel = vi.fn();
-    const view = render(createElement(ArtifactCreationProgressNotice, { state: { ...owner, phase: "preparing", cancelRequested: false, openingDisposition: "idle" }, locale: "de", onCancel, onOpen: () => {} }));
+    const view = render(createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now(), phase: "preparing", cancelRequested: false, openingDisposition: "idle" }, locale: "de", onCancel, onOpen: () => {} }));
     fireEvent.click(view.getByRole("button", { name: "Erstellung abbrechen: Shared Map" }));
     expect(onCancel).toHaveBeenCalledExactlyOnceWith(requestId, "space-a");
-    view.rerender(createElement(ArtifactCreationProgressNotice, { state: { ...owner, phase: "preparing", cancelRequested: true, openingDisposition: "idle" }, locale: "de", onCancel, onOpen: () => {} }));
+    view.rerender(createElement(ArtifactCreationProgressNotice, { state: { ...owner, issuedAtMs: Date.now(), phase: "preparing", cancelRequested: true, openingDisposition: "idle" }, locale: "de", onCancel, onOpen: () => {} }));
     fireEvent.click(view.getByRole("button", { name: "Erstellung abbrechen: Shared Map" }));
     expect(onCancel).toHaveBeenCalledTimes(1);
     view.unmount();
@@ -1078,7 +1107,7 @@ describe("Space artifact creation host owner", () => {
       const onCancel = vi.fn();
       const onOpen = vi.fn();
       const view = render(createElement(ArtifactCreationProgressNotice, {
-        state: { ...owner, phase: "ready", cancelRequested: false, openingDisposition: "failed" },
+        state: { ...owner, issuedAtMs: Date.now(), phase: "ready", cancelRequested: false, openingDisposition: "failed" },
         locale,
         onCancel,
         onOpen,
@@ -1716,6 +1745,7 @@ import graphParameterFixture from "../../../../🌊️flow/🗿️artifacts/🌊
 import graphPickFixture from "../../🧱️elements/🕸️NodeGraph/🧫️fixtures/🔣️pick-target.json";
 import flowParameterSchema from "../../../../🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/🧬️schema/🔣️.json" with { type: "json" };
 import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
+import * as infiniteCanvasRenderer from "@semio-tech/infinite-canvas-react-renderer";
 import { createFlowBrowserRuntime } from "@semio-tech/flow-core/🌐️flow-browser.js";
 import { MockFlowBridge } from "../../../../🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts";
 import flowAbi from "../../../../🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json" with { type: "json" };
@@ -4822,8 +4852,8 @@ describe("framework renderer hosts", () => {
 
   it("dispatches graph parameter keyboard and drag events as bounded nodeGraphEdit operations with explicit commits", async () => {
     const task = <T,>(value: T) => ({ result: Promise.resolve(value), subscribe: () => () => {}, cancel: vi.fn() });
-    const scheduler = { invalidate: vi.fn(), beginContinuous: vi.fn(), endContinuous: vi.fn(), dispose: vi.fn() };
-    const schedulerSpy = vi.spyOn(flowSessionLoader, "createDemandFrameScheduler").mockReturnValue(scheduler);
+    const scheduler = { invalidate: vi.fn(), paintNow: vi.fn(), beginContinuous: vi.fn(), endContinuous: vi.fn(), dispose: vi.fn() };
+    const schedulerSpy = vi.spyOn(infiniteCanvasRenderer, "createDemandFrameScheduler").mockReturnValue(scheduler);
     const contextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
     const timerSpy = vi.spyOn(globalThis, "setTimeout");
     const createSpy = vi.spyOn(flowSessionLoader, "createFlowSession");
@@ -11662,10 +11692,12 @@ describe("built-node store reloads", () => {
       expect(cache.pendingReloadKeys()).toEqual(["window:procedural-main"]);
       expect(notifications).toBe(0);
       expect(textOf()).toBe("first");
+      const revisionBefore = store.getRevisionSnapshot();
       cache.flushPendingReloads();
       expect(cache.pendingReloadKeys()).toEqual([]);
       expect(textOf()).toBe("second");
       expect(notifications).toBeGreaterThan(0);
+      expect(store.getRevisionSnapshot()).toBeGreaterThan(revisionBefore);
       const settled = notifications;
       expect(cache.storeFor("window:procedural-main", second)).toBe(store);
       cache.flushPendingReloads();

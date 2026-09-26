@@ -321,33 +321,8 @@ fn a_contradiction_transient_paints_a_distinct_overlay() {
 #[test]
 fn the_python_oracle_vector_matches_the_rust_payload_shape() {
     use crate::editor::bitmap::modes::edit::tools::fill::{payload_from_assignment, BitmapFillPayload};
-    let mut cursor = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let mut vector = None;
-    for _ in 0..16 {
-        let semio = cursor.join(".🧬semio");
-        if semio.is_dir() {
-            let mut stack = vec![semio];
-            while let Some(dir) = stack.pop() {
-                if let Ok(entries) = std::fs::read_dir(&dir) {
-                    for entry in entries.flatten() {
-                        let path = entry.path();
-                        if path.is_dir() {
-                            stack.push(path);
-                        } else if path.file_name().and_then(|name| name.to_str()) == Some("bitmap-fill-oracle-vector.json") {
-                            vector = Some(path);
-                        }
-                    }
-                }
-            }
-            break;
-        }
-        if !cursor.pop() {
-            break;
-        }
-    }
-    let vector = vector.expect("oracle vector under the WFC ticket");
-    let text = std::fs::read_to_string(&vector).expect("vector readable");
-    let payload = BitmapFillPayload::decode_json(&text).expect("vector decodes");
+    let text = include_str!("../../🎭️modes/✏️edit/🛠️tools/🌡fill/🧫️fixtures/🐍️python-fill-oracle/🔣️.json");
+    let payload = BitmapFillPayload::decode_json(text).expect("vector decodes");
     assert_eq!(payload.width, 2);
     assert_eq!(payload.height, 2);
     assert_eq!(payload.decided_count(), 2);
@@ -358,3 +333,11 @@ fn the_python_oracle_vector_matches_the_rust_payload_shape() {
     assert!(payload.trace.iter().any(|event| event.discarded), "the vector keeps a cell the search undid");
 }
 //#endregion 🌡Fill
+
+/// 🎯️ LAW: the editor declares the artifact kind it edits (the artifact's own `artifact_kind()`), which is
+/// what the hub's one open-target rule (`app_opens_kind`, `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`)
+/// pairs with this editor and the viewer of its dialect — so a WFC bitmap can be created and opened as a hub document.
+#[test]
+fn the_editor_declares_the_artifact_kind_it_edits() {
+    assert_eq!(create_bitmap_editor().artifact_kinds, vec![crate::artifact_kind()]);
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework-editor-rs` router: `bun ./📜️script.ts wasm`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BROWSER_CANVAS_HOT_CRATES, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -9,6 +9,7 @@ class WasmScript extends BundleScript {
       logPrefix: "framework/editor/rs",
       wasmBaseName: "framework_editor",
       shipProfile: "wasm-release",
+      devOptimizedCrates: BROWSER_CANVAS_HOT_CRATES,
       pkg: {
         name: "@semio-tech/framework-editor-rs",
         files: ["framework_editor_bg.wasm", "framework_editor.js", "framework_editor.d.ts", "framework_editor_bg.wasm.d.ts"],

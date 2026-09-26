@@ -557,6 +557,19 @@ fn a_job_handle_is_readable_only_by_its_own_session_and_its_own_authenticated_su
     assert_eq!(resolve_inference_job_handle(&handles, &mine, "job_never_minted", 1_001).expect_err("unknown handle").code, GatewayErrorCode::NotFound);
 }
 
+/// 🌅️ A booting hub's readiness (`startup` present) is an unavailable roster, retryable, never an
+/// empty one; a ready or merely not-ready hub's roster is read as declared.
+#[test]
+fn a_booting_hub_roster_is_unavailable_never_empty() {
+    let cancel = CancelToken::root_now();
+    let starting = ScriptedTransport::ok(503, serde_json::json!({ "status": "not-ready", "features": { "inferenceServices": [] }, "startup": { "stage": "guest-codec-executing", "completedUnits": 1, "totalUnits": 2 } }));
+    assert_eq!(block_on(read_hub_inference_services(&starting, &context(&cancel), "http://127.0.0.1:1")).expect_err("booting hub"), InferenceRouteErrorV1::Unavailable);
+    let blocked = ScriptedTransport::ok(503, serde_json::json!({ "status": "not-ready", "features": { "inferenceServices": [] } }));
+    assert_eq!(block_on(read_hub_inference_services(&blocked, &context(&cancel), "http://127.0.0.1:1")).expect("not-ready hub roster"), Vec::new());
+    let ready = ScriptedTransport::ok(200, serde_json::json!({ "status": "ready", "features": { "inferenceServices": [{ "serviceId": "s.gis.gismap.inference", "route": "inference/gis-map" }] } }));
+    assert_eq!(block_on(read_hub_inference_services(&ready, &context(&cancel), "http://127.0.0.1:1")).expect("ready hub roster").len(), 1);
+}
+
 #[test]
 fn the_four_capabilities_are_direct_object_typed_gateway_tools_with_bilingual_descriptions() {
     let expected = ["inference_submit", "inference_events", "inference_cancel", "inference_approve"];

@@ -294,6 +294,10 @@ impl store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutati
 //#endregion 📬️StorePreparation
 
 impl ArtifactEditor for PlaygroundEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = PlaygroundSnapshot;
     type Mutation = PlaygroundMutation;
     type Config = NoConfig;
@@ -482,6 +486,7 @@ impl ArtifactEditor for PlaygroundEditor {
 pub fn create_playground_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PLAYGROUND_DIALECT)
         .document(["semio", "playground"])
+        .artifact_kind(crate::artifact_kind())
         .icon_id("playground")
         .mode_def(edit::definition())
         .default_mode_id(edit::PLAYGROUND_EDIT_MODE_EDIT)
@@ -492,6 +497,9 @@ pub fn create_playground_editor() -> semio_framework_plugin::AppDefinition {
         .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"))
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
         .action_destructive("setActiveExample")
+        .action_describe("changeSchema", LocalizedLabel::native("Replaces the playground's schema metadata string, the whole persistent content of a playground document, with the given text.", "Ersetzt die Schema-Metadaten-Zeichenkette des Playgrounds, den gesamten dauerhaften Inhalt eines Playground-Dokuments, durch den angegebenen Text."))
+        .action_describe("setActiveExample", LocalizedLabel::native("Loads the bundled demo playground's schema, or clears the schema for an empty example id.", "Lädt das Schema des mitgelieferten Demo-Playgrounds oder leert das Schema bei leerer Beispiel-Id."))
+        .action_destructive("changeSchema")
         .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -224,7 +224,7 @@ pub(super) fn every_command() -> Vec<WiresCommand> {
     vec![
         WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }),
         WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
-        WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into() }),
+        WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-2".into() }),
         WiresCommand::DeleteSelection(delete_selection::DeleteSelection {}),
         WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5, samples: vec![[0.5, -1.5], [1.5, -2.5]] }),
         WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }),
@@ -373,7 +373,7 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     let receiver = meta("local").instance_id;
     instance_a.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a")).await.expect("a adds node");
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *instance_a, receiver).await.expect("a's edit publishes");
-    instance_b.dispatch_typed(WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into() }), &meta("actor-b")).await.expect("b relates node-1 to node-2");
+    instance_b.dispatch_typed(WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-2".into() }), &meta("actor-b")).await.expect("b relates node-1 to node-2");
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *instance_b, receiver).await.expect("b's edit publishes");
 
     instance_a.tick_backbone().await.expect("a folds b's events");

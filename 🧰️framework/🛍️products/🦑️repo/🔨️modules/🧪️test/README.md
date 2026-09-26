@@ -148,11 +148,14 @@ is declared by the OWNER, never by the framework. One field carries this, in the
   depends on it by path — a crates.io coordinate is refused, because it would be an unreviewed
   dependency of a generated host.
 * **Without a path** the entry is an EXTERNAL distribution. The Python host builds a cache-local
-  virtual environment under `.🧬semio/🦑️repo/⚡️cache/tests/hosts/`, keyed by the declared package
-  set so it is created once and reused by every run; it is created with `--system-site-packages`, so
-  a distribution the machine already provides at the declared version is reused rather than
-  downloaded, and anything else is installed INTO the environment. The system interpreter is never
-  written to. The TypeScript host resolves the package from the repository's own `node_modules`
+  virtual environment under `.🧬semio/🦑️repo/⚡️cache/tests/hosts/`, keyed by the base interpreter
+  and the declared package set so it is created once and reused by every run. Its site directory
+  carries `semio-base-interpreter.pth`, which adds the base interpreter's own site directories (the
+  repository's `.venv`) behind the environment's, so a distribution the base already provides at the
+  declared version is reused rather than downloaded — `--system-site-packages` would expose the
+  `.venv`'s base installation instead and hide every `.venv` package — and anything else, including
+  a base copy that does not import at the declared version, is installed INTO the environment with
+  `--ignore-installed`, where it shadows the base. The system interpreter is never written to. The TypeScript host resolves the package from the repository's own `node_modules`
   instead of installing a private copy — one lockfile, one version of every library — and reports
   the declaration as unmet if it does not resolve.
 

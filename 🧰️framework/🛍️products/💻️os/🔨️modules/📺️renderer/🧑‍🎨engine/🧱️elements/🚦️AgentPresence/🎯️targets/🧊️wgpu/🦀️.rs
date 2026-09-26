@@ -20,6 +20,7 @@ pub enum AgentPresenceTone {
     Working,
     Connecting,
     Disconnected,
+    Blocked,
 }
 
 impl AgentPresenceTone {
@@ -31,6 +32,7 @@ impl AgentPresenceTone {
             AgentPresenceTone::Working => "working",
             AgentPresenceTone::Connecting => "connecting",
             AgentPresenceTone::Disconnected => "disconnected",
+            AgentPresenceTone::Blocked => "blocked",
         }
     }
 }
@@ -39,6 +41,7 @@ impl AgentPresenceTone {
 /// without a `DrawList`/`FontAtlas` fixture, exactly like its React original.
 pub fn agent_presence_tone(status: AgentBridgeStatus, presence: &AgentBridgePresence) -> AgentPresenceTone {
     match status {
+        AgentBridgeStatus::Unavailable | AgentBridgeStatus::Incompatible(_) => AgentPresenceTone::Blocked,
         AgentBridgeStatus::Disabled | AgentBridgeStatus::Closed => AgentPresenceTone::Disconnected,
         AgentBridgeStatus::Connecting | AgentBridgeStatus::Reconnecting => AgentPresenceTone::Connecting,
         AgentBridgeStatus::Open if presence.active => AgentPresenceTone::Working,
@@ -53,6 +56,7 @@ pub fn agent_presence_color(tone: AgentPresenceTone, theme: &Theme) -> Rgba {
         AgentPresenceTone::Connected => theme.accent,
         AgentPresenceTone::Connecting => theme.warning,
         AgentPresenceTone::Disconnected => theme.text_muted,
+        AgentPresenceTone::Blocked => theme.error,
     }
 }
 
@@ -60,15 +64,17 @@ pub fn agent_presence_color(tone: AgentPresenceTone, theme: &Theme) -> Rgba {
 /// (re)connection names itself before the tone does, and `working` interpolates the invocation
 /// label the way `os.agent.presence.working`'s `{{label}}` placeholder does.
 pub fn agent_presence_text(status: AgentBridgeStatus, presence: &AgentBridgePresence, locale: Locale) -> String {
-    match agent_presence_tone(status, presence) {
-        _ if matches!(status, AgentBridgeStatus::Reconnecting) => agent_label("Reconnecting to agent…", "Verbindung zum Agent wird wiederhergestellt…", locale),
-        _ if matches!(status, AgentBridgeStatus::Connecting) => agent_label("Connecting to agent…", "Verbinde mit Agent…", locale),
-        AgentPresenceTone::Disconnected => agent_label("Agent disconnected", "Agent getrennt", locale),
-        AgentPresenceTone::Working => {
+    match (status, agent_presence_tone(status, presence)) {
+        (AgentBridgeStatus::Incompatible(mismatch), _) => agent_label("The AI client uses bridge version {{gateway}}, this shell version {{shell}}; update the older one", "Der KI-Client nutzt Brückenversion {{gateway}}, diese Oberfläche Version {{shell}}; aktualisiere die ältere", locale).replace("{{gateway}}", &mismatch.gateway.to_string()).replace("{{shell}}", &mismatch.shell.to_string()),
+        (_, AgentPresenceTone::Blocked) => agent_label("The AI client's bridge does not answer; restart the AI client to connect again", "Die Brücke des KI-Clients antwortet nicht; starte den KI-Client neu, um erneut zu verbinden", locale),
+        (AgentBridgeStatus::Reconnecting, _) => agent_label("Reconnecting to agent…", "Verbindung zum Agent wird wiederhergestellt…", locale),
+        (AgentBridgeStatus::Connecting, _) => agent_label("Connecting to agent…", "Verbinde mit Agent…", locale),
+        (_, AgentPresenceTone::Disconnected) => agent_label("Agent disconnected", "Agent getrennt", locale),
+        (_, AgentPresenceTone::Working) => {
             let working = agent_label("Agent working", "Agent aktiv", locale);
             format!("{working}: {}", presence.label)
         }
-        AgentPresenceTone::Connected | AgentPresenceTone::Connecting => agent_label("Agent idle", "Agent inaktiv", locale),
+        (_, AgentPresenceTone::Connected | AgentPresenceTone::Connecting) => agent_label("Agent idle", "Agent inaktiv", locale),
     }
 }
 

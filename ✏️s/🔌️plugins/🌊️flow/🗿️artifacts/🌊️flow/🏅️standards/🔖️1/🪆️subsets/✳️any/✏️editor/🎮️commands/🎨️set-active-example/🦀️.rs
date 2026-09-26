@@ -23,7 +23,7 @@ pub fn set_active_example_operations(payload: &SetActiveExample, current: &FlowS
     } else if payload.example_id == demo::ID {
         <FlowSnapshot as store::ArtifactDsl>::parse_dsl(demo::PRIMARY_TEXT).map_err(|error| Fault::from(error.to_string()))?
     } else {
-        return Ok(Vec::new());
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.example-unknown"), format!("setActiveExample has no example \"{}\"", payload.example_id)));
     };
     Ok(example_snapshot_operations(current, &target))
 }

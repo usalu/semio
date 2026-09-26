@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "publish": [
+    {
+      "id": "a-pointer-over-the-board-names-the-world-point-under-it",
+      "windowId": "board-main",
+      "bounds": [100, 50, 800, 600],
+      "camera": { "x": 10, "y": -20, "zoom": 2 },
+      "pointer": [700, 150],
+      "expected": { "windowId": "board-main", "space": "canvas", "kind": { "kind": "canvas", "x": 10, "y": -20, "zoom": 2 }, "size": [800, 600], "pointer": [110, -120, 0] }
+    },
+    {
+      "id": "the-board-centre-is-the-camera-centre",
+      "windowId": "board-main",
+      "bounds": [100, 50, 800, 600],
+      "camera": { "x": 10, "y": -20, "zoom": 2 },
+      "pointer": [500, 350],
+      "expected": { "windowId": "board-main", "space": "canvas", "kind": { "kind": "canvas", "x": 10, "y": -20, "zoom": 2 }, "size": [800, 600], "pointer": [10, -20, 0] }
+    },
+    {
+      "id": "a-zoomed-out-board-spreads-the-pointer",
+      "windowId": "board-side",
+      "bounds": [0, 0, 400, 300],
+      "camera": { "x": 0, "y": 0, "zoom": 0.5 },
+      "pointer": [300, 75],
+      "expected": { "windowId": "board-side", "space": "canvas", "kind": { "kind": "canvas", "x": 0, "y": 0, "zoom": 0.5 }, "size": [400, 300], "pointer": [200, -150, 0] }
+    },
+    {
+      "id": "a-pointer-off-the-board-publishes-the-camera-only",
+      "windowId": "board-main",
+      "bounds": [100, 50, 800, 600],
+      "camera": { "x": 10, "y": -20, "zoom": 2 },
+      "pointer": [50, 40],
+      "expected": { "windowId": "board-main", "space": "canvas", "kind": { "kind": "canvas", "x": 10, "y": -20, "zoom": 2 }, "size": [800, 600] }
+    },
+    {
+      "id": "no-pointer-publishes-the-camera-only",
+      "windowId": "board-main",
+      "bounds": [100, 50, 800, 600],
+      "camera": { "x": 10, "y": -20, "zoom": 2 },
+      "pointer": null,
+      "expected": { "windowId": "board-main", "space": "canvas", "kind": { "kind": "canvas", "x": 10, "y": -20, "zoom": 2 }, "size": [800, 600] }
+    }
+  ],
+  "paint": [
+    {
+      "id": "peers-on-this-window-paint-a-cursor-a-viewport-and-their-marks",
+      "windowId": "board-main",
+      "bounds": [100, 50, 800, 600],
+      "camera": { "x": 0, "y": 0, "zoom": 1 },
+      "myActor": "self",
+      "localColor": 0,
+      "scenePath": "board/board-main",
+      "roster": [
+        {
+          "actor": "self",
+          "connectedAtMs": 1,
+          "label": "Me",
+          "color": 0,
+          "views": [{ "windowId": "board-main", "space": "canvas", "kind": { "kind": "canvas", "x": 0, "y": 0, "zoom": 1 }, "size": [800, 600], "pointer": [5, 5, 0] }],
+          "interaction": { "app_id": "block", "domains": [{ "domain": "handle", "granularity": "handle", "selected": ["h9"], "hovered": [] }] }
+        },
+        {
+          "actor": "peer-a",
+          "connectedAtMs": 2,
+          "label": "Ada",
+          "color": 3,
+          "views": [{ "windowId": "board-main", "space": "canvas", "kind": { "kind": "canvas", "x": 100, "y": 50, "zoom": 2 }, "size": [400, 300], "pointer": [120, 80, 0] }],
+          "interaction": { "app_id": "block", "domains": [{ "domain": "handle", "granularity": "handle", "selected": ["h1"], "hovered": ["h2"] }] },
+          "activeTool": "select"
+        },
+        {
+          "actor": "peer-b",
+          "connectedAtMs": 3,
+          "label": "Bo",
+          "color": 5,
+          "views": [{ "windowId": "board-other", "space": "canvas", "kind": { "kind": "canvas", "x": 0, "y": 0, "zoom": 1 }, "size": [800, 600], "pointer": [1, 1, 0] }],
+          "interaction": { "app_id": "block", "domains": [{ "domain": "handle", "granularity": "handle", "selected": ["h1"], "hovered": [] }] }
+        },
+        {
+          "actor": "peer-c",
+          "connectedAtMs": 4,
+          "label": "Cy",
+          "color": 7,
+          "views": [{ "windowId": "board-main", "space": "canvas", "kind": { "kind": "canvas", "x": 0, "y": 0, "zoom": 1 }, "size": [800, 600] }],
+          "interaction": { "app_id": "block", "domains": [{ "domain": "handle", "granularity": "handle", "selected": ["h1"], "hovered": [] }] }
+        }
+      ],
+      "expected": {
+        "cursors": [
+          {
+            "actor": "peer-a",
+            "color": 3,
+            "at": [620, 430],
+            "viewport": [500, 325, 200, 150],
+            "chip": "Ada: select",
+            "cursorPath": "board/board-main/peerCursor[0]#peer-a",
+            "viewportPath": "board/board-main/peerCamera[0]#peer-a"
+          }
+        ],
+        "marks": [
+          { "actor": "peer-a", "color": 3, "domain": "handle", "id": "h1", "mark": "selection", "chip": "AD", "path": "board/board-main/peerMarks[0]#handle:h1" },
+          { "actor": "peer-c", "color": 7, "domain": "handle", "id": "h1", "mark": "selection", "chip": "CY", "path": "board/board-main/peerMarks[0]#handle:h1" },
+          { "actor": "peer-a", "color": 3, "domain": "handle", "id": "h2", "mark": "hover", "chip": "AD", "path": "board/board-main/peerMarks[1]#handle:h2" }
+        ]
+      }
+    }
+  ],
+  "labels": [
+    { "locale": "en", "name": "Ada", "tool": "select", "cursor": "Ada's cursor", "viewport": "Ada's viewport", "selection": "Ada's selection", "hover": "Ada's hover", "chip": "Ada: select" },
+    { "locale": "de", "name": "Ada", "tool": "select", "cursor": "Cursor von Ada", "viewport": "Ansicht von Ada", "selection": "Auswahl von Ada", "hover": "Hover von Ada", "chip": "Ada: select" }
+  ]
+}

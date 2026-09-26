@@ -733,3 +733,4 @@ Peer coordinator session 10 ([8688a5], ticket 26/09/23/END-TO-END-OS-HUB-COLLABO
 
 ## Session 11 (Claude Code main chat, 2026-09-25 00:30)
 Continues on the 26/09/23 lane (`.tmp-ticket/`): preamble `📓️session-11-preamble.md`, fleet `📓️fleet-11-agents.md`, landing log `📓️landing.md`, packages in `📓️work-packages.md` §Session 11. Start state: W1's catalog A published 2026-09-24 20:46 (generation `ee491213…`); freeze lifted with a compile-atomic landing window (T10 switch, G9 commit binding, N2 relay + `ureq` move) before W2's one-tree full rebuild. Fleet: W2, H9, C10, G10, S15, WG7, T12, R8 (Opus) + five Sonnet audits.
+- 2026-09-25 22:5x Session 11 ended: weekly Opus limit cut the fleet ~18:0x; handover to session 12 in `.tmp-ticket/📓️session-11-handover.md`.

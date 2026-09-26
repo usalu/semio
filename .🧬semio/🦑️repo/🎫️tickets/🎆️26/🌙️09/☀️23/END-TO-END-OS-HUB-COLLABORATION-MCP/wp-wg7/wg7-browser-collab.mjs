@@ -28,8 +28,8 @@ const DOCUMENT = process.env.WG7_DOCUMENT;
 const EDIT_ACTION = process.env.WG7_EDIT_ACTION ?? "";
 if (!SPACE || !DOCUMENT) throw new Error("WG7_SPACE and WG7_DOCUMENT are required");
 const USERS = [
-  { label: "A", email: "user1@semio.dev", password: "gm1-local-dev-pass-1" },
-  { label: "B", email: "user2@semio.dev", password: "gm1-local-dev-pass-2" },
+  { label: "A", email: "user1@semio.dev", password: "gm1-local-dev-pass-1", locale: "en-US" },
+  { label: "B", email: "user2@semio.dev", password: "gm1-local-dev-pass-2", locale: "de-DE" },
 ];
 const MIRROR = "#semio-wgpu-accessibility";
 const steps = [];
@@ -128,20 +128,31 @@ async function paintedFrame(page, name) {
 }
 
 async function boot(user) {
-  const context = await browser.newContext({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1 });
+  const context = await browser.newContext({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1, locale: user.locale });
   const page = await context.newPage();
   const lines = [];
   const hub = [];
+  const documentFrames = [];
   page.on("console", (message) => lines.push(`${ms()} ${message.type()} ${message.text()}`));
   page.on("pageerror", (error) => lines.push(`${ms()} pageerror ${String(error)}`));
   page.on("response", (response) => {
     if (response.url().startsWith(HUB)) hub.push(`${ms()} ${response.status()} ${response.request().method()} ${response.url().replace(HUB, "")}`);
   });
-  page.on("websocket", (socket) => hub.push(`${ms()} ws-open ${socket.url().replace(HUB.replace("http", "ws"), "")}`));
+  page.on("websocket", (socket) => {
+    hub.push(`${ms()} ws-open ${socket.url().replace(HUB.replace("http", "ws"), "")}`);
+    if (!socket.url().includes("/document/ws")) return;
+    const text = (payload) => (typeof payload === "string" ? payload : Buffer.from(payload).toString("latin1"));
+    const keep = (direction) => (frame) => {
+      const body = typeof frame.payload === "string" ? Buffer.from(frame.payload) : Buffer.from(frame.payload);
+      documentFrames.push({ at: ms(), direction, bytes: body.length, namesDocument: text(frame.payload).includes(DOCUMENT), ...(documentFrames.length < 400 && body.length <= 4096 ? { base64: body.toString("base64") } : {}) });
+    };
+    socket.on("framesent", keep("sent"));
+    socket.on("framereceived", keep("received"));
+  });
   await page.goto(SHELL, { waitUntil: "domcontentloaded", timeout: 180_000 });
   await page.waitForFunction(() => typeof globalThis.semioWgpuIntrospection?.dumpStructure === "function", null, { timeout: 180_000 });
   await page.waitForTimeout(8000);
-  return { user, context, page, lines, hub };
+  return { user, context, page, lines, hub, documentFrames };
 }
 
 /** 🔁️ Re-selects a hub connection: WGr's measured workaround for the mirror's stale enabled state after a
@@ -213,7 +224,7 @@ async function view(page) {
   const nodes = await projection(page);
   return {
     sync: labelOf(nodes, "s-sync-status"),
-    peers: nodes.filter((node) => String(node.key).startsWith("peer:") || String(node.key).includes("presence")).map((node) => node.label).slice(0, 8),
+    peers: nodes.filter((node) => node.key === "s-presence-peers" && !/^(No one else is here|Niemand sonst ist hier)$/u.test(String(node.label ?? ""))).map((node) => node.label).slice(0, 8),
     history: nodes.filter((node) => String(node.key).startsWith("framework.history.entry.") && !String(node.key).endsWith(".revert")).map((node) => node.label).slice(0, 40),
     nodes,
   };
@@ -260,10 +271,86 @@ record("5 A authors an edit (Add Text)", edited === "activated" && blockRows(aAf
 const seen = await waitFor(b.page, (state) => blockRows(state).length > blockRows(before).length, 60_000);
 await paintedFrame(b.page, "05-b-after-edit");
 record("6 B sees A's edit without a reload", seen.ok, { blocksBefore: blockRows(before).length, blocksB: blockRows(seen.last).slice(0, 4), syncB: seen.last.sync });
+const aBefore = await view(a.page);
+const addTextB = EDIT_ACTION || keyEndingWith(await projection(b.page), "note-play-blocks.add.text") || "";
+const editedB = addTextB ? await activate(b.page, addTextB, 6000) : "no-edit-control";
+const bAfter = await view(b.page);
+record("7 B authors an edit (Add Text)", editedB === "activated" && blockRows(bAfter).length > blockRows(seen.last).length, { addTextB, editedB, blocksB: blockRows(bAfter).slice(0, 4) });
+const seenByA = await waitFor(a.page, (state) => blockRows(state).length > blockRows(aBefore).length, 60_000);
+await paintedFrame(a.page, "07-a-after-b-edit");
+await paintedFrame(b.page, "07-b-after-own-edit");
+record("8 A sees B's edit without a reload", seenByA.ok, { blocksBefore: blockRows(aBefore).length, blocksA: blockRows(seenByA.last).slice(0, 4), syncA: seenByA.last.sync });
+for (const session of sessions) {
+  const sent = session.documentFrames.filter((frame) => frame.direction === "sent");
+  record(`9 document frames name ${DOCUMENT} (${session.user.label})`, sent.some((frame) => frame.namesDocument), { sent: sent.length, sentNamingDocument: sent.filter((frame) => frame.namesDocument).length, received: session.documentFrames.length - sent.length, locale: session.user.locale, syncLabel: (await view(session.page)).sync });
+}
+
+/** 🫀️ One liveness sample: the frame worker's own stats answer (a frozen worker never answers) and how long it took. */
+async function liveness(page) {
+  const started = Date.now();
+  const raw = await Promise.race([page.evaluate(async () => (await globalThis.semioWgpuIntrospection?.dumpFrameStats?.()) ?? ""), new Promise((resolve) => setTimeout(() => resolve(null), 5000))]);
+  return { answered: raw !== null, latencyMs: Date.now() - started, stats: typeof raw === "string" ? raw.slice(0, 160) : null };
+}
+const SYNC_CARD = "s-sync-status";
+const MEDIUM_CUT_MS = Number(process.env.WG7_MEDIUM_CUT_MS ?? 20_000);
+const LINK_KEY = /(?:^|\/)framework\.sync\.link\.([a-z-]+)$/u;
+const syncCard = (state) => state.nodes.filter((node) => node.windowId === SYNC_CARD);
+const linkLine = (state) => syncCard(state).flatMap((node) => {
+  const match = LINK_KEY.exec(String(node.key));
+  return match ? [{ code: match[1], key: node.key }] : [];
+});
+const linkText = (state) => syncCard(state).filter((node) => node.role === "paragraph" && /Verbindung|Connection|Zugriff|access/u.test(String(node.label ?? ""))).map((node) => node.label).slice(0, 4);
+const cardDigest = (state) => syncCard(state).map((node) => `${String(node.key).split("/").pop()}=${String(node.label ?? "").slice(0, 60)}`).slice(0, 16);
+if (process.env.WG7_OUTAGE === "1") {
+  const ensureSyncCard = async (page) => {
+    const pill = (await projection(page)).find((node) => node.key === SYNC_CARD && node.windowId === "shell.chrome");
+    if (pill?.checked !== true) await activate(page, SYNC_CARD, 2000);
+  };
+  for (const session of sessions) await ensureSyncCard(session.page);
+  const aBlocksOnline = blockRows(await view(a.page)).length;
+  await a.context.setOffline(true);
+  const offlineAt = Date.now();
+  await a.page.waitForTimeout(3000);
+  const beats = [await liveness(a.page), await liveness(a.page)];
+  record("10 a 15 s cut never freezes A (the frame worker keeps answering)", beats.every((beat) => beat.answered && beat.latencyMs < 2000), { beats });
+  const offlineEdit = await activate(a.page, keyEndingWith(await projection(a.page), "note-play-blocks.add.text") ?? "absent", 4000);
+  const aOffline = await view(a.page);
+  record("11 A edits while offline: admitted locally and shown as queued (en)", offlineEdit === "activated" && blockRows(aOffline).length > aBlocksOnline && /pending|ausstehend/iu.test(aOffline.sync ?? ""), { offlineEdit, blocksBefore: aBlocksOnline, blocksAfter: blockRows(aOffline).length, sync: aOffline.sync });
+  const bBefore = blockRows(await view(b.page)).length;
+  await a.page.waitForTimeout(Math.max(0, 15_000 - (Date.now() - offlineAt)));
+  await a.context.setOffline(false);
+  const onlineAt = Date.now();
+  const relinked = await waitFor(a.page, (state) => /live|connected|persisted|verbunden|gespeichert/iu.test(state.sync ?? "") && linkLine(state).length === 0, 60_000);
+  const delivered = await waitFor(b.page, (state) => blockRows(state).length > bBefore, 60_000);
+  record("12 after the 15 s cut A relinks in place and B receives the offline edit", relinked.ok && delivered.ok, { cutMs: onlineAt - offlineAt, relinkedAfterMs: Date.now() - onlineAt, syncA: relinked.last.sync, blocksB: blockRows(delivered.last).length, blocksBBefore: bBefore });
+  await paintedFrame(a.page, "12-a-relinked");
+  await ensureSyncCard(a.page);
+  await a.context.setOffline(true);
+  const mediumAt = Date.now();
+  const short = await waitFor(a.page, (state) => linkLine(state).some((row) => row.code === "reconnecting"), MEDIUM_CUT_MS);
+  await paintedFrame(a.page, "12b-a-reconnecting-en");
+  record(`12b a ${MEDIUM_CUT_MS / 1000} s cut is spoken as a short shortage once the link drops (en)`, short.ok, { afterMs: Date.now() - mediumAt, link: linkLine(short.last), texts: linkText(short.last), card: cardDigest(short.last), sync: short.last.sync, beat: await liveness(a.page) });
+  await a.page.waitForTimeout(Math.max(0, MEDIUM_CUT_MS - (Date.now() - mediumAt)));
+  await a.context.setOffline(false);
+  const back = await waitFor(a.page, (state) => /live|connected|persisted|verbunden|gespeichert/iu.test(state.sync ?? "") && linkLine(state).length === 0, 60_000);
+  record(`12c after ${MEDIUM_CUT_MS / 1000} s A relinks and the line clears`, back.ok, { syncA: back.last.sync, link: linkLine(back.last), card: cardDigest(back.last) });
+  await ensureSyncCard(b.page);
+  await b.context.setOffline(true);
+  const longAt = Date.now();
+  const expired = await waitFor(b.page, (state) => linkLine(state).some((row) => row.code === "link-expired"), 120_000);
+  await paintedFrame(b.page, "13-b-expired-de");
+  record("13 a long cut expires B's link and says so (de)", expired.ok, { afterMs: Date.now() - longAt, link: linkLine(expired.last), texts: linkText(expired.last), card: cardDigest(expired.last), sync: expired.last.sync, beat: await liveness(b.page) });
+  await b.context.setOffline(false);
+  await b.page.waitForTimeout(15_000);
+  await ensureSyncCard(b.page);
+  const after = await view(b.page);
+  record("14 an expired link never relinks by itself", linkLine(after).some((row) => row.code === "link-expired") && !/live|verbunden|connected|gespeichert|persisted/iu.test(after.sync ?? ""), { link: linkLine(after), texts: linkText(after), card: cardDigest(after), sync: after.sync });
+}
 
 for (const session of sessions) {
   writeFileSync(out(`console-${session.user.label}.txt`), session.lines.join("\n"));
   writeFileSync(out(`hub-${session.user.label}.txt`), session.hub.join("\n"));
+  writeFileSync(out(`frames-${session.user.label}.json`), JSON.stringify(session.documentFrames, null, 1));
 }
 writeFileSync(out("steps.json"), JSON.stringify({ shell: SHELL, hub: HUB, space: SPACE, document: DOCUMENT, steps }, null, 2));
 await browser.close();

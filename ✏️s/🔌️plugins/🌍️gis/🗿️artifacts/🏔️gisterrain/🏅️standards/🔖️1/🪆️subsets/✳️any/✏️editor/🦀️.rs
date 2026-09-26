@@ -426,6 +426,10 @@ impl store::ArtifactStoreOneItemPreparationFactory<GisTerrainSnapshot, GisTerrai
 //#endregion 📬️StorePreparation
 
 impl ArtifactEditor for Gis3dPlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = GisTerrainSnapshot;
     type Mutation = GisTerrainMutation;
     type Config = NoConfig;

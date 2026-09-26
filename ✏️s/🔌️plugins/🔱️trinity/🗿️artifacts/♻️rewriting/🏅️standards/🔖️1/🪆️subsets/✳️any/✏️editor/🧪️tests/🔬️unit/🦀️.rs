@@ -389,6 +389,40 @@ async fn patch_nodes_refuses_what_it_cannot_apply() {
     assert!(!crate::editor::rewriting::commands::patch_nodes(&state, &[], &[first], "name", "Beam").expect("the selection is the target").artifact_mutations.is_empty());
 }
 
+/// 🚫️ LAW: `addRuleClause` refuses what it cannot add — a second WHERE clause, an unknown clause kind, a rule whose
+/// own JSON no longer decodes — instead of an empty emit (S15: `kind=where` on the default rule journalled a row and
+/// changed nothing).
+#[semio_framework_async_macros::async_test]
+async fn add_rule_clause_refuses_what_it_cannot_add() {
+    let state = default_rule_state();
+    let add = crate::editor::rewriting::commands::add_rule_clause_command;
+    let code = |result: Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
+    assert_eq!(code(add(&state, "where")), "app.command.invalid-args", "the default rule already has a WHERE clause");
+    assert_eq!(code(add(&state, "optional")), "app.command.invalid-args");
+    let broken = RewritingSnapshot { lhs_json: "{".into(), ..state.clone() };
+    assert_eq!(code(add(&broken, "create")), "trinity.rewriting.rule-undecodable");
+}
+
+/// ⏪️ LAW: a rail `addRuleClause kind=create` is ONE undoable edit that rewrites only the RHS — undo restores the
+/// rule and redo adds the clause again (S15, session 12: its row carried a re-printed LHS and undo did nothing).
+#[semio_framework_async_macros::async_test]
+async fn a_rail_add_rule_clause_rewrites_only_the_rhs_and_round_trips() {
+    let mut app = new_app().await;
+    let before = app.snapshot().expect("projection");
+    let emit = crate::editor::rewriting::commands::add_rule_clause_command(&before, "create").expect("create clause");
+    assert!(!emit.artifact_mutations.is_empty() && emit.artifact_mutations.iter().all(|mutation| matches!(mutation, RewriteRuleMutation::EditRhs(_))), "only the RHS changes: {:?}", emit.artifact_mutations);
+    let rail = pack::json_to_dsl_value(&pack::json!({ "kind": "create" }));
+    app.handle_action("addRuleClause", Some(&rail), &meta("local")).await.expect("addRuleClause");
+    settle(&mut app).await;
+    let after = app.snapshot().expect("projection");
+    assert_ne!(after.rhs_json, before.rhs_json, "the clause is added");
+    assert_eq!(after.lhs_json, before.lhs_json, "the LHS is untouched");
+    history(&mut app, "undo").await;
+    assert_eq!(app.snapshot().expect("projection").rhs_json, before.rhs_json, "undo restores the RHS");
+    history(&mut app, "redo").await;
+    assert_eq!(app.snapshot().expect("projection").rhs_json, after.rhs_json, "redo adds the clause again");
+}
+
 /// ⚖️ LAW: `nodeGraphEdit` is the node-graph host's gesture verb (a `surfaceId` plus an `operations`
 /// list), so it stays out of the palette, the Actions rail and the context menu's `transform` group —
 /// pressed there it was refused `missing operationsJson` (S15). The menu's own delete row still
@@ -412,3 +446,11 @@ async fn the_node_graph_gesture_verb_is_kept_off_the_rail_and_the_transform_grou
     assert_eq!(bare_edit_rows, 0, "no argument-less nodeGraphEdit row: {menu:?}");
 }
 //#endregion 🩹️RailVerbLaws
+
+/// 🎯️ LAW: the editor declares the artifact kind it edits (the artifact's own `artifact_kind()`), which is
+/// what the hub's one open-target rule (`app_opens_kind`, `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`)
+/// pairs with this editor and the viewer of its dialect — so a Trinity rewrite rule can be created and opened as a hub document.
+#[semio_framework_async_macros::async_test]
+async fn the_editor_declares_the_artifact_kind_it_edits() {
+    assert_eq!(create_rewriting_app().artifact_kinds, vec![crate::artifact_kind()]);
+}

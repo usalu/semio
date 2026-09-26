@@ -21,7 +21,7 @@ use ui_wgpu::wgpu::{
 
 use crate::dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette, compute_dock_drop_zone, drop_zone_indicator_rect, parse_path};
 use crate::hub_connection::{
-    FRAMEWORK_HUB_PANEL_ID, HUB_ARTIFACT_CREATION_DEADLINE_MS, HUB_ARTIFACT_CREATION_POLL_MS, HubArtifactCatalogPhase, HubArtifactCreation, HubArtifactCreationState, HubArtifactOpening, HubDocumentRemote, HubSessionPresence, hub_artifact_creation_intent,
+    FRAMEWORK_HUB_PANEL_ID, HUB_ARTIFACT_CREATION_DEADLINE_MS, HUB_ARTIFACT_CREATION_POLL_MS, HubArtifactCatalogPhase, HubArtifactCreation, HubArtifactCreationState, HubArtifactOpening, HubConnectionState, HubDocumentRemote, HubLink, HubSessionPresence, hub_artifact_creation_intent,
     hub_artifact_creation_terminal,
 };
 use crate::hub_sign_in::{
@@ -47,8 +47,8 @@ use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
 use semio_framework_os_kernel::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, VecDeque};
-use store_sync::PresencePeer;
-use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
+use store_sync::{PresencePeer, PresenceWindowView};
+use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, DocumentLinkStatus, PersistenceBinding, RemoteState};
 use ui_contract::UiFixedList;
 use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS, UiDocumentLease, UiText};
 use ui_wgpu::wgpu::draw_text;
@@ -653,6 +653,15 @@ fn open_artifact_relay_target(action_id: &str, args: Option<&Value>) -> Result<O
     Ok(OpenArtifactRelayTarget { artifact_ref: dialect.to_coordinate(), dialect, role, plugin_id, app_id, document_id, space_id: text("spaceId"), schema })
 }
 
+/// 👤️ The name a peer's roster shows for this shell — the twin of React's `presenceClientIdentity`
+/// (`🛠️ShellHelpers/🟦️.tsx`): the signed-in person's display name, else a guest named after the actor's tail.
+fn shell_presence_label(identity: Option<&Identity>, actor: &str) -> String {
+    match identity.map(|identity| identity.display_name.trim()).filter(|name| !name.is_empty()) {
+        Some(name) => name.to_string(),
+        None => format!("Guest {}", actor.chars().rev().take(4).collect::<Vec<_>>().into_iter().rev().collect::<String>().to_uppercase()),
+    }
+}
+
 /// 👥️ Projects only Hub-normalized peers for the shell's currently attached surface.
 fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Option<&str>, target_surface: &str) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
     if attached_surface != Some(target_surface) {
@@ -672,6 +681,7 @@ fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Opti
             },
             connected_at_ms: Some(peer.connected_at_ms),
             color: peer.color,
+            is_agent: matches!(peer.principal_kind, Some(store_sync::os_spr::PresencePrincipalKind::Agent)),
         })
         .collect()
 }
@@ -706,21 +716,39 @@ pub enum ShellPluginInstallPhase {
     Failed(String),
 }
 
-/// 🚪️ Where the one frame-pumped document open stands: the guest's app instance is being created,
-/// the document's genesis is being loaded into it, or the open settled as cancelled or failed — a
-/// settled record stays until the user closes its band, like a settled plugin install.
+/// 🚪️ Where the one frame-pumped document open stands: a hub document's component is being resolved by
+/// the serving catalog generation, the guest's app instance is being created, the document's genesis is
+/// being loaded into it, or the open settled as cancelled or failed — a settled record stays until the
+/// user closes its band, like a settled plugin install.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ShellDocumentOpenPhase {
+    Resolving,
     Instantiating,
     Seeding,
     Cancelled,
     Failed(String),
 }
 
-/// 📨️ What one detached open step answered.
+/// 📨️ What one detached open step answered: a hub document's resolved owner — the plugin and app its lease
+/// names, and the program to mount (`None` when the local one already is the lease's component) — an app
+/// instance, or a seeded document.
 enum ShellDocumentOpenAnswer {
+    #[cfg(not(target_arch = "wasm32"))]
+    Resolved { plugin_id: String, app_id: String, program: Option<ProgramBridgeEntry> },
     Instantiated(u32),
     Seeded,
+}
+
+/// ⏳️ The resolution step a hub document open is on, as its band reads it ([`ShellDocumentOpening::resolve_step`]).
+#[cfg(not(target_arch = "wasm32"))]
+fn document_open_resolve_step_code(step: semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStep) -> u8 {
+    use semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStep;
+    match step {
+        ExecutionTargetModuleStep::Lease => 0,
+        ExecutionTargetModuleStep::Component => 1,
+        ExecutionTargetModuleStep::Descriptor => 2,
+        ExecutionTargetModuleStep::Verified => 3,
+    }
 }
 
 /// 🎯️ The document half of an open: what the relay asked for.
@@ -752,16 +780,25 @@ pub struct ShellDocumentOpening {
     pub cancel_requested: bool,
     pub started_at_ms: f64,
     plugin_id: String,
-    app: AppDefinition,
+    app_id: String,
     document: Option<ShellDocumentOpenTarget>,
     pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, String>>>,
     prepared: Option<ShellPreparedDocumentOpen>,
+    /// 🛑️ The token the detached hub resolution's requests check; cancelling the open cancels it.
+    cancel: Option<CancelToken>,
+    /// ⏳️ The resolution step the detached hub resolution last reported (lease, component, descriptor, verified).
+    resolve_step: std::sync::Arc<std::sync::atomic::AtomicU8>,
 }
 
 impl ShellDocumentOpening {
+    /// 🚪️ An open whose first detached step is `pending`, in `phase`.
+    fn new(label: String, phase: ShellDocumentOpenPhase, plugin_id: String, app_id: String, document: Option<ShellDocumentOpenTarget>, pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, String>>>) -> Self {
+        Self { label, phase, cancel_requested: false, started_at_ms: chrome_now_ms(), plugin_id, app_id, document, pending, prepared: None, cancel: None, resolve_step: std::sync::Arc::default() }
+    }
+
     /// ⏳️ Whether a step is still out; a settled record only waits for its band to be closed.
     pub fn running(&self) -> bool {
-        matches!(self.phase, ShellDocumentOpenPhase::Instantiating | ShellDocumentOpenPhase::Seeding)
+        matches!(self.phase, ShellDocumentOpenPhase::Resolving | ShellDocumentOpenPhase::Instantiating | ShellDocumentOpenPhase::Seeding)
     }
 }
 
@@ -1594,19 +1631,58 @@ async fn seed_document_genesis(plugin: ProgramBridgeEntry, instance_id: u32, sch
         None => Ok(()),
     }
 }
-/// 🖼️ Guest documents rendered off the shell for one owed refresh, keyed by surface id, each with the
-/// host effects its render returned.
-type ShellRenderedSurfaces = HashMap<String, (Result<UiDocumentLease, String>, Vec<semio_framework::kernel::Effect>)>;
+/// 🧾️ The reserved sections one owed refresh reads besides its guest bodies: the app catalogue (only on
+/// the instance's one claimed fetch), the window engagements, the window measures and the tool measures.
+#[derive(Clone, Copy, Debug, Default)]
+struct ShellRefreshSections {
+    catalogue: bool,
+    engagements: bool,
+    measures: bool,
+    tools: bool,
+}
 
-/// 🖼️ Renders the guest bodies one owed refresh names, in order, off the shell: every render is the
-/// guest's own turn, so the settle lane hands them off ([`ShellState::advance_owed_refresh`]) and the
-/// frame loop keeps building frames while they run.
-async fn render_surfaces_detached(program: ProgramBridgeEntry, instance_id: u32, jobs: Vec<(String, String, ViewModel)>) -> ShellRenderedSurfaces {
-    let mut rendered = HashMap::with_capacity(jobs.len());
+/// 🖼️ What one owed refresh read off the shell for one app instance: the guest bodies it names, keyed by
+/// surface id, each with the host effects its render returned, and the reserved sections it read. A read
+/// the refresh no longer wants is handed back by its document's own `Drop`.
+struct ShellRenderedRefresh {
+    instance_id: u32,
+    surfaces: HashMap<String, (Result<UiDocumentLease, String>, Vec<semio_framework::kernel::Effect>)>,
+    catalogue: Option<Result<UiDocumentLease, String>>,
+    engagements: Option<Result<UiDocumentLease, String>>,
+    measures: Option<Result<UiDocumentLease, String>>,
+    tools: Option<Result<UiDocumentLease, String>>,
+}
+
+impl ShellRenderedRefresh {
+    /// 🫙️ Nothing read ahead: every wanted body and section is read by the refresh itself.
+    fn empty(instance_id: u32) -> Self {
+        Self { instance_id, surfaces: HashMap::new(), catalogue: None, engagements: None, measures: None, tools: None }
+    }
+}
+
+/// 🖼️ Reads everything one owed refresh names, in order, off the shell: every body render and every
+/// section read is a guest turn, so the settle lane hands them off ([`ShellState::advance_owed_refresh`])
+/// and the frame loop keeps building frames while they run; the refresh that consumes them then only
+/// applies documents ([`ShellState::refresh_ui_rendered`]).
+async fn render_refresh_detached(program: ProgramBridgeEntry, instance_id: u32, jobs: Vec<(String, String, ViewModel)>, sections: ShellRefreshSections, panel_view: ViewModel, view_state: ViewModel) -> ShellRenderedRefresh {
+    let mut rendered = ShellRenderedRefresh::empty(instance_id);
     for (surface_id, body_key, view) in jobs {
         let mut effects = Vec::new();
         let document = program.render_with_document(instance_id, &surface_id, &body_key, &view, None, Some(&mut effects)).await;
-        rendered.insert(surface_id, (document, effects));
+        rendered.surfaces.insert(surface_id, (document, effects));
+    }
+    if sections.catalogue {
+        let body_key = semio_framework::UiRefreshSection::Catalogue.body_key();
+        rendered.catalogue = Some(program.render_with_document(instance_id, body_key, body_key, &panel_view, None, None).await);
+    }
+    if sections.engagements {
+        rendered.engagements = Some(program.window_engagements_section(instance_id, &view_state).await);
+    }
+    if sections.measures {
+        rendered.measures = Some(program.window_measures_section(instance_id, &view_state).await);
+    }
+    if sections.tools {
+        rendered.tools = Some(program.tool_measures_section(instance_id, &view_state).await);
     }
     rendered
 }
@@ -2847,6 +2923,17 @@ const MAX_PENDING_DIRECTORY_COMMANDS: usize = 64;
 const MAX_DIRECTORY_COMMAND_RESULTS: usize = 64;
 /// ⏳️ Finite per-command deadline; a hung hub can never retain a command turn forever.
 const DIRECTORY_COMMAND_DEADLINE_MS: u64 = 5_000;
+/// 🌐️ The native directory client's network byte budget per minute. It carries the largest bounded answer the
+/// client takes — a hub document's execution-target component (`DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES`,
+/// 64 MiB) — twice over: at the old 10 MB a 17.7 MB block component was refused mid-body
+/// (`os.directory-client exhausted its network_bytes_per_min budget`, gate run 23 on hub 7800 B2).
+#[cfg(not(target_arch = "wasm32"))]
+const SHELL_DIRECTORY_NETWORK_BYTES_PER_MINUTE: u64 = 2 * semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES;
+/// ⏳️ The credential sign-in's own deadline (the mint and the `me` read that follows it). A mint spends a
+/// password hash on the hub, which the directory command deadline does not fit: measured 6.8 s and 13.6 s on
+/// hub 7800 under load ~40, so every native sign-in answered `Unreachable` while React's (no request
+/// deadline, cancellable) signed in (ticket 26/09/23 slice WG8, session 12). Still finite.
+const HUB_SIGN_IN_DEADLINE_MS: u64 = 30_000;
 /// ⏳️ Browser identity retry floor: a hub that refuses `/auth/sessions/me` must not be re-asked on
 /// every 100 ms frame pump. Native needs no twin — its bootstrap is a one-shot pool future.
 #[cfg(target_arch = "wasm32")]
@@ -3195,7 +3282,7 @@ pub struct ShellSettlePump {
     crossings: u64,
     traced: Option<ShellSettleStep>,
     watches: HashMap<String, ShellSettleWatch>,
-    rendering: Option<ShellDetached<ShellRenderedSurfaces>>,
+    rendering: Option<ShellDetached<ShellRenderedRefresh>>,
 }
 
 /// ⏳️ The progress witness the wedge watchdog compares across frames — every counter a producer moves
@@ -3637,6 +3724,9 @@ pub struct ShellState {
     sync_terminal_fault: Option<String>,
     /// @emoji 🚦️ Latest sync health for the active document's status badge.
     pub sync_status: Option<ArtifactSyncStatus>,
+    /// 🔌️ The hub link of the document this shell last attached ([`store_sync::sync::DocumentLink`]'s status):
+    /// the Sync card speaks it while it is short and after it turned terminal, until the next open.
+    pub sync_link: DocumentLinkStatus,
     /// 📶️ Target-neutral remote state for every document still attached to this shell. Native actor
     /// status events and browser-host publications enter through the same bounded projection.
     pub hub_documents: BTreeMap<String, ShellHubRemoteV1>,
@@ -3729,6 +3819,13 @@ pub struct ShellState {
     /// used, if any — `presence_peers` is scoped to this surface; a document opened without a hub
     /// binding (local-only) carries `None` and renders no roster.
     pub presence_surface: Option<String>,
+    /// 🪪️ This shell's own hub-admitted presence identity on the attached document — the actor and
+    /// palette index the hub's `Session` frame named. Board overlays never paint it, and the local
+    /// colour is the hub's, never a guess (React's `publishLocalPresenceActorV1`).
+    pub presence_self: Option<(String, u8)>,
+    /// 🖱️ The last pointer position the shell saw, in logical screen space — what a board window's
+    /// presence view turns into the world point under the pointer on the next heartbeat.
+    pub presence_pointer: Option<(f32, f32)>,
     //#endregion 🔖️Identity
     //#region 🔖️CheckIn
     /// 🧾️ ticket §C5 — this session's live history projection (`history_cursor`/`history_entries`
@@ -4773,9 +4870,13 @@ impl ShellState {
     }
 
     /// 🎬️ Reads the canonical reserved engagements surface on either ProgramBridge backend.
-    async fn refresh_window_engagements(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
+    async fn refresh_window_engagements(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, String>>, faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
         let body_key = semio_framework::UiRefreshSection::Engagements.body_key();
-        match program.window_engagements_section(instance_id, view_state).await {
+        let section = match read_ahead {
+            Some(section) => section,
+            None => program.window_engagements_section(instance_id, view_state).await,
+        };
+        match section {
             Ok(document) => self.install_window_engagements_section(document, faults)?,
             Err(error) => faults.push((body_key.to_string(), body_key.to_string(), error)),
         }
@@ -4785,9 +4886,13 @@ impl ShellState {
     /// 📏️ Reads the instance's reserved measures surface once per refresh and republishes every live
     /// window instance's Measures overlay document. A window whose measures fail to project keeps no
     /// overlay and reports a surface fault instead of blanking the refresh.
-    async fn refresh_window_measures(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, windows: &[String], faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
+    async fn refresh_window_measures(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, String>>, windows: &[String], faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
         let body_key = semio_framework::UiRefreshSection::Measures.body_key();
-        let measures = match program.window_measures_section(instance_id, view_state).await {
+        let section = match read_ahead {
+            Some(section) => section,
+            None => program.window_measures_section(instance_id, view_state).await,
+        };
+        let measures = match section {
             Ok(document) => {
                 let measures = crate::program_bridge::window_measures_from_section(&document);
                 self.retire_one_surface_document(Some(document))?;
@@ -4822,9 +4927,13 @@ impl ShellState {
     /// [`ShellState::tool_measures`] — the wgpu twin of React's `toolMeasuresByToolId` ref, which its
     /// `buildToolTabs` `resolveTree` reads fresh at render time. A read failure reports a surface
     /// fault and leaves the previous roster rather than blanking every armed tool's options.
-    async fn refresh_tool_measures(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
+    async fn refresh_tool_measures(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, String>>, faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
         let body_key = semio_framework::UiRefreshSection::Tools.body_key();
-        let measures = match program.tool_measures_section(instance_id, view_state).await {
+        let section = match read_ahead {
+            Some(section) => section,
+            None => program.tool_measures_section(instance_id, view_state).await,
+        };
+        let measures = match section {
             Ok(document) => {
                 let measures = crate::program_bridge::tool_measures_from_section(&document);
                 self.retire_one_surface_document(Some(document))?;
@@ -6183,7 +6292,7 @@ impl ShellState {
             let runtime = std::sync::Arc::new(TokioHostRuntime::with_pool(pool.clone()));
             let scope = runtime.open_scope_now(ScopeOwner::Service("directory_client"), None);
             let compute = std::sync::Arc::new(ComputePool::with_pool(DIRECTORY_COMPUTE_CAPACITY, pool));
-            let transport = ShellDirectoryTransport::with_new_http_pool_now(runtime, scope, compute, 10_000_000, 8, DirectoryPackageId("os.directory-client".to_string()), DirectoryActorId(0));
+            let transport = ShellDirectoryTransport::with_new_http_pool_now(runtime, scope, compute, SHELL_DIRECTORY_NETWORK_BYTES_PER_MINUTE, 8, DirectoryPackageId("os.directory-client".to_string()), DirectoryActorId(0));
             (transport, CancelToken::root_now())
         };
         // 🌐️ The browser half of the same seam: the page door owns no pool, no scope and no socket —
@@ -6353,6 +6462,7 @@ impl ShellState {
             next_sync_binding_generation: 1,
             sync_terminal_fault: None,
             sync_status: None,
+            sync_link: DocumentLinkStatus::Linked,
             hub_documents: BTreeMap::new(),
             sync_bootstrap_progress: None,
             identity: None,
@@ -6387,6 +6497,8 @@ impl ShellState {
             space_administration_epoch: 0,
             presence_peers: Vec::new(),
             presence_surface: None,
+            presence_self: None,
+            presence_pointer: None,
             history_cursor: 0,
             history_entries: BTreeMap::new(),
             history_current_checkpoint_id: None,
@@ -7382,18 +7494,20 @@ impl ShellState {
     /// per-surface loop, never ahead of it, so a skipped surface keeps the exact document it already
     /// owns instead of being retired and never re-minted.
     pub async fn refresh_ui(&mut self, ask: UiDirtyScope) -> Result<(), String> {
-        self.refresh_ui_rendered(ask, ShellRenderedSurfaces::new()).await
+        self.refresh_ui_rendered(ask, None).await
     }
 
-    /// 🖼️ [`Self::refresh_ui`] with the guest bodies some of whose renders already happened off the
-    /// shell: a surface found in `rendered` takes that document, every other wanted surface renders
-    /// here, and a rendered document no longer wanted is handed back by its own `Drop`.
-    async fn refresh_ui_rendered(&mut self, ask: UiDirtyScope, mut rendered_surfaces: ShellRenderedSurfaces) -> Result<(), String> {
+    /// 🖼️ [`Self::refresh_ui`] with the guest bodies and reserved sections some of whose reads already
+    /// happened off the shell: a surface or section found in `rendered` takes that document, every other
+    /// wanted one is read here, and a read no longer wanted — or read for an instance that is no longer
+    /// the session's — is handed back by its own `Drop`.
+    async fn refresh_ui_rendered(&mut self, ask: UiDirtyScope, rendered: Option<ShellRenderedRefresh>) -> Result<(), String> {
         let mut latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::latest_frame_authority(), crate::frame_latency::FrameLatencyStage::ShellRefresh, 1);
         let scope = core::mem::replace(&mut self.owed_refresh_scope, UiDirtyScope::None).merged_with(ask);
         let Some(session) = self.session.clone() else {
             return Ok(());
         };
+        let mut read_ahead = rendered.filter(|rendered| rendered.instance_id == session.instance_id).unwrap_or_else(|| ShellRenderedRefresh::empty(session.instance_id));
         self.drain_retained_document_arenas();
         self.sync_dock();
         let view_state = self.live_view_state(&session);
@@ -7421,7 +7535,7 @@ impl ShellState {
                 Self::debug_log(&format!("[DEBUG] wgpu-shell render begin surface={window_id} body={}", kind.body_key));
                 let render_started = Self::instant_now_ms();
                 Self::declare_boot_subphase(&format!("shell-boot:render:{window_id}"), "enter", 0.0);
-                let document = match rendered_surfaces.remove(&window_id) {
+                let document = match read_ahead.surfaces.remove(&window_id) {
                     Some((document, mut effects)) => {
                         refresh_effects.append(&mut effects);
                         document
@@ -7469,7 +7583,7 @@ impl ShellState {
             Self::debug_log(&format!("[DEBUG] wgpu-shell render begin surface={tab_id} body={body_key}"));
             let render_started = Self::instant_now_ms();
             Self::declare_boot_subphase(&format!("shell-boot:render:{tab_id}"), "enter", 0.0);
-            let document = match rendered_surfaces.remove(&tab_id) {
+            let document = match read_ahead.surfaces.remove(&tab_id) {
                 Some((document, mut effects)) => {
                     refresh_effects.append(&mut effects);
                     document
@@ -7501,10 +7615,10 @@ impl ShellState {
         // instance, and what remains is the local republish onto every live node-graph engine host —
         // the moment a surface minted by THIS pass gets its palette. Skipping that on a partial scope
         // is how a spotlight silently opens empty.
-        self.refresh_app_catalogue(&program, session.instance_id, &panel_view).await;
+        self.refresh_app_catalogue(&program, session.instance_id, &panel_view, read_ahead.catalogue.take()).await;
         if scope.wants_section(UiDirtySection::Engagements) {
             visited.push(semio_framework::UiRefreshSection::Engagements.body_key().to_string());
-            self.refresh_window_engagements(&program, session.instance_id, &view_state, &mut faults).await?;
+            self.refresh_window_engagements(&program, session.instance_id, &view_state, read_ahead.engagements.take(), &mut faults).await?;
         }
         // 🎬️ Deliberately UNSCOPED, like the shell-owned panel leaves above: these two bodies are the
         // shell's own projection of state the user moves without any guest round trip (the expanded
@@ -7517,13 +7631,13 @@ impl ShellState {
         if scope.wants_section(UiDirtySection::Measures) {
             visited.push(semio_framework::UiRefreshSection::Measures.body_key().to_string());
             visited.extend(measure_windows.iter().map(|window_id| window_measures_surface_id(window_id)));
-            self.refresh_window_measures(&program, session.instance_id, &view_state, &measure_windows, &mut faults).await?;
+            self.refresh_window_measures(&program, session.instance_id, &view_state, read_ahead.measures.take(), &measure_windows, &mut faults).await?;
         }
         // 🛠️ The TOOL half of the same reader — React's `toolMeasuresByToolId` ref, refreshed on the
         // scope that names tools so a slider tick inside an armed tool's options repaints its leaf.
         if scope.wants_section(UiDirtySection::Tools) && !self.tool_panel_tabs().is_empty() {
             visited.push(semio_framework::UiRefreshSection::Tools.body_key().to_string());
-            self.refresh_tool_measures(&program, session.instance_id, &view_state, &mut faults).await?;
+            self.refresh_tool_measures(&program, session.instance_id, &view_state, read_ahead.tools.take(), &mut faults).await?;
         }
         if self.space_mode {
             if let Some(panel) = Self::panel_state_from_view(&session.view_state)? {
@@ -7614,13 +7728,17 @@ impl ShellState {
     /// `submit_turn`, which wedged `boot_shell` itself and took every later pointer event with it
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-input-hit-runtime-2026-09-13.md`). "Once
     /// per app instance" is what the first line of this doc promises; the failure path now keeps it.
-    async fn refresh_app_catalogue(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel) {
-        if !claim_app_catalogue_fetch(&mut self.app_catalogue_instance, instance_id) {
-            self.publish_app_catalogue();
-            return;
-        }
+    async fn refresh_app_catalogue(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, String>>) {
         let body_key = semio_framework::UiRefreshSection::Catalogue.body_key();
-        let document = match program.render_with_document(instance_id, body_key, body_key, view_state, None, None).await {
+        let fetched = match read_ahead {
+            Some(fetched) => fetched,
+            None if claim_app_catalogue_fetch(&mut self.app_catalogue_instance, instance_id) => program.render_with_document(instance_id, body_key, body_key, view_state, None, None).await,
+            None => {
+                self.publish_app_catalogue();
+                return;
+            }
+        };
+        let document = match fetched {
             Ok(document) => document,
             Err(error) => {
                 Self::debug_log(&format!("[DEBUG] wgpu shell app catalogue fetch failed: {error}"));
@@ -8892,6 +9010,20 @@ impl ShellState {
                 menu: None,
             }));
         }
+        if let Some(line) = self.sync_link.text(is_de) {
+            children.push(UiNode::Stack(UiStackNode {
+                direction: "column".into(),
+                gap: None,
+                padding: None,
+                id: Some(format!("framework.sync.link.{}", self.sync_link.code())),
+                children: vec![settings_text_row(line)],
+                presence: UiPresence::default(),
+                activate: None,
+                drop_action: None,
+                drop_overlay: None,
+                menu: None,
+            }));
+        }
         UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("framework.sync.panel".into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
     }
 
@@ -9530,6 +9662,7 @@ impl ShellState {
         self.sync_bootstrap_progress = None;
         self.presence_peers.clear();
         self.presence_surface = None;
+        self.presence_self = None;
         retirement.map(|_| ())
     }
 
@@ -9561,6 +9694,7 @@ impl ShellState {
             Self::debug_log(&format!("[DEBUG] wgpu shell retired document-backbone owner after terminal fault: {error}"));
             let _ = self.detach_sync_backbone_internal().await;
             self.sync_card_kind = Some("conflict".into());
+            self.relabel_sync_tab();
             return true;
         }
         let (owner, events) = {
@@ -9630,6 +9764,7 @@ impl ShellState {
                     if let Some(document_key) = self.sync_channel.as_ref().map(|channel| shell_hub_document_key(&channel.document_key)) {
                         self.publish_hub_document_status(document_key, shell_hub_remote(&status.remote));
                     }
+                    self.sync_link = shell_sync_link_after_status(self.sync_link, &status.remote);
                     self.sync_status = Some(status);
                     changed = true;
                     sync_panel_changed = true;
@@ -9641,16 +9776,22 @@ impl ShellState {
                     self.presence_peers = peers;
                     changed = true;
                 }
-                ArtifactEvent::Conflict(_) => {
+                ArtifactEvent::Conflict(message) => {
+                    if let Some(terminal) = shell_sync_link_terminal(&message.code.0) {
+                        self.sync_link = terminal;
+                        self.sync_terminal_fault = Some(message.message);
+                    }
                     self.sync_card_kind = Some("conflict".into());
                     changed = true;
                     sync_panel_changed = true;
                 }
-                // 👥️ Peer session identity (actor + colour), sent once per connection. The sync
-                // actor already stamps it onto outbound heartbeats itself, so the shell has
-                // nothing further to fold in here — matched explicitly so a future variant
-                // cannot be silently ignored by a catch-all.
-                ArtifactEvent::Session { .. } => {}
+                // 👥️ This connection's hub-admitted identity (actor + colour), sent once per connection.
+                // The sync actor stamps it onto outbound heartbeats itself; the shell keeps it so its
+                // board overlays leave the local actor out and paint in the hub's own colour.
+                ArtifactEvent::Session { actor, color } => {
+                    self.presence_self = Some((actor, color));
+                    changed = true;
+                }
                 ArtifactEvent::DocumentBackbone { message } => {
                     let result = match plugin.as_ref() {
                         Some(plugin) => plugin.receive_document_backbone(owner.instance_id, &owner.actor_uri, message).await,
@@ -9694,12 +9835,27 @@ impl ShellState {
             changed = true;
             document_changed = true;
         }
+        if changed {
+            self.relabel_sync_tab();
+        }
         if document_changed {
             let _ = self.refresh_ui(UiDirtyScope::Full).await;
         } else if sync_panel_changed {
             let _ = self.republish_shell_panel_document(FRAMEWORK_SYNC_PANEL_TAB_ID);
         }
         changed
+    }
+
+    /// 🚦️ Rewrites the live dock's sync leaf label from the CURRENT pill. The label is baked into the dock
+    /// when it is (re)built, so without this the footer pill — and its accessible name — kept `Remote:
+    /// detached` after the actor reported `Live` until something else rebuilt the dock (measured, run s12c).
+    fn relabel_sync_tab(&mut self) {
+        let label = shell_sync_pill_text(self.sync_pill(), self.locale_id == "de");
+        for anchor in PanelAnchor::ALL {
+            if let Some(tab) = self.dock_tabs.tabs_mut(anchor).iter_mut().find(|tab| tab.id == FRAMEWORK_SYNC_PANEL_TAB_ID) {
+                tab.label = label.clone();
+            }
+        }
     }
 
     /// 👥️ The roster `#s-presence-peers` paints, scoped to the attached surface. A document opened
@@ -9738,10 +9894,20 @@ impl ShellState {
         ShellSyncPill::Persisted
     }
 
+    /// 📶️ This shell's hub projection over the schema's two shell axes and its attached documents. The
+    /// session is held exactly while a verified `/auth/sessions/me` authority is: a hub is always
+    /// configured here (the connection book keeps the local bootstrap hub), so this shell is never
+    /// `none`. The link is what the identity lane last learned: a hub it could not reach while it kept
+    /// the cached identity is `unreachable`, a verified authority `reachable`, anything else `verifying`.
     pub(crate) fn hub_projection(&self) -> ShellHubProjectionV1 {
-        let authority = self.verified_session_authority.as_ref().map(|authority| ShellHubAuthorityV1::VerifiedSession { authorization_generation: authority.authorization_generation }).unwrap_or(ShellHubAuthorityV1::NoVerifiedSession);
+        let session = if self.verified_session_authority.is_some() { HubSessionPresence::SignedIn } else { HubSessionPresence::SignedOut };
+        let link = match (self.identity_offline, self.verified_session_authority.is_some()) {
+            (true, _) => HubLink::Unreachable,
+            (false, true) => HubLink::Reachable,
+            (false, false) => HubLink::Verifying,
+        };
         let documents = self.hub_documents.iter().map(|(document_key, remote)| ShellHubDocumentV1 { document_key: document_key.clone(), remote: remote.clone() }).collect();
-        ShellHubProjectionV1 { authority, documents }
+        ShellHubProjectionV1 { session, link, documents }
     }
 
     pub(crate) fn publish_hub_document_status(&mut self, document_key: impl Into<String>, remote: ShellHubRemoteV1) {
@@ -9756,7 +9922,7 @@ impl ShellState {
         self.hub_documents.remove(document_key);
     }
 
-    fn hub_connection_state(&self) -> ShellHubConnectionState {
+    fn hub_connection_state(&self) -> HubConnectionState {
         shell_hub_connection_summary_v1(&self.hub_projection()).state
     }
 
@@ -10138,7 +10304,7 @@ impl ShellState {
     /// 📌️ The footer's hub badge, followed by the current Check In's status while one is shown.
     fn hub_footer_label(&self) -> String {
         let is_de = self.locale_id == "de";
-        let hub = self.hub_connection_state().text(is_de);
+        let hub = shell_hub_connection_text(self.hub_connection_state(), is_de);
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(status) = self.hub_check_in.as_ref().and_then(|operation| operation.status.as_ref()) {
             return format!("{hub} · {}", hub_check_in_status_text(status, is_de));
@@ -10230,6 +10396,7 @@ impl ShellState {
         };
         let cmd_tx = channels.cmd_tx.clone();
         let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
+        self.sync_link = DocumentLinkStatus::Linked;
         self.sync_backbone_uri = Some(backbone_uri.unwrap_or_else(|| actor_uri.clone()));
         self.sync_channel =
             Some(ShellSyncChannel { document_id, document_key: channels.document_key, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), binding_generation, cmd_tx, events, connected_at_ms: chrome_now_ms() as i64 });
@@ -11583,7 +11750,8 @@ impl ShellState {
             client_class: if cfg!(target_arch = "wasm32") { HubSignInClientClass::Browser } else { HubSignInClientClass::Native },
         };
         self.hub_workspace.session = reduce_hub_session(&self.hub_workspace.session, &HubSessionEvent::Submit);
-        let ctx = self.directory_command_ctx();
+        let mut ctx = self.directory_ctx();
+        ctx.deadline_ms = Some(Self::directory_now_ms().saturating_add(HUB_SIGN_IN_DEADLINE_MS));
         let outcome = crate::hub_connection::run_hub_sign_in(&self.directory_transport, &ctx, &origin, &credential).await;
         self.hub_workspace.password_draft.clear();
         match outcome {
@@ -11849,8 +12017,12 @@ impl ShellState {
             self.show_transient_notice(shell_chrome_string("document.open.busy", is_de), semio_framework::Severity::Info, Some("document.open.busy"));
             return;
         }
-        if let Some(space_id) = target.space_id {
+        if let Some(space_id) = target.space_id.clone() {
             self.open_space_id = Some(space_id);
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.begin_document_resolution(&target) {
+            return;
         }
         // 🎬️ The relay used to open every artifact inside whatever session happened to be mounted, so
         // a hub that was showing `home` opened a cad document into `home`. The target's own app ref —
@@ -11879,7 +12051,7 @@ impl ShellState {
                 let label = app.label.resolve(self.active_terminology(), self.active_locale()).to_string();
                 let app_id = app.id.clone();
                 let pending = ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated) });
-                self.document_opening = Some(ShellDocumentOpening { label, phase: ShellDocumentOpenPhase::Instantiating, cancel_requested: false, started_at_ms: chrome_now_ms(), plugin_id, app, document, pending: Some(pending), prepared: None });
+                self.document_opening = Some(ShellDocumentOpening::new(label, ShellDocumentOpenPhase::Instantiating, plugin_id, app.id, document, Some(pending)));
             }
             _ => {
                 if let Some(document) = document {
@@ -11912,10 +12084,103 @@ impl ShellState {
             let (plugin, instance_id, schema, document_id, hub_bound) = (prepared.plugin.clone(), prepared.session.instance_id, prepared.schema.clone(), prepared.document_id.clone(), prepared.hub_bound);
             async move { seed_document_genesis(plugin, instance_id, schema, document_id, hub_bound).await.map(|()| ShellDocumentOpenAnswer::Seeded) }
         });
-        let mut opening = opening.unwrap_or_else(|| ShellDocumentOpening { label, phase: ShellDocumentOpenPhase::Seeding, cancel_requested: false, started_at_ms: chrome_now_ms(), plugin_id: session.plugin_id.clone(), app: session.app.clone(), document: None, pending: None, prepared: None });
+        let mut opening = opening.unwrap_or_else(|| ShellDocumentOpening::new(label, ShellDocumentOpenPhase::Seeding, session.plugin_id.clone(), session.app.id.clone(), None, None));
         opening.phase = ShellDocumentOpenPhase::Seeding;
         opening.pending = Some(pending);
         opening.prepared = Some(prepared);
+        self.document_opening = Some(opening);
+    }
+
+    /// 🧩️ Starts a hub document's open by resolving the component it runs by the SERVING catalog
+    /// generation (binding decision of ticket 26/09/23, session 11 13:1x; React resolves the same generation
+    /// through the hub's plugin-module routes): the local program only when its content hash is the lease's,
+    /// else the verified store entry, else the hub's own execution-target bytes, verified and stored
+    /// ([`DirectoryClient::resolve_execution_target_module`]) — all detached, with a cancellable band.
+    /// The lease names the plugin and app that open the document, so a relay that names none (the creation
+    /// door's, a Space index row's) resolves exactly like one that does. Answers `false` for a relay that names
+    /// no hub document, which opens as before.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn begin_document_resolution(&mut self, target: &OpenArtifactRelayTarget) -> bool {
+        let (Some(document_id), Some(schema), Some(space_id), Some(client)) = (target.document_id.clone(), target.schema.clone(), self.open_space_id.clone(), self.directory_client.clone()) else {
+            return false;
+        };
+        let local_app = target.app_id.as_ref().and_then(|app_id| self.plugins.iter().flat_map(|program| program.manifest.apps.iter()).find(|app| app.id == *app_id).cloned());
+        let surface_id = local_app.as_ref().map_or_else(|| semio_framework::manifest::surface_app_id(&target.dialect, target.role), |app| semio_framework::manifest::surface_app_id(&app.dialect, app.role));
+        let label = local_app.map_or_else(|| target.app_id.clone().unwrap_or_else(|| target.artifact_ref.clone()), |app| app.label.resolve(self.active_terminology(), self.active_locale()).to_string());
+        let local_shas: Vec<(String, Option<String>)> = self.plugins.iter().map(|program| (program.plugin_id.clone(), program.component_sha256.clone())).collect();
+        let intent = semio_framework_os_kernel::os_directory::DocumentOpenIntentV1 {
+            schema: "semio.hub.document-open-intent/v1".into(),
+            version: 1,
+            scope: semio_framework_os_kernel::os_directory::DocumentScope::new(space_id.as_str(), document_id.as_str()),
+            requested_surface_id: Some(surface_id),
+            client_instance_id: format!("wgpu-shell-{}", self.shell_session_id),
+        };
+        let ctx = self.directory_ctx();
+        let cancel = ctx.cancel.clone();
+        let resolve_step = std::sync::Arc::new(std::sync::atomic::AtomicU8::new(0));
+        let reported = resolve_step.clone();
+        let expected_plugin = target.plugin_id.clone();
+        let pending = ShellDetached::spawn(async move {
+            let store = semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStore::for_user();
+            reported.store(document_open_resolve_step_code(semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStep::Lease), std::sync::atomic::Ordering::Release);
+            let lease = client.document_execution_target_lease(&ctx, &intent).await.map_err(|error| format!("document execution target: {error}"))?;
+            let plugin_id = lease.package.plugin_id.clone();
+            if expected_plugin.as_ref().is_some_and(|expected| *expected != plugin_id) {
+                return Err(format!("the hub opens this document with {plugin_id}, not {}", expected_plugin.unwrap_or_default()));
+            }
+            let local_sha = local_shas.into_iter().find(|(local, _)| *local == plugin_id).and_then(|(_, sha)| sha);
+            let resolved = client
+                .resolve_execution_target_files(&ctx, &intent, lease, local_sha.as_deref(), &store, |step| reported.store(document_open_resolve_step_code(step), std::sync::atomic::Ordering::Release))
+                .await
+                .map_err(|error| format!("document execution target: {error}"))?;
+            let app_id = resolved.lease.surface.app_id.clone();
+            let program = match resolved.files {
+                Some(files) => Some(crate::program_bridge::load_resolved_program(&plugin_id, &files.component, &files.descriptor, &resolved.lease.component.sha256).await?),
+                None => None,
+            };
+            Ok(ShellDocumentOpenAnswer::Resolved { plugin_id, app_id, program })
+        });
+        let mut opening = ShellDocumentOpening::new(label, ShellDocumentOpenPhase::Resolving, target.plugin_id.clone().unwrap_or_default(), target.app_id.clone().unwrap_or_default(), Some(ShellDocumentOpenTarget { document_id, schema }), Some(pending));
+        opening.cancel = Some(cancel);
+        opening.resolve_step = resolve_step;
+        self.document_opening = Some(opening);
+        true
+    }
+
+    /// 🧩️ Continues a resolved hub open: a hub-resolved program replaces the local one of its plugin (a local
+    /// program no longer mounts a hub document it is not the lease's component for), then the app instance
+    /// is created on it; a local program that already is the lease's component seeds the document into the
+    /// mounted session when it runs the app already.
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn continue_resolved_open(&mut self, mut opening: ShellDocumentOpening, resolved: Option<ProgramBridgeEntry>) {
+        let fresh = resolved.is_some();
+        if let Some(program) = resolved {
+            self.plugins.retain(|entry| entry.plugin_id != program.plugin_id);
+            self.plugins.push(program);
+        }
+        let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == opening.plugin_id).cloned() else {
+            self.document_opening = Some(opening);
+            self.fail_document_opening("the resolved plugin is not mounted".to_string());
+            return;
+        };
+        let Some(app) = program.manifest.apps.iter().find(|app| app.id == opening.app_id).cloned() else {
+            let reason = format!("{} declares no app {}", program.plugin_id, opening.app_id);
+            self.document_opening = Some(opening);
+            self.fail_document_opening(reason);
+            return;
+        };
+        opening.label = app.label.resolve(self.active_terminology(), self.active_locale()).to_string();
+        if !fresh && self.session.as_ref().is_some_and(|session| session.plugin_id == program.plugin_id && session.app.id == app.id) {
+            let document = opening.document.take();
+            self.document_opening = Some(opening);
+            if let Some(document) = document {
+                self.begin_document_seed(document).await;
+            }
+            return;
+        }
+        let app_id = app.id.clone();
+        opening.pending = Some(ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated) }));
+        opening.phase = ShellDocumentOpenPhase::Instantiating;
         self.document_opening = Some(opening);
     }
 
@@ -11928,6 +12193,17 @@ impl ShellState {
         let Some(mut opening) = self.document_opening.take() else { return false };
         opening.pending = None;
         match answer {
+            #[cfg(not(target_arch = "wasm32"))]
+            Ok(ShellDocumentOpenAnswer::Resolved { plugin_id, app_id, program }) => {
+                if opening.cancel_requested {
+                    opening.phase = ShellDocumentOpenPhase::Cancelled;
+                    self.document_opening = Some(opening);
+                    return true;
+                }
+                opening.plugin_id = plugin_id;
+                opening.app_id = app_id;
+                self.continue_resolved_open(opening, program).await;
+            }
             Ok(ShellDocumentOpenAnswer::Instantiated(instance_id)) => {
                 if opening.cancel_requested {
                     if let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == opening.plugin_id) {
@@ -11937,7 +12213,12 @@ impl ShellState {
                     self.document_opening = Some(opening);
                     return true;
                 }
-                self.install_app_session(&opening.plugin_id, opening.app.clone(), instance_id);
+                let Some(app) = self.plugins.iter().find(|entry| entry.plugin_id == opening.plugin_id).and_then(|program| program.manifest.apps.iter().find(|app| app.id == opening.app_id).cloned()) else {
+                    self.document_opening = Some(opening);
+                    self.fail_document_opening("the opened app left its plugin".to_string());
+                    return true;
+                };
+                self.install_app_session(&opening.plugin_id, app, instance_id);
                 self.owe_refresh(UiDirtyScope::Full);
                 self.owe_settle();
                 match opening.document.take() {
@@ -11971,6 +12252,10 @@ impl ShellState {
                     }
                 }
             }
+            Err(_) if opening.cancel_requested => {
+                opening.phase = ShellDocumentOpenPhase::Cancelled;
+                self.document_opening = Some(opening);
+            }
             Err(error) => {
                 self.document_opening = Some(opening);
                 self.fail_document_opening(error);
@@ -12000,6 +12285,9 @@ impl ShellState {
         }
         if let Some(opening) = self.document_opening.as_mut() {
             opening.cancel_requested = true;
+            if let Some(cancel) = opening.cancel.as_ref() {
+                cancel.cancel_now();
+            }
         }
     }
 
@@ -13461,6 +13749,7 @@ impl ShellState {
         input.pointer_x = x;
         input.pointer_y = y;
         input.pointer_down = down;
+        self.presence_pointer = Some((x, y));
         input.update_hover(x, y);
         if let Some((kind, index)) = input.hovered_id.as_deref().and_then(ShellPaletteKind::row_index) {
             match kind {
@@ -15056,16 +15345,17 @@ impl ShellState {
     }
 
     /// 🖼️ The settle lane's owed refresh without holding the shell across a guest turn: the first step
-    /// hands the guest bodies the owed scope names to one detached render ([`render_surfaces_detached`])
-    /// and returns; a later step, once they answered, runs the refresh with those documents
-    /// ([`Self::refresh_ui_rendered`]). Before, the whole refresh ran inside one step: every body's
-    /// render turn held the frame build — 3.5 s per full refresh of a block2d session in a debug build
-    /// (ticket 26/09/23 slice WG8).
+    /// hands every guest read the owed scope names — its bodies and its reserved sections — to one detached
+    /// read ([`render_refresh_detached`]) and returns; a later step, once they answered, runs the refresh
+    /// with those documents ([`Self::refresh_ui_rendered`]), which then only applies them. Before, the
+    /// whole refresh ran inside one step: every read held the frame build — 3.5 s per full refresh of a
+    /// block2d session in a debug build, then still ~0.75 s for the three section reads alone (ticket
+    /// 26/09/23 slice WG8).
     async fn advance_owed_refresh(&mut self) {
         if let Some(rendering) = self.settle_pump.rendering.as_ref() {
             let Some(rendered) = rendering.take() else { return };
             self.settle_pump.rendering = None;
-            if let Err(error) = self.refresh_ui_rendered(UiDirtyScope::None, rendered).await {
+            if let Err(error) = self.refresh_ui_rendered(UiDirtyScope::None, Some(rendered)).await {
                 Self::debug_log(&format!("[DEBUG] wgpu-shell settle pump refresh failed: {error}"));
             }
             return;
@@ -15097,7 +15387,13 @@ impl ShellState {
                 jobs.push((tab.id().to_string(), body_key.to_string(), panel_view.clone()));
             }
         }
-        self.settle_pump.rendering = Some(ShellDetached::spawn(render_surfaces_detached(program, session.instance_id, jobs)));
+        let sections = ShellRefreshSections {
+            catalogue: claim_app_catalogue_fetch(&mut self.app_catalogue_instance, session.instance_id),
+            engagements: scope.wants_section(UiDirtySection::Engagements),
+            measures: scope.wants_section(UiDirtySection::Measures),
+            tools: scope.wants_section(UiDirtySection::Tools) && !self.tool_panel_tabs().is_empty(),
+        };
+        self.settle_pump.rendering = Some(ShellDetached::spawn(render_refresh_detached(program, session.instance_id, jobs, sections, panel_view, view_state)));
     }
 
     /// 🫀️ The crossing half of a step: fund every producer that is still advancing, and drive a
@@ -16999,6 +17295,9 @@ mod driver_editor_tests;
 #[path = "../../🧪️tests/🔗️hub-projection-workspace/🦀️.rs"]
 mod hub_projection_workspace_tests;
 #[cfg(test)]
+#[path = "../../🧪️tests/👕️board-presence/🦀️.rs"]
+mod board_presence_tests;
+#[cfg(test)]
 #[path = "../../🧪️tests/🪟️window-lifecycle-template-drag/🦀️.rs"]
 mod window_lifecycle_template_drag_tests;
 
@@ -17540,26 +17839,6 @@ pub(crate) fn shell_sync_pill_text(pill: ShellSyncPill, is_de: bool) -> String {
 }
 //#endregion 🚦️SyncPill
 
-/// 📶️ The native shell's honest projection of React's aggregate hub badge.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ShellHubConnectionState {
-    SignedOut,
-    Live(usize),
-    Connecting,
-    Reconnecting,
-    Offline,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
-pub enum ShellHubAuthorityV1 {
-    NoVerifiedSession,
-    VerifiedSession {
-        #[serde(rename = "authorizationGeneration")]
-        authorization_generation: u64,
-    },
-}
-
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ShellHubRemoteV1 {
@@ -17582,16 +17861,19 @@ pub struct ShellHubDocumentV1 {
     pub remote: ShellHubRemoteV1,
 }
 
+/// 📶️ The target-neutral hub projection (`🧬️schema/🔗️hub-projection`'s `projection`): the shell's
+/// session and link axes and every attached document's remote state.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ShellHubProjectionV1 {
-    pub authority: ShellHubAuthorityV1,
+    pub session: HubSessionPresence,
+    pub link: HubLink,
     pub documents: Vec<ShellHubDocumentV1>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct ShellHubSummaryV1 {
-    pub state: ShellHubConnectionState,
+    pub state: HubConnectionState,
     pub peer_count: usize,
     pub document_count: usize,
 }
@@ -17608,14 +17890,10 @@ pub(crate) fn shell_hub_connection_summary_v1(projection: &ShellHubProjectionV1)
             ShellHubRemoteV1::Backoff { .. } => HubDocumentRemote::Backoff,
         })
         .collect::<Vec<_>>();
-    let session = if matches!(projection.authority, ShellHubAuthorityV1::VerifiedSession { .. }) { HubSessionPresence::SignedIn } else { HubSessionPresence::SignedOut };
-    let summary = crate::hub_connection::hub_connection_summary(&statuses, session);
-    let (state, peer_count) = match summary.state {
-        crate::hub_connection::HubConnectionState::SignedOut => (ShellHubConnectionState::SignedOut, 0),
-        crate::hub_connection::HubConnectionState::Live { peer_count } => (ShellHubConnectionState::Live(peer_count), peer_count),
-        crate::hub_connection::HubConnectionState::Connecting => (ShellHubConnectionState::Connecting, 0),
-        crate::hub_connection::HubConnectionState::Reconnecting => (ShellHubConnectionState::Reconnecting, 0),
-        crate::hub_connection::HubConnectionState::Offline => (ShellHubConnectionState::Offline, 0),
+    let state = crate::hub_connection::hub_connection_summary(&statuses, projection.session, projection.link).state;
+    let peer_count = match state {
+        HubConnectionState::Live { peer_count } => peer_count,
+        _ => 0,
     };
     ShellHubSummaryV1 { state, peer_count, document_count }
 }
@@ -17627,6 +17905,22 @@ fn shell_hub_document_key(document_key: &ArtifactDocumentKey) -> String {
     }
 }
 
+/// 🔌️ The link status an actor's sync status implies: live relinks, a backoff means the link is short; a
+/// terminal link stays terminal until the next open (only the actor's coded terminal message ends a link).
+fn shell_sync_link_after_status(current: DocumentLinkStatus, remote: &RemoteState) -> DocumentLinkStatus {
+    match (current, remote) {
+        (DocumentLinkStatus::LinkExpired | DocumentLinkStatus::AccessRevoked, _) => current,
+        (_, RemoteState::Live { .. }) => DocumentLinkStatus::Linked,
+        (_, RemoteState::Backoff { .. }) => DocumentLinkStatus::Reconnecting,
+        _ => current,
+    }
+}
+
+/// 🔌️ The terminal link a document actor's coded conflict names, if it names one.
+fn shell_sync_link_terminal(code: &str) -> Option<DocumentLinkStatus> {
+    [DocumentLinkStatus::LinkExpired, DocumentLinkStatus::AccessRevoked].into_iter().find(|status| status.code() == code)
+}
+
 fn shell_hub_remote(remote: &RemoteState) -> ShellHubRemoteV1 {
     match remote {
         RemoteState::Detached => ShellHubRemoteV1::Detached,
@@ -17636,25 +17930,16 @@ fn shell_hub_remote(remote: &RemoteState) -> ShellHubRemoteV1 {
     }
 }
 
-impl ShellHubConnectionState {
-    fn icon_id(self) -> &'static str {
-        match self {
-            Self::SignedOut => "user",
-            Self::Live(_) => "cloud",
-            Self::Connecting => "loader-2",
-            Self::Reconnecting => "rotate-ccw",
-            Self::Offline => "link-2-off",
-        }
-    }
-
-    fn text(self, is_de: bool) -> String {
-        match self {
-            Self::SignedOut => shell_chrome_string("hub.signedOut", is_de).to_string(),
-            Self::Live(peers) => format!("{} · {peers} {}", shell_chrome_string("hub.live", is_de), if peers == 1 { shell_chrome_string("hub.peerOne", is_de) } else { shell_chrome_string("hub.peerMany", is_de) }),
-            Self::Connecting => shell_chrome_string("hub.connecting", is_de).to_string(),
-            Self::Reconnecting => shell_chrome_string("hub.reconnecting", is_de).to_string(),
-            Self::Offline => shell_chrome_string("hub.offline", is_de).to_string(),
-        }
+/// 📶️ The footer hub badge's text for one fold state, en + de, term for term with React's
+/// `HubConnectionIndicator` (`ui.sync.*`).
+fn shell_hub_connection_text(state: HubConnectionState, is_de: bool) -> String {
+    match state {
+        HubConnectionState::Local => shell_chrome_string("hub.local", is_de).to_string(),
+        HubConnectionState::SignedOut => shell_chrome_string("hub.signedOut", is_de).to_string(),
+        HubConnectionState::Live { peer_count } => format!("{} · {peer_count} {}", shell_chrome_string("hub.live", is_de), if peer_count == 1 { shell_chrome_string("hub.peerOne", is_de) } else { shell_chrome_string("hub.peerMany", is_de) }),
+        HubConnectionState::Online => shell_chrome_string("hub.online", is_de).to_string(),
+        HubConnectionState::Connecting => shell_chrome_string("hub.connecting", is_de).to_string(),
+        HubConnectionState::Reconnecting => shell_chrome_string("hub.reconnecting", is_de).to_string(),
     }
 }
 
@@ -18396,6 +18681,19 @@ pub(crate) fn world3d_status_pill_for(surface_id: &str, status: &World3dComputeS
 /// without measuring a glyph.
 pub(crate) fn world3d_status_pill_width(theme: &Theme, pill: &World3dStatusPill) -> f32 {
     theme.padding_standard * 2.0 + pill.label().len() as f32 * theme.font_size_small * 0.6
+}
+
+/// 👥️🖼️ One painted piece of board peer presence: a peer's cursor (with its viewport and name chip) or a
+/// peer mark chip, each with the board it is clipped to.
+#[derive(Clone, Debug)]
+enum ShellBoardPresencePaint {
+    Cursor { bounds: Rect, peer: crate::canvas_presence::BoardPeerCursor },
+    Mark { bounds: Rect, rect: Rect, mark: crate::canvas_presence::BoardPeerMark },
+}
+
+/// 👥️🖼️ A presence chip's width for its text — the same estimate the status pills use.
+fn board_presence_chip_width(theme: &Theme, text: &str) -> f32 {
+    8.0 + text.chars().count() as f32 * theme.font_size_small * 0.6
 }
 
 /// 🖼️ Whether a surface is big enough to carry an overlay row at all — a collapsed dock pane paints
@@ -21839,19 +22137,27 @@ fn plugin_install_action_rect(band: Rect, action_label: &str, theme: &Theme) -> 
 /// ([`ShellState::cancel_document_opening`]), a close once the open settled.
 const DOCUMENT_OPEN_CANCEL_CONTROL_ID: &str = "shell.document-open.cancel";
 
-/// 🔢️ The steps an open takes (the app instance, then the document), for the band's `step/total`.
-const DOCUMENT_OPEN_STEPS: u8 = 2;
+/// 🔢️ The steps an open takes (a hub document's component, the app instance, then the document), for the
+/// band's `step/total`. An open with no hub document to resolve starts at step 2.
+const DOCUMENT_OPEN_STEPS: u8 = 3;
 
 /// 🗣️ The band's message: phase, which app, step and elapsed seconds while it runs; a failure appends
 /// its own reason. English first, German through [`shell_chrome_string`].
 fn document_opening_banner_text(opening: &ShellDocumentOpening, now_ms: f64, is_de: bool) -> String {
     let (key, step) = match opening.phase {
-        ShellDocumentOpenPhase::Instantiating => ("document.open.instantiating", Some(1)),
+        ShellDocumentOpenPhase::Resolving => ("document.open.resolving", Some(1)),
+        ShellDocumentOpenPhase::Instantiating => ("document.open.instantiating", Some(2)),
         ShellDocumentOpenPhase::Seeding => ("document.open.seeding", Some(DOCUMENT_OPEN_STEPS)),
         ShellDocumentOpenPhase::Cancelled => ("document.open.cancelled", None),
         ShellDocumentOpenPhase::Failed(_) => ("document.open.failed", None),
     };
-    let head = format!("{} {}", shell_chrome_string(key, is_de), opening.label);
+    let head = match opening.phase {
+        ShellDocumentOpenPhase::Resolving => {
+            let detail = ["document.open.resolving.lease", "document.open.resolving.component", "document.open.resolving.descriptor", "document.open.resolving.verified"][usize::from(opening.resolve_step.load(std::sync::atomic::Ordering::Acquire).min(3))];
+            format!("{} {} ({})", shell_chrome_string(key, is_de), opening.label, shell_chrome_string(detail, is_de))
+        }
+        _ => format!("{} {}", shell_chrome_string(key, is_de), opening.label),
+    };
     match (&opening.phase, step) {
         (ShellDocumentOpenPhase::Failed(reason), _) => format!("{head}: {reason}"),
         (_, Some(step)) => format!("{head} · {step}/{DOCUMENT_OPEN_STEPS} · {} s", ((now_ms - opening.started_at_ms).max(0.0) / 1000.0).floor() as u64),
@@ -21862,7 +22168,7 @@ fn document_opening_banner_text(opening: &ShellDocumentOpening, now_ms: f64, is_
 /// 🎨️ `(border, fill, text)` for one phase, the same severity map every shell banner uses.
 fn document_opening_tone(phase: &ShellDocumentOpenPhase, theme: &Theme) -> (Rgba, Rgba, Rgba) {
     match phase {
-        ShellDocumentOpenPhase::Instantiating | ShellDocumentOpenPhase::Seeding => transient_notice_tone(semio_framework::Severity::Info, theme),
+        ShellDocumentOpenPhase::Resolving | ShellDocumentOpenPhase::Instantiating | ShellDocumentOpenPhase::Seeding => transient_notice_tone(semio_framework::Severity::Info, theme),
         ShellDocumentOpenPhase::Cancelled => transient_notice_tone(semio_framework::Severity::Warning, theme),
         ShellDocumentOpenPhase::Failed(_) => transient_notice_tone(semio_framework::Severity::Error, theme),
     }
@@ -24118,7 +24424,7 @@ impl ShellState {
                 let preferences = read_ui_preferences();
                 let custom_themes = custom_themes_from(&preferences);
                 self.appearance_id = resolve_appearance_id(&preferences);
-                self.locale_id = env_lock("SEMIO_LOCKED_LOCALE").unwrap_or_else(|| locale_id(preferences.locale));
+                self.locale_id = resolve_locale_id(env_lock("SEMIO_LOCKED_LOCALE"), &preferences);
                 self.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
                 self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
                 self.chrome_build.preferences.custom_drivers = preferences.custom_drivers;
@@ -24166,10 +24472,48 @@ impl ShellState {
         }
         let _document_id = channel.document_id.clone();
         let connected_at_ms = channel.connected_at_ms;
-        let label = self.session.as_ref().map(|session| session.app.id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
+        let label = Some(shell_presence_label(self.identity.as_ref(), &actor)).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
         let user_id = self.identity.as_ref().map(|identity| identity.user_id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
-        let peer = PresencePeer { actor, label, presence_pack: None, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None, active_tool: None };
+        let (views, active_tool) = self.board_presence_views();
+        let ephemeral = self.plugins.iter().find(|entry| entry.plugin_id == channel.plugin_id).and_then(|plugin| plugin.ephemeral_snapshot(channel.instance_id)).unwrap_or_default();
+        let (presence_pack, interaction) = (ephemeral.presence, ephemeral.interaction);
+        let peer = PresencePeer { actor, label, presence_pack, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views, ui: None, tool_run: None, principal_kind: None, active_tool };
         self.document_host.presence_heartbeat_key(&channel.document_key, chrome_now_ms() as u64, peer);
+    }
+
+    /// 👕️ Every board window of the attached session as the presence wire names it — camera, size and
+    /// the world point under the pointer (`crate::canvas_presence::board_presence_view`) — plus the
+    /// active utility of the board under the pointer, React's `publishLocalActiveToolV1`.
+    fn board_presence_views(&self) -> (Vec<PresenceWindowView>, Option<String>) {
+        let mut active_tool = None;
+        let views = self
+            .board2d_states
+            .iter()
+            .filter_map(|(host_id, surface)| {
+                let (camera, utility) = crate::engine_canvas::board2d_presence_state(host_id)?;
+                let view = crate::canvas_presence::board_presence_view(&surface.window_id, surface.bounds, camera, self.presence_pointer);
+                if view.pointer.is_some() {
+                    active_tool = utility;
+                }
+                Some(view)
+            })
+            .collect();
+        (views, active_tool)
+    }
+
+    /// 👥️ Every board window's peer overlays from the verified roster: the other actors' cursors,
+    /// viewports and marks this shell paints over its boards (`crate::canvas_presence::board_peer_overlays`,
+    /// React's `CanvasPresenceOverlayV1`). Nothing before the hub named this connection's own actor.
+    pub(crate) fn board_peer_overlays(&self) -> Vec<(Rect, crate::canvas_presence::BoardPeerOverlays)> {
+        let Some((actor, color)) = self.presence_self.as_ref() else { return Vec::new() };
+        self.board2d_states
+            .iter()
+            .filter_map(|(host_id, surface)| {
+                let (camera, _) = crate::engine_canvas::board2d_presence_state(host_id)?;
+                let overlays = crate::canvas_presence::board_peer_overlays(&self.presence_peers, &surface.window_id, surface.bounds, camera, actor, *color, &format!("board/{}", surface.window_id));
+                (!overlays.cursors.is_empty() || !overlays.marks.is_empty()).then_some((surface.bounds, overlays))
+            })
+            .collect()
     }
 
     fn advance_chrome_preferences_persist_step(&mut self) {
@@ -25918,7 +26262,7 @@ impl ShellState {
                 let layout = self.footer_chrome_layout(atlas, theme, width, btn_y, btn_h);
                 let hub = self.hub_connection_state();
                 let label = self.hub_footer_label();
-                let actionable = hub == ShellHubConnectionState::SignedOut;
+                let actionable = hub == HubConnectionState::SignedOut;
                 let control_id = if actionable { "framework.hub.signIn" } else { "s-hub-connection" };
                 match render_footer_status_step(cursor, draw, atlas, icons, input, theme, layout.hub, control_id, Some(hub.icon_id()), &label, actionable) {
                     Ok(false) => return false,
@@ -26286,16 +26630,64 @@ impl ShellState {
                 cursor.scalar = 0;
                 return false;
             }
+            // 👥️🖼️ Peer presence over every board window — the wgpu twin of React's
+            // `CanvasPresenceOverlayV1`: each other actor's viewport rectangle, cursor dot and name chip,
+            // then every peer mark as a corner chip of the peer's initials, clipped to the board and in
+            // the hub-assigned colour. Non-interactive by construction: nothing here registers a hit.
+            8 => {
+                let items = self.board_presence_paint_items(theme);
+                let Some(item) = items.get(cursor.item).cloned() else {
+                    cursor.item = 0;
+                    cursor.scalar = 0;
+                    cursor.phase = 9;
+                    return false;
+                };
+                let (bounds, color, chip, chip_rect) = match &item {
+                    ShellBoardPresencePaint::Cursor { bounds, peer } => {
+                        let color = theme.presence_color(peer.color);
+                        (*bounds, color, peer.chip.clone(), Rect::new(peer.at[0] + 10.0, peer.at[1] - 4.0, board_presence_chip_width(theme, &peer.chip), theme.font_size_small + 4.0))
+                    }
+                    ShellBoardPresencePaint::Mark { bounds, rect, mark } => (*bounds, theme.presence_color(mark.color), mark.chip.clone(), *rect),
+                };
+                if cursor.scalar == 0 {
+                    overlay.push_scissor(bounds);
+                    if let ShellBoardPresencePaint::Cursor { peer, .. } = &item {
+                        let [x, y, w, h] = peer.viewport;
+                        let edge = theme.stroke_hairline * 1.5;
+                        let frame = color.with_alpha(0.55);
+                        overlay.push_solid([x, y, w, edge], frame);
+                        overlay.push_solid([x, y + h - edge, w, edge], frame);
+                        overlay.push_solid([x, y, edge, h], frame);
+                        overlay.push_solid([x + w - edge, y, edge, h], frame);
+                        overlay.push_rounded([peer.at[0] - 2.0, peer.at[1] - 2.0, 10.0, 10.0], color, 5.0);
+                    }
+                    overlay.push_rounded([chip_rect.x, chip_rect.y, chip_rect.w, chip_rect.h], color, 3.0);
+                    cursor.scalar = 1;
+                    return false;
+                }
+                match chrome_text_complete_step(overlay, atlas, &chip, chip_rect.x + 4.0, chip_rect.y + chip_rect.h - 3.0, (chip_rect.w - 8.0).max(1.0), theme.font_size_small, theme.active_foreground, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        self.error = Some("Shell board presence chip exceeded the retained glyph boundary".to_string());
+                        cursor.glyph.reset();
+                    }
+                }
+                overlay.pop_scissor();
+                cursor.item += 1;
+                cursor.scalar = 0;
+                return false;
+            }
             // 🛑️🖼️ Per-surface overlay controls — the World3d compute cancel. Painted last so they sit
             // above the surface they annotate, and registered last so `InputState::hit_at` (reverse
             // order) resolves them over the surface's own hit.
             // Each grant recomputes its own rect from the live surface bounds, so nothing survives
             // between grants and a surface that stopped painting stops offering its control.
-            8 => {
+            9 => {
                 let controls = self.surface_overlay_controls(theme);
                 let Some((control, anchor)) = controls.get(cursor.item) else {
                     cursor.item = 0;
-                    cursor.phase = 9;
+                    cursor.phase = 10;
                     return false;
                 };
                 let label = self.chrome_control_label(&control.control_id, &control.label);
@@ -26314,10 +26706,25 @@ impl ShellState {
                 cursor.item += 1;
                 return false;
             }
-            9 => return true,
+            10 => return true,
             _ => return false,
         }
         false
+    }
+
+    /// 👥️🖼️ The board presence this frame paints, in paint order: every cursor (viewport, dot, chip),
+    /// then every mark chip, stacked down the board's right edge by entity row like React's canvas marks.
+    fn board_presence_paint_items(&self, theme: &Theme) -> Vec<ShellBoardPresencePaint> {
+        let mut items = Vec::new();
+        for (bounds, overlays) in self.board_peer_overlays() {
+            items.extend(overlays.cursors.into_iter().map(|peer| ShellBoardPresencePaint::Cursor { bounds, peer }));
+            items.extend(overlays.marks.into_iter().map(|mark| {
+                let width = board_presence_chip_width(theme, &mark.chip);
+                let rect = Rect::new(bounds.x + bounds.w - 8.0 - width, bounds.y + 8.0 + mark.row as f32 * 18.0, width, theme.font_size_small + 4.0);
+                ShellBoardPresencePaint::Mark { bounds, rect, mark }
+            }));
+        }
+        items
     }
 
     fn render_context_menu_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, viewport_w: f32, viewport_h: f32) -> bool {
@@ -28472,6 +28879,16 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("plugin.install.failed", true) => "Plugin konnte nicht geladen werden",
         ("plugin.install.cancel", false) => "Cancel",
         ("plugin.install.cancel", true) => "Abbrechen",
+        ("document.open.resolving", false) => "Resolving the hub's component for",
+        ("document.open.resolving", true) => "Hub-Komponente wird ermittelt für",
+        ("document.open.resolving.lease", false) => "asking the hub which component runs it",
+        ("document.open.resolving.lease", true) => "Hub wird nach der ausführenden Komponente gefragt",
+        ("document.open.resolving.component", false) => "downloading the component",
+        ("document.open.resolving.component", true) => "Komponente wird heruntergeladen",
+        ("document.open.resolving.descriptor", false) => "downloading its descriptor",
+        ("document.open.resolving.descriptor", true) => "Deskriptor wird heruntergeladen",
+        ("document.open.resolving.verified", false) => "verified",
+        ("document.open.resolving.verified", true) => "geprüft",
         ("document.open.instantiating", false) => "Starting",
         ("document.open.instantiating", true) => "Wird gestartet:",
         ("document.open.seeding", false) => "Loading the document in",
@@ -28818,8 +29235,10 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("hub.connecting", true) => "verbinde…",
         ("hub.reconnecting", false) => "reconnecting…",
         ("hub.reconnecting", true) => "verbinde erneut…",
-        ("hub.offline", false) => "offline",
-        ("hub.offline", true) => "offline",
+        ("hub.online", false) => "online",
+        ("hub.online", true) => "online",
+        ("hub.local", false) => "local only",
+        ("hub.local", true) => "nur lokal",
         ("hub.signedOut", false) => "signed out",
         ("hub.signedOut", true) => "abgemeldet",
         ("hub.peerOne", false) => "peer",
@@ -29017,12 +29436,20 @@ fn resolve_appearance_id(preferences: &UiPreferences) -> String {
     env_lock("SEMIO_LOCKED_APPEARANCE").or_else(|| appearance_id(preferences.appearance)).or_else(|| crate::host_appearance_preference().map(ToOwned::to_owned)).unwrap_or_else(|| "system".to_string())
 }
 
-fn locale_id(value: Option<OsUiLocale>) -> String {
-    match value {
-        Some(OsUiLocale::De) => "de",
-        _ => "en",
-    }
-    .to_string()
+/// 🗣️ The ONE locale-resolution law, mirroring `🏛️ShellHost/🟦️.tsx`'s
+/// `locks?.locale ?? readUiPreferences(storage).locale ?? detectShellLocale(navigator.language)` term
+/// for term — a lock wins, then the persisted preference, then the host's own language read published
+/// through `semioWgpuSetHostLocale`, then `detectShellLocale`'s own `"en"` answer for a host that
+/// said nothing.
+fn resolve_locale_id(lock: Option<String>, preferences: &UiPreferences) -> String {
+    lock.or_else(|| {
+        preferences.locale.map(|locale| match locale {
+            OsUiLocale::De => "de".to_string(),
+            OsUiLocale::En => "en".to_string(),
+        })
+    })
+    .or_else(|| crate::host_locale().map(ToOwned::to_owned))
+    .unwrap_or_else(|| "en".to_string())
 }
 
 fn custom_themes_from(preferences: &UiPreferences) -> HashMap<String, String> {
@@ -29132,7 +29559,7 @@ impl ShellState {
         let locks = shell_pref_locks();
         let preferences = read_ui_preferences();
         self.appearance_id = resolve_appearance_id(&preferences);
-        self.locale_id = locks.locale.clone().unwrap_or_else(|| locale_id(preferences.locale));
+        self.locale_id = resolve_locale_id(locks.locale.clone(), &preferences);
         self.terminology_id = locks.terminology.clone().or(preferences.terminology).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
         self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
         self.chrome_build.preferences = with_chrome_prefs(|preferences| preferences.clone());
@@ -30671,8 +31098,59 @@ impl ShellState {
                     }
                 }
             }
+            for (key, label) in self.footer_status_chips() {
+                if nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY && !nodes.iter().any(|node| node.key == key) {
+                    nodes.push(chrome_status_accessibility_node(nodes.len() as u64 + 1, key, label));
+                }
+            }
             nodes
         })
+    }
+
+    /// 🏷️ The footer chips this shell paints without a hit target — the presence roster (React's `#s-presence-peers`
+    /// status) and, while signed in, the hub connection — with the text they paint, so a screen reader and the
+    /// accessibility mirror read them too. Signed out, the hub chip is the `framework.hub.signIn` button and already a node.
+    fn footer_status_chips(&self) -> Vec<(&'static str, String)> {
+        if self.mobile_panel_active() {
+            return Vec::new();
+        }
+        let mut chips = vec![("s-presence-peers", ui_wgpu::wgpu::presence_bar_chip_text(&self.footer_presence_rows(), None, self.active_locale()))];
+        if self.hub_connection_state() != HubConnectionState::SignedOut {
+            chips.push(("s-hub-connection", self.hub_footer_label()));
+        }
+        chips
+    }
+}
+
+/// 🔊️ One non-interactive chrome status node: named, politely live, never focusable nor actionable.
+fn chrome_status_accessibility_node(node_id: u64, key: &str, label: String) -> ui_contract::AccessibilityProjectionNode {
+    ui_contract::AccessibilityProjectionNode {
+        node_id,
+        key: key.to_string(),
+        role: "status".to_string(),
+        depth: 0,
+        label: Some(label),
+        description: None,
+        live: ui_contract::liveness_name(ui_contract::Liveness::Polite).to_string(),
+        shortcut: None,
+        hidden: false,
+        disabled: false,
+        focusable: false,
+        actionable: false,
+        focused: false,
+        checked: None,
+        selected: None,
+        expanded: None,
+        editable: false,
+        controls: None,
+        active_descendant: None,
+        level: None,
+        rect: None,
+        value_min: None,
+        value_max: None,
+        value_now: None,
+        value_text: None,
+        busy: false,
     }
 }
 //#endregion ♿️ChromeAccessibleNames

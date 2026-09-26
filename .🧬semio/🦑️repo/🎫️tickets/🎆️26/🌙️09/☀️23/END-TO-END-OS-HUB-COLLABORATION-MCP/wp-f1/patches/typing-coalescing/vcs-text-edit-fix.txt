@@ -1,0 +1,5 @@
+vcs `🩹️edit/🦀️.rs` `text_edit_operations`: `Emit::mutations(operations)` → `Emit::amend(operations, VCS_TEXT_TYPING_COALESCE_KEY)` with
+`pub(crate) const VCS_TEXT_TYPING_COALESCE_KEY: &str = "vcs-text-typing";` (+ emoji docstring). The vcs text is a JSON snapshot: most
+keystrokes of a free typing run are invalid JSON (→ `Emit::default()`, no edit), so its law types the run INSIDE a JSON string value
+(letters, digits, spaces, Backspace/Delete, arrows only) — derive `typing_run()` texts filtered to string-safe keys at landing time.
+No vcs window hosts the TextEditor in `s` today (typing census), so this is correctness of the command, not a live path.

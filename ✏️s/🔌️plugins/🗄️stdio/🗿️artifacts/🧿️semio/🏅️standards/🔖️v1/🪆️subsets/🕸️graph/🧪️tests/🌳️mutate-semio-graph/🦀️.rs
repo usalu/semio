@@ -44,21 +44,6 @@ const WIRES_PACK: &str = "asset://🕸️wires/🎒️.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Plan
-/// 🧫️ Every `asset://` URI the scenario's steps name, in step order — the specification-vector
-/// paths live in the feature, never in this file.
-#[cfg(feature = "sut")]
-fn step_assets(ctx: &Context) -> Vec<String> {
-    let mut found = Vec::new();
-    for (_, text) in &ctx.scenario.steps {
-        for candidate in text.split_whitespace() {
-            if candidate.starts_with("asset://") {
-                found.push(candidate.to_string());
-            }
-        }
-    }
-    found
-}
-
 /// 📜️ The scenario's `{"prepare": [...], "mutation": {…}}` doc string, split into its two halves.
 #[cfg(feature = "sut")]
 fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
@@ -151,7 +136,7 @@ mod subject {
     /// checked against the committed after-snapshot in role — a THIRD statement of what the verb
     /// means, independent of both implementations, kept from the case this one replaces.
     pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
-        let assets = super::step_assets(ctx);
+        let assets = ctx.step_fixture_uris();
         if assets.len() < 3 {
             return Err(format!("{}: expected three committed vector assets, found {}", ctx.scenario.id, assets.len()));
         }

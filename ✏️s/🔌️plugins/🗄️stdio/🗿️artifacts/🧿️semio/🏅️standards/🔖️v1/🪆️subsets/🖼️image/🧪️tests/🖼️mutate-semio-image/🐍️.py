@@ -538,14 +538,9 @@ def doc_string(ctx: Context) -> str:
     raise AssertionError("%s declares no doc string" % ctx.scenario["id"])
 
 
-def step_uris(ctx: Context, scheme: str) -> list:
-    """🧫️ Every fixture URI of one scheme the scenario's steps name, in step order."""
-    found = []
-    for step in ctx.scenario.get("steps", []):
-        for token in step["text"].split():
-            if token.startswith(scheme):
-                found.append(token)
-    return found
+def step_uris(ctx: Context, prefix: str) -> list:
+    """🧫️ The fixture URIs under one prefix the scenario's steps name, in step order (the host's one fixture-URI grammar)."""
+    return [uri for uri in ctx.step_fixture_uris() if uri.startswith(prefix)]
 
 
 def fixture_json(ctx: Context, uri: str):
@@ -602,7 +597,7 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector — a THIRD
     statement of what the verb means, independent of both implementations."""
-    uris = step_uris(ctx, "asset://")
+    uris = ctx.step_fixture_uris()
     before = fixture_json(ctx, uris[0])
     mutation = fixture_json(ctx, uris[1]) if len(uris) > 2 else json.loads(doc_string(ctx))
     expected = fixture_json(ctx, uris[2]) if len(uris) > 2 else before
@@ -654,7 +649,7 @@ def adapter() -> Adapter:
     """🧭️ Registration entry point the Python host calls. Handlers are registered under the Scenario
     Outline base ids, which the host resolves for every Examples row, and plain scenarios under their
     own ids."""
-    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("spec-vector-no-mutation", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

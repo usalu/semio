@@ -56,12 +56,22 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     applyMutations: async () => {},
     loadAppDocumentArchive: async () => {},
     loadAppDocumentPack: async () => {},
+    codec: async () => null,
+    ephemeralSnapshot: () => null,
     dispose: async () => {},
     ...overrides,
   };
 }
 
 describe("framework renderer wgpu plugin bridge", () => {
+  it("hands the guest's last ephemeral frame to Rust as bytes, and nothing before the guest published one", async () => {
+    const { wgpuEphemeralSnapshot } = await import("../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts");
+    const published = pluginHandleForBridge(fakeHandle({ ephemeralSnapshot: (instanceId) => (instanceId === 7 ? wgpuEphemeralSnapshot({ presence: [1, 2], presenceGeneration: 3, interaction: [4] }) : null) }));
+    expect(published.ephemeralSnapshot(7)).toEqual({ presence: Uint8Array.from([1, 2]), presenceGeneration: 3, interaction: Uint8Array.from([4]) });
+    expect(published.ephemeralSnapshot(8), "an instance whose guest published nothing carries no app presence").toBeNull();
+    expect(wgpuEphemeralSnapshot(null)).toBeNull();
+  });
+
   it("crosses the document-backbone door with an exact u64 binding generation and refuses an unknown operation", async () => {
     const seen: { operation: string; bindingGeneration: bigint; uri: string }[] = [];
     const bridge = pluginHandleForBridge(fakeHandle({

@@ -12,7 +12,7 @@
 // #region 🔌️Adapters
 import { cleanup, fireEvent, render, screen, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildTaskManagerTableScene, createTaskManagerDispatcher, installTasksV1, runtimeMetricsRowsV1, spawnedJobTasksV1, taskManagerColumns, taskManagerElapsedSecondsV1, taskManagerMetricCell, taskManagerRowAction, taskManagerRows, TaskManagerPanel, TaskManagerTasksPanel, TaskManagerWindow, toolCallTasksV1, TASK_MANAGER_UNOBSERVED_METRIC, type TaskManagerLabels, type TaskManagerRow, type TaskManagerSourcesV1, type TaskManagerTableCell, type TaskManagerTaskV1 } from "../../🟦️.tsx";
+import { buildTaskManagerTableScene, createTaskManagerDispatcher, installTasksV1, runtimeMetricsRowsV1, spawnedJobTasksV1, taskManagerColumns, taskManagerElapsedSecondsV1, taskManagerMetricCell, taskManagerRowAction, taskManagerRows, TaskManagerPanel, TaskManagerTasksPanel, TaskManagerWindow, toolCallTasksV1, toolRunTasksV1, TASK_MANAGER_UNOBSERVED_METRIC, type TaskManagerLabels, type TaskManagerRow, type TaskManagerSourcesV1, type TaskManagerTableCell, type TaskManagerTaskV1 } from "../../🟦️.tsx";
 import { type SpawnedJobRowV1 } from "../../../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
 import { type AgentConversationEntry } from "../../../🔗️AgentBridge/🟦️.tsx";
 import runningTasks from "../../🧫️fixtures/🏃️running-tasks.json";
@@ -225,8 +225,10 @@ describe("taskManagerMetricCell", () => {
 
 /** 🧪️ A window reads everything through `sources`; these hand it a fixed registry and task list. */
 function sourcesFor(registry: ActivationRegistry | null, tasks: readonly TaskManagerTaskV1[] = [], cancel: (task: TaskManagerTaskV1) => void = () => undefined): TaskManagerSourcesV1 {
-  return { registry: () => registry, tasks: () => tasks, subscribe: () => () => undefined, cancel };
+  return { registry: () => registry, tasks: () => tasks, subscribe: () => () => undefined, cancel, suspend: () => undefined, resume: () => undefined };
 }
+
+const NO_CONTROLS = { onCancel: () => undefined, onSuspend: () => undefined, onResume: () => undefined };
 
 describe("TaskManagerWindow", () => {
   it("distinguishes 'no runtime attached' from 'the runtime reports no actors'", async () => {
@@ -283,7 +285,7 @@ describe("running tasks", () => {
 
   it("renders a named progress bar and a named cancel control per task, and a cancelling task cannot be cancelled twice", () => {
     const onCancel = vi.fn();
-    render(<TaskManagerTasksPanel tasks={fixtureTasks} onCancel={onCancel} />);
+    render(<TaskManagerTasksPanel tasks={fixtureTasks} controls={{ ...NO_CONTROLS, onCancel }} />);
     expect(screen.getAllByRole("progressbar")).toHaveLength(runningTasks.expected.length);
     const fill = screen.getByRole("progressbar", { name: /semio\.puzzle3d\.fill/u });
     expect(fill.getAttribute("aria-valuetext")).toMatch(/^128 /u);
@@ -294,7 +296,7 @@ describe("running tasks", () => {
   });
 
   it("says nothing is running rather than showing an empty list", () => {
-    const { container } = render(<TaskManagerTasksPanel tasks={[]} onCancel={() => undefined} />);
+    const { container } = render(<TaskManagerTasksPanel tasks={[]} controls={NO_CONTROLS} />);
     expect(container.querySelector("[data-semio-task-manager-tasks-empty]")).not.toBeNull();
     expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
   });
@@ -302,12 +304,63 @@ describe("running tasks", () => {
   it("re-reads its sources on every notification", async () => {
     let tasks: readonly TaskManagerTaskV1[] = [];
     const listeners = new Set<() => void>();
-    const sources: TaskManagerSourcesV1 = { registry: () => null, tasks: () => tasks, subscribe: (listener) => (listeners.add(listener), () => listeners.delete(listener)), cancel: () => undefined };
+    const sources: TaskManagerSourcesV1 = { registry: () => null, tasks: () => tasks, subscribe: (listener) => (listeners.add(listener), () => listeners.delete(listener)), cancel: () => undefined, suspend: () => undefined, resume: () => undefined };
     const { container } = render(<TaskManagerWindow sources={sources} />);
     expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
     tasks = fixtureTasks.slice(0, 1);
     for (const listener of listeners) listener();
     await waitFor(() => expect(screen.getAllByRole("progressbar")).toHaveLength(1));
+  });
+
+  const fixtureToolRuns = () => {
+    const now = vi.spyOn(Date, "now").mockReturnValue(runningTasks.toolRuns.nowMs);
+    const tasks = toolRunTasksV1(runningTasks.toolRuns.runs.map((run) => ({ ...run, run: BigInt(run.run) })), runningTasks.toolRuns.program, new Map(Object.entries(runningTasks.toolRuns.startedAtMs)));
+    now.mockRestore();
+    return tasks;
+  };
+
+  it("maps every live tool run of the focused program onto one suspendable task, suspended while the run is paused", () => {
+    expect(fixtureToolRuns()).toEqual(runningTasks.toolRuns.expected);
+  });
+
+  it("offers Suspend on a running tool run and Resume on a paused one, each named after the run, beside a determinate progress bar", () => {
+    const onSuspend = vi.fn();
+    const onResume = vi.fn();
+    const onCancel = vi.fn();
+    render(<TaskManagerTasksPanel tasks={fixtureToolRuns()} controls={{ onCancel, onSuspend, onResume }} />);
+    const fill = screen.getByRole("progressbar", { name: /Fill/u });
+    expect([fill.getAttribute("aria-valuenow"), fill.getAttribute("aria-valuemax"), fill.getAttribute("aria-valuetext")?.startsWith("Filling (1/2): 3 of 10 cells (30 %)")]).toEqual(["30", "100", true]);
+    expect(screen.getByRole("progressbar", { name: /Reconstruct/u }).getAttribute("aria-valuenow")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Suspend Fill" }));
+    fireEvent.click(screen.getByRole("button", { name: "Resume Reconstruct" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel Reconstruct" }));
+    expect(screen.getAllByRole("button").map((button) => button.getAttribute("aria-label")).filter((name) => name === "Resume Fill" || name === "Suspend Reconstruct")).toEqual([]);
+    expect([onSuspend.mock.calls[0]?.[0].id, onResume.mock.calls[0]?.[0].id, onCancel.mock.calls[0]?.[0].id]).toEqual(["toolRun:wfc-2#1", "toolRun:wfc-2#2", "toolRun:wfc-2#2"]);
+  });
+
+  /** 📐️ A live tool run's progress line ("Matching features (3/10): 227 of 374 decisions (60 %) · 61 s") used to share one
+   * unwrapping row with its controls, so in the narrow Tasks window Cancel sat outside the panel — unreachable by pointer
+   * (Playwright: "element is outside of the viewport", ticket 26/09/23 U5). The controls now live in their own group
+   * after a wrapping progress line, and the progress bar spans the row. */
+  it("keeps every task control in one group after a wrapping progress line, so a narrow window never clips Cancel", () => {
+    render(<TaskManagerTasksPanel tasks={fixtureToolRuns()} controls={{ onCancel: vi.fn(), onSuspend: vi.fn(), onResume: vi.fn() }} />);
+    const rows = [...document.querySelectorAll("[data-semio-task-manager-task]")];
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      const footer = row.querySelector('[data-slot="task-manager-task-footer"]');
+      const actions = footer?.querySelector('[data-slot="task-manager-task-actions"]');
+      const text = footer?.querySelector('[data-slot="task-manager-task-progress-text"]');
+      expect(footer?.classList.contains("flex-wrap"), "the progress line and the controls wrap").toBe(true);
+      expect(text?.classList.contains("shrink-0"), "the progress text yields width to the controls").toBe(false);
+      expect([...row.querySelectorAll("button")].every((button) => actions?.contains(button)), "every control is in the actions group").toBe(true);
+      expect(row.querySelector('[role="progressbar"]')?.parentElement, "the bar spans the row").toBe(row);
+    }
+  });
+
+  it("scrolls the wide actor table inside a named, keyboard-focusable region instead of clipping its columns", () => {
+    render(<TaskManagerPanel rows={[ROW]} onAction={vi.fn()} />);
+    const region = screen.getByRole("region", { name: "Actors" });
+    expect([region.getAttribute("tabindex"), region.classList.contains("overflow-x-auto"), region.querySelector("table") !== null]).toEqual(["0", true, true]);
   });
 });
 //#endregion 🔖️RunningTasks

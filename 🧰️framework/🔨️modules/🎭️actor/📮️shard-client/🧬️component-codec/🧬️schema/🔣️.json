@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/component-codec/schema.json",
+  "title": "Actor Component Codec Lane",
+  "$defs": {
+    "Hex": { "type": "string", "pattern": "^([0-9a-f]{2})*$" },
+    "DocumentPair": {
+      "title": "Codec Document Pair",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packHex", "sprHex"],
+      "properties": { "packHex": { "$ref": "#/$defs/Hex" }, "sprHex": { "$ref": "#/$defs/Hex" } }
+    },
+    "ShardCodecRequest": {
+      "title": "One Codec Interface Call",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "artifactKind"],
+          "properties": { "operation": { "const": "pack-schema-hash" }, "artifactKind": { "type": "string", "minLength": 1 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "artifactKind", "documentId"],
+          "properties": { "operation": { "const": "genesis" }, "artifactKind": { "type": "string", "minLength": 1 }, "documentId": { "type": "string", "minLength": 1 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "artifactKind", "pair"],
+          "properties": { "operation": { "const": "print-mirror" }, "artifactKind": { "type": "string", "minLength": 1 }, "pair": { "$ref": "#/$defs/DocumentPair" } }
+        }
+      ]
+    },
+    "ComponentBehaviour": {
+      "title": "What The Component's Codec Export Does",
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["exported"], "properties": { "exported": { "const": false } } },
+        { "type": "object", "additionalProperties": false, "required": ["bytesHex"], "properties": { "bytesHex": { "$ref": "#/$defs/Hex" } } },
+        { "type": "object", "additionalProperties": false, "required": ["pair"], "properties": { "pair": { "$ref": "#/$defs/DocumentPair" } } },
+        { "type": "object", "additionalProperties": false, "required": ["mirror"], "properties": { "mirror": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string" } } } },
+        { "type": "object", "additionalProperties": false, "required": ["faultHex"], "properties": { "faultHex": { "$ref": "#/$defs/Hex" } } },
+        { "type": "object", "additionalProperties": false, "required": ["throws"], "properties": { "throws": { "type": "string", "minLength": 1 } } }
+      ]
+    },
+    "Expected": {
+      "title": "The Lane's Answer",
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["okHex"], "properties": { "okHex": { "$ref": "#/$defs/Hex" } } },
+        { "type": "object", "additionalProperties": false, "required": ["okPair"], "properties": { "okPair": { "$ref": "#/$defs/DocumentPair" } } },
+        { "type": "object", "additionalProperties": false, "required": ["okMirror"], "properties": { "okMirror": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string" } } } },
+        { "type": "object", "additionalProperties": false, "required": ["faultHex"], "properties": { "faultHex": { "$ref": "#/$defs/Hex" } } },
+        { "type": "object", "additionalProperties": false, "required": ["refusal"], "properties": { "refusal": { "type": "string", "minLength": 1 } } }
+      ]
+    },
+    "ComponentCodecLane": {
+      "title": "Codec Calls, Component Behaviours And Answers",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "scope", "refusals", "cases"],
+      "properties": {
+        "version": { "const": 1 },
+        "scope": { "const": "actor-component-codec-lane" },
+        "refusals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["unexported", "operation"],
+          "properties": { "unexported": { "type": "string", "pattern": "^actor-codec\\." }, "operation": { "type": "string", "pattern": "^actor-codec\\." } }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "request", "component", "expected"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+              "request": { "oneOf": [{ "$ref": "#/$defs/ShardCodecRequest" }, { "type": "object", "required": ["operation"], "properties": { "operation": { "type": "string", "not": { "enum": ["pack-schema-hash", "genesis", "print-mirror"] } } } }] },
+              "component": { "$ref": "#/$defs/ComponentBehaviour" },
+              "expected": { "$ref": "#/$defs/Expected" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [{ "$ref": "#/$defs/ComponentCodecLane" }]
+}

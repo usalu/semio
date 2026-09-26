@@ -149,11 +149,11 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
       "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
       "@semio-tech/framework-renderer-wgpu": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts",
       "@semio-tech/framework": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
-      "/plugin-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules",
+      "/plugin-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules",
       "/renderer-modules": ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules",
     },
     assets: [
-      { kind: "static-dir", route: "/plugin-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules" },
+      { kind: "static-dir", route: "/plugin-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules" },
       { kind: "static-dir", route: "/renderer-modules", root: ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules" },
     ],
     vitePlugins: async () => {

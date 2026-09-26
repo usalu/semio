@@ -80,6 +80,13 @@ impl PasswordCredentialV1 {
         Ok(Self { iterations, salt, digest: pbkdf2_sha256(password.as_bytes(), &salt, iterations) })
     }
 
+    /// 🕳️ The credential an account without one is checked against: the cost of a freshly minted
+    /// credential and a digest no password derives, so refusing an unknown account takes as long as
+    /// refusing a wrong password and the refusal's timing never tells the two apart.
+    pub fn absent() -> Self {
+        Self { iterations: DEFAULT_ITERATIONS, salt: [0; SALT_BYTES], digest: [0; DIGEST_BYTES] }
+    }
+
     /// 📖️ Parses the exact `CredentialHashV1` encoding; anything else is [`PasswordCredentialError::Malformed`].
     pub fn parse(encoded: &str) -> Result<Self, PasswordCredentialError> {
         let mut parts = encoded.split('$');
@@ -125,43 +132,63 @@ impl PasswordCredentialV1 {
     }
 }
 
-/// 🧷️ HMAC-SHA256 (RFC 2104) over the framework's own SHA-256.
-pub fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
-    let mut block = [0u8; HMAC_BLOCK_BYTES];
-    if key.len() > HMAC_BLOCK_BYTES {
-        block[..32].copy_from_slice(&Sha256::digest(key));
-    } else {
-        block[..key.len()].copy_from_slice(key);
-    }
-    let mut inner_pad = [0x36u8; HMAC_BLOCK_BYTES];
-    let mut outer_pad = [0x5cu8; HMAC_BLOCK_BYTES];
-    for index in 0..HMAC_BLOCK_BYTES {
-        inner_pad[index] ^= block[index];
-        outer_pad[index] ^= block[index];
-    }
-    let mut inner = Sha256::new();
-    inner.update(&inner_pad);
-    inner.update(message);
-    let inner_digest = inner.finalize();
-    let mut outer = Sha256::new();
-    outer.update(&outer_pad);
-    outer.update(&inner_digest);
-    let digest = outer.finalize();
-    block.fill(0);
-    inner_pad.fill(0);
-    outer_pad.fill(0);
-    digest
+/// 🔑️ One HMAC-SHA256 key, keyed once: the SHA-256 states after absorbing the inner and outer pads.
+/// Every MAC under the key clones them instead of hashing both pads again, so a PBKDF2 iteration costs
+/// two compressions rather than four.
+struct HmacSha256Key {
+    inner: Sha256,
+    outer: Sha256,
 }
 
-/// 🧮️ PBKDF2 (RFC 8018 §5.2) with HMAC-SHA256 and a single 32-byte output block.
+impl HmacSha256Key {
+    fn new(key: &[u8]) -> Self {
+        let mut block = [0u8; HMAC_BLOCK_BYTES];
+        if key.len() > HMAC_BLOCK_BYTES {
+            block[..32].copy_from_slice(&Sha256::digest(key));
+        } else {
+            block[..key.len()].copy_from_slice(key);
+        }
+        let mut inner_pad = [0x36u8; HMAC_BLOCK_BYTES];
+        let mut outer_pad = [0x5cu8; HMAC_BLOCK_BYTES];
+        for index in 0..HMAC_BLOCK_BYTES {
+            inner_pad[index] ^= block[index];
+            outer_pad[index] ^= block[index];
+        }
+        let mut inner = Sha256::new();
+        inner.update(&inner_pad);
+        let mut outer = Sha256::new();
+        outer.update(&outer_pad);
+        block.fill(0);
+        inner_pad.fill(0);
+        outer_pad.fill(0);
+        Self { inner, outer }
+    }
+
+    fn mac(&self, message: &[u8]) -> [u8; 32] {
+        let mut inner = self.inner.clone();
+        inner.update(message);
+        let mut outer = self.outer.clone();
+        outer.update(&inner.finalize());
+        outer.finalize()
+    }
+}
+
+/// 🧷️ HMAC-SHA256 (RFC 2104) over the framework's own SHA-256.
+pub fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
+    HmacSha256Key::new(key).mac(message)
+}
+
+/// 🧮️ PBKDF2 (RFC 8018 §5.2) with HMAC-SHA256 and a single 32-byte output block; the password is
+/// keyed once for all iterations.
 pub fn pbkdf2_sha256(password: &[u8], salt: &[u8], iterations: u32) -> [u8; 32] {
+    let key = HmacSha256Key::new(password);
     let mut seed = Vec::with_capacity(salt.len() + 4);
     seed.extend_from_slice(salt);
     seed.extend_from_slice(&1u32.to_be_bytes());
-    let mut block = hmac_sha256(password, &seed);
+    let mut block = key.mac(&seed);
     let mut accumulator = block;
     for _ in 1..iterations {
-        block = hmac_sha256(password, &block);
+        block = key.mac(&block);
         for index in 0..32 {
             accumulator[index] ^= block[index];
         }

@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/refusal/schema.json",
+  "title": "HubRefusalV1",
+  "description": "Every answer a hub gives that is not a success, as the pair its client observes: the HTTP status and the code the `x-semio-refusal` response header names, so a client (and an operator reading a proxy log) can tell a hub's own refusal from a proxy's or a crashed connection's. A route that answers a typed error body of its own keeps it; a bare refusal stays body-free and discloses nothing beyond this pair.",
+  "$ref": "#/$defs/HubRefusalV1",
+  "$defs": {
+    "HubRefusalCodeV1": {
+      "enum": [
+        "malformed-request",
+        "unauthenticated",
+        "forbidden",
+        "not-found",
+        "method-not-allowed",
+        "not-acceptable",
+        "request-timeout",
+        "conflict",
+        "gone",
+        "precondition-failed",
+        "payload-too-large",
+        "uri-too-long",
+        "unsupported-media-type",
+        "range-not-satisfiable",
+        "unprocessable",
+        "upgrade-required",
+        "precondition-required",
+        "rate-limited",
+        "headers-too-large",
+        "insecure-transport",
+        "internal",
+        "not-implemented",
+        "unavailable",
+        "timeout",
+        "refused"
+      ]
+    },
+    "HubRefusalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "status",
+        "code"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.refusal/v1"
+        },
+        "status": {
+          "type": "integer",
+          "minimum": 400,
+          "maximum": 599
+        },
+        "code": {
+          "$ref": "#/$defs/HubRefusalCodeV1"
+        }
+      }
+    },
+    "HubRefusalStatusCodesV1": {
+      "description": "The code a refusal carries when its route names none: one per status, `refused` for any other 4xx/5xx.",
+      "const": {
+        "400": "malformed-request",
+        "401": "unauthenticated",
+        "403": "forbidden",
+        "404": "not-found",
+        "405": "method-not-allowed",
+        "406": "not-acceptable",
+        "408": "request-timeout",
+        "409": "conflict",
+        "410": "gone",
+        "412": "precondition-failed",
+        "413": "payload-too-large",
+        "414": "uri-too-long",
+        "415": "unsupported-media-type",
+        "416": "range-not-satisfiable",
+        "422": "unprocessable",
+        "426": "upgrade-required",
+        "428": "precondition-required",
+        "429": "rate-limited",
+        "431": "headers-too-large",
+        "500": "internal",
+        "501": "not-implemented",
+        "503": "unavailable",
+        "504": "timeout"
+      }
+    }
+  }
+}

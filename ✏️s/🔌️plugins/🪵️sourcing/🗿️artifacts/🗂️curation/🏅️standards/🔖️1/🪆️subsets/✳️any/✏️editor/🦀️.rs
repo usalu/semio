@@ -1339,6 +1339,13 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                     ],
                 )],
             )
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole curation with one of the bundled example stocks or the empty curation, by example id.", "Ersetzt die gesamte Kuratierung durch einen der mitgelieferten Beispielbestände oder die leere Kuratierung, anhand der Beispiel-Id."))
+            .action_describe("stockFromCatalogue", LocalizedLabel::native("Adds every object kind the installed sourcing modules (such as beams, slabs and windows) offer to the stock, keeping the existing stock and curated counts.", "Fügt dem Bestand alle Objektarten hinzu, die die installierten Beschaffungsmodule (etwa Träger, Decken und Fenster) anbieten; vorhandener Bestand und kuratierte Anzahlen bleiben erhalten."))
+            .action_describe("setDocument", LocalizedLabel::native("Replaces the whole curation with one decoded from the given JSON document; oversized or schema-mismatched JSON is refused.", "Ersetzt die gesamte Kuratierung durch eine aus dem angegebenen JSON-Dokument; zu großes oder schemafremdes JSON wird abgelehnt."))
+            .action_describe("curationAdd", LocalizedLabel::native("Adds one more of the given stock object to the curated selection, at most up to its available quantity.", "Nimmt ein weiteres Exemplar des angegebenen Bestandsobjekts in die Kuratierung auf, höchstens bis zur verfügbaren Menge."))
+            .action_describe("curationSetCount", LocalizedLabel::native("Sets how many of one stock object are curated, by a relative delta or an absolute value clamped to its availability; zero removes it from the curation.", "Legt fest, wie viele Exemplare eines Bestandsobjekts kuratiert sind, per relativer Änderung oder absolutem Wert bis zur Verfügbarkeit; null entfernt es aus der Kuratierung."))
+            .action_describe("curationRemove", LocalizedLabel::native("Removes one stock object from the curated selection entirely; the stock itself is unchanged.", "Entfernt ein Bestandsobjekt vollständig aus der Kuratierung; der Bestand selbst bleibt unverändert."))
+            .action_describe("setGridInstanceDisplay", LocalizedLabel::native("Chooses how object instances are shown in the curation grid window; only that window's view changes.", "Wählt, wie Objektinstanzen im Kuratierungs-Rasterfenster dargestellt werden; nur die Ansicht dieses Fensters ändert sich."))
             .build_definition()
 }
 //#endregion 🔖️Manifest

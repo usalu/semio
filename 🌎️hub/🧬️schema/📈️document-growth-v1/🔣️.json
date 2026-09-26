@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/document-growth/schema.json",
+  "title": "DocumentGrowthScenarioV1",
+  "description": "One real-binary hub scenario: documents created through the creation catalog, grown concurrently with chained edits, the hub restarted on the same data root, every document reopened and edited again. A document stays writable as it grows.",
+  "$ref": "#/$defs/DocumentGrowthScenarioV1",
+  "$defs": {
+    "DocumentGrowthScenarioV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "version", "author", "spaceName", "documents", "editsAfterRestart", "command", "bounds", "shutdown", "refusalMarkers", "steps"],
+      "properties": {
+        "schema": { "const": "semio.hub.document-growth-scenario/v1" },
+        "version": { "const": 1 },
+        "author": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "spaceName": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "documents": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kindId", "count", "editsBeforeRestart"],
+            "properties": {
+              "kindId": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "count": { "type": "integer", "minimum": 1, "maximum": 64 },
+              "editsBeforeRestart": { "type": "integer", "minimum": 1, "maximum": 100000 }
+            }
+          }
+        },
+        "editsAfterRestart": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "command": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["diffSchema", "payloadBytes", "batchIdBase", "mutationIdPrefix"],
+          "properties": {
+            "diffSchema": { "const": "artifact", "description": "Every edit carries the document's own artifact schema (the open plan's `artifact.schema`) with an opaque payload: the path a real plugin edit takes through the hub and the database, which never interpret a foreign diff." },
+            "payloadBytes": { "type": "integer", "minimum": 1, "maximum": 262144 },
+            "batchIdBase": { "type": "integer", "minimum": 0 },
+            "mutationIdPrefix": { "type": "string", "minLength": 1, "maxLength": 64 }
+          }
+        },
+        "bounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["concurrentDocumentsMin", "concurrentCreations", "longDocumentEditsMin", "ackWithinMs", "latencyWindowEdits", "latencyGrowthMax", "gracefulExitWithinMs", "restartWithinMs", "reopenWithinMs"],
+          "properties": {
+            "concurrentDocumentsMin": { "type": "integer", "minimum": 1 },
+            "concurrentCreations": { "type": "integer", "minimum": 1, "maximum": 8, "description": "Creations in flight at once; the hub admits 8 concurrent creations." },
+            "longDocumentEditsMin": { "type": "integer", "minimum": 1 },
+            "ackWithinMs": { "type": "integer", "minimum": 1 },
+            "latencyWindowEdits": { "type": "integer", "minimum": 1 },
+            "latencyGrowthMax": { "type": "number", "exclusiveMinimum": 1 },
+            "gracefulExitWithinMs": { "type": "integer", "minimum": 1 },
+            "restartWithinMs": { "type": "integer", "minimum": 1 },
+            "reopenWithinMs": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "shutdown": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["databaseClosedMarker"],
+          "properties": { "databaseClosedMarker": { "type": "string", "minLength": 1 } }
+        },
+        "refusalMarkers": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "steps": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" } }
+      }
+    }
+  }
+}

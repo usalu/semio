@@ -37,7 +37,7 @@ impl Deserializer<SequenceSnapshot> for CsvIntoSequence {
                 SequenceStep {
                     id,
                     kind: "computation.import".into(),
-                    params: StepParams::new().insert("value", neural_engine::Value::Atom(neural_engine::Atom::String(serde_json::to_string(&values).unwrap_or_default()))),
+                    params: StepParams::new().insert("value", neural_engine::Value::Atom(neural_engine::Atom::String(dsl::os_pack::to_json_string(&values)))),
                     x: index as f64 * 280.0,
                     y: 0.0,
                     slot: None,

@@ -513,5 +513,6 @@
       "artifactKind": "s.none.none",
       "owner": null
     }
-  ]
+  ],
+  "catalogOnlyCases": [{"id": "device-lists-everything-but-draw", "local": ["flow", "gis", "loop-a", "loop-b", "orphan", "shared-a", "shared-b", "stdio"], "hubOnly": ["draw"]}, {"id": "extensions-are-never-plugins", "local": ["draw", "gis", "loop-a", "loop-b", "orphan", "shared-a", "shared-b", "stdio"], "hubOnly": ["flow"]}, {"id": "device-lists-everything", "local": ["draw", "flow", "gis", "loop-a", "loop-b", "orphan", "shared-a", "shared-b", "stdio"], "hubOnly": []}, {"id": "device-lists-nothing", "local": [], "hubOnly": ["draw", "flow", "gis", "loop-a", "loop-b", "orphan", "shared-a", "shared-b", "stdio"]}, {"id": "device-only-plugins-are-not-hub-rows", "local": ["note", "raster"], "hubOnly": ["draw", "flow", "gis", "loop-a", "loop-b", "orphan", "shared-a", "shared-b", "stdio"]}]
 }

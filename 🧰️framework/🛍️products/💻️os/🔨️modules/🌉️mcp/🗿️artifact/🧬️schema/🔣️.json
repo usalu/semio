@@ -29,6 +29,72 @@
           }
         }
       }
+    },
+    "UntrustedContentLawV1": {
+      "description": "Document-authored content reaches an agent only inside the untrusted envelope. A canary written into a document must appear inside every carrier's envelope and nowhere else in any tool result or resource; every hostile envelope must be refused by the envelope schema.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "law", "canary", "envelopeField", "plants", "carriers", "observers", "hostile"],
+      "properties": {
+        "$schema": { "type": "string", "minLength": 1 },
+        "law": { "type": "string", "minLength": 1 },
+        "canary": { "type": "string", "pattern": "^[ -~]{24,}$" },
+        "envelopeField": { "const": "untrusted" },
+        "plants": {
+          "description": "How a collaborator writes the canary into a document, per lane: create `artifactKind`, then invoke `capabilityId` with `input`, every `{{canary}}` in its strings replaced by the canary.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["lane", "artifactKind", "capabilityId", "input"],
+            "properties": {
+              "lane": { "enum": ["headless", "shell"] },
+              "artifactKind": { "type": "string", "minLength": 1 },
+              "capabilityId": { "type": "string", "minLength": 1 },
+              "input": { "type": "object" }
+            }
+          }
+        },
+        "carriers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["surface", "name", "source"],
+            "properties": {
+              "surface": { "enum": ["tool", "resource"] },
+              "name": { "type": "string", "minLength": 1 },
+              "source": { "enum": ["artifact-body", "artifact-export", "hub-checkpoint", "space-directory"] }
+            }
+          }
+        },
+        "observers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["surface", "name"],
+            "properties": { "surface": { "enum": ["tool", "resource", "list"] }, "name": { "type": "string", "minLength": 1 } }
+          }
+        },
+        "hostile": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "path", "value"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "path": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+              "value": {}
+            }
+          }
+        }
+      }
     }
   }
 }

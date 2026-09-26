@@ -639,6 +639,14 @@ pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("edit", InteractiveJobClassification::Migrated)
             .default_layout(edit_mode::layout())
             .io(block5d_io())
+            .action_describe("patchPartKind", LocalizedLabel::native("Sets one field of the 5D block's part kind: its name, label, variant, description or icon.", "Setzt ein Feld der Teilart des 5D-Blocks: Name, Bezeichnung, Variante, Beschreibung oder Symbol."))
+            .action_describe("addGripKind", LocalizedLabel::native("Adds a new grip kind (a named, coloured connector type with a default rope kind) to the 5D block.", "Fügt dem 5D-Block eine neue Griffart hinzu (einen benannten, farbigen Verbindertyp mit Standard-Seilart)."))
+            .action_describe("removeGripKind", LocalizedLabel::native("Removes one grip kind by id from the 5D block.", "Entfernt eine Griffart anhand ihrer Id aus dem 5D-Block."))
+            .action_describe("addGrip", LocalizedLabel::native("Adds a new grip of the first grip kind with default 2D and 3D placement; without any grip kind nothing happens.", "Fügt einen neuen Griff der ersten Griffart mit Standard-2D- und -3D-Platzierung hinzu; ohne Griffart geschieht nichts."))
+            .action_describe("removeGrip", LocalizedLabel::native("Removes one grip by id from the 5D block.", "Entfernt einen Griff anhand seiner Id aus dem 5D-Block."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Loads one of the plugin's bundled 5D block examples into the document, replacing what differs, by example id.", "Lädt eines der mitgelieferten 5D-Block-Beispiele in das Dokument und ersetzt Abweichendes, anhand der Beispiel-Id."))
+            .action_describe("edit", LocalizedLabel::native("Replaces the whole 5D block document with one parsed from the given JSON text; invalid or identical JSON changes nothing.", "Ersetzt das gesamte 5D-Block-Dokument durch eines aus dem angegebenen JSON-Text; ungültiges oder identisches JSON ändert nichts."))
+            .action_destructive("edit")
             .build_definition()
 }
 //#endregion 🔖️Manifest

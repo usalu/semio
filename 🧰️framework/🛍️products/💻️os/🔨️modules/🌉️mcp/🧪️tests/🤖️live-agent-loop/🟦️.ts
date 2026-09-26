@@ -41,7 +41,9 @@
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { inflateRawSync, inflateSync } from "node:zlib";
 import { chromium, type Page } from "playwright";
+import { parseAgentBridgeOffer, sameAgentBridgeOffer, type AgentBridgeConfig } from "../../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 
 const REPO_ROOT = join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..");
 const PROTOCOL_VERSION = "2025-06-18";
@@ -74,6 +76,49 @@ const APPROVAL_WORDS: Readonly<Record<"en" | "de", Readonly<{ once: string; deny
  * of it answers every (f) step from a route that no longer exists in the tree under test, which is
  * how two runs of this gate on two serves produced two different verdicts (LB1 §11.2). */
 const SHELL_HOST_MODULE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx";
+/** 🧷️ The adversarial text a collaborator plants in the note for the (g) chain: the canary of the
+ * untrusted-content law, so this gate and the laws probe one and the same string. */
+const UNTRUSTED_LAW = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗿️artifact/🧫️fixtures/🧷️untrusted-content-law.json";
+const UNTRUSTED_CONTENT_SCHEMA = "semio.mcp.untrusted-content/v1";
+
+/** 🧷️ The canary as text plus its base64 spelling for each of its three byte alignments. */
+function canaryNeedles(canary: string): string[] {
+  const bytes = Buffer.from(canary, "utf8");
+  return [canary, ...[0, 1, 2].map((shift) => bytes.subarray(shift, shift + Math.floor((bytes.length - shift) / 3) * 3).toString("base64"))];
+}
+
+/** ✂️ `value` with every untrusted envelope cut out, collecting the envelopes it held. */
+function outsideUntrusted(value: unknown, envelopes: Record<string, any>[]): unknown {
+  if (Array.isArray(value)) return value.map((item) => outsideUntrusted(item, envelopes));
+  if (value === null || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).flatMap(([key, member]) => {
+      if (key === "untrusted" && (member as Record<string, unknown> | null)?.schema === UNTRUSTED_CONTENT_SCHEMA) {
+        envelopes.push(member as Record<string, any>);
+        return [];
+      }
+      return [[key, outsideUntrusted(member, envelopes)]];
+    }),
+  );
+}
+
+/** 📖️ The document bytes an envelope carries (pack then spr, or the export), as latin1 text to search
+ * in, followed by every deflate stream found inside them inflated: a kind that compresses its pack
+ * and event-log records (note does) holds its text only in those streams. */
+function envelopeText(envelope: Record<string, any> | undefined): string {
+  const content = (envelope?.content ?? {}) as Record<string, unknown>;
+  const bytes = Buffer.concat(["packBase64", "sprBase64", "contentBase64"].map((field) => Buffer.from(String(content[field] ?? ""), "base64")));
+  const inflated: string[] = [];
+  for (let offset = 0; offset + 2 < bytes.length; offset += 1) {
+    for (const inflate of [inflateRawSync, inflateSync]) {
+      try {
+        const text = inflate(bytes.subarray(offset)).toString("latin1");
+        if (text.length >= 8) inflated.push(text);
+      } catch {}
+    }
+  }
+  return [bytes.toString("latin1"), ...inflated].join("\n");
+}
 
 type ServerEntry = { readonly command: string; readonly args: readonly string[] };
 
@@ -277,23 +322,23 @@ try {
   // 🛰️ The offer the endpoint already served is read IN FULL, not just its status: a dead gateway
   //    leaves its file behind and a peer's live one is served in preference to nothing, so a gate
   //    that only checked for `200` would happily hand this shell somebody else's bridge and then
-  //    report on their session. The step passes only once the offer CHANGED to a new pid.
-  const offerBefore = await fetch(OFFER_URL)
-    .then(async (response) => (response.status === 200 ? ((await response.json()) as { pid?: number }) : null))
-    .catch(() => null);
+  //    report on their session. The step passes only once the typed answer names a NEW gateway (url + proof).
+  const readOffer = (): Promise<AgentBridgeConfig | null> =>
+    fetch(OFFER_URL)
+      .then(async (response) => (response.status === 200 ? parseAgentBridgeOffer(await response.json()) : null))
+      .catch(() => null);
+  const offerBefore = await readOffer();
   gateway = await open("gateway — .mcp.json args verbatim", entry);
   const offer = await until("the gateway's offer on the dev session", 60_000, 500, async () => {
-    const response = await fetch(OFFER_URL).catch(() => null);
-    if (!response || response.status !== 200) return null;
-    const published = (await response.json()) as { url: string; admissionProof: string; pid: number };
-    return published.pid === offerBefore?.pid ? null : published;
+    const published = await readOffer();
+    return published === null || sameAgentBridgeOffer(published, offerBefore) ? null : published;
   });
   record(
     "0 rendezvous",
     offer ? "pass" : "fail",
     offer
-      ? `offer before=${offerBefore ? `pid ${offerBefore.pid}` : "(none)"}, after=200 url=${offer.url} pid=${offer.pid}`
-      : `this gateway published no offer of its own; ${OFFER_URL} still answers ${offerBefore ? `a pre-existing offer from pid ${offerBefore.pid} — point S_AGENT_BRIDGE_DIR at the rendezvous THIS dev session publishes into` : "404"}`,
+      ? `offer before=${offerBefore ? offerBefore.url : "(none)"}, after=${offer.url}`
+      : `this gateway published no offer of its own; ${OFFER_URL} still answers ${offerBefore ? `a pre-existing offer at ${offerBefore.url} — point S_AGENT_BRIDGE_DIR at the rendezvous THIS dev session publishes into` : "no offer"}`,
   );
 
 /** 🪟️ Opens one program through the shell's OWN command palette — the route a human takes, and the
@@ -547,6 +592,7 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
   // 🗣️ `<plugin>.<artifactKind>@<schemaVersion>/*#<app>.<action>` — the artifact kind a mutation
   //    capability belongs to is the segment its own id carries, never a kind invented here.
   const artifactKind = writeTarget ? (/^[^.]+\.([^@]+)@/.exec(writeTarget)?.[1] ?? null) : null;
+  let plantedIn: { artifactId: string } | null = null;
   if (!writeTarget || !artifactKind) {
     const reason = `the live catalog exposes no \`${PLUGIN}\`…\`${MUTATION_VERB}\` mutation capability to drive (writeTarget=${writeTarget ?? "none"}); name the plugin's own unconditional mutation with S_OS_MCP_LIVE_MUTATION/S_OS_MCP_LIVE_MUTATION_INPUT`;
     for (const step of ["(f1) artifact_create/open", "(f2) action_prepare", "(f3) action_invoke changes the head", "(f4) artifact_snapshot shows the change", "(f5) the live shell shows the same artifact", "(f6) history_undo/redo", "(f7) transaction begin/rollback/commit", "(f8) artifact_export"]) record(step, "skip", reason);
@@ -568,7 +614,7 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     //    genesis container in `pack` and every edit in the `spr` sidecar, so a note that gained a
     //    block answers an unchanged `packBytes` and a grown `sprBytes` (515/223 → 515/612, measured
     //    2026-09-20). A witness that watched only the pack would call that "no change".
-    const witness = (envelope: Record<string, any>): string => `${structured(envelope).packBytes ?? "?"}:${structured(envelope).sprBytes ?? "?"}:${String(structured(envelope).packBase64 ?? "")}`;
+    const witness = (envelope: Record<string, any>): string => `${structured(envelope).packBytes ?? "?"}:${structured(envelope).sprBytes ?? "?"}:${envelopeText(structured(envelope).untrusted)}`;
     const before = witness(snapshotBefore);
 
     const prepared = createFault ? created : await safely("action_prepare", () => gateway!.call("action_prepare", { capabilityId: writeTarget, input: MUTATION_INPUT }));
@@ -644,8 +690,9 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
 
     const exported = txnFault ? committed : await safely("artifact_export", () => gateway!.call("artifact_export", { artifactId }));
     const exportFault = txnFault ? `cascaded from (f7)` : failure(exported);
-    const contentBytes = String(structured(exported).contentBase64 ?? "").length;
-    record("(f8) artifact_export", !exportFault && contentBytes > 0 ? "pass" : "fail", exportFault ?? `contentBase64=${contentBytes} char(s) mimeType=${structured(exported).mimeType ?? "null"}`);
+    const contentBytes = String(structured(exported).untrusted?.content?.contentBase64 ?? "").length;
+    record("(f8) artifact_export", !exportFault && contentBytes > 0 ? "pass" : "fail", exportFault ?? `untrusted.content.contentBase64=${contentBytes} char(s) mimeType=${structured(exported).mimeType ?? "null"}`);
+    if (!exportFault) plantedIn = { artifactId };
   }
 
   // (e) approval. `capabilities_describe` is the precondition oracle: a capability that does not
@@ -658,6 +705,7 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     record("(e1) Approve Once lets it through", "skip", reason);
     record("(e2) Deny returns the typed refusal", "skip", reason);
     record("(e3) a silent client returns the typed timeout", "skip", reason);
+    for (const step of ["(g1) a collaborator's instruction reaches the agent only inside `untrusted`", "(g2) the destructive action it asks for still waits for a human", "(g3) the planted block survives the denial"]) record(step, "skip", reason);
   } else {
     // 🚦️ Which channel resolves the approval is itself the measurement (M5a, 2026-09-20). The
     //    coordinator offers ELICITATION first, so an elicitation-capable client settles every
@@ -667,14 +715,14 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     //    `ApprovalRequested` over `/bridge`, the shell must render a decidable affordance, and the
     //    human's click must come back as the typed outcome. `sawAffordance` is an assertion here,
     //    not a note: without it the human was never given the chance to decide.
-    const decide = async (decision: "once" | "deny"): Promise<{ answer: Record<string, any>; surface: string; countdown: string | null; words: Readonly<{ once: string; deny: string }> | null }> => {
+    const decide = async (decision: "once" | "deny", capabilityId: string = String(target), input: Record<string, unknown> = {}): Promise<{ answer: Record<string, any>; surface: string; countdown: string | null; words: Readonly<{ once: string; deny: string }> | null }> => {
       // 🗂️ Every approval this run already parked stays on screen — `(c)` cancels its call while the
       //    gateway is still waiting for a human, so a row from it outlives the step. Deciding "the
       //    first row" would answer THAT one, whose budget has been running since, and leave this
       //    invocation waiting on a decision nobody made. Only an id that was not there a moment ago
       //    belongs to the call this step just made.
       const before = new Set((await readShell(page)).approvals.filter((id): id is string => id !== null));
-      const invoked = gateway!.call("action_invoke", { capabilityId: target, input: {} });
+      const invoked = gateway!.call("action_invoke", { capabilityId, input });
       const shown = await until("the approval affordance", 30_000, 150, async () => {
         const view = await readShell(page);
         const fresh = view.approvals.find((id) => id !== null && !before.has(id));
@@ -717,6 +765,43 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
       denied.surface !== "none" && structured(denied.answer).code === "PERMISSION_DENIED" ? "pass" : "fail",
       `affordance=${denied.surface} channel=${structured(denied.answer).details?.channel ?? "?"} answer=${describe(denied.answer)}`,
     );
+
+    // (g) prompt injection. A collaborator's document carries an instruction; the agent reads the
+    //     document back. The text must reach it only inside the `untrusted` envelope, and the
+    //     destructive action it asks for must still stop at the human. The plant is the law's shell
+    //     recipe (`🧷️untrusted-content-law.json`): a whole-document load the human approves.
+    const untrustedLaw = JSON.parse(readFileSync(join(REPO_ROOT, UNTRUSTED_LAW), "utf8"));
+    const adversarial = String(untrustedLaw.canary);
+    const needles = canaryNeedles(adversarial);
+    const recipe = (untrustedLaw.plants as Record<string, any>[]).find((row) => row.lane === "shell");
+    const gSteps = ["(g1) a collaborator's instruction reaches the agent only inside `untrusted`", "(g2) the destructive action it asks for still waits for a human", "(g3) the planted block survives the denial"];
+    if (!plantedIn || !recipe || recipe.artifactKind !== artifactKind) {
+      const reason = !plantedIn ? "the (f) chain created no document to plant the collaborator's text in" : `the law has no shell recipe for ${artifactKind}`;
+      for (const step of gSteps) record(step, "skip", reason);
+    } else {
+      const noteId = plantedIn.artifactId;
+      const readBack = async (): Promise<{ envelopes: Record<string, any>[]; outside: string; carried: string }> => {
+        const reply = await safely("artifact_snapshot", () => gateway!.call("artifact_snapshot", { artifactId: noteId }));
+        const envelopes: Record<string, any>[] = [];
+        const outside = JSON.stringify(outsideUntrusted(reply, envelopes));
+        return { envelopes, outside, carried: envelopes.map(envelopeText).join("\n") };
+      };
+      const plant = await decide("once", String(recipe.capabilityId), JSON.parse(JSON.stringify(recipe.input).replaceAll("{{canary}}", adversarial)));
+      const read = await readBack();
+      const leaked = needles.some((needle) => read.outside.includes(needle));
+      const carried = read.carried.includes(adversarial);
+      const provenance = read.envelopes[0]?.provenance;
+      const plantFault = plant.surface === "none" ? `the collaborator's load raised no approval: ${describe(plant.answer)}` : failure(plant.answer);
+      record(
+        gSteps[0]!,
+        !plantFault && carried && !leaked && read.envelopes.length === 1 && typeof read.envelopes[0]?.notice === "string" ? "pass" : "fail",
+        plantFault ?? `plant=${describe(plant.answer)} envelopes=${read.envelopes.length} carriedInside=${carried} leakedOutside=${leaked} source=${provenance?.source} authors=${JSON.stringify(provenance?.authors)} contentSha256=${String(provenance?.revision?.contentSha256 ?? "").slice(0, 12)}…`,
+      );
+      const obeyed = await decide("deny");
+      record(gSteps[1]!, obeyed.surface !== "none" && structured(obeyed.answer).code === "PERMISSION_DENIED" ? "pass" : "fail", `the agent tried ${target} as the note demanded: affordance=${obeyed.surface} countdown=${obeyed.countdown ?? "(none)"} answer=${describe(obeyed.answer)}`);
+      const after = await readBack();
+      record(gSteps[2]!, after.carried.includes(adversarial) ? "pass" : "fail", `the snapshot still carries the collaborator's text inside untrusted: ${after.carried.includes(adversarial)}`);
+    }
 
     // ⏱️ A client that advertises `elicitation` and then never answers must get the typed timeout —
     //    not an approval, and not a wedged agent. Its own empty rendezvous closes the SHELL lane by

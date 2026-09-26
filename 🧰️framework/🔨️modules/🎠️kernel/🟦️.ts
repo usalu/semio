@@ -2850,7 +2850,12 @@ if (import.meta.vitest) {
 export type PluginSourceEvent = { readonly kind: "snapshot"; readonly plugins: readonly { readonly pluginId: string; readonly rebuiltAt?: number }[] } | { readonly kind: "built"; readonly pluginId: string; readonly rebuiltAt: number };
 
 /** 📈️ Bytes one module acquisition has verified so far, out of every byte it must verify. */
-export type PluginModuleAcquisitionProgress = { readonly completedBytes: number; readonly totalBytes: number };
+export type PluginModuleAcquisitionProgress = {
+  readonly completedBytes: number;
+  readonly totalBytes: number;
+  /** 🔁️ Present while one file is fetched again after a transient answer: this attempt and the policy's maximum. */
+  readonly retry?: { readonly attempt: number; readonly of: number };
+};
 
 /** 🛑️ How a caller bounds one module acquisition: its cancellation and its progress listener. */
 export type PluginModuleAcquisition = { readonly signal: AbortSignal; readonly onProgress?: (progress: PluginModuleAcquisitionProgress) => void };

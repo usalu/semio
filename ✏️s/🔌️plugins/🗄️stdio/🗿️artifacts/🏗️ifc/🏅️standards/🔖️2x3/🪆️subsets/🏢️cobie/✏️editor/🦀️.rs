@@ -200,6 +200,10 @@ impl ArtifactOwnedToolJobFactory for Ifc2x3CobieEditorExampleFactory {
 pub struct Ifc2x3CobieEditor;
 
 impl ArtifactEditor for Ifc2x3CobieEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = Ifc2x3Snapshot;
     type Mutation = Ifc2x3Mutation;
     type Config = NoConfig;

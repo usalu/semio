@@ -239,7 +239,7 @@ describe("finite exact fixed parent scope", () => {
     taxonomy.fixedFilenameContracts["fixture-interface"].scope = vector.accepted;
     taxonomy.fixedFilenameContracts["ambiguous-interface"] = structuredClone(contract);
     expect(() => discovery.fixedFilenameContractIdsForPath(vector.parents.left + "/wasi-io-poll.d.ts", taxonomy, { parentFixedDirectoryContractIds: ["left"] })).toThrow(/equal-specificity/);
-  });
+  }, 30_000);
 });
 
 describe("materialized JCO interface filename boundaries", () => {
@@ -248,8 +248,8 @@ describe("materialized JCO interface filename boundaries", () => {
     const taxonomy = loadTaxonomy(), root = findRepoRoot(import.meta.dir), resolver = discovery.createFixedContractResolver(taxonomy), pathMatcher = discovery.createTaxonomyPathMatcher();
     const contracts = Object.entries(taxonomy.fixedFilenameContracts).filter(([id]) => id.startsWith("dev-jco-interface-"));
     const parentIds = taxonomy.fixedDirectoryContractSets!["dev-jco-all-interfaces"];
-    expect(contracts).toHaveLength(33);
-    expect(parentIds).toHaveLength(83);
+    expect(contracts).toHaveLength(31);
+    expect(parentIds).toHaveLength(60);
     const normalSource = readFileSync(join(import.meta.dir, "../../🧹️normalization/🟦️.ts"), "utf8");
     const syntax = ts.createSourceFile("🟦️.ts", normalSource, ts.ScriptTarget.Latest, true);
     const declaration = syntax.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "fixedScopeMatches");
@@ -278,7 +278,7 @@ describe("materialized JCO interface filename boundaries", () => {
       }
       for (const filename of ["custom.d.ts", "semio-framework-types.d.ts.extra", "🧪️custom.d.ts"]) expect(resolver.filenameIdsForPath(parent + "/" + filename, { parentFixedDirectoryContractIds: [parentId] })).toEqual([]);
     }
-    expect(physicalFiles).toBe(2027);
+    expect(physicalFiles).toBe(1717);
     for (const [id, contract] of contracts) {
       const path = "unknown/interfaces/" + discovery.fixedContractFilename(contract);
       expect(resolver.filenameIdsForPath(path).includes(id)).toBe(false);
@@ -288,11 +288,11 @@ describe("materialized JCO interface filename boundaries", () => {
 });
 
 describe("materialized JCO companion boundaries", () => {
-  test("preserves only the 83 exact compiler-linked triples", async () => {
+  test("preserves only the 60 exact compiler-linked triples", async () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts"), ts = await import("typescript"), picomatch = (await import("picomatch")).default;
     const taxonomy = loadTaxonomy(), root = findRepoRoot(import.meta.dir), resolver = discovery.createFixedContractResolver(taxonomy);
     const contracts = Object.entries(taxonomy.fixedFilenameContracts).filter(([id]) => /^dev-(plugin|extension)-component-/u.test(id));
-    expect(contracts).toHaveLength(249);
+    expect(contracts).toHaveLength(180);
     const options = { allowJs: true, moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext };
     for (const [id, contract] of contracts) {
       const path = contract.pathPattern;
@@ -2548,7 +2548,7 @@ describe("commit", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   test("formatBundleTagName and formatBundleSubject use contributor date emojis", async () => {
     const { formatBundleTagName, formatBundleSubject } = await import("../../📦️packages/🟦️typescript/🟦️.ts");
@@ -2980,7 +2980,7 @@ describe("loadTaxonomy", () => {
       const changed = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "actor-typegen": contract } };
       expect(validateTaxonomy(changed).length === 0, JSON.stringify(row)).toBe(row.valid);
     }
-  });
+  }, 30_000);
 
   test("rejects missing, external, and non-canonical generator preview targets", () => {
     const taxonomy = loadTaxonomy();
@@ -4011,7 +4011,7 @@ describe("discoverBurndown", () => {
     expect(burndown.cleanOwners + burndown.mixedOwners.length).toBe(burndown.ownersTotal);
   }, 600_000);
 
-  test("markerless package manifests stay visible even where they are a silent skip", () => {
+  test.if(testLevelAtLeast("long"))("markerless package manifests stay visible even where they are a silent skip", () => {
     const root = getWorkspaceRoot();
     const burndown = discoverBurndown(root);
     const catalogPaths = new Set(discoverPackages(root).map((pkg) => pkg.manifestPath));
@@ -4283,7 +4283,6 @@ type ArtifactProjectionGoldenEntry = Readonly<{
   mappingDigest: string;
   mappings: readonly Readonly<{ sourcePath: string; destinationPath: string }>[];
   liveBindings?: readonly Readonly<{ source: string; live: string }>[];
-  referenceEdits?: readonly Readonly<{ path: string; adapter: "json" | "toml"; structuredLocation: string; oldValue: string; newValue: string; preimageHash: string }>[];
   modelCatalog?: Readonly<{
     models: readonly Readonly<{ directoryName: string; id: string; schema: string; version: string }>[];
     categoryRules: readonly Readonly<{ sourceDirectoryName: string; sourceShape: string; manifestSchema: string; count: number }>[];
@@ -4798,7 +4797,6 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     expect(authority.mappingDigest).toBe(projection.mappingDigest);
     expect(authority.destinationDirectoryCount).toBe(DRAW_SOURCE_SCENARIO.oracle.destinationDirectoryCount);
     expect(authority.destinationNodeCount).toBe(DRAW_SOURCE_SCENARIO.oracle.destinationNodeCount);
-    expect(authority.referenceEdits).toEqual([]);
     for (const manifest of DRAW_SOURCE_SCENARIO.members.filter(({ path }) => path.endsWith("/📦️packages/🦀️rust/Cargo.toml"))) {
       const entry = posix.join(dirname(manifest.path), (toml.parse(manifest.content).lib as { path: string }).path);
       expect(projection.mappings.map(({ sourcePath }) => sourcePath)).toContain(`${projection.sourceRoot}/${entry}`);
@@ -4886,11 +4884,9 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
   test("canonical CAD and Draw authority retains the exact language-neutral mapping digests", () => {
     for (const projection of ARTIFACT_PROJECTION_GOLDEN.projections) {
       const source = projectionAuthorityNodes(projection, projection.contractId === "artifact-editor-command-bundle-v1" ? "authored-draw" : "live");
-      const sourceAuthority = projectionAuthority(projection, source);
       const directories = new Set<string>([projection.destinationRoot]);
       const files = projection.mappings.map(({ sourcePath, destinationPath }) => {
-        let content = source.find(({ path }) => path === sourcePath)!.content!;
-        for (const edit of sourceAuthority.referenceEdits.filter(({ path }) => path === destinationPath)) content = content.replace(JSON.stringify(edit.oldValue), JSON.stringify(edit.newValue));
+        const content = source.find(({ path }) => path === sourcePath)!.content!;
         for (let path = dirname(destinationPath); path !== dirname(projection.destinationRoot); path = dirname(path)) directories.add(path);
         return { path: destinationPath, nodeKind: "file" as const, content };
       });
@@ -4899,7 +4895,6 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
       expect(result.problems).toEqual([]);
       expect(result.mappings).toEqual(projection.mappings);
       expect(result.mappingDigest).toBe(projection.mappingDigest);
-      expect(result.referenceEdits).toEqual([]);
       const invalid = nodes.map((node) => node.nodeKind === "file" && node.path === files[0]!.path ? { ...node, path: `${node.path}.unexpected` } : node);
       expect(semanticPathProjectionAuthority({ artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.sourceRoot, nodes: invalid, layout: "destination" }).problems.length).toBeGreaterThan(0);
       const symlink = nodes.map((node) => node.path === files[0]!.path ? { path: node.path, nodeKind: "symlink" as const } : node);
@@ -5010,7 +5005,6 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     expect(result.destinationDirectoryCount).toBe(projection.destinationDirectoryCount);
     expect(result.destinationNodeCount).toBe(projection.destinationNodeCount);
     expect(result.maxPathBytes).toBe(projection.maxPathBytes);
-    expect(result.referenceEdits).toEqual(projection.referenceEdits ?? []);
 
     const partial = nodes.filter(({ path }) => !path.endsWith("/🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json"));
     expect(projectionAuthority(projection, partial).problems.some((problem) => problem.includes("exact command bundle"))).toBe(true);

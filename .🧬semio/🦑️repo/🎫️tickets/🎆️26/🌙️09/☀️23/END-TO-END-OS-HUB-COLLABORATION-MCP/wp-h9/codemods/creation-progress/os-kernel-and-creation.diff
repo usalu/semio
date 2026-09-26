@@ -1,0 +1,411 @@
+diff --git a/🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/🦀️.rs b/🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/🦀️.rs
+index 98e6dc4bff..6a27a869c8 100644
+--- a/🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/🦀️.rs
++++ b/🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/🦀️.rs
+@@ -271,6 +271,7 @@ impl ArtifactCreationServiceV1 {
+                     catalog_generation_id: intent.catalog_generation.clone(),
+                     phase: SpaceArtifactCreationPhaseV1::Indeterminate,
+                     ready: None,
++                    progress: None,
+                 })
+             }
+             Err(error) => self.terminal(intent, matches!(error, AuthorityError::Cancelled), &format!("genesis publication failed: {error}"), context).await,
+diff --git a/🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🦀️.rs b/🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🦀️.rs
+index 11ad915c89..570ba6b5f1 100644
+--- a/🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🦀️.rs
++++ b/🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🦀️.rs
+@@ -293,6 +293,7 @@ impl ArtifactCreationIntentV1 {
+                 catalog_generation_id: self.catalog_generation.clone(),
+                 phase: SpaceArtifactCreationPhaseV1::Accepted,
+                 ready: None,
++                progress: None,
+             })
+             .validate()
+             || !self.ready().validate()
+@@ -433,6 +434,7 @@ impl ArtifactCreationOperationV1 {
+             catalog_generation_id: self.intent.catalog_generation.clone(),
+             phase: self.phase,
+             ready: self.receipt.as_ref().map(|receipt| receipt.ready.clone()),
++            progress: None,
+         }
+     }
+ }
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json b/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json
+index 3e00fe515d..48a8dbf997 100644
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json
+@@ -651,6 +651,151 @@
+         }
+       },
+       "accepted": false
++    },
++    {
++      "id": "accepted-queued",
++      "value": {
++        "schema": "semio.hub.space-artifact-creation-status/v1",
++        "requestId": "1234567890abcdef1234567890abcdef",
++        "spaceId": "space-fixture",
++        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
++        "phase": "accepted",
++        "progress": {
++          "stage": "queued",
++          "completedUnits": 0,
++          "totalUnits": 1
++        }
++      },
++      "accepted": true
++    },
++    {
++      "id": "preparing-compiling-guest",
++      "value": {
++        "schema": "semio.hub.space-artifact-creation-status/v1",
++        "requestId": "1234567890abcdef1234567890abcdef",
++        "spaceId": "space-fixture",
++        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
++        "phase": "preparing",
++        "progress": {
++          "stage": "compiling-guest",
++          "completedUnits": 0,
++          "totalUnits": 1
++        }
++      },
++      "accepted": true
++    },
++    {
++      "id": "preparing-genesis",
++      "value": {
++        "schema": "semio.hub.space-artifact-creation-status/v1",
++        "requestId": "1234567890abcdef1234567890abcdef",
++        "spaceId": "space-fixture",
++        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
++        "phase": "preparing",
++        "progress": {
++          "stage": "genesis",
++          "completedUnits": 25000000,
++          "totalUnits": 4000000000
++        }
++      },
++      "accepted": true
++    },
++    {
++      "id": "preparing-publishing",
++      "value": {
++        "schema": "semio.hub.space-artifact-creation-status/v1",
++        "requestId": "1234567890abcdef1234567890abcdef",
++        "spaceId": "space-fixture",
++        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
++        "phase": "preparing",
++        "progress": {
++          "stage": "publishing",
++          "completedUnits": 3,
++          "totalUnits": 7
++        }
++      },
++      "accepted": true
++    },
++    {
++      "id": "failed-leaks-progress",
++      "value": {
++        "schema": "semio.hub.space-artifact-creation-status/v1",
++        "requestId": "1234567890abcdef1234567890abcdef",
++        "spaceId": "space-fixture",
++        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
++        "phase": "failed",
++        "progress": {
++          "stage": "genesis",
++          "completedUnits": 1,
++          "totalUnits": 2
++        }
++      },
++      "accepted": false
++    },
++    {
++      "id": "cancelled-leaks-progress",
++      "value": {
++        "schema": "semio.hub.space-artifact-creation-status/v1",
++        "requestId": "1234567890abcdef1234567890abcdef",
++        "spaceId": "space-fixture",
++        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
++        "phase": "cancelled",
++        "progress": {
++          "stage": "queued",
++          "completedUnits": 0,
++          "totalUnits": 1
++        }
++      },
++      "accepted": false
++    },
++    {
++      "id": "preparing-unknown-stage",
++      "value": {
++        "schema": "semio.hub.space-artifact-creation-status/v1",
++        "requestId": "1234567890abcdef1234567890abcdef",
++        "spaceId": "space-fixture",
++        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
++        "phase": "preparing",
++        "progress": {
++          "stage": "thinking",
++          "completedUnits": 0,
++          "totalUnits": 1
++        }
++      },
++      "accepted": false
++    },
++    {
++      "id": "preparing-zero-total",
++      "value": {
++        "schema": "semio.hub.space-artifact-creation-status/v1",
++        "requestId": "1234567890abcdef1234567890abcdef",
++        "spaceId": "space-fixture",
++        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
++        "phase": "preparing",
++        "progress": {
++          "stage": "genesis",
++          "completedUnits": 0,
++          "totalUnits": 0
++        }
++      },
++      "accepted": false
++    },
++    {
++      "id": "preparing-completed-exceeds-total",
++      "value": {
++        "schema": "semio.hub.space-artifact-creation-status/v1",
++        "requestId": "1234567890abcdef1234567890abcdef",
++        "spaceId": "space-fixture",
++        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
++        "phase": "preparing",
++        "progress": {
++          "stage": "publishing",
++          "completedUnits": 8,
++          "totalUnits": 7
++        }
++      },
++      "accepted": false,
++      "schemaValid": true
+     }
+   ],
+   "catalogs": [
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts b/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts
+index 87792e8eed..6fc6737506 100644
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts
+@@ -32,6 +32,15 @@ export type SpaceArtifactCreationReadyV1 = Readonly<{
+   parentDialect: SpaceArtifactCreationDialectV1;
+ }>;
+ 
++/** 📈️ Where a running creation is; only `accepted`/`preparing` report it, and `completedUnits <= totalUnits`. */
++export type SpaceArtifactCreationStageV1 = "queued" | "compiling-guest" | "genesis" | "publishing";
++
++export type SpaceArtifactCreationProgressV1 = Readonly<{
++  stage: SpaceArtifactCreationStageV1;
++  completedUnits: number;
++  totalUnits: number;
++}>;
++
+ export type SpaceArtifactCreationStatusV1 = Readonly<{
+   schema: typeof SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1;
+   requestId: string;
+@@ -39,6 +48,7 @@ export type SpaceArtifactCreationStatusV1 = Readonly<{
+   catalogGenerationId: string;
+   phase: SpaceArtifactCreationPhaseV1;
+   ready?: SpaceArtifactCreationReadyV1;
++  progress?: SpaceArtifactCreationProgressV1;
+ }>;
+ 
+ export type SpaceArtifactCreationKindV1 = Readonly<{
+@@ -140,7 +150,19 @@ export function parseSpaceArtifactCreateJsonV1(source: string): SpaceArtifactCre
+   return result;
+ }
+ 
+-/** 📤️ Decodes one canonical, bounded server status and withholds incomplete ready tuples. */
++/** 📈️ One exact progress record, or `null`. */
++function creationProgress(value: unknown): SpaceArtifactCreationProgressV1 | null {
++  const row = record(value);
++  const stages: readonly SpaceArtifactCreationStageV1[] = ["queued", "compiling-guest", "genesis", "publishing"];
++  if (row === null || !exactFields(row, ["stage", "completedUnits", "totalUnits"]) || !stages.includes(row.stage as SpaceArtifactCreationStageV1)) return null;
++  const completedUnits = row.completedUnits,
++    totalUnits = row.totalUnits;
++  if (!Number.isSafeInteger(completedUnits) || !Number.isSafeInteger(totalUnits) || (totalUnits as number) < 1 || (completedUnits as number) < 0 || (completedUnits as number) > (totalUnits as number)) return null;
++  return { stage: row.stage as SpaceArtifactCreationStageV1, completedUnits: completedUnits as number, totalUnits: totalUnits as number };
++}
++
++/** 📤️ Decodes one canonical, bounded server status and withholds incomplete ready tuples; only a running
++ * creation carries progress. */
+ export function parseSpaceArtifactCreationStatusJsonV1(source: string): SpaceArtifactCreationStatusV1 {
+   if (new TextEncoder().encode(source).byteLength > SPACE_ARTIFACT_CREATION_MAX_BYTES) throw new Error("space artifact creation status: capacity");
+   const row = record(JSON.parse(source));
+@@ -150,11 +172,16 @@ export function parseSpaceArtifactCreationStatusJsonV1(source: string): SpaceArt
+     parsedRequestId = requestId(row.requestId),
+     spaceId = identity(row.spaceId),
+     catalogGenerationId = digest(row.catalogGenerationId),
+-    parsedReady = row.ready === undefined ? undefined : ready(row.ready);
++    parsedReady = row.ready === undefined ? undefined : ready(row.ready),
++    parsedProgress = row.progress === undefined ? undefined : creationProgress(row.progress),
++    running = phase === "accepted" || phase === "preparing";
+   if (row.schema !== SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1 || parsedRequestId === null || spaceId === null || catalogGenerationId === null || phase === null) throw new Error("space artifact creation status: invalid owner");
+-  if (!exactFields(row, phase === "ready" ? ["schema", "requestId", "spaceId", "catalogGenerationId", "phase", "ready"] : ["schema", "requestId", "spaceId", "catalogGenerationId", "phase"])) throw new Error("space artifact creation status: invalid fields");
++  const fields = ["schema", "requestId", "spaceId", "catalogGenerationId", "phase", ...(phase === "ready" ? ["ready"] : []), ...(running && row.progress !== undefined ? ["progress"] : [])];
++  if (!exactFields(row, fields)) throw new Error("space artifact creation status: invalid fields");
+   if ((phase === "ready") !== (parsedReady !== undefined && parsedReady !== null)) throw new Error("space artifact creation status: invalid ready");
+-  const result: SpaceArtifactCreationStatusV1 = phase === "ready" ? { schema: SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1, requestId: parsedRequestId, spaceId, catalogGenerationId, phase, ready: parsedReady! } : { schema: SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1, requestId: parsedRequestId, spaceId, catalogGenerationId, phase };
++  if (parsedProgress === null) throw new Error("space artifact creation status: invalid progress");
++  const base = { schema: SPACE_ARTIFACT_CREATION_STATUS_SCHEMA_V1, requestId: parsedRequestId, spaceId, catalogGenerationId, phase } as const;
++  const result: SpaceArtifactCreationStatusV1 = phase === "ready" ? { ...base, ready: parsedReady! } : parsedProgress !== undefined ? { ...base, progress: parsedProgress } : base;
+   if (JSON.stringify(result) !== source) throw new Error("space artifact creation status: noncanonical");
+   return result;
+ }
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs
+index c2b2ce4f77..7c4dc1e788 100644
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs
+@@ -170,6 +170,36 @@ pub enum SpaceArtifactCreationPhaseV1 {
+     Cancelled,
+ }
+ 
++/// 🧭️ The stage a running creation reports (`SpaceArtifactCreationProgress.stage`).
++#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
++#[serde(rename_all = "kebab-case")]
++#[value(rename_all = "kebab-case")]
++pub enum SpaceArtifactCreationStageV1 {
++    Queued,
++    CompilingGuest,
++    Genesis,
++    Publishing,
++}
++
++/// 📈️ Where a running creation is (`SpaceArtifactCreationProgress`); `completed_units` never exceeds
++/// `total_units`, which is never zero.
++#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
++#[serde(rename_all = "camelCase", deny_unknown_fields)]
++#[value(rename_all = "camelCase", deny_unknown_fields)]
++pub struct SpaceArtifactCreationProgressV1 {
++    pub stage: SpaceArtifactCreationStageV1,
++    pub completed_units: u64,
++    pub total_units: u64,
++}
++
++impl SpaceArtifactCreationProgressV1 {
++    /// 🧮️ The bounds JSON Schema states, plus the ordering it cannot.
++    pub fn validate(&self) -> bool {
++        const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
++        self.total_units >= 1 && self.total_units <= MAX_SAFE_INTEGER && self.completed_units <= self.total_units
++    }
++}
++
+ /// 🧭️ The server-selected artifact dialect, without executable authority supplied by a client.
+ #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
+ #[serde(rename_all = "camelCase", deny_unknown_fields)]
+@@ -222,11 +252,16 @@ pub struct SpaceArtifactCreationStatusV1 {
+     #[serde(default, skip_serializing_if = "Option::is_none")]
+     #[value(default, skip_serializing_if = "Option::is_none")]
+     pub ready: Option<SpaceArtifactCreationReadyV1>,
++    #[serde(default, skip_serializing_if = "Option::is_none")]
++    #[value(default, skip_serializing_if = "Option::is_none")]
++    pub progress: Option<SpaceArtifactCreationProgressV1>,
+ }
+ 
+ impl SpaceArtifactCreationStatusV1 {
+-    /// 🔐️ Only Ready may contain document coordinates, and Ready must contain all of them.
++    /// 🔐️ Only Ready may contain document coordinates, and Ready must contain all of them; only an
++    /// unfinished creation reports progress.
+     pub fn validate(&self) -> bool {
++        let running = matches!(self.phase, SpaceArtifactCreationPhaseV1::Accepted | SpaceArtifactCreationPhaseV1::Preparing);
+         self.schema == "semio.hub.space-artifact-creation-status/v1"
+             && request_id(&self.request_id)
+             && identity(&self.space_id)
+@@ -236,6 +271,7 @@ impl SpaceArtifactCreationStatusV1 {
+                 (SpaceArtifactCreationPhaseV1::Ready, None) | (_, Some(_)) => false,
+                 (_, None) => true,
+             }
++            && self.progress.as_ref().is_none_or(|progress| running && progress.validate())
+     }
+ 
+     /// 🧾️ Reads one exact receipt, withholding malformed or authority-overposted results.
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json b/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json
+index b1f7865164..e734a2f173 100644
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json
+@@ -3647,6 +3647,27 @@
+         }
+       }
+     },
++    "SpaceArtifactCreationProgress": {
++      "description": "Where a running creation is, so a waiting author sees work instead of silence: `queued` until it starts, `compiling-guest` while the kind's component is compiled, `genesis` while the guest builds the empty document, `publishing` while the document is stored and announced. Only an unfinished creation (`accepted`, `preparing`) reports progress; `completedUnits` never exceeds `totalUnits`.",
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["stage", "completedUnits", "totalUnits"],
++      "properties": {
++        "stage": {
++          "enum": ["queued", "compiling-guest", "genesis", "publishing"]
++        },
++        "completedUnits": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 9007199254740991
++        },
++        "totalUnits": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 9007199254740991
++        }
++      }
++    },
+     "SpaceArtifactCreationStatus": {
+       "type": "object",
+       "additionalProperties": false,
+@@ -3690,9 +3711,26 @@
+         },
+         "ready": {
+           "$ref": "#/$defs/SpaceArtifactCreationReady"
++        },
++        "progress": {
++          "$ref": "#/$defs/SpaceArtifactCreationProgress"
+         }
+       },
+       "allOf": [
++        {
++          "if": {
++            "properties": {
++              "phase": {
++                "enum": ["ready", "indeterminate", "failed", "cancelled"]
++              }
++            }
++          },
++          "then": {
++            "not": {
++              "required": ["progress"]
++            }
++          }
++        },
+         {
+           "if": {
+             "properties": {
+@@ -4777,11 +4815,12 @@
+       ]
+     },
+     "ArtifactCreationProgressCopyV1": {
+-      "description": "🈯️ Artifact-creation progress copy for one locale: the heading, the cancel affordance, and one line per progress and catalog phase.",
++      "description": "🈯️ Artifact-creation progress copy for one locale: the heading, the waiting line, the cancel affordance, and one line per progress and catalog phase.",
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+         "heading",
++        "waiting",
+         "cancel",
+         "cancelling",
+         "opening",
+@@ -4794,6 +4833,13 @@
+           "minLength": 1,
+           "maxLength": 256
+         },
++        "waiting": {
++          "description": "The line a running creation shows once it takes longer than the shell's waiting threshold; `{elapsed}` is the localized elapsed time. The hub is still answering, so the person may keep waiting or cancel.",
++          "type": "string",
++          "minLength": 1,
++          "maxLength": 512,
++          "pattern": "\\{elapsed\\}"
++        },
+         "cancel": {
+           "type": "string",
+           "minLength": 1,

@@ -1375,6 +1375,10 @@ fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Proce
 }
 
 impl ArtifactEditor for Process3dPlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source(), crate::examples::concrete_forest::source()]
+    }
     /// 🧩️ The roster the three composed `s.stdio.semio` members (`stockSolid`/`steps`/`toolSolids`)
     /// open through — a `NoMembers` editor cannot materialise the children `genesis_child_pack`
     /// derives, and every whole-document load then fails its archive closure as `Incomplete`.
@@ -1928,6 +1932,28 @@ pub fn create_process3d_app() -> AppDefinition {
             // window actions, commands and mode commands alike. The exact split is pinned independently by
             // `📦️packages/🟦️typescript/📜️script.ts`'s route audit, which fails if it ever drifts.
             .interactive_jobs(InteractiveJobClassification::Migrated)
+            .action_describe("addStep", LocalizedLabel::native("Adds a process step that applies one measure (such as a cut or a drill) with a workshop machine's capability at the given position on the stock.", "Fügt einen Prozessschritt hinzu, der eine Maßnahme (etwa einen Schnitt oder eine Bohrung) mit der Fähigkeit einer Werkstattmaschine an der angegebenen Position des Rohteils ausführt."))
+            .action_describe("setStock", LocalizedLabel::native("Swaps the stock (the raw part, such as a box or cylinder) for one of the given kind and resets the whole process: every step and the timeline cursor are cleared.", "Tauscht das Rohteil (etwa Quader oder Zylinder) gegen eines der angegebenen Art und setzt den gesamten Prozess zurück: alle Schritte und der Zeitleisten-Cursor werden gelöscht."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole process document (stock, workshop and steps) with one of the plugin's bundled examples, by example id.", "Ersetzt das gesamte Prozessdokument (Rohteil, Werkstatt und Schritte) durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))
+            .action_describe("removeSelectedStep", LocalizedLabel::native("Removes the process step currently selected in the 3D view; nothing happens without a selection.", "Entfernt den aktuell in der 3D-Ansicht ausgewählten Prozessschritt; ohne Auswahl geschieht nichts."))
+            .action_describe("exportModel", LocalizedLabel::native("Writes the processed model in the chosen format to a downloaded file on the user's machine.", "Schreibt das bearbeitete Modell im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."))
+            .action_describe("loadModelRequest", LocalizedLabel::native("Opens the host's file picker for a STEP, OBJ, STL or GLB model; the chosen file is then imported as the new stock.", "Öffnet die Dateiauswahl des Hosts für ein STEP-, OBJ-, STL- oder GLB-Modell; die gewählte Datei wird dann als neues Rohteil importiert."))
+            .action_describe("setSnapshot", LocalizedLabel::native("Replaces the whole process document with the supplied document; nothing of the previous stock, workshop or steps is kept.", "Ersetzt das gesamte Prozessdokument durch das übergebene; von Rohteil, Werkstatt und Schritten bleibt nichts erhalten."))
+            .action_describe("addWorkshopMachine", LocalizedLabel::native("Adds a machine from the catalogue to the workshop under the given machine id, with the capabilities that catalogue entry provides.", "Fügt der Werkstatt eine Maschine aus dem Katalog unter der angegebenen Maschinen-Id hinzu, mit den Fähigkeiten dieses Katalogeintrags."))
+            .action_describe("removeWorkshopMachine", LocalizedLabel::native("Removes one machine by id from the workshop.", "Entfernt eine Maschine anhand ihrer Id aus der Werkstatt."))
+            .action_describe("updateWorkshopMachine", LocalizedLabel::native("Updates one workshop machine to the supplied definition, changing only its name, icon or capabilities where they differ.", "Aktualisiert eine Werkstattmaschine auf die übergebene Definition und ändert nur Name, Symbol oder Fähigkeiten, wo sie abweichen."))
+            .action_describe("importModelFile", LocalizedLabel::native("Replaces the whole document with a stock read from the given model file (name and data-URL payload) and clears the process timeline.", "Ersetzt das gesamte Dokument durch ein Rohteil aus der angegebenen Modelldatei (Name und Data-URL-Inhalt) und leert die Prozesszeitleiste."))
+            .action_describe("removeStep", LocalizedLabel::native("Removes one process step by id from the timeline.", "Entfernt einen Prozessschritt anhand seiner Id aus der Zeitleiste."))
+            .action_describe("moveStep", LocalizedLabel::native("Moves one process step to a new position (index) in the timeline, changing the order in which it is applied.", "Verschiebt einen Prozessschritt an eine neue Position (Index) der Zeitleiste und ändert damit die Reihenfolge seiner Anwendung."))
+            .action_describe("updateStep", LocalizedLabel::native("Updates one process step to the supplied definition, changing only the fields that differ.", "Aktualisiert einen Prozessschritt auf die übergebene Definition und ändert nur die abweichenden Felder."))
+            .action_describe("setStepEnabled", LocalizedLabel::native("Turns one process step on or off; a disabled step stays in the timeline but is not applied to the stock.", "Schaltet einen Prozessschritt ein oder aus; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."))
+            .action_describe("patchInspector", LocalizedLabel::native("Edits one inspector field of the stock or a workshop machine (a label, a stock position or a capability parameter) with a number or text value.", "Bearbeitet ein Inspektorfeld des Rohteils oder einer Werkstattmaschine (Bezeichnung, Rohteilposition oder Fähigkeitsparameter) mit einem Zahlen- oder Textwert."))
+            .action_describe("setCursor", LocalizedLabel::native("Sets how many process steps the timeline cursor has applied, which the 3D view shows the stock after.", "Legt fest, wie viele Prozessschritte der Zeitleisten-Cursor angewendet hat, wonach die 3D-Ansicht das Rohteil zeigt."))
+            .action_describe("stepCursor", LocalizedLabel::native("Moves the timeline cursor by the given number of steps forward or back (never below zero).", "Bewegt den Zeitleisten-Cursor um die angegebene Zahl von Schritten vor oder zurück (nie unter null)."))
+            .action_describe("stepCursorBack", LocalizedLabel::native("Moves the timeline cursor one step back so the 3D view shows the stock before the last applied step.", "Bewegt den Zeitleisten-Cursor einen Schritt zurück, sodass die 3D-Ansicht das Rohteil vor dem zuletzt angewendeten Schritt zeigt."))
+            .action_describe("stepCursorForward", LocalizedLabel::native("Moves the timeline cursor one step forward so the 3D view shows the stock after the next step.", "Bewegt den Zeitleisten-Cursor einen Schritt vor, sodass die 3D-Ansicht das Rohteil nach dem nächsten Schritt zeigt."))
+            .action_destructive("setStock")
+            .action_destructive("importModelFile")
             .build_definition()
 }
 //#endregion 🔖️Manifest

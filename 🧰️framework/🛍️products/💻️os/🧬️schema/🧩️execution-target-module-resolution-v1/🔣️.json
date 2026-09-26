@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/execution-target-module-resolution-v1.json",
+  "title": "Execution-target module resolution",
+  "description": "How a shell resolves the component a hub document runs by the serving catalog generation: the local copy only on an equal content hash, a content-addressed store entry only when its bytes verify, else the hub's execution-target component and descriptor bytes, verified against the lease before they are stored and mounted. Bytes and lease come from the hub corpus document-execution-target-lease-v1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "corpus", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "corpus": { "type": "string", "minLength": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "local", "store", "hub", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "local": { "enum": ["none", "leaseComponent", "otherComponent"] },
+          "store": { "enum": ["empty", "verified", "tamperedComponent", "tamperedDescriptor"] },
+          "hub": { "enum": ["exact", "wrongComponent", "wrongDescriptor", "cancelledAtComponent", "unavailableOnce", "unavailable"] },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["outcome", "requests", "steps"],
+            "properties": {
+              "outcome": { "enum": ["local", "store", "hub", "refused", "cancelled"] },
+              "requests": { "type": "array", "items": { "enum": ["manifest", "component", "descriptor"] } },
+              "steps": { "type": "array", "items": { "enum": ["lease", "component", "descriptor", "verified"] } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

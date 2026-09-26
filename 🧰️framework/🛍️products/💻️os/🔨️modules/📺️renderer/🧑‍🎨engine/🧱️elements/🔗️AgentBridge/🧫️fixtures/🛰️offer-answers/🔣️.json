@@ -1,0 +1,24 @@
+{
+  "note": "Agent-bridge offer answers (`GET /__semio/agent-bridge`, always 200, schema semio.os.agent-bridge-offer/v1). `answer` rows are what a supervisor may send; `expected` is the config a shell dials (null = none). `shape` is whether the body is a well-formed answer of the schema (`🧬️schema.json`); a well-formed offer can still be refused by the loopback/credential admission rule.",
+  "encode": [
+    { "id": "no-live-gateway", "offer": null, "answer": { "schema": "semio.os.agent-bridge-offer/v1", "offered": false } },
+    { "id": "live-gateway", "offer": { "url": "ws://127.0.0.1:6300/bridge", "admissionProof": "deadbeef" }, "answer": { "schema": "semio.os.agent-bridge-offer/v1", "offered": true, "url": "ws://127.0.0.1:6300/bridge", "admissionProof": "deadbeef" } }
+  ],
+  "decode": [
+    { "id": "offered", "body": { "schema": "semio.os.agent-bridge-offer/v1", "offered": true, "url": "ws://127.0.0.1:6300/bridge", "admissionProof": "deadbeef" }, "shape": true, "expected": { "url": "ws://127.0.0.1:6300/bridge", "admissionProof": "deadbeef" } },
+    { "id": "offered-localhost", "body": { "schema": "semio.os.agent-bridge-offer/v1", "offered": true, "url": "ws://localhost:6301/bridge", "admissionProof": "p" }, "shape": true, "expected": { "url": "ws://localhost:6301/bridge", "admissionProof": "p" } },
+    { "id": "not-offered", "body": { "schema": "semio.os.agent-bridge-offer/v1", "offered": false }, "shape": true, "expected": null },
+    { "id": "offered-non-loopback", "body": { "schema": "semio.os.agent-bridge-offer/v1", "offered": true, "url": "ws://evil.example.com:6300/bridge", "admissionProof": "x" }, "shape": true, "expected": null },
+    { "id": "offered-url-with-credential", "body": { "schema": "semio.os.agent-bridge-offer/v1", "offered": true, "url": "ws://127.0.0.1:6300/bridge?token=secret", "admissionProof": "x" }, "shape": true, "expected": null },
+    { "id": "offered-empty-proof", "body": { "schema": "semio.os.agent-bridge-offer/v1", "offered": true, "url": "ws://127.0.0.1:6300/bridge", "admissionProof": "" }, "shape": false, "expected": null },
+    { "id": "offered-without-proof", "body": { "schema": "semio.os.agent-bridge-offer/v1", "offered": true, "url": "ws://127.0.0.1:6300/bridge" }, "shape": false, "expected": null },
+    { "id": "offered-extra-field", "body": { "schema": "semio.os.agent-bridge-offer/v1", "offered": true, "url": "ws://127.0.0.1:6300/bridge", "admissionProof": "x", "principal": "agent:local" }, "shape": false, "expected": null },
+    { "id": "not-offered-with-url", "body": { "schema": "semio.os.agent-bridge-offer/v1", "offered": false, "url": "ws://127.0.0.1:6300/bridge" }, "shape": false, "expected": null },
+    { "id": "bare-offer-without-schema", "body": { "url": "ws://127.0.0.1:6300/bridge", "admissionProof": "deadbeef" }, "shape": false, "expected": null },
+    { "id": "other-schema", "body": { "schema": "semio.os.agent-bridge-offer/v2", "offered": true, "url": "ws://127.0.0.1:6300/bridge", "admissionProof": "deadbeef" }, "shape": false, "expected": null },
+    { "id": "error-body", "body": { "error": "no live semio-os-mcp gateway is offering a bridge" }, "shape": false, "expected": null },
+    { "id": "array", "body": [], "shape": false, "expected": null },
+    { "id": "string", "body": "ws://127.0.0.1:6300/bridge", "shape": false, "expected": null },
+    { "id": "null", "body": null, "shape": false, "expected": null }
+  ]
+}

@@ -988,6 +988,10 @@ impl ArtifactReservedJob for RasterImportJob {
 pub struct RasterPlayApp;
 
 impl ArtifactEditor for RasterPlayApp {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::art_raster_demo::source()]
+    }
     type Snapshot = RasterSnapshot;
     type Mutation = RasterMutation;
     type Config = RasterConfig;
@@ -1338,13 +1342,8 @@ fn raster_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group:
 /// Only the leaf action/keybinding/utility declarations (which have no dedicated `_def` passthrough) are
 /// written out inline.
 ///
-/// 📚️ CLOSED (ticket 26/09/05/RASTER-PLUGIN-END-TO-END, W2) — the old "SDK GAP #4" note here claimed
-/// `.editor::<E>(def: AppDefinition)` discards `App.examples` with no replacement, so raster's
-/// `📚️examples/🎬️demo` facet went unregistered. The replacement is `PluginBuilder::
-/// editor_with_examples`, already in production on `🌀️procedural`'s two editors: the plugin root's
-/// `examples()` now stamps the demo carrier onto `PluginManifest.examples`, which is what the react
-/// shell's `NavbarExampleSelect` reads. Examples are a PLUGIN-root registration, not a builder-chain
-/// one; nothing about them belongs in this function.
+/// 📚️ The navbar dropdown reads `RasterPlayApp::examples()`, which `.editor` stamps onto the
+/// manifest. The catalogue lives on the artifact, not on the plugin root.
 pub fn create_raster_app() -> AppDefinition {
     Editor::builder(crate::RASTER_DIALECT).document(["semio", "raster"])
             .artifact_kind(crate::artifact_kind())

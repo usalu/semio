@@ -16,7 +16,7 @@ export default () => {
     compilerRoot: join(wgpu, "📦️packages/🦀️rust/dist/wasm-release"),
     bootRoot: join(wgpu, "🚀️browser-boot/🤖️generated"),
     workerRoot: join(wgpu, "🎞️frame-worker/🤖️generated"),
-    moduleRoot: join(workspace, ".🧬semio/🌐hub/s11-wg7-catalog-modules/release/🔌️plugin-modules"),
+    moduleRoot: join(workspace, ".🧬semio/🌐hub", process.env.WG7_MODULE_ROOT ?? "s11-wg7-catalog-modules", "release/🔌️plugin-modules"),
     extensionRoot: join(runtime, "extensions"),
     reloadFile: join(runtime, "activation", ACTIVATION_RECEIPT_FILE),
     assets: playground.assets,

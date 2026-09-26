@@ -90,15 +90,16 @@ impl SequenceDomain for SequenceDomainAdapter {
                 self.host.dag.set_canvas_theme_from_json(json).map_err(domain_error)?;
                 Ok(Vec::new())
             }
-            SEQUENCE_OPERATION_SELECTED_NODES => serde_json::to_vec(&self.host.dag.selected_node_ids()).map_err(domain_error),
+            SEQUENCE_OPERATION_SELECTED_NODES => Ok(dsl::os_pack::to_json_string(&self.host.dag.selected_node_ids()).into_bytes()),
             SEQUENCE_OPERATION_SET_SELECTION => self.set_selection(payload),
             SEQUENCE_OPERATION_LABEL_OVERLAY => self.host.dag.label_overlay_paint_state_json().map(String::into_bytes).map_err(domain_error),
             SEQUENCE_OPERATION_HOVERED_NODE => Ok(self.host.dag.hovered_node_id().unwrap_or_default().into_bytes()),
-            SEQUENCE_OPERATION_PRESELECT_NODES => serde_json::to_vec(&serde_json::json!({
+            SEQUENCE_OPERATION_PRESELECT_NODES => Ok(dsl::os_pack::json!({
                 "ids": self.host.dag.preselect_widget_ids(),
                 "removedIds": self.host.dag.preselect_removed_widget_ids(),
-            }))
-            .map_err(domain_error),
+            })
+            .to_string()
+            .into_bytes()),
             SEQUENCE_OPERATION_SELECTION_PREVIEW_POINTS => Ok(self.host.dag.selection_preview_points_json().into_bytes()),
             SEQUENCE_OPERATION_SELECTION_PREVIEW_CROSSING => Ok(vec![u8::from(self.host.dag.selection_preview_crossing())]),
             SEQUENCE_OPERATION_SELECTION_PREVIEW_METHOD => Ok(self.host.dag.selection_preview_method().to_string().into_bytes()),

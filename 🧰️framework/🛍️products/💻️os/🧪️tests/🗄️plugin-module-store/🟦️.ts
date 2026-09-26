@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import { PluginModuleUnavailableError } from "@semio-tech/framework";
+import { PluginModuleUnavailableError, type PluginModuleAcquisitionProgress } from "@semio-tech/framework";
 import { PLUGIN_MODULE_STORE_V1, validatePluginModuleStoreRecordV1, type PluginModuleStoreRecordV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
 import {
   collectPluginModuleStoreGarbageV1,
@@ -20,7 +20,8 @@ import {
   storePluginModuleBlobV1,
   type PluginModuleCacheV1,
 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🗄️store/🟦️.ts";
-import { createHubPluginSource, HUB_PLUGIN_MODULE_ROUTE, type HubPluginSourceNoticeV1, type PluginModuleLocksV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
+import { createHubPluginSource, HUB_PLUGIN_MODULE_ROUTE, TrustedPluginModuleTransientError, type HubPluginSourceNoticeV1, type PluginModuleLocksV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
+import { PLUGIN_MODULE_TRANSFER_RETRY_V1, TrustedPluginModuleRefusalV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧫️fixtures/🗄️store/🔣️.json");
@@ -202,7 +203,7 @@ describe("🌎️ hub plugin source on the store", () => {
       now: () => 1_790_000_000_000,
     });
   const acquire = async (state: ReturnType<typeof device>, served: ReturnType<typeof hub>, pluginId = "note", locks = memoryLocks()) => {
-    const progress: { completedBytes: number; totalBytes: number }[] = [];
+    const progress: PluginModuleAcquisitionProgress[] = [];
     vi.stubGlobal("fetch", served.fetch);
     try {
       const acquired = await source(state, locks).acquireModule(pluginId, undefined, { signal: new AbortController().signal, onProgress: (row) => progress.push(row) });
@@ -315,6 +316,76 @@ describe("🌎️ hub plugin source on the store", () => {
     expect((await install(device(), otherEntry, `/plugin-modules/${encodeURIComponent("🗒️note")}/index.js`)).source).toBe("hub");
     expect(otherEntry.localReads).toEqual([]);
     expect(otherEntry.downloads.length).toBe(noteFiles);
+  });
+
+  /** 🌩️ The failing-once double (ticket 26/09/23 S15, C10's report): the hub (or its proxy) answers ONE plugin module file with
+   * `status` (or drops the connection) `times` times, then serves it. */
+  const flaky = (served: ReturnType<typeof hub>, fileSuffix: string, times: number, status: number | "reset") => {
+    let left = times;
+    const fetches: string[] = [];
+    const fetch = async (input: string, init?: RequestInit) => {
+      const path = decodeURIComponent(new URL(input, origin).pathname);
+      if (path.endsWith(fileSuffix)) fetches.push(path);
+      if (path.endsWith(fileSuffix) && left > 0) {
+        left -= 1;
+        if (status === "reset") throw new TypeError("network connection was lost");
+        return new Response(null, { status });
+      }
+      return served.fetch(input, init);
+    };
+    return { ...served, fetch, fetches };
+  };
+
+  /** ⏩️ Drives the faked backoff clock until `pending` settles (the backoff timers are scheduled only as the downloads reach them). */
+  const settle = async <T>(pending: Promise<T>): Promise<T> => {
+    let done = false;
+    const watched = pending.finally(() => {
+      done = true;
+    });
+    for (let step = 0; step < 400 && !done; step += 1) await vi.advanceTimersByTimeAsync(250);
+    return watched;
+  };
+
+  it("fetches one file again after a declared transient answer, keeps every verified file, and names the retry in the progress", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      for (const transient of [...PLUGIN_MODULE_TRANSFER_RETRY_V1.transientStatuses, "reset"] as const) {
+        const state = device();
+        const served = flaky(hub(generationB, ["noteB"]), "🌉️bridge.js", 2, transient);
+        const { acquired, progress } = await settle(acquire(state, served));
+        expect(acquired.moduleUrl, String(transient)).toBe(storedPluginModuleUrlV1(generationB, fixture.bundles.noteB.entry.bundleSha256, "🗒️note/🌉️bridge.js"));
+        expect(served.fetches, `${transient}: the failed file alone is fetched again`).toHaveLength(3);
+        expect(served.downloads.filter((path) => !path.endsWith("🌉️bridge.js")).length, `${transient}: every other file once`).toBe(Object.keys(fixture.bundles.noteB.contents).length - 1);
+        expect(progress.filter((row) => row.retry !== undefined).map((row) => row.retry!.attempt).filter((attempt, index, all) => all.indexOf(attempt) === index), String(transient)).toEqual([2, 3]);
+        expect(progress.at(-1)?.retry, `${transient}: the band clears its retry once the file lands`).toBeUndefined();
+        const bytes = Object.values(fixture.bundles.noteB.contents as Record<string, string>).reduce((sum, value) => sum + value.length / 2, 0);
+        expect(progress.at(-1)?.completedBytes, String(transient)).toBe(bytes);
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("refuses at once on a non-transient answer and after the declared attempts, committing nothing", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      const refused = device();
+      const internal = flaky(hub(generationB, ["noteB"]), "🌉️bridge.js", 1, 500);
+      const refusal = await settle(acquire(refused, internal).catch((error: unknown) => error));
+      expect(refusal, "a non-transient answer refuses the install").toBeInstanceOf(TrustedPluginModuleRefusalV1);
+      expect(refusal).not.toBeInstanceOf(TrustedPluginModuleTransientError);
+      expect(internal.fetches, "a 500 is not retried").toHaveLength(1);
+      expect(refused.cache.entries.size).toBe(0);
+      const exhausted = device();
+      const always = flaky(hub(generationB, ["noteB"]), "🌉️bridge.js", 99, 503);
+      const error = await settle(acquire(exhausted, always).catch((error: unknown) => error));
+      expect(error, "attempts exhausted: the last transient answer refuses the install").toBeInstanceOf(TrustedPluginModuleTransientError);
+      expect(String((error as Error).message)).toContain("503");
+      expect(always.fetches).toHaveLength(PLUGIN_MODULE_TRANSFER_RETRY_V1.maxAttempts);
+      expect(exhausted.cache.entries.size).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("finds and lists a hub-only plugin the local build never registered", async () => {

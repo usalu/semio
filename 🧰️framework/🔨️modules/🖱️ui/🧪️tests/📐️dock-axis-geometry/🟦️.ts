@@ -63,10 +63,10 @@ describe("📐️ dock axis geometry", () => {
     const resized = applyAxisResizeDelta(layout, "", oracle.separatorIndex, deltaPercent, oracle.minimumPercent);
     expect(resized.kind).toBe("row");
     if (resized.kind !== "row") throw new Error("resize oracle must remain a row");
-    const actualWeights = resized.children.map((child) => child.size);
+    const actualWeights = resized.children.map((child) => child.size ?? Number.NaN);
     expect(actualWeights).toEqual(oracle.afterWeights);
     const beforeSeparator = (oracle.beforeWeights[0]! / oracle.beforeWeights.reduce((sum, weight) => sum + weight, 0)) * oracle.axisExtentPixels;
-    const afterSeparator = (actualWeights[0]! / actualWeights.reduce((sum, weight) => sum + (weight ?? 0), 0)) * oracle.axisExtentPixels;
+    const afterSeparator = (actualWeights[0]! / actualWeights.reduce((sum, weight) => sum + weight, 0)) * oracle.axisExtentPixels;
     expect(afterSeparator - beforeSeparator).toBeCloseTo(oracle.expectedSeparatorDeltaPixels, 6);
   });
 });

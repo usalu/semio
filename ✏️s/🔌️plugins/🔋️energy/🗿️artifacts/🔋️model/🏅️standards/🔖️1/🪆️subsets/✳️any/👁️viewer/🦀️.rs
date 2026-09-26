@@ -430,6 +430,7 @@ pub fn create_energy_model_viewer() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(simulation::definition())
         .window_kind_def(model_window::definition())
         .default_layout(view::layout())
+        .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }
 //#endregion 🔖️Manifest

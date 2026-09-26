@@ -4,7 +4,7 @@ use crate::op::NoteMutation;
 use crate::schema::mutations::move_block_to_container;
 use crate::schema::{block_id_from_tree_row_id, find_block};
 use crate::{NoteBlockNode, NoteSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -20,7 +20,7 @@ pub struct MoveBlock {
 pub fn handle(payload: &MoveBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     if find_block(&document.blocks, &payload.block_id).is_none() {
-        return Ok(Emit::default());
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the note has no block {}", payload.block_id)));
     }
     let target_id = block_id_from_tree_row_id(&payload.target_row_id);
     let parent_id = target_id.as_ref().and_then(|id| find_block(&document.blocks, id).and_then(|entry| if matches!(entry, NoteBlockNode::Group { .. }) { Some(id.clone()) } else { None }));

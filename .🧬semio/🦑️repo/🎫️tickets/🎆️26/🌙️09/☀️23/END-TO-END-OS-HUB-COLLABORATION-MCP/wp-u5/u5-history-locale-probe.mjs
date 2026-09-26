@@ -24,7 +24,12 @@ async function setLocale(page, wanted) {
     await language.click({ force: true }).catch(() => undefined);
     await page.waitForTimeout(1_500);
   }
-  const control = page.locator('select, [role="combobox"]').filter({ hasText: /english|deutsch|german|englisch/iu }).first();
+  let control = page.locator('select, [role="combobox"]').filter({ hasText: /english|deutsch|german|englisch/iu }).first();
+  if ((await control.count()) === 0) {
+    await page.locator('[id="framework.settings.general"]').first().click({ force: true }).catch(() => undefined);
+    await page.waitForTimeout(1_500);
+    control = page.locator('select, [role="combobox"]').filter({ hasText: /english|deutsch|german|englisch/iu }).first();
+  }
   if ((await control.count()) === 0) return `${wanted}:no-language-control`;
   if ((await control.evaluate((element) => element.tagName.toLowerCase())) === "select") await control.selectOption(wanted).catch(() => undefined);
   else {

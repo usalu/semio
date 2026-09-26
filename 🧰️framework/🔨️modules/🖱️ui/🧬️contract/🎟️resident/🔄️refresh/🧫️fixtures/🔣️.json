@@ -9,8 +9,8 @@
   "nodeRecordBytes": 6416,
   "openBytes": 1906,
   "fullDocumentBytes": 835986,
-  "fullDocumentAdmittedRoots": 62,
-  "fullDocumentRefusedRoot": 63,
+  "fullDocumentAdmittedRoots": 60,
+  "fullDocumentRefusedRoot": 61,
   "refreshes": 2,
   "retirementGrantItems": 1024,
   "retirementGrantBytes": 32768,
@@ -53,7 +53,7 @@
     "surfaces": 6,
     "residentRoots": 6,
     "residentBytes": 1311424,
-    "fixedBackingBytes": 566352,
+    "fixedBackingBytes": 2077760,
     "capacityFaults": 0
   },
   "laws": [
@@ -61,6 +61,6 @@
     "the double-buffered order needs a second FULL set: twice the roots and twice the bytes",
     "the aggregate admits only six ceiling-sized surface reservations of its sixty-four slots, which is why a retained caller right-sizes",
     "two consecutive six-surface refreshes take no permit refusal",
-    "the byte ledger admits sixty-two populated full documents and refuses the sixty-third with two slot positions still free"
+    "the byte ledger admits sixty populated full documents and refuses the sixty-first with four slot positions still free"
   ]
 }

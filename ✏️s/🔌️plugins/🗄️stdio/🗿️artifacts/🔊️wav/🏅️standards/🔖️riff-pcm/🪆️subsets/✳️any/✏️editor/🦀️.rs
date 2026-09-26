@@ -111,6 +111,10 @@ impl ArtifactOwnedToolJobFactory for WavEditorExampleFactory {
 pub struct WavEditor;
 
 impl ArtifactEditor for WavEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
     type Snapshot = WavSnapshot;
     type Mutation = WavMutation;
     type Config = NoConfig;

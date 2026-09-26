@@ -1,0 +1,7 @@
+2026-09-26 03:5x H9 — per-kind localized creation labels (S15 finding c, audit P1-1). Guest descriptor wire change → POST-PUBLISH landing window only.
+  Patch set: .tmp-ticket/wp-h9/codemods/kind-label-patch.py (dry run clean 03:5x: 184 literal sites in 93 files + 6 exact hunks).
+  `ArtifactKindSpec.name: String` → `label: LocalizedLabel` (en + de); hub creation catalog + local picker (`artifact_kind_choices`) +
+  host `OsArtifactDescriptor` present the KIND's label instead of the editor app's "Editor".
+  Crates: semio-framework (manifest), semio-framework-plugin, semio-framework-os-host, semio-hub, and EVERY s plugin crate (descriptor
+  bytes change) → describe-all + restage + catalog republish after it lands. H9 applies it (then `@semio-tech/framework:generate`,
+  cargo check each crate + one wasm32 plugin) when W2 announces the landing window; W2 then rebuilds all guests once.

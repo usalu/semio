@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.os.dev-local-hub-session/v1",
+  "title": "LocalHubSessionAnswerV1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "offered", "token", "userId"],
+      "properties": {
+        "schema": { "const": "semio.os.dev-local-hub-session/v1" },
+        "offered": { "const": true },
+        "token": { "type": "string", "minLength": 1 },
+        "userId": { "type": "string", "minLength": 1 }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "offered"],
+      "properties": {
+        "schema": { "const": "semio.os.dev-local-hub-session/v1" },
+        "offered": { "const": false }
+      }
+    }
+  ]
+}

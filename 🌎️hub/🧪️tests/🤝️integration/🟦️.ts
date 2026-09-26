@@ -147,7 +147,7 @@ describe("hub harness quick contract", () => {
       [localBootstrapExport("LocalBootstrapPipeIssueV1"), fixture.issue],
       [localBootstrapExport("LocalBootstrapProfileV1"), ...fixture.initialize.profiles],
       [validateCredential, fixture.credential],
-      [validateReadiness, fixture.ready, fixture.bootstrapReadyButArtifactUnavailable, fixture.notReady],
+      [validateReadiness, fixture.ready, fixture.bootstrapReadyButArtifactUnavailable, fixture.notReady, fixture.starting],
     ] as const;
     for (const [validate, ...values] of exports) for (const value of values) expect(validate(value), "validate rejected its own fixture").toBe(true);
     const oversizedDevice = structuredClone(fixture.issue);
@@ -166,6 +166,8 @@ describe("hub harness quick contract", () => {
     expect(validateReadiness({ ...fixture.ready, authorizationGeneration: fixture.credential.authorizationGeneration })).toBe(false);
     expect(validateReadiness({ ...fixture.ready, artifactAuthority: { ready: false } })).toBe(false);
     expect(validateReadiness({ ...fixture.bootstrapReadyButArtifactUnavailable, status: "ready" })).toBe(false);
+    expect(validateReadiness({ ...fixture.ready, startup: fixture.starting.startup }), "a ready hub never reports startup progress").toBe(false);
+    expect(validateReadiness({ ...fixture.starting, startup: { ...fixture.starting.startup, stage: "Guest Codec" } })).toBe(false);
     expect(validateCredential({ ...fixture.credential, sessionKind: "external" })).toBe(false);
     expect(validateCredential({ ...fixture.credential, authorizationGeneration: 0 })).toBe(false);
     const aggregateReady = (value: any): boolean => value.authentication.bootstrapReady === true && value.directory.ready === true && value.storage.ready === true && value.artifactAuthority.ready === true && value.adminAssets.ready === true;

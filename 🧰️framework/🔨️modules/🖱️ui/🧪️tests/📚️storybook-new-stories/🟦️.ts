@@ -130,7 +130,7 @@ test("Mode reserves themed separators before distributing nested React panel ext
   const token = geometry!.rootHandle.width;
   const rootWeights = dockAxisGeometry.layout.children.map((child) => child.weight);
   const nested = dockAxisGeometry.layout.children[1]!.node;
-  if (nested.kind !== "column") throw new Error("dock geometry fixture must carry the nested column oracle");
+  if (nested.kind !== "column" || nested.children === undefined) throw new Error("dock geometry fixture must carry the nested column oracle");
   const nestedWeights = nested.children.map((child) => child.weight);
   expect(token).toBeGreaterThan(0);
   close(geometry!.viewport.width, dockAxisGeometry.viewport.width);

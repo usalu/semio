@@ -1,0 +1,1239 @@
+{
+  "why": "The declared-verb verdict, written once and read by two implementations: the Rust law `artifact_app_laws::declared_verb_findings` (`🧪️tests/⚖️declared-verb-verdicts/🦀️.rs`, which every plugin surface's `assert_declared_verbs_honour_their_declarations` applies to its own probes) and the AJV twin (`📦️packages/🟦️typescript/🧪️tests/⚖️declared-verb-verdicts/🟦️.ts`, which states the same rules as JSON Schema). A probe is one declared verb dispatched on its app's boot example from every window kind that presents it (`windows`), each with its staged declared defaults (`staged`) and with two distinct values per perturbable declared argument (`arguments`). An outcome is `unreachable` (the dispatch infrastructure refused it before any handler ran), `refused` (the handler refused it by name) or `settled` (the lanes it published and what it changed). The rules: (a) a view or shell verb never writes or replaces the document from any window; (b) an agent-facing mutation never settles silently on every probe; (c) an agent- or chrome-facing verb never answers two distinct values of one declared argument identically (equal settles always count; equal refusals count only when every other declared argument carried a value, `othersSpecified`, and the staged invocation of that window was refused identically too); a destructive verb that settles writes the document or a user file; every declared agent or chrome verb bridges with its staged declared defaults (an input gesture's payload is the host's) and every declared verb is reachable from at least one window; an agent-facing verb run through the agent lane (`agent`, the MCP prepare phase at the catalog's address) writes the document exactly when the shell lane does and is not refused where the shell acts; (c) holds when some window tells the two values apart. An unbridged or unreachable verb reports that alone.",
+  "cases": [
+    {
+      "name": "a view verb that publishes an artifact lane lies about its kind",
+      "probe": {
+        "verb": "runAnalysis",
+        "kind": "view",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "artifact",
+                  "config",
+                  "terminal"
+                ],
+                "documentChanged": true,
+                "documentReplaced": false,
+                "configChanged": true,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 11
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": [
+        {
+          "finding": "documentWriteFromNonMutation"
+        }
+      ]
+    },
+    {
+      "name": "a shell verb that asks the host to replace the document lies about its kind",
+      "probe": {
+        "verb": "openExample",
+        "kind": "shell",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "terminal"
+                ],
+                "documentChanged": false,
+                "documentReplaced": true,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 1,
+                "fingerprint": 12
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": [
+        {
+          "finding": "documentWriteFromNonMutation"
+        }
+      ]
+    },
+    {
+      "name": "a view verb that only moves its window config keeps its declaration",
+      "probe": {
+        "verb": "setCamera",
+        "kind": "view",
+        "audience": "chrome",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "windowConfig",
+                  "terminal"
+                ],
+                "documentChanged": false,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 13
+              }
+            },
+            "arguments": [
+              {
+                "argument": "zoom",
+                "first": {
+                  "settled": {
+                    "lanes": [
+                      "windowConfig",
+                      "terminal"
+                    ],
+                    "documentChanged": false,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 0,
+                    "fingerprint": 14
+                  }
+                },
+                "second": {
+                  "settled": {
+                    "lanes": [
+                      "windowConfig",
+                      "terminal"
+                    ],
+                    "documentChanged": false,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 0,
+                    "fingerprint": 15
+                  }
+                },
+                "othersSpecified": true
+              }
+            ]
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "an agent mutation that settles silently on its only probe is a no-op handler",
+      "probe": {
+        "verb": "duplicateWidget",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "terminal"
+                ],
+                "documentChanged": false,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 21
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": [
+        {
+          "finding": "silentMutation"
+        }
+      ]
+    },
+    {
+      "name": "an agent mutation that refuses an unactionable request by name keeps its declaration",
+      "probe": {
+        "verb": "deleteSelection",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": true,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "refused": {
+                "code": "selection.empty",
+                "detail": "nothing is selected"
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "an idempotent set that is silent at its default but acts on another value is no no-op",
+      "probe": {
+        "verb": "setGridSpacing",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "terminal"
+                ],
+                "documentChanged": false,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 31
+              }
+            },
+            "arguments": [
+              {
+                "argument": "spacing",
+                "first": {
+                  "settled": {
+                    "lanes": [
+                      "terminal"
+                    ],
+                    "documentChanged": false,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 0,
+                    "fingerprint": 31
+                  }
+                },
+                "second": {
+                  "settled": {
+                    "lanes": [
+                      "artifact",
+                      "terminal"
+                    ],
+                    "documentChanged": true,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 0,
+                    "fingerprint": 32
+                  }
+                },
+                "othersSpecified": true
+              }
+            ]
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "a silent input gesture phase is not held to the agent no-op rule",
+      "probe": {
+        "verb": "canvasPointerUp",
+        "kind": "mutation",
+        "audience": "input",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "terminal"
+                ],
+                "documentChanged": false,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 41
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "two distinct argument values that settle identically mean the handler ignores the argument",
+      "probe": {
+        "verb": "addRelationship",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "artifact",
+                  "terminal"
+                ],
+                "documentChanged": true,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 1,
+                "fingerprint": 51
+              }
+            },
+            "arguments": [
+              {
+                "argument": "sourceId",
+                "first": {
+                  "settled": {
+                    "lanes": [
+                      "artifact",
+                      "terminal"
+                    ],
+                    "documentChanged": true,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 1,
+                    "fingerprint": 51
+                  }
+                },
+                "second": {
+                  "settled": {
+                    "lanes": [
+                      "artifact",
+                      "terminal"
+                    ],
+                    "documentChanged": true,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 1,
+                    "fingerprint": 51
+                  }
+                },
+                "othersSpecified": true
+              }
+            ]
+          }
+        ],
+        "agent": null
+      },
+      "findings": [
+        {
+          "finding": "ignoredArgument",
+          "argument": "sourceId"
+        }
+      ]
+    },
+    {
+      "name": "two distinct argument values refused with the same words mean the refusal never read the argument",
+      "probe": {
+        "verb": "removeElement",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": true,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "refused": {
+                "code": "mutation.target-missing",
+                "detail": "no element"
+              }
+            },
+            "arguments": [
+              {
+                "argument": "elementId",
+                "first": {
+                  "refused": {
+                    "code": "mutation.target-missing",
+                    "detail": "no element"
+                  }
+                },
+                "second": {
+                  "refused": {
+                    "code": "mutation.target-missing",
+                    "detail": "no element"
+                  }
+                },
+                "othersSpecified": true
+              }
+            ]
+          }
+        ],
+        "agent": null
+      },
+      "findings": [
+        {
+          "finding": "ignoredArgument",
+          "argument": "elementId"
+        }
+      ]
+    },
+    {
+      "name": "refusals that name the argument's value prove it was read",
+      "probe": {
+        "verb": "removeElement",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": true,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "refused": {
+                "code": "mutation.target-missing",
+                "detail": "no element ''"
+              }
+            },
+            "arguments": [
+              {
+                "argument": "elementId",
+                "first": {
+                  "refused": {
+                    "code": "mutation.target-missing",
+                    "detail": "no element 'p8-alpha'"
+                  }
+                },
+                "second": {
+                  "refused": {
+                    "code": "mutation.target-missing",
+                    "detail": "no element 'p8-beta'"
+                  }
+                },
+                "othersSpecified": true
+              }
+            ]
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "a destructive verb that settles with only a config change discards nothing",
+      "probe": {
+        "verb": "setActiveExample",
+        "kind": "view",
+        "audience": "agent",
+        "destructive": true,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "config",
+                  "terminal"
+                ],
+                "documentChanged": false,
+                "documentReplaced": false,
+                "configChanged": true,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 61
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": [
+        {
+          "finding": "destructiveWithoutDiscard"
+        }
+      ]
+    },
+    {
+      "name": "a destructive export that writes a user file keeps its declaration",
+      "probe": {
+        "verb": "exportProgram",
+        "kind": "shell",
+        "audience": "agent",
+        "destructive": true,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "download",
+                  "terminal"
+                ],
+                "documentChanged": false,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": true,
+                "hostEffects": 0,
+                "fingerprint": 71
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "a destructive verb that only ever refuses proves nothing either way",
+      "probe": {
+        "verb": "importProgram",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": true,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "refused": {
+                "code": "architect.import-empty",
+                "detail": "the payload is empty"
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "an unreachable verb reports only that it is unreachable",
+      "probe": {
+        "verb": "runReport",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "unreachable": {
+                "code": "interactive-job.not-ui-safe",
+                "detail": "UI dispatch rejected"
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": [
+        {
+          "finding": "unreachable"
+        }
+      ]
+    },
+    {
+      "name": "an unbridged verb reports only that it does not bridge",
+      "probe": {
+        "verb": "search",
+        "kind": "view",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": "app.command.unsupported: no bridge",
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "artifact",
+                  "terminal"
+                ],
+                "documentChanged": true,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 81
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": [
+        {
+          "finding": "unbridged"
+        }
+      ]
+    },
+    {
+      "name": "an input verb is not held to the argument rule",
+      "probe": {
+        "verb": "canvasPointerMove",
+        "kind": "view",
+        "audience": "input",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "windowTransient",
+                  "terminal"
+                ],
+                "documentChanged": false,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 91
+              }
+            },
+            "arguments": [
+              {
+                "argument": "x",
+                "first": {
+                  "settled": {
+                    "lanes": [
+                      "terminal"
+                    ],
+                    "documentChanged": false,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 0,
+                    "fingerprint": 92
+                  }
+                },
+                "second": {
+                  "settled": {
+                    "lanes": [
+                      "terminal"
+                    ],
+                    "documentChanged": false,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 0,
+                    "fingerprint": 92
+                  }
+                },
+                "othersSpecified": true
+              }
+            ]
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "infrastructure refusals of both argument values prove nothing about the argument",
+      "probe": {
+        "verb": "patchRegisterItem",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "refused": {
+                "code": "architect.register-missing",
+                "detail": "no register ''"
+              }
+            },
+            "arguments": [
+              {
+                "argument": "patch",
+                "first": {
+                  "unreachable": {
+                    "code": "interactive-job.missing-factory",
+                    "detail": "x"
+                  }
+                },
+                "second": {
+                  "unreachable": {
+                    "code": "interactive-job.missing-factory",
+                    "detail": "x"
+                  }
+                },
+                "othersSpecified": true
+              }
+            ]
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "a view verb writing the document while ignoring an argument breaks two rules at once",
+      "probe": {
+        "verb": "search",
+        "kind": "view",
+        "audience": "agent",
+        "destructive": true,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "artifact",
+                  "terminal"
+                ],
+                "documentChanged": true,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 101
+              }
+            },
+            "arguments": [
+              {
+                "argument": "query",
+                "first": {
+                  "settled": {
+                    "lanes": [
+                      "artifact",
+                      "terminal"
+                    ],
+                    "documentChanged": true,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 0,
+                    "fingerprint": 101
+                  }
+                },
+                "second": {
+                  "settled": {
+                    "lanes": [
+                      "artifact",
+                      "terminal"
+                    ],
+                    "documentChanged": true,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 0,
+                    "fingerprint": 101
+                  }
+                },
+                "othersSpecified": true
+              }
+            ]
+          }
+        ],
+        "agent": null
+      },
+      "findings": [
+        {
+          "finding": "documentWriteFromNonMutation"
+        },
+        {
+          "finding": "ignoredArgument",
+          "argument": "query"
+        }
+      ]
+    },
+    {
+      "name": "equal refusals while a sibling argument had no value may be the sibling's refusal",
+      "probe": {
+        "verb": "addRelationship",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "refused": {
+                "code": "wires.relationship-endpoints-missing",
+                "detail": "name sourceId and targetId"
+              }
+            },
+            "arguments": [
+              {
+                "argument": "kind",
+                "othersSpecified": false,
+                "first": {
+                  "refused": {
+                    "code": "wires.relationship-endpoints-missing",
+                    "detail": "name sourceId and targetId"
+                  }
+                },
+                "second": {
+                  "refused": {
+                    "code": "wires.relationship-endpoints-missing",
+                    "detail": "name sourceId and targetId"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "a window-config verb that acts only from its own window consumes its argument",
+      "probe": {
+        "verb": "selectRegister",
+        "kind": "view",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "adjacency",
+            "staged": {
+              "refused": {
+                "code": "architect.register-window-context-required",
+                "detail": "x"
+              }
+            },
+            "arguments": [
+              {
+                "argument": "registerId",
+                "othersSpecified": true,
+                "first": {
+                  "refused": {
+                    "code": "architect.register-window-context-required",
+                    "detail": "x"
+                  }
+                },
+                "second": {
+                  "refused": {
+                    "code": "architect.register-window-context-required",
+                    "detail": "x"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "window": "register",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "windowConfig",
+                  "terminal"
+                ],
+                "documentChanged": false,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 2
+              }
+            },
+            "arguments": [
+              {
+                "argument": "registerId",
+                "othersSpecified": true,
+                "first": {
+                  "settled": {
+                    "lanes": [
+                      "windowConfig",
+                      "terminal"
+                    ],
+                    "documentChanged": false,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 0,
+                    "fingerprint": 3
+                  }
+                },
+                "second": {
+                  "settled": {
+                    "lanes": [
+                      "windowConfig",
+                      "terminal"
+                    ],
+                    "documentChanged": false,
+                    "documentReplaced": false,
+                    "configChanged": false,
+                    "userPathWritten": false,
+                    "hostEffects": 0,
+                    "fingerprint": 4
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "a view verb that writes the document from one of its windows lies about its kind",
+      "probe": {
+        "verb": "search",
+        "kind": "view",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "register",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "config",
+                  "terminal"
+                ],
+                "documentChanged": false,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 5
+              }
+            },
+            "arguments": []
+          },
+          {
+            "window": "graph",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "artifact",
+                  "terminal"
+                ],
+                "documentChanged": true,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 6
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": [
+        {
+          "finding": "documentWriteFromNonMutation"
+        }
+      ]
+    },
+    {
+      "name": "a verb reachable from one window is reachable",
+      "probe": {
+        "verb": "runReport",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "graph",
+            "staged": {
+              "unreachable": {
+                "code": "interactive-job.window-context",
+                "detail": "x"
+              }
+            },
+            "arguments": []
+          },
+          {
+            "window": "report",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "artifact",
+                  "windowConfig",
+                  "terminal"
+                ],
+                "documentChanged": true,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 7
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "a body whose two perturbations fail to parse identically, while its default fails differently, was read",
+      "probe": {
+        "verb": "importProgram",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": true,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "refused": {
+                "code": "architect.import-program-invalid",
+                "detail": "empty input"
+              }
+            },
+            "arguments": [
+              {
+                "argument": "payload",
+                "othersSpecified": true,
+                "first": {
+                  "refused": {
+                    "code": "architect.import-program-invalid",
+                    "detail": "unexpected identifier at 1:1"
+                  }
+                },
+                "second": {
+                  "refused": {
+                    "code": "architect.import-program-invalid",
+                    "detail": "unexpected identifier at 1:1"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    },
+    {
+      "name": "an agent refused a retained route the shell runs",
+      "probe": {
+        "verb": "addWidget",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "child",
+                  "terminal"
+                ],
+                "documentChanged": true,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 201
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": {
+          "refused": {
+            "code": "flow.retained.legacy-dispatch",
+            "detail": "Flow retained routes execute only through their exact app-owned job factory"
+          }
+        }
+      },
+      "findings": [
+        {
+          "finding": "agentLaneDiverges"
+        }
+      ]
+    },
+    {
+      "name": "an agent previewing no operation for a verb that replaces the document diverges",
+      "probe": {
+        "verb": "setActiveExample",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": true,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "terminal"
+                ],
+                "documentChanged": true,
+                "documentReplaced": true,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 1,
+                "fingerprint": 202
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": {
+          "settled": {
+            "lanes": [],
+            "documentChanged": false,
+            "documentReplaced": false,
+            "configChanged": false,
+            "userPathWritten": false,
+            "hostEffects": 0,
+            "fingerprint": 203
+          }
+        }
+      },
+      "findings": [
+        {
+          "finding": "agentLaneDiverges"
+        }
+      ]
+    },
+    {
+      "name": "an agent previewing the document write the shell performs agrees",
+      "probe": {
+        "verb": "addNode",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "canvas",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "artifact",
+                  "terminal"
+                ],
+                "documentChanged": true,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 204
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": {
+          "settled": {
+            "lanes": [
+              "artifact"
+            ],
+            "documentChanged": true,
+            "documentReplaced": false,
+            "configChanged": false,
+            "userPathWritten": false,
+            "hostEffects": 0,
+            "fingerprint": 205
+          }
+        }
+      },
+      "findings": []
+    },
+    {
+      "name": "an agent refusing what the shell refuses agrees",
+      "probe": {
+        "verb": "deleteSelection",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": true,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "canvas",
+            "staged": {
+              "refused": {
+                "code": "wires.delete-selection-empty",
+                "detail": "x"
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": {
+          "refused": {
+            "code": "wires.delete-selection-empty",
+            "detail": "x"
+          }
+        }
+      },
+      "findings": []
+    },
+    {
+      "name": "an input gesture whose payload only the host supplies is not held to bridging with staged defaults",
+      "probe": {
+        "verb": "nodeGraphEdit",
+        "kind": "mutation",
+        "audience": "input",
+        "destructive": false,
+        "bridge": "app.message: nodeGraphEdit arguments have fields outside their closed schema",
+        "windows": [
+          {
+            "window": "main",
+            "staged": {
+              "refused": {
+                "code": "app.message",
+                "detail": "x"
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": null
+      },
+      "findings": []
+    }
+  ]
+}

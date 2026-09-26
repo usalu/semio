@@ -16,6 +16,16 @@ const lines = [];
 const stamp = () => new Date().toISOString().slice(11, 23);
 page.on("console", (m) => lines.push(`${stamp()} ${m.type()}: ${m.text()}`.slice(0, 400)));
 page.on("pageerror", (e) => lines.push(`${stamp()} pageerror: ${String(e)}`.slice(0, 400)));
+const hubAnswers = [];
+const hubAsks = [];
+page.on("request", (request) => {
+  const url = request.url();
+  if (/\/auth\/sessions|\/directory\//u.test(url)) hubAsks.push({ at: Date.now(), path: new URL(url).pathname });
+});
+page.on("response", (response) => {
+  const url = response.url();
+  if (/\/auth\/sessions|\/directory\//u.test(url)) hubAnswers.push({ at: Date.now(), status: response.status(), path: new URL(url).pathname });
+});
 const grid = () => page.locator('[role="grid"][data-ui-node-key="framework.window.table"]').first();
 const read = () => page.evaluate(() => {
   const table = document.querySelector('[role="grid"][data-ui-node-key="framework.window.table"]');
@@ -27,6 +37,8 @@ const read = () => page.evaluate(() => {
     rowcount: Number(table.getAttribute("aria-rowcount")),
     headers: [...table.querySelectorAll('[role="columnheader"]')].map((header) => (header.textContent ?? "").trim()),
     window: container ? { total: Number(container.getAttribute("data-tree-window-total")), offset: Number(container.getAttribute("data-tree-window-offset")), length: Number(container.getAttribute("data-tree-window-length")) } : null,
+    firstCells: rows[0] ? [...rows[0].querySelectorAll('[role="gridcell"]')].map((cell) => (cell.textContent ?? "").trim()) : [],
+    firstActions: rows[0] ? [...rows[0].querySelectorAll("button")].map((button) => button.getAttribute("aria-label") ?? (button.textContent ?? "").trim()) : [],
     first: rows[0] ? { index: Number(rows[0].getAttribute("data-table-row-index")), key: rows[0].getAttribute("data-ui-node-key"), name: (rows[0].querySelector('[role="gridcell"]')?.textContent ?? "").trim() } : null,
     last: rows.at(-1) ? { index: Number(rows.at(-1).getAttribute("data-table-row-index")), key: rows.at(-1).getAttribute("data-ui-node-key"), name: (rows.at(-1).querySelector('[role="gridcell"]')?.textContent ?? "").trim() } : null,
     materialised: rows.length,
@@ -48,15 +60,20 @@ await page.locator('[data-semio-hub-sign-in=""]').first().click({ force: true })
 const form = page.locator("[data-semio-hub-workspace]");
 await form.waitFor({ state: "visible", timeout: 60_000 });
 for (const skip of await page.getByRole("button", { name: /^(Skip|Überspringen)$/u }).all()) await skip.click({ force: true }).catch(() => undefined);
-await form.locator('input[type="email"]').fill("ada@example.org");
-await form.locator('input[type="password"]').fill("correct horse battery staple");
+await form.locator('input[type="email"]').fill(process.env.U5_EMAIL ?? "ada@example.org");
+await form.locator('input[type="password"]').fill(process.env.U5_PASSWORD ?? "correct horse battery staple");
 await form.locator('[id="os.hub.signIn.submit"]').click({ force: true });
 await page.waitForFunction(() => !document.querySelector('[data-semio-hub-sign-in=""]'), undefined, { timeout: 120_000 }).catch(() => undefined);
 await page.waitForTimeout(2_000);
 await page.locator('[data-semio-hub-workspace] [id="os.hub.signIn.cancel"]').click({ force: true }).catch(() => undefined);
 const signedIn = Date.now();
 await page.waitForFunction((count) => Number(document.querySelector('[role="grid"][data-ui-node-key="framework.window.table"]')?.getAttribute("aria-rowcount") ?? 0) >= count + 1, expectedSpaces, { timeout: 60_000 }).catch(() => undefined);
-await note("signed in", { gridMs: Date.now() - signedIn });
+const rowsAt = Date.now();
+const minted = hubAnswers.find((answer) => answer.path === "/auth/sessions" && answer.status < 300);
+const lastDirectoryBeforeRows = hubAnswers.filter((answer) => /(^|\/_semio\/hub)\/directory\//u.test(answer.path) && answer.at <= rowsAt).at(-1);
+await note("signed in", { gridMs: rowsAt - signedIn, mintToRowsMs: minted ? rowsAt - minted.at : null, lastDirectoryAnswerToRowsMs: lastDirectoryBeforeRows ? rowsAt - lastDirectoryBeforeRows.at : null, lastDirectoryAnswer: lastDirectoryBeforeRows?.path ?? null, hubAnswers: hubAnswers.map((answer) => `${answer.path} ${answer.status} +${answer.at - (minted?.at ?? answer.at)}ms`).slice(0, 12), hubAsks: hubAsks.map((ask) => `${ask.path} asked +${ask.at - (minted?.at ?? ask.at)}ms`).slice(0, 12) });
+const aria = await grid().ariaSnapshot().catch((error) => `ariaSnapshot failed: ${error}`);
+timeline.push({ at: "aria snapshot", aria: aria.split("\n").slice(0, 24) });
 await page.screenshot({ path: out(`u5-home-${tag}-top.png`) });
 const finish = async () => {
   const faults = lines.filter((line) => /render fault|Credits|max_nodes|pageerror|refused/iu.test(line));
@@ -79,6 +96,18 @@ await page.keyboard.press("End");
 const lastIndex = (await read())?.rowcount - 2;
 await page.waitForFunction((index) => document.activeElement?.getAttribute("data-table-row-index") === String(index), lastIndex, { timeout: 30_000 }).catch(() => undefined);
 await note("End pressed", { walkMs: Date.now() - walked, lastIndex });
+await page.keyboard.press("PageUp");
+await page.waitForTimeout(600);
+await note("PageUp");
+await page.keyboard.press("ArrowUp");
+await page.waitForTimeout(300);
+await note("ArrowUp");
+await page.keyboard.press("ArrowRight");
+await page.waitForTimeout(300);
+timeline.push({ at: "ArrowRight", activeName: await page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? (document.activeElement?.textContent ?? "").trim()), activeRole: await page.evaluate(() => document.activeElement?.tagName) });
+await page.keyboard.press("Escape");
+await page.waitForTimeout(300);
+await note("Escape");
 await page.screenshot({ path: out(`u5-home-${tag}-end.png`) });
 await page.keyboard.press("Home");
 await page.waitForFunction(() => document.activeElement?.getAttribute("data-table-row-index") === "0", undefined, { timeout: 30_000 }).catch(() => undefined);

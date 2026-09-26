@@ -50,11 +50,11 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
             "gis2d",
             semio_s_artifact_gis_gismap::schema::gis2d_document_json_to_svg,
         )?)
-        .editor_with_examples::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>(semio_s_artifact_gis_gismap::editor::gis2d::create_gis2d_app(), vec![semio_s_artifact_gis_gismap::examples::demo::source()])
+        .editor::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>(semio_s_artifact_gis_gismap::editor::gis2d::create_gis2d_app())
         .editor_mutation_roster::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>()
         .viewer::<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer>(semio_s_artifact_gis_gismap::viewer::gismap::create_gismap_viewer())
         .viewer_mutation_roster::<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer>()
-        .editor_with_examples::<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>(semio_s_artifact_gis_gisterrain::editor::gis3d::create_gis3d_app(), vec![semio_s_artifact_gis_gisterrain::examples::demo::source()])
+        .editor::<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>(semio_s_artifact_gis_gisterrain::editor::gis3d::create_gis3d_app())
         .editor_mutation_roster::<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>()
         .viewer::<semio_s_artifact_gis_gisterrain::viewer::gisterrain::GisTerrainViewer>(semio_s_artifact_gis_gisterrain::viewer::gisterrain::create_gisterrain_viewer())
         .viewer_mutation_roster::<semio_s_artifact_gis_gisterrain::viewer::gisterrain::GisTerrainViewer>()

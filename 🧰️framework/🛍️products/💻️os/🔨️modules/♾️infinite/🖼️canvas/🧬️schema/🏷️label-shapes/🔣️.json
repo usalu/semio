@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.infinite.canvas.label-shapes/v1",
+  "title": "🏷️ Shaped-label cache bounds",
+  "description": "The bounds of the one content-keyed cache of shaped canvas labels (`canvas::text`): a label's SVG text markup (text, font size, family, fill, halo) is shaped by usvg once and its outline scene + bounds are reused by every later paint and measure of the same markup, so an unchanged frame re-parses no font face and reshapes no glyph run. The cache is least-recently-used and bounded three ways; these `const`s are the only source of the bounds (the Rust cache reads them from this document).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["maximumEntries", "maximumBytes", "maximumEntryBytes"],
+  "properties": {
+    "maximumEntries": {
+      "description": "Most shaped labels resident at once, per wasm module (the editor and the surface bundles each hold their own cache).",
+      "type": "integer",
+      "const": 4096
+    },
+    "maximumBytes": {
+      "description": "Most resident bytes: every entry's markup key, record and outline scene (command list + path/stroke backing).",
+      "type": "integer",
+      "const": 16777216
+    },
+    "maximumEntryBytes": {
+      "description": "Largest single entry that is kept; a larger shaped label is painted and dropped, never evicting the working set.",
+      "type": "integer",
+      "const": 1048576
+    }
+  }
+}

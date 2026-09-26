@@ -249,6 +249,138 @@
         }
       }
     },
+    "CapabilityDescription": {
+      "description": "💬️ What an agent-published verb says about itself in `semantics.description` — every `ActionDefinition`/`CommandDefinition` whose resolved `CapabilityAudience` is `agent` MUST declare one. The `LocalizedLabel` matrix (terminology × locale): every cell is one to three sentences on one line saying what the verb does, to what, and with which consequence; a destructive or export verb names exactly what is lost or written. English AND German, no default language. Three cross-field rules a JSON Schema cannot state are part of this contract and are enforced identically by Rust `catalog::description_problems` and TypeScript `capabilityDescriptionProblems` (`🌉️mcp/🗂️catalog`): the German cell differs from the English cell, no cell repeats the verb's own title in that locale, and no two verbs of one app share an English description.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "native",
+        "reuse"
+      ],
+      "properties": {
+        "native": {
+          "$ref": "#/$defs/CapabilityDescriptionLocales"
+        },
+        "reuse": {
+          "$ref": "#/$defs/CapabilityDescriptionLocales"
+        }
+      }
+    },
+    "CapabilityDescriptionLocales": {
+      "description": "🌐️ One terminology row of a `CapabilityDescription`: an English and a German sentence, both required.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "de",
+        "en"
+      ],
+      "properties": {
+        "de": {
+          "$ref": "#/$defs/CapabilityDescriptionSentence"
+        },
+        "en": {
+          "$ref": "#/$defs/CapabilityDescriptionSentence"
+        }
+      }
+    },
+    "CapabilityDescriptionSentence": {
+      "description": "✍️ One cell of a `CapabilityDescription`: starts with a capital letter or digit, stays on one line, ends with sentence punctuation, and is long enough to name an object and a consequence.",
+      "type": "string",
+      "minLength": 24,
+      "maxLength": 480,
+      "pattern": "^[A-ZÄÖÜ0-9].*[.!?]$"
+    },
+    "CapabilityDescriptionFixture": {
+      "description": "⚖️ Language-agnostic law cases for `CapabilityDescription`: each row is one app's agent-published verbs (id, localized title, declared description or null) and the exact `(verb, problem)` list both implementations must report.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "verbs",
+          "problems"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "verbs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "title",
+                "description"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "title": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "de",
+                    "en"
+                  ],
+                  "properties": {
+                    "de": {
+                      "type": "string"
+                    },
+                    "en": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "description": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "object"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "verb",
+                "problem"
+              ],
+              "properties": {
+                "verb": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "problem": {
+                  "enum": [
+                    "missing",
+                    "schema",
+                    "untranslated",
+                    "repeatsTitle",
+                    "sharedWithinApp"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "ArtifactKindFormatsFixture": {
       "type": "object",
       "additionalProperties": false,

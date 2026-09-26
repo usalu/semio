@@ -1,0 +1,9 @@
+{
+  "schema": "semio.os.execution-target-retry/v1",
+  "description": "How the browser asks the hub again for one document execution-target asset (manifest, component, descriptor, browser actor) the hub declared temporarily unavailable. Only the declared transient statuses are retried (the hub's typed 503 `deadline-exceeded`/`component-unavailable`/`catalog-unavailable`, and 502/504 from a proxy in front of it); every other answer is final at once. At most maxAttempts requests per asset, waiting backoffInitialMs * backoffFactor^(retry-1) capped at backoffMaxMs before each retry, cancellable, and every retry is announced to the person as the `retrying` status with the attempt number.",
+  "transientStatuses": [502, 503, 504],
+  "maxAttempts": 4,
+  "backoffInitialMs": 500,
+  "backoffFactor": 2,
+  "backoffMaxMs": 8000
+}

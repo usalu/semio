@@ -34,20 +34,19 @@ pub struct RunExtensionAction {
 /// 🧩️ The extension effect against an already-resolved window config — the one body the batch
 /// `handle` below and the retained `FlowGraphOperationWork` route both run, so neither can drift
 /// from the other (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn extension_action_result(payload: &RunExtensionAction, snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
-    let Some((id, _, _, _, effect)) = FLOW_AUTOMATIONS.iter().find(|(_, _, entry_action_id, ..)| *entry_action_id == payload.action_id) else {
-        return Emit::default();
-    };
+pub fn extension_action_result(payload: &RunExtensionAction, snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    let refuse = |code: &str, message: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message);
+    let (id, _, _, _, effect) = FLOW_AUTOMATIONS.iter().find(|(_, _, entry_action_id, ..)| *entry_action_id == payload.action_id).ok_or_else(|| refuse("flow.extension-action-unknown", format!("runExtensionAction has no extension action \"{}\"", payload.action_id)))?;
     if !config.automation_enabled().get(*id).copied().unwrap_or(false) {
-        return Emit::default();
+        return Err(refuse("flow.extension-disabled", format!("runExtensionAction \"{}\" belongs to the disabled extension \"{id}\"", payload.action_id)));
     }
     match *effect {
-        "reorganize" => Emit::mutations(reorganize_operations(snapshot, config, session)),
-        "evaluate" => evaluate_result(snapshot, config, session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN),
-        _ => Emit::default(),
+        "reorganize" => Ok(Emit::mutations(reorganize_operations(snapshot, config, session))),
+        "evaluate" => Ok(evaluate_result(snapshot, config, session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN)),
+        other => Err(refuse("flow.extension-effect-unknown", format!("runExtensionAction \"{}\" names the unknown effect \"{other}\"", payload.action_id))),
     }
 }
 
 pub fn handle(payload: &RunExtensionAction, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    Ok(extension_action_result(payload, doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session))
+    extension_action_result(payload, doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session)
 }

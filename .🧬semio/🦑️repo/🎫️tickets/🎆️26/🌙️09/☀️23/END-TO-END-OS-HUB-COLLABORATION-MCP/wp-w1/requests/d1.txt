@@ -1,0 +1,13 @@
+d1: descriptions for wfc, architect, animate, dag, reasoning, mathematical, imperative, playbook (+ playbook-module-procedural), sourcing, writer, sequence, trinity (jack, rewriting), energy, flow, process, remodel, shooting, block, fem, procedural (+ plugin command listFlowExtensions), lowpoly, space (home, space, studio), puzzle, norm, demonstrator (playground)
+d1 (2026-09-26 00:5x, session 12) — capability descriptions + audience/destructive flags, source only, NOT yet in any descriptor.
+  Also in every guest: semio-framework (🛂️manifest tool-run verb descriptions) and semio-framework-plugin (SDK window kits:
+  replace-text described + destructive, set-cell/set-node described) → the describe-all of the --packages all publish carries them.
+  No WIT/owned-export/pack-schema/codec change: `semantics.description` is existing descriptor metadata.
+  Native gateway: semio-framework-os-mcp (`audit` now also prints description findings; exits 1 on either) — rebuild the staged
+  semio-os-mcp with the restage.
+  Measured on a projection of the landed source onto the committed descriptors (.🧬semio/🌐hub/s12-d1-projected):
+  audit 0 findings, 55 description findings — all in the frozen crates gis (22 + demonstrator's gis composition 18), stdio (9), vcs (6).
+  Frozen patch set, NOT applied (session-12 ABI freeze): .tmp-ticket/wp-d1/d1-frozen.py (dry run clean 00:44 + 00:53; --apply writes)
+  → land AFTER the --packages all publish, then cargo check -p gis/stdio/vcs/demonstrator + describe those four.
+  With it projected (.🧬semio/🌐hub/s12-d1-projected-with-frozen): 0 findings, 0 description findings over 60 descriptors.
+  Report: .tmp-ticket/📓️wp-d1.md.

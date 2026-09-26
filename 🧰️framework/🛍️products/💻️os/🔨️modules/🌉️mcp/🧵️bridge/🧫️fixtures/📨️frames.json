@@ -27,5 +27,7 @@
   { "direction": "gateway_to_shell", "variant": "AgentReply", "frame": {"variant":"agentReply","replyId":"rep_1","inReplyTo":null,"text":" the 300 mm variant \u2014 shall I?","complete":true}, "hex": "0a050000007265705f3100200000002074686520333030206d6d2076617269616e7420e28094207368616c6c20493f01" },
   { "direction": "gateway_to_shell", "variant": "ApprovalWithdrawn", "frame": {"variant":"approvalWithdrawn","approvalId":"appr_1","reason":"cancelled"}, "hex": "0b06000000617070725f3100" },
   { "direction": "gateway_to_shell", "variant": "ApprovalWithdrawn", "frame": {"variant":"approvalWithdrawn","approvalId":"appr_2","reason":"timed_out"}, "hex": "0b06000000617070725f3201" },
-  { "direction": "gateway_to_shell", "variant": "ApprovalWithdrawn", "frame": {"variant":"approvalWithdrawn","approvalId":"appr_3","reason":"superseded"}, "hex": "0b06000000617070725f3302" }
+  { "direction": "gateway_to_shell", "variant": "ApprovalWithdrawn", "frame": {"variant":"approvalWithdrawn","approvalId":"appr_3","reason":"superseded"}, "hex": "0b06000000617070725f3302" },
+  { "direction": "gateway_to_shell", "variant": "Refused", "frame": {"variant":"refused","reason":"version","gatewayVersion":1}, "hex": "0c000100" },
+  { "direction": "gateway_to_shell", "variant": "Refused", "frame": {"variant":"refused","reason":"capacity","gatewayVersion":1}, "hex": "0c010100" }
 ]

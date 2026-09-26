@@ -2,7 +2,7 @@
 //! the shared `TableWindowKit`'s read-only `window_kind()` (no `set-cell` action) — never imports
 //! anything from the sibling `✏️editor` (`policyViewerPurityBreaches`).
 
-use crate::standards::v1::subsets::any::schema::snapshot::{space_index_table_row, SSpaceSnapshot, SPACE_INDEX_TABLE_COLUMNS};
+use crate::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceIndexTableLabels};
 use semio_framework_plugin::app::{table_window_row, TableWindowKit, TreeWindows, WindowKit};
 use semio_framework_plugin::WindowKindDefinition;
 
@@ -23,10 +23,10 @@ pub fn definition() -> WindowKindDefinition {
 /// live presence source. One `TableRow` record per artifact, no row actions: the viewer has no mutating
 /// affordance.
 pub fn render(document: &SSpaceSnapshot, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    TableWindowKit::render_rows(&TreeWindows::for_body(view_state, BODY_KEY), "Artifacts", &SPACE_INDEX_TABLE_COLUMNS, None, &document.artifacts, |row| {
-        let cells = space_index_table_row(row, "");
-        let cells: Vec<&str> = cells.iter().map(String::as_str).collect();
-        table_window_row(&format!("artifact:{}", row.id), &cells, std::iter::empty(), None)
+    let labels = semio_framework_plugin::resolve_labels::<SpaceIndexTableLabels>(view_state);
+    TableWindowKit::render_rows(&TreeWindows::for_body(view_state, BODY_KEY), labels.table_name.as_str(), &labels.columns(), None, &document.artifacts, |row| {
+        let cells = labels.row(row, "");
+        table_window_row(&format!("artifact:{}", row.id), &cells.each_ref().map(String::as_str), std::iter::empty(), None)
     })
 }
 //#endregion 🔖️Render

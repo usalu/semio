@@ -864,8 +864,8 @@ pub fn adjacency_kind_from_id(kind: &str) -> Option<AdjacencyKind> {
     }
 }
 
-pub fn analysis_kind_from_str(kind: &str) -> AnalysisKind {
-    match kind {
+pub fn analysis_kind_from_str(kind: &str) -> Option<AnalysisKind> {
+    Some(match kind {
         "gap" => AnalysisKind::Gap,
         "conflict" => AnalysisKind::Conflict,
         "dependency" => AnalysisKind::Dependency,
@@ -886,12 +886,12 @@ pub fn analysis_kind_from_str(kind: &str) -> AnalysisKind {
         "requirementScoring" => AnalysisKind::RequirementScoring,
         "requirementWeighting" => AnalysisKind::RequirementWeighting,
         "relationshipAnalysis" => AnalysisKind::RelationshipAnalysis,
-        _ => AnalysisKind::Gap,
-    }
+        _ => return None,
+    })
 }
 
-pub fn report_kind_from_str(kind: &str) -> ReportKind {
-    match kind {
+pub fn report_kind_from_str(kind: &str) -> Option<ReportKind> {
+    Some(match kind {
         "executiveSummary" => ReportKind::ExecutiveSummary,
         "programOverview" => ReportKind::ProgramOverview,
         "stakeholderSummary" => ReportKind::StakeholderSummary,
@@ -913,8 +913,8 @@ pub fn report_kind_from_str(kind: &str) -> ReportKind {
         "openIssueSummary" => ReportKind::OpenIssueSummary,
         "prioritySummary" => ReportKind::PrioritySummary,
         "scenarioSummary" => ReportKind::ScenarioSummary,
-        _ => ReportKind::ExecutiveSummary,
-    }
+        _ => return None,
+    })
 }
 
 pub fn analysis_kind_picker_options() -> Vec<ActionArgOption> {

@@ -679,21 +679,6 @@ def doc_json(ctx: Context) -> dict:
     raise AssertionError("scenario %s carries no doc string" % ctx.scenario["id"])
 
 
-def step_assets(ctx: Context) -> list:
-    """🧫️ Every `asset://` URI the scenario's steps name, in step order."""
-    found = []
-    for step in ctx.scenario["steps"]:
-        text = step.get("text", "")
-        at = text.find("asset://")
-        while at != -1:
-            end = at
-            while end < len(text) and not text[end].isspace():
-                end += 1
-            found.append(text[at:end])
-            at = text.find("asset://", end)
-    return found
-
-
 def prepared(ctx: Context) -> tuple:
     """🕸️ The real committed wires graph, plus the scenario's own verb."""
     plan = doc_json(ctx)
@@ -732,7 +717,7 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
     is a THIRD statement of what the verb means, independent of both implementations."""
-    before_uri, mutation_uri, after_uri = step_assets(ctx)[:3]
+    before_uri, mutation_uri, after_uri = ctx.step_fixture_uris()[:3]
     before = fixture_json(ctx, before_uri)
     after = fixture_json(ctx, after_uri)
     applied = apply_mutation(before, fixture_json(ctx, mutation_uri))

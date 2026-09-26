@@ -3,7 +3,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ContextMenuController, decodeIcon, encodeIcon, resolveIconUrlsInBoardJson, reactHostPort, type ContextMenuItem, type Icon, type IconSelectorMode } from "@semio-tech/ui-react";
+import { ContextMenuController, decodeIcon, encodeIcon, resolveIconUrlsInBoardJson, reactHostPort, useCanvasAppearanceSync, type ContextMenuItem, type Icon, type IconSelectorMode } from "@semio-tech/ui-react";
 import React from "react";
 import { GestureRecognizer, type PinchStep } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
@@ -79,6 +79,115 @@ export function scheduleDemandFrame(tick: () => void): { readonly cancel: () => 
   return { cancel: () => cancelAnimationFrame(frame) };
 }
 
+/** @emoji ⏱️ A render-on-demand frame clock for one canvas. `invalidate` marks the canvas dirty and paints it at the next
+ * frame (any number of invalidations before that frame coalesce into ONE paint); `paintNow` paints synchronously and
+ * satisfies every invalidation that preceded it, so a pending frame paints nothing twice; `beginContinuous`/
+ * `endContinuous` bracket genuinely continuous work (a gesture whose moves do not invalidate one by one). */
+export type DemandFrameSchedulerV1 = {
+  invalidate(): void;
+  paintNow(): void;
+  beginContinuous(reason: string): void;
+  endContinuous(reason: string): void;
+  dispose(): void;
+};
+
+/** @emoji 🌗️ The trailing window of a surface whose wasm session eases its own state after an input (a flow graph's or a
+ * tiled map's camera settling): it keeps painting this long after its last invalidation. */
+export const EASED_SURFACE_TRAILING_WINDOW_MS = 250;
+
+/** @emoji 🎚️ Options of {@link createDemandFrameScheduler}. `trailingWindowMs` is an EXPLICIT, bounded animation window:
+ * a surface whose wasm session eases state on its own (a camera settling after a gesture) keeps painting that long after
+ * its last invalidation. A surface without self-animating state declares none and paints exactly once per demand. */
+export type DemandFrameSchedulerOptionsV1 = {
+  readonly trailingWindowMs?: number;
+};
+
+/** @emoji 🪶️ The one render-on-demand scheduler of every wasm canvas surface (flow node-graph, tiled-map,
+ * {@link GraphWasmCanvas}); each of them used to run an unconditional animation-frame loop that held the tab at 60 fps
+ * fully idle (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT; ticket 26/09/23 S15 for {@link GraphWasmCanvas}). A frame paints
+ * only when the canvas is dirty, a continuous reason is held, or an explicit trailing window runs; a synchronous
+ * `paintNow` clears the dirt, so an owner that paints on its own never gets the same frame painted again by the clock
+ * (ticket 26/09/23 F1: a typed character cost 2–3 paints of ~90 ms each in the trinity query editor, and a node-graph
+ * drag painted every frame twice — once by its own clock, once by the canvas's). */
+export function createDemandFrameScheduler(render: () => void, opts?: DemandFrameSchedulerOptionsV1): DemandFrameSchedulerV1 {
+  const trailingWindowMs = opts?.trailingWindowMs ?? 0;
+  const continuousReasons = new Set<string>();
+  let handle: { readonly cancel: () => void } | null = null;
+  let trailingUntil = 0;
+  let dirty = false;
+  let disposed = false;
+
+  const animating = () => continuousReasons.size > 0 || Date.now() < trailingUntil;
+  const tick = () => {
+    handle = null;
+    if (disposed) return;
+    if (dirty || animating()) {
+      dirty = false;
+      render();
+    }
+    if (animating()) schedule();
+  };
+  const schedule = () => {
+    handle = scheduleDemandFrame(tick);
+  };
+  const ensureScheduled = () => {
+    if (disposed || handle !== null) return;
+    schedule();
+  };
+
+  return {
+    invalidate() {
+      dirty = true;
+      if (trailingWindowMs > 0) trailingUntil = Date.now() + trailingWindowMs;
+      ensureScheduled();
+    },
+    paintNow() {
+      if (disposed) return;
+      dirty = false;
+      render();
+    },
+    beginContinuous(reason: string) {
+      continuousReasons.add(reason);
+      ensureScheduled();
+    },
+    endContinuous(reason: string) {
+      continuousReasons.delete(reason);
+      if (continuousReasons.size > 0) return;
+      dirty = true;
+      if (trailingWindowMs > 0) trailingUntil = Date.now() + trailingWindowMs;
+      ensureScheduled();
+    },
+    dispose() {
+      disposed = true;
+      continuousReasons.clear();
+      handle?.cancel();
+      handle = null;
+    },
+  };
+}
+
+/** @emoji 🎯️ The owner's handle on a canvas session: every call except `renderFrame` invalidates the canvas (painted once
+ * at the next frame, coalesced with every other call before it), and `renderFrame` paints at once and satisfies those
+ * invalidations. So a canvas repaints exactly when its owner changed something (a scene sync, a caret, a theme, a camera),
+ * never twice for one change, and an idle canvas paints nothing. It replaces an unconditional per-frame repaint that held
+ * the main thread at 100 % for every node-graph and text-editor window (measured ticket 26/09/23 S15: an idle trinity jack
+ * editor painted its query text at ~98 ms per frame, so every host continuation waited a frame and one retained patch
+ * intake took 20 s). */
+export function frameDemandingSessionV1<Session extends object>(session: Session, scheduler: Pick<DemandFrameSchedulerV1, "invalidate" | "paintNow">): Session {
+  return new Proxy(session, {
+    get(target, key) {
+      const value: unknown = Reflect.get(target, key, target);
+      if (typeof value !== "function") return value;
+      const method = value as (...args: unknown[]) => unknown;
+      if (key === "renderFrame") return () => scheduler.paintNow();
+      return (...args: unknown[]) => {
+        scheduler.invalidate();
+        return method.apply(target, args);
+      };
+    },
+  });
+}
+
 /** @emoji 🕸️ Minimal WASM graph session surface (attach, resize, RAF, optional pointer). */
 export interface GraphWasmSession {
   attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
@@ -103,6 +212,7 @@ export interface GraphWasmSession {
 export interface GraphWasmCanvasProps {
   readonly className?: string;
   readonly sessionFactory: () => GraphWasmSession;
+  /** The owner's session handle ({@link frameDemandingSessionV1}): calls through it repaint the canvas on demand. */
   readonly onSessionReady?: (session: GraphWasmSession) => void;
   readonly enablePointer?: boolean;
 }
@@ -111,6 +221,8 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
   const containerRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const sessionRef = React.useRef<GraphWasmSession | null>(null);
+  const schedulerRef = React.useRef<DemandFrameSchedulerV1 | null>(null);
+  useCanvasAppearanceSync(() => schedulerRef.current?.invalidate(), true);
 
   const renderFrame = React.useCallback(() => {
     try {
@@ -125,13 +237,14 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
     const container = containerRef.current;
     if (!canvas || !container) return;
     let torndown = false;
-    let localRaf: { readonly cancel: () => void } | null = null;
     let localRo: ResizeObserver | null = null;
     let layoutRo: ResizeObserver | null = null;
     let degenerateTimer: ReturnType<typeof setTimeout> | null = null;
     const session = sessionFactory();
     sessionRef.current = session;
-    onSessionReady?.(session);
+    const scheduler = createDemandFrameScheduler(renderFrame);
+    schedulerRef.current = scheduler;
+    onSessionReady?.(frameDemandingSessionV1(session, scheduler));
     const modifiersOf = (ev: PointerEvent | MouseEvent): CanvasInputModifiers => ({
       shift: ev.shiftKey,
       ctrl: ev.ctrlKey,
@@ -148,32 +261,32 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
       const verdict = gestures.down(gesturePoint(ev));
       if (verdict.kind === "pinchBegin") {
         session.pointerCancel?.();
-        renderFrame();
+        scheduler.paintNow();
         return;
       }
       if (verdict.kind !== "single") return;
       const rect = canvas.getBoundingClientRect();
       session.pointerDown?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.button, ev.shiftKey, modifiersOf(ev));
-      renderFrame();
+      scheduler.paintNow();
     };
     const onPointerMove = (ev: PointerEvent) => {
       const verdict = gestures.move(gesturePoint(ev));
       if (verdict.kind === "pinch") {
         session.pinch?.(verdict.step);
-        renderFrame();
+        scheduler.paintNow();
         return;
       }
       if (verdict.kind !== "single") return;
       const rect = canvas.getBoundingClientRect();
       session.pointerMove?.(ev.clientX - rect.left, ev.clientY - rect.top);
-      renderFrame();
+      scheduler.paintNow();
     };
     const onPointerUp = (ev: PointerEvent) => {
       if (canvas.hasPointerCapture(ev.pointerId)) canvas.releasePointerCapture(ev.pointerId);
       if (gestures.up(ev.pointerId).kind !== "single") return;
       const rect = canvas.getBoundingClientRect();
       session.pointerUp?.(ev.clientX - rect.left, ev.clientY - rect.top, modifiersOf(ev));
-      renderFrame();
+      scheduler.paintNow();
     };
     // 🚫️ `pointerleave` / `pointercancel` / `lostpointercapture` are gesture CANCELS. While the canvas holds
     // capture, `pointerleave` and `lostpointercapture` only fire after `pointerup` has already closed the
@@ -184,18 +297,18 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
       if (ev.type !== "pointerleave" && gestures.up(ev.pointerId).kind !== "single") return;
       if (gestures.latched) return;
       session.pointerCancel?.();
-      renderFrame();
+      scheduler.paintNow();
     };
     const onDoubleClick = (ev: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       session.doubleClick?.(ev.clientX - rect.left, ev.clientY - rect.top);
-      renderFrame();
+      scheduler.invalidate();
     };
     const onWheel = (ev: WheelEvent) => {
       ev.preventDefault();
       const rect = canvas.getBoundingClientRect();
       session.wheel?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.deltaY);
-      renderFrame();
+      scheduler.invalidate();
     };
     const attach = (initW: number, initH: number, dpr: number) => {
       canvas.width = Math.round(initW * dpr);
@@ -215,16 +328,11 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
           canvas.style.width = `${w}px`;
           canvas.style.height = `${h}px`;
           session.setSize(w, h, dpr);
-          renderFrame();
+          scheduler.paintNow();
         };
         resize();
         localRo = new ResizeObserver(resize);
         localRo.observe(container);
-        const tick = () => {
-          renderFrame();
-          localRaf = scheduleDemandFrame(tick);
-        };
-        localRaf = scheduleDemandFrame(tick);
         if (enablePointer) {
           canvas.addEventListener("pointerdown", onPointerDown);
           canvas.addEventListener("pointermove", onPointerMove);
@@ -283,7 +391,8 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
         canvas.removeEventListener("dblclick", onDoubleClick);
         canvas.removeEventListener("wheel", onWheel);
       }
-      localRaf?.cancel();
+      scheduler.dispose();
+      if (schedulerRef.current === scheduler) schedulerRef.current = null;
       sessionRef.current?.detachGpu?.();
       sessionRef.current = null;
     };
@@ -305,5 +414,7 @@ export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️canvaseventbindingcontroller/🟦️.tsx");
   await registerTests1(import.meta.vitest, { CanvasEventBindingController }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerTests2 } = await import("./🧪️tests/🪶️demand-frames/🟦️.tsx");
+  await registerTests2(import.meta.vitest, { GraphWasmCanvas, React, createDemandFrameScheduler }, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🔖️Vitest

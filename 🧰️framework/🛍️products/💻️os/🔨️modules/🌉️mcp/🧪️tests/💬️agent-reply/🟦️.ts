@@ -30,6 +30,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium, type Page } from "playwright";
+import { parseAgentBridgeOffer, sameAgentBridgeOffer, type AgentBridgeConfig } from "../../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 
 const REPO_ROOT = join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..");
 const PROTOCOL_VERSION = "2025-06-18";
@@ -231,17 +232,17 @@ const page = await (await browser.newContext({ viewport: { width: 1600, height: 
 let gateway: Peer | null = null;
 let unscoped: Peer | null = null;
 try {
-  const offerBefore = await fetch(OFFER_URL)
-    .then(async (response) => (response.status === 200 ? ((await response.json()) as { pid?: number }) : null))
-    .catch(() => null);
+  const readOffer = (): Promise<AgentBridgeConfig | null> =>
+    fetch(OFFER_URL)
+      .then(async (response) => (response.status === 200 ? parseAgentBridgeOffer(await response.json()) : null))
+      .catch(() => null);
+  const offerBefore = await readOffer();
   gateway = await open("gateway — .mcp.json args verbatim", entry);
   const offer = await until("the gateway's offer on the dev session", 60_000, 500, async () => {
-    const response = await fetch(OFFER_URL).catch(() => null);
-    if (!response || response.status !== 200) return null;
-    const published = (await response.json()) as { url: string; pid: number };
-    return published.pid === offerBefore?.pid ? null : published;
+    const published = await readOffer();
+    return published === null || sameAgentBridgeOffer(published, offerBefore) ? null : published;
   });
-  record("0 rendezvous", offer ? "pass" : "fail", offer ? `offer before=${offerBefore ? `pid ${offerBefore.pid}` : "(none)"}, after=200 url=${offer.url} pid=${offer.pid}` : `this gateway published no offer of its own; ${OFFER_URL} still answers ${offerBefore ? `pid ${offerBefore.pid}` : "404"}`);
+  record("0 rendezvous", offer ? "pass" : "fail", offer ? `offer before=${offerBefore ? offerBefore.url : "(none)"}, after=${offer.url}` : `this gateway published no offer of its own; ${OFFER_URL} still answers ${offerBefore ? offerBefore.url : "no offer"}`);
 
   // 1. the tool exists on the live surface, with a real schema.
   const listed = await gateway.request("tools/list", {});

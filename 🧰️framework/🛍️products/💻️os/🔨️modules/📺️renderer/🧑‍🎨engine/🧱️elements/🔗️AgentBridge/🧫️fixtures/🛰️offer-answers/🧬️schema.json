@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.os.agent-bridge-offer/v1",
+  "title": "AgentBridgeOfferAnswerV1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "offered", "url", "admissionProof"],
+      "properties": {
+        "schema": { "const": "semio.os.agent-bridge-offer/v1" },
+        "offered": { "const": true },
+        "url": { "type": "string", "minLength": 1 },
+        "admissionProof": { "type": "string", "minLength": 1 }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "offered"],
+      "properties": {
+        "schema": { "const": "semio.os.agent-bridge-offer/v1" },
+        "offered": { "const": false }
+      }
+    }
+  ]
+}

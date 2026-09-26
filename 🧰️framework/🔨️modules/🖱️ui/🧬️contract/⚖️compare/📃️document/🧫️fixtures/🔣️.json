@@ -3,7 +3,7 @@
   "admissionGrant": 32768,
   "smallGrant": 4096,
   "frames": 256,
-  "componentCount": 19,
+  "componentCount": 21,
   "grants": [1, 64, 4096],
   "cancelFrontiers": [0, 1, 2, 5, 16, 64, 128],
   "finalReadModes": ["sole", "concurrent-pair", "queued-alias"],

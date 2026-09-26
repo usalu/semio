@@ -193,6 +193,7 @@ pub struct WalCursorControl {
     cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
     deadline: std::time::Instant,
     fuel: usize,
+    step: Option<(std::time::Duration, usize)>,
 }
 
 impl WalCursorControl {
@@ -200,7 +201,25 @@ impl WalCursorControl {
         if fuel == 0 {
             return Err(DbError::LimitExceeded("wal cursor fuel"));
         }
-        Ok(Self { cancelled, deadline, fuel })
+        Ok(Self { cancelled, deadline, fuel, step: None })
+    }
+
+    /// ⏱️ A control whose bound holds for each step of a whole-document scan rather than for the
+    /// scan: every `renew_step` grants `stall` and `fuel` afresh, so the scan's total length follows
+    /// its document's size and only a step that makes no progress within its bound fails.
+    pub fn stall_bounded(cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, stall: std::time::Duration, fuel: usize) -> Result<Self, DbError> {
+        let mut control = Self::new(cancelled, std::time::Instant::now() + stall, fuel)?;
+        control.step = Some((stall, fuel));
+        Ok(control)
+    }
+
+    /// ⏱️ Renews a stall-bounded control for its next step; a control built with one fixed deadline
+    /// keeps that one budget for the whole scan.
+    pub fn renew_step(&mut self) -> Result<(), DbError> {
+        match self.step {
+            Some((stall, fuel)) => self.replenish(std::time::Instant::now() + stall, fuel),
+            None => Ok(()),
+        }
     }
 
     pub fn replenish(&mut self, deadline: std::time::Instant, fuel: usize) -> Result<(), DbError> {
@@ -2085,10 +2104,11 @@ pub enum WalCommittedStep<'cursor, 'storage, S: db_storage::WalStorage> {
     Done,
 }
 
-/// ⏱️ How long one committed-transaction step of a whole-document replay may make no progress.
+/// ⏱️ How long one step of a whole-document WAL scan (one verified segment on open, one committed
+/// transaction on replay) may make no progress.
 pub const WAL_REPLAY_STEP_STALL_BOUND: std::time::Duration = std::time::Duration::from_secs(30);
 
-/// ⛽️ Fuel one committed-transaction step of a whole-document replay may spend.
+/// ⛽️ Fuel one step of a whole-document WAL scan may spend.
 pub const WAL_REPLAY_STEP_FUEL: usize = 1_000_000;
 
 /// 🤝️ Keeps the source segment and current decoded body borrowed until explicit retirement.
@@ -2794,9 +2814,12 @@ impl ArtifactWal {
 
     /// 🚑️ Verifies the retained chain, durably aborts incomplete active transactions, repairs the
     /// uncommitted tail, and resumes the physical sequence under the caller's exclusive write authority.
+    /// The bound holds per verified segment (`WAL_REPLAY_STEP_STALL_BOUND`, `WAL_REPLAY_STEP_FUEL`):
+    /// one wall-clock budget for the whole chain made every document whose history outgrew it
+    /// unopenable, and a loaded host reached that size first.
     pub async fn open(storage: &impl db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<(Self, WalRecoveryReport), ArtifactWalOpenRejected> {
         let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let mut control = WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).map_err(ArtifactWalOpenRejected::before_acquire)?;
+        let mut control = WalCursorControl::stall_bounded(cancelled, WAL_REPLAY_STEP_STALL_BOUND, WAL_REPLAY_STEP_FUEL).map_err(ArtifactWalOpenRejected::before_acquire)?;
         Self::open_with_control(storage, document, policy, now_ms, &mut control).await
     }
 
@@ -2838,6 +2861,7 @@ impl ArtifactWal {
             let mut logical = WalTransactionGate::new();
             let mut active = None;
             for &index in indices.as_slice() {
+                control.renew_step()?;
                 control.grant()?;
                 let state = storage.segment_state(&document, index).await?;
                 let writable = index == last && state == db_storage::WalSegmentState::Active;

@@ -12,6 +12,157 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 static FIXTURE_SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
+/// 🧊️ The residency every hub applies is exactly the `const` values `TrustedCatalogGuestResidencyV1`
+/// declares, and a catalog load never verifies more guests at once than the declared bound.
+#[test]
+fn guest_residency_bounds_are_the_declared_schema_values() {
+    let module: serde_json::Value = serde_json::from_str(schema::TRUSTED_CATALOG_SCHEMA_JSON).unwrap();
+    let residency = &module["$defs"]["TrustedCatalogGuestResidencyV1"];
+    let declared = &residency["properties"];
+    assert_eq!(declared["residentComponentBytesMaximum"]["const"].as_u64(), Some(TRUSTED_CATALOG_GUEST_RESIDENCY.resident_component_bytes_maximum));
+    assert_eq!(declared["concurrentVerifications"]["const"].as_u64(), Some(TRUSTED_CATALOG_GUEST_RESIDENCY.concurrent_verifications as u64));
+    assert_eq!(residency["required"].as_array().unwrap().len(), declared.as_object().unwrap().len(), "every declared bound is required");
+    assert!(guest_verification_concurrency() >= 1 && guest_verification_concurrency() <= TRUSTED_CATALOG_GUEST_RESIDENCY.concurrent_verifications);
+}
+
+/// 🗃️ A remembered verification answers only for exactly its component, schema and engine; a record
+/// edited to claim another hash, another engine or another component is a miss, never a verdict.
+#[tokio::test]
+async fn a_guest_codec_verification_is_recalled_only_for_its_exact_key() {
+    let root = std::env::temp_dir().join(format!("guest-codec-verifications-{}-{}", std::process::id(), FIXTURE_SEQUENCE.fetch_add(1, Ordering::SeqCst)));
+    let cache = GuestCodecVerificationCacheV1::at(root.clone(), "owned-engine-v1:aa:fuel-1");
+    let component = [7u8; 32];
+    let observed = [9u8; 32];
+    assert_eq!(cache.recall(&component, "note.document").await, None, "a cold cache recalls nothing");
+    assert!(cache.remember(&component, "note.document", &observed).await);
+    assert_eq!(cache.recall(&component, "note.document").await, Some(observed));
+    assert_eq!(cache.recall(&component, "draw.document").await, None, "another schema is another key");
+    assert_eq!(cache.recall(&[8u8; 32], "note.document").await, None, "another component is another key");
+    assert_eq!(GuestCodecVerificationCacheV1::at(root.clone(), "owned-engine-v1:ab:fuel-1").recall(&component, "note.document").await, None, "a changed engine verifies afresh");
+    assert_eq!(GuestCodecVerificationCacheV1::disabled().recall(&component, "note.document").await, None);
+    let file = std::fs::read_dir(&root).unwrap().next().unwrap().unwrap().path();
+    let module: serde_json::Value = serde_json::from_str(schema::TRUSTED_CATALOG_SCHEMA_JSON).unwrap();
+    let stored: serde_json::Value = serde_json::from_slice(&std::fs::read(&file).unwrap()).unwrap();
+    let required: Vec<&str> = module["$defs"]["GuestCodecVerificationV1"]["required"].as_array().unwrap().iter().map(|field| field.as_str().unwrap()).collect();
+    assert_eq!(stored.as_object().unwrap().keys().map(String::as_str).collect::<BTreeSet<_>>(), required.iter().copied().collect(), "the record is exactly the schema's fields");
+    let forged = String::from_utf8(std::fs::read(&file).unwrap()).unwrap().replace(&"09".repeat(32), &"0a".repeat(32));
+    std::fs::write(&file, forged).unwrap();
+    assert_eq!(cache.recall(&component, "note.document").await, Some([10u8; 32]), "a record is only a memory; the loader compares it with the trust record");
+    std::fs::write(&file, b"{not json").unwrap();
+    assert_eq!(cache.recall(&component, "note.document").await, None, "an unreadable record is a miss");
+    std::fs::remove_dir_all(&root).unwrap();
+}
+
+/// 🪪️ A hub's verification memory is keyed by the owned engine and lives inside its trusted catalog:
+/// any build of the same engine at the same data root — another path, a copy, a re-signed binary —
+/// recalls what one verified, and copying `trusted-catalog/` carries the memory with it.
+#[tokio::test]
+async fn a_guest_codec_verification_is_keyed_by_the_engine_and_travels_with_the_catalog() {
+    let data = std::env::temp_dir().join(format!("guest-codec-engine-{}-{}", std::process::id(), FIXTURE_SEQUENCE.fetch_add(1, Ordering::SeqCst)));
+    let engine = guest_codec_engine_identity();
+    assert!(engine.starts_with("owned-engine-v1:") && engine.ends_with(&format!(":fuel-{}", GUEST_CODEC_BUDGET.fuel)), "{engine}");
+    assert_eq!(engine, guest_codec_engine_identity(), "the identity is a pure function of the engine");
+    let component = [3u8; 32];
+    let observed = [5u8; 32];
+    assert!(GuestCodecVerificationCacheV1::beside(&data).remember(&component, "note.document", &observed).await);
+    assert!(data.join("trusted-catalog").join("guest-codec-verifications").is_dir());
+    assert_eq!(GuestCodecVerificationCacheV1::beside(&data).recall(&component, "note.document").await, Some(observed));
+    let copied = data.with_extension("copy");
+    std::fs::create_dir_all(copied.join("trusted-catalog")).unwrap();
+    std::fs::rename(data.join("trusted-catalog").join("guest-codec-verifications"), copied.join("trusted-catalog").join("guest-codec-verifications")).unwrap();
+    assert_eq!(GuestCodecVerificationCacheV1::beside(&copied).recall(&component, "note.document").await, Some(observed), "the memory travels with the catalog tree");
+    assert_eq!(GuestCodecVerificationCacheV1::beside(&data).recall(&component, "note.document").await, None);
+    std::fs::remove_dir_all(&data).unwrap();
+    std::fs::remove_dir_all(&copied).unwrap();
+}
+
+/// 🧊️ Compiled guests stay resident within the ledger's byte budget: a new compile releases the least
+/// recently used guests no call holds, a held guest is never released, idleness alone releases nothing,
+/// and a released guest compiles again on its next use.
+#[tokio::test]
+async fn compiled_guests_are_released_least_recently_used_by_capacity_never_by_idleness() {
+    let compiles = AtomicUsize::new(0);
+    let compile = |value: u8| {
+        let compiles = &compiles;
+        move || async move {
+            compiles.fetch_add(1, Ordering::SeqCst);
+            Ok::<_, AuthorityError>(vec![value; 16])
+        }
+    };
+    let ledger = GuestResidencyLedgerV1::<Vec<u8>>::new(2_000);
+    let (a, b, c) = (ledger.register(1_000), ledger.register(1_000), ledger.register(1_000));
+    assert_eq!(*a.acquire(compile(1)).await.unwrap(), vec![1; 16]);
+    assert_eq!(*b.acquire(compile(2)).await.unwrap(), vec![2; 16]);
+    assert_eq!(*a.acquire(compile(1)).await.unwrap(), vec![1; 16]);
+    assert_eq!(compiles.load(Ordering::SeqCst), 2, "a resident guest is reused");
+    tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    assert!(a.is_resident() && b.is_resident(), "idleness alone releases nothing");
+    assert_eq!(ledger.state(), GuestResidencyStateV1 { resident: 2, resident_bytes: 2_000, maximum_bytes: 2_000, released: 0 });
+    assert_eq!(*c.acquire(compile(3)).await.unwrap(), vec![3; 16]);
+    assert!(!b.is_resident() && a.is_resident() && c.is_resident(), "the least recently used unheld guest makes room");
+    assert_eq!(ledger.state(), GuestResidencyStateV1 { resident: 2, resident_bytes: 2_000, maximum_bytes: 2_000, released: 1 });
+    let held_a = a.acquire(compile(1)).await.unwrap();
+    let held_c = c.acquire(compile(3)).await.unwrap();
+    assert_eq!(*b.acquire(compile(2)).await.unwrap(), vec![2; 16]);
+    assert_eq!(compiles.load(Ordering::SeqCst), 4, "the released guest compiles again on its next use");
+    assert!(a.is_resident() && c.is_resident() && b.is_resident(), "guests running calls hold are never released, even over budget");
+    drop((held_a, held_c));
+    assert_eq!(*b.acquire(compile(2)).await.unwrap(), vec![2; 16]);
+    assert_eq!(compiles.load(Ordering::SeqCst), 4);
+    let d = ledger.register(1_000);
+    assert_eq!(*d.acquire(compile(4)).await.unwrap(), vec![4; 16]);
+    assert!(!a.is_resident() && !c.is_resident() && b.is_resident() && d.is_resident(), "the next compile brings the ledger back under budget, oldest first");
+    assert_eq!(ledger.state().resident_bytes, 2_000);
+    let failing = ledger.register(1_000);
+    assert!(failing.acquire(|| async { Err::<Vec<u8>, _>(AuthorityError::Catalog("refused".into())) }).await.is_err());
+    assert!(!failing.is_resident(), "a failed compile leaves nothing resident");
+}
+
+/// 🧵️ A guest codec call interprets on the blocking pool, never on the worker awaiting it: another
+/// task on a one-thread runtime keeps running for the whole call, every fuel observation reaches the
+/// caller's context in order, and a cancelled caller is released at its next observation.
+#[test]
+fn guest_codec_calls_run_off_the_async_worker_and_relay_their_fuel() {
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+    runtime.block_on(async {
+        let control = TestControl::new();
+        let context = control.context();
+        let ticks = Arc::new(AtomicUsize::new(0));
+        let ticker = {
+            let ticks = ticks.clone();
+            tokio::spawn(async move {
+                loop {
+                    ticks.fetch_add(1, Ordering::SeqCst);
+                    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+                }
+            })
+        };
+        let answer = interpret_off_worker(&context, |_handle, progress| {
+            for fuel in [10, 20, 30] {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+                progress(fuel);
+            }
+            Ok(42u32)
+        })
+        .await;
+        assert!(matches!(answer, Ok(Ok(42))), "{answer:?}");
+        assert!(ticks.load(Ordering::SeqCst) >= 20, "the awaiting worker kept running other tasks: {} ticks", ticks.load(Ordering::SeqCst));
+        let relayed: Vec<u64> = control.progress.lock().unwrap().iter().filter(|progress| progress.stage == AuthorityProgressStage::GuestCodecExecuting).map(|progress| progress.completed_units).collect();
+        assert_eq!(relayed, vec![10, 20, 30]);
+        control.cancelled.store(true, Ordering::SeqCst);
+        let started = std::time::Instant::now();
+        let cancelled = interpret_off_worker(&context, |_handle, progress| {
+            progress(1);
+            std::thread::sleep(std::time::Duration::from_millis(400));
+            Ok(0u32)
+        })
+        .await;
+        assert!(matches!(cancelled, Err(AuthorityError::Cancelled)), "{cancelled:?}");
+        assert!(started.elapsed() < std::time::Duration::from_millis(300), "a cancelled caller is released at its next observation, not when the call ends");
+        ticker.abort();
+    });
+}
+
 #[test]
 fn trusted_descriptor_wire_materialization_matches_neutral_boundaries() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
@@ -1509,4 +1660,61 @@ async fn a_loaded_catalog_indexes_and_serves_every_verified_plugin_module_file_a
     assert!(editor.file("fixture.editor/unlisted.js").is_none());
     std::fs::write(fixture.root.join(plugin_module::plugin_module_blob_path(&bridge.sha256)), b"tampered").expect("tamper entry");
     assert!(editor.file(&bridge.path).expect("editor entry").read(&control.context()).await.is_err(), "a module file tampered after verification is never served");
+    assert!(drain_stream(editor.file(&bridge.path).expect("editor entry")).await.1.is_some(), "a module file tampered after verification never completes its stream");
+}
+
+/// 🚰️ Drains one asset stream: the bytes it released and the error that ended it, if any.
+async fn drain_stream(asset: &TrustedCatalogAsset) -> (Vec<u8>, Option<AuthorityError>) {
+    let mut stream = match asset.stream() {
+        Ok(stream) => stream,
+        Err(error) => return (Vec::new(), Some(error)),
+    };
+    let mut released = Vec::new();
+    while let Some(chunk) = stream.next_chunk().await {
+        match chunk {
+            Ok(bytes) => released.extend_from_slice(&bytes),
+            Err(error) => return (released, Some(error)),
+        }
+    }
+    (released, None)
+}
+
+/// ⚖️ LAW: a verified file is served as a chunked stream with NO request deadline that releases exactly the verified bytes,
+/// and a file changed on disk after verification — same length, one byte flipped anywhere, or truncated — ends the stream in
+/// an error before its final chunk, so a reader holding the declared length never completes it. The per-request reread
+/// under the 8 s execution-target deadline refused every large core module with 500 once a burst loaded the debug hub
+/// (S15, session 12: all 7 core modules ≥ 17 MB of catalog B answered 500 at 8.0–8.2 s, `wp-s15/s15-module-burst.ts`).
+#[tokio::test]
+async fn a_verified_file_streams_its_exact_bytes_without_a_deadline_and_withholds_its_last_chunk_once_tampered() {
+    let fixture = prepared_fixture();
+    let canonical_root = std::fs::canonicalize(&fixture.root).expect("canonical fixture-owned generation root");
+    let root = Arc::new(TrustedCatalogGenerationRoot::open_fixture_owned(&canonical_root).expect("opened generation root"));
+    let bytes: Vec<u8> = (0..(3 * TRUSTED_READ_CHUNK_BYTES + 17)).map(|index| (index % 251) as u8).collect();
+    let retained = |name: &str| {
+        std::fs::write(fixture.root.join(name), &bytes).expect("write multi-chunk module file");
+        TrustedCatalogAsset::retained(TrustedRetainedFile::new(Arc::clone(&root), TrustedCatalogRelativePathV1::parse(name).expect("relative path"), bytes.len() as u64, Sha256::digest(&bytes), Some(*Hasher::new().update(&bytes).finalize().as_bytes())))
+    };
+
+    let intact = retained("intact.bin");
+    assert_eq!(intact.stream().expect("stream").byte_length(), bytes.len() as u64);
+    let (released, error) = drain_stream(&intact).await;
+    assert!(error.is_none(), "an intact verified file streams to its end: {error:?}");
+    assert_eq!(released, bytes, "the stream releases exactly the verified bytes");
+
+    for (name, offset) in [("flip-first.bin", 0), ("flip-middle.bin", TRUSTED_READ_CHUNK_BYTES + 5), ("flip-last.bin", bytes.len() - 1)] {
+        let asset = retained(name);
+        let mut tampered = bytes.clone();
+        tampered[offset] ^= 0xff;
+        std::fs::write(fixture.root.join(name), &tampered).expect("tamper after verification");
+        let (released, error) = drain_stream(&asset).await;
+        assert!(error.is_some(), "{name}: a file changed after verification ends its stream in an error");
+        assert!(released.len() < bytes.len(), "{name}: the final chunk is withheld, so the declared length is never completed ({} of {})", released.len(), bytes.len());
+    }
+
+    let truncated = retained("truncated.bin");
+    std::fs::write(fixture.root.join("truncated.bin"), &bytes[..bytes.len() - 1]).expect("truncate after verification");
+    assert!(drain_stream(&truncated).await.1.is_some(), "a truncated file is refused before it streams");
+
+    let (released, error) = drain_stream(&TrustedCatalogAsset::resident(Arc::from(bytes.clone()))).await;
+    assert!(error.is_none() && released == bytes, "a resident asset streams the bytes the catalog verified");
 }

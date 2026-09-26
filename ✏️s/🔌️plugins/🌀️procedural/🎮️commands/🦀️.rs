@@ -15,7 +15,7 @@ pub(crate) const LIST_FLOW_EXTENSIONS: &str = "listFlowExtensions";
 /// extensions this plugin installs, which is plugin-scoped precisely because both the 2D and the 3D
 /// editor evaluate through the same nine extensions and neither owns them.
 pub(crate) fn list_flow_extensions_command() -> CommandDefinition {
-    CommandDefinition { in_palette: true, ..CommandDefinition::bounded_catalog(LIST_FLOW_EXTENSIONS, LocalizedLabel::native("List Flow Extensions", "Flow-Erweiterungen auflisten"), "plugin", ActionKind::View) }
+    CommandDefinition { in_palette: true, ..CommandDefinition::bounded_catalog(LIST_FLOW_EXTENSIONS, LocalizedLabel::native("List Flow Extensions", "Flow-Erweiterungen auflisten"), "plugin", ActionKind::View) }.describe(LocalizedLabel::native("Lists every flow extension the procedural plugin can load (id, extension, label and version); nothing is changed.", "Listet alle Flow-Erweiterungen auf, die das Prozedural-Plugin laden kann (Id, Erweiterung, Bezeichnung und Version); nichts wird geändert.")).describe(LocalizedLabel::native("Lists every flow extension the procedural plugin can load (id, extension, label and version); nothing is changed.", "Listet alle Flow-Erweiterungen auf, die das Prozedural-Plugin laden kann (Id, Erweiterung, Bezeichnung und Version); nichts wird geändert.")).describe(LocalizedLabel::native("Lists every flow extension the procedural plugin can load (id, extension, label and version); nothing is changed.", "Listet alle Flow-Erweiterungen auf, die das Prozedural-Plugin laden kann (Id, Erweiterung, Bezeichnung und Version); nichts wird geändert."))
 }
 
 /// 🧾️ Projects `super::FLOW_EXTENSIONS` as `[{ id, extension, label, version }]`, in declaration

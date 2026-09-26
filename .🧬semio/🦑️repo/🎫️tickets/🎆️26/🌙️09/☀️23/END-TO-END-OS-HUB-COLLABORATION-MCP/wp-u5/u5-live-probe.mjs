@@ -11,7 +11,7 @@
 import { chromium } from "playwright";
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dismissIntroduction, seatLocale, spawnProgram } from "../../../☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🐍️s6-all-kinds-sweep.mjs";
+import { dismissIntroduction, openPalette, seatLocale, spawnProgram } from "../../../☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🐍️s6-all-kinds-sweep.mjs";
 
 const [baseUrl = "http://127.0.0.1:6580/", mode = "devices", ...rest] = process.argv.slice(2);
 const out = (name) => fileURLToPath(new URL(`./generated/${name}`, import.meta.url));
@@ -172,7 +172,28 @@ async function tasks() {
   report.console = lines.filter((l) => /error|pageerror/iu.test(l)).slice(-30);
 }
 
-async function jobs(pluginId) {
+/** 🚀️ Spawns one exact app (`spawn.<pluginId>.<appId>`) from the command palette. */
+async function spawnApp(page, pluginId, appId) {
+  const before = await page.evaluate(() => [...document.querySelectorAll("[data-window-id]")].map((el) => el.getAttribute("data-window-id")));
+  await openPalette(page);
+  const input = page.locator("[role='dialog'] [data-slot='command-input']").first();
+  await input.waitFor({ state: "visible", timeout: 20_000 }).catch(() => undefined);
+  await input.fill(/^s\.[^.]+\.([^@]+)@/u.exec(appId)?.[1] ?? pluginId);
+  const item = page.locator(`[data-slot="command-item"][data-command-item-id="spawn.${pluginId}.${appId}"]`).first();
+  await item.waitFor({ state: "visible", timeout: 20_000 }).catch(() => undefined);
+  if ((await item.count()) === 0) return { windowIds: [], detail: `no spawn.${pluginId}.${appId} palette entry` };
+  await item.click({ force: true });
+  const deadline = Date.now() + 180_000;
+  while (Date.now() < deadline) {
+    const now = await page.evaluate(() => [...document.querySelectorAll("[data-window-id]")].map((el) => el.getAttribute("data-window-id")));
+    const opened = now.filter((id) => !before.includes(id));
+    if (opened.length > 0) return { windowIds: opened, detail: null };
+    await page.waitForTimeout(250);
+  }
+  return { windowIds: [], detail: "no new window" };
+}
+
+async function jobs(pluginId, appId) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
   const lines = [];
@@ -184,8 +205,8 @@ async function jobs(pluginId) {
     const record = () => {
       for (const row of document.querySelectorAll("[data-semio-task-manager-task]")) {
         const bar = row.querySelector("[role='progressbar']");
-        const entry = { id: row.getAttribute("data-semio-task-manager-task"), lane: row.getAttribute("data-semio-task-manager-lane"), state: row.getAttribute("data-semio-task-manager-state"), progress: bar?.getAttribute("aria-valuetext") ?? null, label: bar?.getAttribute("aria-label") ?? null };
-        const key = JSON.stringify(entry);
+        const entry = { t: Math.round(performance.now()), id: row.getAttribute("data-semio-task-manager-task"), lane: row.getAttribute("data-semio-task-manager-lane"), state: row.getAttribute("data-semio-task-manager-state"), progress: bar?.getAttribute("aria-valuetext") ?? null, label: bar?.getAttribute("aria-label") ?? null };
+        const key = JSON.stringify({ ...entry, t: 0 });
         if (seen.has(key)) continue;
         seen.add(key);
         window.__u5Task?.(entry);
@@ -201,7 +222,7 @@ async function jobs(pluginId) {
   await page.waitForTimeout(3_000);
   await page.locator('[id="os.task-manager"]').first().click({ timeout: 10_000 }).catch(() => undefined);
   await page.waitForSelector("[data-semio-task-manager-window]", { timeout: 20_000 }).catch(() => undefined);
-  const spawned = await spawnProgram(page, pluginId);
+  const spawned = appId ? await spawnApp(page, pluginId, appId) : await spawnProgram(page, pluginId);
   report.rows.push({ at: `spawn ${pluginId}`, spawned });
   if ((await page.locator("[data-semio-task-manager-window]").count()) === 0) await page.locator('[id="os.task-manager"]').first().click({ timeout: 10_000 }).catch(() => undefined);
   const firstJob = await page.waitForSelector("[data-semio-task-manager-lane='job']", { timeout: 45_000 }).then(() => true).catch(() => false);
@@ -218,10 +239,10 @@ async function jobs(pluginId) {
   report.console = lines.filter((l) => /pageerror|fault|trap|job/iu.test(l)).slice(-40);
 }
 
-if (mode === "jobs") await jobs(rest[0] ?? "fem");
+if (mode === "jobs") await jobs(rest[0] ?? "fem", rest[1]);
 if (mode === "devices") await devices();
 if (mode === "hub") await hub(rest[0]);
 if (mode === "tasks") await tasks();
+writeFileSync(out(`u5-live-${mode}${rest[0] ? `-${rest[0]}` : ""}.json`), JSON.stringify(report, null, 1));
 await browser.close();
-writeFileSync(out(`u5-live-${mode}.json`), JSON.stringify(report, null, 1));
 for (const row of report.rows) console.log(JSON.stringify(row).slice(0, 700));

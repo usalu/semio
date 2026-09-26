@@ -655,6 +655,10 @@ export type UiTranslationSchema = {
       readonly hubRejected: UiLabelValue;
       /** 🌐️ The hub applied one of this human's command batches in a transformed form (a concurrent edit won). */
       readonly hubTransformed: UiLabelValue;
+      /** 🌐️ Why the hub refused a batch: another human changed the same part concurrently (a touched-region conflict). */
+      readonly hubConcurrentEdit: UiLabelValue;
+      /** 🌐️ Why the hub refused a batch: it breaks a structural rule a concurrent change by another human now holds. */
+      readonly hubConcurrentInvariant: UiLabelValue;
     };
     /** 👥️ `PresenceBar` roster chrome (ticket `26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS`
      * lane 2-F) — the `(space, document, surface)` peer list's own aria strings; per-peer display names are
@@ -788,6 +792,8 @@ export type UiTranslateFn = <K extends UiTranslationKey>(key: K, options?: Recor
 /** @emoji 🪁️ Shared UI i18n port (wraps i18next; do not import i18next outside this bundle). */
 export interface UiI18nPort {
   readonly t: UiTranslateFn;
+  /** Whether the live bundles define `key` — for a caller holding an open id space that only sometimes names a label. */
+  exists(key: string): boolean;
   changeLanguage(locale: UiLocale): Promise<unknown>;
   readonly language: string | undefined;
   readonly resolvedLanguage: string | undefined;

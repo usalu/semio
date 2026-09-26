@@ -322,6 +322,9 @@ export function mcpServerEntries(repoRoot: string): Record<string, McpServerEntr
 export const CLIENT_E2E_PINNED_PLUGIN_ID = "note";
 export const CLIENT_E2E_PINNED_ARTIFACT_KIND = "s.note.note";
 export const CLIENT_E2E_PINNED_CAPABILITY_ID = "note.s.note.note@1/*#editor.addBlock";
+/** 📭️ A verb of the pinned kind that changes nothing on a document with no selection: its preview
+ * produces no operation, which the gateway must answer as a committed no-change, never INTERNAL. */
+export const CLIENT_E2E_NO_CHANGE_CAPABILITY_ID = "note.s.note.note@1/*#editor.duplicateSelection";
 
 /** 💡️ The inference the journey runs, pinned for the same reason and against the same kind of
  * drift: `inference_list` returns the UNION of every installed plugin's declared roster, and taking
@@ -552,9 +555,16 @@ function revisionOf(reply: McpToolReply): RevisionStampWire | undefined {
  * therefore asserted something the format can never deliver — it read identical across a commit
  * that landed perfectly (measured 2026-09-22, slice CE3). */
 function snapshotDocumentBase64(reply: McpToolReply): string {
-  const pack = String(reply.structuredContent?.packBase64 ?? "");
-  const spr = String(reply.structuredContent?.sprBase64 ?? "");
+  const pack = String(untrustedContent(reply).packBase64 ?? "");
+  const spr = String(untrustedContent(reply).sprBase64 ?? "");
   return pack.length === 0 && spr.length === 0 ? "" : `${pack}.${spr}`;
+}
+
+/** 🧷️ The document-authored content a reply carries — only ever inside its `untrusted` envelope
+ * (`semio.mcp.untrusted-content/v1`); an empty record when the reply carries none. */
+function untrustedContent(reply: McpToolReply): Record<string, unknown> {
+  const envelope = reply.structuredContent?.untrusted as Record<string, any> | undefined;
+  return envelope?.schema === "semio.mcp.untrusted-content/v1" ? ((envelope.content ?? {}) as Record<string, unknown>) : {};
 }
 
 /** 📄️ Walks one cursor-paginated list method exactly as a spec-strict client does: page one, then
@@ -739,7 +749,8 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
 
     const exportTarget = typedArtifactId;
     const exported = await session.call("artifact_export", { artifactId: exportTarget });
-    announce(steps, { step: "os: artifact_export", ok: exported.isError !== true && typeof exported.structuredContent?.contentBase64 === "string" && (exported.structuredContent?.contentBase64 as string).length > 0, detail: exported.isError === true ? `${exportTarget}: ${JSON.stringify(exported.structuredContent).slice(0, 300)}` : `artifactId=${exportTarget} port=${exported.structuredContent?.format} base64Bytes=${String(exported.structuredContent?.contentBase64 ?? "").length} declaredFormats=${JSON.stringify(exported.structuredContent?.declaredExportFormats ?? [])}`, wire: { ...exported.structuredContent, contentBase64: `${String(exported.structuredContent?.contentBase64 ?? "").slice(0, 32)}…` } });
+    const exportedBase64 = String(untrustedContent(exported).contentBase64 ?? "");
+    announce(steps, { step: "os: artifact_export", ok: exported.isError !== true && exportedBase64.length > 0, detail: exported.isError === true ? `${exportTarget}: ${JSON.stringify(exported.structuredContent).slice(0, 300)}` : `artifactId=${exportTarget} port=${exported.structuredContent?.format} base64Bytes=${exportedBase64.length} (inside untrusted) declaredFormats=${JSON.stringify(exported.structuredContent?.declaredExportFormats ?? [])}`, wire: { ...exported.structuredContent, untrusted: { provenance: (exported.structuredContent?.untrusted as any)?.provenance, contentBase64: `${exportedBase64.slice(0, 32)}…` } } });
 
     // 🎯️ Every dispatch row from here down is the PINNED verb on the PINNED artifact kind, whose
     //    component the step above proved staged and current. Walking on to another hit when one
@@ -748,7 +759,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    server — so one cold 202 MB component (`gis`) wedges every later step behind it. One
     //    plugin per journey is also one cold component compile per journey.
     const beforeSnapshot = await session.call("artifact_snapshot", { artifactId: typedArtifactId });
-    const packBefore = String(beforeSnapshot.structuredContent?.packBase64 ?? "");
+    const packBefore = String(untrustedContent(beforeSnapshot).packBase64 ?? "");
     const documentBefore = snapshotDocumentBase64(beforeSnapshot);
 
     const prepared = await session.call("action_prepare", { capabilityId: CLIENT_E2E_PINNED_CAPABILITY_ID, input });
@@ -795,10 +806,11 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    prompt tells an agent to confirm exactly this way. The document is `pack` AND `spr`, never
     //    `pack` alone — see `snapshotDocumentBase64`.
     const afterSnapshot = await session.call("artifact_snapshot", { artifactId: typedArtifactId });
-    const packAfter = String(afterSnapshot.structuredContent?.packBase64 ?? "");
-    announce(steps, { step: "os: artifact_snapshot (the created artifact)", ok: afterSnapshot.isError !== true && Number(afterSnapshot.structuredContent?.packBytes ?? 0) > 0, detail: afterSnapshot.isError === true ? `${typedArtifactId}: ${JSON.stringify(afterSnapshot.structuredContent).slice(0, 300)}` : `artifactId=${typedArtifactId} packBytes=${afterSnapshot.structuredContent?.packBytes} sprBytes=${afterSnapshot.structuredContent?.sprBytes}`, wire: { ...afterSnapshot.structuredContent, packBase64: `${packAfter.slice(0, 32)}…` } });
+    const packAfter = String(untrustedContent(afterSnapshot).packBase64 ?? "");
+    const afterEnvelope = afterSnapshot.structuredContent?.untrusted as Record<string, any> | undefined;
+    announce(steps, { step: "os: artifact_snapshot (the created artifact)", ok: afterSnapshot.isError !== true && Number(afterSnapshot.structuredContent?.packBytes ?? 0) > 0 && packAfter.length > 0, detail: afterSnapshot.isError === true ? `${typedArtifactId}: ${JSON.stringify(afterSnapshot.structuredContent).slice(0, 300)}` : `artifactId=${typedArtifactId} packBytes=${afterSnapshot.structuredContent?.packBytes} sprBytes=${afterSnapshot.structuredContent?.sprBytes} untrusted.source=${afterEnvelope?.provenance?.source} authors=${afterEnvelope?.provenance?.authors?.kind}`, wire: { ...afterSnapshot.structuredContent, untrusted: { provenance: afterEnvelope?.provenance, packBase64: `${packAfter.slice(0, 32)}…` } } });
     const documentAfter = snapshotDocumentBase64(afterSnapshot);
-    announce(steps, { step: "os: the snapshot shows the mutation", ok: documentBefore.length > 0 && documentAfter.length > 0 && documentAfter !== documentBefore, detail: documentBefore.length === 0 ? `the pre-mutation snapshot answered no bytes: ${JSON.stringify(beforeSnapshot.structuredContent).slice(0, 200)}` : documentAfter === documentBefore ? `${typedArtifactId} is byte-identical across the commit (pack ${packAfter.length}, spr ${String(afterSnapshot.structuredContent?.sprBase64 ?? "").length} base64 chars) — the snapshot is reading a frozen row, not the document the mutation went to` : `${documentBefore.length} → ${documentAfter.length} base64 chars across the commit (pack ${packBefore.length} → ${packAfter.length}, spr ${String(beforeSnapshot.structuredContent?.sprBase64 ?? "").length} → ${String(afterSnapshot.structuredContent?.sprBase64 ?? "").length})`, wire: { before: documentBefore.slice(0, 24), after: documentAfter.slice(0, 24) } });
+    announce(steps, { step: "os: the snapshot shows the mutation", ok: documentBefore.length > 0 && documentAfter.length > 0 && documentAfter !== documentBefore, detail: documentBefore.length === 0 ? `the pre-mutation snapshot answered no bytes: ${JSON.stringify(beforeSnapshot.structuredContent).slice(0, 200)}` : documentAfter === documentBefore ? `${typedArtifactId} is byte-identical across the commit (pack ${packAfter.length}, spr ${String(untrustedContent(afterSnapshot).sprBase64 ?? "").length} base64 chars) — the snapshot is reading a frozen row, not the document the mutation went to` : `${documentBefore.length} → ${documentAfter.length} base64 chars across the commit (pack ${packBefore.length} → ${packAfter.length}, spr ${String(untrustedContent(beforeSnapshot).sprBase64 ?? "").length} → ${String(untrustedContent(afterSnapshot).sprBase64 ?? "").length})`, wire: { before: documentBefore.slice(0, 24), after: documentAfter.slice(0, 24) } });
 
     const headAfterInvoke = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
     announce(steps, { step: "os: live head advanced", ok: headAfterInvoke !== undefined && headAfterInvoke.headEditId === revisionAfter?.headEditId && headAfterInvoke.headEditId !== baselineRevision?.headEditId, detail: `re-read head ${stampText(headAfterInvoke)} (baseline ${stampText(baselineRevision)}, invoke reported ${stampText(revisionAfter)})`, wire: headAfterInvoke });
@@ -820,6 +832,16 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     const headAfterRedo = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
     const redoWarnings = (redone.structuredContent?.warnings ?? []) as string[];
     announce(steps, { step: "os: history_redo (mutation restored)", ok: redone.isError !== true && Number(redone.structuredContent?.members ?? 0) > 0 && redoWarnings.length === 0 && headAfterRedo?.headEditId !== undefined && headAfterRedo.headEditId !== baselineRevision?.headEditId, detail: redone.isError === true ? JSON.stringify(redone.structuredContent).slice(0, 300) : `members=${redone.structuredContent?.members} warnings=${redoWarnings.length === 0 ? "none" : redoWarnings.join(" / ").slice(0, 200)} head ${stampText(headAfterRedo)} (undone head was ${stampText(headAfterUndo)})`, wire: redone.structuredContent });
+
+    const noChangePrepared = await session.call("action_prepare", { capabilityId: CLIENT_E2E_NO_CHANGE_CAPABILITY_ID, input: {} });
+    const noChange = noChangePrepared.isError === true ? noChangePrepared : await session.call("action_invoke", { preparedActionHandle: noChangePrepared.structuredContent?.preparedHandle });
+    const noChangeWarnings = (noChange.structuredContent?.warnings as string[] | undefined) ?? [];
+    announce(steps, {
+      step: "os: an action that changes nothing answers no-change, never INTERNAL",
+      ok: noChange.isError !== true && noChange.structuredContent?.status === "SUCCEEDED" && noChangeWarnings.some((warning) => warning.startsWith("no-change:")) && JSON.stringify(noChange.structuredContent?.revisionAfter) === JSON.stringify(noChange.structuredContent?.revisionBefore) && noChange.structuredContent?.undoToken == null,
+      detail: noChange.isError === true ? `${CLIENT_E2E_NO_CHANGE_CAPABILITY_ID}: ${JSON.stringify(noChange.structuredContent).slice(0, 300)}` : `status=${noChange.structuredContent?.status} opsCount=${JSON.stringify(noChangePrepared.structuredContent?.preview?.opsCount)} warnings=${noChangeWarnings.join(" / ").slice(0, 120)} undoToken=${noChange.structuredContent?.undoToken ?? "none"}`,
+      wire: noChange.structuredContent,
+    });
 
     const sagaMember = await session.call("action_prepare", { capabilityId: CLIENT_E2E_PINNED_CAPABILITY_ID, input });
     const began = await session.call("transaction_begin", { preparedHandles: [sagaMember.structuredContent?.preparedHandle] });
@@ -884,7 +906,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    `job_get`/`job_cancel` unreachable the moment the plugin refused, which is exactly when a
     //    client most needs them to work.
     const jobId = (inference.structuredContent?.jobId ?? (inference.structuredContent?.details as Record<string, unknown> | undefined)?.jobId) as string | undefined;
-    announce(steps, { step: "os: inference_run", ok: inference.isError !== true, detail: inference.isError === true ? JSON.stringify(inference.structuredContent).slice(0, 300) : `jobId=${jobId} artifactId=${inference.structuredContent?.artifactId || "<none>"} status=${inference.structuredContent?.status} complete=${inference.structuredContent?.complete} bytes=${inference.structuredContent?.payloadBytes ?? 0}`, wire: inference.structuredContent });
+    announce(steps, { step: "os: inference_run", ok: inference.isError !== true, detail: inference.isError === true ? `${inference.structuredContent?.code}: ${inference.structuredContent?.message} ${JSON.stringify(inference.structuredContent?.details ?? null).slice(0, 300)}` : `jobId=${jobId} artifactId=${inference.structuredContent?.artifactId || "<none>"} status=${inference.structuredContent?.status} complete=${inference.structuredContent?.complete} bytes=${inference.structuredContent?.payloadBytes ?? 0}`, wire: inference.structuredContent });
 
     if (jobId) {
       const progress = await session.call("job_get", { jobId });

@@ -62,15 +62,15 @@ fn text_arg(binding: &semio_framework_ui_contract::ActionBinding, key: &str) -> 
 }
 
 fn one_local_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { id: "sp-local".into(), name: "Fixture Studio".into(), kind: "atelier".into(), visibility: "private".into(), members: "1".into(), updated: "0".into(), origin: "local", data_class: "persistedLocalOnly", role: None }
+    crate::HomeSpaceRow { id: "sp-local".into(), name: "Fixture Studio".into(), kind: semio_framework_artifact_space_space::SpaceKind::Atelier, visibility: semio_framework_artifact_space_space::SpaceVisibility::Private, members: "1".into(), updated_ms: None, origin: "local", data_class: "persistedLocalOnly", role: None }
 }
 
 fn one_ephemeral_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { id: "sp-draft".into(), name: "Temp Studio".into(), kind: "atelier".into(), visibility: "private".into(), members: "1".into(), updated: "0".into(), origin: "local", data_class: "ephemeralLocalOnly", role: None }
+    crate::HomeSpaceRow { id: "sp-draft".into(), name: "Temp Studio".into(), kind: semio_framework_artifact_space_space::SpaceKind::Atelier, visibility: semio_framework_artifact_space_space::SpaceVisibility::Private, members: "1".into(), updated_ms: None, origin: "local", data_class: "ephemeralLocalOnly", role: None }
 }
 
 fn one_hub_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { id: "sp-hub".into(), name: "Fabrication".into(), kind: "studio".into(), visibility: "public".into(), members: "2".into(), updated: "1000".into(), origin: "hub", data_class: "persistedShared", role: Some(crate::DirectorySpaceRole::Author) }
+    crate::HomeSpaceRow { id: "sp-hub".into(), name: "Fabrication".into(), kind: semio_framework_artifact_space_space::SpaceKind::Studio, visibility: semio_framework_artifact_space_space::SpaceVisibility::Public, members: "2".into(), updated_ms: Some(1_790_370_316_130), origin: "hub", data_class: "persistedShared", role: Some(crate::DirectorySpaceRole::Author) }
 }
 
 fn spectator_hub_row() -> crate::HomeSpaceRow {

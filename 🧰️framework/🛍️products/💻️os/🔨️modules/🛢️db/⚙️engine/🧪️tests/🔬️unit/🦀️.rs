@@ -2640,7 +2640,7 @@ async fn database_create_catalog_real_worker_loop_services_finite_saturation_can
     assert_eq!(Arc::as_ptr(&storage) as usize, cancel_pointer);
     assert_eq!(document.0, "saturation-cancel");
     assert_eq!(actual, Err(DbError::Closed));
-    assert_eq!(cancel_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), 1);
+    assert_eq!(cancel_state.spent_submission_attempts.load(std::sync::atomic::Ordering::Acquire), 1);
     assert_eq!(cancel_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
     assert!(cancel_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
     assert_eq!(cancel_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
@@ -2658,7 +2658,7 @@ async fn database_create_catalog_real_worker_loop_services_finite_saturation_can
     assert_eq!(Arc::as_ptr(&storage) as usize, deadline_pointer);
     assert_eq!(document.0, "saturation-deadline");
     assert!(matches!(actual, Err(DbError::Timeout(_))));
-    assert_eq!(deadline_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), 1);
+    assert_eq!(deadline_state.spent_submission_attempts.load(std::sync::atomic::Ordering::Acquire), 1);
     assert_eq!(deadline_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
     assert!(deadline_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
     assert_eq!(deadline_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
@@ -2676,7 +2676,7 @@ async fn database_create_catalog_real_worker_loop_services_finite_saturation_can
     assert_eq!(Arc::as_ptr(&storage) as usize, exhaust_pointer);
     assert_eq!(document.0, "saturation-exhaust");
     assert_eq!(actual, Err(DbError::LimitExceeded("database create-catalog retry exhausted")));
-    assert_eq!(exhaust_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+    assert_eq!(exhaust_state.spent_submission_attempts.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
     assert_eq!(exhaust_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
     assert!(exhaust_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
     assert_eq!(exhaust_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
@@ -2687,7 +2687,7 @@ async fn database_create_catalog_real_worker_loop_services_finite_saturation_can
     for _ in 0..32 {
         std::thread::yield_now();
     }
-    assert_eq!(exhaust_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+    assert_eq!(exhaust_state.spent_submission_attempts.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
     active.store(false, std::sync::atomic::Ordering::Release);
     pool.shutdown();
 
@@ -2707,7 +2707,7 @@ async fn database_create_catalog_real_worker_loop_services_finite_saturation_can
         std::thread::yield_now();
     }
     assert!(close.terminal_is_empty());
-    assert_eq!(close.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+    assert_eq!(close.spent_submission_attempts.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
     assert!(close.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
     assert_eq!(close.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
     active.store(false, std::sync::atomic::Ordering::Release);
@@ -2733,7 +2733,7 @@ async fn database_create_catalog_two_worker_reserved_capacity_services_timers_wh
     assert_eq!(document.0, "reserved-cancel");
     assert_eq!(actual, Err(DbError::Closed));
     assert!(!*maintenance_gate.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
-    assert_eq!(cancel_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), 1);
+    assert_eq!(cancel_state.spent_submission_attempts.load(std::sync::atomic::Ordering::Acquire), 1);
     assert_eq!(cancel_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
     assert!(cancel_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
     assert_eq!(cancel_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
@@ -2754,7 +2754,7 @@ async fn database_create_catalog_two_worker_reserved_capacity_services_timers_wh
     assert_eq!(document.0, "reserved-deadline");
     assert!(matches!(actual, Err(DbError::Timeout(_))));
     assert!(!*maintenance_gate.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
-    assert_eq!(deadline_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), 1);
+    assert_eq!(deadline_state.spent_submission_attempts.load(std::sync::atomic::Ordering::Acquire), 1);
     assert_eq!(deadline_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
     assert!(deadline_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
     assert_eq!(deadline_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
@@ -2775,7 +2775,7 @@ async fn database_create_catalog_two_worker_reserved_capacity_services_timers_wh
     assert_eq!(document.0, "reserved-exhaust");
     assert_eq!(actual, Err(DbError::LimitExceeded("database create-catalog retry exhausted")));
     assert!(!*maintenance_gate.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
-    assert_eq!(exhaust_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+    assert_eq!(exhaust_state.spent_submission_attempts.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
     assert_eq!(exhaust_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
     assert!(exhaust_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
     assert_eq!(exhaust_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
@@ -2786,7 +2786,7 @@ async fn database_create_catalog_two_worker_reserved_capacity_services_timers_wh
     for _ in 0..32 {
         std::thread::yield_now();
     }
-    assert_eq!(exhaust_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+    assert_eq!(exhaust_state.spent_submission_attempts.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
     active.store(false, std::sync::atomic::Ordering::Release);
     release_held_create_catalog_worker(&maintenance_gate);
     pool.shutdown();
@@ -2809,7 +2809,7 @@ async fn database_create_catalog_two_worker_reserved_capacity_services_timers_wh
         std::thread::yield_now();
     }
     assert!(!*maintenance_gate.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
-    assert_eq!(close.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+    assert_eq!(close.spent_submission_attempts.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
     assert!(close.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
     assert_eq!(close.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
     active.store(false, std::sync::atomic::Ordering::Release);
@@ -3972,14 +3972,14 @@ async fn database_shutdown_cancellation_and_vcs_error_preserve_exact_retry_owner
     let batch = db_artifact::CommandBatch::new(vec![envelope("shutdown-seed", &[], "owner", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
     db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions::default())).unwrap().unwrap();
     drop(handle);
+    let closing = |database: &Database| matches!(database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots.get(&document.0), Some(DatabaseDocumentMountSlot::Closing { .. }));
+    assert!(closing(&database), "the last handle unmounts its document into a closing slot");
 
-    let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(true));
     let control = DatabaseShutdownControl::new(std::time::Instant::now() + std::time::Duration::from_secs(5), cancelled.clone());
-    assert!(matches!(database.shutdown_step(&control).await.unwrap(), DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, .. }));
-    let exact_authority = Arc::as_ptr(&database.closing_authority.as_ref().expect("database retains closing authority").1);
-    cancelled.store(true, std::sync::atomic::Ordering::Release);
     assert_eq!(database.shutdown(&control).await, Err(DbError::Closed));
-    assert_eq!(Arc::as_ptr(&database.closing_authority.as_ref().expect("cancelled shutdown retains authority").1), exact_authority);
+    assert!(closing(&database), "cancelled shutdown retains the closing slot");
+    assert!(database.closing_authority.is_none(), "an unmounted document retires through its closing slot");
     cancelled.store(false, std::sync::atomic::Ordering::Release);
     let drain_deadline = std::time::Instant::now() + std::time::Duration::from_secs(4);
     while std::time::Instant::now() < drain_deadline {
@@ -4058,6 +4058,58 @@ async fn hello_sessions_retire_when_drained_and_when_close_races_the_returned_fr
         }
         assert!(witness.retired(), "hello session {round} retired: {}", witness.describe());
     }
+    drop(handle);
+}
+
+/// 🎟️ More hellos than the process has admission slots are all welcomed: the retained submission
+/// still refuses the one beyond capacity (its owners handed back), but [`Database::hello`] waits for
+/// a slot and is welcomed as soon as one is released — two dozen document sockets reopening
+/// together after a hub restart used to see `database sync hello admission saturated` (ticket
+/// 26/09/23 H9 session 12, growth e2e g15).
+#[semio_framework_async_macros::async_test]
+async fn hellos_beyond_the_admission_slots_wait_for_a_slot_instead_of_refusing() {
+    if !db_storage::process_isolated_law("db_engine::tests::hellos_beyond_the_admission_slots_wait_for_a_slot_instead_of_refusing") {
+        return;
+    }
+    let pool = test_worker_pool();
+    let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
+    let database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage).await.unwrap();
+    let document = protocol::ArtifactId("doc-hello-admission".to_string());
+    let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+    let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
+    handle.submit(batch, db_artifact::SubmitOptions::default()).await.unwrap().unwrap();
+    let origin = protocol::ActorId("semio_hub".to_string());
+    let mut held = Vec::new();
+    for slot in 0..8 {
+        let mut session = database.hello(document.clone(), None, format!("held-{slot}"), origin.clone(), 64 * 1024).await.unwrap();
+        session.take_welcome().unwrap().acknowledge().unwrap();
+        held.push(session);
+    }
+    let core = to_core_document_id(&document).await;
+    match database.hello_retained(core, None, "retained-ninth".to_string(), origin.clone(), 64 * 1024) {
+        Err(DatabaseRetainedActivityRejected::Retained(rejected)) => {
+            assert!(rejected.admission_saturated(), "the retained ninth hello is refused for capacity alone");
+            drop(rejected.close_and_take_error());
+        }
+        Err(DatabaseRetainedActivityRejected::Closed(error)) => panic!("database closed: {error:?}"),
+        Ok(_) => panic!("the retained ninth hello was admitted beyond the declared slots"),
+    }
+    let mut ninth = std::pin::pin!(database.hello(document.clone(), None, "waiting-ninth".to_string(), origin.clone(), 64 * 1024));
+    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+    for _ in 0..1_000 {
+        assert!(ninth.as_mut().poll(&mut context).is_pending(), "the ninth hello waits while every slot is held");
+        if db_sync::database_sync_hello_admission_waiters() == 1 {
+            break;
+        }
+        semio_framework_async::yield_once().await;
+    }
+    assert_eq!(db_sync::database_sync_hello_admission_waiters(), 1, "the ninth hello is registered as a waiter");
+    drop(held.pop());
+    let mut session = ninth.await.expect("the ninth hello is welcomed once a slot is released");
+    session.take_welcome().unwrap().acknowledge().unwrap();
+    assert_eq!(db_sync::database_sync_hello_admission_waiters(), 0, "a welcomed hello leaves the waiter table");
+    drop(session);
+    drop(held);
     drop(handle);
 }
 

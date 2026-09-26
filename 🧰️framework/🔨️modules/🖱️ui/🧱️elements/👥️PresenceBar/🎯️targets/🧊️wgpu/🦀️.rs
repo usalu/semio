@@ -47,6 +47,9 @@ pub struct PresencePeerRow {
     /// 🎨️ Hub-assigned session-color palette index (contract freeze §C7.5) — `None` for a folder-only
     /// peer with no hub connection, which renders as index 0.
     pub color: Option<u8>,
+    /// 🤖️ The hub-admitted principal is an AI agent acting under a delegation — React's `isAgent`: the row
+    /// carries the agent badge inside its accessible name, and is never folded into its delegating human.
+    pub is_agent: bool,
 }
 
 //#region 🔖️Palette
@@ -133,8 +136,11 @@ pub fn build_presence_bar_localized(id: impl Into<String>, peers: &[PresencePeer
 
     let mut children: Vec<UiNode> = Vec::with_capacity(visible_count);
     for peer in visible {
-        let text = presence_text(peer.label.clone());
-        children.push(presence_stack(format!("peer:{}", peer.actor), vec![text]));
+        let mut row = vec![presence_text(peer.label.clone())];
+        if peer.is_agent {
+            row.push(presence_stack(format!("peer-agent-badge:{}", peer.actor), vec![presence_text(presence_agent_label(locale))]));
+        }
+        children.push(presence_stack(format!("peer:{}", peer.actor), row));
     }
 
     if overflow_count > 0 {
@@ -150,6 +156,12 @@ pub fn build_presence_bar_localized(id: impl Into<String>, peers: &[PresencePeer
 // 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
 pub fn presence_empty_label(locale: Locale) -> String {
     LocalizedLabel::native("No one else is here", "Niemand sonst ist hier").resolve(Terminology::ALL[0], locale).to_string()
+}
+
+/// 🤖️ The agent badge word — React's `ui.presence.kind.agent`.
+// 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
+pub fn presence_agent_label(locale: Locale) -> String {
+    LocalizedLabel::native("AI agent", "KI-Agent").resolve(Terminology::ALL[0], locale).to_string()
 }
 
 /// 👥️ The `+N more` suffix past the visible cap — React's `ui.presence.overflow`.
@@ -170,7 +182,7 @@ pub fn presence_bar_chip_text(peers: &[PresencePeerRow], max: Option<usize>, loc
     }
     let max = max.unwrap_or(PRESENCE_BAR_DEFAULT_MAX);
     let visible_count = peers.len().min(max);
-    let mut parts: Vec<String> = peers[..visible_count].iter().map(|peer| peer.label.clone()).collect();
+    let mut parts: Vec<String> = peers[..visible_count].iter().map(|peer| if peer.is_agent { format!("{} ({})", peer.label, presence_agent_label(locale)) } else { peer.label.clone() }).collect();
     if peers.len() > visible_count {
         parts.push(presence_overflow_label(peers.len() - visible_count, locale));
     }

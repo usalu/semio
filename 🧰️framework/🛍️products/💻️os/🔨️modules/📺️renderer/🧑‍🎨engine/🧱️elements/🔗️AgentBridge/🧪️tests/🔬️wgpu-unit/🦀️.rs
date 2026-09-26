@@ -11,6 +11,7 @@ use super::*;
 /// assert against, read at compile time so a moved fixture is a build error, not a skipped test.
 const FRAME_FIXTURES: &str = include_str!("../../../../../../🌉️mcp/🧵️bridge/🧫️fixtures/📨️frames.json");
 const CANCELLATION_FIXTURE: &str = include_str!("../../🧫️fixtures/🛑️cancellation/🔣️.json");
+const HANDSHAKE_FIXTURE: &str = include_str!("../../🧫️fixtures/🤝️handshake/🔣️.json");
 
 /// 📨️ Shell→Gateway variants this shell deliberately does not model — the four snapshot-carrying
 /// frames that only a `ShellState`-mirroring shell produces (see [`ShellToGateway`]'s own doc).
@@ -53,7 +54,7 @@ fn every_gateway_to_shell_fixture_round_trips_through_this_codec() {
         assert_eq!(encode_hex(&frame.encode()), hex, "{variant} re-encoded to different bytes");
         seen.push(variant);
     }
-    assert_eq!(distinct_variants(&seen), 12, "the gateway→shell corpus must cover all twelve tags — including `AgentReply` (10) and `ApprovalWithdrawn` (11), saw {seen:?}");
+    assert_eq!(distinct_variants(&seen), 13, "the gateway→shell corpus must cover all thirteen tags — including `AgentReply` (10), `ApprovalWithdrawn` (11) and `Refused` (12), saw {seen:?}");
 }
 
 #[test]
@@ -452,13 +453,13 @@ fn a_closed_socket_is_retired_and_its_redial_waits_the_backoff_react_computes() 
 }
 
 #[test]
-fn the_backoff_doubles_per_drop_and_saturates_where_reacts_does() {
+fn the_backoff_doubles_per_unanswered_dial_until_the_offer_is_unavailable() {
     let mut state = AgentBridgeState::default();
     let mut dialer = AgentBridgeDialer::default();
     dialer.set_config(Some(AgentBridgeConfig::admit("ws://host/bridge", "proof").expect("admitted")), &mut state);
     let mut now = 0.0;
     let mut delays = Vec::new();
-    for _ in 0..8 {
+    for _ in 1..BRIDGE_UNANSWERED_ATTEMPTS {
         assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Closed, now), AgentBridgeDialTurn::Retire);
         match dialer.turn(&mut state, AgentBridgeSocketState::Absent, now) {
             AgentBridgeDialTurn::Wait { until_ms } => delays.push(until_ms - now),
@@ -467,10 +468,11 @@ fn the_backoff_doubles_per_drop_and_saturates_where_reacts_does() {
         now += RECONNECT_MAX_MS;
         assert!(matches!(dialer.turn(&mut state, AgentBridgeSocketState::Absent, now), AgentBridgeDialTurn::Dial { .. }));
     }
-    assert_eq!(delays[0], RECONNECT_BASE_MS);
-    assert_eq!(delays[1], RECONNECT_BASE_MS * 2.0);
-    assert_eq!(delays[2], RECONNECT_BASE_MS * 4.0);
-    assert_eq!(*delays.last().expect("a delay"), RECONNECT_MAX_MS, "the ladder saturates, it does not grow forever");
+    assert_eq!(delays, vec![RECONNECT_BASE_MS, RECONNECT_BASE_MS * 2.0]);
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Closed, now), AgentBridgeDialTurn::Retire);
+    assert_eq!(state.status, AgentBridgeStatus::Unavailable);
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Absent, now + RECONNECT_MAX_MS * 10.0), AgentBridgeDialTurn::Idle, "a given-up offer is never dialled again");
+    assert_eq!(reconnect_delay_ms(64), RECONNECT_MAX_MS, "the ladder saturates, it does not grow forever");
 }
 
 #[test]
@@ -501,6 +503,92 @@ fn a_new_config_restarts_the_ladder_from_zero_and_clearing_it_disables_the_bridg
     assert!(dialer.set_config(None, &mut state));
     assert_eq!(state.status, AgentBridgeStatus::Disabled);
     assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Absent, 0.0), AgentBridgeDialTurn::Idle);
+}
+fn handshake_frame(frame: &serde_json::Value) -> GatewayToShell {
+    let version = |key: &str| u16::try_from(frame[key].as_u64().expect("version")).expect("u16 version");
+    match frame["variant"].as_str().expect("variant") {
+        "welcome" => GatewayToShell::Welcome { bridge_version: version("bridgeVersion"), connection: frame["connection"].as_str().expect("connection").into(), principal: frame["principal"].as_str().expect("principal").into() },
+        "refused" => GatewayToShell::Refused {
+            reason: match frame["reason"].as_str().expect("reason") {
+                "version" => BridgeRefusal::Version,
+                "capacity" => BridgeRefusal::Capacity,
+                other => panic!("unknown refusal {other}"),
+            },
+            gateway_version: version("gatewayVersion"),
+        },
+        other => panic!("unexpected handshake frame {other}"),
+    }
+}
+
+/// 🤝️ Replays `🧫️fixtures/🤝️handshake/🔣️.json` — the scenarios React's `useAgentBridge handshake`
+/// suite replays — through this twin's dialer and state: same dial count, same terminal status, same
+/// named version pair, and nothing dialled after the offer is given up on.
+#[test]
+fn every_handshake_scenario_ends_where_reacts_hook_ends() {
+    let fixture: serde_json::Value = serde_json::from_str(HANDSHAKE_FIXTURE).expect("handshake fixture");
+    assert_eq!((fixture["handshakeDeadlineMs"].as_f64(), fixture["unansweredAttempts"].as_u64(), fixture["shellVersion"].as_u64()), (Some(BRIDGE_HANDSHAKE_DEADLINE_MS), Some(u64::from(BRIDGE_UNANSWERED_ATTEMPTS)), Some(u64::from(BRIDGE_VERSION))));
+    for scenario in fixture["scenarios"].as_array().expect("scenarios") {
+        let name = scenario["name"].as_str().expect("name");
+        let mut state = AgentBridgeState::default();
+        let mut dialer = AgentBridgeDialer::default();
+        dialer.set_config(Some(AgentBridgeConfig::admit("ws://127.0.0.1:6300/bridge", "session.v1.handshake.proof").expect("admitted")), &mut state);
+        let (mut now, mut socket, mut dials) = (0.0, AgentBridgeSocketState::Absent, 0usize);
+        fn advance(state: &mut AgentBridgeState, dialer: &mut AgentBridgeDialer, socket: &mut AgentBridgeSocketState, now: &mut f64, dials: &mut usize) {
+            for _ in 0..64 {
+                match dialer.turn(state, *socket, *now) {
+                    AgentBridgeDialTurn::Dial { .. } => {
+                        *dials += 1;
+                        *socket = AgentBridgeSocketState::Connecting;
+                        return;
+                    }
+                    AgentBridgeDialTurn::Retire => *socket = AgentBridgeSocketState::Absent,
+                    AgentBridgeDialTurn::Wait { until_ms } => *now = until_ms,
+                    AgentBridgeDialTurn::Idle if matches!(*socket, AgentBridgeSocketState::Absent) => return,
+                    _ => *now += 1.0,
+                }
+            }
+        }
+        for dial in scenario["dials"].as_array().expect("dials") {
+            advance(&mut state, &mut dialer, &mut socket, &mut now, &mut dials);
+            match dial.as_str() {
+                Some("close") => {
+                    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Closed, now), AgentBridgeDialTurn::Retire, "{name}");
+                    socket = AgentBridgeSocketState::Absent;
+                }
+                Some("silence") => {
+                    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, now), AgentBridgeDialTurn::Announce, "{name}");
+                    now += BRIDGE_HANDSHAKE_DEADLINE_MS;
+                    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, now), AgentBridgeDialTurn::Retire, "{name}: an unanswered socket outlives no deadline");
+                    socket = AgentBridgeSocketState::Absent;
+                }
+                _ => {
+                    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, now), AgentBridgeDialTurn::Announce, "{name}");
+                    socket = AgentBridgeSocketState::Open;
+                    state.apply_encoded_frame(&handshake_frame(&dial["frame"]).encode(), now).expect("frame decodes");
+                    if dial["thenClose"].as_bool() == Some(true) {
+                        assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Closed, now), AgentBridgeDialTurn::Retire, "{name}");
+                        socket = AgentBridgeSocketState::Absent;
+                    }
+                }
+            }
+        }
+        for _ in 0..16 {
+            now += RECONNECT_MAX_MS;
+            match dialer.turn(&mut state, socket, now) {
+                AgentBridgeDialTurn::Retire => socket = AgentBridgeSocketState::Absent,
+                AgentBridgeDialTurn::Dial { .. } => dials += 1,
+                _ => {}
+            }
+        }
+        assert_eq!(dials, scenario["dials"].as_array().expect("dials").len(), "{name}: dial count");
+        let expected = match (scenario["status"].as_str().expect("status"), &scenario["versionMismatch"]) {
+            ("unavailable", _) => AgentBridgeStatus::Unavailable,
+            ("open", _) => AgentBridgeStatus::Open,
+            ("incompatible", mismatch) => AgentBridgeStatus::Incompatible(AgentBridgeVersionMismatch { gateway: mismatch["gateway"].as_u64().expect("gateway") as u16, shell: mismatch["shell"].as_u64().expect("shell") as u16 }),
+            (other, _) => panic!("{name}: unknown status {other}"),
+        };
+        assert_eq!(state.status, expected, "{name}");
+    }
 }
 //#endregion 🔖️DialLadder
 

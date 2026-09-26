@@ -225,8 +225,10 @@ describe("🪟️ the ShellHost decision sites route through the focused program
     expect(shellHostSource).toContain("activeUtilityByWindowId: guestActiveUtilityByWindowIdV1(activeUtilityByWindowIdRef.current, targetSpawnedId, spawnedIdsRef.current)");
   });
 
-  it("routes a window's utility activation to the program that owns that window", () => {
-    expect(shellHostSource).toContain("const utilitySpawnedId = spawnedIdOfWindowInstanceV1(windowId, spawnedIdsRef.current);");
+  it("routes a window's utility activation and tool arming to the program that owns that window, through one resolution", () => {
+    expect(shellHostSource).toContain("const spawnedId = spawnedIdOfWindowInstanceV1(windowId, spawnedIdsRef.current);");
+    expect(shellHostSource).toContain("session: utilitySession, extraInstances: utilityExtraInstances, guestWindowId: utilityGuestWindowId } = programOfWindow(windowId);");
+    expect(shellHostSource).toContain("session: toolSession, extraInstances: toolExtraInstances, guestWindowId: toolGuestWindowId } = programOfWindow(activeWindowIdRef.current ?? \"\");");
     expect(shellHostSource).toContain("handleAction(utilitySession.instanceId");
   });
 
@@ -422,11 +424,21 @@ describe("🪟️ a spawned program's window bodies are read under the key they 
     expect(cache.get("window:dag.main")).toBeUndefined();
   });
 
-  it("REGRESSION: `refreshSpawnedUi` reads the refresh cache by window id, the key `buildUiRefreshRequest` sends and the guest echoes", () => {
-    const start = shellHostSource.indexOf("const refreshSpawnedUi = useCallback(");
+  it("REGRESSION: a spawned refresh pass reads the refresh cache by window id, the key `buildUiRefreshRequest` sends and the guest echoes", () => {
+    const start = shellHostSource.indexOf("const refreshSpawnedUiPass = useCallback(");
     const body = shellHostSource.slice(start, shellHostSource.indexOf("[injectActiveUtility, uiLocale, uiTerminology]", start));
-    expect(body).toContain("buildUiRefreshRequest({ kind: \"full\" }, windowKinds, [], fullViewState, cache)");
+    expect(start).toBeGreaterThan(-1);
+    expect(body).toContain("buildUiRefreshRequest({ kind: \"full\" }, windowKinds, panelTabLeaves, fullViewState, cache)");
     expect(body).toContain("(cache.get(`window:${kind.id}`)?.value as BuiltNode | undefined) ?? pendingWindowUiNode()");
     expect(body).not.toContain("cache.get(`window:${kind.bodyKey}`)");
+  });
+});
+
+describe("🪐️ the space the user is in reaches every render that shows it", () => {
+  it("renders the hub workspace's active space from state written by every route and session change, never from a ref", () => {
+    expect(shellHostSource).toContain("activeSpaceId={openSpaceId}");
+    expect(shellHostSource).not.toContain("activeSpaceId={openSpaceIdRef.current}");
+    expect(shellHostSource.match(/openSpaceIdRef\.current = /gu) ?? []).toHaveLength(1);
+    expect(shellHostSource).toContain("const hubOverlay = shellRouteIsOverlayV1(shellUri);");
   });
 });

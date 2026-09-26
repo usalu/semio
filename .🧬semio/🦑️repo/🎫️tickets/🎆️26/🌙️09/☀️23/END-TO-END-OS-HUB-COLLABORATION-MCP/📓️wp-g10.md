@@ -24,6 +24,294 @@ Owns outcome 4 (semio MCP `semio-framework-os-mcp`). Inherits G9 (`📓️wp-g9.
 | 13 | U5 item 4: schema-first approval withdrawal on the gateway→shell wire (cancel/timeout/superseded); React + wgpu retire the affordance; law + live en/de | **DONE**: wire tag 11 `ApprovalWithdrawn{approvalId, reason: cancelled|timed_out|superseded}` (fixture rows first; Rust SSOT ×5 codec sites, TS twin, wgpu twin); gateway withdraws on cancel/countdown and moves a request to a newer shell (`superseded`, remaining time); law `🛡️policy/🧫️fixtures/🪦️approval-withdrawal.json` replayed by Rust (real coordinator, 4 cases) + React hook (5) + wgpu (5); panel en/de laws; os-mcp policy/bridge/ui 92/92, agent-bridge-check 66/66, chat panel + approvals 35/35, wgpu agent 49/49. **Live** (c2) en + de PASS: cancel → affordance withdrawn, no countdown/decisions, localized reason |
 | 12 | P1-6 (audit-s11-os-frontend): architect `setAdjacencyKind` duplicate capability id | NOT PRESENT: descriptor has it once; live catalog compiles, one hit; client-e2e "zero duplicate ids" |
 
+## Session 12
+
+Session 12 (2026-09-25 22:5x, preamble `📓️session-12-preamble.md`). Captures `.🧬semio/🌐hub/s12-g10-logs/`; durable data
+`.🧬semio/🌐hub/s12-g10-*`. Ports: hubs 8030–8039, serves 6530–6539.
+
+| # | Item | Status |
+|---|---|---|
+| S1 | 4b browser half: delegated agent edits a shared hub doc over the semio MCP, signed-in human sees it live in the React `s` shell (Space index → note → agent's block), en + de; PresenceBar agent badge | **DONE LIVE on 7800 B2 (05:0x)**: **en 8/8** (`agent-edit-en-13.txt`), **de 8/8** (`agent-edit-de-1.txt`, screenshot `g10-agent-edit-human-sees-{en,de}.png`): human signs in in the `s` shell → Home → Space index lists the hub-created note → opens it live → agent `agent:<delegation>` opens + commits `addBlock` → the human's roster shows **"Claude G10 en (AI agent, Editing)" / "Claude G10 de (KI-Agent, Bearbeitet)"** (`data-presence-kind=agent`, G-P2-2 live) → the human's canvas gains the agent's block `data-ink-block-id=text-…-0` (+ navigator row) 2–16 ms after the Commands frame → hub `head_seq 0→1`. Fixed on the way: S9 (agent commit relay acknowledgement) |
+| S2 | live-agent-loop 23/23 en + de on the current tree; client-e2e; MCP conformance TS + Rust; hub quartet; durability; hub-agent-participant (on 7800 B2) | **Local half DONE on the final tree (09:0x–10:3x)**: live-agent-loop **en 26/26, de 26/26** (`live-agent-loop-{en-10,de-3}.txt`), agent-reply **9/9**, client-e2e **39/39** (`client-e2e-8.txt`, restage 16), MCP TS **70/70** (`mcp-ts-7.txt`), Rust quick **462/462** (`mcp-rust-quick-4.txt`; run 5 on the final tree in the log). **Hub half**: hub-agent-participant **17/17** on 7800 B2 (04:07); quartet on 7800 best **17/19** — the two reds are hub-side (7800 answers agents' execution-target requests `503 deadline-exceeded` after a commit; gis approval answered `503 inference.unavailable` while the ledger advanced), reported; the gateway defects it exposed are fixed (S11). Durability gate: running on its own B2 hub (log) |
+| S3 | All plugins over MCP: per-package coverage of `capabilities_search`/`inference_list`/`artifact_create`/`action_invoke` (description authoring moved to slice D1 by the coordinator) | **DONE 01:4x, measured (run 4, folder lane, current tree + S7/S8/fault mapping, `--auto-approve all`)**: 35 packages, 1548 plugin capabilities, 74 declared inferences (stdio 67, wfc 5, cad 1, gis 1); `artifact_create` **71/71** `s.*` kinds; `action_invoke` **64/71** kinds. The 7 reds: cad, flow, sequence, space home (P8), and s.home, s.space, playbook procedural (no mutation of their own kind). Table: "### S3 per-package coverage". Fixed on the way: S7, S8, fault mapping |
+| S4 | User path, zero-touch, timed, en + de: sign in → Set up MCP client → real client connects, lists tools, edits a hub doc with approval in the shell → revoke | **en 7/8 on 7800 (09:2x, `user-path-7800-en-6.txt`, fresh page load)**: clean profile signs in (15.9 s) → "Set up MCP client" → the **official `@modelcontextprotocol/sdk` Client** over `StdioClientTransport` from exactly the shown entry connects in 2.3 s (28 tools) → edits the hub note → destructive `deleteSelection` → shell approval "Approve Once" → **19.5 s from first page load to the approved agent edit** (the shell-attach grace holds live). **Blocked on U5 (reported twice)**: (a) "Set up MCP client" stays `installing` in 2 of 3 runs (en-5, de-1) although the credential file is written — `🔗️HubConnection` drops the install result when the operation owner is no longer current and has no terminal phase for it; (b) after the approval the agent pane is unbound and the overlay reopened from the palette says "Not signed in to a hub" above the user's own spaces, so the revoke row is unreachable. de: same step-2 stall. Revoke itself: G-P2-3 (session 11, 8/8 en + de) |
+| S5 | Remaining `audit-s11-ai-mcp.md` items in scope (+ the session-12 audits' items routed to G10) | **DONE 10:4x, each with evidence**: G-P0-1 → 4b 8/8 en + de (S1); G-P0-2 → quartet 17/19, the two reds hub-side (S2/S11); G-P1-1 launch rows and G-P2-5 duplicate resource → session 11 rows 7/5; G-P1-3 roster half → session 11 row 8 (stale, live lists stdio + cad-extension); G-P2-2 agent principal → 4b roster "Claude G10 en (AI agent, Editing)"; G-P2-3 in-product MCP config → S4 (official SDK client from the shown entry). Routed by `audit-s12-os-frontend.md`: "approval affordance lingers after a cancel" → closed live, live-agent-loop row (c2) en-10/de-3 "Withdrawn — the agent's request was cancelled", no countdown, no decisions; "architect `setAdjacencyKind` duplicate capability id" → closed, headless `capabilities_search "set adjacency kind"` returns `…#editor.setAdjacencyKind` once, 0 duplicate ids in 50 hits (`🗑️generated/s12/adj-probe.py`). Routed by `audit-s12-build-convergence.md`: "orphaned `dev mcp stdio` build" → already in tree (`SEMIO_BUILD_OWNER_PID`: the staging build cancels itself when its owner is gone). Not G10's: G-P1-2/G-P1-4 (descriptions → D1), G-P2-1/G-P2-4 (S15) |
+| S6 | Coordinator (audit-s12 G12-P1-2): prompt-injection surface | **DONE 00:2x (local + shell lanes)**: schema-first envelope `semio.mcp.untrusted-content/v1` (`UntrustedContentV1` + `UntrustedProvenanceV1`: document, kind, space, revision `contentSha256`/`headEditId`/`commitSeq`, authors `local-principal`/`space-writers`, fixed en/de notice) is the ONLY carrier of document bytes: `artifact_snapshot`, `semio://artifact/{id}`, `artifact_export`, hub `…/checkpoint`, hub `semio://workspace` space entry. `initialize.instructions` + tool/resource descriptions state it (en — de). Law fixture `🗿️artifact/🧫️fixtures/🧷️untrusted-content-law.json` (canary, carriers, observers, 7 hostile envelopes): Rust quick law green, TS process law **6/6** (AJV + `node:crypto`), live agent loop **en 26/26, de 26/26** with (g1) canary only inside `untrusted` (deflate-inflated), (g2) the destructive follow-up it demands → shell affordance → Deny → `PERMISSION_DENIED`, (g3) block survives. Hub lanes (checkpoint/space entry) re-run on 7800 B2 |
+| S7 | Coordinator: headless lane answered INTERNAL (`owner-mutation payload did not decode … Truncated(0)`) for every verb whose preview has no op (selection verbs with nothing selected, effect-only verbs such as note `setFixtureJson`) | **DONE 00:3x**: `🔀️dispatch` invoke answers a committed no-change (`SUCCEEDED`, `warnings:[no-change: …]`, revision unchanged, no undo token, audit `no_change`) and never opens a guest transaction over an empty op list; a saga skips such members. Law `actions::quick::an_action_whose_preview_produced_no_operation_commits_nothing_and_says_so` (28/28 `actions::`); client-e2e row **39/39** (`client-e2e-4.txt`). Guest half (typed refusal for `Effect::LoadDocument` previews) prepared, not applied: `wp-g10/g10-preview-effect-refusal.py`, request in `wp-w1/requests/g10.txt` |
+| S8 | S3 finding, MCP-owned: the headless lane opened ONE guest per plugin (its first editor app), so every verb of a multi-app plugin's other apps was refused (`action app owner s.block.block3d@1/*#editor does not match s.block.block2d@1/*#editor`) and `artifact_create` of those kinds persisted the FIRST app's genesis document under the other kind's schema | **DONE 00:4x**: routing keys are `AppRoute{plugin, app}` (channels, instance slots, session artifacts, backbone relay); `artifact_create`/`artifact_export` open the kind's own app; plugin-scope verbs run on the plugin's default route. Laws: `every_app_of_a_multi_app_plugin_routes_to_its_own_instance_slot` + the routing integration law rebuilt on the REAL note/cad descriptors (it had routed synthetic app ids) 7/7; `workspace:: actions:: artifact::` 100/101 before the integration-law rebuild, the one red was that law. Live: coverage run 3 (below) |
+| S9 | Found by 4b on 7800 (API-only reproducer `wp-g10/g10-agent-relay-probe.ts`): a hub-bound agent's `action_invoke` answered `SUCCEEDED` while the hub head never moved (1 of 3 rounds, 3 of 6 browser runs under load ~50): the guest committed, the envelopes sat in the document actor whose link was not live, and the gateway process could exit before any relay | **DONE 05:0x**: a commit that relayed envelopes waits (≤ `HUB_RELAY_ACK_WAIT_MS` 10 s) for a status the document actor reports AFTER the relay (live link, 0 pending, acknowledged head) and answers `postconditions: ["edit:…", "relay:acknowledged"]` or `warnings: ["relay-pending: link …, N pending; last fault: …"]`; `artifact_open.sessionDocument.sync` reports `{remote, pendingMutations, acknowledged, lastFault}` (actor `Status`/`Conflict` events, e.g. an expired link). Law `a_hub_commit_is_acknowledged_only_by_a_live_status_reported_after_its_relay`; probe 4/4 `relay:acknowledged` + head 1; 4b en/de 8/8. Root of the unacknowledged runs (hub admission `open-plan`+`socket-grants` over the actor's 5 s budget under load, then the 60 s link expiry) is now visible in `lastFault`, not yet proven |
+| S10 | Coordinator (from U5): pid 88810, the coordinator's old `dev mcp stdio os`, accepts TCP on its bridge port and never answers; the shell redials forever | **Gateway half DONE 05:4x, shell half DONE 09:0x, live-proven**. Root cause (measured on 88810: exactly 64 `CLOSED` sockets): `start_bridge_only` kept the `Handback` terminal policy of the full HTTP transport, so every finished non-upgrade request parked its socket, and after `HTTP_CONNECTION_CAPACITY` (64) `accept_one` never ran again. Gateway: bridge-only listener closes terminal sockets; every accepted connection is answered within `BRIDGE_OPENING_DEADLINE_MS` (10 s) — at capacity a typed `503` `semio.mcp.transport-refusal/v1`, a `Hello` of another version a typed `Refused{version, gatewayVersion}` frame (new tag 12, fixtures `0c000100`/`0c010100` replayed by Rust, TS and wgpu codecs); the offer file is withdrawn when the listener's run completes; law `transport::long::a_bridge_only_listener_answers_every_connection_it_accepts` (70 connections, v0/v2 refused, silent socket closed). Shell (React + wgpu twin, one fixture `🔗️AgentBridge/🧫️fixtures/🤝️handshake/🔣️.json`): 8 s handshake deadline from the dial, at most 3 unanswered dials per offer, a typed refusal or a foreign `Welcome` ends the offer at once; statuses `unavailable`/`incompatible` render ONE localized footer notice (en/de, names both versions); a different offer restarts the ladder. Laws: React `useAgentBridge handshake` 8/8 (bridge suite 80/80), AgentPresence 15/15 (suite was in no include list — registered). Live on `:6530`: silent stand-in (88810's wire behaviour) → exactly 3 dials, notice at 28.7 s (en) / 32.7 s (de), 0 console errors, no dial after; v2 stand-in → 1 dial, typed refusal, "incompatible" notice en + de, 0 console messages. See log 08:4x–09:0x |
+| S11 | Found by the quartet on 7800: a hub-bound `inference_approve` answered retryable `PLUGIN_UNAVAILABLE` while the hub ledger had advanced (the agent is told to retry an edit that landed); every hub tool failed at once in the window after any directory event; failed authority refreshes were retried back-to-back against a busy hub; the refusal named nothing | **DONE 10:3x (os-mcp)**: (1) `HubRemoteBinding` announces every state/authority/catalog transition on a Condvar; hub-bound entry points (`settled_hub_binding`, component resolve, `open_hub`) wait ≤ `HUB_AUTHORITY_SETTLE_WAIT_MS` (10 s = one refresh turn's deadline) for a refresh in flight, then their gate still fails closed. (2) `approve_hub_job` checks its base precondition before the relay; after the hub receipt it answers success with named `warnings` (`undo-unavailable`, `events-unavailable`). (3) The refusal carries `phase` + `lastFault`; `HubBindingError::Unavailable` keeps the HTTP status and the hub's typed refusal code (that is how `503 deadline-exceeded` was found). (4) Failed refreshes back off 100 ms → 5 s (cancel-aware). Laws `a_call_during_an_authority_refresh_waits_for_it_and_fails_closed_only_after_the_wait`, `failed_authority_refreshes_back_off_and_saturate`; remote + inference **73/73** (`settle-law-2.log`) |
+
+### S3 per-package coverage
+
+Harness `wp-g10/g10-plugin-coverage.ts` (a fresh `--folder` space, staged binary, `--no-bridge`): per package, every
+capability via paginated `capabilities_search {owner}` + `capabilities_describe`, `inference_list`, `artifact_create` of every
+installed kind of the package, then prepare + invoke of the first verb of that kind whose required args it can supply.
+Run 3 (01:0x, after S7 + S8; `coverage-3/coverage-rows.jsonl`, `coverage-table.md`):
+
+| package | capabilities | mutations | destructive | empty description | mutations declaring no args | inferences | artifact_create ok/kinds | action_invoke ok/created |
+|---|---|---|---|---|---|---|---|---|
+| animate | 14 | 11 | 5 | 14 | 7 | 0 | 1/1 | 1/1 |
+| architect | 25 | 13 | 3 | 20 | 4 | 0 | 1/1 | 1/1 |
+| block | 37 | 27 | 11 | 37 | 27 | 0 | 3/3 | 3/3 |
+| cad | 26 | 14 | 2 | 0 | 13 | 1 | 1/1 | 0/1 |
+| dag | 11 | 9 | 2 | 11 | 8 | 0 | 1/1 | 1/1 |
+| demonstrator | 166 | 84 | 21 | 139 | 69 | 0 | 1/1 | 1/1 |
+| draw | 15 | 14 | 5 | 0 | 2 | 0 | 1/1 | 1/1 |
+| energy | 28 | 19 | 3 | 23 | 0 | 0 | 1/1 | 0/1 |
+| fem | 60 | 56 | 4 | 60 | 7 | 0 | 2/2 | 0/2 |
+| flow | 24 | 18 | 4 | 20 | 17 | 0 | 1/1 | 0/1 |
+| forms | 20 | 18 | 6 | 0 | 15 | 0 | 1/1 | 1/1 |
+| gis | 34 | 10 | 3 | 22 | 3 | 1 | 2/2 | 2/2 |
+| home | 0 | 0 | 0 | 0 | 0 | 0 | 1/1 | 0/1 |
+| imperative | 14 | 8 | 2 | 10 | 7 | 0 | 1/1 | 1/1 |
+| layout | 18 | 8 | 1 | 0 | 7 | 0 | 1/1 | 1/1 |
+| lowpoly | 56 | 31 | 3 | 47 | 20 | 0 | 1/1 | 1/1 |
+| mathematical | 7 | 6 | 2 | 7 | 2 | 0 | 1/1 | 1/1 |
+| norm | 90 | 30 | 30 | 60 | 0 | 0 | 15/15 | 0/15 |
+| note | 20 | 18 | 4 | 0 | 15 | 0 | 1/1 | 1/1 |
+| playbook | 8 | 7 | 2 | 8 | 6 | 0 | 2/2 | 1/2 |
+| procedural | 72 | 26 | 7 | 59 | 23 | 0 | 2/2 | 2/2 |
+| process | 24 | 18 | 5 | 20 | 15 | 0 | 1/1 | 1/1 |
+| puzzle | 153 | 71 | 12 | 153 | 61 | 0 | 3/3 | 3/3 |
+| raster | 20 | 10 | 2 | 0 | 9 | 0 | 1/1 | 1/1 |
+| reasoning | 5 | 4 | 2 | 5 | 4 | 0 | 1/1 | 1/1 |
+| remodel | 31 | 28 | 10 | 31 | 12 | 0 | 1/1 | 1/1 |
+| sequence | 16 | 12 | 3 | 16 | 10 | 0 | 1/1 | 0/1 |
+| shooting | 39 | 25 | 2 | 35 | 22 | 0 | 1/1 | 1/1 |
+| sourcing | 7 | 6 | 3 | 7 | 4 | 0 | 1/1 | 1/1 |
+| space | 73 | 28 | 5 | 68 | 24 | 0 | 4/4 | 1/4 |
+| stdio | 291 | 18 | 9 | 18 | 0 | 67 | 6/7 | 0/6 |
+| trinity | 20 | 15 | 5 | 20 | 5 | 0 | 2/2 | 1/2 |
+| vcs | 6 | 5 | 1 | 6 | 4 | 0 | 0/1 | 0/0 |
+| wfc | 108 | 92 | 17 | 103 | 36 | 5 | 5/5 | 5/5 |
+| writer | 10 | 9 | 4 | 10 | 5 | 0 | 1/1 | 1/1 |
+
+Run 4 (01:2x–01:4x, `coverage-4/`; `--auto-approve all` so destructive verbs run too, required args synthesised by type,
+900 s create budget):
+
+| package | capabilities | mutations | destructive | empty description | mutations declaring no args | inferences | artifact_create ok/kinds | action_invoke ok/created |
+|---|---|---|---|---|---|---|---|---|
+| animate | 14 | 11 | 5 | 14 | 7 | 0 | 1/1 | 1/1 |
+| architect | 25 | 13 | 3 | 20 | 4 | 0 | 1/1 | 1/1 |
+| block | 37 | 27 | 11 | 37 | 27 | 0 | 3/3 | 3/3 |
+| cad | 26 | 14 | 2 | 0 | 13 | 1 | 1/1 | 0/1 |
+| dag | 11 | 9 | 2 | 11 | 8 | 0 | 1/1 | 1/1 |
+| demonstrator | 166 | 84 | 21 | 139 | 69 | 0 | 1/1 | 1/1 |
+| draw | 15 | 14 | 5 | 0 | 2 | 0 | 1/1 | 1/1 |
+| energy | 28 | 19 | 3 | 23 | 0 | 0 | 1/1 | 1/1 |
+| fem | 60 | 56 | 4 | 60 | 7 | 0 | 2/2 | 2/2 |
+| flow | 24 | 18 | 4 | 20 | 17 | 0 | 1/1 | 0/1 |
+| forms | 20 | 18 | 6 | 0 | 15 | 0 | 1/1 | 1/1 |
+| gis | 34 | 10 | 3 | 22 | 3 | 1 | 2/2 | 2/2 |
+| home | 0 | 0 | 0 | 0 | 0 | 0 | 1/1 | 0/1 |
+| imperative | 14 | 8 | 2 | 10 | 7 | 0 | 1/1 | 1/1 |
+| layout | 18 | 8 | 1 | 0 | 7 | 0 | 1/1 | 1/1 |
+| lowpoly | 56 | 31 | 3 | 47 | 20 | 0 | 1/1 | 1/1 |
+| mathematical | 7 | 6 | 2 | 7 | 2 | 0 | 1/1 | 1/1 |
+| norm | 90 | 30 | 30 | 60 | 0 | 0 | 15/15 | 15/15 |
+| note | 20 | 18 | 4 | 0 | 15 | 0 | 1/1 | 1/1 |
+| playbook | 8 | 7 | 2 | 8 | 6 | 0 | 2/2 | 1/2 |
+| procedural | 72 | 26 | 7 | 59 | 23 | 0 | 2/2 | 2/2 |
+| process | 24 | 18 | 5 | 20 | 15 | 0 | 1/1 | 1/1 |
+| puzzle | 153 | 71 | 12 | 153 | 61 | 0 | 3/3 | 3/3 |
+| raster | 20 | 10 | 2 | 0 | 9 | 0 | 1/1 | 1/1 |
+| reasoning | 5 | 4 | 2 | 5 | 4 | 0 | 1/1 | 1/1 |
+| remodel | 31 | 28 | 10 | 31 | 12 | 0 | 1/1 | 1/1 |
+| sequence | 16 | 12 | 3 | 16 | 10 | 0 | 1/1 | 0/1 |
+| shooting | 39 | 25 | 2 | 35 | 22 | 0 | 1/1 | 1/1 |
+| sourcing | 7 | 6 | 3 | 7 | 4 | 0 | 1/1 | 1/1 |
+| space | 73 | 28 | 5 | 68 | 24 | 0 | 4/4 | 2/4 |
+| stdio | 291 | 18 | 9 | 18 | 0 | 67 | 7/7 | 7/7 |
+| trinity | 20 | 15 | 5 | 20 | 5 | 0 | 2/2 | 2/2 |
+| vcs | 6 | 5 | 1 | 6 | 4 | 0 | 1/1 | 1/1 |
+| wfc | 108 | 92 | 17 | 103 | 36 | 5 | 5/5 | 5/5 |
+| writer | 10 | 9 | 4 | 10 | 5 | 0 | 1/1 | 1/1 |
+
+Run 4's 7 red kinds: cad, flow, sequence, space home = the P8 guest faults below (space home also has `set-cell`
+"typed command has no exact controller/owner", same class); `s.home`, `s.space`, `s.playbook.procedural` declare no
+mutation of their own kind (nothing to invoke; not a defect).
+
+Invoke failures by cause (run 3, before run 4's harness changes):
+
+| cause | kinds | owner |
+|---|---|---|
+| harness could not supply required free-form args (no default/enum) | energy, fem 2d/3d, stdio html/json/md/tsv/txt/xml, trinity jack, space home/space | harness (run 4 synthesises by type) |
+| every mutation of the kind is destructive (harness skipped destructive) | norm ×15, s.home, s.space, playbook procedural | harness (run 4 uses `--auto-approve all`) |
+| `interactive-job.not-ui-safe` (`BatchOnlyPendingRewrite`): the verb is published to agents but its guest refuses the agent lane | cad importCadFile, architect runReport/importProgram, space importSpace | **blocked: BatchOnly (P8)**: coordinator decision 01:2x, the commands are dead for humans too and get MIGRATED (not unpublished) by P8; meanwhile the MCP answers PLUGIN_UNAVAILABLE instead of INTERNAL |
+| cad preview: "the artifact view is not bound to a public command operation" | cad duplicateObject/addNode/patchSelection | **blocked: P8 lane parity** (coordinator 05:1x: the SDK's `preview_addressed_action` runs `A::handle` directly while the shell lane runs the retained tool-job work; P8 fixes the preview, no gateway patch) |
+| flow: "Flow retained routes execute only through their exact app-owned job factory" | flow addWidget/patch/rename/disconnect | **blocked: P8 lane parity** |
+| sequence: `sequence-content-child-dialect-required` | sequence addStep/reorganize/connect | **blocked: P8 lane parity** |
+| `s.home.session-identity-required` | space home createStudio | P8 |
+| `mutation.target-missing` for a default id | space renameArtifact/touchArtifact | correct refusal; MCP now answers PRECONDITION_FAILED instead of INTERNAL |
+| client timeout 240 s on a cold create | stdio csv (7 stdio kinds share one 200 MB component), vcs | measured again in run 4 with 900 s |
+
+Also measured: note `patchBlocks/deleteBlock/moveBlock/duplicateBlock` declare no args (coordinator routed to T12); writer
+`setText` output cap 64 op bytes (≈38 chars of text) → the MCP now answers INPUT_INVALID (`interactive-job.preview-output`)
+instead of INTERNAL; empty descriptions are D1's.
+
+**Fault mapping (01:1x, `🔀️dispatch` `map_fault`)**: `interactive-job.not-ui-safe` → non-retryable PLUGIN_UNAVAILABLE,
+`interactive-job.preview-output` → INPUT_INVALID, `transaction.member-rejected` → PRECONDITION_FAILED; every other unknown
+code stays INTERNAL (law `every_fault_code_maps_to_the_right_gateway_error_code` extended; `actions::` 28/28).
+
+### Session 12 Pids
+
+| pid | what | started | stopped |
+|---|---|---|---|
+| 94695 (→ bun 94698, vite 94700) | `s` react dev serve :6530 local-only, private rendezvous `.🧬semio/🌐hub/s12-g10-bridge` (`g10-serve.sh s 6530`) | 23:04 | 08:58 (stale offer endpoint) |
+| 19583 | `s` react dev serve :6530 local-only, same rendezvous (restart: the node-side offer endpoint still answered the pre-U5 untyped body) | 08:58 | running |
+| 42075 | `s` react dev serve :6531 bound to hub 7800 (`g10-serve.sh s 6531 http://127.0.0.1:7800`) | 04:1x | running |
+| 19662 / 20447 | bridge stand-ins `g10-bridge-double.py` silent / v2-refusal (offer in my rendezvous only) | 08:58 / 09:01 | 09:01 / 09:02 |
+| 15420 | wgpu twin unit laws (`g10-wgpu-bridge-unit.sh`, private target) | 08:55 | running |
+| 25626 | os-mcp restage (`g10-mcp-build.sh`, `mcp-build-10.txt`) | 09:03 | running |
+| 45457 / 47633 / 68937 / 94060 | coverage harness runs 1–4 (run 1 stopped for the rendezvous incident, run 2 stopped as baseline) | 00:24–01:4x | all ended |
+| 2602 | hub hold → os-hub :8030 (catalog-B clone `s11-g10-hub-8030-b`, binary `s11-g10-bin/os-hub-stack` 98dea583…), state `.🧬semio/🌐hub/s12-g10-state-8030` — rehearsal of S1/S4 while 7800 is down | 01:4x | 04:0x (7800 up) |
+
+### Session 12 Log
+
+- 22:53 resumed. Nothing of mine runs. 7800 down until W2 publishes catalog B2. Staged `semio-os-mcp` fresh (662 sources unchanged since
+  19:36). The Space index guest link (`fold-directory-events` selects the one folded space when the index `space_id` is empty) is in
+  the tree since 17:55, so restage4 (18:56) carries it.
+- 22:58 MCP TS suite **61/61** (`mcp-ts-1.txt`, 63 s). 23:0x client-e2e **38/38** (`client-e2e-1.txt`, 256 s).
+- 23:04 `s` serve :6530 local-only (pid 94695, `serve-s-6530.txt`: `[fresh] 60 staged components match their sources`).
+  `g10-serve.sh` now keeps the bridge rendezvous and credentials under `.🧬semio/🌐hub/s12-g10-{bridge,credentials}`: the
+  session-11 dirs `wp-g10/{bridge,credentials}` were tracked paths (`git check-ignore` says so), wrong for a 0600 credential.
+- 23:06 os-mcp Rust quick **453 passed, 34 skipped** (`mcp-rust-quick-1.txt`, private target).
+- 23:0x live-agent-loop run 1 red (10/22): my env named the host (`S_OS_MCP_LIVE_PLUGIN=s`), so the gate found no `s` mutation
+  and picked dag's destructive verb. The gate's contract is `PLUGIN=note SPAWN=note` on the `s` host (script fixed).
+  Run 2 **en 23/23** (`live-agent-loop-en-2.txt`), **de 23/23** (`live-agent-loop-de-1.txt`): `boot` green in both locales
+  (S15's boot fix holds), (c2) withdrawal, (e1) countdown 120, (e2) `PERMISSION_DENIED channel=shell`, (i18n) both locales.
+- 23:1x coordinator: description authoring → slice D1; new item S6 (prompt-injection envelope, G12-P1-2).
+- 23:2x–00:2x **S6 landed** (design + files in the S6 row; files in "Files Changed (G10, session 12)" below). Measured:
+  `cargo check -p semio-framework-os-mcp --lib --tests` green after each edit; laws `artifact:: schema::` + the checkpoint law
+  18/18 (`untrusted-law-1.txt`); schema mirror regenerated (72 exports, strict AJV resolves all) and `--check` green;
+  `canonical-checkpoint-resource-check` green (oracle now verifies the envelope, `untrusted=1`); TS process law 6/6
+  (`untrusted-ts-4.txt`); MCP TS suite **69/69** (`mcp-ts-2.txt`); Rust quick **456/456** (`mcp-rust-quick-2.txt`);
+  client-e2e **38/38** (`client-e2e-3.txt`; run 2 was 37/38 with an intermittent wfc guest `inference_run`
+  `SIDE_EFFECT_REJECTED` at progress 0.35, green on rerun, not reproduced since, nothing in S6 touches inference);
+  live agent loop **en 26/26** (`live-agent-loop-en-7.txt`), **de 26/26** (`live-agent-loop-de-2.txt`).
+  On the way (measured, recorded for S3): (a) note's `patchBlocks`/`deleteBlock`/`duplicateBlock`/`moveBlock` declare NO args,
+  so their MCP input schema is `{}` with `additionalProperties:false`: an agent cannot set a block's text or delete a block
+  by id at all; (b) writer `setText`'s declared output cap is 64 op bytes (a text of ~38 chars), so the law's canary is 37
+  chars; (c) the headless (`--folder`) lane answers `INTERNAL "owner-mutation payload did not decode … Truncated(0)"` for
+  any effect-only command (note `setFixtureJson`); the shell lane applies it. The note text lives in deflate streams inside
+  pack/spr, so the live gate inflates every stream in the envelope to find the canary.
+  A peer's `🏪️store/🔄️sync` edit at 23:5x made the staged MCP stale: my live-gate run 5's gateway restaged it (>240 s
+  initialize timeout, gate red), its orphan finished the build and exited on EOF; rerun green.
+- 00:2x coordinator: S7 (headless effect-only INTERNAL) → G10; note args → T12. S3 coverage harness `wp-g10/g10-plugin-coverage.ts`.
+  **Incident (mine):** coverage run 1 (00:24–00:27) spawned its gateway without `--no-bridge`, so it offered itself in the
+  per-user rendezvous and a peer's live `dev s` session dialled it (`context_resolve` → `channel=shell`); 50 `artifact_create`
+  calls went to that peer's shell and were refused (`refused ReadArtifact`), no document was changed. Stopped (pids 45457/45459,
+  mine) at 00:27; every harness now passes `--no-bridge`. The peer's chat panel may show those refused tool calls.
+- 00:2x–00:3x S7 landed (row S7). MCP binary restaged (88 s). (Earlier log lines that say 00:4x–00:5x for S7 meant 00:2x–00:3x.)
+- 00:3x–00:5x S8 landed (row S8), found by coverage run 2 (baseline, pre-S7/S8 binary, 21 packages measured before I stopped it).
+  Rule 17 (BG_NICE): my detached processes start through `g10-detach.py` (python `Popen`, new session), not zsh `&`, and run at
+  nice 0 (measured: serve 94695/94700 `NI 0`).
+- 00:5x client-e2e run 5: 38/39, `inference_run` wfc bitmap `SIDE_EFFECT_REJECTED` again (2 of 5 runs, both while another heavy
+  run of mine shared the machine). The same call standalone succeeded twice (110 s and 73 s under load, `infer.ts` probe). The
+  client-e2e row now prints the error's code, message and details in full, so the next red names its cause.
+- 01:1x–01:4x coverage runs 3 + 4 (S3 row, table below); local suites re-measured after S6–S8 (S2 row).
+- 03:4x official MCP SDK 1.30.0 (S4's real client) validates `structuredContent` against `outputSchema` even for `isError`
+  results, so every typed tool error failed client-side. Root fix: `schema::admit_tool_errors` publishes every tool output
+  schema as `anyOf[success, typed tool error]` with `$defs` kept at the root (first attempt nested `$defs` and broke every
+  `#/$defs` ref → SDK `tools/list` failed). Law `a_tool_output_schema_admits_its_success_shape_and_the_typed_tool_error`
+  (`tool-error-law-1.txt`); MCP TS **70/70** (`mcp-ts-5.txt`, includes the SDK typed-error row).
+- 03:59 7800 READY on B2. 04:07 hub-agent-participant **17/17** (`hub-agent-participant-7800-b2.txt`). Hub hold 2602 stopped.
+- 04:1x–04:4x 4b runs en-1…12: driver fixes (Commands-frame baseline taken BEFORE the commit — a baseline after it had
+  miscounted "1→1"; `[data-ink-block-id]` witness; space-open retry; roster/head waits 90 s) and the S9 finding.
+- 05:0x S9 landed (`relay-law-1.txt`, restage 8); 4b **en 8/8, de 8/8** (S1 row); relay probe 4/4.
+- 05:1x–05:4x S4 on 7800 runs 1–4 (S4 row). The intermittent "no OS shell attached" was a race: the approval coordinator
+  looked for a shell before the shell had dialled the new gateway's offer. Fix: `SHELL_ATTACH_GRACE_MS` 35 s, only while a
+  live os session exists, cancel-aware; law `a_shell_that_attaches_within_the_grace_is_asked` (`grace-law-1.txt`, policy +
+  bridge 60/60). Not yet re-run live (needs the restage below).
+- 05:3x coordinator (from U5): bridge-handshake defect, S10 row. Gateway half + law `bridge-law-1.txt` by 05:4x. My restage 9
+  (05:41) rotated `dist/build.stage-dUd3Xu.previous` away before the instruction to reproduce with an old-build copy, and
+  88810 runs from that deleted inode, so no old-build copy exists; the live repro uses stand-ins with 88810's exact wire
+  behaviour (listens, never accepts) and a v2 gateway (typed refusal). 88810 untouched.
+- 08:40 resumed after the usage-limit stop. Rule 20 (guest freeze) noted: everything below is os-mcp + renderer; the wgpu
+  renderer crate (`semio-framework-os-renderer-wgpu`) is linked by no guest (only a ticket probe depends on it).
+- 08:4x–08:5x S10 shell half (React hook, AgentPresence, chat panel, footer notice, wgpu twin, fixture). React laws: bridge
+  suite **80/80** (`vitest-bridge-2.log`), AgentPresence + chat panel **29/29** (`vitest-presence-1.log`); `typecheck` of the
+  React renderer clean, `--listFiles` shows every edited file.
+- 08:58 serve :6530 restarted (mine): its node-side `/__semio/agent-bridge` still answered the pre-U5 `{"error":…}` body,
+  which the current shell never parses as an offer. Now `{"schema":"semio.os.agent-bridge-offer/v1","offered":false}`.
+- 08:58–09:02 S10 live (`🗑️generated/s12/bridge-live-*.json` + `.png`, stand-in logs `double-*.jsonl`):
+  silent stand-in, en: dials at 1.4 s / 10.3 s / 20.3 s, each retired at +8.0 s, notice "The AI client's bridge does not
+  answer; restart the AI client to connect again" at 28.7 s, nothing dialled in the remaining 41 s, `consoleErrors 0`
+  (Chrome prints one browser-native *warning* per retired dial, "WebSocket is closed before the connection is established",
+  3 in total). de: same shape, notice "Die Brücke des KI-Clients antwortet nicht; …" at 32.7 s, 3 dials, 0 errors.
+  v2 stand-in: 1 dial each for en and de, the shell's `Hello` carried `bridgeVersion 1`, the stand-in answered `0c000200`,
+  notice "The AI client uses bridge version 2, this shell version 1; update the older one" / "Der KI-Client nutzt
+  Brückenversion 2, diese Oberfläche Version 1; aktualisiere die ältere", 0 console messages of any kind.
+- 09:03 os-mcp restage 10 (51 s). Real new gateway, live (`hold-new.jsonl`): 70 finished HTTP requests on its bridge port all
+  answered, 0 `CLOSED` sockets held, the 71st answered in 7 ms; the shell on :6530 dialled its offer once and was welcomed
+  (frame tag 0), no notice, 0 console messages. Closing its stdin removed the offer file (`offerLeft:false`); a SIGTERM-killed
+  gateway's leftover file is ignored by the supervisor's liveness check (`offered:false`).
+- 09:0x suites on restage 10 + fresh :6530: MCP TS **70/70** (`mcp-ts-6.txt`), client-e2e **39/39** (`client-e2e-7.txt`),
+  live-agent-loop en 25/26 → row `0 rendezvous` still read `pid` from the offer answer, which U5's typed
+  `semio.os.agent-bridge-offer/v1` no longer carries; the live-agent-loop and agent-reply gates now read the answer with the
+  shell's own `parseAgentBridgeOffer`/`sameAgentBridgeOffer` (a new gateway = new url + proof). Then live-agent-loop **en 26/26**
+  (`live-agent-loop-en-10.txt`), **de 26/26** (`live-agent-loop-de-3.txt`), agent-reply **9/9** (`agent-reply-1.txt`), Rust
+  quick **462/462**, 35 skipped (`mcp-rust-quick-4.txt`).
+- 09:2x S4 on 7800 (serve :6531, fresh page loads): en-5 2/3 and de-1 2/3 — "Set up MCP client" stays `installing` although
+  the credential file is written (09:23:13, 09:26:40): `🔗️HubConnection` `installAgentMcpClient` drops the result when
+  `operationOwnerCurrent(owner)` is false and has no terminal phase for it. en-6 **7/8**: sign-in 15.9 s, setup, official SDK
+  client connects in 2.3 s (fresh binary), edits the note, destructive request → shell approval "Approve Once" at 30.3 s,
+  **19.5 s from first page load to the approved agent edit** (the S4 shell-attach grace holds live); red: revoke — after the
+  approval the agent pane is unbound (space "", path /hub) and the overlay reopened from the palette says "Not signed in to a
+  hub" above the user's own space list, so no delegation row. Reported to the coordinator for U5 (both, with captures).
+- 09:3x quartet on 7800 run 1 **17/19** (`quartet-7800-1.txt`): row 14 `inference_approve` answered retryable
+  `PLUGIN_UNAVAILABLE` "descriptor index is refreshing" while row 16 shows the hub ledger advanced 0→1 — the agent was told to
+  retry an approval that had landed; row 17 agent B read headSeq −1. Root: every directory event in the bound space
+  `invalidate`s the authority and every hub call in the refresh window failed at once. Fixes (os-mcp): `HubRemoteBinding`
+  announces each state/authority/catalog transition on a Condvar and hub-bound entry points wait for a refresh in flight
+  (`HUB_AUTHORITY_SETTLE_WAIT_MS` = one refresh turn's deadline, 10 s) before their gate fails closed; `approve_hub_job` checks
+  its base precondition BEFORE the relay and, once the hub receipt exists, reports success with named `warnings`
+  (`undo-unavailable`/`events-unavailable`) instead of an error; the refusal now names `phase` and `lastFault`. Law
+  `a_call_during_an_authority_refresh_waits_for_it_and_fails_closed_only_after_the_wait` (remote 14/14, `settle-law-1.log`).
+  Run 2 (restage 11): approval answers success (no retry signal), but `job` null — the binding was still refreshing after the
+  10 s wait and 20 s later; restage 12 carries the diagnostics to name why.
+
+### Session 12 Files Changed
+
+| path | change |
+|---|---|
+| `🌉️mcp/🧬️schema/🦀️.rs` (+ regenerated `🔣️.json`, `🟦️.ts`) | `UNTRUSTED_CONTENT_SCHEMA`/`NOTICE`, typed provenance, `untrusted_content()` builder, shapes `UntrustedContentV1`/`UntrustedProvenanceV1` (exports 70 → 72); snapshot/export output shapes carry `untrusted` |
+| `🌉️mcp/🏠️workspace/🦀️.rs` | `untrusted_artifact_provenance`, `artifact_body` (folder + hub bodies), hub `semio://workspace` space entry enveloped, resource descriptions |
+| `🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs` | hub checkpoint resource: `pack`/`spr` keep `byteLength`+`sha256`, bytes move into `untrusted` |
+| `🌉️mcp/🏠️workspace/🧬️schema/🔣️.json`, `🧫️fixtures/🔐️canonical-checkpoint-resource/🔣️.json`, pair unit law | checkpoint contract + fixture + law follow the envelope (cross-document `$ref` to `UntrustedContentV1`) |
+| `🌉️mcp/🗿️artifact/🦀️.rs` + quick law | export enveloped; en/de descriptions; law `document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope` |
+| `🌉️mcp/🗿️artifact/🧬️schema/🔣️.json`, `🧫️fixtures/🧷️untrusted-content-law.json` (new) | `UntrustedContentLawV1` + the law fixture |
+| `🌉️mcp/🧪️tests/🧷️untrusted-content/🟦️.ts` (new) | process law over the real binary (AJV, `node:crypto`) |
+| `🌉️mcp/🧭️protocol/🦀️.rs` | `SERVER_INSTRUCTIONS` in both `initialize` results |
+| `🌉️mcp/🧠️context/🦀️.rs` | artifact resource template description + mime |
+| `🌉️mcp/🟦️.ts` (client-e2e) | reads content from the envelope |
+| `🌉️mcp/🧪️tests/🤖️live-agent-loop/🟦️.ts` | envelope reads; (g1)–(g3) prompt-injection rows; `decide` takes a capability + input |
+| `🌉️mcp/📦️packages/🦀️rust/📜️script.ts` | checkpoint oracle verifies the envelope; `workspaceContract` registers the os.mcp component |
+| `🌎️hub/📦️packages/🦀️rust/📜️script.ts` (2 readers) | hub checkpoint gates read bytes from `untrusted.content` |
+| `🌉️mcp/README.md` | "Document content is untrusted data" |
+| `🌉️mcp/🔀️dispatch/🦀️.rs` + quick laws | S7 no-change invocation (`PreparedOps::is_empty`, `NO_CHANGE_WARNING`, saga skips empty members), mock `force_empty_preview`; fault mapping `interactive-job.not-ui-safe`/`preview-output`, `transaction.member-rejected` |
+| `🌉️mcp/🏠️workspace/🦀️.rs` + quick laws | S8 `AppRoute` routing (channels, slots, session artifacts, backbone relay, create/export per app); routing integration law rebuilt on real descriptors; new multi-app law |
+| `🌉️mcp/🟦️.ts` (client-e2e) | no-change row; `inference_run` row prints the full error |
+| ticket `wp-g10/g10-serve.sh`, `g10-live-agent-loop.sh`, `g10-mcp-rust-quick.sh`, `g10-plugin-coverage.ts`, `g10-user-path.ts`, `g10-preview-effect-refusal.py` | s12 paths, gate env, private-target niced quick run, S3 harness, S4 user path, prepared guest patch |
+| `🌉️mcp/🚚️transport/🦀️.rs` + long law | S10: bridge-only listener closes terminal sockets, opening deadline, typed `503` capacity refusal, `Refused{version}` on a foreign `Hello`, run completion |
+| `🌉️mcp/🧵️bridge/🦀️.rs`, `🟦️.ts`, `🧫️fixtures/📨️frames.json` | S10: `GatewayToShell::Refused` (tag 12) + `BridgeRefusal`, fixture rows `0c000100`/`0c010100` |
+| `🌉️mcp/🦀️.rs` | S10: the stdio bridge offer is withdrawn when the listener's run completes |
+| `🌉️mcp/🛡️policy/🦀️.rs` + law | S4 race: `SHELL_ATTACH_GRACE_MS` while a live os session exists |
+| `🌉️mcp/🧬️schema/🦀️.rs`, `🧭️protocol/🦀️.rs` + law | every tool output schema admits the typed tool error (`anyOf`, `$defs` at the root) — official SDK client |
+| `🌉️mcp/🏠️workspace/🦀️.rs`, `🔀️dispatch/🦀️.rs`, `🗿️artifact/🦀️.rs` + law | S9 relay acknowledgement (`HubRelay`, `relay:acknowledged` / `relay-pending`, `sessionDocument.sync`) |
+| `🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs` + unit laws, `🏠️workspace/🦀️.rs` | S11: settle Condvar + `await_settled`, `settled_hub_binding`, named refusal (`phase`, `lastFault`, HTTP status + code), refresh backoff |
+| `🌉️mcp/💡️inference/🦀️.rs` | S11: hub approval checks preconditions before the relay and never errors after the receipt |
+| `🌉️mcp/🧪️tests/🤖️live-agent-loop/🟦️.ts`, `🧪️tests/💬️agent-reply/🟦️.ts` | rendezvous row reads the typed offer answer through the shell's own parser |
+| `📺️renderer/…/🔗️AgentBridge/🟦️.tsx` | S10 shell: handshake deadline from the dial, ≤ 3 unanswered dials per offer, `refused`/foreign `welcome` end the offer, `unavailable`/`incompatible` + `versionMismatch`, en/de labels, `BRIDGE_VERSION` in `hello` |
+| `📺️renderer/…/🔗️AgentBridge/🧫️fixtures/🤝️handshake/🔣️.json` (new) + React laws | the language-neutral handshake scenarios (React + wgpu replay them) |
+| `📺️renderer/…/🔗️AgentBridge/🎯️targets/🧊️wgpu/🦀️.rs` + wgpu-unit | wgpu twin: tag 12, `Unavailable`/`Incompatible(mismatch)`, dialer deadline + bounded unanswered dials; backoff law rewritten for the bounded ladder |
+| `📺️renderer/…/🚦️AgentPresence/🟦️.tsx` + wgpu twin + both test suites | `blocked` tone, localized unavailable/incompatible texts (versions named) |
+| `📺️renderer/…/💬️AgentChatPanel/🟦️.tsx`, `🏛️ShellHost/🟦️.tsx` | mismatch passed through; one footer notice while the offer is unavailable/incompatible |
+| `📺️renderer/…/⚛️react/🧪️tests/🎚️config/🟦️.ts` | registers the AgentPresence suite (it ran nowhere) |
+| ticket `wp-g10/g10-bridge-{hold.py,double.py,live.ts}`, `g10-wgpu-bridge-unit.sh`, `g10-mcp-build.sh`, `g10-exec-target-probe.ts`, `g10-durability.sh`, `g10-user-path.ts`, `g10-quartet-live.ts` | S10 live proof, wgpu laws, restage, hub probe, durability run, S4 pane trace, s12 capture dir |
+
 ## Pids
 
 | pid | what | started | stopped |

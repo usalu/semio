@@ -103,6 +103,33 @@ export function guestWindowIdV1(windowId: string | null | undefined, spawnedIds:
   return spawnedWindowKindOfInstanceV1(windowId, spawnedIds) ?? windowId;
 }
 
+/** 🧭️ A shell-keyed record as ONE program knows it — the mode-level chrome (panel bodies, tool measures) of whichever
+ * program owns the focused window. The session's own app keeps its plain keys; a spawned program's entries are stored
+ * under `${spawnedId}::<id>` (two programs declare the same `framework.panel.toolRun` tab and the same `fill` tool) and
+ * come back with that namespace stripped. `spawnedId === null` selects the entries that belong to no spawned program. */
+export function programEntriesV1<T>(record: Readonly<Record<string, T>>, spawnedId: string | null, spawnedIds: readonly string[]): Record<string, T> {
+  const entries: [string, T][] = [];
+  for (const [key, value] of Object.entries(record)) {
+    const owner = spawnedIdOfWindowInstanceV1(key, spawnedIds);
+    if (owner !== spawnedId) continue;
+    entries.push([owner === null ? key : key.slice(owner.length + SPAWNED_WINDOW_SEPARATOR.length), value]);
+  }
+  return Object.fromEntries(entries);
+}
+
+/** 🧭️ The entries a shell-keyed record holds after ONE program replaces its own slice with `entries` (already keyed the
+ * way {@link programKeyedEntriesV1} stores them): every other program's entries stay as they are. The session's refresh
+ * and a spawned program's refresh write the same panel-body and tool-measure records, and a writer replacing the whole
+ * record erased the other program's ToolRun panel the moment its own refresh landed. */
+export function withProgramEntriesV1<T>(record: Readonly<Record<string, T>>, spawnedId: string | null, spawnedIds: readonly string[], entries: readonly (readonly [string, T])[]): (readonly [string, T])[] {
+  return [...Object.entries(record).filter(([key]) => spawnedIdOfWindowInstanceV1(key, spawnedIds) !== spawnedId), ...entries];
+}
+
+/** 🧭️ The inverse of {@link programEntriesV1}: one program's own entries under the shell's key for them. */
+export function programKeyedEntriesV1<T>(spawnedId: string | null, entries: Readonly<Record<string, T>>): Record<string, T> {
+  return spawnedId === null ? { ...entries } : Object.fromEntries(Object.entries(entries).map(([key, value]) => [spawnedWindowInstanceIdV1(spawnedId, key), value] as const));
+}
+
 /** 🧰️ The per-window active-utility map as ONE program sees it: for a spawned instance only its own
  * windows, keyed by the window kind ids it declared; for the session's own app only the windows that
  * belong to no spawned instance. Sending the whole shell-wide map would hand every guest the other

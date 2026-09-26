@@ -1973,8 +1973,8 @@ fn widget_preview_eligibility_covers_neurons_output_previews_and_clusters() {
 //#endregion 🔖️EngineComputeTests
 
 //#region 🔖️ExamplesTests
-/// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `examples()` (wired at the plugin root via
-/// `.editor_with_examples::<Generation3dPlayApp>(create_generation3d_app(), …examples())`) must
+/// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `examples()`, returned by
+/// `Generation3dPlayApp::examples` and stamped by `.editor`, must
 /// carry the same eight ids, in the same order, as the `setActiveExample` select options this app
 /// declares — otherwise the navbar dropdown and the action's own arg picker disagree.
 #[test]

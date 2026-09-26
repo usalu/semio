@@ -83,6 +83,9 @@ pub mod space_browser;
 pub mod hub_connection;
 //#endregion 🔐️HubElements
 
+#[path = "../../../🧱️elements/👕️canvas-presence/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod canvas_presence;
+
 #[path = "../../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod engine_canvas;
 
@@ -8492,26 +8495,47 @@ pub(crate) mod kernel_runtime {
         command_bytes: usize,
         closing: bool,
         consumer_waker: Option<Waker>,
-        producer_waker: Option<Waker>,
+        producer_wakers: Vec<Waker>,
     }
 
     impl Default for KernelRequestQueue {
         fn default() -> Self {
-            Self { state: Mutex::new(KernelRequestQueueState { slots: semio_framework_async::boxed_fixed_slots(|| None), read: 0, write: 0, len: 0, command_pages: 0, command_bytes: 0, closing: false, consumer_waker: None, producer_waker: None }) }
+            Self { state: Mutex::new(KernelRequestQueueState { slots: semio_framework_async::boxed_fixed_slots(|| None), read: 0, write: 0, len: 0, command_pages: 0, command_bytes: 0, closing: false, consumer_waker: None, producer_wakers: Vec::with_capacity(KERNEL_REQUEST_QUEUE_CAPACITY) }) }
         }
     }
 
     impl KernelRequestQueue {
+        /// 📥️ Admits one request, or hands it back with its producer's wake already arranged: a queue
+        /// that is full (or over its command credit) keeps every distinct waiting producer's wake and
+        /// wakes them all when a request leaves it, and a queue whose lock is momentarily held asks the
+        /// producer to retry at once. A producer parked without either wake was never polled again — a
+        /// detached render hung for the rest of a 180 s law on one contended push, and a second waiting
+        /// producer used to overwrite the first one's wake (ticket 26/09/23 slice WG8, session 12).
         fn try_push(&self, request: KernelRequest, slot: Arc<ResponseSlot>, producer: Option<&Waker>) -> Result<(), (KernelRequest, Arc<ResponseSlot>)> {
             let (pages, bytes) = request.command_credits();
             let Ok(mut state) = self.state.try_lock() else {
+                if let Some(producer) = producer {
+                    producer.wake_by_ref();
+                }
                 return Err((request, slot));
             };
             let admitted_pages = state.command_pages.checked_add(pages).filter(|total| *total <= semio_framework::kernel::COMMAND_MAXIMUM_PAGES);
             let admitted_bytes = state.command_bytes.checked_add(bytes).filter(|total| *total <= semio_framework::kernel::COMMAND_MAXIMUM_BYTES);
             if state.closing || state.len == KERNEL_REQUEST_QUEUE_CAPACITY || admitted_pages.is_none() || admitted_bytes.is_none() {
-                if let Some(producer) = producer {
-                    state.producer_waker = Some(producer.clone());
+                let retry = match producer {
+                    Some(producer) if !state.producer_wakers.iter().any(|kept| kept.will_wake(producer)) => {
+                        if state.producer_wakers.len() < KERNEL_REQUEST_QUEUE_CAPACITY {
+                            state.producer_wakers.push(producer.clone());
+                            None
+                        } else {
+                            Some(producer)
+                        }
+                    }
+                    _ => None,
+                };
+                drop(state);
+                if let Some(producer) = retry {
+                    producer.wake_by_ref();
                 }
                 return Err((request, slot));
             }
@@ -8546,11 +8570,9 @@ pub(crate) mod kernel_runtime {
             state.len -= 1;
             state.command_pages -= pages;
             state.command_bytes -= bytes;
-            let producer = state.producer_waker.take();
+            let producers: Vec<Waker> = state.producer_wakers.drain(..).collect();
             drop(state);
-            if let Some(waker) = producer {
-                waker.wake();
-            }
+            producers.into_iter().for_each(Waker::wake);
             Poll::Ready(request)
         }
 
@@ -8566,11 +8588,9 @@ pub(crate) mod kernel_runtime {
             state.len -= 1;
             state.command_pages -= pages;
             state.command_bytes -= bytes;
-            let producer = state.producer_waker.take();
+            let producers: Vec<Waker> = state.producer_wakers.drain(..).collect();
             drop(state);
-            if let Some(waker) = producer {
-                waker.wake();
-            }
+            producers.into_iter().for_each(Waker::wake);
             Some(request)
         }
 
@@ -9970,6 +9990,46 @@ pub fn semio_wgpu_set_host_platform(platform: String) {
 }
 //#endregion ⌨️HostPlatform
 
+//#region 🗣️HostLocale
+/// 🗣️ Byte-for-byte React's `normalizeUiLocale` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`): a BCP47 tag
+/// (`navigator.language`, `"de-AT"`) folds onto the chrome's two tongues. `""` is "the host said
+/// nothing", which leaves the door unset rather than pinning a tongue nobody chose.
+pub fn host_locale_from_tag(tag: &str) -> Option<&'static str> {
+    if tag.is_empty() {
+        return None;
+    }
+    Some(if tag.to_ascii_lowercase().starts_with("de") { "de" } else { "en" })
+}
+
+thread_local! {
+    static HOST_LOCALE: std::cell::Cell<Option<&'static str>> = const { std::cell::Cell::new(None) };
+}
+
+/// 🗣️ Publishes the host's own language read. The shell folds it in exactly where React's
+/// `ShellHost` folds `detectShellLocale(navigator.language)`: after a lock and after the persisted
+/// preference, never over either.
+pub fn set_host_locale(tag: &str) {
+    HOST_LOCALE.with(|cell| cell.set(host_locale_from_tag(tag)));
+}
+
+/// 🗣️ The host's published tongue, or `None` when no door has spoken.
+pub fn host_locale() -> Option<&'static str> {
+    HOST_LOCALE.with(std::cell::Cell::get)
+}
+
+/// 🗣️ wasm locale hook — the browser twin of React's `navigator.language` read.
+///
+/// 🩸️ What this replaces: nothing reached the renderer. The page resolved `de` for a German
+/// browser and handed it to the frame Worker, which spent it on one boot error message; the shell
+/// fell through to `"en"`, so a de-DE user saw English chrome where React, on the same browser,
+/// spoke German.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuSetHostLocale)]
+pub fn semio_wgpu_set_host_locale(tag: String) {
+    set_host_locale(&tag);
+}
+//#endregion 🗣️HostLocale
+
 /// 🌓️ Byte-for-byte React's `resolveElementsSurfaceChromeDark` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:1691`):
 /// `"dark"` is dark, `"light"` is light, everything else (including `"system"`) asks the host.
 fn resolve_theme(appearance_id: &str) -> Theme {
@@ -10324,6 +10384,12 @@ struct FrameDeferredCursor {
     cancel: semio_framework_async::CancelToken,
     closing: bool,
 }
+
+/// 🔁️ How often a frame owes the shell's sync pump (`ShellState::pump_sync_events`: the document actors'
+/// events, the directory lane, the hub creation door, the agent bridge) — on BOTH builds. The browser build
+/// used to skip it (the cadence was native-only), so a browser document actor reached `Live` on the wire
+/// while its shell never heard a `Status`, `Presence` or `RemoteMutations` event (ticket 26/09/23 WG7, run s12b).
+const SHELL_SYNC_PUMP_INTERVAL_MS: f64 = 100.0;
 
 enum FrameDeferredWork {
     ShellMaintenance,
@@ -13295,7 +13361,6 @@ pub(crate) struct AppInteractionState {
     text_fault: Option<String>,
     frame_fault: Option<String>,
     text_cancel_pending: bool,
-    #[cfg(not(target_arch = "wasm32"))]
     last_sync_pump_ms: f64,
 }
 
@@ -16451,12 +16516,9 @@ impl AppRuntime {
                 // report `computing`, so a frame owes a settle step exactly while there is a chain to
                 // converge (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `ShellSettlePump`).
                 cursor.settle = self.shell.settle_pump_pending();
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= 100.0;
-                    if cursor.pump_sync {
-                        self.last_sync_pump_ms = app_now_ms();
-                    }
+                cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= SHELL_SYNC_PUMP_INTERVAL_MS;
+                if cursor.pump_sync {
+                    self.last_sync_pump_ms = app_now_ms();
                 }
                 cursor.phase = FrameFinishPhase::IconRaster;
             }
@@ -17167,7 +17229,6 @@ async fn boot_runtime(
             text_fault: None,
             frame_fault: None,
             text_cancel_pending: false,
-            #[cfg(not(target_arch = "wasm32"))]
             last_sync_pump_ms: 0.0,
         }),
         checkout: runtime_mailbox_core::InteractionCheckoutLedger::default(),

@@ -1,0 +1,66 @@
+{
+  "description": "When the shell's route effect applies a URI (🎫️ 26/09/23 C10). `fire` = the route effect runs for `uri` and `apply` is whether it must apply it; `begin` starts an application and names it; `settle` ends the named application with whether it took effect (`false` = the shell was not ready: no session, plugin or app yet); `invalidate` = a replaced session (boot, worker loss, hot swap, a changed human) or an explicit navigation. A hub document opened from a space keeps the space's URI, so an applied URI that is applied again closes that document — measured live as a note closing ~1.4 s after it mounted.",
+  "scenarios": [
+    {
+      "name": "a document opened from a space survives every later route effect",
+      "steps": [
+        { "op": "fire", "uri": "/spaces/a", "apply": true },
+        { "op": "begin", "as": "route" },
+        { "op": "settle", "of": "route", "uri": "/spaces/a", "tookEffect": true },
+        { "op": "fire", "uri": "/spaces/a", "apply": false },
+        { "op": "fire", "uri": "/spaces/a", "apply": false }
+      ]
+    },
+    {
+      "name": "a route the shell was not ready for is applied once it is",
+      "steps": [
+        { "op": "fire", "uri": "/spaces/a", "apply": true },
+        { "op": "begin", "as": "early" },
+        { "op": "settle", "of": "early", "uri": "/spaces/a", "tookEffect": false },
+        { "op": "fire", "uri": "/spaces/a", "apply": true },
+        { "op": "begin", "as": "ready" },
+        { "op": "settle", "of": "ready", "uri": "/spaces/a", "tookEffect": true },
+        { "op": "fire", "uri": "/spaces/a", "apply": false }
+      ]
+    },
+    {
+      "name": "a new URI is always applied",
+      "steps": [
+        { "op": "begin", "as": "a" },
+        { "op": "settle", "of": "a", "uri": "/spaces/a", "tookEffect": true },
+        { "op": "fire", "uri": "/spaces/b", "apply": true },
+        { "op": "fire", "uri": "/", "apply": true }
+      ]
+    },
+    {
+      "name": "an explicit navigation to the URI already shown applies it again",
+      "steps": [
+        { "op": "begin", "as": "a" },
+        { "op": "settle", "of": "a", "uri": "/spaces/a", "tookEffect": true },
+        { "op": "invalidate" },
+        { "op": "fire", "uri": "/spaces/a", "apply": true }
+      ]
+    },
+    {
+      "name": "a replaced session re-applies the route behind it",
+      "steps": [
+        { "op": "begin", "as": "a" },
+        { "op": "settle", "of": "a", "uri": "/spaces/a", "tookEffect": true },
+        { "op": "invalidate" },
+        { "op": "fire", "uri": "/spaces/a", "apply": true },
+        { "op": "begin", "as": "again" },
+        { "op": "settle", "of": "again", "uri": "/spaces/a", "tookEffect": true },
+        { "op": "fire", "uri": "/spaces/a", "apply": false }
+      ]
+    },
+    {
+      "name": "a session replaced while a route was applying leaves that route unapplied",
+      "steps": [
+        { "op": "begin", "as": "inflight" },
+        { "op": "invalidate" },
+        { "op": "settle", "of": "inflight", "uri": "/spaces/a", "tookEffect": true },
+        { "op": "fire", "uri": "/spaces/a", "apply": true }
+      ]
+    }
+  ]
+}

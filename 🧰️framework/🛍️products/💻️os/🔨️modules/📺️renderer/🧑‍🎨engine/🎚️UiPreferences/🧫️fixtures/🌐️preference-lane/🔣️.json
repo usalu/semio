@@ -1,0 +1,73 @@
+{
+  "note": "Preference lane scenarios (ticket 26/09/23 U5): two devices A and B of one hub user and the hub's per-user preference log. Steps: `commit` a user change on a device (local-first; a persistedShared one is queued), `deliver` a device's queued changes to the hub (idempotent by request id; a device that never delivers is offline), `fold` the hub's events after a device's frontier into it. `expected` lists each device's projection of the named keys and how many events the hub holds.",
+  "scenarios": [
+    {
+      "id": "a-change-reaches-the-other-device",
+      "steps": [
+        { "commit": { "device": "A", "mutation": { "mutation": "setAppearance", "appearance": "dark" } } },
+        { "deliver": "A" },
+        { "fold": "B" },
+        { "fold": "A" }
+      ],
+      "expected": { "A": { "appearance": "dark" }, "B": { "appearance": "dark" }, "hubEvents": 1 }
+    },
+    {
+      "id": "language-and-keybinding-follow-the-user-layout-stays",
+      "steps": [
+        { "commit": { "device": "A", "mutation": { "mutation": "setLayout", "layout": "tablet" } } },
+        { "commit": { "device": "A", "mutation": { "mutation": "setLocale", "locale": "de" } } },
+        { "commit": { "device": "A", "mutation": { "mutation": "setKeybindingOverride", "controlId": "undo", "keys": "ctrl+alt+k" } } },
+        { "deliver": "A" },
+        { "fold": "B" }
+      ],
+      "expected": { "A": { "layout": "tablet", "locale": "de", "keybindingOverrides": { "undo": "ctrl+alt+k" } }, "B": { "layout": null, "locale": "de", "keybindingOverrides": { "undo": "ctrl+alt+k" } }, "hubEvents": 2 }
+    },
+    {
+      "id": "an-offline-change-reconciles-on-reconnect",
+      "steps": [
+        { "commit": { "device": "A", "mutation": { "mutation": "setAppearance", "appearance": "dark" } } },
+        { "commit": { "device": "B", "mutation": { "mutation": "setAppearance", "appearance": "light" } } },
+        { "deliver": "B" },
+        { "fold": "A" },
+        { "deliver": "A" },
+        { "fold": "B" },
+        { "fold": "A" }
+      ],
+      "expected": { "A": { "appearance": "dark" }, "B": { "appearance": "dark" }, "hubEvents": 2 }
+    },
+    {
+      "id": "both-offline-converge-on-the-hub-order",
+      "steps": [
+        { "commit": { "device": "A", "mutation": { "mutation": "setAppearance", "appearance": "dark" } } },
+        { "commit": { "device": "B", "mutation": { "mutation": "setAppearance", "appearance": "light" } } },
+        { "deliver": "A" },
+        { "deliver": "B" },
+        { "fold": "A" },
+        { "fold": "B" }
+      ],
+      "expected": { "A": { "appearance": "light" }, "B": { "appearance": "light" }, "hubEvents": 2 }
+    },
+    {
+      "id": "a-resend-is-the-same-change",
+      "steps": [
+        { "commit": { "device": "A", "mutation": { "mutation": "setLocale", "locale": "de" } } },
+        { "deliver": "A" },
+        { "deliver": "A" },
+        { "fold": "A" },
+        { "fold": "B" }
+      ],
+      "expected": { "A": { "locale": "de" }, "B": { "locale": "de" }, "hubEvents": 1 }
+    },
+    {
+      "id": "a-newer-pending-change-supersedes-an-older-one",
+      "steps": [
+        { "commit": { "device": "A", "mutation": { "mutation": "setAppearance", "appearance": "dark" } } },
+        { "commit": { "device": "A", "mutation": { "mutation": "setAppearance", "appearance": "system" } } },
+        { "deliver": "A" },
+        { "fold": "B" },
+        { "fold": "A" }
+      ],
+      "expected": { "A": { "appearance": "system" }, "B": { "appearance": "system" }, "hubEvents": 1 }
+    }
+  ]
+}

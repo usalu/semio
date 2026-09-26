@@ -605,6 +605,13 @@ opt-level = 3
 [profile.dev.package.semio-framework-plugin-host]
 opt-level = 3
 
+# 🔐️ The repository's own SHA-256 carries every hub credential check: a sign-in derives PBKDF2-HMAC-SHA256
+# at 210 000 iterations. At `opt-level = 0` one derivation took ~2 s on an idle debug hub and 8.5 s on hub
+# 7800 under load (ticket 26/09/23 H9 session 12), all inside the compression function; optimizing this
+# one small crate makes a dev hub's sign-in cost what a release hub's does.
+[profile.dev.package.semio-framework-hash]
+opt-level = 3
+
 # 🛡️ WASI component links alone select this mitigation for rust-lld's ElemSection crash.
 # Native dev retains Cargo's parallel codegen policy; publication stays wasm-release.
 [profile.wasm-dev]
@@ -615,6 +622,11 @@ codegen-units = 1
 # inherited `incremental = true` split it by the caller's `CARGO_INCREMENTAL` into two compiles with two
 # different wasm hashes (ticket 26/09/23 W1: descriptor `ce48…`/`2a5c…` vs staged `a740…`).
 incremental = false
+
+# 🔐️ The dev-profile hash optimization above is for native hosts' credential checks; guests keep their
+# own `wasm-dev` code for this crate, so a component's bytes do not change with a host-side decision.
+[profile.wasm-dev.package.semio-framework-hash]
+opt-level = 0
 
 # 🎚️ The plugin guest must meet the framework's 8 ms interactive-step contract even in the dev
 # profile: at `opt-level = 0` a lowpoly render turn tessellates its seeded mesh in 10-11.5 ms and

@@ -1,0 +1,86 @@
+{
+  "schema": "semio.infinite.canvas.demand-frames/v2",
+  "description": "A GraphWasmCanvas paints only on demand and never twice for one change: an idle canvas paints nothing; any number of calls through the owner's session handle before a frame paint that frame ONCE; renderFrame through the handle paints at once and satisfies every call before it, so the pending frame paints nothing; unmount stops painting. Steps run in order on one mounted canvas; `do` is `mount`, `idle`, `unmount` or `calls:<method>,<method>,…` (called in that order within one task); `advanceMs` moves the frame clock; `renders` bounds the renderFrame calls the step produced (inclusive). A mount paints its first frame synchronously and at most two more (the appearance sync and the owner's ready handle). The `scheduler` cases drive the one shared scheduler directly: `invalidate`, `paintNow`, `begin:<reason>`, `end:<reason>`; a declared trailing window is an explicit bounded animation of at most ceil(trailingWindowMs / frameMs) + 1 frames.",
+  "frameMs": 16,
+  "cases": [
+    {
+      "id": "idle-after-attach",
+      "steps": [
+        { "do": "mount", "advanceMs": 1000, "renders": { "min": 1, "max": 3 } },
+        { "do": "idle", "advanceMs": 5000, "renders": { "min": 0, "max": 0 } }
+      ]
+    },
+    {
+      "id": "one-owner-call-paints-one-frame",
+      "steps": [
+        { "do": "mount", "advanceMs": 1000, "renders": { "min": 1, "max": 3 } },
+        { "do": "calls:syncFromScenePack", "advanceMs": 1000, "renders": { "min": 1, "max": 1 } },
+        { "do": "idle", "advanceMs": 5000, "renders": { "min": 0, "max": 0 } },
+        { "do": "calls:setCanvasThemeJson", "advanceMs": 1000, "renders": { "min": 1, "max": 1 } },
+        { "do": "idle", "advanceMs": 5000, "renders": { "min": 0, "max": 0 } }
+      ]
+    },
+    {
+      "id": "owner-calls-before-a-frame-coalesce",
+      "steps": [
+        { "do": "mount", "advanceMs": 1000, "renders": { "min": 1, "max": 3 } },
+        { "do": "calls:syncFromScenePack,setCanvasThemeJson,syncFromScenePack", "advanceMs": 1000, "renders": { "min": 1, "max": 1 } },
+        { "do": "idle", "advanceMs": 5000, "renders": { "min": 0, "max": 0 } }
+      ]
+    },
+    {
+      "id": "render-frame-paints-at-once",
+      "steps": [
+        { "do": "mount", "advanceMs": 1000, "renders": { "min": 1, "max": 3 } },
+        { "do": "calls:renderFrame", "advanceMs": 0, "renders": { "min": 1, "max": 1 } },
+        { "do": "idle", "advanceMs": 5000, "renders": { "min": 0, "max": 0 } }
+      ]
+    },
+    {
+      "id": "render-frame-satisfies-the-pending-demand",
+      "steps": [
+        { "do": "mount", "advanceMs": 1000, "renders": { "min": 1, "max": 3 } },
+        { "do": "calls:syncFromScenePack,setCanvasThemeJson,renderFrame", "advanceMs": 1000, "renders": { "min": 1, "max": 1 } },
+        { "do": "idle", "advanceMs": 5000, "renders": { "min": 0, "max": 0 } }
+      ]
+    },
+    {
+      "id": "unmount-stops",
+      "steps": [
+        { "do": "mount", "advanceMs": 100, "renders": { "min": 0, "max": 3 } },
+        { "do": "calls:syncFromScenePack", "advanceMs": 0, "renders": { "min": 0, "max": 0 } },
+        { "do": "unmount", "advanceMs": 5000, "renders": { "min": 0, "max": 0 } }
+      ]
+    }
+  ],
+  "scheduler": [
+    {
+      "id": "without-a-trailing-window-one-demand-is-one-paint",
+      "trailingWindowMs": 0,
+      "steps": [
+        { "do": "invalidate", "advanceMs": 0, "renders": { "min": 0, "max": 0 } },
+        { "do": "invalidate", "advanceMs": 1000, "renders": { "min": 1, "max": 1 } },
+        { "do": "paintNow", "advanceMs": 1000, "renders": { "min": 1, "max": 1 } },
+        { "do": "invalidate", "advanceMs": 0, "renders": { "min": 0, "max": 0 } },
+        { "do": "paintNow", "advanceMs": 1000, "renders": { "min": 1, "max": 1 } }
+      ]
+    },
+    {
+      "id": "a-declared-trailing-window-is-a-bounded-animation",
+      "trailingWindowMs": 250,
+      "steps": [
+        { "do": "invalidate", "advanceMs": 1000, "renders": { "min": 2, "max": 17 } },
+        { "do": "idle", "advanceMs": 5000, "renders": { "min": 0, "max": 0 } }
+      ]
+    },
+    {
+      "id": "a-continuous-reason-paints-every-frame-until-it-ends",
+      "trailingWindowMs": 0,
+      "steps": [
+        { "do": "begin:gesture", "advanceMs": 160, "renders": { "min": 5, "max": 11 } },
+        { "do": "end:gesture", "advanceMs": 1000, "renders": { "min": 1, "max": 2 } },
+        { "do": "idle", "advanceMs": 5000, "renders": { "min": 0, "max": 0 } }
+      ]
+    }
+  ]
+}

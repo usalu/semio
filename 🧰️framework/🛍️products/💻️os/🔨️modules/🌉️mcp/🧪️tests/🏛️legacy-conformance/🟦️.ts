@@ -136,6 +136,17 @@ describe("semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0)", () =>
     expect(threw, "an unregistered tool name must reject the request, not resolve with isError:true").toBe(true);
   });
 
+  it("a registered tool's typed error reaches the SDK client as isError:true, never as an output-schema exception", async () => {
+    const tools = (await client.listTools()).tools;
+    const withOutputSchema = tools.filter((tool) => tool.outputSchema !== undefined).map((tool) => tool.name);
+    expect(withOutputSchema, "the tools that answer structured content declare it").toEqual(expect.arrayContaining(["action_invoke", "artifact_snapshot", "artifact_open"]));
+    for (const name of ["action_invoke", "artifact_snapshot", "artifact_open"]) {
+      const result = await client.callTool({ name, arguments: name === "action_invoke" ? { capabilityId: "no.such.capability", input: {} } : { artifactId: "no-such-artifact" } });
+      expect(result.isError, `${name} answers its own failure as a tool result`).toBe(true);
+      expect((result.structuredContent as { code?: string } | undefined)?.code, `${name} carries the typed GatewayError`).toMatch(/^[A-Z_]+$/);
+    }
+  });
+
   it("ping succeeds", async () => {
     await expect(client.ping()).resolves.toBeDefined();
   });

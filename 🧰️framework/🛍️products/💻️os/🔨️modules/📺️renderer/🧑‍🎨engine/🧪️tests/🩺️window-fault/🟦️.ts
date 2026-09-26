@@ -5,7 +5,9 @@ import { exampleArtifactSources, reachableKindsFromUnknown, resolveDocumentOpera
 
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
-import { classifyWindowFault, WINDOW_FAULT_ATTRIBUTE, windowFaultFromError } from "../../🧱️elements/🏛️ShellHost/🩺️fault/🟦️.ts";
+import { classifyWindowFault, liveInstanceWindowFaultV1, WINDOW_FAULT_ATTRIBUTE, windowFaultFromError } from "../../🧱️elements/🏛️ShellHost/🩺️fault/🟦️.ts";
+import retiredInstanceFaults from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🪦️retired-instance-fault/🔣️.json";
+import { isPluginInstanceRetiredV1, markPluginInstanceRetiredV1 } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { createContributionsPublisher } from "../../🧱️elements/🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 import pluginLifetimeSchema from "../../../../🔌️plugin/🚪️lifetime/🧬️schema/🔣️.json";
 import faultVectors from "../../../../🔌️plugin/🩺️runtime-fault-vectors.json";
@@ -83,9 +85,10 @@ describe("window fault discriminators", () => {
     const shell = shellSource;
     expect(shell).toContain(`${WINDOW_FAULT_ATTRIBUTE}={fault.class}`);
     expect(shell).toContain('role="status"');
-    expect(shell).toContain("windowFaultFromError(renderError, pluginSupervisorByIdRef.current[current.pluginId])");
-    expect(shell).toContain("windowFaultFromError(renderError, pluginSupervisorByIdRef.current[activeSpawned.pluginId])");
-    expect(shell).toContain("windowFaultFromError(commandError, pluginSupervisorByIdRef.current[session.pluginId])");
+    expect(shell).toContain("refreshUi(current).catch((renderError) => reportRefreshFault(current.pluginId, renderError))");
+    expect(shell).toContain("liveInstanceWindowFaultV1(error, pluginSupervisorByIdRef.current[pluginId], isPluginInstanceRetiredV1)");
+    expect(shell).toContain("liveInstanceWindowFaultV1(renderError, pluginSupervisorByIdRef.current[activeSpawned.pluginId], isPluginInstanceRetiredV1)");
+    expect(shell).toContain("liveInstanceWindowFaultV1(commandError, pluginSupervisorByIdRef.current[session.pluginId], isPluginInstanceRetiredV1)");
     for (const key of ["ui.windowFault.abiMismatch", "ui.windowFault.interactiveCeiling", "ui.windowFault.clock", "ui.windowFault.pluginInternal", "ui.windowFault.installFailed", "ui.windowFault.unknown"]) expect(shell).toContain(key);
   });
 
@@ -99,6 +102,48 @@ describe("window fault discriminators", () => {
       expect(en, `en:${key}`).toContain(`${key}: {`);
     }
     expect(de).not.toEqual(en);
+  });
+});
+
+type RetiredFaultRowV1 = { readonly name: string; readonly failure: { readonly kind: "marked" | "error" | "wire"; readonly message: string; readonly origin?: string; readonly code?: string }; readonly fault: string | null };
+
+describe("retired instance faults", () => {
+  const rows = (retiredInstanceFaults as { readonly rows: readonly RetiredFaultRowV1[] }).rows;
+  const failure = (row: RetiredFaultRowV1): unknown =>
+    row.failure.kind === "marked" ? markPluginInstanceRetiredV1(new Error(row.failure.message)) : row.failure.kind === "error" ? new Error(row.failure.message) : { origin: row.failure.origin, code: row.failure.code, severity: "error", message: row.failure.message };
+
+  it("accepts the neutral corpus under a strict independent schema oracle and rejects adversarial shapes", () => {
+    const failureSchema = {
+      oneOf: [
+        { type: "object", additionalProperties: false, required: ["kind", "message"], properties: { kind: { enum: ["marked", "error"] }, message: { type: "string", minLength: 1 } } },
+        { type: "object", additionalProperties: false, required: ["kind", "origin", "code", "message"], properties: { kind: { const: "wire" }, origin: { type: "string" }, code: { type: "string" }, message: { type: "string" } } },
+      ],
+    };
+    const validate = new Ajv({ strict: true, allErrors: true }).compile({
+      type: "object",
+      additionalProperties: false,
+      required: ["description", "rows"],
+      properties: {
+        description: { type: "string" },
+        rows: { type: "array", minItems: 1, items: { type: "object", additionalProperties: false, required: ["name", "failure", "fault"], properties: { name: { type: "string" }, failure: failureSchema, fault: { anyOf: [{ type: "null" }, { enum: ["abi-mismatch", "interactive-ceiling", "clock", "plugin-internal", "install-failed", "unknown"] }] } } } },
+      },
+    });
+    expect(validate(retiredInstanceFaults), JSON.stringify(validate.errors)).toBe(true);
+    for (const hostile of [{ ...retiredInstanceFaults, rows: [] }, { ...retiredInstanceFaults, rows: [{ ...rows[0], fault: "retired" }] }, { ...retiredInstanceFaults, rows: [{ ...rows[0], failure: { kind: "wire", message: "x" } }] }]) expect(validate(hostile)).toBe(false);
+    expect(rows.some((row) => row.fault === null) && rows.some((row) => row.fault !== null)).toBe(true);
+  });
+
+  it("raises no window fault for a pass whose instance was retired under it, and the classified fault for every other failure", () => {
+    for (const row of rows) {
+      const fault = liveInstanceWindowFaultV1(failure(row), undefined, isPluginInstanceRetiredV1);
+      expect(fault === null ? null : fault.class, row.name).toBe(row.fault);
+      if (fault !== null) expect(fault.message, row.name).toBe(row.failure.message);
+    }
+  });
+
+  it("keeps a crashed supervisor's install fault for a live instance", () => {
+    const live = rows.find((row) => row.fault !== null && row.failure.kind === "error")!;
+    expect(liveInstanceWindowFaultV1(failure(live), "crashed", isPluginInstanceRetiredV1)?.class).toBe("install-failed");
   });
 });
 

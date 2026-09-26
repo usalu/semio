@@ -11,6 +11,7 @@
 // #region 🔌️Adapters
 import { cleanup, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it } from "vitest";
+import { setUiLocale } from "@semio-tech/ui-react";
 import { AgentPresence, agentPresenceTone } from "../../🟦️.tsx";
 import { type AgentBridgePresence } from "../../../🔗️AgentBridge/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -27,6 +28,8 @@ describe("agentPresenceTone", () => {
   it("is connecting while reconnecting", () => expect(agentPresenceTone("reconnecting", idle)).toBe("connecting"));
   it("is connected when open and idle", () => expect(agentPresenceTone("open", idle)).toBe("connected"));
   it("is working when open and active", () => expect(agentPresenceTone("open", working)).toBe("working"));
+  it("is blocked when the offer is unavailable", () => expect(agentPresenceTone("unavailable", working)).toBe("blocked"));
+  it("is blocked when the offer is incompatible", () => expect(agentPresenceTone("incompatible", idle)).toBe("blocked"));
 });
 
 describe("AgentPresence", () => {
@@ -53,5 +56,32 @@ describe("AgentPresence", () => {
   it("shows the connecting label while connecting", () => {
     render(<AgentPresence status="connecting" presence={idle} />);
     expect(screen.getByRole("status").textContent).toBe("Connecting to agent…");
+  });
+
+  it("tells an unavailable gateway once, in English and German", async () => {
+    render(<AgentPresence status="unavailable" presence={idle} />);
+    expect(screen.getByRole("status").textContent).toBe("The AI client's bridge does not answer; restart the AI client to connect again");
+    expect(screen.getByRole("status").getAttribute("data-semio-agent-bridge-status")).toBe("unavailable");
+    cleanup();
+    await setUiLocale("de");
+    try {
+      render(<AgentPresence status="unavailable" presence={idle} />);
+      expect(screen.getByRole("status").textContent).toBe("Die Brücke des KI-Clients antwortet nicht; starte den KI-Client neu, um erneut zu verbinden");
+    } finally {
+      await setUiLocale("en");
+    }
+  });
+
+  it("names both bridge versions when incompatible, in English and German", async () => {
+    render(<AgentPresence status="incompatible" presence={idle} versionMismatch={{ gateway: 2, shell: 1 }} />);
+    expect(screen.getByRole("status").textContent).toBe("The AI client uses bridge version 2, this shell version 1; update the older one");
+    cleanup();
+    await setUiLocale("de");
+    try {
+      render(<AgentPresence status="incompatible" presence={idle} versionMismatch={{ gateway: 2, shell: 1 }} />);
+      expect(screen.getByRole("status").textContent).toBe("Der KI-Client nutzt Brückenversion 2, diese Oberfläche Version 1; aktualisiere die ältere");
+    } finally {
+      await setUiLocale("en");
+    }
   });
 });

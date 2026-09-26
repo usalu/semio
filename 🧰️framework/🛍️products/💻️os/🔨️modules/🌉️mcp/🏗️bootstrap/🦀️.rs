@@ -20,7 +20,9 @@ enum Mode {
     /// 🚨️ `semio-os-mcp audit [--folder <dir>]` — compiles the catalog source from the committed
     /// plugin descriptors under `<dir>` and prints every `CatalogAuditFinding` (a gesture-named
     /// route published to agents with no declared audience; a delete/clear/replace mutation with
-    /// `effects.destructive = false`). Exits 1 when the list is non-empty, so it is a gate.
+    /// `effects.destructive = false`) and every `DescriptionFinding` (an agent-published verb whose
+    /// en/de description breaks the manifest's `CapabilityDescription` contract). Exits 1 when either
+    /// list is non-empty, so it is a gate.
     Audit { folder: String },
 }
 
@@ -320,8 +322,12 @@ fn main() {
         for finding in &findings {
             println!("{}", finding.message());
         }
-        println!("semio-os-mcp audit: {} finding(s) over {} descriptor(s) under {folder}", findings.len(), source.descriptors.len());
-        std::process::exit(if findings.is_empty() { 0 } else { 1 });
+        let undescribed = semio_framework_os_mcp::catalog::description_findings(&source);
+        for finding in &undescribed {
+            println!("{}", finding.message());
+        }
+        println!("semio-os-mcp audit: {} finding(s), {} description finding(s) over {} descriptor(s) under {folder}", findings.len(), undescribed.len(), source.descriptors.len());
+        std::process::exit(if findings.is_empty() && undescribed.is_empty() { 0 } else { 1 });
     }
     let result = match mode {
         Mode::Stdio(options) => semio_framework_os_mcp::run_stdio(options),

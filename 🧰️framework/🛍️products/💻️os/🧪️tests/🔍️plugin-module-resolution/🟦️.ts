@@ -11,6 +11,7 @@ import Ajv from "ajv";
 import { decodeTrustedPluginModuleBundleV1, PLUGIN_MODULE_SOURCES_V1, trustedPluginModuleSourceOfEntryV1, validateTrustedPluginModuleIndexV1, type TrustedPluginModuleFileV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
 import {
   hubCatalogClosureV1,
+  hubCatalogOnlyPluginsV1,
   hubCatalogOwnerOfDialectV1,
   hubProgramIdV1,
   localPluginModuleRootV1,
@@ -91,5 +92,18 @@ describe("🔍️ hub program resolution", () => {
     const index = validateTrustedPluginModuleIndexV1(fixture.index);
     for (const row of fixture.ownerCases) expect(hubCatalogOwnerOfDialectV1(index, row.artifactKind)?.pluginId ?? null, row.artifactKind).toBe(row.owner);
     for (const row of fixture.closureCases) expect(hubCatalogClosureV1(index, row.pluginId)?.map((entry) => entry.pluginId) ?? null, row.id).toEqual(row.closure);
+  });
+
+  it("lists every hub plugin this device's build lacks, never an extension, pinned to its generation's bundle", () => {
+    const index = validateTrustedPluginModuleIndexV1(fixture.index);
+    for (const row of fixture.catalogOnlyCases) {
+      const rows = hubCatalogOnlyPluginsV1(index, new Set(row.local));
+      expect(rows.map((entry) => entry.pluginId), row.id).toEqual(row.hubOnly);
+      for (const entry of rows) {
+        const indexed = index.modules.find((module) => module.pluginId === entry.pluginId)!;
+        expect([entry.generationId, entry.bundleSha256, entry.dependencies], row.id).toEqual([index.generationId, indexed.bundleSha256, indexed.dependencies]);
+        expect(indexed.extendsPluginId, `${row.id}: ${entry.pluginId} is a plugin`).toBeNull();
+      }
+    }
   });
 });

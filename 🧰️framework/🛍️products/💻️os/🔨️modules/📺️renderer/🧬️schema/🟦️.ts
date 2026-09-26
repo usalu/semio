@@ -137,7 +137,7 @@ export type DocumentOpeningTargetV1 = { readonly kind: "hub"; readonly dataClass
 export type DocumentOpeningErrorCodeV1 = "opening.identity-required" | "opening.surface-required";
 export interface DocumentOpeningScopeResolutionV1 { readonly id: string; readonly ref: DocumentOpeningRefV1; readonly context: DocumentOpeningContextV1; readonly expected?: readonly DocumentOpeningTargetV1[]; readonly error?: DocumentOpeningErrorCodeV1 }
 export type DocumentOpeningRequestStageV1 = "open-plan" | "manifest" | "component" | "descriptor" | "socket-grants";
-export interface DocumentFirstOpenV1 { readonly requestedSurfaceOnly: boolean; readonly requestStages: readonly DocumentOpeningRequestStageV1[]; readonly socketCount: number; readonly localSocketFailures: number; readonly unselectedSocketFailures: number; readonly hostile: readonly { readonly id: string; readonly requestStages: readonly DocumentOpeningRequestStageV1[] }[] }
+export interface DocumentFirstOpenV1 { readonly requestedSurfaceOnly: boolean; readonly requestStages: readonly DocumentOpeningRequestStageV1[]; readonly socketCount: number; readonly localSocketFailures: number; readonly unselectedSocketFailures: number; readonly hostile: readonly { readonly id: string; readonly requestStages: readonly DocumentOpeningRequestStageV1[]; readonly sessionKept: boolean }[] }
 export type TutorialRunEventV1 = "resolve" | "stop" | "switch" | "replace";
 export interface TutorialRunTransitionV1 { readonly id: string; readonly events: readonly TutorialRunEventV1[]; readonly started: boolean; readonly restores: number }
 export type TutorialDriveEventV1 = "claimA" | "claimB" | "releaseA" | "releaseB" | "retire";

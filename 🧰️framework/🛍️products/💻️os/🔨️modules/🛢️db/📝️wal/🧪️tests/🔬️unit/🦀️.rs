@@ -1419,6 +1419,45 @@ async fn recovery_resumes_next_tx_id_and_accepts_further_submits() {
     wal.close().await.unwrap();
 }
 
+/// ⏱️ Opening a WAL is bounded per verified segment, never over its whole history: a chain whose
+/// verification needs more fuel in total than one step grants still opens under a stall-bounded
+/// control, while the same budget as one fixed allowance refuses it. A grown document stays openable.
+#[semio_framework_async_macros::async_test]
+async fn wal_open_bounds_each_verified_segment_not_the_whole_history() {
+    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let document = doc("grown-history").await;
+    let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
+    wal.max_segment_bytes = 400;
+    for index in 0..48u32 {
+        submit_one(&storage, &mut wal, WalRecord::Command(retained(format!("history-{index:04}-{}", "h".repeat(96)).as_bytes()).await), DurabilityClass::Fsync, u64::from(index)).await;
+    }
+    wal.close().await.unwrap();
+    let segments = db_actor::block_on(storage.list_segments(&document)).unwrap().len() as usize;
+    assert!(segments >= 8, "the history spans many segments: {segments}");
+    let spent = {
+        let mut control = WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
+        let (mut opened, _) = ArtifactWal::open_with_control(&storage, document.clone(), GroupCommitPolicy::default(), 1, &mut control).await.unwrap();
+        opened.close().await.unwrap();
+        1_000_000 - control.fuel
+    };
+    let step_fuel = spent.div_ceil(segments) * 2;
+    assert!(step_fuel < spent, "one step's fuel covers less than the whole chain: step={step_fuel} whole={spent}");
+    let mut fixed = WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), step_fuel).unwrap();
+    match ArtifactWal::open_with_control(&storage, document.clone(), GroupCommitPolicy::default(), 2, &mut fixed).await {
+        Err(rejected) => assert!(matches!(rejected_open_error(rejected).await, DbError::LimitExceeded("wal cursor fuel"))),
+        Ok((mut opened, _)) => {
+            opened.close().await.unwrap();
+            panic!("one fixed step budget must not cover the whole chain");
+        }
+    }
+    let mut stepped = WalCursorControl::stall_bounded(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Duration::from_secs(30), step_fuel).unwrap();
+    let (mut opened, report) = ArtifactWal::open_with_control(&storage, document.clone(), GroupCommitPolicy::default(), 3, &mut stepped).await.unwrap();
+    assert_eq!(report.segments_seen as usize, segments);
+    opened.close().await.unwrap();
+    let (mut reopened, _) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 4).await.unwrap();
+    reopened.close().await.unwrap();
+}
+
 #[semio_framework_async_macros::async_test]
 async fn multi_segment_rotation_chains_prev_hash_and_replay_spans_segments() {
     let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();

@@ -69,6 +69,13 @@ type RendererBindings = {
    * `os.config.ui-preferences` log; the UI isolate makes both reads and hands them here — at boot and
    * again on every change. Without it every browser boot resolved DARK where React resolved LIGHT. */
   semioWgpuSetHostAppearance?: (preference: string, systemDark: boolean) => void;
+  /** 🗣️ The locale door (`🧊️renderer/🦀️.rs`, region 🗣️HostLocale). This realm's own `navigator.language`
+   * is not the page's promise, so the UI isolate's read (the boot message's `locale`) crosses here once,
+   * before the shell resolves its tongue: a lock, then the stored preference, then this. */
+  semioWgpuSetHostLocale?: (locale: string) => void;
+  /** 🛰️ The agent-bridge door (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` `semioWgpuSetAgentBridgeConfig`): the page's discovered
+   * offer; an empty url clears it and parks the bridge in `Disabled`. */
+  semioWgpuSetAgentBridgeConfig?: (url: string, admissionProof: string) => void;
   /** ⌨️ The platform door (`🧊️renderer/🦀️.rs`, region ⌨️HostPlatform). The renderer's own answer is
    * `cfg!(target_os = "macos")`, which is FALSE in every wasm build, so a macOS browser formatted `mod`
    * as `Ctrl` where React formatted `⌘️`. `userAgentData.platform` is page-thread-only, so the UI
@@ -354,6 +361,10 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
     ownedStep("host-storage", () => bindings?.semioWgpuSetHostStorage?.(JSON.stringify(message.storage)));
     return;
   }
+  if (message.kind === "host-agent-bridge") {
+    ownedStep("host-agent-bridge", () => bindings?.semioWgpuSetAgentBridgeConfig?.(message.offer?.url ?? "", message.offer?.admissionProof ?? ""));
+    return;
+  }
   if (closed || closing || failed || quarantined) return;
   if (message.kind === "job-submit" || message.kind === "job-input-page" || message.kind === "job-cancel") {
     if (!interactiveJobs) {
@@ -613,6 +624,7 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
       loaded.semioWgpuSetHostStorage?.(JSON.stringify(message.storage));
       loaded.semioWgpuSetHostAppearance?.(message.appearance.preference, message.appearance.systemDark);
       loaded.semioWgpuSetHostPlatform?.(message.platform);
+      loaded.semioWgpuSetHostLocale?.(message.locale);
       if (message.descriptor.hub) loaded.semioWgpuSetHubEnv?.(message.descriptor.hub.hubUrl, message.descriptor.hub.user, message.descriptor.hub.dataDir);
     }, suspensionLedger);
     progress("plugin-graph", 0.25);

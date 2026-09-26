@@ -43,7 +43,7 @@ use futures::{SinkExt, StreamExt};
 use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 use semio_framework_async::ShardedMap;
 use semio_framework_hash::Sha256;
-use semio_framework_trace::record::{EventCount, Span, TraceOutcome, TraceRecord, Tracer, SERVER_SPAN_EVENTS};
+use semio_framework_trace::record::{EventCount, Span, TraceLevel, TraceOutcome, TraceRecord, Tracer, SERVER_SPAN_EVENTS};
 #[cfg(feature = "neo4j")]
 use semio_hub::artifact_authority::chunk_cas::Neo4jArtifactChunkCasStorage;
 #[cfg(feature = "postgres")]
@@ -240,6 +240,7 @@ fn now_ms() -> i64 {
 struct StartupCatalogControl {
     tracer: Tracer,
     cancellation: StartupCancellationV1,
+    progress: StartupProgressCellV1,
     /// @emoji 🕰️ When the last IN-FLIGHT progress record was emitted, so a long load reports that it
     /// is advancing without turning a 16 k-unit catalog into 16 k trace lines.
     last_in_flight_ms: std::sync::atomic::AtomicU64,
@@ -250,15 +251,30 @@ struct StartupCatalogControl {
 const STARTUP_CATALOG_IN_FLIGHT_TRACE_MIN_GAP_MS: u64 = 1_000;
 
 impl StartupCatalogControl {
-    /// @emoji 📚️ Reporting onto `tracer`, cancelled with `cancellation`.
-    fn new(tracer: Tracer, cancellation: StartupCancellationV1) -> Self {
-        Self { tracer, cancellation, last_in_flight_ms: std::sync::atomic::AtomicU64::new(0) }
+    /// @emoji 📚️ Reporting onto `tracer` and into `progress`, cancelled with `cancellation`.
+    fn new(tracer: Tracer, cancellation: StartupCancellationV1, progress: StartupProgressCellV1) -> Self {
+        Self { tracer, cancellation, progress, last_in_flight_ms: std::sync::atomic::AtomicU64::new(0) }
     }
 
     /// @emoji 🤫️ Reporting nowhere — for a caller that runs before this process has configured
     /// observability, and for every law that is not about the catalog's progress.
     fn silent() -> Self {
-        Self { tracer: Tracer::disabled(), cancellation: StartupCancellationV1::default(), last_in_flight_ms: std::sync::atomic::AtomicU64::new(0) }
+        Self { tracer: Tracer::disabled(), cancellation: StartupCancellationV1::default(), progress: StartupProgressCellV1::default(), last_in_flight_ms: std::sync::atomic::AtomicU64::new(0) }
+    }
+}
+
+/// @emoji 📈️ The latest progress a booting hub's startup work reported — what `/readyz` shows as
+/// `startup` while the trusted catalog loads, so a waiting caller sees a hub that is advancing.
+#[derive(Clone, Default)]
+struct StartupProgressCellV1(Arc<Mutex<Option<AuthorityProgress>>>);
+
+impl StartupProgressCellV1 {
+    fn observe(&self, progress: AuthorityProgress) {
+        *self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(progress);
+    }
+
+    fn latest(&self) -> Option<HubStartupProgressV1> {
+        self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner).map(|progress| HubStartupProgressV1 { stage: progress.stage.code(), completed_units: progress.completed_units, total_units: progress.total_units })
     }
 }
 
@@ -292,8 +308,12 @@ impl AuthorityOperationControl for StartupCatalogControl {
     /// could not tell a slow machine from a wedged one — the very distinction the load's own
     /// no-progress bound now makes internally. In-flight units are rate-limited to
     /// [`STARTUP_CATALOG_IN_FLIGHT_TRACE_MIN_GAP_MS`] so the record count never scales with the
-    /// catalog's.
+    /// catalog's, and are emitted at `info`, the level a launcher runs the hub at: a `started`
+    /// record defaults to `debug`, so a long guest-codec step (a component's pack-schema hash)
+    /// printed nothing at `info` and a launcher's readiness stall bound killed a hub that was
+    /// still loading.
     fn report(&self, progress: AuthorityProgress) {
+        self.progress.observe(progress);
         let terminal = progress.completed_units == 0 || progress.completed_units == progress.total_units;
         if !terminal {
             let now_ms = self.now_ms();
@@ -305,6 +325,7 @@ impl AuthorityOperationControl for StartupCatalogControl {
         }
         let outcome = if progress.completed_units == progress.total_units { TraceOutcome::Ok } else { TraceOutcome::Started };
         let mut record = TraceRecord::new("server.catalog.publication", outcome);
+        record.level = TraceLevel::Info;
         record.detail = Some(format!("stage={:?} {}/{}", progress.stage, progress.completed_units, progress.total_units));
         self.tracer.emit(record);
     }
@@ -677,7 +698,7 @@ pub fn artifact_authority_closed_reason(native_artifact_execution: bool, trusted
     }
 }
 
-async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Option<&dyn NativeCodecProviderSourceV1>, tracer: &Tracer, cancellation: &StartupCancellationV1) -> Result<StartupArtifactAuthority, AuthorityError> {
+async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Option<&dyn NativeCodecProviderSourceV1>, tracer: &Tracer, cancellation: &StartupCancellationV1, progress: &StartupProgressCellV1) -> Result<StartupArtifactAuthority, AuthorityError> {
     if providers.is_none() && data_dir.join("trusted-catalog/current.json").try_exists().map_err(|error| AuthorityError::Catalog(error.to_string()))? {
         return Err(AuthorityError::Catalog("configured trusted catalog requires the native-artifact-execution provider".into()));
     }
@@ -686,7 +707,7 @@ async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Op
     };
     let mut loaded = None;
     for attempt in 0..8u8 {
-        let control = StartupCatalogControl::new(tracer.clone(), cancellation.clone());
+        let control = StartupCatalogControl::new(tracer.clone(), cancellation.clone(), progress.clone());
         let context = OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &control)?;
         match TrustedCatalogLoader::load_current(data_dir, providers, &context).await {
             Ok(value) => {
@@ -1075,7 +1096,6 @@ enum SocketBindingKeyV1 {
     DirectorySpaceAuthority { space_id: String },
     Membership { user_id: String, space_id: String },
     Share(String),
-    DocumentWrite(DocumentScope),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1246,33 +1266,75 @@ struct SocketGrantLedgerV1 {
     inner: Mutex<SocketGrantLedgerInnerV1>,
 }
 
+/// 🔐️ How one caller holds an authority binding. Everything that USES an authority — a socket
+/// frame, a directory message delivery, an open plan, a creation — holds it `Shared`, so a user's
+/// sockets, every socket of a space and a running creation never wait on each other. Only what
+/// CHANGES the authority — a membership or space transition, a revocation, an administrator effect —
+/// holds it `Exclusive`, and waits for the uses already admitted to finish, then fences new ones.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum SocketBindingModeV1 {
+    Shared,
+    Exclusive,
+}
+
+/// 🎟️ One held authority binding (see [`SocketBindingModeV1`]); dropping it releases the binding.
+enum SocketBindingGuardV1 {
+    Shared(#[allow(dead_code)] tokio::sync::OwnedRwLockReadGuard<()>),
+    Exclusive(#[allow(dead_code)] tokio::sync::OwnedRwLockWriteGuard<()>),
+}
+
+/// 🚦️ The hub's authority gates: one reader-writer gate per authority binding, and one writer
+/// gate per document, which serializes the writes of every writer of that document.
 #[derive(Default)]
 struct SocketBindingGatesV1 {
-    inner: Mutex<BTreeMap<SocketBindingKeyV1, std::sync::Weak<tokio::sync::Mutex<()>>>>,
+    inner: Mutex<BTreeMap<SocketBindingKeyV1, std::sync::Weak<tokio::sync::RwLock<()>>>>,
+    document_writes: Mutex<BTreeMap<DocumentScope, std::sync::Weak<tokio::sync::Mutex<()>>>>,
 }
 
 impl SocketBindingGatesV1 {
-    fn gate(&self, binding: SocketBindingKeyV1) -> Arc<tokio::sync::Mutex<()>> {
+    fn gate(&self, binding: SocketBindingKeyV1) -> Arc<tokio::sync::RwLock<()>> {
         let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         inner.retain(|_, gate| gate.strong_count() > 0);
         if let Some(gate) = inner.get(&binding).and_then(std::sync::Weak::upgrade) {
             return gate;
         }
-        let gate = Arc::new(tokio::sync::Mutex::new(()));
+        let gate = Arc::new(tokio::sync::RwLock::new(()));
         inner.insert(binding, Arc::downgrade(&gate));
         gate
     }
 
-    async fn acquire_record(&self, subject: &SocketSubjectV1, audience: &SocketAudienceV1) -> Vec<tokio::sync::OwnedMutexGuard<()>> {
-        self.acquire_bindings(socket_record_bindings(subject, audience)).await
+    /// ✍️ The one writer gate of `scope`'s document.
+    fn document_write(&self, scope: &DocumentScope) -> Arc<tokio::sync::Mutex<()>> {
+        let mut writes = self.document_writes.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        writes.retain(|_, gate| gate.strong_count() > 0);
+        if let Some(gate) = writes.get(scope).and_then(std::sync::Weak::upgrade) {
+            return gate;
+        }
+        let gate = Arc::new(tokio::sync::Mutex::new(()));
+        writes.insert(scope.clone(), Arc::downgrade(&gate));
+        gate
     }
 
-    async fn acquire_bindings(&self, mut bindings: Vec<SocketBindingKeyV1>) -> Vec<tokio::sync::OwnedMutexGuard<()>> {
-        bindings.sort();
-        bindings.dedup();
+    async fn share_record(&self, subject: &SocketSubjectV1, audience: &SocketAudienceV1) -> Vec<SocketBindingGuardV1> {
+        self.share_bindings(socket_record_bindings(subject, audience)).await
+    }
+
+    async fn share_bindings(&self, bindings: Vec<SocketBindingKeyV1>) -> Vec<SocketBindingGuardV1> {
+        self.acquire(bindings.into_iter().map(|binding| (binding, SocketBindingModeV1::Shared)).collect()).await
+    }
+
+    /// 🔗️ Holds every binding in one global key order, a binding named twice in its strongest mode,
+    /// so no two callers can wait on each other's gates.
+    async fn acquire(&self, mut bindings: Vec<(SocketBindingKeyV1, SocketBindingModeV1)>) -> Vec<SocketBindingGuardV1> {
+        bindings.sort_by(|left, right| left.0.cmp(&right.0).then(right.1.cmp(&left.1)));
+        bindings.dedup_by(|later, earlier| later.0 == earlier.0);
         let mut admissions = Vec::with_capacity(bindings.len());
-        for binding in bindings {
-            admissions.push(self.gate(binding).lock_owned().await);
+        for (binding, mode) in bindings {
+            let gate = self.gate(binding);
+            admissions.push(match mode {
+                SocketBindingModeV1::Shared => SocketBindingGuardV1::Shared(gate.read_owned().await),
+                SocketBindingModeV1::Exclusive => SocketBindingGuardV1::Exclusive(gate.write_owned().await),
+            });
         }
         admissions
     }
@@ -1981,12 +2043,12 @@ impl Drop for SocketLiveLeaseV1 {
     }
 }
 
-async fn socket_live_authority(state: &HubState, record: &SocketGrantRecordV1, live_id: &str) -> Result<Vec<tokio::sync::OwnedMutexGuard<()>>, SocketBindingValidityV1> {
+async fn socket_live_authority(state: &HubState, record: &SocketGrantRecordV1, live_id: &str) -> Result<Vec<SocketBindingGuardV1>, SocketBindingValidityV1> {
     socket_live_authority_with_bindings(state, record, live_id, record.bindings()).await
 }
 
-async fn socket_live_authority_with_bindings(state: &HubState, record: &SocketGrantRecordV1, live_id: &str, bindings: Vec<SocketBindingKeyV1>) -> Result<Vec<tokio::sync::OwnedMutexGuard<()>>, SocketBindingValidityV1> {
-    let admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_bindings(bindings)).await.map_err(|_| SocketBindingValidityV1::Unavailable)?;
+async fn socket_live_authority_with_bindings(state: &HubState, record: &SocketGrantRecordV1, live_id: &str, bindings: Vec<SocketBindingKeyV1>) -> Result<Vec<SocketBindingGuardV1>, SocketBindingValidityV1> {
+    let admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.share_bindings(bindings)).await.map_err(|_| SocketBindingValidityV1::Unavailable)?;
     let validity = socket_binding_validity(state, &record.subject, &record.audience).await;
     if validity != SocketBindingValidityV1::Active {
         return Err(validity);
@@ -2635,6 +2697,18 @@ struct HubReadinessV1 {
     features: HubFeatureReadinessV1,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     blocked_by: Vec<HubClosedReadinessGateV1>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    startup: Option<HubStartupProgressV1>,
+}
+
+/// @emoji 📈️ How far a booting hub's startup work has come: the stage its trusted catalog load last
+/// reported and that stage's units. Present only while the hub starts.
+#[derive(Clone, Copy, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HubStartupProgressV1 {
+    stage: &'static str,
+    completed_units: u64,
+    total_units: u64,
 }
 
 /// 🧭️ One named readiness gate that is holding `status` at `not-ready`, with the stable reason code a
@@ -2788,8 +2862,40 @@ fn hub_readiness(
             inference_services,
         },
         blocked_by,
+        startup: None,
     }
 }
+
+/// @emoji 🌅️ The readiness of a hub that has bound its socket but not yet opened its stores or loaded
+/// its trusted catalog: every component gate closed with `hub-starting`, the artifact authority with
+/// `trusted-catalog-loading`, and no feature served yet.
+fn hub_starting_readiness(mode: HubMode, bind_scope: &'static str, run_id: String, bootstrap_ready: bool, credential_sign_in_enabled: bool, artifact_cas_sweep_execute: bool) -> HubReadinessV1 {
+    let readiness = declare_public_session_issuance(hub_readiness(mode, bind_scope, run_id, bootstrap_ready, false, false, false, false, false, artifact_cas_sweep_execute, false, HUB_STARTING_CATALOG_REASON), credential_sign_in_enabled);
+    let mut blocked_by = vec![HubClosedReadinessGateV1 { gate: "directory", reason: HUB_STARTING_REASON }, HubClosedReadinessGateV1 { gate: "storage", reason: HUB_STARTING_REASON }];
+    blocked_by.extend(readiness.blocked_by.iter().filter(|closed| closed.gate == "authentication.bootstrapReady").cloned());
+    blocked_by.extend([
+        HubClosedReadinessGateV1 { gate: "artifactCasBarrier", reason: HUB_STARTING_REASON },
+        HubClosedReadinessGateV1 { gate: "artifactAuthority", reason: HUB_STARTING_CATALOG_REASON },
+        HubClosedReadinessGateV1 { gate: "adminAssets", reason: HUB_STARTING_REASON },
+    ]);
+    HubReadinessV1 {
+        status: "not-ready",
+        directory: HubComponentReadinessV1::gate(false, HUB_STARTING_REASON),
+        storage: HubComponentReadinessV1::gate(false, HUB_STARTING_REASON),
+        artifact_cas_barrier: HubComponentReadinessV1::gate(false, HUB_STARTING_REASON),
+        artifact_publication: HubComponentReadinessV1::gate(false, HUB_STARTING_REASON),
+        artifact_cas_sweeper: HubArtifactCasSweeperReadinessV1 { ready: false, reason: Some(HUB_STARTING_REASON), ..readiness.artifact_cas_sweeper.clone() },
+        admin_assets: HubComponentReadinessV1::gate(false, HUB_STARTING_REASON),
+        features: HubFeatureReadinessV1 { rebootstrap: false, ..readiness.features.clone() },
+        blocked_by,
+        ..readiness
+    }
+}
+
+/// @emoji 🌅️ The closed-gate reason of a component a booting hub has not opened yet.
+const HUB_STARTING_REASON: &str = "hub-starting";
+/// @emoji 🌅️ The artifact authority's closed-gate reason while the trusted catalog loads.
+const HUB_STARTING_CATALOG_REASON: &str = "trusted-catalog-loading";
 
 /// 🗣️ The one line a hub prints about its own readiness at startup — `[INFO]` naming the bound
 /// address when every required gate is open, `[WARN]` naming each closed gate and its stable reason
@@ -2921,6 +3027,40 @@ fn forwarded_external_host(headers: &HeaderMap, trust: ForwardedTlsTrustV1) -> O
         ForwardedTlsTrustV1::Untrusted => None,
     };
     forwarded.or_else(|| headers.get(axum::http::header::HOST).and_then(|value| value.to_str().ok()).map(str::trim).filter(|host| !host.is_empty())).map(str::to_string)
+}
+
+/// @emoji 🚧️ The router's outermost layer: every answer that is not a success leaves as a typed, signed
+/// refusal. A response at or above 400 without `x-semio-refusal` gets the code its status declares
+/// (`HubRefusalStatusCodesV1`), so a client can always tell the hub's own refusal from a proxy's; its
+/// body is never touched, so a bare refusal stays body-free and discloses nothing. A handler that
+/// panics answers a typed `500 internal` instead of dropping the connection, and the panic is traced.
+/// The handler is polled in place, never spawned: it stays owned by its request, so a client that
+/// disconnects still drops it at its next await (`canonical_pair_route_disconnect_deadline_and_progress_are_request_owned`).
+async fn refusal_middleware(State(tracer): State<Tracer>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
+    let mut handler = std::pin::pin!(next.run(request));
+    let answered = std::future::poll_fn(|context| match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| std::future::Future::poll(handler.as_mut(), context))) {
+        Ok(std::task::Poll::Ready(response)) => std::task::Poll::Ready(Some(response)),
+        Ok(std::task::Poll::Pending) => std::task::Poll::Pending,
+        Err(_) => std::task::Poll::Ready(None),
+    })
+    .await;
+    let response = answered.unwrap_or_else(|| {
+        let mut record = TraceRecord::new("server.request", TraceOutcome::Failed);
+        record.detail = Some("handler-panicked".into());
+        tracer.emit(record);
+        StatusCode::INTERNAL_SERVER_ERROR.into_response()
+    });
+    typed_refusal(response)
+}
+
+/// @emoji 🏷️ Stamps one response as a typed refusal (see [`refusal_middleware`]); a success passes unchanged.
+fn typed_refusal(mut response: Response) -> Response {
+    if let Some(code) = semio_hub::refusal::refusal_code(response.status().as_u16()) {
+        if !response.headers().contains_key(semio_hub::refusal::HUB_REFUSAL_HEADER) {
+            response.headers_mut().insert(semio_hub::refusal::HUB_REFUSAL_HEADER, axum::http::HeaderValue::from_static(code));
+        }
+    }
+    response
 }
 
 /// @emoji 🛡️ Refuses any request a trusted proxy reports as having reached the client in cleartext.
@@ -3117,7 +3257,7 @@ async fn socket_binding_validity(state: &HubState, subject: &SocketSubjectV1, au
 
 async fn issue_socket_grant(state: &HubState, subject: SocketSubjectV1, audience: SocketAudienceV1, actor_id: String) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
     let binding = subject.binding();
-    let _admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&subject, &audience)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+    let _admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.share_record(&subject, &audience)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
     let validity = socket_binding_validity(state, &subject, &audience).await;
     match validity {
         SocketBindingValidityV1::Active => {}
@@ -3249,7 +3389,7 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
     }
     let (subject, server_actor_id) = authenticate_document_socket_subject(&state, &scope, &headers).await.map_err(document_open_plan_exchange_error)?;
     let audience = SocketAudienceV1::Document(scope.clone());
-    let _admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&subject, &audience)).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
+    let _admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.share_record(&subject, &audience)).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
     match subject.revalidate(state.directory.as_ref(), &audience, now_ms()).await {
         SocketBindingValidityV1::Active => {}
         SocketBindingValidityV1::Unauthorized => return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Denied)),
@@ -3367,7 +3507,7 @@ async fn issue_document_plan_socket_grant_inner(space_id: String, document_id: S
     let scope = DocumentScope::new(space_id, document_id);
     let (subject, _) = authenticate_document_socket_subject(&state, &scope, &headers).await.map_err(document_open_plan_exchange_error)?;
     let audience = SocketAudienceV1::Document(scope.clone());
-    let _admission = state.socket_binding_gates.acquire_record(&subject, &audience).await;
+    let _admission = state.socket_binding_gates.share_record(&subject, &audience).await;
     match subject.revalidate(state.directory.as_ref(), &audience, now_ms()).await {
         SocketBindingValidityV1::Active => {}
         SocketBindingValidityV1::Unauthorized => return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Denied)),
@@ -3447,7 +3587,7 @@ async fn document_execution_target_selection(space_id: String, document_id: Stri
     }
     let (subject, _) = authenticate_document_socket_subject(&state, &scope, &headers).await.map_err(document_open_plan_exchange_error)?;
     let audience = SocketAudienceV1::Document(scope.clone());
-    let _admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&subject, &audience)).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
+    let _admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.share_record(&subject, &audience)).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
     match subject.revalidate(state.directory.as_ref(), &audience, now_ms()).await {
         SocketBindingValidityV1::Active => {}
         SocketBindingValidityV1::Unauthorized => return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Denied)),
@@ -3544,36 +3684,28 @@ async fn issue_document_execution_target(
         let (fields, assets) = document_execution_target_selection(space_id, document_id, parts.headers, state, body).await?;
         Ok(match asset {
             DocumentExecutionTargetAssetV1::Manifest => DirectoryJson(fields).into_response(),
-            DocumentExecutionTargetAssetV1::Component => document_execution_target_bytes(&document_execution_target_asset_bytes(&assets.component).await?),
+            DocumentExecutionTargetAssetV1::Component => document_execution_target_stream(&assets.component)?,
             DocumentExecutionTargetAssetV1::Descriptor => document_execution_target_bytes(&assets.descriptor),
-            DocumentExecutionTargetAssetV1::BrowserActor => document_execution_target_bytes(&document_execution_target_asset_bytes(assets.browser_actor.as_ref().ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?).await?),
+            DocumentExecutionTargetAssetV1::BrowserActor => document_execution_target_stream(assets.browser_actor.as_ref().ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?)?,
         })
     })
     .await
     .unwrap_or_else(|_| Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)))
 }
 
-/// ⏱️ The control one execution-target asset read runs under: the route's own deadline bounds it, so
-/// nothing cancels it from here and it reports no progress outward.
-struct ExecutionTargetAssetReadControl;
-
-impl AuthorityOperationControl for ExecutionTargetAssetReadControl {
-    fn now_ms(&self) -> u64 {
-        SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX))
-    }
-
-    fn is_cancelled(&self) -> bool {
-        false
-    }
-
-    fn report(&self, _progress: AuthorityProgress) {}
-}
-
-/// 📖️ Reads one catalog-verified execution-target asset from the generation it was verified in.
-async fn document_execution_target_asset_bytes(asset: &TrustedCatalogAsset) -> Result<std::sync::Arc<[u8]>, DocumentOpenPlanRouteError> {
-    let control = ExecutionTargetAssetReadControl;
-    let context = OperationContext::new(control.now_ms().saturating_add(DOCUMENT_EXECUTION_TARGET_DEADLINE_MS), AuthorityLimits::maximum(), &control);
-    asset.read(&context).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))
+/// 🌊️ Streams one catalog-verified execution-target asset (the document's component or browser actor, tens of MB) from
+/// the generation it was verified in. The route's deadline bounds the selection that authorizes it, never the transfer:
+/// reading and hashing the whole asset under that deadline answered 503 for every large component once the hub was busy
+/// (ticket 26/09/23 S15: catalog B2 puzzle3d, `execution-target/component` 503 after a slow creation; the plugin-module
+/// twin of this defect was S12-1b). The stream withholds its last chunk until length, SHA-256 and BLAKE3 match, so a
+/// tampered asset ends the body short instead of completing it.
+fn document_execution_target_stream(asset: &TrustedCatalogAsset) -> Result<Response, DocumentOpenPlanRouteError> {
+    let stream = asset.stream().map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?;
+    let length = stream.byte_length();
+    let body = axum::body::Body::from_stream(futures::stream::unfold(stream, |mut stream| async move {
+        stream.next_chunk().await.map(|chunk| (chunk.map_err(|error| std::io::Error::other(error.to_string())), stream))
+    }));
+    Ok((StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "application/octet-stream".to_string()), (axum::http::header::CONTENT_LENGTH, length.to_string()), (axum::http::header::CACHE_CONTROL, "no-store".to_string())], body).into_response())
 }
 
 fn document_execution_target_bytes(bytes: &[u8]) -> Response {
@@ -3638,7 +3770,10 @@ async fn issue_document_plan_socket_grant(
 #[cfg(test)]
 include!("../🧪️tests/🔬️standalone/🦀️.rs");
 
-async fn issue_directory_socket_grant(headers: HeaderMap, State(state): State<HubState>) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
+async fn issue_directory_socket_grant(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
+    if !body.is_empty() {
+        return Err(StatusCode::BAD_REQUEST);
+    }
     let capability = SessionCapability::parse(&socket_issue_bearer(&headers)?).map_err(|_| StatusCode::UNAUTHORIZED)?;
     let session =
         tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&capability)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.ok_or(StatusCode::UNAUTHORIZED)?;
@@ -4293,8 +4428,8 @@ impl VerifiedCheckpointPublisher for FencedCheckInPublisherV1 {
 
     async fn publish_reserved(&self, checkpoint: &os_directory::ArtifactCheckpoint, reservation: &semio_hub::artifact_authority::chunk_cas::ArtifactCasReservation, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        let authorization = tokio::time::timeout(std::time::Duration::from_secs(2), self.state.socket_binding_gates.acquire_record(&self.subject, &self.audience)).await.map_err(|_| Self::changed())?;
-        let document_write = tokio::time::timeout(std::time::Duration::from_secs(2), self.state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(self.scope.clone())).lock_owned()).await.map_err(|_| Self::changed())?;
+        let authorization = tokio::time::timeout(std::time::Duration::from_secs(2), self.state.socket_binding_gates.share_record(&self.subject, &self.audience)).await.map_err(|_| Self::changed())?;
+        let document_write = tokio::time::timeout(std::time::Duration::from_secs(2), self.state.socket_binding_gates.document_write(&self.scope).lock_owned()).await.map_err(|_| Self::changed())?;
         context.checkpoint()?;
         if !self.authority_is_current().await? || checkpoint.scope != self.scope || checkpoint.parent_checkpoint_id != Some(self.parent.checkpoint_id) {
             return Err(Self::changed());
@@ -4687,7 +4822,7 @@ async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRec
 async fn consume_scoped_directory_socket_grant(state: &HubState, headers: &HeaderMap, scope: DocumentScope) -> Result<SocketGrantAdmissionV1, StatusCode> {
     let capability = socket_grant_from_protocol_header(headers)?;
     let candidate = state.socket_grants.pending(&capability, &SocketAudienceV1::DirectoryScoped(scope), now_ms()).map_err(|_| StatusCode::UNAUTHORIZED)?;
-    let _binding_gates = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&candidate.subject, &candidate.audience)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+    let _binding_gates = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.share_record(&candidate.subject, &candidate.audience)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
     let validity = socket_binding_validity(state, &candidate.subject, &candidate.audience).await;
     match validity {
         SocketBindingValidityV1::Active => state.socket_grants.consume(&candidate, now_ms()).map(|record| SocketGrantAdmissionV1 { record }).map_err(|_| StatusCode::UNAUTHORIZED),
@@ -4713,7 +4848,7 @@ async fn consume_document_socket_grant(state: &HubState, subject: &SocketSubject
 async fn consume_directory_socket_grant(state: &HubState, headers: &HeaderMap) -> Result<SocketGrantAdmissionV1, StatusCode> {
     let capability = socket_grant_from_protocol_header(headers)?;
     let candidate = state.socket_grants.pending_directory(&capability, now_ms()).map_err(|_| StatusCode::UNAUTHORIZED)?;
-    let _binding_gates = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&candidate.subject, &candidate.audience)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+    let _binding_gates = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.share_record(&candidate.subject, &candidate.audience)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
     let validity = socket_binding_validity(state, &candidate.subject, &candidate.audience).await;
     match validity {
         SocketBindingValidityV1::Active => state.socket_grants.consume(&candidate, now_ms()).map(|record| SocketGrantAdmissionV1 { record }).map_err(|_| StatusCode::UNAUTHORIZED),
@@ -4873,6 +5008,13 @@ async fn admit_writes(gate: &db::security::SecurityGate, principal: &db::securit
     None
 }
 
+/// ⏱️ How long one document-socket frame — a command's admission, document write and durable commit
+/// included — may take before its socket closes `1013 frame-deadline` and its client resynchronizes.
+/// It bounds how long the frame holds its authority bindings (so how long a revocation of them can
+/// wait), and it is far above a loaded host's commit latency: at 2 s a busy hub closed sockets whose
+/// commands were merely waiting for their fsync, as `authorization-unavailable`, and never sent their Ack.
+const DOCUMENT_SOCKET_FRAME_DEADLINE: std::time::Duration = std::time::Duration::from_secs(30);
+
 /// @emoji 📨️ Handles one decoded `ClientFrame` for an already-authenticated v1 socket session.
 /// session. Returns `false` when the session should close (`Bye`, or a send failure).
 #[allow(clippy::too_many_arguments)]
@@ -4912,7 +5054,7 @@ async fn handle_client_frame(
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason, messages: Vec::new() }) }], frontier };
                 return sender.send(encode(&ack, document_id).await).await.is_ok();
             }
-            let _document_write = state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(DocumentScope::new(space_id, document_id))).lock_owned().await;
+            let _document_write = state.socket_binding_gates.document_write(&DocumentScope::new(space_id, document_id)).lock_owned().await;
             let (ack, relay) = submit_commands(handle, actor, batch_id, envelopes, state.merge_policy).await;
             if let Some(commands_frame) = relay {
                 let _ = fanout.send(commands_frame);
@@ -5103,7 +5245,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
             return;
         }
     };
-    let socket_binding_gates = match tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&socket_grant.subject, &socket_grant.audience)).await {
+    let socket_binding_gates = match tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.share_record(&socket_grant.subject, &socket_grant.audience)).await {
         Ok(admission) => admission,
         Err(_) => {
             let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
@@ -5337,7 +5479,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                                 }
                             };
                             match tokio::time::timeout(
-                                std::time::Duration::from_secs(2),
+                                DOCUMENT_SOCKET_FRAME_DEADLINE,
                                 handle_client_frame(&state, &handle, &db_id, &key, &space_id, &document_id, &fanout, &actor, &socket_live.id, &gate, &principal, &tenant, frame, &mut sender),
                             )
                             .await
@@ -5345,7 +5487,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                                 Ok(true) => {}
                                 Ok(false) => break,
                                 Err(_) => {
-                                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "frame-deadline".into() }))).await;
                                     break;
                                 }
                             }
@@ -5671,6 +5813,19 @@ async fn resolve_bearer_user(state: &HubState, token: Option<&str>) -> Option<Au
     Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability })
 }
 
+/// 🪪️ The caller of a route that also answers anonymously: no `Authorization` header is the anonymous
+/// caller, and a presented credential must authenticate. A malformed, forged, expired or revoked
+/// credential is refused `401` — never downgraded to the anonymous view — so a client whose session
+/// ended learns it at once instead of silently reading as a stranger.
+async fn resolve_optional_bearer_user(state: &HubState, headers: &HeaderMap) -> Result<Option<AuthedUser>, StatusCode> {
+    if !headers.contains_key(axum::http::header::AUTHORIZATION) {
+        return Ok(None);
+    }
+    let capability = bearer(headers).and_then(|token| SessionCapability::parse(&token).ok()).ok_or(StatusCode::UNAUTHORIZED)?;
+    let session = state.directory.authenticate_session(&capability).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.ok_or(StatusCode::UNAUTHORIZED)?;
+    Ok(Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability }))
+}
+
 /// 🪪️ An admitted command keeps the exact authenticated session, not a reusable user identity.
 async fn revalidate_directory_caller(state: &HubState, caller: &AuthedUser) -> Result<(), StatusCode> {
     let session = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&caller.capability))
@@ -5686,7 +5841,7 @@ async fn revalidate_directory_caller(state: &HubState, caller: &AuthedUser) -> R
 
 #[cfg(feature = "native-artifact-execution")]
 struct HubArtifactCreationCommitLeaseV1 {
-    _guards: Vec<tokio::sync::OwnedMutexGuard<()>>,
+    _guards: Vec<SocketBindingGuardV1>,
 }
 
 #[cfg(feature = "native-artifact-execution")]
@@ -5704,7 +5859,7 @@ impl ArtifactCreationCommitAuthorityV1 for HubArtifactCreationCommitAuthorityV1 
         Box::pin(async move {
             let guards = tokio::time::timeout(
                 std::time::Duration::from_secs(2),
-                self.gates.acquire_bindings(vec![
+                self.gates.share_bindings(vec![
                     SocketBindingKeyV1::User(actor.user_id.clone()),
                     SocketBindingKeyV1::Session(actor.session_id.clone()),
                     SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.to_string() },
@@ -5731,14 +5886,14 @@ fn artifact_creation_space_id_v1(space_id: &str) -> bool {
 }
 
 #[cfg(feature = "native-artifact-execution")]
-async fn acquire_artifact_creation_actor(state: &HubState, space_id: &str, token: Option<&str>) -> Result<(ArtifactCreationActorV1, Vec<tokio::sync::OwnedMutexGuard<()>>), StatusCode> {
+async fn acquire_artifact_creation_actor(state: &HubState, space_id: &str, token: Option<&str>) -> Result<(ArtifactCreationActorV1, Vec<SocketBindingGuardV1>), StatusCode> {
     if !artifact_creation_space_id_v1(space_id) {
         return Err(StatusCode::BAD_REQUEST);
     }
     let caller = resolve_bearer_user(state, token).await.ok_or(StatusCode::UNAUTHORIZED)?;
     let guards = tokio::time::timeout(
         std::time::Duration::from_secs(2),
-        state.socket_binding_gates.acquire_bindings(vec![
+        state.socket_binding_gates.share_bindings(vec![
             SocketBindingKeyV1::User(caller.user_id.clone()),
             SocketBindingKeyV1::Session(caller.session_id.clone()),
             SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.to_string() },
@@ -6177,7 +6332,7 @@ async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(
                 }
                 _ => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
             },
-            ArtifactCreationHttpAdmissionV1::Unavailable => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+            ArtifactCreationHttpAdmissionV1::Unavailable => return ([(axum::http::header::RETRY_AFTER, "1")], StatusCode::SERVICE_UNAVAILABLE).into_response(),
         }
     };
     let Ok(context) = OperationContext::stall_bounded(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_STALL_BOUND_MS, AuthorityLimits::maximum(), control.as_ref()) else {
@@ -6534,15 +6689,30 @@ fn directory_command_space(command: &DirectoryCommand) -> Option<&str> {
     }
 }
 
-/// 🔗️ Holds ordered principal, space, and exact member gates before the directory writer.
-async fn acquire_directory_command_fence(state: &HubState, mut bindings: Vec<SocketBindingKeyV1>, command: &DirectoryCommand) -> Result<Vec<tokio::sync::OwnedMutexGuard<()>>, FencedDirectoryCommandErrorV1> {
+/// 🔗️ Holds, before the directory writer, exactly the authority the command changes exclusively and
+/// everything else it uses shared: the whole space for a visibility change, an archive or a delete;
+/// the target's membership for a member upsert or removal; the caller's own principal and
+/// membership, and the space for every other command, shared. A changed authority waits for every use
+/// of it already admitted and fences new ones until the change has committed, while a space's
+/// sockets, creations and unrelated commands never wait on each other.
+async fn acquire_directory_command_fence(state: &HubState, caller: Vec<SocketBindingKeyV1>, command: &DirectoryCommand) -> Result<Vec<SocketBindingGuardV1>, FencedDirectoryCommandErrorV1> {
+    let mut bindings: Vec<(SocketBindingKeyV1, SocketBindingModeV1)> = caller.into_iter().map(|binding| (binding, SocketBindingModeV1::Shared)).collect();
     if let Some(space_id) = directory_command_space(command) {
-        bindings.push(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.to_owned() });
+        let space_wide = matches!(command, DirectoryCommand::SetVisibility { .. } | DirectoryCommand::ArchiveSpace { .. } | DirectoryCommand::DeleteSpace { .. });
+        bindings.push((SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.to_owned() }, if space_wide { SocketBindingModeV1::Exclusive } else { SocketBindingModeV1::Shared }));
     }
-    if let DirectoryCommand::RemoveMember { space_id, user_id } = command {
-        bindings.push(SocketBindingKeyV1::Membership { user_id: user_id.clone(), space_id: space_id.clone() });
+    let target = match command {
+        DirectoryCommand::RemoveMember { space_id, user_id } => Some((space_id.clone(), user_id.clone())),
+        DirectoryCommand::UpsertMember { space_id, email, .. } => {
+            let user = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_user_by_email(email)).await.map_err(|_| FencedDirectoryCommandErrorV1::Unavailable)?.map_err(|_| FencedDirectoryCommandErrorV1::Unavailable)?;
+            user.map(|user| (space_id.clone(), user.id))
+        }
+        _ => None,
+    };
+    if let Some((space_id, user_id)) = target {
+        bindings.push((SocketBindingKeyV1::Membership { user_id, space_id }, SocketBindingModeV1::Exclusive));
     }
-    tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_bindings(bindings)).await.map_err(|_| FencedDirectoryCommandErrorV1::Unavailable)
+    tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire(bindings)).await.map_err(|_| FencedDirectoryCommandErrorV1::Unavailable)
 }
 
 /// 🔒️ Durable role and space transitions retire only the authority they changed.
@@ -6707,7 +6877,7 @@ async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(
 }
 
 async fn get_directory_spaces(headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectorySpaceListEntryV1>>, StatusCode> {
-    let caller = resolve_bearer_user(&state, bearer(&headers).as_deref()).await;
+    let caller = resolve_optional_bearer_user(&state, &headers).await?;
     let model = load_read_model(&state).await?;
     let mut views = Vec::new();
     for space in model.spaces.values() {
@@ -6991,7 +7161,7 @@ async fn get_directory_space(Path(space_id): Path<String>, OriginalUri(uri): Ori
 }
 
 async fn build_directory_space_administration_page_v1(state: &HubState, space_id: &str, cursor: Option<&str>, headers: &HeaderMap) -> Result<DirectorySpaceAdministrationPageV1, StatusCode> {
-    let caller = resolve_bearer_user(state, bearer(headers).as_deref()).await;
+    let caller = resolve_optional_bearer_user(state, headers).await?;
     let binding = space_administration_session_binding_v1(caller.as_ref(), space_id)?;
     let generation = caller.as_ref().map_or(0, |caller| caller.authorization_generation);
     let section = match cursor {
@@ -7104,11 +7274,11 @@ async fn post_redeem_invite(Path(token): Path<String>, headers: HeaderMap, State
     pause_directory_command_authority(&state, &user.user_id, false).await;
     let _authority = tokio::time::timeout(
         std::time::Duration::from_secs(2),
-        state.socket_binding_gates.acquire_bindings(vec![
-            SocketBindingKeyV1::User(user.user_id.clone()),
-            SocketBindingKeyV1::Session(user.session_id.clone()),
-            SocketBindingKeyV1::DirectorySpaceAuthority { space_id: hint.space_id().to_owned() },
-            SocketBindingKeyV1::Membership { user_id: user.user_id.clone(), space_id: hint.space_id().to_owned() },
+        state.socket_binding_gates.acquire(vec![
+            (SocketBindingKeyV1::User(user.user_id.clone()), SocketBindingModeV1::Shared),
+            (SocketBindingKeyV1::Session(user.session_id.clone()), SocketBindingModeV1::Shared),
+            (SocketBindingKeyV1::DirectorySpaceAuthority { space_id: hint.space_id().to_owned() }, SocketBindingModeV1::Shared),
+            (SocketBindingKeyV1::Membership { user_id: user.user_id.clone(), space_id: hint.space_id().to_owned() }, SocketBindingModeV1::Exclusive),
         ]),
     )
     .await
@@ -7404,7 +7574,7 @@ async fn visibility_filter_events(state: &HubState, events: Vec<DirectoryEvent>,
 }
 
 async fn get_directory_events(Query(query): Query<EventsQuery>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, StatusCode> {
-    let caller = resolve_bearer_user(&state, bearer(&headers).as_deref()).await;
+    let caller = resolve_optional_bearer_user(&state, &headers).await?;
     let events = state.directory.events_since(query.since.unwrap_or(0), query.limit.unwrap_or(500)).await.map_err(directory_error_status)?;
     Ok(DirectoryJson(visibility_filter_events(&state, events, caller.as_ref()).await))
 }
@@ -7691,7 +7861,7 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
         let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
         return;
     }
-    let binding_gates = match tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&record.subject, &record.audience)).await {
+    let binding_gates = match tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.share_record(&record.subject, &record.audience)).await {
         Ok(admission) => admission,
         Err(_) => {
             let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
@@ -7935,7 +8105,7 @@ async fn delete_session_me(headers: HeaderMap, State(state): State<HubState>) ->
     if let Some(gate) = &state.live_gate {
         gate.socket_session_revoke_attempted.add_permits(1);
     }
-    let _admission = match tokio::time::timeout(std::time::Duration::from_secs(2), gate.lock_owned()).await {
+    let _admission = match tokio::time::timeout(std::time::Duration::from_secs(2), gate.write_owned()).await {
         Ok(admission) => admission,
         Err(_) => {
             span.failed("binding-gate-timeout");
@@ -8009,7 +8179,16 @@ async fn post_auth_session(State(state): State<HubState>, body: Bytes) -> Respon
         Some(subject) => span.principal(format!("user:{}", subject.user_id)),
         None => span,
     };
-    match decide_credential_sign_in(state.credential_sign_in, &verified, subject.as_ref()) {
+    let policy = state.credential_sign_in;
+    let decision = {
+        let (verified, subject) = (verified.clone(), subject.clone());
+        tokio::task::spawn_blocking(move || decide_credential_sign_in(policy, &verified, subject.as_ref())).await
+    };
+    let Ok(decision) = decision else {
+        span.failed("credential-verification-interrupted");
+        return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None);
+    };
+    match decision {
         CredentialSignInDecisionV1::Refuse(code) => {
             journal_credential_sign_in(&state, subject.as_ref().map(|subject| subject.user_id.as_str()), "failure", Some(code.reason_code()), &correlation_id, peer_class).await;
             span.refused(code.reason_code());
@@ -8110,14 +8289,27 @@ async fn post_auth_credential(headers: HeaderMap, State(state): State<HubState>,
             return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None);
         }
     };
-    match decide_credential_change(state.credential_sign_in, &verified, &subject) {
+    let policy = state.credential_sign_in;
+    let decision = {
+        let (verified, subject) = (verified.clone(), subject.clone());
+        tokio::task::spawn_blocking(move || match decide_credential_change(policy, &verified, &subject) {
+            CredentialChangeDecisionV1::Apply { user_id, mint_iterations } => (CredentialChangeDecisionV1::Apply { user_id, mint_iterations }, Some(PasswordCredentialV1::mint(verified.new_password(), mint_iterations))),
+            refused => (refused, None),
+        })
+        .await
+    };
+    let Ok((decision, minted)) = decision else {
+        span.failed("credential-verification-interrupted");
+        return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None);
+    };
+    match decision {
         CredentialChangeDecisionV1::Refuse(code) => {
             journal_credential_change_refusal(&state, &subject.user_id, code.reason_code(), &correlation_id).await;
             span.refused(code.reason_code());
             auth_error_response(code, None)
         }
-        CredentialChangeDecisionV1::Apply { user_id, mint_iterations } => {
-            let Ok(credential) = PasswordCredentialV1::mint(verified.new_password(), mint_iterations) else {
+        CredentialChangeDecisionV1::Apply { user_id, .. } => {
+            let Some(Ok(credential)) = minted else {
                 span.refused("malformed-request");
                 return auth_error_response(AuthErrorCodeV1::MalformedRequest, None);
             };
@@ -9320,9 +9512,20 @@ fn admin_intent_bindings(principal: &AdminPrincipalV1, intent: &AdminIntentV1) -
     Some(bindings)
 }
 
+/// 🪞️ Whether an administrator intent changes the administrator's own principal — revoking its own
+/// user's sessions — so its own user binding is held exclusive rather than shared.
+fn admin_intent_changes_own_principal(principal: &AdminPrincipalV1, intent: &AdminIntentV1) -> bool {
+    matches!(intent, AdminIntentV1::RevokeUserSessions { user_id, .. } if *user_id == principal.user_id)
+}
+
 /// 🏛️ A configured administrator retains its exact durable principal through a short side effect.
-async fn acquire_admin_intent_authority(state: &HubState, principal: &AdminPrincipalV1, bindings: Vec<SocketBindingKeyV1>) -> Result<Vec<tokio::sync::OwnedMutexGuard<()>>, FencedDirectoryCommandErrorV1> {
-    let admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_bindings(bindings)).await.map_err(|_| FencedDirectoryCommandErrorV1::Unavailable)?;
+async fn acquire_admin_intent_authority(state: &HubState, principal: &AdminPrincipalV1, intent: &AdminIntentV1, bindings: Vec<SocketBindingKeyV1>) -> Result<Vec<SocketBindingGuardV1>, FencedDirectoryCommandErrorV1> {
+    let own = [SocketBindingKeyV1::User(principal.user_id.clone()), SocketBindingKeyV1::Session(principal.auth_session_id.clone())];
+    let modes = bindings.into_iter().map(|binding| {
+        let mode = if own.contains(&binding) && !admin_intent_changes_own_principal(principal, intent) { SocketBindingModeV1::Shared } else { SocketBindingModeV1::Exclusive };
+        (binding, mode)
+    });
+    let admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire(modes.collect())).await.map_err(|_| FencedDirectoryCommandErrorV1::Unavailable)?;
     let provider_digest = admin_provider_digest(&principal.identity_provider);
     if principal.expires_at_ms <= now_ms()
         || !state
@@ -9366,7 +9569,7 @@ async fn execute_admin_intent(
     intent_digest: &str,
     intent: AdminIntentV1,
     operation_runtime: Option<Arc<AdminOperationRuntime>>,
-    authority_owner: &mut Option<Vec<tokio::sync::OwnedMutexGuard<()>>>,
+    authority_owner: &mut Option<Vec<SocketBindingGuardV1>>,
 ) -> AdminIntentExecution {
     *authority_owner = None;
     if operation_runtime.as_ref().is_some_and(|runtime| runtime.cancelled_before_effect()) {
@@ -9377,7 +9580,7 @@ async fn execute_admin_intent(
         if operation_runtime.as_ref().is_some_and(|runtime| runtime.cancelled_before_effect()) {
             return AdminIntentExecution { phase: "cancelled", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "admin-operation-cancelled-before-effect".into(), durable: false, kick_attempted: None, kick_signalled: None } };
         }
-        match acquire_admin_intent_authority(state, principal, bindings).await {
+        match acquire_admin_intent_authority(state, principal, &intent, bindings).await {
             Ok(authority) => Some(authority),
             Err(error) => return admin_directory_authority_refusal(error),
         }
@@ -9960,8 +10163,11 @@ fn extension_asset_path(root: &std::path::Path, extension_id: &str, rest: &str) 
 
 async fn list_extensions(State(state): State<HubState>) -> Result<Json<ExtensionListResponse>, StatusCode> {
     let mut extensions = Vec::new();
-    let read_dir = tokio::fs::read_dir(&state.extensions_root).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let mut entries = read_dir;
+    let mut entries = match tokio::fs::read_dir(&state.extensions_root).await {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Json(ExtensionListResponse { extensions })),
+        Err(_) => return Err(StatusCode::SERVICE_UNAVAILABLE),
+    };
     while let Ok(Some(entry)) = entries.next_entry().await {
         if !entry.file_type().await.map(|kind| kind.is_dir()).unwrap_or(false) {
             continue;
@@ -9971,7 +10177,7 @@ async fn list_extensions(State(state): State<HubState>) -> Result<Json<Extension
             Ok(value) => value,
             Err(_) => continue,
         };
-        let value: serde_json::Value = serde_json::from_slice(&bytes).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        let Ok(value) = serde_json::from_slice::<serde_json::Value>(&bytes) else { continue };
         extensions.push(value);
     }
     extensions.sort_by(|left, right| left.get("extensionId").and_then(|value| value.as_str()).unwrap_or_default().cmp(right.get("extensionId").and_then(|value| value.as_str()).unwrap_or_default()));
@@ -10006,16 +10212,18 @@ async fn get_trusted_plugin_module_manifest(Path(bundle_sha256): Path<String>, S
     (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "application/json"), (axum::http::header::CACHE_CONTROL, TRUSTED_PLUGIN_MODULE_CACHE_CONTROL)], module.manifest_bytes().to_vec()).into_response()
 }
 
-/// 📖️ `GET /trusted-catalog/plugin-modules/{bundleSha256}/{*path}`: one file of that module, reread and
-/// re-verified against the generation it was verified in. A file that no longer verifies is never served.
+/// 📖️ `GET /trusted-catalog/plugin-modules/{bundleSha256}/{*path}`: one file of that module, streamed from the
+/// generation it was verified in and re-verified while it streams (`TrustedCatalogAssetStream`): no request deadline,
+/// bytes flow from the first chunk, the declared `Content-Length` is completed only by bytes that verified, and a file
+/// changed on disk after verification ends in a broken body, never in its last bytes. A client that goes away stops the read.
 async fn get_trusted_plugin_module_file(Path((bundle_sha256, path)): Path<(String, String)>, State(state): State<HubState>) -> Response {
     let Some(asset) = state.verified_catalog.as_ref().and_then(|catalog| catalog.plugin_module(&bundle_sha256)).and_then(|module| module.file(&path)) else { return StatusCode::NOT_FOUND.into_response() };
-    let control = ExecutionTargetAssetReadControl;
-    let context = OperationContext::new(control.now_ms().saturating_add(DOCUMENT_EXECUTION_TARGET_DEADLINE_MS), AuthorityLimits::maximum(), &control);
-    match asset.read(&context).await {
-        Ok(bytes) => (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, plugin_module_content_type(&path)), (axum::http::header::CACHE_CONTROL, TRUSTED_PLUGIN_MODULE_CACHE_CONTROL)], bytes.to_vec()).into_response(),
-        Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-    }
+    let Ok(stream) = asset.stream() else { return StatusCode::INTERNAL_SERVER_ERROR.into_response() };
+    let length = stream.byte_length();
+    let body = axum::body::Body::from_stream(futures::stream::unfold(stream, |mut stream| async move {
+        stream.next_chunk().await.map(|chunk| (chunk.map_err(|error| std::io::Error::other(error.to_string())), stream))
+    }));
+    (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, plugin_module_content_type(&path).to_string()), (axum::http::header::CACHE_CONTROL, TRUSTED_PLUGIN_MODULE_CACHE_CONTROL.to_string()), (axum::http::header::CONTENT_LENGTH, length.to_string())], body).into_response()
 }
 //#endregion 🔖️PluginModules
 
@@ -10097,6 +10305,79 @@ struct HubLivenessV1 {
 
 static HUB_PROCESS_START: std::sync::LazyLock<std::time::Instant> = std::sync::LazyLock::new(std::time::Instant::now);
 
+/// 🌅️ What a hub answers while it boots. The listener is bound before the stores open and the trusted
+/// catalog loads; until the full router takes over the very same socket, `/healthz` answers live,
+/// `/readyz` answers `503 not-ready` with the catalog load's `startup` progress, and every other route
+/// a signed `503 unavailable` with `Retry-After` — a caller sees a starting hub, never a refused
+/// connection, and a load balancer or launcher can tell a slow boot from a dead one.
+struct BootReadinessServerV1 {
+    stop: Option<tokio::sync::oneshot::Sender<()>>,
+    task: Option<tokio::task::JoinHandle<()>>,
+}
+
+#[derive(Clone)]
+struct BootReadinessStateV1 {
+    readiness: Arc<HubReadinessV1>,
+    progress: StartupProgressCellV1,
+}
+
+impl BootReadinessServerV1 {
+    /// 🌅️ Serves the booting hub on `listener` under the same transport, cross-origin and refusal
+    /// layers as the full router.
+    fn start(listener: tokio::net::TcpListener, readiness: HubReadinessV1, progress: StartupProgressCellV1, tracer: Tracer, cross_origin: CrossOriginPolicyV1, forwarded_tls: ForwardedTlsTrustV1) -> Self {
+        std::sync::LazyLock::force(&HUB_PROCESS_START);
+        let (stop, stopped) = tokio::sync::oneshot::channel::<()>();
+        let app = Router::new()
+            .route("/healthz", get(boot_healthz))
+            .route("/readyz", get(boot_readyz))
+            .fallback(boot_unavailable)
+            .layer(axum::middleware::from_fn_with_state(cross_origin, cors_middleware))
+            .layer(axum::middleware::from_fn_with_state(forwarded_tls, transport_security_middleware))
+            .layer(axum::middleware::from_fn_with_state(tracer, refusal_middleware))
+            .with_state(BootReadinessStateV1 { readiness: Arc::new(readiness), progress });
+        let task = tokio::spawn(async move {
+            let _ = axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
+                .with_graceful_shutdown(async move {
+                    let _ = stopped.await;
+                })
+                .await;
+        });
+        Self { stop: Some(stop), task: Some(task) }
+    }
+
+    /// 🤝️ Stops accepting, lets the booting answers in flight finish, and releases the socket to the
+    /// full router, which accepts on the same listener next.
+    async fn hand_over(mut self) {
+        if let Some(stop) = self.stop.take() {
+            let _ = stop.send(());
+        }
+        if let Some(task) = self.task.take() {
+            let _ = task.await;
+        }
+    }
+}
+
+impl Drop for BootReadinessServerV1 {
+    fn drop(&mut self) {
+        if let Some(task) = self.task.take() {
+            task.abort();
+        }
+    }
+}
+
+async fn boot_healthz(State(state): State<BootReadinessStateV1>) -> impl IntoResponse {
+    Json(HubLivenessV1 { schema: "semio.hub.liveness/v1", status: "live", run_id: state.readiness.run_id.clone(), uptime_ms: HUB_PROCESS_START.elapsed().as_millis().min(u128::from(u64::MAX)) as u64 })
+}
+
+async fn boot_readyz(State(state): State<BootReadinessStateV1>) -> impl IntoResponse {
+    let readiness = HubReadinessV1 { startup: state.progress.latest(), ..(*state.readiness).clone() };
+    (StatusCode::SERVICE_UNAVAILABLE, Json(readiness))
+}
+
+async fn boot_unavailable() -> impl IntoResponse {
+    (StatusCode::SERVICE_UNAVAILABLE, [(axum::http::header::RETRY_AFTER, "5")])
+}
+
 async fn get_healthz(State(state): State<HubState>) -> impl IntoResponse {
     Json(HubLivenessV1 {
         schema: "semio.hub.liveness/v1",
@@ -10140,7 +10421,7 @@ fn inference_error_response(error: InferenceRouteErrorV1) -> Response {
 struct HubGisMapApprovalIngressAuthorityV1 {
     scope: DocumentScope,
     caller: AuthedUser,
-    _guards: Vec<tokio::sync::OwnedMutexGuard<()>>,
+    _guards: Vec<SocketBindingGuardV1>,
 }
 
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
@@ -10179,7 +10460,7 @@ async fn acquire_gis_map_approval_ingress(state: &HubState, scope: DocumentScope
     let caller = resolve_bearer_user(state, token).await.ok_or(InferenceRouteErrorV1::Denied)?;
     let guards = tokio::time::timeout(
         std::time::Duration::from_secs(2),
-        state.socket_binding_gates.acquire_bindings(vec![
+        state.socket_binding_gates.share_bindings(vec![
             SocketBindingKeyV1::User(caller.user_id.clone()),
             SocketBindingKeyV1::Session(caller.session_id.clone()),
             SocketBindingKeyV1::DirectorySpaceAuthority { space_id: scope.space_id.clone() },
@@ -10201,7 +10482,7 @@ fn inference_context<'a>(state: &'a HubState, space_id: &str, document_id: &str,
         runtime,
         directory: &state.directory,
         rebootstrap: &state.rebootstrap,
-        document_write: state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(scope.clone())),
+        document_write: state.socket_binding_gates.document_write(&scope),
         scope,
         token: token.as_deref(),
         now_ms: u64::try_from(now_ms()).unwrap_or(0),
@@ -10361,7 +10642,7 @@ fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: For
         .route("/directory/invites/{token}/redeem", post(post_redeem_invite))
         .route("/directory/events", get(get_directory_events))
         .route("/directory/event-page/v1", get(get_directory_event_page_v1))
-        .route("/directory/socket-grants", post(issue_directory_socket_grant))
+        .route("/directory/socket-grants", post(issue_directory_socket_grant).layer(DefaultBodyLimit::max(0)))
         .route("/directory/socket/v1", get(directory_ws_v1))
         .route("/directory/spaces/{space_id}/documents/{document_id}/socket-grants", post(issue_scoped_directory_socket_grant).layer(DefaultBodyLimit::max(256)))
         .route("/directory/spaces/{space_id}/documents/{document_id}/socket/v1", get(directory_scoped_ws_v1))
@@ -10407,6 +10688,8 @@ fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: For
         // 🛡️ Outermost: a request a trusted proxy reports as cleartext is refused before CORS, rate
         // limiting or any handler sees it — a compromised transport is not a per-route question.
         .layer(axum::middleware::from_fn_with_state(forwarded_tls, transport_security_middleware))
+        // 🚧️ Outermost of all: every answer, the transport refusal included, leaves typed and signed.
+        .layer(axum::middleware::from_fn_with_state(state.tracer.clone(), refusal_middleware))
         .with_state(state)
 }
 
@@ -10788,6 +11071,28 @@ async fn serve() -> Result<(), HubError> {
     // routes later use — a tracer built after them would have silently lost every boot record.
     let tracer = Tracer::from_environment();
     let startup_cancellation = StartupCancellationV1::default();
+    let addr = SocketAddr::new(bind, port);
+    let bound = std::net::TcpListener::bind(addr)?;
+    bound.set_nonblocking(true)?;
+    let bind_scope = if bind.is_loopback() { "loopback" } else { "network" };
+    let run_id = local_bootstrap.as_ref().map_or_else(|| "production".to_string(), |bootstrap| bootstrap.run_id().to_string());
+    let bootstrap_ready = match mode {
+        HubMode::Development => local_bootstrap.as_ref().is_some_and(|bootstrap| bootstrap.is_ready()),
+        HubMode::Production => identity_verifier.is_some() || credential_sign_in.is_enabled(),
+    };
+    let artifact_cas_sweep_execute = artifact_cas_sweep_execute_from_env()?;
+    let startup_progress = StartupProgressCellV1::default();
+    let boot_server = BootReadinessServerV1::start(
+        tokio::net::TcpListener::from_std(bound.try_clone()?)?,
+        hub_starting_readiness(mode, bind_scope, run_id.clone(), bootstrap_ready, credential_sign_in.is_enabled(), artifact_cas_sweep_execute),
+        startup_progress.clone(),
+        tracer.clone(),
+        cross_origin.clone(),
+        forwarded_tls,
+    );
+    let mut starting = TraceRecord::new("server.readiness", TraceOutcome::Started);
+    starting.detail = Some(format!("addr={addr} scope={bind_scope} starting"));
+    tracer.emit(starting);
     if let Some(transport) = local_bootstrap.clone() {
         let cancellation = startup_cancellation.clone();
         tokio::spawn(async move {
@@ -10796,7 +11101,7 @@ async fn serve() -> Result<(), HubError> {
             }
         });
     }
-    let startup_artifact_authority = match configured_artifact_authority(&data_dir, native_codec_provider, &tracer, &startup_cancellation).await {
+    let startup_artifact_authority = match configured_artifact_authority(&data_dir, native_codec_provider, &tracer, &startup_cancellation, &startup_progress).await {
         Err(_) if startup_cancellation.is_cancelled() => {
             let mut record = TraceRecord::new("server.shutdown", TraceOutcome::Cancelled);
             record.detail = Some("launcher-closed-during-catalog-load database=unopened".into());
@@ -10815,25 +11120,18 @@ async fn serve() -> Result<(), HubError> {
         directory.close_all_sync_sessions().await?;
         let directory_service = Arc::new(DirectoryService::new(directory.clone(), 1024));
         let artifact_cas = connect_artifact_cas(&data_dir).await?;
-        let startup_control = StartupCatalogControl::new(tracer.clone(), startup_cancellation.clone());
+        let startup_control = StartupCatalogControl::new(tracer.clone(), startup_cancellation.clone(), startup_progress.clone());
         // ⏳️ The artifact-CAS coordinator handshake is startup work no client is waiting on, so it takes
         // the same no-progress bound as the catalog load above rather than a second wall-clock budget.
         let startup_context = OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &startup_control)?;
         let artifact_cas_coordinator_id = directory.artifact_cas_coordinator_id().await?;
         artifact_cas.configure_coordinator(artifact_cas_coordinator_id, &startup_context).await?;
         let artifact_publication = Arc::new(CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(artifact_cas.clone()), HubVerifiedCheckpointPublisher::new(directory_service.clone(), artifact_cas.clone(), "system:artifact-authority")));
-        let artifact_cas_sweep_execute = artifact_cas_sweep_execute_from_env()?;
         let artifact_maintenance = ArtifactCasMaintenanceSupervisor::start(directory_service.clone(), artifact_cas.clone(), artifact_cas_sweep_execute, tracer.clone());
         let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
         let admin_dir = std::env::var("OS_HUB_ADMIN_DIR").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🛡️admin/📦️packages/🟦️typescript/📤️dist")));
         let extensions_root = std::env::var("OS_HUB_EXTENSIONS_DIR").map(std::path::PathBuf::from).unwrap_or_else(|_| data_dir.join("extension-modules"));
         std::fs::create_dir_all(&extensions_root)?;
-        let run_id = local_bootstrap.as_ref().map_or_else(|| "production".to_string(), |bootstrap| bootstrap.run_id().to_string());
-        let bootstrap_ready = match mode {
-            HubMode::Development => local_bootstrap.as_ref().is_some_and(|bootstrap| bootstrap.is_ready()),
-            HubMode::Production => identity_verifier.is_some() || credential_sign_in.is_enabled(),
-        };
-        let bind_scope = if bind.is_loopback() { "loopback" } else { "network" };
         let artifact_authority_ready = artifact_authority.is_some();
         let open_plan_ready = artifact_authority.as_ref().is_some_and(|configured| configured.catalog.open_target_count() > 0);
         // 🤖️ One bounded read of the real method, never a declared capability flag beside it: a backend
@@ -10978,8 +11276,8 @@ async fn serve() -> Result<(), HubError> {
             extensions_root,
             merge_policy,
         };
-        let addr = SocketAddr::new(bind, port);
-        let listener = tokio::net::TcpListener::bind(addr).await?;
+        let listener = tokio::net::TcpListener::from_std(bound)?;
+        boot_server.hand_over().await;
         let saga_drain = SagaDrainSupervisor::start(state.instance.clone(), state.tracer.clone(), SAGA_DRAIN_INTERVAL);
         let admin_operation_tasks = state.admin_operation_tasks.clone();
         #[cfg(feature = "native-artifact-execution")]

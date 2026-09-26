@@ -796,6 +796,36 @@ pub fn resolve_command_audience(command: &CommandDefinition) -> CapabilityAudien
     command.semantics.audience.unwrap_or_else(|| derive_audience(command.kind, command.in_palette))
 }
 
+/// @emoji 🖐️ The verbs the framework's World3d gumball dispatches ITSELF around one drag —
+/// `transformBegin` when a handle is grabbed and `transformEnd` when it is released
+/// (`World3dHost`'s `handleGumballDragStart`/`handleGumballDragEnd`). They bracket the pose deltas
+/// (`translateSelection`/`rotateSelection`/`scaleSelection`, each a self-contained verb that commits on
+/// its own outside a bracket) and mean nothing outside a live pointer gesture.
+pub const GUMBALL_GESTURE_BRACKET_ACTION_IDS: [&str; 2] = ["transformBegin", "transformEnd"];
+
+/// @emoji 🎛️ The gumball's handle toggle — which move/rotate/scale handles one window shows.
+pub const GUMBALL_CHROME_ACTION_IDS: [&str; 1] = ["setTransformGumballFlag"];
+
+/// @emoji 🧭️ The one classification rule for the framework-owned gumball verbs, stated once for every
+/// app that uses the gumball (lowpoly, puzzle, fem, block, …): the drag brackets are
+/// [`CapabilityAudience::Input`], the handle toggle is [`CapabilityAudience::Chrome`]. `None` for every
+/// other id. An app declaring one of these ids must resolve to exactly this audience — enforced when its
+/// definition is built, held against `🧫️fixtures/🖐️gumball-verb-audience.json`.
+pub fn framework_fixed_audience(action_id: &str) -> Option<CapabilityAudience> {
+    if GUMBALL_GESTURE_BRACKET_ACTION_IDS.contains(&action_id) {
+        Some(CapabilityAudience::Input)
+    } else if GUMBALL_CHROME_ACTION_IDS.contains(&action_id) {
+        Some(CapabilityAudience::Chrome)
+    } else {
+        None
+    }
+}
+
+/// @emoji ⚖️ The audience a framework-owned verb requires when `action` resolves to a different one.
+pub fn framework_fixed_audience_violation(action: &ActionDefinition) -> Option<CapabilityAudience> {
+    framework_fixed_audience(&action.id).filter(|expected| *expected != resolve_audience(action))
+}
+
 /// @emoji 🧵️ Phase-8 migration disposition for every action and command declaration. The
 /// default is deliberately not executable: manifests decoded without an explicit disposition remain
 /// visible to audit tooling but are rejected by [`validate_interactive_job_classification`] before a
@@ -1439,9 +1469,40 @@ pub fn tool_run_action_definitions(app: &AppDefinition) -> Vec<ActionDefinition>
                 ToolRunAction::Dismiss => "x",
             };
             let keys = (action != ToolRunAction::Dismiss).then(|| action.chord().to_string());
-            ActionDefinition { keys, in_palette: false, ..ActionDefinition::resumable_framework(action.id(), action.label().localized(), ActionKind::History, icon) }.with_args(action.args().iter().map(|arg| tool_run_action_arg(arg.name, arg.required)))
+            ActionDefinition { keys, in_palette: false, ..ActionDefinition::resumable_framework(action.id(), action.label().localized(), ActionKind::History, icon) }
+                .with_args(action.args().iter().map(|arg| tool_run_action_arg(arg.name, arg.required)))
+                .describe(tool_run_action_description(action))
         })
         .collect()
+}
+
+/// 💬️ What each reserved tool run action does to the run and to the document — a run holds its
+/// result as a provisional preview, and only `toolRunFinalize` publishes it as one undoable edit.
+fn tool_run_action_description(action: ToolRunAction) -> LocalizedLabel {
+    match action {
+        ToolRunAction::Start => LocalizedLabel::native(
+            "Starts a run of the given tool (such as a solver) in a window; the run shows its result as a provisional preview and changes nothing until it is finalized.",
+            "Startet einen Lauf des angegebenen Werkzeugs (etwa eines Lösers) in einem Fenster; der Lauf zeigt sein Ergebnis als vorläufige Vorschau und ändert nichts, bis er abgeschlossen wird.",
+        ),
+        ToolRunAction::Pause => LocalizedLabel::native(
+            "Pauses a running tool run at its current step so its progress can be inspected, stepped or resumed.",
+            "Hält einen laufenden Werkzeuglauf beim aktuellen Schritt an, damit sein Fortschritt geprüft, schrittweise fortgeführt oder fortgesetzt werden kann.",
+        ),
+        ToolRunAction::Resume => LocalizedLabel::native("Continues a paused tool run from the step where it stopped.", "Setzt einen pausierten Werkzeuglauf an dem Schritt fort, an dem er angehalten wurde."),
+        ToolRunAction::Step => LocalizedLabel::native("Advances a paused tool run by exactly one step and pauses it again.", "Führt einen pausierten Werkzeuglauf genau einen Schritt weiter und hält ihn wieder an."),
+        ToolRunAction::Abort => LocalizedLabel::native(
+            "Stops a tool run and discards its provisional result; the document stays exactly as it was before the run started.",
+            "Bricht einen Werkzeuglauf ab und verwirft sein vorläufiges Ergebnis; das Dokument bleibt genau so, wie es vor dem Start war.",
+        ),
+        ToolRunAction::Finalize => LocalizedLabel::native(
+            "Commits the provisional result of a running, paused or complete tool run into the document as one undoable edit.",
+            "Übernimmt das vorläufige Ergebnis eines laufenden, pausierten oder fertigen Werkzeuglaufs als eine rückgängig machbare Änderung in das Dokument.",
+        ),
+        ToolRunAction::Dismiss => LocalizedLabel::native(
+            "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
+            "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt.",
+        ),
+    }
 }
 
 fn tool_run_action_arg(name: &'static str, required: bool) -> ActionArgDef {
@@ -5967,6 +6028,10 @@ mod example_picker_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🪟️resolved-host-context/🦀️.rs"]
 mod resolved_host_context_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🖐️gumball-verb-audience/🦀️.rs"]
+mod gumball_verb_audience_tests;
 //#endregion 🔖️Manifest
 
 // #endregion 🛂️Manifest

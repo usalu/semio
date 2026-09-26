@@ -85,6 +85,16 @@ export async function resolvePluginModuleSourceV1(input: Readonly<{
   return { source: "local", files };
 }
 
+/** 🧩️ The plugin registry's hub half: every plugin (never an extension) the serving generation carries that this device's
+ * own build does not list, in plugin id order, each pinned to its generation's bundle. The shell's registry is the device's
+ * build plus these, so a plugin this build lacks is listed, installed from the hub (verified, stored) and run like any other. */
+export function hubCatalogOnlyPluginsV1(index: TrustedPluginModuleIndexV1, localPluginIds: ReadonlySet<string>): readonly Readonly<{ pluginId: string; generationId: string; bundleSha256: string; dependencies: readonly string[] }>[] {
+  return index.modules
+    .filter((entry) => entry.extendsPluginId === null && !localPluginIds.has(entry.pluginId))
+    .map((entry) => ({ pluginId: entry.pluginId, generationId: index.generationId, bundleSha256: entry.bundleSha256, dependencies: entry.dependencies }))
+    .sort((left, right) => (left.pluginId < right.pluginId ? -1 : left.pluginId > right.pluginId ? 1 : 0));
+}
+
 /** 🎭️ The one package of a generation whose surfaces open `artifactKind` (a dialect artifact kind), or `null` when none
  * or more than one does. */
 export function hubCatalogOwnerOfDialectV1(index: TrustedPluginModuleIndexV1, artifactKind: string): TrustedPluginModuleIndexEntryV1 | null {

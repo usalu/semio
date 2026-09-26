@@ -4654,6 +4654,18 @@ pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut infinite_can
     })
 }
 
+/// 👕️ One board surface's presence state: the scene camera its owning guest last published and the
+/// board's active utility — exactly what React's `Board2dHost` stamps on its presence view
+/// (`parseBoardCamera(sceneRef.current.cameraJson) ?? { x: 0, y: 0, zoom: 1 }`, `activeUtility`): a scene
+/// that published no readable camera is the identity camera. `None` only for a surface that is not attached.
+pub fn board2d_presence_state(host_id: &str) -> Option<((f64, f64, f64), Option<String>)> {
+    ENGINE_SURFACES.with(|cell| {
+        let registry = cell.borrow();
+        let cache = &registry.get(host_id)?.board_sync_cache;
+        Some((cache.camera_json.as_deref().and_then(engine_camera_from_json).unwrap_or((0.0, 0.0, 1.0)), cache.active_utility.clone()))
+    })
+}
+
 pub fn with_board_host<R>(surface_id: &str, f: impl FnOnce(&infinite_canvas::BoardHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();

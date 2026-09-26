@@ -1,0 +1,358 @@
+{
+  "schema": "semio.renderer.text-editor-local-echo/v1",
+  "description": "The text editor host's optimistic local echo. The host delivers its latest text and selection through ONE latest-wins channel, so the guest sees some of the local texts (`local`: a text sent as a `textEdit`) and never sees others (`typed`: a local change the channel superseded before sending it). While the editor types, its own text and caret are the newest state: a scene buffer equal to a pending sent text (acknowledging it and every older one) or to the last acknowledged text (the guest re-publishing a state it already echoed) applies neither its buffer nor its selection; any other buffer is an external change (undo, a collaborator, a formatter) whose text and selection are applied at once, dropping every pending send. `refuse` answers one sent text as refused (`reason`, default `dispatch-failed`): the text leaves the pending set, and when nothing is pending any more the host re-applies the guest's buffer (`resync`), so a keystroke the guest did not take is never shown as saved; a reason that says the window takes no edits (`undeclared-action`, `viewer-read-only`) turns the editor read-only, after which `local`/`typed` change nothing. `expect` is the host's text after the event, `pending` the sends still in flight, `readOnly` (when given) the editor's mode.",
+  "cases": [
+    {
+      "id": "stale-echoes-of-in-flight-typing-never-revert-it",
+      "initial": "RETURN",
+      "events": [
+        {
+          "local": "RETURN n",
+          "expect": "RETURN n",
+          "pending": [
+            "RETURN n"
+          ]
+        },
+        {
+          "local": "RETURN na",
+          "expect": "RETURN na",
+          "pending": [
+            "RETURN n",
+            "RETURN na"
+          ]
+        },
+        {
+          "echo": "RETURN n",
+          "expect": "RETURN na",
+          "pending": [
+            "RETURN na"
+          ]
+        },
+        {
+          "local": "RETURN nam",
+          "expect": "RETURN nam",
+          "pending": [
+            "RETURN na",
+            "RETURN nam"
+          ]
+        },
+        {
+          "echo": "RETURN na",
+          "expect": "RETURN nam",
+          "pending": [
+            "RETURN nam"
+          ]
+        },
+        {
+          "echo": "RETURN nam",
+          "expect": "RETURN nam",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "an-external-change-is-applied-and-drops-the-pending-edits",
+      "initial": "MATCH",
+      "events": [
+        {
+          "local": "MATCHx",
+          "expect": "MATCHx",
+          "pending": [
+            "MATCHx"
+          ]
+        },
+        {
+          "echo": "MATCH (n)",
+          "expect": "MATCH (n)",
+          "pending": []
+        },
+        {
+          "echo": "MATCH (n) RETURN n",
+          "expect": "MATCH (n) RETURN n",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "a-repeated-text-is-acknowledged-in-order",
+      "initial": "a",
+      "events": [
+        {
+          "local": "ab",
+          "expect": "ab",
+          "pending": [
+            "ab"
+          ]
+        },
+        {
+          "local": "a",
+          "expect": "a",
+          "pending": [
+            "ab",
+            "a"
+          ]
+        },
+        {
+          "echo": "ab",
+          "expect": "a",
+          "pending": [
+            "a"
+          ]
+        },
+        {
+          "echo": "a",
+          "expect": "a",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "a-selection-only-echo-of-the-newest-edit-is-applied",
+      "initial": "",
+      "events": [
+        {
+          "local": "x",
+          "expect": "x",
+          "pending": [
+            "x"
+          ]
+        },
+        {
+          "echo": "x",
+          "expect": "x",
+          "pending": []
+        },
+        {
+          "echo": "x",
+          "expect": "x",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "a-re-published-acknowledged-text-is-stale-while-typing-is-in-flight",
+      "initial": "a",
+      "events": [
+        {
+          "local": "ab",
+          "expect": "ab",
+          "pending": [
+            "ab"
+          ]
+        },
+        {
+          "echo": "ab",
+          "expect": "ab",
+          "pending": []
+        },
+        {
+          "local": "abc",
+          "expect": "abc",
+          "pending": [
+            "abc"
+          ]
+        },
+        {
+          "echo": "ab",
+          "expect": "abc",
+          "pending": [
+            "abc"
+          ]
+        },
+        {
+          "echo": "abc",
+          "expect": "abc",
+          "pending": []
+        },
+        {
+          "echo": "abc",
+          "expect": "abc",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "a-refused-keystroke-reverts-to-the-guests-text",
+      "initial": "abc",
+      "events": [
+        {
+          "local": "abcd",
+          "expect": "abcd",
+          "pending": [
+            "abcd"
+          ]
+        },
+        {
+          "refuse": "abcd",
+          "expect": "abc",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "a-refusal-behind-accepted-typing-keeps-the-typing",
+      "initial": "a",
+      "events": [
+        {
+          "local": "ab",
+          "expect": "ab",
+          "pending": [
+            "ab"
+          ]
+        },
+        {
+          "local": "abc",
+          "expect": "abc",
+          "pending": [
+            "ab",
+            "abc"
+          ]
+        },
+        {
+          "refuse": "ab",
+          "expect": "abc",
+          "pending": [
+            "abc"
+          ]
+        },
+        {
+          "echo": "abc",
+          "expect": "abc",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "a-full-ledger-refuses-every-keystroke-and-the-editor-shows-what-saved",
+      "initial": "x",
+      "events": [
+        {
+          "local": "xy",
+          "expect": "xy",
+          "pending": [
+            "xy"
+          ]
+        },
+        {
+          "local": "xyz",
+          "expect": "xyz",
+          "pending": [
+            "xy",
+            "xyz"
+          ]
+        },
+        {
+          "refuse": "xy",
+          "expect": "xyz",
+          "pending": [
+            "xyz"
+          ]
+        },
+        {
+          "refuse": "xyz",
+          "expect": "x",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "a-window-without-text-edits-turns-read-only-after-its-first-refusal",
+      "initial": "step-1:state.set@next->step-2:log.print@prev",
+      "events": [
+        {
+          "local": "step-1:state.set@next->step-2:log.print@prevx",
+          "expect": "step-1:state.set@next->step-2:log.print@prevx",
+          "pending": [
+            "step-1:state.set@next->step-2:log.print@prevx"
+          ],
+          "readOnly": false
+        },
+        {
+          "refuse": "step-1:state.set@next->step-2:log.print@prevx",
+          "reason": "undeclared-action",
+          "expect": "step-1:state.set@next->step-2:log.print@prev",
+          "pending": [],
+          "readOnly": true
+        },
+        {
+          "local": "step-1:state.set@next->step-2:log.print@prevy",
+          "expect": "step-1:state.set@next->step-2:log.print@prev",
+          "pending": [],
+          "readOnly": true
+        }
+      ]
+    },
+    {
+      "id": "unsent-typing-survives-the-echo-of-its-predecessor",
+      "initial": "a",
+      "events": [
+        {
+          "local": "ab",
+          "expect": "ab",
+          "pending": [
+            "ab"
+          ]
+        },
+        {
+          "typed": "abc",
+          "expect": "abc",
+          "pending": [
+            "ab"
+          ]
+        },
+        {
+          "typed": "abcd",
+          "expect": "abcd",
+          "pending": [
+            "ab"
+          ]
+        },
+        {
+          "echo": "ab",
+          "expect": "abcd",
+          "pending": []
+        },
+        {
+          "local": "abcd",
+          "expect": "abcd",
+          "pending": [
+            "abcd"
+          ]
+        },
+        {
+          "echo": "abcd",
+          "expect": "abcd",
+          "pending": []
+        }
+      ]
+    },
+    {
+      "id": "a-re-published-state-never-reverts-unsent-typing",
+      "initial": "a",
+      "events": [
+        {
+          "typed": "ab",
+          "expect": "ab",
+          "pending": []
+        },
+        {
+          "echo": "a",
+          "expect": "ab",
+          "pending": []
+        },
+        {
+          "local": "ab",
+          "expect": "ab",
+          "pending": [
+            "ab"
+          ]
+        },
+        {
+          "echo": "ab",
+          "expect": "ab",
+          "pending": []
+        }
+      ]
+    }
+  ]
+}

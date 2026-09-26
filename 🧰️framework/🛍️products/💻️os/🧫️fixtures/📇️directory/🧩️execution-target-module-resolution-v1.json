@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "corpus": "🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
+  "cases": [
+    { "id": "the-local-component-is-the-lease", "local": "leaseComponent", "store": "empty", "hub": "exact", "expected": { "outcome": "local", "requests": ["manifest"], "steps": ["lease", "verified"] } },
+    { "id": "an-empty-store-fetches-verifies-and-stores", "local": "otherComponent", "store": "empty", "hub": "exact", "expected": { "outcome": "hub", "requests": ["manifest", "component", "descriptor"], "steps": ["lease", "component", "descriptor", "verified"] } },
+    { "id": "a-shell-without-the-plugin-fetches", "local": "none", "store": "empty", "hub": "exact", "expected": { "outcome": "hub", "requests": ["manifest", "component", "descriptor"], "steps": ["lease", "component", "descriptor", "verified"] } },
+    { "id": "a-verified-store-entry-needs-only-the-lease", "local": "otherComponent", "store": "verified", "hub": "exact", "expected": { "outcome": "store", "requests": ["manifest"], "steps": ["lease", "verified"] } },
+    { "id": "a-tampered-stored-component-is-fetched-again", "local": "otherComponent", "store": "tamperedComponent", "hub": "exact", "expected": { "outcome": "hub", "requests": ["manifest", "component"], "steps": ["lease", "component", "verified"] } },
+    { "id": "a-tampered-stored-descriptor-is-fetched-again", "local": "otherComponent", "store": "tamperedDescriptor", "hub": "exact", "expected": { "outcome": "hub", "requests": ["manifest", "descriptor"], "steps": ["lease", "descriptor", "verified"] } },
+    { "id": "component-bytes-off-the-lease-are-refused-and-never-stored", "local": "otherComponent", "store": "empty", "hub": "wrongComponent", "expected": { "outcome": "refused", "requests": ["manifest", "component"], "steps": ["lease", "component"] } },
+    { "id": "descriptor-bytes-off-the-lease-are-refused-and-never-stored", "local": "otherComponent", "store": "empty", "hub": "wrongDescriptor", "expected": { "outcome": "refused", "requests": ["manifest", "component", "descriptor"], "steps": ["lease", "component", "descriptor"] } },
+    { "id": "a-hub-short-of-time-is-asked-again", "local": "otherComponent", "store": "empty", "hub": "unavailableOnce", "expected": { "outcome": "hub", "requests": ["manifest", "manifest", "component", "component", "descriptor", "descriptor"], "steps": ["lease", "component", "descriptor", "verified"] } },
+    { "id": "a-hub-short-of-time-three-times-is-a-refusal", "local": "otherComponent", "store": "empty", "hub": "unavailable", "expected": { "outcome": "refused", "requests": ["manifest", "manifest", "manifest"], "steps": ["lease"] } },
+    { "id": "a-cancel-as-the-component-step-begins-fetches-nothing-more", "local": "otherComponent", "store": "empty", "hub": "cancelledAtComponent", "expected": { "outcome": "cancelled", "requests": ["manifest"], "steps": ["lease", "component"] } }
+  ]
+}

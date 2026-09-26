@@ -1,0 +1,16 @@
+{
+  "why": "The one classification rule for the framework-owned gumball verbs, read by two implementations: the Rust rule `framework_fixed_audience`/`framework_fixed_audience_violation` (`🧪️tests/🖐️gumball-verb-audience/🦀️.rs`, enforced by every app definition build) and the AJV twin (`🧪️tests/🖐️gumball-verb-audience/🟦️.ts`, stating the same rule as JSON Schema). The World3d gumball dispatches `transformBegin` when a handle is grabbed and `transformEnd` when it is released; they bracket the self-contained pose deltas and are raw input. `setTransformGumballFlag` toggles which handles one window shows and is window chrome. Every other id is untouched by the rule. An action resolves its audience from its declaration, else from its kind and palette visibility (`derive_audience`).",
+  "cases": [
+    { "name": "a bracket declared input keeps the rule", "action": { "id": "transformBegin", "kind": "view", "inPalette": true, "audience": "input" }, "expected": "input", "violation": false },
+    { "name": "an undeclared bracket in the palette derives agent and breaks the rule", "action": { "id": "transformBegin", "kind": "view", "inPalette": true, "audience": null }, "expected": "input", "violation": true },
+    { "name": "an undeclared bracket off the palette derives chrome and breaks the rule", "action": { "id": "transformEnd", "kind": "view", "inPalette": false, "audience": null }, "expected": "input", "violation": true },
+    { "name": "a committing bracket declared mutation still has to be input", "action": { "id": "transformEnd", "kind": "mutation", "inPalette": true, "audience": null }, "expected": "input", "violation": true },
+    { "name": "a committing bracket declared input keeps the rule", "action": { "id": "transformEnd", "kind": "mutation", "inPalette": true, "audience": "input" }, "expected": "input", "violation": false },
+    { "name": "a bracket declared agent breaks the rule", "action": { "id": "transformBegin", "kind": "view", "inPalette": true, "audience": "agent" }, "expected": "input", "violation": true },
+    { "name": "the handle toggle off the palette derives chrome and keeps the rule", "action": { "id": "setTransformGumballFlag", "kind": "view", "inPalette": false, "audience": null }, "expected": "chrome", "violation": false },
+    { "name": "the handle toggle in the palette derives agent and breaks the rule", "action": { "id": "setTransformGumballFlag", "kind": "view", "inPalette": true, "audience": null }, "expected": "chrome", "violation": true },
+    { "name": "the handle toggle declared chrome keeps the rule", "action": { "id": "setTransformGumballFlag", "kind": "view", "inPalette": true, "audience": "chrome" }, "expected": "chrome", "violation": false },
+    { "name": "a pose delta is an ordinary verb", "action": { "id": "translateSelection", "kind": "mutation", "inPalette": true, "audience": null }, "expected": null, "violation": false },
+    { "name": "an unrelated verb declared input is untouched", "action": { "id": "canvasPointerDown", "kind": "mutation", "inPalette": false, "audience": "input" }, "expected": null, "violation": false }
+  ]
+}

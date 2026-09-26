@@ -882,8 +882,8 @@ export type { PluginRegistryEntry };
 //#endregion 🔖️plugin-runtime
 
 //#region 🔖️wasm-session-loader
+import { createDemandFrameScheduler } from "@semio-tech/infinite-canvas-react-renderer";
 import {
-  createDemandFrameScheduler,
   createGraphSession,
   type FlowWasmSession,
   createFlowSession,

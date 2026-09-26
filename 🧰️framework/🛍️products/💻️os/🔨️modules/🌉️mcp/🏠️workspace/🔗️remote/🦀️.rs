@@ -9,7 +9,7 @@ use semio_framework_os_kernel::os_directory::{
 use semio_framework_os_kernel::{FromValue, ToValue};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex, PoisonError, RwLock};
+use std::sync::{Arc, Condvar, Mutex, PoisonError, RwLock};
 
 #[path = "🧩️pair/🦀️.rs"]
 mod pair;
@@ -23,6 +23,31 @@ pub const HUB_VERIFIED_CATALOG_MAX_DESCRIPTOR_BYTES: usize = 32 * 1024 * 1024;
 pub const HUB_BINDING_DIAGNOSTIC_MAX_BYTES: usize = 4_096;
 pub const HUB_BINDING_ID_MAX_BYTES: usize = 512;
 pub const HUB_BINDING_OPERATION_TIMEOUT_MS: u64 = 10_000;
+/// ⏳️ How long a hub-bound call waits for a descriptor refresh already in flight before it fails
+/// closed: one refresh turn's own deadline. Every directory event in the space (another member's
+/// new document, this agent's own commit) invalidates the authority, and without the wait every
+/// tool call in that window answered a retryable `PLUGIN_UNAVAILABLE`, including an approval whose
+/// edit had already landed.
+pub const HUB_AUTHORITY_SETTLE_WAIT_MS: u64 = HUB_BINDING_OPERATION_TIMEOUT_MS;
+/// 🔁️ First and largest pause between failed authority refreshes. A refresh costs the hub two
+/// requests plus two per document, and one that failed (a busy hub answering `503
+/// deadline-exceeded`) used to be retried back-to-back for as long as it kept failing.
+pub const HUB_REFRESH_RETRY_BASE_MS: u64 = 100;
+pub const HUB_REFRESH_RETRY_MAX_MS: u64 = 5_000;
+
+/// 🔁️ `min(base · 2^(failures-1), max)` — the pause after the `failures`th refresh in a row failed.
+pub fn hub_refresh_retry_ms(failures: u32) -> u64 {
+    HUB_REFRESH_RETRY_BASE_MS.saturating_mul(1u64 << failures.saturating_sub(1).min(16)).min(HUB_REFRESH_RETRY_MAX_MS)
+}
+
+/// 😴️ Sleeps `ms` in short steps so a cancelled binding actor stops within one step.
+fn pause_unless_cancelled(cancel: &semio_framework_async::CancelToken, ms: u64) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_millis(ms);
+    while !cancel.is_cancelled_now() {
+        let Some(remaining) = deadline.checked_duration_since(std::time::Instant::now()).filter(|remaining| !remaining.is_zero()) else { return };
+        std::thread::sleep(remaining.min(std::time::Duration::from_millis(25)));
+    }
+}
 /// ⏳️ One authorized component is tens of megabytes over a loopback or LAN hub; the ordinary 10 s
 /// directory budget is a JSON-page budget and refuses it long before the transfer could finish.
 pub const HUB_EXECUTION_TARGET_COMPONENT_TIMEOUT_MS: u64 = 120_000;
@@ -111,7 +136,24 @@ pub enum HubBindingError {
     CapacityExceeded,
     InvalidResponse(&'static str),
     StaleRefresh,
-    Unavailable,
+    Unavailable(HubUnavailableCause),
+}
+
+/// 🔎️ What made the hub directory unavailable, so a refusal names it instead of one opaque word.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum HubUnavailableCause {
+    /// 🌐️ The HTTP status and, when the hub answered its typed refusal, that refusal's `code`.
+    Http { status: u16, code: Option<String> },
+    Transport,
+    UndecodableResponse,
+}
+
+impl HubUnavailableCause {
+    /// 🌐️ An HTTP refusal, keeping the hub's typed `code` (bounded) when its body carries one.
+    fn http(status: u16, body: &str) -> Self {
+        let code = serde_json::from_str::<serde_json::Value>(body).ok().and_then(|value| value.get("code").and_then(serde_json::Value::as_str).map(|code| code.chars().take(64).collect()));
+        Self::Http { status, code }
+    }
 }
 
 impl std::fmt::Display for HubBindingError {
@@ -125,7 +167,10 @@ impl std::fmt::Display for HubBindingError {
             Self::CapacityExceeded => formatter.write_str("hub descriptor index exceeded its fixed document capacity"),
             Self::InvalidResponse(detail) => write!(formatter, "hub directory response was invalid: {detail}"),
             Self::StaleRefresh => formatter.write_str("hub descriptor refresh was superseded"),
-            Self::Unavailable => formatter.write_str("hub directory is temporarily unavailable"),
+            Self::Unavailable(HubUnavailableCause::Http { status, code: Some(code) }) => write!(formatter, "hub directory is temporarily unavailable (HTTP {status} {code})"),
+            Self::Unavailable(HubUnavailableCause::Http { status, code: None }) => write!(formatter, "hub directory is temporarily unavailable (HTTP {status})"),
+            Self::Unavailable(HubUnavailableCause::Transport) => formatter.write_str("hub directory is temporarily unavailable (transport)"),
+            Self::Unavailable(HubUnavailableCause::UndecodableResponse) => formatter.write_str("hub directory is temporarily unavailable (undecodable response)"),
         }
     }
 }
@@ -144,6 +189,7 @@ pub struct HubRemoteBinding {
     authenticated_user_id: RwLock<Option<String>>,
     catalog: RwLock<Option<Arc<AuthorizedCatalogSnapshot>>>,
     pair_actor: Mutex<pair::CanonicalPairActor>,
+    settle: (Mutex<()>, Condvar),
     #[cfg(test)]
     pair_mount_return_pause: Mutex<Option<(Arc<std::sync::Barrier>, Arc<std::sync::Barrier>)>>,
 }
@@ -167,7 +213,50 @@ impl HubRemoteBinding {
             observed_event_seq: AtomicU64::new(0),
             authenticated_user_id: RwLock::new(None),
             catalog: RwLock::new(None),
+            settle: (Mutex::new(()), Condvar::new()),
         })
+    }
+
+    /// 🚫️ The retryable refusal for `state`, naming the refresh phase and the binding's last fault.
+    fn unavailable(&self, state: HubRemoteBindingState) -> GatewayError {
+        unavailable_gateway_error(state, self.progress().phase, self.diagnostic())
+    }
+
+    /// 🔄️ Whether an authority refresh is in flight: not yet bound, refreshing, or bound while the
+    /// catalog of that exact authority generation is still being verified.
+    fn settling(&self) -> bool {
+        match self.state() {
+            HubRemoteBindingState::Unbound | HubRemoteBindingState::Refreshing => true,
+            HubRemoteBindingState::Ready(_) => {
+                let authority_generation = self.authority_generation.load(Ordering::SeqCst);
+                authority_generation == 0 || self.catalog.read().unwrap_or_else(PoisonError::into_inner).as_ref().is_none_or(|catalog| catalog.authority_generation != authority_generation)
+            }
+            HubRemoteBindingState::Revoked => false,
+        }
+    }
+
+    /// 📣️ Wakes every caller parked in [`Self::await_settled`]; called after each state, authority
+    /// or catalog transition, never while one of those locks is held.
+    fn announce(&self) {
+        let _guard = self.settle.0.lock().unwrap_or_else(PoisonError::into_inner);
+        self.settle.1.notify_all();
+    }
+
+    /// ⏳️ Parks the calling (tool) thread until the refresh in flight settles or `wait_ms` passes.
+    /// It decides nothing: the caller's own gate still fails closed if the authority is not ready.
+    /// Only request threads call it; the binding actor that performs the refresh never does.
+    pub fn await_settled(&self, wait_ms: u64) {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let deadline = std::time::Instant::now() + std::time::Duration::from_millis(wait_ms);
+            let mut guard = self.settle.0.lock().unwrap_or_else(PoisonError::into_inner);
+            while self.settling() {
+                let Some(remaining) = deadline.checked_duration_since(std::time::Instant::now()).filter(|remaining| !remaining.is_zero()) else { return };
+                guard = self.settle.1.wait_timeout(guard, remaining).unwrap_or_else(PoisonError::into_inner).0;
+            }
+        }
+        #[cfg(target_arch = "wasm32")]
+        let _ = wait_ms;
     }
 
     pub fn state(&self) -> HubRemoteBindingState {
@@ -187,9 +276,9 @@ impl HubRemoteBinding {
             HubRemoteBindingState::Ready(snapshot) if snapshot.session_expires_at_ms > wall_now_ms => snapshot,
             HubRemoteBindingState::Ready(_) => {
                 self.revoke(HubBindingError::SessionExpired);
-                return Err(unavailable_gateway_error(HubRemoteBindingState::Revoked));
+                return Err(self.unavailable(HubRemoteBindingState::Revoked));
             }
-            state => return Err(unavailable_gateway_error(state)),
+            state => return Err(self.unavailable(state)),
         };
         Ok(ready)
     }
@@ -202,7 +291,7 @@ impl HubRemoteBinding {
         let catalog = self.catalog.read().unwrap_or_else(PoisonError::into_inner).clone();
         match catalog {
             Some(catalog) if authority_generation != 0 && catalog.authority_generation == authority_generation && self.authority_generation.load(Ordering::SeqCst) == authority_generation => Ok(catalog),
-            _ => Err(unavailable_gateway_error(HubRemoteBindingState::Refreshing)),
+            _ => Err(self.unavailable(HubRemoteBindingState::Refreshing)),
         }
     }
 
@@ -306,6 +395,7 @@ impl HubRemoteBinding {
         }
         let catalog = Arc::new(AuthorizedCatalogSnapshot { authority_generation, selections: selected.into_values().collect(), dialect_kinds });
         *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = Some(catalog.clone());
+        self.announce();
         Ok(catalog)
     }
 
@@ -358,6 +448,7 @@ impl HubRemoteBinding {
         self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner).descriptor_ready(authority_generation);
         *self.diagnostic.write().unwrap_or_else(PoisonError::into_inner) = None;
         self.set_progress(HubBindingPhase::Ready, snapshot.documents.len(), snapshot.documents.len());
+        self.announce();
         Ok(snapshot)
     }
 
@@ -408,6 +499,7 @@ impl HubRemoteBinding {
         *self.state.write().unwrap_or_else(PoisonError::into_inner) = HubRemoteBindingState::Refreshing;
         *self.diagnostic.write().unwrap_or_else(PoisonError::into_inner) = None;
         self.set_progress(phase, 0, total);
+        self.announce();
         generation
     }
 
@@ -422,10 +514,10 @@ impl HubRemoteBinding {
         *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = None;
         actor.invalidate(pair::CanonicalPairActorState::Refreshing);
         drop(actor);
-        let mut state = self.state.write().unwrap_or_else(PoisonError::into_inner);
-        *state = HubRemoteBindingState::Refreshing;
+        *self.state.write().unwrap_or_else(PoisonError::into_inner) = HubRemoteBindingState::Refreshing;
         *self.diagnostic.write().unwrap_or_else(PoisonError::into_inner) = Some(bounded_diagnostic(diagnostic));
         self.set_progress(HubBindingPhase::Idle, 0, 0);
+        self.announce();
     }
 
     fn revoke(&self, error: HubBindingError) {
@@ -439,6 +531,7 @@ impl HubRemoteBinding {
         *self.authenticated_user_id.write().unwrap_or_else(PoisonError::into_inner) = None;
         *self.diagnostic.write().unwrap_or_else(PoisonError::into_inner) = Some(bounded_diagnostic(&error.to_string()));
         self.set_progress(HubBindingPhase::Revoked, 0, 0);
+        self.announce();
     }
 
     fn fail<T>(&self, generation: u64, error: HubBindingError) -> Result<T, HubBindingError> {
@@ -451,6 +544,7 @@ impl HubRemoteBinding {
             *self.state.write().unwrap_or_else(PoisonError::into_inner) = HubRemoteBindingState::Refreshing;
             *self.diagnostic.write().unwrap_or_else(PoisonError::into_inner) = Some(bounded_diagnostic(&error.to_string()));
             self.set_progress(HubBindingPhase::Idle, 0, 0);
+            self.announce();
         }
         Err(error)
     }
@@ -509,6 +603,7 @@ impl HubRemoteBinding {
         self.authority_generation.store(authority_generation, Ordering::SeqCst);
         *self.state.write().unwrap_or_else(PoisonError::into_inner) = HubRemoteBindingState::Ready(Arc::new(snapshot));
         self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner).descriptor_ready(authority_generation);
+        self.announce();
     }
 
     #[cfg(test)]
@@ -517,6 +612,7 @@ impl HubRemoteBinding {
         assert_ne!(authority_generation, 0);
         let dialect_kinds = selections.iter().map(|selection| (selection.scope.clone(), selection.lease.parent_dialect.artifact_kind.clone())).collect();
         *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = Some(Arc::new(AuthorizedCatalogSnapshot { authority_generation, selections, dialect_kinds }));
+        self.announce();
     }
 }
 
@@ -669,6 +765,14 @@ fn canonical_checkpoint_resource_text(
     }
     let pack_base64 = base64_encode_exact(pack, pack_base64_length)?;
     let spr_base64 = base64_encode_exact(spr, spr_base64_length)?;
+    let provenance = crate::schema::UntrustedProvenance {
+        source: crate::schema::UntrustedSource::HubCheckpoint,
+        artifact_id: Some(identity.scope.document_id.clone()),
+        artifact_kind: None,
+        space_id: Some(identity.scope.space_id.clone()),
+        revision: crate::schema::UntrustedRevision { content_sha256: crate::schema::untrusted_content_sha256(&[pack, spr]), head_edit_id: Some(frontier.head_edit_id.clone()), commit_seq: Some(frontier.last_commit_seq) },
+        authors: crate::schema::UntrustedAuthors::SpaceWriters { space_id: identity.scope.space_id.clone() },
+    };
     let value = serde_json::json!({
         "schema": CANONICAL_CHECKPOINT_RESOURCE_SCHEMA,
         "scope": { "spaceId": identity.scope.space_id, "documentId": identity.scope.document_id },
@@ -684,8 +788,9 @@ fn canonical_checkpoint_resource_text(
             "lastCommitSeq": frontier.last_commit_seq,
             "chainHash": hex_lower(&frontier.chain_hash.0)
         },
-        "pack": { "byteLength": pack.len(), "sha256": framework_hash::sha256_hex(pack), "base64": pack_base64 },
-        "spr": { "byteLength": spr.len(), "sha256": framework_hash::sha256_hex(spr), "base64": spr_base64 }
+        "pack": { "byteLength": pack.len(), "sha256": framework_hash::sha256_hex(pack) },
+        "spr": { "byteLength": spr.len(), "sha256": framework_hash::sha256_hex(spr) },
+        "untrusted": crate::schema::untrusted_content(&provenance, serde_json::json!({ "packBase64": pack_base64, "sprBase64": spr_base64 }))
     });
     let text = serde_json::to_string(&value).map_err(|_| CanonicalPairMountError::InvalidResponse("canonical checkpoint resource serialization failed"))?;
     if text.len() > CANONICAL_CHECKPOINT_RESOURCE_MAX_TEXT_BYTES {
@@ -716,7 +821,9 @@ fn map_client_error(error: DirectoryClientError) -> HubBindingError {
         DirectoryClientError::Unauthorized | DirectoryClientError::Http { status: 403 | 404, .. } => HubBindingError::Unauthorized,
         DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::Cancelled) => HubBindingError::Cancelled,
         DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::DeadlineExceeded) => HubBindingError::DeadlineExceeded,
-        DirectoryClientError::Decode(_) | DirectoryClientError::Http { .. } | DirectoryClientError::Transport(_) => HubBindingError::Unavailable,
+        DirectoryClientError::Decode(_) => HubBindingError::Unavailable(HubUnavailableCause::UndecodableResponse),
+        DirectoryClientError::Http { status, body } => HubBindingError::Unavailable(HubUnavailableCause::http(status, &body)),
+        DirectoryClientError::Transport(_) => HubBindingError::Unavailable(HubUnavailableCause::Transport),
     }
 }
 
@@ -727,7 +834,8 @@ fn map_catalog_client_error(error: DirectoryClientError) -> HubBindingError {
         DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::DeadlineExceeded) => HubBindingError::DeadlineExceeded,
         DirectoryClientError::Decode(_) => HubBindingError::InvalidResponse("execution-target response failed validation"),
         DirectoryClientError::Http { status: 404 | 409, .. } => HubBindingError::StaleRefresh,
-        DirectoryClientError::Http { .. } | DirectoryClientError::Transport(_) => HubBindingError::Unavailable,
+        DirectoryClientError::Http { status, body } => HubBindingError::Unavailable(HubUnavailableCause::http(status, &body)),
+        DirectoryClientError::Transport(_) => HubBindingError::Unavailable(HubUnavailableCause::Transport),
     }
 }
 
@@ -742,15 +850,23 @@ fn bounded_diagnostic(message: &str) -> String {
     message[..end].to_string()
 }
 
-fn unavailable_gateway_error(state: HubRemoteBindingState) -> GatewayError {
+fn unavailable_gateway_error(state: HubRemoteBindingState, phase: HubBindingPhase, diagnostic: Option<String>) -> GatewayError {
     let label = match state {
         HubRemoteBindingState::Unbound => "unbound",
         HubRemoteBindingState::Refreshing => "refreshing",
         HubRemoteBindingState::Ready(_) => "expired",
         HubRemoteBindingState::Revoked => "revoked",
     };
+    let phase = match phase {
+        HubBindingPhase::Idle => "idle",
+        HubBindingPhase::Authenticating => "authenticating",
+        HubBindingPhase::LoadingSpace => "loading-space",
+        HubBindingPhase::ValidatingDocuments => "validating-documents",
+        HubBindingPhase::Ready => "ready",
+        HubBindingPhase::Revoked => "revoked",
+    };
     GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("authenticated hub descriptor index is {label}; retry after authority refresh"))
-        .with_details(serde_json::json!({ "bindingState": label }))
+        .with_details(serde_json::json!({ "bindingState": label, "phase": phase, "lastFault": diagnostic }))
         .retryable()
 }
 
@@ -890,6 +1006,7 @@ impl NativeHubBindingDriver {
             .name("semio-mcp-hub-binding".to_string())
             .spawn(move || {
                 let mut needs_refresh = false;
+                let mut refresh_failures: u32 = 0;
                 while !thread_cancel.is_cancelled_now() {
                     let operation_now = thread_runtime.block_on(thread_runtime.now_ms());
                     let ctx = OperationContext {
@@ -918,10 +1035,13 @@ impl NativeHubBindingDriver {
                                         continue;
                                     }
                                     Ok(snapshot) => {
-                                        if thread_runtime.block_on(thread_binding.refresh_catalog(thread_client.as_ref(), &snapshot, &ctx)).is_err() {
-                                            thread_binding.invalidate("authenticated Hub catalog refresh failed before directory dial");
+                                        if let Err(error) = thread_runtime.block_on(thread_binding.refresh_catalog(thread_client.as_ref(), &snapshot, &ctx)) {
+                                            thread_binding.invalidate(&format!("authenticated Hub catalog refresh failed before directory dial: {error}"));
+                                            refresh_failures = refresh_failures.saturating_add(1);
+                                            pause_unless_cancelled(&thread_cancel, hub_refresh_retry_ms(refresh_failures));
                                             continue;
                                         }
+                                        refresh_failures = 0;
                                     }
                                 }
                             }
@@ -958,15 +1078,22 @@ impl NativeHubBindingDriver {
                         DirectoryStreamTurn::Idle if needs_refresh => {
                             match thread_runtime.block_on(thread_binding.refresh(thread_client.as_ref(), &ctx, wall_now_ms(), operation_now)) {
                                 Ok(snapshot) => match thread_runtime.block_on(thread_binding.refresh_catalog(thread_client.as_ref(), &snapshot, &ctx)) {
-                                    Ok(_) => needs_refresh = false,
+                                    Ok(_) => {
+                                        needs_refresh = false;
+                                        refresh_failures = 0;
+                                    }
                                     Err(HubBindingError::Unauthorized | HubBindingError::SessionExpired | HubBindingError::MembershipRequired) => break,
-                                    Err(_) => {
-                                        thread_binding.invalidate("authenticated Hub catalog refresh failed");
-                                        std::thread::sleep(std::time::Duration::from_millis(100));
+                                    Err(error) => {
+                                        thread_binding.invalidate(&format!("authenticated Hub catalog refresh failed: {error}"));
+                                        refresh_failures = refresh_failures.saturating_add(1);
+                                        pause_unless_cancelled(&thread_cancel, hub_refresh_retry_ms(refresh_failures));
                                     }
                                 },
                                 Err(HubBindingError::Unauthorized | HubBindingError::SessionExpired | HubBindingError::MembershipRequired) => break,
-                                Err(_) => std::thread::sleep(std::time::Duration::from_millis(100)),
+                                Err(_) => {
+                                    refresh_failures = refresh_failures.saturating_add(1);
+                                    pause_unless_cancelled(&thread_cancel, hub_refresh_retry_ms(refresh_failures));
+                                }
                             }
                         }
                         DirectoryStreamTurn::Idle => std::thread::sleep(std::time::Duration::from_millis(10)),
@@ -1061,7 +1188,7 @@ fn binding_error_to_gateway(error: HubBindingError) -> GatewayError {
         HubBindingError::CapacityExceeded => GatewayErrorCode::BudgetExceeded,
         HubBindingError::InvalidResponse(_) => GatewayErrorCode::PreconditionFailed,
         HubBindingError::Unauthorized | HubBindingError::SessionExpired | HubBindingError::MembershipRequired => GatewayErrorCode::PermissionDenied,
-        HubBindingError::DeadlineExceeded | HubBindingError::StaleRefresh | HubBindingError::Unavailable => GatewayErrorCode::PluginUnavailable,
+        HubBindingError::DeadlineExceeded | HubBindingError::StaleRefresh | HubBindingError::Unavailable(_) => GatewayErrorCode::PluginUnavailable,
     };
     let gateway = GatewayError::new(code, error.to_string());
     if matches!(code, GatewayErrorCode::PluginUnavailable) { gateway.retryable() } else { gateway }
@@ -1115,7 +1242,7 @@ impl HubRemoteBinding {
         let snapshot = self.ready_snapshot(wall_now_ms)?;
         let authority_generation = self.authority_generation.load(Ordering::SeqCst);
         if authority_generation == 0 {
-            return Err(unavailable_gateway_error(HubRemoteBindingState::Refreshing));
+            return Err(self.unavailable(HubRemoteBindingState::Refreshing));
         }
         Ok(crate::inference::HubInferenceSubjectV1 { hub_origin: self.hub_origin.clone(), space_id: self.space_id.clone(), user_id: snapshot.authenticated_user_id.clone(), authority_generation })
     }

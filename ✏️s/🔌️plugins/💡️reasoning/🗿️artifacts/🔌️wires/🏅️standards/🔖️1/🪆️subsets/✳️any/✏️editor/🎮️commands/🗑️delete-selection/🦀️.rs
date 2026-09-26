@@ -4,7 +4,7 @@ use crate::op::WiresMutation;
 use crate::schema::fixture_edges;
 use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::WiresSnapshot;
-use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -12,8 +12,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 
-/// 🕹️ Deletes every currently-selected node/edge — shared by `handle`/`apply` below.
-fn delete_selected(document: &WiresSnapshot, selected: &[String]) -> Emit<WiresMutation, NoConfigMutation> {
+/// 🕹️ Deletes every currently-selected node/edge — shared by `handle`/`apply` below. A selection that
+/// names no live node or edge is refused by name rather than answered with an empty success.
+fn delete_selected(document: &WiresSnapshot, selected: &[String]) -> Result<Emit<WiresMutation, NoConfigMutation>, Fault> {
     let board = crate::wires_working_board(document);
     let mut operations = Vec::new();
     for id in selected {
@@ -23,20 +24,23 @@ fn delete_selected(document: &WiresSnapshot, selected: &[String]) -> Emit<WiresM
             operations.push(crate::mutations::disconnect_nodes(id.clone()));
         }
     }
-    Emit { artifact_mutations: operations, ..Default::default() }
+    if operations.is_empty() {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("wires.delete-selection-empty"), "deleteSelection needs at least one selected node or relationship on the board"));
+    }
+    Ok(Emit { artifact_mutations: operations, ..Default::default() })
 }
 
 /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg)` is framework-fixed at this exact 3-arg shape
 /// (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), reachable
 /// only through that macro-generated path (`ReasoningWiresPlayApp::handle` always routes this command
-/// through `apply` below instead), so it degrades to treating the selection as empty.
+/// through `apply` below instead), so it sees an empty selection and refuses by name.
 pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WiresMutation, NoConfigMutation>, Fault> {
-    Ok(delete_selected(doc.snapshot, &[]))
+    delete_selected(doc.snapshot, &[])
 }
 
 /// 🗑️ Removes the framework graph selection; topology validation prunes deleted identities.
 pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, NoConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WiresMutation, NoConfigMutation>, Fault> {
-    Ok(delete_selected(doc.snapshot, &interaction.selection("graph").ids))
+    delete_selected(doc.snapshot, &interaction.selection("graph").ids)
 }
 
 /// 🧵️ The retained-tool twin of [`apply`]: a bounded tool-job reducer is handed the raw
@@ -44,7 +48,7 @@ pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnapshot>, 
 /// selection is read straight off the state instead of being wrapped first.
 pub fn apply_with_state(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnapshot>, interaction: &protocol::InteractionState) -> Result<Emit<WiresMutation, NoConfigMutation>, Fault> {
     let selected = interaction.selection.get("graph").map(|domain| domain.ids.clone()).unwrap_or_default();
-    Ok(delete_selected(doc.snapshot, &selected))
+    delete_selected(doc.snapshot, &selected)
 }
 
 //#region 🧪️Tests

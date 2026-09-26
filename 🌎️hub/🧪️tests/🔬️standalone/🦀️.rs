@@ -17,7 +17,7 @@ async fn issue_document_socket_grant_fixture(Path((space_id, document_id)): Path
         return Err(StatusCode::NOT_FOUND);
     }
     let audience = SocketAudienceV1::Document(scope);
-    let _admission = state.socket_binding_gates.acquire_record(&subject, &audience).await;
+    let _admission = state.socket_binding_gates.share_record(&subject, &audience).await;
     if socket_binding_validity(&state, &subject, &audience).await != SocketBindingValidityV1::Active {
         return Err(StatusCode::UNAUTHORIZED);
     }

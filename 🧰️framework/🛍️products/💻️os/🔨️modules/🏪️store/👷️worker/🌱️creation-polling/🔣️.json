@@ -1,0 +1,7 @@
+{
+  "schema": "semio.os.space-artifact-creation-polling/v1",
+  "description": "How the browser follows one space artifact creation on the hub. While the hub answers (any 2xx status), the creation is never concluded by the browser: it polls with a backoff from pollInitialMs doubling to pollMaxMs and reports every hub phase, and the person may cancel. Only when the hub has not answered for unreachableBoundMs does the browser conclude `indeterminate` (the outcome is then truly unknown and the space must be refreshed).",
+  "pollInitialMs": 100,
+  "pollMaxMs": 2000,
+  "unreachableBoundMs": 60000
+}

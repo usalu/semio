@@ -17,6 +17,20 @@
     "keybindingOverrides": { "type": "object", "additionalProperties": { "type": "string" } }
   },
   "$defs": {
+    "DataClasses": {
+      "$comment": "Where each preference lives: persistedShared follows the signed-in user to every device through the hub's per-user preference lane; persistedLocalOnly stays on this device (the chrome layout is a property of the device class, not of the user).",
+      "const": {
+        "appearance": "persistedShared",
+        "layout": "persistedLocalOnly",
+        "driverId": "persistedShared",
+        "customDrivers": "persistedShared",
+        "locale": "persistedShared",
+        "terminology": "persistedShared",
+        "themeId": "persistedShared",
+        "customThemes": "persistedShared",
+        "keybindingOverrides": "persistedShared"
+      }
+    },
     "UiDriver": {
       "type": "object",
       "additionalProperties": false,

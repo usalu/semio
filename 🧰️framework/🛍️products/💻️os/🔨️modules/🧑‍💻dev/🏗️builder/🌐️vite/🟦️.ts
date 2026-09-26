@@ -216,7 +216,7 @@ return {
     ]),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
-    semioAgentBridgeRendezvousVitePlugin(),
+    semioAgentBridgeRendezvousVitePlugin({ shellKind: "react" }),
     semioAgentCredentialInstallVitePlugin({ repoRoot }),
     semioLocalHubSessionVitePlugin(),
     ...(command === "serve" ? [...semioSourceFreshnessVitePlugins({ repoRoot }), semioActivationVitePlugin({ receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: activationComponents }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot })] : []),
